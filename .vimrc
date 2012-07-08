@@ -1,1 +1,1 @@
-/Users/andrewthal88/vim-config/.vimrc
+/Users/andrewthal/vim-config/.vimrc
