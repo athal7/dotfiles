@@ -1,0 +1,37 @@
+[user]
+	name = athal7
+	email = andrewthal88@gmail.com
+[github]
+	user = athal7
+[alias]
+  co = checkout
+  ci = commit
+  st = status
+  br = branch
+  hist = log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short
+  type = cat-file -t
+  dump = cat-file -p
+[core]
+	excludesfile = /Users/andrewthal/.gitignore_global
+[color]
+  branch = auto
+  diff = auto
+  status = auto
+  ui = true
+[color "branch"]
+  current = magenta reverse
+  local = magenta
+  remote = green
+[color "diff"]
+  meta = yellow bold
+  frag = magenta bold
+  old = red bold
+  new = green bold
+[color "status"]
+  added = yellow
+  changed = green
+  untracked = cyan
+[apply]
+  whitespace = fix
+[push]
+  default = tracking
