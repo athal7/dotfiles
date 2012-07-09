@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =7
+let g:netrw_dirhist_1='/Users/andrewthal/Dropbox/HungryAcademy/Code/how-improvement'
+let g:netrw_dirhist_2='/Users/andrewthal/Dropbox/HungryAcademy/Code/how-improvement/.git'
+let g:netrw_dirhist_3='/Users/andrewthal/Dropbox/HungryAcademy/Code/how-improvement'
+let g:netrw_dirhist_4='/Users/andrewthal/Dropbox/HungryAcademy/Code/how-improvement/app'
+let g:netrw_dirhist_5='/Users/andrewthal/Dropbox/HungryAcademy/Code/how-improvement/app/models'
+let g:netrw_dirhist_6='/Users/andrewthal/autojump'
+let g:netrw_dirhist_7='/Users/andrewthal/.fontconfig'
