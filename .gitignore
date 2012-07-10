@@ -14,7 +14,9 @@ Sites
 .ssh
 .vim-fuf-data
 .viminfo
-.gvimrc
+/.gvimrc
+/.vimrc
+/.vim
 .irb-history
 .irb_history
 .gem
