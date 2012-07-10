@@ -17,6 +17,7 @@ Sites
 /.gvimrc
 /.vimrc
 /.vim
+.netrwhist
 .irb-history
 .irb_history
 .gem
