@@ -8,7 +8,7 @@ imap jj <Esc>
 imap ii <Esc>
 
 " Highlight over 80 chars
-  highlight OverLength ctermbg=Blue guibg=#592929
+  highlight OverLength ctermbg=Blue
   match OverLength /\%81v.\+/
 
 
