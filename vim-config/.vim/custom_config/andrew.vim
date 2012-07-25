@@ -8,8 +8,10 @@ imap jj <Esc>
 imap ii <Esc>
 
 " Highlight over 80 chars
-  highlight OverLength ctermbg=Blue
-  match OverLength /\%81v.\+/
+  "highlight OverLength ctermbg=Gray
+  "match OverLength /\%81v.\/
+set colorcolumn=80
+highlight ColorColumn ctermbg=DarkGray guibg=DarkGray
 
 
 " don't wrap long lines
