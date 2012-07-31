@@ -92,3 +92,6 @@ LSCOLORS=gxfxcxdxbxegedabagacad
 #sets up the prompt color (currently a green similar to linux terminal)
 #enables color for iTerm
 export TERM=xterm-color
+
+# show directory in iterm header
+export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'

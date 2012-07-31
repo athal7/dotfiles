@@ -10,11 +10,5 @@ imap jk <Esc>
 imap kk <Esc>
 
 " Highlight over 80 chars
-  "highlight OverLength ctermbg=Gray
-  "match OverLength /\%81v.\/
 set colorcolumn=80
 highlight ColorColumn ctermbg=DarkGray guibg=DarkGray
-
-
-" don't wrap long lines
-  set wrap
