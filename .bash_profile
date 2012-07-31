@@ -65,7 +65,7 @@ WHITE="\[\033[1;37m\]"
 BLACK="\[\033[0;30m\]"
 OFF="\[\033[0m\]"
 source /usr/local/etc/bash_completion.d/git-completion.bash
-export PS1="$BLUE \W $YELLOW\$(~/.rvm/bin/rvm-prompt v)\$(rvm_version) \$(__git_ps1 "%s")$BLUE\n => $OFF"
+export PS1="$BLUE \W$YELLOW \$(__git_ps1 "%s")$PINK •\$(~/.rvm/bin/rvm-prompt v)\$(rvm_version) $GREEN\n § $OFF"
 
 # other aliases
 alias be='bundle exec'
