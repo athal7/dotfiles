@@ -13,6 +13,7 @@
   dump = cat-file -p
 [core]
 	excludesfile = /Users/andrewthal/.gitignore_global
+	editor = vim
 [color]
   branch = auto
   diff = auto
