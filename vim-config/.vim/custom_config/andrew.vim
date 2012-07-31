@@ -6,6 +6,8 @@ colorscheme jellybeans
 " Remap keys
 imap jj <Esc>
 imap ii <Esc>
+imap jk <Esc>
+imap kk <Esc>
 
 " Highlight over 80 chars
   "highlight OverLength ctermbg=Gray
