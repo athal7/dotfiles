@@ -1,3 +1,6 @@
+# Get the aliases and functions
+source ~/.bashrc
+
 export ARCHFLAGS='-arch x86_64' 
 export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 
@@ -62,7 +65,7 @@ WHITE="\[\033[1;37m\]"
 BLACK="\[\033[0;30m\]"
 OFF="\[\033[0m\]"
 source /usr/local/etc/bash_completion.d/git-completion.bash
-export PS1="ɾ $YELLOW\$(~/.rvm/bin/rvm-prompt v)\$(rvm_version) $BLUE\W $PINK\$(__git_ps1 "%s")$OFF\nɩ $GREEN=> $OFF"
+export PS1="$BLUE \W $YELLOW\$(~/.rvm/bin/rvm-prompt v)\$(rvm_version) \$(__git_ps1 "%s")$BLUE\n => $OFF"
 
 # other aliases
 alias be='bundle exec'
@@ -78,11 +81,6 @@ hitch() {
   if [[ -s "$HOME/.hitch_export_authors" ]] ; then source "$HOME/.hitch_export_authors" ; fi
 }
 alias unhitch='hitch -u'
-
-# Get the aliases and functions
-if [ -f /.bashrc ]; then
-  . /.bashrc
-fi
 
 #Autojump
 [[ -f ~/.autojump/etc/profile.d/autojump.bash ]] && source ~/.autojump/etc/profile.d/autojump.bash
