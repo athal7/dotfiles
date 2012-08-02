@@ -23,7 +23,6 @@ alias gl='git pull'
 alias glom='git pull origin master'
 alias gp='git push'
 alias gpom='git push origin master'
-alias gt='git tag -a'
 # Status
 alias gst='git status'
 alias gd='git diff'
@@ -33,7 +32,6 @@ alias gh='git hist'
 # Adding/Committing 
 alias ga='git add'
 alias gap='git add -p'
-alias gaa='git add -A'
 alias gc='git commit -v'
 alias gcm='git commit -v -m'
 alias gcam='git add -A && git commit -v -m'
@@ -47,6 +45,7 @@ alias go='git checkout'
 alias grb='git rebase'
 alias grbi='git rebase -i'
 alias gm='git merge'
+alias gcadd="git add \"$@\" && git commit --amend -C HEAD"
 
 # Bash Prompt Color / Layout
 export RUBYOPT=-Itest
@@ -65,7 +64,7 @@ WHITE="\[\033[1;37m\]"
 BLACK="\[\033[0;30m\]"
 OFF="\[\033[0m\]"
 source /usr/local/etc/bash_completion.d/git-completion.bash
-export PS1="$BLUE \W$YELLOW \$(__git_ps1 "%s")$PINK •\$(~/.rvm/bin/rvm-prompt v)\$(rvm_version) $GREEN\n § $OFF"
+export PS1="$BLUE\W$YELLOW \$(__git_ps1 "%s")$PINK •\$(~/.rvm/bin/rvm-prompt v)\$(rvm_version) $GREEN \n§ $OFF"
 
 # other aliases
 alias be='bundle exec'
