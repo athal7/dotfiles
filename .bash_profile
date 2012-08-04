@@ -6,6 +6,12 @@ export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 # rvm
 export CC=gcc-4.2
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
+PATH=$PATH:$HOME/.rvm/bin
+export RUBYOPT=-Itest
+function rvm_version {
+local gemset=$(echo $GEM_HOME | awk -F'@' '{print $2}')
+[ "$gemset" != "" ] && echo "@$gemset"
+}
 
 # jruby
 export JRUBY_OPTS=--1.9
@@ -47,11 +53,6 @@ export JRUBY_OPTS=--1.9
   alias gcadd="git add \"$@\" && git commit --amend -C HEAD"
 
 # bash prompt color / layout
-export RUBYOPT=-Itest
-function rvm_version {
-local gemset=$(echo $GEM_HOME | awk -F'@' '{print $2}')
-[ "$gemset" != "" ] && echo "@$gemset"
-}
 RED="\[\033[0;31m\]"
 YELLOW="\[\033[0;33m\]"
 GREEN="\[\033[0;32m\]"
