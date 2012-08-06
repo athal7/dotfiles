@@ -36,3 +36,5 @@
   whitespace = fix
 [push]
   default = tracking
+[pull]
+  default = tracking
