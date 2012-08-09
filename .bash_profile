@@ -1,17 +1,21 @@
 # get machine specific bashrc
 source ~/.bashrc
-export ARCHFLAGS='-arch x86_64' 
+
+# ?
+export ARCHFLAGS='-arch x86_64'
 export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 
 # rvm
 export CC=gcc-4.2
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
 PATH=$PATH:$HOME/.rvm/bin
-export RUBYOPT=-Itest
 function rvm_version {
 local gemset=$(echo $GEM_HOME | awk -F'@' '{print $2}')
 [ "$gemset" != "" ] && echo "@$gemset"
 }
+
+# test unit
+export RUBYOPT=-Itest
 
 # jruby
 export JRUBY_OPTS=--1.9
@@ -37,10 +41,8 @@ export JRUBY_OPTS=--1.9
   # adding/committing
   alias ga='git add'
   alias gap='git add -p'
-  alias gc='git commit -v'
   alias gcm='git commit -v -m'
   alias gcam='git add -A && git commit -v -m'
-  alias gac='git add -A && git commit -v'
   # branches
   alias gb='git branch'
   alias gbn='git checkout -b'
@@ -52,7 +54,7 @@ export JRUBY_OPTS=--1.9
   alias gm='git merge'
   alias gcadd="git add \"$@\" && git commit --amend -C HEAD"
 
-# bash prompt color / layout
+# bash prompt
 RED="\[\033[0;31m\]"
 YELLOW="\[\033[0;33m\]"
 GREEN="\[\033[0;32m\]"
@@ -73,8 +75,9 @@ alias bp='vi  ~/.bash_profile'
 # alias canes= 'cane --style-glob "app/**/*.rb" --abc-glob "app/**/*.rb" --no-doc'
 alias rspec='rspec --color -f d'
 alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
-alias reloadbash='source ~/.bash_profile'
 alias start="source ~/Scripts/start_app.sh"
+alias reload='source ~/.bash_profile'
+alias ring='ringleader ~/Documents/Projects/ringleader.yml'
 
 # hitch
 hitch() {
