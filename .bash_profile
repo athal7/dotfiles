@@ -77,7 +77,7 @@ alias rspec='rspec --color -f d'
 alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
 alias start="source ~/Scripts/start_app.sh"
 alias reload='source ~/.bash_profile'
-alias ring='ringleader ~/Documents/Projects/ringleader.yml'
+alias ring='rvm use 1.9.3 && ringleader ~/Documents/Projects/ringleader.yml'
 
 # hitch
 hitch() {
