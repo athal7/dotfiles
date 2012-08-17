@@ -37,7 +37,7 @@ export JRUBY_OPTS=--1.9
   alias gd='git diff'
   alias gs='git stash'
   alias gsa='git stash apply'
-  alias gh='git hist'
+  alias gh='git log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short'
   # adding/committing
   alias ga='git add'
   alias gap='git add -p'
