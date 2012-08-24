@@ -77,7 +77,7 @@ alias bp='vi  ~/.bash_profile'
 alias rspec='rspec --color -f d'
 alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
 alias start="source ~/Scripts/start_app.sh"
-alias reload='source ~/.bash_profile'
+alias reload='source ~/.bash_profile; cd ..; cd -'
 alias ring='rvm use 1.9.3 && ringleader ~/Documents/Projects/ringleader.yml'
 
 # hitch
@@ -94,4 +94,4 @@ alias unhitch='hitch -u'
 export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
 
 # open vpn from command line, written by webandy
-alias openvpn="/usr/local/bin/pgrep racoon | xargs sudo kill -9; osascript openvpn.applescript"
+alias openvpn="cd ~; /usr/local/bin/pgrep racoon | xargs sudo kill -9; osascript openvpn.applescript; cd -"
