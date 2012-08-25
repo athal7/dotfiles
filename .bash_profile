@@ -73,7 +73,7 @@ export TERM=xterm-color
 # other aliases
 alias be='bundle exec'
 alias bp='vi  ~/.bash_profile'
-# alias canes= 'cane --style-glob "app/**/*.rb" --abc-glob "app/**/*.rb" --no-doc'
+alias canes="cane --style-glob '**/*.rb' --style-measure 1"
 alias rspec='rspec --color -f d'
 alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
 alias start="source ~/Scripts/start_app.sh"
