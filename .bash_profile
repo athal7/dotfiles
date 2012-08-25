@@ -75,14 +75,20 @@ LSCOLORS=gxfxcxdxbxegedabagacad
 export TERM=xterm-color
 
 # other aliases
-alias be='bundle exec'
-alias bp='vi  ~/.bash_profile'
-alias canes="cane --style-glob '**/*.rb' --style-measure 1"
-alias rspec='rspec --color -f d'
-alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
-alias start="source ~/Scripts/start_app.sh"
-alias reload='source ~/.bash_profile; cd ..; cd -'
-alias ring='rvm use 1.9.3 && ringleader ~/Documents/Projects/ringleader.yml'
+  # ruby
+    alias canes="cane --style-glob '**/*.rb' --style-measure 1"
+    alias rspec='rspec --color -f d'
+  # rails
+    alias be='bundle exec'
+    alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
+    alias ring='rvm use 1.9.3 && ringleader ~/Documents/Projects/ringleader.yml'
+    alias ss='script/server'
+    alias sc='script/console'
+    alias rs='rails server'
+    alias rc='rails console'
+  # for dotfiles
+    alias bp='vi  ~/.bash_profile'
+    alias reload='source ~/.bash_profile; cd ..; cd -'
 
 # hitch
 hitch() {
