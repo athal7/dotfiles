@@ -55,6 +55,10 @@ export JRUBY_OPTS=--1.9
   alias gm='git merge'
   alias gcadd="git add \"$@\" && git commit --amend -C HEAD"
 
+# git completion
+source ~/git-completion.bash
+complete -o default -o nospace -F _git_checkout gco
+
 # bash prompt
 RED="\[\033[0;31m\]"
 YELLOW="\[\033[0;33m\]"
@@ -95,8 +99,3 @@ export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
 
 # open vpn from command line, written by webandy
 alias openvpn="cd ~; /usr/local/bin/pgrep racoon | xargs sudo kill -9; osascript openvpn.applescript; cd -"
-
-# for use with homebrew git-completion and git-completion.bash in /etc/
-if [ -f `brew --prefix`/etc/bash_completion ]; then
-      . `brew --prefix`/etc/bash_completion
-fi
