@@ -89,6 +89,8 @@ export TERM=xterm-color
   # for dotfiles
     alias bp='vi  ~/.bash_profile'
     alias reload='source ~/.bash_profile; cd ..; cd -'
+  # always use vim not vi
+    alias vi='vim'
 
 # hitch
 hitch() {
