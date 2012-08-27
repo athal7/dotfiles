@@ -41,6 +41,7 @@ export JRUBY_OPTS=--1.9
   alias gh="git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short"
   # adding/committing
   alias ga='git add'
+  alias gaa='git add -A'
   alias gap='git add -p'
   alias gcm='git commit -v -m'
   alias gcam='git add -A && git commit -v -m'
