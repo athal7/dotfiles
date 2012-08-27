@@ -82,7 +82,7 @@ export TERM=xterm-color
   # rails
     alias be='bundle exec'
     alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
-    alias ring='rvm use 1.9.3 && ringleader ~/Documents/Projects/ringleader.yml'
+    alias ring='cd ~; rvm use 1.9.3 && ringleader ~/Documents/Projects/ringleader.yml'
     alias ss='script/server'
     alias sc='script/console'
     alias rs='rails server'
