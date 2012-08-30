@@ -12,3 +12,9 @@ imap kk <Esc>
 " Highlight over 80 chars
 set colorcolumn=80
 highlight ColorColumn ctermbg=DarkGray guibg=DarkGray
+
+" Copy and paste with system clipboard
+nmap pp :set paste<CR>:r !pbpaste<CR>:set nopaste<CR>
+imap pp <Esc>:set paste<CR>:r !pbpaste<CR>:set nopaste<CR>
+nmap cc :.w !pbcopy<CR><CR>
+vmap cc :w !pbcopy<CR><CR>
