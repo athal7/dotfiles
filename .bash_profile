@@ -100,14 +100,15 @@ hitch() {
 }
 alias unhitch='hitch -u'
 
+
+# show directory in iterm header
+export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
+
 # autojump
 # if [ -f `brew --prefix`/etc/autojump ]; then
 . `brew --prefix`/etc/autojump
 # fi
 # [[ -f ~/.autojump/etc/profile.d/autojump.bash ]] && source ~/.autojump/etc/profile.d/autojump.bash
-
-# show directory in iterm header
-export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
 
 # open vpn from command line, written by webandy
 alias openvpn="cd ~; /usr/local/bin/pgrep racoon | xargs sudo kill -9; osascript openvpn.applescript; cd -"
