@@ -1,5 +1,5 @@
 require 'rubygems'
-require "awesome_print"
+require "wirble"
 
 unless IRB.version.include?('DietRB')
   IRB::Irb.class_eval do
