@@ -1,0 +1,12 @@
+CLICOLOR=1
+LSCOLORS=gxfxcxdxbxegedabagacad
+export TERM=xterm-color
+
+RED="\[\033[0;31m\]"
+YELLOW="\[\033[0;33m\]"
+GREEN="\[\033[0;32m\]"
+BLUE="\[\033[0;36m\]"
+PINK="\[\033[0;35m\]"
+WHITE="\[\033[1;37m\]"
+BLACK="\[\033[0;30m\]"
+OFF="\[\033[0m\]"
