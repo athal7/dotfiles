@@ -1,9 +1,0 @@
-export ARCHFLAGS='-arch x86_64'
-export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
-PATH=$PATH:$HOME/.rvm/bin
-
-export CC=gcc-4.2
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
-
-export RUBYOPT=-Itest
-export JRUBY_OPTS=--1.9
