@@ -15,5 +15,5 @@
 # always use vim not vi
   alias vi='vim'
 # applescripts
-  alias openvpn="cd ~/applescripts; osascript openvpn.applescript; cd -"
-  alias rearrange="cd ~/applescripts; osascript WindowArrangement.scpt; cd -"
+  alias openvpn="cd ~; osascript openvpn.applescript; cd -"
+  alias rearrange="cd ~; osascript WindowArrangement.scpt; cd -"
