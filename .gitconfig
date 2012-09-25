@@ -24,6 +24,13 @@
   added = yellow
   changed = green
   untracked = cyan
+[alias]
+  st = status
+  ci = commit
+  br = branch
+  co = checkout
+  df = diff
+  lg = log -p
 [apply]
   whitespace = fix
 [push]
