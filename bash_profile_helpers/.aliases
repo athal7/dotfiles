@@ -17,3 +17,6 @@
 # applescripts
   alias openvpn="cd ~; osascript applescripts/openvpn.applescript; cd -"
   alias rearrange="cd ~; osascript applescripts/WindowArrangement.scpt; cd -"
+#tmux
+  alias tmux="tmux -2"
+  alias ta="tmux attach"
