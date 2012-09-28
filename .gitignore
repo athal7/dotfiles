@@ -64,7 +64,6 @@ Sites
 .showoffrc
 .sqlite_history
 .subversion/
-.tmuxinator/
 .vagrant.d/
 .vimfuzzyfinder
 .zshrc
