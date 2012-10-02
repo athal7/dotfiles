@@ -70,3 +70,20 @@
 " insert the path of currently edited file into a command
 " Command mode: Ctrl-P
   cmap <C-S-P> <C-R>=expand("%:p:h") . "/" <cr>
+
+" allow use of keypad
+:inoremap <Esc>Oq 1
+:inoremap <Esc>Or 2
+:inoremap <Esc>Os 3
+:inoremap <Esc>Ot 4
+:inoremap <Esc>Ou 5
+:inoremap <Esc>Ov 6
+:inoremap <Esc>Ow 7
+:inoremap <Esc>Ox 8
+:inoremap <Esc>Oy 9
+:inoremap <Esc>Op 0
+:inoremap <Esc>On .
+:inoremap <Esc>OQ /
+:inoremap <Esc>OR *
+:inoremap <Esc>Ol +
+:inoremap <Esc>OS -
