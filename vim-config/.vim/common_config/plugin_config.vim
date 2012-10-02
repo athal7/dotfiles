@@ -41,15 +41,11 @@
 " Mustache
   Bundle "git://github.com/juvenn/mustache.vim.git"
     " Copied from the plugin; not sure why it isn't working normally
-    au BufNewFile,BufRead *.mustache,*.handlebars,*.hbs set filetype=mustache
+    au BufNewFile,BufRead *.mustache,*.handlebars set filetype=mustache
 
 " Slim
   Bundle "git://github.com/bbommarito/vim-slim.git"
     au BufNewFile,BufRead *.slim set filetype=slim
-
-" Less
-  Bundle "git://github.com/groenewege/vim-less.git"
-    au BufNewFile,BufRead *.less set filetype=less
 
 " Handlebars
   Bundle "git://github.com/nono/vim-handlebars.git"
