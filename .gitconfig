@@ -30,6 +30,8 @@
   br = branch
   co = checkout
   df = diff
+  p  = push
+  l  = pull
   lg = log -p
 [apply]
   whitespace = fix
