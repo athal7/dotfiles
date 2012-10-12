@@ -79,3 +79,4 @@ sample_db
 /.config
 QtSDK
 _livingsocial.yml
+.cache
