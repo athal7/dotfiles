@@ -24,3 +24,10 @@ set foldmethod=indent   "fold based on indent
 set foldnestmax=10      "deepest fold is 10 levels
 set nofoldenable        "dont fold by default
 set foldlevel=2         "this is just what i use
+
+" set custom cursor -- vertical bar in insert mode (iTerm2)
+" from http://www.iterm2.com/#/section/documentation/escape_codes
+if !has("gui_running")
+  let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+  let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+endif
