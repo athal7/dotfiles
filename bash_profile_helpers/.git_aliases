@@ -36,7 +36,7 @@ alias go='git checkout'
 alias grb='git rebase'
 alias grbi='git rebase -i'
 alias gm='git merge'
-alias gcadd="git add \"$@\" && git commit --amend -C HEAD"
+alias gcadd="git add -A && git commit --amend -C HEAD"
 
 # pull requests
 alias lspr="open http://code.livingsocial.net/athal/\$(application)/pull/new/\$(git_branch)"
