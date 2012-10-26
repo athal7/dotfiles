@@ -1,6 +1,7 @@
 # ruby
   alias canes="cane --style-glob '**/*.rb' --style-measure 1"
   alias rspec='rspec --color -f d'
+  alias rego='rego {test,spec} -- ruby @'
 # rails
   alias be='bundle exec'
   alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
