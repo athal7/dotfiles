@@ -51,6 +51,7 @@
   re  = reset
   rr  = remote rm
   rs  = remote -v show
+  rv  = revert
   sa  = stash apply
   sh  = show
   sq  = commit -a --amend -C HEAD
