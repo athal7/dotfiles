@@ -87,7 +87,7 @@
   set backspace=indent,eol,start
 
 " highlight trailing whitespace
-  set listchars=tab:>\ ,trail:-,extends:>,precedes:<,nbsp:+
+  set listchars=tab:>\ ,trail:·,extends:>,precedes:<,nbsp:+
   set list
 
 " have the mouse enabled all the time
