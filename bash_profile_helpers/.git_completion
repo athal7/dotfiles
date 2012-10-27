@@ -1,3 +1,2 @@
 source ~/git-completion.bash
-complete -o default -o nospace -F _git_checkout gco
 source /usr/local/etc/bash_completion.d/git-completion.bash

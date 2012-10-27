@@ -25,14 +25,36 @@
   changed = green
   untracked = cyan
 [alias]
-  st = status
-  ci = commit
-  br = branch
-  co = checkout
-  df = diff
-  p  = push
-  l  = pull
-  lg = log -p
+  a   = add
+  aa  = add -A
+  ap  = add -p
+  b   = branch
+  bd  = branch -D
+  bn  = checkout -b
+  c   = commit
+  cam = commit -am
+  cl  = clone
+  cm  = commit -v -m
+  d   = diff
+  f   = fetch
+  h   = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+  l   = pull
+  lom = pull origin master
+  o   = checkout
+  m   = merge
+  p   = push
+  pom = push origin master
+  s   = stash
+  ra  = remote add
+  rb  = rebase
+  rbi = rebase -i
+  re  = reset
+  rr  = remote rm
+  rs  = remote -v show
+  sa  = stash apply
+  sh  = show
+  sq  = commit -a --amend -C HEAD
+  st  = status
 [apply]
   whitespace = fix
 [push]
