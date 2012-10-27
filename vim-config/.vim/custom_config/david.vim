@@ -25,13 +25,6 @@ nnoremap <silent> ,gf :vertical botright wincmd f<CR>
 " get the last pasted text (via evilchelu)
 nnoremap gb '[V']
 
-if !has("gui_running")
-  " set custom cursor -- vertical bar in insert mode (iTerm2)
-  " from http://www.iterm2.com/#/section/documentation/escape_codes
-  let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-  let &t_EI = "\<Esc>]50;CursorShape=0\x7"
-endif
-
 " strip leading tabs and trailing whitespace
 command Tr %s/\s\+$//ge | %s/\t/  /ge | nohlsearch
 
