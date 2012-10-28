@@ -172,8 +172,8 @@ if has("gui_running")
   " but: open the nerd tree window first, in CWD, so the find doesn't change
   " the tree root.
   nnoremap <D-R> :NERDTree<CR><C-w>p:NERDTreeFind<CR>
-else
-  map <leader>w :NERDTreeToggle<CR><space>
+" else
+  " map <leader>w :NERDTreeToggle<CR><space>
 endif
 
 
