@@ -1,3 +1,7 @@
+" Set leader
+  let mapleader=","
+  let maplocalleader=","
+
 " get out of insert mode with cmd-i
   imap <D-i> <Esc>
 

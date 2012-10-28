@@ -1,16 +1,3 @@
-" basic editing
-let mapleader = ','
-let maplocalleader = ','
-
-" enable plugin filetypes and indentation
-filetype plugin indent on
-
-" move quickly between splits
-map <C-j> <C-w>j
-map <C-k> <C-w>k
-map <C-h> <C-w>h
-map <C-l> <C-w>l
-
 map :vs :vsplit<cr><c-w>l
 
 " fast zoom for a split
@@ -48,11 +35,6 @@ map <leader>tn :tabnew<CR>
 
 " hide quickfix window
 nnoremap q :ccl<CR>
-
-" easy escape
-imap jj <Esc>
-imap jk <Esc>
-imap kk <Esc>
 
 " easy close
 map <leader>x :x<CR>
@@ -254,7 +236,7 @@ imap <buffer> <silent> <C-.> <Plug>ClojureReplDownHistory
 
 """ tagbar
 map <silent> <Leader>tb :TagbarOpen<CR>
-map <Leader>t :TagbarToggle<CR>
+" map <Leader>t :TagbarToggle<CR>
 if has("gui_running")
   map <D-e> :TagbarToggle<CR><C-w>l
 endif
