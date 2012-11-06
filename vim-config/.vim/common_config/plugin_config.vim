@@ -204,7 +204,11 @@
     map <Leader>oh :Rhelper<Space>
     map <Leader>oj :Rjavascript<Space>
     map <Leader>os :Rstylesheet<Space>
-    map <Leader>oi :Rintegration<Space>
+    map <Leader>oi :Rintegrationtest<Space>
+    map <Leader>ou :Runittest<Space>
+    map <Leader>of :Rfunctionaltest<Space>
+    map <Leader>osp :Rspec<Space>
+    map <Leader>oin :Rinitializer<Space>
 
 
 " surround for adding surround 'physics'
