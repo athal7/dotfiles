@@ -12,12 +12,6 @@ imap kk <Esc>
 set colorcolumn=80
 highlight ColorColumn ctermbg=DarkBlue guibg=DarkBlue
 
-" Copy and paste with system clipboard
-nmap pp :set paste<CR>:r !pbpaste<CR>:set nopaste<CR>
-imap <F1> <Esc>:set paste<CR>:r !pbpaste<CR>:set nopaste<CR>
-nmap cc :.w !pbcopy<CR><CR>
-vmap cc :w !pbcopy<CR><CR>
-
 "folding settings
 set foldmethod=indent   "fold based on indent
 set foldnestmax=10      "deepest fold is 10 levels
