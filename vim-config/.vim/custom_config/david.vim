@@ -190,38 +190,6 @@ else
   map <C-_> <Esc><leader>c<space>
 endif
 
-
-""" unimpaired
-" bubble lines:
-nmap <C-Up> [e
-nmap <C-Down> ]e
-vmap <C-Up> [egv
-vmap <C-Down> ]egv
-
-
-""" Ack
-vnoremap <C-a> "hy:Ack "<C-r>=escape(@h,'./"*()[]?')<CR>"<CR>
-map <leader>a :Ack<space>
-vmap <leader>a "hy:Ack "<C-r>=escape(@h,'./"*()[]?')<CR>"<CR>
-map <leader>ta :tabnew<CR>:Ack<space>
-vmap <leader>ta "hy:tabnew<CR>:Ack "<C-r>=escape(@h,'./"*()[]?')<CR>"<CR>
-map <leader>va :vnew<CR>:Ack<space>
-vmap <leader>va "hy:vnew<CR>:Ack "<C-r>=escape(@h,'./"*()[]?')<CR>"<CR>
-
-
-""" surround
-" Use v or # to get a variable interpolation (inside of a string)}
-" ysiw#   Wrap the token under the cursor in #{}
-" v...s#  Wrap the selection in #{}
-let g:surround_113 = "#{\r}" " v
-let g:surround_35  = "#{\r}" " #
-
-" Select text in an ERb file with visual mode and then press s- or s=
-" Or yss- to do entire line.
-let g:surround_45 = "<% \r %>"  " -
-let g:surround_61 = "<%= \r %>" " =
-
-
 """ vimclojure
 let vimclojure#HighlightBuiltins=1
 let vimclojure#ParenRainbow=1

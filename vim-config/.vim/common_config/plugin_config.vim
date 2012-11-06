@@ -214,11 +214,13 @@
 " surround for adding surround 'physics'
   Bundle "git://github.com/tpope/vim-surround.git"
     " # to surround with ruby string interpolation
-    let g:surround_35 = "#{\r}"
+    let g:surround_35 = "#{\r}" " #
     " - to surround with no-output erb tag
-    let g:surround_45 = "<% \r %>"
+    let g:surround_45 = "<% \r %>" " -
     " = to surround with output erb tag
-    let g:surround_61 = "<%= \r %>"
+    let g:surround_61 = "<%= \r %>" " =
+    " v...s#  Wrap the selection in #{}
+    let g:surround_113 = "#{\r}" " v
 
 " Clojure Highlighting"
   Bundle "https://github.com/vim-scripts/VimClojure.git"
