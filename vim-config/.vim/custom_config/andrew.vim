@@ -28,3 +28,6 @@ if !has("gui_running")
     let &t_EI = "\<Esc>]50;CursorShape=0\x7"
   endif
 endif
+
+" Use system clipboard, requires +clipboard when you type vim --version
+set clipboard=unnamed
