@@ -80,3 +80,4 @@ sample_db
 QtSDK
 _livingsocial.yml
 .cache
+.pry_history
