@@ -36,5 +36,5 @@ if !has("gui_running")
   endif
 endif
 
-" Use system clipboard, requires +clipboard when you type vim --version
+" Use system clipboard, requires +clipboard or fakeclip
 set clipboard=unnamed
