@@ -1,7 +1,14 @@
 " Color scheme
-set background=dark
 set t_Co=256
-colorscheme jellybeans
+set background=dark
+if has("gui")
+  colorscheme Tomorrow-Night
+" colorscheme jellybeans
+else
+  colorscheme Tomorrow-Night
+" colorscheme jellybeans
+endif
+set cursorline
 
 " Remap keys
 imap jj <Esc>
@@ -10,7 +17,7 @@ imap kk <Esc>
 
 " Highlight over 80 chars
 set colorcolumn=80
-highlight ColorColumn ctermbg=DarkBlue guibg=DarkBlue
+highlight ColorColumn ctermbg=darkblue guibg=darkblue
 
 "folding settings
 set foldmethod=indent   "fold based on indent
