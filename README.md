@@ -6,6 +6,7 @@
   - Tmux configs adapted from [tmux: Productive Mouse-Free Development](http://pragprog.com/book/bhtmux/tmux)
   - Custom git aliases
   - [Git completion](https://github.com/git/git/blob/master/contrib/completion/git-completion.bash)
+  - [fakeclip](http://www.vim.org/scripts/script.php?script_id=2098) for copying and pasting to/from OSX clipboard in terminal vim
   - Custom bash prompt
   - [autojump](https://github.com/joelthelion/autojump/wiki)
   - Sourcing of machine-specific .bashrc
