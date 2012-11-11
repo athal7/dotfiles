@@ -5,8 +5,20 @@
   syntax on
 
 " default color scheme
+  set t_Co=256
   set background=dark
-  color twilight2
+  if has("gui")
+    colorscheme Tomorrow-Night
+  else
+    colorscheme Tomorrow-Night
+  endif
+
+" Highlight current line
+  set cursorline
+
+" Highlight 80 character line
+  set colorcolumn=80
+  highlight ColorColumn ctermbg=darkblue guibg=darkblue
 
 " don't wrap long lines
   set nowrap
@@ -110,3 +122,24 @@
 
 " different color for each paren pairs
 let vimclojure#ParenRainbow  = 1
+
+" code folding settings
+  set foldmethod=indent   "fold based on indent
+  set foldnestmax=10      "deepest fold is 10 levels
+  set nofoldenable        "dont fold by default
+  set foldlevel=4         "this is just what i use
+
+" set custom cursor
+  if !has("gui_running")
+    if exists('$TMUX')
+      let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
+      let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
+    else
+      let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+      let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+    endif
+  endif
+
+" Use system clipboard
+  set clipboard=unnamed
+

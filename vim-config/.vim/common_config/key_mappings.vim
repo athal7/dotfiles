@@ -2,8 +2,11 @@
   let mapleader=","
   let maplocalleader=","
 
-" get out of insert mode with cmd-i
+" get out of insert mode easier
   imap <D-i> <Esc>
+  imap jj <Esc>
+  imap jk <Esc>
+  imap kk <Esc>
 
 " easy wrap toggling
   nmap <Leader>w :set wrap!<cr>
