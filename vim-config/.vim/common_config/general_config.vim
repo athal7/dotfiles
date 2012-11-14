@@ -8,9 +8,9 @@
   set t_Co=256
   set background=dark
   if has("gui")
-    colorscheme Tomorrow-Night
+    colorscheme hybrid
   else
-    colorscheme Tomorrow-Night
+    colorscheme hybrid
   endif
 
 " Highlight current line
