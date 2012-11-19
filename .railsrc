@@ -11,3 +11,11 @@ end
 def hide_log
   change_log(nil)
 end
+
+def me
+  Person.find_by_email 'andrew.thal@livingsocial.com'
+end
+
+def update_to_paid
+  Purchase.last.update_attribute(:aasm_state, "paid")
+end
