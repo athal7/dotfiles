@@ -2,7 +2,7 @@
 	name = Andrew Thal
 	email = andrew.thal@livingsocial.com
 [github]
-	user = athal7
+	user = athal
 [core]
 	excludesfile = /Users/andrewthal/.gitignore_global
 	editor = vim
