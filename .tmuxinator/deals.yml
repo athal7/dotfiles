@@ -1,0 +1,19 @@
+# ~/.tmuxinator/deals.yml
+# you can make as many tabs as you wish...
+
+project_name: deals
+project_root: ~/Documents/Projects/deals
+tabs:
+  - editor:
+      layout: main-vertical
+      panes:
+        - #empty, will just run plain bash
+        - vi .
+  - server/console:
+      layout: even-vertical
+      panes:
+        - ring
+        - script/console
+  - bash: # empty
+  - pipeline: cd ../pipeline
+  - home: cd ~
