@@ -97,3 +97,6 @@
 
 " for pasting large amounts of information
 set pastetoggle=<F2>
+
+" allow semicolon for colon
+nmap ; :
