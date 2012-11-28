@@ -94,3 +94,6 @@
 :inoremap <Esc>OR *
 :inoremap <Esc>Ol +
 :inoremap <Esc>OS -
+
+" for pasting large amounts of information
+set pastetoggle=<F2>
