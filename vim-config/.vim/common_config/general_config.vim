@@ -141,5 +141,4 @@ let vimclojure#ParenRainbow  = 1
   endif
 
 " Use system clipboard
-  " set clipboard=unnamed
-
+  set clipboard=unnamed
