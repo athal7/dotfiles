@@ -16,8 +16,9 @@
   alias bp='vi  ~/.bash_profile'
   alias reload='source ~/.bash_profile; cd ..; cd -'
 
-# always use vim not vi
-  alias vi='vim'
+# always use macvim in the terminal when trying to use terminal vim
+  alias vi='mvim -v'
+  alias vim='mvim -v'
 
 # applescripts
   alias vpn="cd ~; osascript applescripts/openvpn.applescript; cd -"
