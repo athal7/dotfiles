@@ -19,3 +19,7 @@ end
 def update_to_paid
   Purchase.last.update_attribute(:aasm_state, "paid")
 end
+
+def give_me_roles
+  me.roles << (Person.find_by_email('doug@livingsocial.com').roles - me.roles)
+end
