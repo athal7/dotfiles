@@ -15,5 +15,9 @@ tabs:
         - ring
         - script/console
   - bash: # empty
-  - pipeline: cd ../pipeline
+  - pipeline:
+      layout: main-vertical
+      panes:
+        - cd ../pipeline
+        - cd ../pipeline; vi .
   - home: cd ~
