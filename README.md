@@ -6,7 +6,7 @@
   - Tmux configs adapted from [tmux: Productive Mouse-Free Development](http://pragprog.com/book/bhtmux/tmux)
   - Custom git aliases
   - [Git completion](https://github.com/git/git/blob/master/contrib/completion/git-completion.bash)
-  - copy and paste to/from OSX clipboard in terminal vim
+  - copy and paste to/from OSX clipboard in terminal vim (requires mvim as default terminal editor and `reattach-to-user-namespace` homebrew formula if using tmux)
   - Custom bash prompt
   - [autojump](https://github.com/joelthelion/autojump/wiki)
   - Sourcing of machine-specific .bashrc
