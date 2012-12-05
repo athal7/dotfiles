@@ -67,6 +67,7 @@ Sites
 .vagrant.d/
 .vimfuzzyfinder
 .zshrc
+.swfinfo
 Marketing alias
 Projects/
 README
