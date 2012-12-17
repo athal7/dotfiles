@@ -54,7 +54,6 @@
   rv  = revert
   sa  = stash apply
   sh  = show
-  sq  = commit -a --amend -C HEAD
   st  = status
 [apply]
   whitespace = fix
