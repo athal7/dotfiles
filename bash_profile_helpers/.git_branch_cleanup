@@ -1,35 +1,55 @@
-function remote_branches { # requires argument of remote name
+function set_remote_branches { # requires argument of remote name
   echo -n "$(git branch -r | sed -n "/"$1"/ p" | sed "s/"$1"\///" > ~/remote-branch-list)"
-  echo "$(cat ~/remote-branch-list)"
 }
 
-function local_branches {
+function set_local_branches {
   echo -n "$(git branch | sed "s/*/ /g" > ~/local-branch-list)"
+}
+
+function list_remote_branches { # requires argument of remote name
+  echo -n "$(remote_branches $1)" > /dev/null
+  echo "$(cat ~/remote-branch-list)"
+  echo "$(rm ~/remote-branch-list)"
+}
+
+function list_local_branches {
+  echo -n "$(local_branches)" > /dev/null
   echo "$(cat ~/local-branch-list)"
+  echo "$(rm ~/local-branch-list)"
 }
 
-function orphaned_remote_branches { # requires argument of remote name
-  echo -n "$(remote_branches $1)" > /dev/null
-  echo -n "$(local_branches)" > /dev/null
+function set_orphaned_remote_branches { # requires argument of remote name
+  echo -n "$(set_remote_branches $1)" > /dev/null
+  echo -n "$(set_local_branches)" > /dev/null
   echo -n "$(diff -u -b ~/remote-branch-list ~/local-branch-list | grep '^-' | sed 's|^-||' | grep -v '^trunk$' | grep -v '^--' > ~/orphaned-remote-branch-list)"
-  echo "$(cat ~/orphaned-remote-branch-list)"
 }
 
-function orphaned_local_branches { # requires argument of remote name
-  echo -n "$(remote_branches $1)" > /dev/null
-  echo -n "$(local_branches)" > /dev/null
+function set_orphaned_local_branches { # requires argument of remote name
+  echo -n "$(set_remote_branches $1)" > /dev/null
+  echo -n "$(set_local_branches)" > /dev/null
   echo -n "$(diff -u -b ~/local-branch-list ~/remote-branch-list | grep '^-' | sed 's|^-||' | grep -v '^trunk$' | grep -v '^--' > ~/orphaned-local-branch-list)"
+}
+
+function list_orphaned_remote_branches { # requires argument of remote name
+  echo -n "$(set_orphaned_remote_branches $1)" > /dev/null
+  echo "$(cat ~/orphaned-remote-branch-list)"
+  echo "$(rm ~/orphaned-remote-branch-list ~/local-branch-list ~/remote-branch-list)"
+}
+
+function list_orphaned_local_branches { # requires argument of remote name
+  echo -n "$(set_orphaned_local_branches $1)" > /dev/null
   echo "$(cat ~/orphaned-local-branch-list)"
+  echo "$(rm ~/orphaned-local-branch-list ~/local-branch-list ~/remote-branch-list)"
 }
 
 function delete_orphaned_remote_branches { # requires argument of remote name
-  echo -n "$(orphaned_remote_branches $1)" > /dev/null
+  echo -n "$(set_orphaned_remote_branches $1)" > /dev/null
   echo "$(for i in `cat ~/orphaned-remote-branch-list`; do git push $1 ":$i"; done)"
   echo -n "$(rm ~/local-branch-list ~/remote-branch-list ~/orphaned-remote-branch-list)"
 }
 
 function delete_orphaned_local_branches { # requires argument of remote name
-  echo -n "$(orphaned_local_branches $1)" > /dev/null
+  echo -n "$(set_orphaned_local_branches $1)" > /dev/null
   echo "$(for i in `cat ~/orphaned-local-branch-list`; do git branch -d $i; done)"
   echo -n "$(rm ~/local-branch-list ~/remote-branch-list ~/orphaned-local-branch-list)"
 }
