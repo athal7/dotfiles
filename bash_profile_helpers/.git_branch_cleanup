@@ -1,5 +1,5 @@
 function set_remote_branches { # requires argument of remote name
-  echo -n "$(git branch -r | sed -n "/"$1"/ p" | sed "s/"$1"\///" > ~/remote-branch-list)"
+  echo -n "$(git branch -r | sed -n "/"$1"\// p" | sed "s/"$1"\///" > ~/remote-branch-list)"
 }
 
 function set_local_branches {
