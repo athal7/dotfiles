@@ -35,7 +35,6 @@
   cam = commit -am
   cl  = clone
   co  = checkout
-  cm  = commit -v -m
   d   = diff
   f   = fetch
   h   = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
