@@ -23,3 +23,7 @@ end
 def give_me_roles
   me.roles << (Person.find_by_email('doug@livingsocial.com').roles - me.roles)
 end
+
+def remove_my_roles
+  me.roles.destroy_all
+end
