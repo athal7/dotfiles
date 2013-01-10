@@ -5,7 +5,7 @@ project_name: deals
 project_root: ~/Documents/Projects/deals
 tabs:
   - editor:
-      layout: main-vertical
+      layout: main-horizonal
       panes:
         - #empty, will just run plain bash
         - vi .
@@ -16,7 +16,7 @@ tabs:
         - script/console
   - bash: # empty
   - pipeline:
-      layout: main-vertical
+      layout: main-horizontal
       panes:
         - cd ../pipeline
         - cd ../pipeline; vi .
