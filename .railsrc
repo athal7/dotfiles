@@ -21,7 +21,7 @@ def update_to_paid
 end
 
 def give_me_roles
-  me.roles << (Person.find_by_email('doug@livingsocial.com').roles - me.roles)
+  me.roles << Role.all.reject{|r| ["limited_purchase_access", "csr_refund_matrix_user", "csr_refund_matrix_super_user"].include?(r.title) } - me.roles
 end
 
 def remove_my_roles
