@@ -25,5 +25,5 @@ def give_me_roles
 end
 
 def remove_my_roles
-  me.roles.destroy_all
+  me.people_roles.destroy_all
 end
