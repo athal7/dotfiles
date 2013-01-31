@@ -55,6 +55,7 @@
   sa  = stash apply
   sh  = show
   st  = status
+  tr  = branch -t
 [apply]
   whitespace = fix
 [push]
