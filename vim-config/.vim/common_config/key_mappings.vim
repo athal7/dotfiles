@@ -66,10 +66,10 @@
   vnoremap <tab> %
 
 " buffer resizing mappings (shift + arrow key)
-  nnoremap <S-Up> <c-w>+
-  nnoremap <S-Down> <c-w>-
-  nnoremap <S-Left> <c-w><
-  nnoremap <S-Right> <c-w>>
+  nnoremap <S-J> <c-w>+
+  nnoremap <S-K> <c-w>-
+  nnoremap <S-H> <c-w><
+  nnoremap <S-L> <c-w>>
 
 " reindent the entire file
   map <Leader>I gg=G``<cr>
