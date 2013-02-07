@@ -83,3 +83,5 @@ _livingsocial.yml
 .cache
 .pry_history
 Box Documents
+.ivy2
+.sbt

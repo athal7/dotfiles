@@ -39,6 +39,7 @@
   f   = fetch
   h   = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
   l   = pull
+  lb  = checkout -
   lom = pull origin master
   o   = checkout
   m   = merge
