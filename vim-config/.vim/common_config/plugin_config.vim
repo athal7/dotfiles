@@ -26,6 +26,7 @@
   Bundle "git://github.com/wgibbs/vim-irblack.git"
   Bundle "git://github.com/wavded/vim-stylus.git"
   Bundle "git://github.com/kien/ctrlp.vim.git"
+  Bundle "git://github.com/Lokaltog/vim-powerline.git"
 
   Bundle "git://github.com/smerrill/vim-arduino.git"
     au BufNewFile,BufRead *.pde set filetype=arduino
