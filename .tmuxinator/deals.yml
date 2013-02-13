@@ -7,7 +7,7 @@ socket_path: /tmp/wemux-wemux
 tabs:
   - editor:
   - editor:
-      layout: main-horizonal
+      layout: main-horizontal
       panes:
         - #empty, will just run plain bash
         - vi .
