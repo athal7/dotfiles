@@ -1,5 +1,5 @@
 # ruby
-  alias canes="cane --style-glob '**/*.rb' --style-measure 1"
+  alias canes="cane --style-glob 'app/*.rb' --style-measure 80 --no-doc"
   alias rspec='rspec --color -f d'
   alias rego='rego {test,spec,app} -- ruby @'
 
