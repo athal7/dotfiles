@@ -39,3 +39,6 @@
     echo "$(pwd | awk -F/ '{print$NF}')"
   }
 
+# clean up scripts
+  alias check_last_cleanup_run="ls -la /var/log/*.out"
+  alias run_cleanup_scripts="sudo periodic daily weekly monthly"
