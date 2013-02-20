@@ -18,6 +18,7 @@ end
 
 def update_to_paid
   Purchase.last.update_attribute(:aasm_state, "paid")
+  Purchase.last.coupons.each(&:activate!)
 end
 
 def give_me_roles
