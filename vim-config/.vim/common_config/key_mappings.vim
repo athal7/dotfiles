@@ -65,9 +65,10 @@
   nnoremap <tab> %
   vnoremap <tab> %
 
-" buffer resizing mappings (shift + arrow key)
-  nnoremap <S-K> :res +10<cr>
-  nnoremap <S-J> :res -10<cr>
+" buffer resizing mappings
+  nnoremap + :res +10<cr>
+  nnoremap - :res -10<cr>
+  nnoremap _ :res -10<cr>
   nnoremap <S-H> :vertical resize -10<cr>
   nnoremap <S-L> :vertical resize +10<cr>
 
