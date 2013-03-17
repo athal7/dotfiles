@@ -85,3 +85,4 @@ _livingsocial.yml
 Box Documents
 .ivy2
 .sbt
+.guard_history
