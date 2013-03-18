@@ -11,6 +11,7 @@
   alias sc='script/console'
   alias rs='rails server'
   alias rc='rails console'
+  alias kill_rogue_servers="kill -9 $(ps aux | grep 'ruby\|poller\|ror\:server' | awk '{print $2}')"
 
 # for dotfiles
   alias bp='vi  ~/.bash_profile'
