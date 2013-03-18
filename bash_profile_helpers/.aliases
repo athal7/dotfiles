@@ -11,7 +11,7 @@
   alias sc='script/console'
   alias rs='rails server'
   alias rc='rails console'
-  alias kill_rogue_servers="kill -9 $(ps aux | grep 'ruby\|poller\|ror\:server' | awk '{print $2}')"
+  alias kill_rogue_servers="kill -9 \$(rogue_servers)"
 
 # for dotfiles
   alias bp='vi  ~/.bash_profile'
@@ -38,6 +38,10 @@
 
   function application {
     echo "$(pwd | awk -F/ '{print$NF}')"
+  }
+
+  function rogue_servers {
+    echo "$(ps aux | grep -v 'grep' | grep 'ruby\|poller\|ror\:server' | awk '{print $2}')"
   }
 
 # clean up scripts
