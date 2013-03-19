@@ -86,3 +86,4 @@ Box Documents
 .ivy2
 .sbt
 .guard_history
+.hgignore_global

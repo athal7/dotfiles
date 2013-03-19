@@ -11,6 +11,7 @@
   alias sc='script/console'
   alias rs='rails server'
   alias rc='rails console'
+  alias show_rogue_servers="echo \$(rogue_servers)"
   alias kill_rogue_servers="kill -9 \$(rogue_servers)"
 
 # for dotfiles
