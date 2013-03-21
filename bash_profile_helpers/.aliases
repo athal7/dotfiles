@@ -42,7 +42,7 @@
   }
 
   function rogue_servers {
-    echo "$(ps aux | grep -v 'grep' | grep 'ruby\|poller\|ror\:server' | awk '{print $2}')"
+    echo "$(ps aux | grep -v 'grep' | grep -v 'guard' | grep 'ruby\|poller\|ror\:server' | awk '{print $2}')"
   }
 
 # clean up scripts
