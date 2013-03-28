@@ -50,7 +50,7 @@
   alias run_cleanup_scripts="sudo periodic daily weekly monthly"
 
 # memcached
-  alias flush_memcached='echo "flush_all" | nc 127.0.0.1 11211'
+  alias flush_memcached="\$(stop_memcached) && \$(start_memcached)"
   alias stop_memcached='launchctl unload ~/Library/LaunchAgents/com.danga.memcached.plist'
   alias start_memcached='launchctl load ~/Library/LaunchAgents/com.danga.memcached.plist'
 
