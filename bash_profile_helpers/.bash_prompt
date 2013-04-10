@@ -1,8 +1,7 @@
 export PS1="$BLUE\W$YELLOW \$(git_branch)$PINK \$(rvm_version)\n$GREEN$ $OFF"
 
 function rvm_version {
-  local gemset=$(echo $GEM_HOME | awk -F'@' '{print $2}')
-  echo "•$(~/.rvm/bin/rvm-prompt v g)"
+  echo "•"
 }
 
 function git_branch {
