@@ -6,7 +6,7 @@
 # rails
   alias be='bundle exec'
   alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
-  alias ring='cd ~; rbenv shell 1.9.3-p392 && ringleader ~/Documents/Projects/deals/config/nginx/ringleader.yml'
+  alias ring='cd ~; rbenv local 1.9.3-p392 && ringleader ~/Documents/Projects/deals/config/nginx/ringleader.yml'
   alias ss='script/server'
   alias sc='script/console'
   alias rs='rails server'
