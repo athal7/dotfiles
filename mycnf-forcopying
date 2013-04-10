@@ -1,0 +1,26 @@
+# For advice on how to change settings please see
+# http://dev.mysql.com/doc/refman/5.6/en/server-configuration-defaults.html
+
+[mysqld]
+max_allowed_packet = 16M
+skip-external-locking
+key_buffer_size = 256M
+table_open_cache = 256
+sort_buffer_size = 32M
+join_buffer_size = 32M
+read_buffer_size = 32M
+read_rnd_buffer_size = 32M
+thread_cache_size = 8
+thread_concurrency = 8
+query_cache_size = 64M
+query_cache_limit = 2M
+net_buffer_length = 2K
+thread_stack = 128K
+tmp_table_size = 64M
+delay_key_write = ON
+
+max_heap_table_size = 64M
+innodb_buffer_pool_size = 512MB
+innodb_file_per_table = truemax_allowed_packet = 16M
+sql_mode=NO_ENGINE_SUBSTITUTION
+
