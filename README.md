@@ -16,3 +16,10 @@
 
 Feel free to use these dotfiles as you wish, and also feel free to submit pull requests for anything you'd like to improve.
 Keep in mind these configs update frequently.
+
+### To install
+* clone the repo
+* copy the files to your home directory
+* `source ~/.bash_profile`
+* `brew install autojump macvim git bash-completion reattach-to-user-namespace tmux`
+* `gem install tmuxinator`
