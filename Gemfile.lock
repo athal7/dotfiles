@@ -1,0 +1,10 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    tmuxinator (0.5.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  tmuxinator
