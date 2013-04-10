@@ -88,3 +88,4 @@ Box Documents
 .guard_history
 .hgignore_global
 .ls_ops_api_token
+.zprofile
