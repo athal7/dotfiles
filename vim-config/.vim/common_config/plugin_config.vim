@@ -45,10 +45,6 @@
     " Copied from the plugin; not sure why it isn't working normally
     au BufNewFile,BufRead *.mustache,*.handlebars,*.hbs set filetype=mustache
 
-" Slim
-  Bundle "git://github.com/bbommarito/vim-slim.git"
-    au BufNewFile,BufRead *.slim set filetype=slim
-
 " Less
   Bundle "git://github.com/groenewege/vim-less.git"
     au BufNewFile,BufRead *.less set filetype=less

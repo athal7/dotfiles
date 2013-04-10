@@ -23,3 +23,5 @@ Keep in mind these configs update frequently.
 * `source ~/.bash_profile`
 * `brew install autojump macvim git bash-completion reattach-to-user-namespace tmux`
 * `gem install tmuxinator`
+* `cd vim-config && rake`
+* `vi .` then `:BundleInstall`, then `:q` to exit
