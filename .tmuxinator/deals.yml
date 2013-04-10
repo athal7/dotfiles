@@ -5,7 +5,6 @@ project_name: wemux
 project_root: ~/Documents/Projects/deals
 socket_path: /tmp/wemux-wemux
 tabs:
-  - server:
   - server: ring
   - consoles:
       panes:
