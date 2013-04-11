@@ -12,3 +12,36 @@ export RUBY_HEAP_MIN_SLOTS=4000000
 export RUBY_HEAP_SLOTS_INCREMENT=250000
 export RUBY_GC_MALLOC_LIMIT=500000000
 export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
+
+# no need to prefix with bundle exec etc. in a bundle'd project
+BUNDLED_COMMANDS="foreman rackup rails rake rspec ruby shotgun spec watchr nesta cap"
+
+bundler-installed()
+{
+    which bundle > /dev/null 2>&1
+}
+
+within-bundled-project()
+{
+    local dir="$(pwd)"
+    while [ "$(dirname $dir)" != "/" ]; do
+        [ -f "$dir/Gemfile" ] && return
+        dir="$(dirname $dir)"
+    done
+    false
+}
+
+run-with-bundler()
+{
+    local command="$1"
+    shift
+    if bundler-installed && within-bundled-project; then
+        bundle exec $command $*
+    else
+        $command $*
+    fi
+}
+
+for CMD in $BUNDLED_COMMANDS; do
+    alias $CMD="run-with-bundler $CMD"
+done
