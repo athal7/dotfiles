@@ -14,7 +14,7 @@ export RUBY_GC_MALLOC_LIMIT=500000000
 export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
 
 # no need to prefix with bundle exec etc. in a bundle'd project
-BUNDLED_COMMANDS="foreman rackup rails rake rspec ruby shotgun spec watchr nesta cap"
+BUNDLED_COMMANDS="foreman rackup rails rake rspec ruby shotgun spec watchr nesta cap guard"
 
 bundler-installed()
 {
