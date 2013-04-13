@@ -57,3 +57,6 @@
 # For Virtualbox
   alias StartVB='sudo ifconfig lo0 alias 192.168.10.100'
   alias StopVB='sudo ifconfig lo0 -alias 192.168.10.100'
+
+# Heroku
+  alias deployheroku="heroku ps:scale web=2; git push heroku master; heroku ps:scale web=1"
