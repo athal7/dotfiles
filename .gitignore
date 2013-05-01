@@ -89,3 +89,17 @@ Box Documents
 .hgignore_global
 .ls_ops_api_token
 .zprofile
+.m2/
+.lein/
+target/
+.viminfo.tmp
+.viminfp.tmp
+.viminfq.tmp
+.viminfr.tmp
+.viminfs.tmp
+.viminft.tmp
+.viminfv.tmp
+.viminfw.tmp
+.viminfx.tmp
+.viminfy.tmp
+.viminfz.tmp
