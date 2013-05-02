@@ -37,7 +37,7 @@
   set smarttab
 
 " enable line numbers, and don't make them any wider than necessary
-  set number numberwidth=2
+  set relativenumber numberwidth=2
 
 " show the first match as search strings are typed
   set incsearch
