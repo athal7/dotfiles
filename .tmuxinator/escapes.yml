@@ -1,0 +1,21 @@
+# ~/.tmuxinator/deals.yml
+# you can make as many tabs as you wish...
+
+project_name: wemux
+project_root: ~/Documents/Projects/escapes
+socket_path: /tmp/wemux-wemux
+tabs:
+  - server: ring
+  - escapes:
+      layout: main-horizontal
+      panes:
+        -
+        - vi .
+  - travel-service:
+      panes:
+        - cd ../travel-service
+  - deals/pipeline:
+      panes:
+        - cd ../deals
+        - cd ../pipeline
+  - home: cd ~
