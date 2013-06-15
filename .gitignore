@@ -103,3 +103,4 @@ target/
 .viminfx.tmp
 .viminfy.tmp
 .viminfz.tmp
+.lighttable
