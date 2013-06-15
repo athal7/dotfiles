@@ -226,3 +226,9 @@
 " Jade Highlighting"
   Bundle "git://github.com/digitaltoad/vim-jade.git"
   autocmd BufNewFile,BufRead *.jade set filetype=jade
+
+" Rspec tests"
+  Bundle 'thoughtbot/vim-rspec'
+  map <Leader>v :call RunCurrentSpecFile()<CR>
+  map <Leader>s :call RunNearestSpec()<CR>
+  map <Leader>l :call RunLastSpec()<CR>
