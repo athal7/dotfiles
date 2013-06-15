@@ -24,8 +24,8 @@
   Bundle "git://github.com/tpope/vim-repeat.git"
   Bundle "git://github.com/vim-scripts/ruby-matchit.git"
   Bundle "git://github.com/wgibbs/vim-irblack.git"
-  Bundle "git://github.com/wavded/vim-stylus.git"
   Bundle "git://github.com/kien/ctrlp.vim.git"
+  Bundle "git://github.com/Lokaltog/vim-powerline.git"
 
   Bundle "git://github.com/smerrill/vim-arduino.git"
     au BufNewFile,BufRead *.pde set filetype=arduino
@@ -44,10 +44,6 @@
     " Copied from the plugin; not sure why it isn't working normally
     au BufNewFile,BufRead *.mustache,*.handlebars,*.hbs set filetype=mustache
 
-" Less
-  Bundle "git://github.com/groenewege/vim-less.git"
-    au BufNewFile,BufRead *.less set filetype=less
-
 " Handlebars
   Bundle "git://github.com/nono/vim-handlebars.git"
     au BufNewFile,BufRead *.hbs set filetype=handlebars
@@ -63,7 +59,6 @@
 " Scala
   Bundle "https://github.com/rosstimson/scala-vim-support.git"
     au BufNewFile,BufRead *.scala set filetype=scala
-
 
 " ACK
   Bundle "git://github.com/mileszs/ack.vim.git"

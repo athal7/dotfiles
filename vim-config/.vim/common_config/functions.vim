@@ -21,6 +21,3 @@ command! -range=% OpenHtml :call OpenHtml(<line1>,<line2>)
 
 " Tidy an HTML/XML file inline
 command! Tidy :%! tidy -indent -quiet -wrap 100
-
-" Align all colon-separated content (CSS rules) in a file
-command! AlignColons execute 'g/:/Tabularize colon' | noh

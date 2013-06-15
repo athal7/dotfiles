@@ -12,9 +12,6 @@
   nmap <Leader>w :set wrap!<cr>
   nmap <Leader>W :set nowrap<cr>
 
-" shortcut to save all
-  nmap <Leader>ss :wa<cr>
-
 " close all other windows (in the current tab)
   nmap gW :only<cr>
 
@@ -45,9 +42,6 @@
 
 " Yank from the cursor to the end of the line, to be consistent with C and D.
   nnoremap Y y$
-
-" select the lines which were just pasted
-  nnoremap vv `[V`]
 
 " clean up trailing whitespace
   map <Leader>c :%s/\s\+$<cr>
