@@ -7,11 +7,7 @@
 " default color scheme
   set t_Co=256
   set background=dark
-  if has("gui")
-    colorscheme hybrid
-  else
-    colorscheme hybrid
-  endif
+  colorscheme hybrid
 
 " Highlight current line
   set cursorline
@@ -121,7 +117,7 @@
   au BufNewFile,BufRead *.json set ai filetype=javascript
 
 " different color for each paren pairs
-let vimclojure#ParenRainbow  = 1
+  let vimclojure#ParenRainbow  = 1
 
 " code folding settings
   set foldmethod=indent   "fold based on indent

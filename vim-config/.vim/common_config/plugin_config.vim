@@ -107,7 +107,7 @@
   Bundle "git://github.com/scrooloose/nerdtree.git"
     let NERDTreeHijackNetrw = 0
 
-    nmap gt :NERDTreeToggle<CR>
+    nmap <Leader>w :NERDTreeToggle<CR>
     nmap g :NERDTree \| NERDTreeToggle \| NERDTreeFind<CR>
 
 

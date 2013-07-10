@@ -9,8 +9,7 @@
   imap kk <Esc>
 
 " easy wrap toggling
-  nmap <Leader>w :set wrap!<cr>
-  nmap <Leader>W :set nowrap<cr>
+  nmap <Leader>W :set wrap!<cr>
 
 " close all other windows (in the current tab)
   nmap gW :only<cr>
