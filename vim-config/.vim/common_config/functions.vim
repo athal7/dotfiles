@@ -21,3 +21,35 @@ command! -range=% OpenHtml :call OpenHtml(<line1>,<line2>)
 
 " Tidy an HTML/XML file inline
 command! Tidy :%! tidy -indent -quiet -wrap 100
+
+
+" allow for toggling to and from relativenumber
+function! NumberToggle()
+  if(&relativenumber == 1)
+    set number
+  else
+    set relativenumber
+  endif
+endfunc
+
+""" ctrlp, fuzzyfind, NERDTree refresh
+function Refresh()
+  echo "refreshing files..."
+
+  if exists(":CtrlPClearAllCaches") == 2
+    CtrlPClearAllCaches
+  endif
+
+  if exists("FufRenewCache")
+    FufRenewCache
+  endif
+
+  if exists("t:NERDTreeBufName")
+    let nr = bufwinnr(t:NERDTreeBufName)
+    if nr != -1
+      exe nr . "wincmd w"
+      exe substitute(mapcheck("R"), "<CR>", "", "")
+      wincmd p
+    endif
+  endif
+endfunction

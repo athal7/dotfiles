@@ -96,13 +96,6 @@ set pastetoggle=<F2>
 " allow semicolon for colon
 nmap ; :
 
-" allow for toggling to and from relativenumber
-function! NumberToggle()
-  if(&relativenumber == 1)
-    set number
-  else
-    set relativenumber
-  endif
-endfunc
-
 nnoremap <Leader>n :call NumberToggle()<cr>
+
+map <Leader>r :call Refresh()<cr>
