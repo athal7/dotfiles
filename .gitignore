@@ -104,3 +104,5 @@ target/
 .viminfy.tmp
 .viminfz.tmp
 .lighttable
+.livingsocial.yml
+.api.yml
