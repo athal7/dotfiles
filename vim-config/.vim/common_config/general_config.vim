@@ -6,8 +6,11 @@
 
 " default color scheme
   set t_Co=256
+  " set background=dark
+  " colorscheme hybrid
+  let g:solarized_termtrans = 1
   set background=dark
-  colorscheme hybrid
+  colorscheme solarized
 
 " Highlight current line
   set cursorline
