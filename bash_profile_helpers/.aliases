@@ -59,3 +59,6 @@
 
 # Heroku
   alias deployheroku="heroku ps:scale web=2; git push heroku master; heroku ps:scale web=1"
+
+# for syntax-highlighted cat
+  alias cat="pygmentize -g"
