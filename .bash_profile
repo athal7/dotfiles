@@ -7,6 +7,3 @@ source ~/bash_profile_helpers/.aliases
 source ~/bash_profile_helpers/.man_color
 source ~/bash_profile_helpers/.git_branch_cleanup
 source ~/bash_profile_helpers/.autojump
-
-### Added by the Heroku Toolbelt
-export PATH="/usr/local/heroku/bin:$PATH"
