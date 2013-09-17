@@ -1,0 +1,2 @@
+U:RDoc::Attr[iI"open_timeout:EFI"Net::POP3#open_timeout;FI"RW;F:publico:RDoc::Markup::Document:@parts[o:RDoc::Markup::Paragraph;	[I"2Seconds to wait until a connection is opened.;TI"BIf the POP3 object cannot open a connection within this time,;TI"Iit raises a TimeoutError exception. The default value is 30 seconds.;T:
+@file0FI"lib/net/pop.rb;T

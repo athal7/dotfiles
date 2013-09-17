@@ -1,0 +1,2 @@
+U:RDoc::Attr[iI"continue_timeout:EFI"Net::HTTP#continue_timeout;FI"R;F:publico:RDoc::Markup::Document:@parts[o:RDoc::Markup::Paragraph;	[I"KSeconds to wait for 100 Continue response. If the HTTP object does not;TI"Kreceive a response in this many seconds it sends the request body. The;TI"default value is +nil+.;T:
+@file0FI"lib/net/http.rb;T

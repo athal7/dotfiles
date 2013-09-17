@@ -1,0 +1,2 @@
+U:RDoc::Attr[iI"api_keys:ETI"Gem::ConfigFile#api_keys;FI"R;T:publico:RDoc::Markup::Document:@parts[o:RDoc::Markup::Paragraph;	[I"0Hash of RubyGems.org and alternate API keys;T:
+@fileI" lib/rubygems/config_file.rb;T:0@omit_headings_from_table_of_contents_below0F@I"Gem::ConfigFile;FcRDoc::NormalClass0

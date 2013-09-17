@@ -1,0 +1,6 @@
+U:RDoc::AnyMethod[iI"pop:EFI"Queue#pop;TF:publico:RDoc::Markup::Document:@parts[o:RDoc::Markup::Paragraph;	[I"RRetrieves data from the queue.  If the queue is empty, the calling thread is ;TI"Qsuspended until data is pushed onto the queue.  If +non_block+ is true, the ;TI"8thread isn't suspended, and an exception is raised.;T:
+@fileI"lib/thread.rb;T:0@omit_headings_from_table_of_contents_below000[[I"
+shift;Fo;;	[o;
+;	[I"Alias of pop;T;@;0[I"deq;Fo;;	[o;
+;	[I"Alias of pop;T;@;0I"(non_block=false);T@FI"
+Queue;TcRDoc::NormalClass0

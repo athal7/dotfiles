@@ -1,0 +1,4 @@
+U:RDoc::AnyMethod[iI"const_missing:EFI"Module#const_missing;TF:publico:RDoc::Markup::Document:@parts[o:RDoc::Markup::Paragraph;	[
+I"ECheck for deprecated uses of top level (i.e. in Object) uses of ;TI"CRake class names.  If someone tries to reference the constant ;TI"Fname, display a warning and return the proper object.  Using the ;TI"?--classic-namespace command line option will define these ;TI"0constants in Object and avoid this handler.;T:
+@fileI"lib/rake/ext/module.rb;T:0@omit_headings_from_table_of_contents_below000[[I" rake_original_const_missing;To;;	[o;
+;	[I"6Rename the original handler to make it available.;T;@;0I"(const_name);T@FI"Module;TcRDoc::NormalClass0
