@@ -109,3 +109,4 @@ target/
 .vegas/
 .rbenv/versions/
 .rbenv/shims/
+.rbenv/bundles
