@@ -3,7 +3,7 @@
   alias rspec='rspec --color -f d'
   alias rego='rego {test,spec,app} -- ruby @'
 
-# rails
+# ruby
   alias be='bundle exec'
   alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
   alias ring='cd ~/Documents/Projects/escapes; ringleader ~/Documents/Projects/deals/config/nginx/ringleader.yml'
@@ -12,6 +12,8 @@
   alias rc='pry -r ./config/environment'
   alias show_rogue_servers="echo \$(rogue_servers)"
   alias kill_rogue_servers="kill -9 \$(rogue_servers)"
+  alias bl="bundle --local"
+  alias bbs="bundle install --binstubs .bundle/bin"
 
 # for dotfiles
   alias bp='vi  ~/.bash_profile'
