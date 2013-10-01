@@ -14,6 +14,7 @@
   alias kill_rogue_servers="kill -9 \$(rogue_servers)"
   alias bl="bundle --local"
   alias bbs="bundle install --binstubs .bundle/bin"
+  alias fs="foreman start"
 
 # for dotfiles
   alias bp='vi  ~/.bash_profile'

@@ -110,3 +110,4 @@ target/
 .rbenv/versions/
 .rbenv/shims/
 .rbenv/bundles
+.my.cnf
