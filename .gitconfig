@@ -43,6 +43,7 @@
   lom = pull origin master
   o   = checkout
   m   = merge
+  mf  = merge --ff-only
   p   = push
   pom = push origin master
   s   = stash
