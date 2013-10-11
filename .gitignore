@@ -112,3 +112,5 @@ target/
 .rbenv/shims/
 .rbenv/bundles
 .my.cnf
+.rbenv/ruby-build
+.viminfu.tmp

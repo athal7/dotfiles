@@ -1,7 +1,7 @@
 # ruby
   alias canes="cane --style-glob 'app/*.rb' --style-measure 80 --no-doc"
   alias rspec='rspec --color -f d'
-  alias rego='rego {test,spec,app} -- ruby @'
+  alias rego='rego {test,spec,app,lib,services} -- '
 
 # ruby
   alias be='bundle exec'
