@@ -19,6 +19,9 @@ function! OpenHtml(line1, line2)
 endfunction
 command! -range=% OpenHtml :call OpenHtml(<line1>,<line2>)
 
+" Tidy an HTML/XML file inline
+command! Tidy :%! tidy -indent -quiet -wrap 100
+
 " allow for toggling to and from relativenumber
 function! NumberToggle()
   if(&relativenumber == 1)
