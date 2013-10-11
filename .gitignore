@@ -107,7 +107,8 @@ target/
 .livingsocial.yml
 .api.yml
 .vegas/
-.rbenv/versions/
+.rbenv/versions/*
+.rbenv/plugins/*
 .rbenv/shims/
 .rbenv/bundles
 .my.cnf
