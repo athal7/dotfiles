@@ -1,1 +1,3 @@
 --ignore-dir=.bundle
+--type-add
+scss=.scss
