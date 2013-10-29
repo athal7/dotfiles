@@ -59,9 +59,12 @@
   sh  = show
   st  = status
   tr  = branch -t
+  ctags = !.git/hooks/ctags
 [apply]
   whitespace = fix
 [push]
   default = tracking
 [pull]
   default = tracking
+[init]
+  templatedir = ~/.git_template

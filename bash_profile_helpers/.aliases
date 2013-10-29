@@ -1,11 +1,5 @@
 # ruby
-  alias canes="cane --style-glob 'app/*.rb' --style-measure 80 --no-doc"
-  alias rspec='rspec --color -f d'
-
-# ruby
   alias be='bundle exec'
-  alias reeks='reek app/**/*.rb | grep "TooManyStatements\|UncommunicativeVariableName\|LongMethod"'
-  alias ring='cd ~/Documents/Projects/escapes; ringleader ~/Documents/Projects/deals/config/nginx/ringleader.yml'
   alias ss='script/server'
   alias rs='rails server'
   alias rc='pry -r ./config/environment'
