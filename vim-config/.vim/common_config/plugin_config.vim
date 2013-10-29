@@ -70,14 +70,6 @@
     nmap gq :ccl<CR>
     nmap gl :cwindow<CR>
 
-
-" Tagbar for navigation by tags using CTags
-  Bundle "git://github.com/majutsushi/tagbar.git"
-    let g:tagbar_autofocus = 1
-    map <Leader>rt :!ctags --extra=+f -R *<CR><CR>
-    map <Leader>. :TagbarToggle<CR>
-
-
 " Ruby focused unit test (wrapped in an if-loaded because it doesn't like
 " being loaded twice)
   if !exists(':RunRubyFocusedUnitTest')
