@@ -114,3 +114,4 @@ target/
 .my.cnf
 .rbenv/ruby-build
 .viminfu.tmp
+.tmuxinator/*
