@@ -13,7 +13,7 @@
   set cursorline
 
 " Highlight 80 character line
-  execute "set colorcolumn=" . join(range(81,335), ',')
+  execute "set colorcolumn=81"
   highlight ColorColumn ctermbg=black guibg=black
 
 " don't wrap long lines
