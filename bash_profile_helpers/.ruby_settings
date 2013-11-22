@@ -1,5 +1,5 @@
 export ARCHFLAGS='-arch x86_64'
-export PATH="/usr/local/sbin:$PATH"
+export PATH="$HOME/.rbenv/shims:$PATH"
 eval "$(rbenv init -)"
 
 export CC=gcc-4.2
