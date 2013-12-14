@@ -115,3 +115,4 @@ target/
 .rbenv/ruby-build
 .viminfu.tmp
 .tmuxinator/*
+.irssi/*
