@@ -10,7 +10,8 @@
   alias fs="foreman start"
 
 # for dotfiles
-  alias reload='source ~/.bashrc; cd ..; cd -'
+  alias bp='vi  ~/.bash_profile'
+  alias reload='source ~/.bash_profile; cd ..; cd -'
 
 # always use macvim in the terminal when trying to use terminal vim
   alias vi='mvim -v'

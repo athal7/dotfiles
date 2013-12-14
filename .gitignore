@@ -25,7 +25,7 @@ Sites
 .gdb_history
 .cups
 .bundler
-.bash_profile
+.bashrc
 .bash_history
 .DS_Store
 .CFUserTextEncoding
@@ -35,7 +35,7 @@ Sites
 .Trash/
 .Xauthority
 .adobe/
-.bash_profile~
+.bashrc~
 .codeintel/
 .dbk_info
 .dbshell
@@ -115,4 +115,3 @@ target/
 .rbenv/ruby-build
 .viminfu.tmp
 .tmuxinator/*
-.irssi/*
