@@ -18,8 +18,8 @@
   alias vim='mvim -v'
 
 # applescripts
-  alias vpn="cd ~; osascript applescripts/openvpn.applescript; cd -"
-  alias rearrange="cd ~; osascript applescripts/WindowArrangement.scpt; cd -"
+  alias vpn="osascript ~/applescripts/openvpn.applescript"
+  alias rearrange="osascript ~/applescripts/WindowArrangement.scpt"
 
 # tmux
   alias tmux="tmux -2"
