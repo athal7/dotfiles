@@ -68,3 +68,5 @@
   default = tracking
 [init]
   templatedir = ~/.git_template
+[help]
+  autocorrect = 20
