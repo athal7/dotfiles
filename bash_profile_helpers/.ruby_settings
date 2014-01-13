@@ -2,7 +2,7 @@ export ARCHFLAGS='-arch x86_64'
 export PATH="$HOME/.rbenv/shims:$PATH"
 eval "$(rbenv init -)"
 
-export CC=gcc-4.2
+export CC=gcc
 
 export RUBYOPT=-Itest
 export JRUBY_OPTS=--1.9

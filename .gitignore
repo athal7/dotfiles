@@ -72,6 +72,7 @@ Marketing alias
 Projects/
 README
 VirtualBoxVMs/
+VirtualBox\ VMs/
 autojump/
 lastpass.safariextz
 logs
@@ -116,3 +117,4 @@ target/
 .tmuxinator/*
 .irssi/*
 .dropbox-master
+src
