@@ -71,7 +71,6 @@ Sites
 Marketing alias
 Projects/
 README
-Rakefile
 VirtualBoxVMs/
 autojump/
 lastpass.safariextz
@@ -116,3 +115,4 @@ target/
 .viminfu.tmp
 .tmuxinator/*
 .irssi/*
+.dropbox-master
