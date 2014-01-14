@@ -118,3 +118,6 @@ target/
 .irssi/*
 .dropbox-master
 src
+.node-gyp/
+.openvpn-connect.json
+.psql_history
