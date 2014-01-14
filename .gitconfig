@@ -1,8 +1,8 @@
 [user]
 	name = Andrew Thal
-	email = andrew.thal@livingsocial.com
+	email = andrewthal88@gmail.com
 [github]
-	user = athal
+	user = athal7
 [core]
 	excludesfile = /Users/andrewthal/.gitignore_global
 	editor = mvim -v
