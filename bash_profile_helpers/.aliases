@@ -8,6 +8,7 @@
   alias bl="bundle --local"
   alias bbs="bundle install --binstubs .bundle/bin"
   alias fs="foreman start"
+  alias gs="grunt serve"
 
 # for dotfiles
   alias bp='vi  ~/.bash_profile'
