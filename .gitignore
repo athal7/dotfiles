@@ -1,4 +1,5 @@
 Desktop
+Applications
 Documents
 Downloads
 Dropbox
@@ -121,3 +122,5 @@ src
 .node-gyp/
 .openvpn-connect.json
 .psql_history
+.pgpass
+.pgadmin_histoqueries
