@@ -33,6 +33,12 @@
   alias bnpr="open http://github.com/bonobos/\$(application)/pull/new/\$(git_branch)"
   alias pr="open http://github.com/athal7/\$(application)/pull/new/\$(git_branch)"
 
+# set tracking
+  function track_branch { # requires argument of remote name
+    echo -n "$(git branch --set-upstream-to=$1/$(git_branch) $(git_branch))"
+    echo ""
+  }
+
   function application {
     echo "$(pwd | awk -F/ '{print$NF}')"
   }
