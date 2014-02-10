@@ -30,7 +30,7 @@
   alias g='git' # see other aliases in .gitconfig
 
 # pull requests
-  alias lspr="open http://code.livingsocial.net/athal/\$(application)/pull/new/\$(git_branch)"
+  alias bnpr="open http://github.com/bonobos/\$(application)/pull/new/\$(git_branch)"
   alias pr="open http://github.com/athal7/\$(application)/pull/new/\$(git_branch)"
 
   function application {
