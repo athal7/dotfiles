@@ -1,3 +1,4 @@
 --ignore-dir=.bundle
+--ignore-dir=log
 --type-set
 scss=.scss
