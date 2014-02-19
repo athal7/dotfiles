@@ -1,2 +1,1 @@
-export PATH="$HOME/.nodenv/bin:$PATH"
-eval "$(nodenv init -)"
+source $(brew --prefix nvm)/nvm.sh
