@@ -2,7 +2,7 @@
   alias be='bundle exec'
   alias ss='script/server'
   alias rs='rails server'
-  alias rc='pry -r ./config/environment'
+  alias rc='rails console'
   alias show_rogue_servers="echo \$(rogue_servers)"
   alias kill_rogue_servers="kill -9 \$(rogue_servers)"
   alias bl="bundle --local"
