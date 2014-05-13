@@ -44,7 +44,7 @@
   o   = checkout
   m   = merge
   mf  = merge --ff-only
-  p   = push
+  p   = push -u
   pom = push origin master
   s   = stash
   ra  = remote add
