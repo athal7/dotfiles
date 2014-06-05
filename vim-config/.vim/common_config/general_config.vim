@@ -116,6 +116,9 @@
 " JSON is JS
   au BufNewFile,BufRead *.json set ai filetype=javascript
 
+" GO
+  au BufRead,BufNewFile *.go set filetype=go
+
 " different color for each paren pairs
   let vimclojure#ParenRainbow  = 1
 
