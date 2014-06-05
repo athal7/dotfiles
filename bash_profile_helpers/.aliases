@@ -1,10 +1,12 @@
 # ruby
   alias be='bundle exec'
+  alias bs='bundle exec rspec'
   alias ss='script/server'
   alias rs='rails server'
   alias rc='rails console'
   alias show_rogue_servers="echo \$(rogue_servers)"
   alias kill_rogue_servers="kill -9 \$(rogue_servers)"
+  alias bi='bundle install'
   alias bl="bundle --local"
   alias bbs="bundle install --binstubs .bundle/bin"
   alias fs="foreman start"
