@@ -1,11 +1,11 @@
 [user]
-	name = Andrew Thal
-	email = athal7@me.com
+  name = Andrew Thal
+  email = athal7@me.com
 [github]
-	user = athal7
+  user = athal7
 [core]
-	excludesfile = /Users/andrewthal/.gitignore_global
-	editor = mvim -v
+  excludesfile = /Users/andrewthal/.gitignore_global
+  editor = mvim -v
 [color]
   branch = auto
   diff = auto
