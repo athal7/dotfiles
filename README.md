@@ -1,5 +1,15 @@
 ## athal7's dotfiles
 
+
+### To install
+* clone the repo anywhere in your system
+* run `rake` to copy the dotfiles to ~
+* run `:BundleInstall` when you open vim for the first time
+
+### Vim Configs:
+  - Default is very simple vim configs (so as to train myself for better pair programming and success on servers)
+  - Can include enhanced configs by running `:Enhance` in vim
+
 ### Includes:
   - Vim configs adapted from [Neo's Vim Configs](https://github.com/neo/vim-config) (view their readme for installation/basic key mappings)
   - VPN opening AppleScript adapted from [webandy](https://github.com/webandy/applescripts)
@@ -17,12 +27,3 @@
 
 Feel free to use these dotfiles as you wish, and also feel free to submit pull requests for anything you'd like to improve.
 Keep in mind these configs update frequently.
-
-### To install
-* clone the repo
-* copy the files to your home directory
-* `source ~/.bash_profile`
-* `brew install autojump macvim git bash-completion reattach-to-user-namespace tmux`
-* `gem install tmuxinator`
-* `cd vim-config && rake`
-* `vi .` then `:BundleInstall`, then `:q` to exit

@@ -31,24 +31,9 @@ function! NumberToggle()
   endif
 endfunc
 
-""" ctrlp, fuzzyfind, NERDTree refresh
-function Refresh()
-  echo "refreshing files..."
-
-  if exists(":CtrlPClearAllCaches") == 2
-    CtrlPClearAllCaches
-  endif
-
-  if exists("FufRenewCache")
-    FufRenewCache
-  endif
-
-  if exists("t:NERDTreeBufName")
-    let nr = bufwinnr(t:NERDTreeBufName)
-    if nr != -1
-      exe nr . "wincmd w"
-      exe substitute(mapcheck("R"), "<CR>", "", "")
-      wincmd p
-    endif
-  endif
+function! EnhanceConfigs()
+  echo "enhancing configs..."
+  source $HOME/.vim/enhanced_config.vim
+  :BundleInstall
 endfunction
+command! -range=% Enhance :call EnhanceConfigs()

@@ -13,7 +13,7 @@
   alias gs="grunt serve"
 
 # for dotfiles
-  alias bp='vi  ~/.bash_profile'
+  alias bp='vi  $DOTFILE_DIR/.bash_profile'
   alias reload='source ~/.bash_profile; cd ..; cd -'
 
 # always use macvim in the terminal when trying to use terminal vim
@@ -21,8 +21,8 @@
   alias vim='mvim -v'
 
 # applescripts
-  alias vpn="osascript ~/applescripts/openvpn.applescript"
-  alias rearrange="osascript ~/applescripts/WindowArrangement.scpt"
+  alias vpn="osascript $DOTFILE_DIR/applescripts/openvpn.applescript"
+  alias rearrange="osascript $DOTFILE_DIR/applescripts/WindowArrangement.scpt"
 
 # tmux
   alias tmux="tmux -2"
