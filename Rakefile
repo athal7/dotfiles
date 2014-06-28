@@ -1,6 +1,6 @@
 module AT
   class DotfileSetupHandler
-    FILES_TO_SKIP = [".",".."]
+    FILES_TO_SKIP = [".","..",".git"]
     FILES_TO_INCLUDE = ['tmux-helpers']
 
     DEPENDENCIES = ["autojump","macvim","git","bash-completion","reattach-to-user-namespace","tmux"]
