@@ -1,7 +1,7 @@
 ## athal7's dotfiles
 
 
-### To install
+### To Install
 * clone the repo anywhere in your system
 * run `rake` to copy the dotfiles to ~
 * run `:BundleInstall` when you open vim for the first time
