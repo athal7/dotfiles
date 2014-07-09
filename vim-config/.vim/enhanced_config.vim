@@ -165,18 +165,12 @@
 " compress excess whitespace on current line
   map <Leader>l :s/\v(\S+)\s+/\1 /<cr>:nohl<cr>
 
-" delete all buffers
-  map <Leader>d :bufdo bd<cr>
-
 " map spacebar to clear search highlight
   nnoremap <Leader><space> :noh<cr>
 
 " make tab key match bracket pairs
   nnoremap <tab> %
   vnoremap <tab> %
-
-" reindent the entire file
-  map <Leader>I gg=G``<cr>
 
 " insert the path of currently edited file into a command
 " Command mode: Ctrl-P

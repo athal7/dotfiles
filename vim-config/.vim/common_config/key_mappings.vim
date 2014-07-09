@@ -36,3 +36,9 @@
 set pastetoggle=<F2>
 
 nnoremap <Leader>n :call NumberToggle()<cr>
+
+" reindent the entire file
+  map <Leader>I gg=G``<cr>
+
+" delete all buffers
+  map <Leader>d :bufdo bd<cr>
