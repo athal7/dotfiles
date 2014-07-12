@@ -79,3 +79,7 @@
 
 " Multiple pasteboard"
 " Bundle 'git://github.com/vim-scripts/Yankring.vim.git'
+
+" xmpfilter
+  Bundle 't9md/vim-ruby-xmpfilter'
+  nmap <Leader>x <Plug>(xmpfilter-mark) <Plug>(xmpfilter-run)
