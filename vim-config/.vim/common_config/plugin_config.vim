@@ -83,3 +83,27 @@
 " xmpfilter
   Bundle 't9md/vim-ruby-xmpfilter'
   nmap <Leader>x <Plug>(xmpfilter-mark) <Plug>(xmpfilter-run)
+
+" ctrlp
+  Bundle "git://github.com/kien/ctrlp.vim.git"
+  nnoremap <leader>b :CtrlPBuffer<CR>
+
+" ctrlp, NERDTree refresh
+  function Refresh()
+    echo "refreshing files..."
+
+    if exists(":CtrlPClearAllCaches") == 2
+      CtrlPClearAllCaches
+    endif
+
+    if exists("t:NERDTreeBufName")
+      let nr = bufwinnr(t:NERDTreeBufName)
+      if nr != -1
+        exe nr . "wincmd w"
+        exe substitute(mapcheck("R"), "<CR>", "", "")
+        wincmd p
+      endif
+    endif
+  endfunction
+
+  map <Leader>r :call Refresh()<cr>

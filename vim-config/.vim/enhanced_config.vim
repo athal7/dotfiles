@@ -3,7 +3,6 @@
   Bundle "git://github.com/nelstrom/vim-textobj-rubyblock.git"
   Bundle "git://github.com/wgibbs/vim-irblack.git"
   Bundle "git://github.com/tpope/vim-repeat.git"
-  Bundle "git://github.com/kien/ctrlp.vim.git"
   Bundle "git://github.com/Lokaltog/vim-powerline.git"
 
 " ACK
@@ -162,24 +161,3 @@
 
 " allow semicolon for colon
 nmap ; :
-
-nnoremap <leader>b :CtrlPBuffer<CR>
-""" ctrlp, NERDTree refresh
-function Refresh()
-  echo "refreshing files..."
-
-  if exists(":CtrlPClearAllCaches") == 2
-    CtrlPClearAllCaches
-  endif
-
-  if exists("t:NERDTreeBufName")
-    let nr = bufwinnr(t:NERDTreeBufName)
-    if nr != -1
-      exe nr . "wincmd w"
-      exe substitute(mapcheck("R"), "<CR>", "", "")
-      wincmd p
-    endif
-  endif
-endfunction
-
-map <Leader>r :call Refresh()<cr>
