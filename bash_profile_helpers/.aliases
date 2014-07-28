@@ -29,7 +29,7 @@
   alias ta="tmux attach"
 
 # git
-  alias g='git' # see other aliases in .gitconfig
+  alias g='hub'
 
 # pull requests
   alias bnpr="open http://github.com/bonobos/\$(application)/pull/new/\$(git_branch)"
