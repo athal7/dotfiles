@@ -139,9 +139,6 @@
   iabbrev rdebug require 'ruby-debug'; Debugger.start; Debugger.settings[:autoeval] = 1; Debugger.settings[:autolist] = 1; debugger; 0;
   abbrev hte the
 
-" Yank from the cursor to the end of the line, to be consistent with C and D.
-  nnoremap Y y$
-
 " clean up trailing whitespace
   map <Leader>c :%s/\s\+$<cr>
 
