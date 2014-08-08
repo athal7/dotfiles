@@ -107,3 +107,32 @@
   endfunction
 
   map <Leader>r :call Refresh()<cr>
+
+" ACK
+  Bundle "git://github.com/mileszs/ack.vim.git"
+    nmap g/ :Ack!<space>
+    nmap g* :Ack! -w <C-R><C-W><space>
+    nmap ga :AckAdd!<space>
+    nmap gn :cnext<CR>
+    nmap gp :cprev<CR>
+    nmap gq :ccl<CR>
+    nmap gl :cwindow<CR>
+
+" Tabular for aligning text
+  Bundle "git://github.com/godlygeek/tabular.git"
+    function! CustomTabularPatterns()
+      if exists('g:tabular_loaded')
+        AddTabularPattern! symbols         / :/l0
+        AddTabularPattern! hash            /^[^>]*\zs=>/
+        AddTabularPattern! chunks          / \S\+/l0
+        AddTabularPattern! assignment      / = /l0
+        AddTabularPattern! comma           /^[^,]*,/l1
+        AddTabularPattern! colon           /:\zs /l0
+        AddTabularPattern! options_hashes  /:\w\+ =>/
+      endif
+    endfunction
+
+    autocmd VimEnter * call CustomTabularPatterns()
+
+    " shortcut to align text with Tabular
+    map <Leader>a :Tabularize<space>
