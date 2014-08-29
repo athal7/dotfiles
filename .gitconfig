@@ -47,6 +47,7 @@
   p   = push -u
   poh = push -u origin head
   pom = push origin master
+  pr  = pull-request
   s   = stash
   ra  = remote add
   rb  = rebase
