@@ -77,6 +77,10 @@
   Bundle "git://github.com/digitaltoad/vim-jade.git"
   autocmd BufNewFile,BufRead *.jade set filetype=jade
 
+" Elixir Highlighting
+  Bundle "git://github.com/elixir-lang/vim-elixir.git"
+  autocmd BufNewFile,BufRead *.exs set filetype=elixir
+
 " Multiple pasteboard"
 " Bundle 'git://github.com/vim-scripts/Yankring.vim.git'
 
