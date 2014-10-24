@@ -19,6 +19,7 @@
   - copy and paste to/from OSX clipboard in terminal vim (requires mvim as default terminal editor and `reattach-to-user-namespace` homebrew formula if using tmux)
   - Custom bash prompt
   - [autojump](https://github.com/joelthelion/autojump/wiki)
+  - [AG](https://github.com/ggreer/the_silver_searcher)
   - ctags setup using http://tbaggery.com/2011/08/08/effortless-ctags-with-git.html
   - Sourcing of machine-specific .bashrc
   - Ruby / Rails server and console helpers
