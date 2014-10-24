@@ -15,7 +15,7 @@
   Bundle "git://github.com/tpope/vim-rake.git"
   Bundle "git://github.com/vim-ruby/vim-ruby.git"
   Bundle "git://github.com/michaeljsmith/vim-indent-object.git"
-  Bundle "git://github.com/tsaleh/vim-matchit.git"
+  Bundle "git://github.com/vim-scripts/matchit.zip.git"
   Bundle "git://github.com/kana/vim-textobj-user.git"
   Bundle "git://github.com/vim-scripts/ruby-matchit.git"
   Bundle "git://github.com/ervandew/supertab.git"
