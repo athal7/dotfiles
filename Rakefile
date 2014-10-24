@@ -3,7 +3,8 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = ['tmux-helpers']
 
-    DEPENDENCIES = ["autojump","macvim","git","bash-completion","reattach-to-user-namespace","tmux"]
+    DEPENDENCIES = ["autojump","macvim","git","bash-completion",
+                    "reattach-to-user-namespace","tmux","ag"]
     GEMS = ["tmuxinator","rcodetools","hub"]
 
     attr_accessor :location

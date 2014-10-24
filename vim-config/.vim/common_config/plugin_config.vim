@@ -112,15 +112,10 @@
 
   map <Leader>r :call Refresh()<cr>
 
-" ACK
-  Bundle "git://github.com/mileszs/ack.vim.git"
-    nmap g/ :Ack!<space>
-    nmap g* :Ack! -w <C-R><C-W><space>
-    nmap ga :AckAdd!<space>
-    nmap gn :cnext<CR>
-    nmap gp :cprev<CR>
-    nmap gq :ccl<CR>
-    nmap gl :cwindow<CR>
+" AG, The Silver Searcher
+  Bundle "git://github.com/rking/ag.vim.git"
+    nmap g/ :Ag<space>
+    nmap g* :Ag -w <C-R><C-W><space>
 
 " Tabular for aligning text
   Bundle "git://github.com/godlygeek/tabular.git"
