@@ -1,7 +1,9 @@
+require 'fileutils'
+
 module AT
   class DotfileSetupHandler
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
-    FILES_TO_INCLUDE = ['tmux-helpers']
+    FILES_TO_INCLUDE = ['tmux-helpers', '.vim']
 
     DEPENDENCIES = ["autojump","macvim","git","bash-completion",
                     "reattach-to-user-namespace","tmux","ag", "ctags"]
@@ -59,7 +61,7 @@ module AT
 
     def setup_vim
       message "Setting up vim..."
-      silent_system("cd vim-config && rake")
+      silent_system("cd .vim/vundle.git && git fetch")
       action "Make sure to run :BundleInstall the first time you open up vim!"
     end
 
