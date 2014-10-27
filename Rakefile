@@ -4,7 +4,7 @@ module AT
     FILES_TO_INCLUDE = ['tmux-helpers']
 
     DEPENDENCIES = ["autojump","macvim","git","bash-completion",
-                    "reattach-to-user-namespace","tmux","ag"]
+                    "reattach-to-user-namespace","tmux","ag", "ctags"]
     GEMS = ["tmuxinator","rcodetools","hub"]
 
     attr_accessor :location
