@@ -1,8 +1,0 @@
-let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =6
-let g:netrw_dirhist_1='/Users/andrewthal/Documents/Code/exercism/elixir/bob'
-let g:netrw_dirhist_2='/Users/andrewthal/Documents/Code/exercism/elixir/word-count'
-let g:netrw_dirhist_3='/Users/andrewthal/Documents/Code/exercism/ruby/roman-numerals'
-let g:netrw_dirhist_4='/Users/andrewthal/Documents/Code/exercism/elixir/word-count'
-let g:netrw_dirhist_5='/Users/andrewthal/Documents/Code/exercism/elixir/sublist'
-let g:netrw_dirhist_6='/Users/andrewthal/Documents/Code/personal_site'
