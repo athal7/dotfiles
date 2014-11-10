@@ -6,10 +6,6 @@
 * run `rake` to copy the dotfiles to ~
 * run `:BundleInstall` when you open vim for the first time
 
-### Vim Configs:
-  - Default is very simple vim configs (so as to train myself for better pair programming and success on servers)
-  - Can include enhanced configs by running `:Enhance` in vim
-
 ### Includes:
   - Vim configs adapted from [Neo's Vim Configs](https://github.com/neo/vim-config) (view their readme for installation/basic key mappings)
   - VPN opening AppleScript adapted from [webandy](https://github.com/webandy/applescripts)

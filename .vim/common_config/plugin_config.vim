@@ -135,3 +135,34 @@
 
     " shortcut to align text with Tabular
     map <Leader>a :Tabularize<space>
+
+" NERDTree for project drawer
+  Bundle "git://github.com/scrooloose/nerdtree.git"
+    let NERDTreeHijackNetrw = 0
+
+    nmap <Leader>w :NERDTreeToggle<CR>
+    nmap g :NERDTree \| NERDTreeToggle \| NERDTreeFind<CR>
+
+" ZoomWin to fullscreen a particular buffer without losing others
+  Bundle "git://github.com/vim-scripts/ZoomWin.git"
+    map <Leader>z :ZoomWin<CR>
+
+" Powerline
+  Bundle "git://github.com/Lokaltog/vim-powerline.git"
+
+" Ruby focused unit test (wrapped in an if-loaded because it doesn't like
+" being loaded twice)
+  if !exists(':RunRubyFocusedUnitTest')
+    Bundle "git://github.com/drewolson/ruby_focused_unit_test_vim.git"
+      nmap <Leader>ra :wa<CR> :RunAllRubyTests<CR>
+      nmap <Leader>rc :wa<CR> :RunRubyFocusedContext<CR>
+      nmap <Leader>rf :wa<CR> :RunRubyFocusedUnitTest<CR>
+      nmap <Leader>rl :wa<CR> :RunLastRubyTest<CR>
+  endif
+
+" Rspec tests"
+  Bundle 'thoughtbot/vim-rspec'
+  map <Leader>v :call RunCurrentSpecFile()<CR>
+  map <Leader>s :call RunNearestSpec()<CR>
+  " map <Leader>l :call RunLastSpec()<CR>
+

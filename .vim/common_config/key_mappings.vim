@@ -45,3 +45,12 @@ nnoremap <Leader>n :call NumberToggle()<cr>
 
 " Yank from the cursor to the end of the line, to be consistent with C and D.
   nnoremap Y y$
+
+" easy wrap toggling
+  nmap <Leader>W :set wrap!<cr>
+
+" clean up trailing whitespace
+  map <Leader>c :%s/\s\+$<cr>
+
+" compress excess whitespace on current line
+  map <Leader>l :s/\v(\S+)\s+/\1 /<cr>:nohl<cr>

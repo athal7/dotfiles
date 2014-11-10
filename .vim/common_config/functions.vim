@@ -30,10 +30,3 @@ function! NumberToggle()
     set relativenumber
   endif
 endfunc
-
-function! EnhanceConfigs()
-  echo "enhancing configs..."
-  source $HOME/.vim/enhanced_config.vim
-  :BundleInstall
-endfunction
-command! -range=% Enhance :call EnhanceConfigs()
