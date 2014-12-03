@@ -28,7 +28,7 @@
   a   = add
   aa  = add -A :/
   ap  = add -p
-  b   = branch
+  b   = for-each-ref --count=30 --sort=-committerdate refs/heads/ --format='%(refname:short)'
   bd  = branch -D
   bn  = checkout -b
   c   = commit
