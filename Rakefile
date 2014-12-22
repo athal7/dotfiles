@@ -7,7 +7,7 @@ module AT
 
     DEPENDENCIES = ["autojump","macvim","git","bash-completion",
                     "reattach-to-user-namespace","tmux","ag", "ctags"]
-    GEMS = ["tmuxinator","rcodetools","hub"]
+    GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
 
     attr_accessor :location
 
