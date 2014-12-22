@@ -154,6 +154,9 @@
   Bundle 'thoughtbot/vim-rspec'
   map <Leader>v :call RunCurrentSpecFile()<CR>
   map <Leader>s :call RunNearestSpec()<CR>
+  let g:rspec_runner = "os_x_iterm"
+  let g:rspec_command = "!bundle exec rspec -f d -c {spec}"
+
   " map <Leader>l :call RunLastSpec()<CR>
 
 " surround for adding surround 'physics'
