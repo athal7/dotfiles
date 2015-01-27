@@ -32,6 +32,7 @@
   bd  = branch -D
   bn  = checkout -b
   c   = commit
+  ca  = commit -a
   cl  = clone
   co  = checkout
   cm  = commit -v -m
