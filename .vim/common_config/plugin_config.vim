@@ -81,6 +81,10 @@
   Bundle "git://github.com/elixir-lang/vim-elixir.git"
   autocmd BufNewFile,BufRead *.exs set filetype=elixir
 
+" Go Highlighting
+  Bundle "git://github.com/fatih/vim-go.git"
+
+
 " Multiple pasteboard"
 " Bundle 'git://github.com/vim-scripts/Yankring.vim.git'
 
