@@ -5,9 +5,13 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = ['tmux-helpers', '.vim']
 
-    DEPENDENCIES = ["autojump","macvim","git","bash-completion",
-                    "reattach-to-user-namespace","tmux","ag", "ctags"]
+    DEPENDENCIES = ["autojump","bash-completion","ctags","git","macvim",
+                    "rbenv","rbenv-gem-rehash","reattach-to-user-namespace",
+                    "ruby-build","tmux","wemux"]
+
     GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
+
+    RB_VERSION = "2.1.5"
 
     attr_accessor :location
 
@@ -20,7 +24,9 @@ module AT
       setup_symlinks
       source_bash_profile
       install_system_dependencies
+      install_ruby unless ENV['SKIP_RUBY']
       install_gems
+      install_pygments
       setup_vim
       message "All done!"
     end
@@ -51,12 +57,22 @@ module AT
       end
     end
 
+    def install_ruby
+      message "Installing ruby #{RB_VERSION}"
+      silent_system("rbenv install #{RB_VERSION}") || error("Unable to install ruby")
+    end
+
     def install_gems
       message "Installing gem dependencies..."
       GEMS.each do |g|
         silent_system("gem install #{g}") ||
           error("Unable to install #{g}")
       end
+    end
+
+    def install_pygments
+      message "Installing Pygments (for syntax-highlighted cat)"
+      silent_system("sudo easy_install Pygments") || error("Unable to install Pygments")
     end
 
     def setup_vim
