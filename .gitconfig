@@ -52,6 +52,7 @@
   s   = stash
   ra  = remote add
   rb  = rebase
+  rbc = rebase --continue
   rbi = rebase -i
   re  = reset
   rr  = remote rm
