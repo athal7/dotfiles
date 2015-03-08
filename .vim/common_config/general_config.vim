@@ -136,3 +136,6 @@
 
 " Use system clipboard
   set clipboard=unnamed
+
+" Strip whitespace on save
+autocmd FileType * autocmd BufWritePre <buffer> :%s/\s\+$//e
