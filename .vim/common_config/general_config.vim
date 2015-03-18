@@ -13,8 +13,8 @@
   set cursorline
 
 " Highlight 80 character line
-  execute "set colorcolumn=81"
-  highlight ColorColumn ctermbg=black guibg=black
+  highlight OverLength ctermbg=darkgrey
+  match OverLength /\%81v.\+/
 
 " don't wrap long lines
   set nowrap
