@@ -63,3 +63,6 @@
 
 # for syntax-highlighted cat
   alias cat="pygmentize -g"
+
+# for syntax-highlighted less
+  alias less="less -R"
