@@ -84,6 +84,9 @@
 " Go Highlighting
   Bundle "git://github.com/fatih/vim-go.git"
 
+" Slim highlighting
+  Bundle "git://github.com/slim-template/vim-slim.git"
+  autocmd BufNewFile,BufRead *.slim set filetype=haml
 
 " Multiple pasteboard"
 " Bundle 'git://github.com/vim-scripts/Yankring.vim.git'
