@@ -19,6 +19,7 @@
 # always use macvim in the terminal when trying to use terminal vim
   alias vi='mvim -v'
   alias vim='mvim -v'
+  alias e='mvim -v'
 
 # applescripts
   alias vpn="osascript $DOTFILE_DIR/applescripts/openvpn.applescript"
