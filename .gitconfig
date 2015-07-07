@@ -31,6 +31,7 @@
   b   = for-each-ref --count=30 --sort=-committerdate refs/heads/ --format='%(refname:short)'
   bd  = branch -D
   bn  = checkout -b
+  br  = browse
   c   = commit
   ca  = commit -a
   cl  = clone
