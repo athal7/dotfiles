@@ -1,7 +1,6 @@
 # ruby
   alias be='bundle exec'
   alias bs='bundle exec rspec'
-  alias ss='script/server'
   alias rs='rails server'
   alias rc='rails console'
   alias show_rogue_servers="echo \$(rogue_servers)"
@@ -10,7 +9,6 @@
   alias bl="bundle --local"
   alias bbs="bundle install --binstubs .bundle/bin"
   alias fs="foreman start"
-  alias gs="grunt serve"
 
 # for dotfiles
   alias bp='vi  $DOTFILE_DIR/.bash_profile'
@@ -67,3 +65,6 @@
 
 # for syntax-highlighted less
   alias less="less -R"
+
+# other
+  alias lf="less +F"
