@@ -5,7 +5,7 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = ['tmux-helpers', '.vim']
 
-    DEPENDENCIES = ["autojump","bash-completion","ctags","git","macvim",
+    DEPENDENCIES = ["autojump","bash-completion","ctags","git","macvim", "pgcli",
                     "rbenv","rbenv-gem-rehash","reattach-to-user-namespace",
                     "ruby-build","tmux","wemux"]
 
