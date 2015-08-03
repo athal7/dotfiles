@@ -39,7 +39,7 @@
   cm  = commit -v -m
   d   = diff
   f   = fetch
-  h   = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+  h   = log --pretty=format:'%h %ad | %s [%an]' --graph --date=short
   l   = pull
   lb  = checkout -
   lom = pull origin master
