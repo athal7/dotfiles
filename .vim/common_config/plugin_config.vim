@@ -189,3 +189,6 @@
   vnoremap <leader>rrlv :RRenameLocalVariable<cr>
   vnoremap <leader>rriv :RRenameInstanceVariable<cr>
   vnoremap <leader>rem  :RExtractMethod<cr>
+
+" autojump for vim
+  Bundle "git://github.com/trotter/autojump.vim.git"
