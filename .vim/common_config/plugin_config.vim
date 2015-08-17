@@ -99,6 +99,9 @@
   Bundle "git://github.com/kien/ctrlp.vim.git"
   nnoremap <leader>b :CtrlPBuffer<CR>
   let g:ctrlp_working_path_mode = '' " enables search of entire filesystem
+  let g:ctrlp_max_files = 0
+  let g:ctrlp_follow_symlinks=1
+  let g:ctrlp_max_depth = 40
 
 " ctrlp, NERDTree refresh
   function Refresh()
