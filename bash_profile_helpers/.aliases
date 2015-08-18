@@ -1,6 +1,6 @@
 # ruby
   alias be='bundle exec'
-  alias bs='bundle exec rspec'
+  alias bspec='bundle exec rspec'
   alias rs='rails server'
   alias rc='rails console'
   alias show_rogue_servers="echo \$(rogue_servers)"
