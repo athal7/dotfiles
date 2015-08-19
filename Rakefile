@@ -6,8 +6,8 @@ module AT
     FILES_TO_INCLUDE = ['tmux-helpers', '.vim']
 
     DEPENDENCIES = ["autojump","bash-completion","ctags","git","macvim", "pgcli",
-                    "rbenv","rbenv-gem-rehash","reattach-to-user-namespace",
-                    "ruby-build","tmux","wemux"]
+                    "chruby","ruby-install","reattach-to-user-namespace",
+                    "tmux","wemux"]
 
     GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
 

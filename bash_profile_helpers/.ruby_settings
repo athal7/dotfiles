@@ -1,6 +1,6 @@
 export ARCHFLAGS='-arch x86_64'
-export PATH="$HOME/.rbenv/shims:$PATH"
-eval "$(rbenv init -)"
+source /usr/local/share/chruby/chruby.sh
+source /usr/local/share/chruby/auto.sh
 
 export CC=gcc
 

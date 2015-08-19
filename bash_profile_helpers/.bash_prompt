@@ -1,7 +1,7 @@
 export PS1="$BLUE\W$YELLOW \$(git_branch)$PINK \$(ruby_version)\n$GREEN$ $OFF"
 
 function ruby_version {
-  echo "•$(rbenv version | sed -e 's/ .*//')"
+  echo "$(ruby -v)"
 }
 
 function git_branch {
