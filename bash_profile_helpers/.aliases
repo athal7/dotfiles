@@ -1,5 +1,6 @@
 # ruby
   alias be='bundle exec'
+  alias brspec='bundle exec rspec'
   alias bspec='bundle exec rspec'
   alias rs='rails server'
   alias rc='rails console'
