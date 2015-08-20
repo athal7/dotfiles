@@ -11,7 +11,7 @@ module AT
 
     GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
 
-    RB_VERSION = "2.1.5"
+    RB_VERSION = "2.1.7"
 
     attr_accessor :location
 
