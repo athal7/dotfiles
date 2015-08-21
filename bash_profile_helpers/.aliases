@@ -10,6 +10,7 @@
   alias bl="bundle --local"
   alias bbs="bundle install --binstubs .bundle/bin"
   alias fs="foreman start"
+  alias bmdb="bundle && bundle exec rake db:migrate && bundle exec rake db:test:prepare"
 
 # for dotfiles
   alias bp='vi  $DOTFILE_DIR/.bash_profile'
