@@ -102,6 +102,7 @@
   let g:ctrlp_max_files = 0
   let g:ctrlp_follow_symlinks=1
   let g:ctrlp_max_depth = 40
+  let g:ctrlp_user_command = 'ag %s -i --nocolor --nogroup --hidden --ignore .git --ignore .svn --ignore .hg --ignore .DS_Store --ignore "**/*.pyc" -g ""'
 
 " ctrlp, NERDTree refresh
   function Refresh()
