@@ -159,9 +159,6 @@
   Bundle "git://github.com/vim-scripts/ZoomWin.git"
     map <Leader>z :ZoomWin<CR>
 
-" Powerline
-  Bundle "git://github.com/Lokaltog/vim-powerline.git"
-
 " Rspec tests"
   Bundle 'thoughtbot/vim-rspec'
   map <Leader>f :call RunCurrentSpecFile()<CR>
