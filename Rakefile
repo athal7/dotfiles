@@ -3,7 +3,7 @@ require 'fileutils'
 module AT
   class DotfileSetupHandler
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
-    FILES_TO_INCLUDE = ['tmux-helpers', '.vim']
+    FILES_TO_INCLUDE = ['.vim']
 
     DEPENDENCIES = ["autojump","bash-completion","ctags","git","macvim", "pgcli",
                     "chruby","ruby-install","reattach-to-user-namespace",
