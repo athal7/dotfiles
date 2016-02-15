@@ -7,7 +7,7 @@ module AT
 
     DEPENDENCIES = ["autojump","bash-completion","ctags","git","macvim", "pgcli",
                     "chruby","ruby-install","reattach-to-user-namespace",
-                    "tmux","wemux"]
+                    "tmux","watch","wemux"]
 
     GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
 
