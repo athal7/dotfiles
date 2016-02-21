@@ -11,8 +11,8 @@ module AT
 
     APPS = ["1password","alfred","atom","bartender","bettertouchtool",
             "caffeine","daisydisk","dropbox","google-drive","google-chrome",
-            "iterm2","multifirefox","pomodone","postman","skitch","skype",
-            "slack","soulver"]
+            "iterm2","multifirefox","pomodone","postman","screenhero",
+            "skitch","skype","slack","soulver"]
 
     GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
 
