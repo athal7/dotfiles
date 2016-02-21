@@ -5,16 +5,15 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = ['.vim']
 
-    DEPENDENCIES = ["autojump","bash-completion","ctags","git","macvim", "pgcli",
-                    "chruby","ruby-install","reattach-to-user-namespace",
-                    "tmux","watch","wemux"]
+    DEPENDENCIES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","pgcli",
+                    "reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
     APPS = ["1password","alfred","atom","bartender","bettertouchtool",
             "caffeine","daisydisk","dropbox","google-drive","google-chrome",
             "iterm2","multifirefox","pomodone","postman","screenhero",
             "skitch","skype","slack","soulver"]
 
-    GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
+    GEMS = ["rcodetools"]
 
     PYTHON_LIBS = ["pygments"]
 
@@ -76,7 +75,8 @@ module AT
 
     def install_ruby
       message "Installing ruby #{RB_VERSION}"
-      silent_system("ruby-install ruby #{RB_VERSION} --no-reinstall") || error("Unable to install ruby")
+      silent_system("ruby-install ruby #{RB_VERSION} --no-reinstall") ||
+        error("Unable to install ruby")
     end
 
     def install_gems
