@@ -59,7 +59,7 @@ module AT
 
     def install_ruby
       message "Installing ruby #{RB_VERSION}"
-      silent_system("ruby-install ruby #{RB_VERSION}") || error("Unable to install ruby")
+      silent_system("ruby-install ruby #{RB_VERSION} --no-reinstall") || error("Unable to install ruby")
     end
 
     def install_gems
