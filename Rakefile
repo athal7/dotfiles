@@ -16,6 +16,8 @@ module AT
 
     GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
 
+    PYTHON_LIBS = ["pygments"]
+
     RB_VERSION = "2.2.4"
 
     attr_accessor :location
@@ -32,7 +34,7 @@ module AT
       install_apps
       install_ruby unless ENV['SKIP_RUBY']
       install_gems
-      install_pygments
+      install_python_libraries
       setup_vim
       message "All done!"
     end
@@ -85,9 +87,12 @@ module AT
       end
     end
 
-    def install_pygments
-      message "Installing Pygments (for syntax-highlighted cat)"
-      silent_system("sudo easy_install Pygments") || error("Unable to install Pygments")
+    def install_python_libraries
+      message "Installing python libraries..."
+      PYTHON_LIBS.each do |l|
+        silent_system("pip install #{l}") ||
+          error("Unable to install #{l}")
+      end
     end
 
     def setup_vim
