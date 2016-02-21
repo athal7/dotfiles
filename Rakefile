@@ -9,6 +9,11 @@ module AT
                     "chruby","ruby-install","reattach-to-user-namespace",
                     "tmux","watch","wemux"]
 
+    APPS = ["1password","alfred","atom","bartender","bettertouchtool",
+            "caffeine","daisydisk","dropbox","google-drive","google-chrome",
+            "iterm2","multifirefox","pomodone","postman","skitch","skype",
+            "slack","soulver"]
+
     GEMS = ["tmuxinator","rcodetools","hub","git-branch-delete-orphans"]
 
     RB_VERSION = "2.2.4"
@@ -24,6 +29,7 @@ module AT
       setup_symlinks
       source_bash_profile
       install_system_dependencies
+      install_apps
       install_ruby unless ENV['SKIP_RUBY']
       install_gems
       install_pygments
@@ -54,6 +60,15 @@ module AT
         silent_system("brew install #{DEPENDENCIES.join(" ")}")
       else
         error "Unable to install dependencies with homebrew, please install #{DEPENDENCIES}"
+      end
+    end
+
+    def install_apps
+      if silent_system("brew cask help")
+        message "Installing apps..."
+        silent_system("brew cask install #{APPS.join(" ")}")
+      else
+        error "Unable to install apps with brew cask, please install #{APPS}"
       end
     end
 
