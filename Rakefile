@@ -9,9 +9,9 @@ module AT
                     "reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
     APPS = ["1password","alfred","atom","bartender","bettertouchtool",
-            "caffeine","daisydisk","dropbox","google-drive","google-chrome",
-            "iterm2","multifirefox","pomodone","postman","screenhero",
-            "skitch","skype","slack","soulver"]
+            "caffeine","daisydisk","dropbox","flux",
+            "google-drive","google-chrome","iterm2","multifirefox",
+            "pomodone","postman","screenhero","sketch","skitch","skype","slack","soulver"]
 
     GEMS = ["rcodetools"]
 
