@@ -8,9 +8,8 @@ module AT
     DEPENDENCIES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","pgcli",
                     "reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
-    APPS = ["1password","alfred","atom","bartender","bettertouchtool",
-            "caffeine","daisydisk","dropbox","flux",
-            "google-drive","google-chrome","iterm2","multifirefox",
+    APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
+            "daisydisk","dropbox","flux","google-drive","google-chrome","iterm2","multifirefox",
             "pomodone","postman","screenhero","sketch","skitch","skype","slack","soulver"]
 
     GEMS = ["rcodetools"]
@@ -58,7 +57,7 @@ module AT
     def install_system_dependencies
       if silent_system("brew info")
         message "Installing system dependencies..."
-        silent_system("brew install #{DEPENDENCIES.join(" ")}")
+        system("brew install #{DEPENDENCIES.join(" ")}")
       else
         error "Unable to install dependencies with homebrew, please install #{DEPENDENCIES}"
       end
@@ -67,7 +66,7 @@ module AT
     def install_apps
       if silent_system("brew cask help")
         message "Installing apps..."
-        silent_system("brew cask install #{APPS.join(" ")}")
+        system("sudo brew cask install --force #{APPS.join(" ")}")
       else
         error "Unable to install apps with brew cask, please install #{APPS}"
       end
@@ -75,14 +74,14 @@ module AT
 
     def install_ruby
       message "Installing ruby #{RB_VERSION}"
-      silent_system("ruby-install ruby #{RB_VERSION} --no-reinstall") ||
+      system("ruby-install ruby #{RB_VERSION} --no-reinstall") ||
         error("Unable to install ruby")
     end
 
     def install_gems
       message "Installing gem dependencies..."
       GEMS.each do |g|
-        silent_system("gem install #{g}") ||
+        system("gem install #{g}") ||
           error("Unable to install #{g}")
       end
     end
@@ -90,7 +89,7 @@ module AT
     def install_python_libraries
       message "Installing python libraries..."
       PYTHON_LIBS.each do |l|
-        silent_system("pip install #{l}") ||
+        system("pip install #{l}") ||
           error("Unable to install #{l}")
       end
     end
