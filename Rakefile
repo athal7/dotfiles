@@ -66,7 +66,7 @@ module AT
     def install_apps
       if silent_system("brew cask help")
         message "Installing apps..."
-        system("sudo brew cask install --force #{APPS.join(" ")}")
+        system("brew cask install #{APPS.join(" ")}")
       else
         error "Unable to install apps with brew cask, please install #{APPS}"
       end
