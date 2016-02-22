@@ -57,7 +57,7 @@ module AT
     def install_system_dependencies
       if silent_system("brew info")
         message "Installing system dependencies..."
-        system("brew install #{DEPENDENCIES.join(" ")}")
+        silent_system("brew install #{DEPENDENCIES.join(" ")}")
       else
         error "Unable to install dependencies with homebrew, please install #{DEPENDENCIES}"
       end
@@ -66,7 +66,7 @@ module AT
     def install_apps
       if silent_system("brew cask help")
         message "Installing apps..."
-        system("brew cask install #{APPS.join(" ")}")
+        silent_system("brew cask install --appdir='~/Applications' #{APPS.join(" ")}")
       else
         error "Unable to install apps with brew cask, please install #{APPS}"
       end
@@ -74,14 +74,14 @@ module AT
 
     def install_ruby
       message "Installing ruby #{RB_VERSION}"
-      system("ruby-install ruby #{RB_VERSION} --no-reinstall") ||
+      silent_system("ruby-install ruby #{RB_VERSION} --no-reinstall") ||
         error("Unable to install ruby")
     end
 
     def install_gems
       message "Installing gem dependencies..."
       GEMS.each do |g|
-        system("gem install #{g}") ||
+        silent_system("gem install #{g}") ||
           error("Unable to install #{g}")
       end
     end
@@ -89,7 +89,7 @@ module AT
     def install_python_libraries
       message "Installing python libraries..."
       PYTHON_LIBS.each do |l|
-        system("pip install #{l}") ||
+        silent_system("pip install #{l}") ||
           error("Unable to install #{l}")
       end
     end
