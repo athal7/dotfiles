@@ -10,7 +10,7 @@ module AT
 
     APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","flux","google-drive","google-chrome","iterm2","multifirefox",
-            "pomodone","postman","screenhero","sketch","skitch","skype","slack","soulver"]
+            "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver"]
 
     GEMS = ["rcodetools"]
 
@@ -57,6 +57,7 @@ module AT
     def install_system_dependencies
       if silent_system("brew info")
         message "Installing system dependencies..."
+        silent_system("brew upgrade #{DEPENDENCIES.join(" ")}")
         silent_system("brew install #{DEPENDENCIES.join(" ")}")
       else
         error "Unable to install dependencies with homebrew, please install #{DEPENDENCIES}"
