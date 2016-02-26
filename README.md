@@ -8,7 +8,6 @@
 
 ### Includes:
   - Vim configs adapted from [Neo's Vim Configs](https://github.com/neo/vim-config) (view their readme for installation/basic key mappings)
-  - VPN opening AppleScript adapted from [webandy](https://github.com/webandy/applescripts)
   - Tmux configs adapted from [tmux: Productive Mouse-Free Development](http://pragprog.com/book/bhtmux/tmux)
   - Custom git aliases
   - [Git completion](https://github.com/git/git/blob/master/contrib/completion/git-completion.bash)
