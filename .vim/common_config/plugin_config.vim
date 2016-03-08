@@ -12,7 +12,6 @@
   Bundle "git://github.com/tpope/vim-haml.git"
   Bundle "git://github.com/pangloss/vim-javascript.git"
   Bundle "git://github.com/vim-scripts/L9.git"
-  Bundle "git://github.com/tpope/vim-rake.git"
   Bundle "git://github.com/vim-ruby/vim-ruby.git"
   Bundle "git://github.com/michaeljsmith/vim-indent-object.git"
   Bundle "git://github.com/vim-scripts/matchit.zip.git"
