@@ -10,7 +10,7 @@ module AT
 
     APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","flux","google-drive","google-chrome","iterm2","multifirefox",
-            "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver"]
+            "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","viscosity"]
 
     GEMS = ["rcodetools"]
 
