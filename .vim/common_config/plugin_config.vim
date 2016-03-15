@@ -61,12 +61,11 @@
       autocmd BufNewFile,BufRead *.markdown set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
     augroup END
 
-
 " Syntastic for catching syntax errors on save
   Bundle "git://github.com/scrooloose/syntastic.git"
     let g:syntastic_enable_signs=1
     let g:syntastic_quiet_messages = { 'level': 'warnings' }
-    let g:syntastic_disabled_filetypes = ['sass']
+    let g:syntastic_check_on_open = 1
 
 " Clojure Highlighting"
   Bundle "https://github.com/vim-scripts/VimClojure.git"
