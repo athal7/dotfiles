@@ -10,7 +10,7 @@
   Bundle "git://github.com/tpope/vim-endwise.git"
   Bundle "git://github.com/tpope/vim-fugitive.git"
   Bundle "git://github.com/tpope/vim-haml.git"
-  Bundle "git://github.com/pangloss/vim-javascript.git"
+  Bundle "git://github.com/othree/yajs.vim"
   Bundle "git://github.com/vim-scripts/L9.git"
   Bundle "git://github.com/vim-ruby/vim-ruby.git"
   Bundle "git://github.com/michaeljsmith/vim-indent-object.git"
