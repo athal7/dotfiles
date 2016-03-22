@@ -139,3 +139,6 @@
 
 " Strip whitespace on save
 autocmd FileType * autocmd BufWritePre <buffer> :%s/\s\+$//e
+
+" Use login shell for commands
+set shell=bash\ -l

@@ -157,15 +157,6 @@
   Bundle "git://github.com/vim-scripts/ZoomWin.git"
     map <Leader>z :ZoomWin<CR>
 
-" Rspec tests"
-  Bundle 'thoughtbot/vim-rspec'
-  map <Leader>f :call RunCurrentSpecFile()<CR>
-  map <Leader>s :call RunNearestSpec()<CR>
-  let g:rspec_runner = "os_x_iterm"
-  let g:rspec_command = "!bundle exec rspec -f d -c {spec}"
-
-  " map <Leader>l :call RunLastSpec()<CR>
-
 " surround for adding surround 'physics'
   Bundle "git://github.com/tpope/vim-surround.git"
     " # to surround with ruby string interpolation
