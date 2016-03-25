@@ -12,7 +12,7 @@ module AT
             "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
             "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","viscosity"]
 
-    GEMS = ["rcodetools"]
+    GEMS = ["rcodetools","reek"]
 
     PYTHON_LIBS = ["pygments"]
 
