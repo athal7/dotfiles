@@ -16,6 +16,8 @@ module AT
 
     PYTHON_LIBS = ["pygments"]
 
+    NODE_PACKAGES = ["eslint_d"]
+
     RB_VERSION = "2.2.4"
 
     attr_accessor :location
@@ -33,6 +35,7 @@ module AT
       install_ruby unless ENV['SKIP_RUBY']
       install_gems
       install_python_libraries
+      install_node_packages
       setup_vim
       message "All done!"
     end
@@ -91,6 +94,14 @@ module AT
       message "Installing python libraries..."
       PYTHON_LIBS.each do |l|
         silent_system("pip install #{l}") ||
+          error("Unable to install #{l}")
+      end
+    end
+
+    def install_node_packages
+      message "Installing node packages..."
+      NODE_PACKAGES.each do |l|
+        silent_system("npm install -g #{l}") ||
           error("Unable to install #{l}")
       end
     end
