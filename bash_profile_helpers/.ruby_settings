@@ -1,6 +1,7 @@
 export ARCHFLAGS='-arch x86_64'
 source /usr/local/share/chruby/chruby.sh
 source /usr/local/share/chruby/auto.sh
+chruby 2.2.4
 
 export CC=gcc
 
