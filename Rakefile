@@ -5,8 +5,8 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = ['.vim']
 
-    DEPENDENCIES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","pgcli",
-                    "reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
+    DEPENDENCIES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","nvm",
+                    "pgcli","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
     APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",

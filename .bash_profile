@@ -1,6 +1,7 @@
 export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 source ~/.bashrc # machine specific
 source $DOTFILE_DIR/bash_profile_helpers/.ruby_settings
+source $DOTFILE_DIR/bash_profile_helpers/.js_settings
 source $DOTFILE_DIR/bash_profile_helpers/.terminal_color_settings
 source $DOTFILE_DIR/bash_profile_helpers/.bash_prompt
 source $DOTFILE_DIR/bash_profile_helpers/.git_completion
