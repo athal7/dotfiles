@@ -64,7 +64,6 @@
 " Syntastic for catching syntax errors on save
   Bundle "git://github.com/scrooloose/syntastic.git"
     let g:syntastic_enable_signs=1
-    let g:syntastic_check_on_open=1
     let g:syntastic_javascript_checkers=['eslint']
     let g:syntastic_javascript_eslint_exec='eslint_d'
     let g:syntastic_enable_elixir_checker = 1
