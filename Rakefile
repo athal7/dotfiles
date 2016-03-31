@@ -109,7 +109,7 @@ module AT
     def setup_vim
       message "Setting up vim..."
       silent_system("cd .vim && rm -rf vundle && git clone http://github.com/gmarik/vundle.git")
-      action "Make sure to run :BundleInstall the first time you open up vim!"
+      action "Make sure to run :PluginInstall the first time you open up vim!"
     end
 
     def should_symlink?(filename)
