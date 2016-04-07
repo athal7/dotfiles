@@ -1,0 +1,21 @@
+CLICOLOR=1
+export TERM=xterm-256color
+export EDITOR="vim"
+
+RED="\[\033[0;31m\]"
+YELLOW="\[\033[0;33m\]"
+GREEN="\[\033[0;32m\]"
+BLUE="\[\033[0;36m\]"
+PINK="\[\033[0;35m\]"
+WHITE="\[\033[1;37m\]"
+BLACK="\[\033[0;30m\]"
+OFF="\[\033[0m\]"
+
+# for man pages
+export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
+export LESS_TERMCAP_md=$'\E[01;38;5;74m'  # begin bold
+export LESS_TERMCAP_me=$'\E[0m'           # end mode
+export LESS_TERMCAP_se=$'\E[0m'           # end standout-mode
+export LESS_TERMCAP_so=$'\E[1;31m'        # begin standout-mode - info box
+export LESS_TERMCAP_ue=$'\E[0m'           # end underline
+export LESS_TERMCAP_us=$'\E[04;33;5;146m' # begin underline
