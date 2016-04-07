@@ -5,10 +5,10 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = [".vim"]
 
-    DEPENDENCIES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","nvm",
+    HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","nvm",
                     "pgcli","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
-    APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
+    BREW_CASK_APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
             "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","viscosity"]
 
@@ -29,7 +29,7 @@ module AT
     def initialize(location)
       self.location = location
       setup_symlinks
-      install_system_dependencies
+      install_homebrew_packages
       install_apps
       install_ruby unless ENV['SKIP_RUBY']
       install_gems
@@ -51,22 +51,22 @@ module AT
       end
     end
 
-    def install_system_dependencies
+    def install_homebrew_packages
       if silent_system("brew info")
-        message "Installing system dependencies..."
-        silent_system("brew upgrade #{DEPENDENCIES.join(" ")}")
-        silent_system("brew install #{DEPENDENCIES.join(" ")}")
+        message "Installing homebrew packages..."
+        silent_system("brew upgrade #{HOMEBREW_PACKAGES.join(" ")}")
+        silent_system("brew install #{HOMEBREW_PACKAGES.join(" ")}")
       else
-        error "Unable to install dependencies with homebrew, please install #{DEPENDENCIES}"
+        error "Unable to install dependencies with homebrew, please install #{HOMEBREW_PACKAGES}"
       end
     end
 
     def install_apps
       if silent_system("brew cask help")
         message "Installing apps..."
-        silent_system("brew cask install --appdir='~/Applications' #{APPS.join(" ")}")
+        silent_system("brew cask install --appdir='~/Applications' #{BREW_CASK_APPS.join(" ")}")
       else
-        error "Unable to install apps with brew cask, please install #{APPS}"
+        error "Unable to install apps with brew cask, please install #{BREW_CASK_APPS}"
       end
     end
 
