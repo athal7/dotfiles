@@ -3,7 +3,7 @@ require 'fileutils'
 module AT
   class DotfileSetupHandler
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
-    FILES_TO_INCLUDE = ['.vim']
+    FILES_TO_INCLUDE = [".vim"]
 
     DEPENDENCIES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","nvm",
                     "pgcli","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
@@ -29,7 +29,6 @@ module AT
     def initialize(location)
       self.location = location
       setup_symlinks
-      source_bash_profile
       install_system_dependencies
       install_apps
       install_ruby unless ENV['SKIP_RUBY']
@@ -50,11 +49,6 @@ module AT
           silent_system("ln -s #{Dir.pwd}/#{filename} #{location}/#{filename}")
         end
       end
-    end
-
-    def source_bash_profile
-      message "Loading configs..."
-      silent_system("source #{location}/.bash_profile")
     end
 
     def install_system_dependencies

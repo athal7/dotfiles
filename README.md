@@ -16,7 +16,7 @@
   - [autojump](https://github.com/joelthelion/autojump/wiki)
   - [AG](https://github.com/ggreer/the_silver_searcher)
   - ctags setup using http://tbaggery.com/2011/08/08/effortless-ctags-with-git.html
-  - Sourcing of machine-specific .bashrc
+  - Sourcing of machine-specific .secrets
   - Other bash aliases
 
 Feel free to use these dotfiles as you wish, and also feel free to submit pull requests for anything you'd like to improve.
