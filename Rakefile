@@ -5,8 +5,10 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = [".vim"]
 
-    HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","git","hub","macvim","nvm",
+    HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","dash","git","hub","macvim","nvm",
                     "pgcli","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
+
+    APP_DIR = '~/Applications'
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
@@ -64,7 +66,7 @@ module AT
     def install_apps
       if silent_system("brew cask help")
         message "Installing apps..."
-        silent_system("brew cask install --appdir='~/Applications' #{BREW_CASK_APPS.join(" ")}")
+        silent_system("brew cask install --appdir=#{APP_DIR} #{BREW_CASK_APPS.join(" ")}")
       else
         error "Unable to install apps with brew cask, please install #{BREW_CASK_APPS}"
       end
