@@ -75,7 +75,8 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 # chruby
   source /usr/local/share/chruby/chruby.sh
   source /usr/local/share/chruby/auto.sh
-  chruby 2.2.4
+  export RB_VERSION=2.3.0
+  chruby $RB_VERSION
 
 # ruby performance / etc
   export ARCHFLAGS='-arch x86_64'

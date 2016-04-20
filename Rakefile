@@ -19,8 +19,6 @@ module AT
       { language: "node", install_command: "npm install -g", libs: ["eslint_d"] },
     ]
 
-    RB_VERSION = "2.3.0"
-
     attr_accessor :location
 
     def self.setup_dotfiles
@@ -70,8 +68,8 @@ module AT
     end
 
     def install_ruby
-      message "Installing ruby #{RB_VERSION}"
-      silent_system("ruby-install ruby #{RB_VERSION} --no-reinstall") ||
+      message "Installing ruby #{ENV['RB_VERSION']}"
+      silent_system("ruby-install ruby #{ENV['RB_VERSION']} --no-reinstall") ||
         error("Unable to install ruby")
     end
 
