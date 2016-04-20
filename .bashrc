@@ -62,11 +62,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   . $(brew --prefix nvm)/nvm.sh
 
 # prompt
-  export PS1="$BLUE\W$YELLOW \$(git_branch)$PINK \$(ruby_version)\n$GREEN$ $OFF"
-
-  function ruby_version {
-    echo "$(ruby -v | sed -e 's/ruby //' | sed -e 's/ .*//' | sed -e 's/p.*//')"
-  }
+  export PS1="$BLUE\W$YELLOW@\$(git_branch) $GREEN$ $OFF"
 
   function git_branch {
     echo "$(__git_ps1 "%s")"
