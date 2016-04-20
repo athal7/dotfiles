@@ -33,10 +33,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   alias bl="bundle --local"
   alias bbs="bundle install --binstubs .bundle/bin"
 
-  alias vi='mvim -v'
-  alias vim='mvim -v'
   alias e='mvim -v'
-
   alias g='hub'
 
   alias run_cleanup_scripts="sudo periodic daily weekly monthly"
