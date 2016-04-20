@@ -7,19 +7,19 @@ module AT
 
     HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","dash","git",
                          "homebrew/completions/brew-cask-completion","hub","macvim","nvm",
-                         "pgcli","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
+                         "pgcli","pip","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
             "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","viscosity"]
 
-    GEMS = ["rcodetools","reek"]
+    LIBRARIES = [
+      { language: "ruby", install_command: "gem install", libs: ["rcodetools","reek"] },
+      { language: "python", install_command: "pip install", libs: ["pygments"] },
+      { language: "node", install_command: "npm install -g", libs: ["eslint_d"] },
+    ]
 
-    PYTHON_LIBS = ["pygments"]
-
-    NODE_PACKAGES = ["eslint_d"]
-
-    RB_VERSION = "2.2.4"
+    RB_VERSION = "2.3.0"
 
     attr_accessor :location
 
@@ -33,9 +33,7 @@ module AT
       install_homebrew_packages
       install_apps
       install_ruby
-      install_gems
-      install_python_libraries
-      install_node_packages
+      install_libraries
       setup_vim
       message "All done!"
     end
@@ -77,27 +75,13 @@ module AT
         error("Unable to install ruby")
     end
 
-    def install_gems
-      message "Installing gem dependencies..."
-      GEMS.each do |g|
-        silent_system("gem install #{g}") ||
-          error("Unable to install #{g}")
-      end
-    end
-
-    def install_python_libraries
-      message "Installing python libraries..."
-      PYTHON_LIBS.each do |l|
-        silent_system("pip install #{l}") ||
-          error("Unable to install #{l}")
-      end
-    end
-
-    def install_node_packages
-      message "Installing node packages..."
-      NODE_PACKAGES.each do |l|
-        silent_system("npm install -g #{l}") ||
-          error("Unable to install #{l}")
+    def install_libraries
+      LIBRARIES.each do |lib_def|
+        message "Installing #{lib_def[:language]} libraries..."
+        lib_def[:libs].each do |l|
+          silent_system("#{lib_def[:install_command]} #{l}") ||
+            error("Unable to install #{l}")
+        end
       end
     end
 
