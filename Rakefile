@@ -32,7 +32,7 @@ module AT
       setup_symlinks
       install_homebrew_packages
       install_apps
-      install_ruby unless ENV['SKIP_RUBY']
+      install_ruby
       install_gems
       install_python_libraries
       install_node_packages
