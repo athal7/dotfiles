@@ -54,6 +54,9 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   source $DOTFILE_DIR/git-completion.bash
   source /usr/local/etc/bash_completion.d/git-completion.bash
 
+# homebrew
+  export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
+
 # nvm
   export NVM_DIR=~/.nvm
   . $(brew --prefix nvm)/nvm.sh

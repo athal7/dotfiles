@@ -9,8 +9,6 @@ module AT
                          "homebrew/completions/brew-cask-completion","hub","macvim","nvm",
                          "pgcli","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
-    APP_DIR = '~/Applications'
-
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
             "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","viscosity"]
@@ -67,7 +65,7 @@ module AT
     def install_apps
       if silent_system("brew cask help")
         message "Installing apps..."
-        silent_system("brew cask install --appdir=#{APP_DIR} #{BREW_CASK_APPS.join(" ")}")
+        silent_system("brew cask install #{BREW_CASK_APPS.join(" ")}")
       else
         error "Unable to install apps with brew cask, please install #{BREW_CASK_APPS}"
       end
