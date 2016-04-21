@@ -59,10 +59,16 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   . $(brew --prefix nvm)/nvm.sh
 
 # prompt
-  export PS1="$BLUE\w $YELLOW@\$(git_branch) $GREEN$ $OFF"
+  export PS1="$BLUE\$(abbrev_path) $YELLOW@\$(git_branch) $GREEN$ $OFF"
+
 
   function git_branch {
     echo "$(__git_ps1 "%s")"
+  }
+
+  function abbrev_path {
+    local abbreviated=$(echo ${PWD%/*} | sed -e "s;\(/..\)[^/]*;\1;g")
+    echo "$abbreviated/${PWD##*/}"
   }
 
 # chruby
