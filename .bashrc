@@ -5,13 +5,14 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   export TERM=xterm-256color
   export EDITOR="vim"
 
-  RED="\[\033[0;31m\]"
-  YELLOW="\[\033[0;33m\]"
-  GREEN="\[\033[0;32m\]"
-  BLUE="\[\033[0;36m\]"
-  PINK="\[\033[0;35m\]"
-  WHITE="\[\033[1;37m\]"
   BLACK="\[\033[0;30m\]"
+  RED="\[\033[0;31m\]"
+  GREEN="\[\033[0;32m\]"
+  YELLOW="\[\033[0;33m\]"
+  DARKBLUE="\[\033[0;34m\]"
+  PINK="\[\033[0;35m\]"
+  BLUE="\[\033[0;36m\]"
+  WHITE="\[\033[1;37m\]"
   OFF="\[\033[0m\]"
 
 # color for man pages
@@ -59,7 +60,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   . $(brew --prefix nvm)/nvm.sh
 
 # prompt
-  export PS1="$BLUE\$(abbrev_path) $YELLOW@\$(git_branch) $GREEN$ $OFF"
+  export PS1="$DARKBLUE\$(abbrev_path)/$YELLOW${PWD##*/} $BLUE@\$(git_branch) $GREEN$ $OFF"
 
 
   function git_branch {
@@ -68,7 +69,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 
   function abbrev_path {
     local abbreviated=$(echo ${PWD%/*} | sed -e "s;\(/..\)[^/]*;\1;g")
-    echo "$abbreviated/${PWD##*/}"
+    echo "$abbreviated"
   }
 
 # chruby
