@@ -7,7 +7,7 @@ module AT
 
     HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","dash","git",
                          "homebrew/completions/brew-cask-completion","hub","macvim","nvm",
-                         "pgcli","pip","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
+                         "pgcli","python","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
