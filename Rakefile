@@ -5,12 +5,12 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = [".vim"]
 
-    HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","dash","git",
+    HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","git",
                          "homebrew/completions/brew-cask-completion","hub","macvim","nvm",
                          "pgcli","python","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
-            "daisydisk","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
+            "daisydisk","dash","dropbox","firefox","flux","gitx","google-drive","google-chrome","iterm2",
             "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","viscosity"]
 
     LIBRARIES = [
