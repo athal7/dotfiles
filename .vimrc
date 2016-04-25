@@ -131,7 +131,6 @@ Plugin 'tpope/vim-endwise'
 Plugin 'tpope/vim-fugitive'
 Plugin 'ervandew/supertab'
 Plugin 'tomtom/tcomment_vim'
-Plugin 'trotter/autojump.vim'
 
 " Syntax highlighting
     au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,config.ru} set ft=ruby
