@@ -5,7 +5,7 @@ module AT
     FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
     FILES_TO_INCLUDE = [".vim"]
 
-    HOMEBREW_PACKAGES = ["autojump","bash-completion","chruby","ctags","git",
+    HOMEBREW_PACKAGES = ["ag","autojump","bash-completion","chruby","ctags","git",
                          "homebrew/completions/brew-cask-completion","hub","macvim","nvm",
                          "pgcli","python","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
