@@ -15,7 +15,7 @@ module AT
 
     LIBRARIES = [
       { language: "ruby", install_command: "gem install", libs: ["rcodetools","reek"] },
-      { language: "python", install_command: "pip install", libs: ["pygments"] },
+      { language: "python", install_command: "pip install", libs: ["pygments","virtualenv","pylint"] },
       { language: "node", install_command: "npm install -g", libs: ["eslint_d"] },
     ]
 

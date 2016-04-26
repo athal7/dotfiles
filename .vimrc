@@ -171,6 +171,7 @@ Plugin 'tomtom/tcomment_vim'
     let g:syntastic_javascript_eslint_exec='eslint_d'
     let g:syntastic_enable_elixir_checker = 1
     let g:syntastic_ruby_checkers=['reek']
+    let g:syntastic_python_checkers=['pylint']
 
 " xmpfilter
   Plugin 't9md/vim-ruby-xmpfilter'
