@@ -30,7 +30,7 @@ module AT
       setup_symlinks
       install_homebrew_packages
       install_apps
-      install_ruby
+      install_language_versions
       install_libraries
       setup_vim
       message "All done!"
@@ -67,10 +67,14 @@ module AT
       end
     end
 
-    def install_ruby
+    def install_language_versions
       message "Installing ruby #{ENV['RB_VERSION']}"
       silent_system("ruby-install ruby #{ENV['RB_VERSION']} --no-reinstall") ||
         error("Unable to install ruby")
+
+      node_version = "5.0"
+      message "Installing node #{node_version}"
+      silent_system("nvm install #{node_version}") || error("Unable to install node")
     end
 
     def install_libraries
