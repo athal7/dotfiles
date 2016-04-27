@@ -33,6 +33,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   alias bi='bundle install'
   alias bl="bundle --local"
   alias bbs="bundle install --binstubs .bundle/bin"
+  alias ll="ls -la"
 
   alias e='mvim -v'
   alias g='hub'
