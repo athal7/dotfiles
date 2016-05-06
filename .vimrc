@@ -127,10 +127,17 @@ set shell=bash\ -l               " Use login shell for commands
   endfunction
   map <Leader>r :call Refresh()<cr>
 
-Plugin 'tpope/vim-endwise'
-Plugin 'tpope/vim-fugitive'
-Plugin 'ervandew/supertab'
-Plugin 'tomtom/tcomment_vim'
+" Adds 'end' in ruby
+  Plugin 'tpope/vim-endwise'
+
+" Git wrapper
+  Plugin 'tpope/vim-fugitive'
+
+" Insert-mode auto-completion with 'tab'
+  Plugin 'ervandew/supertab'
+
+" Universal comment plugin
+  Plugin 'tomtom/tcomment_vim'
 
 " Syntax highlighting
     au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,config.ru} set ft=ruby
