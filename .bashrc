@@ -90,6 +90,11 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   export RUBY_GC_MALLOC_LIMIT=500000000
   export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
 
+# python settings
+  export PYTHONDONTWRITEBYTECODE=1
+  export PIP_DOWNLOAD_CACHE=$HOME/.pip/cache
+  export PIP_REQUIRE_VIRTUALENV=true
+
 # secrets file
   if [ -f ~/.secrets ]; then
      source ~/.secrets
