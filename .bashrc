@@ -24,29 +24,18 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   export LESS_TERMCAP_ue=$'\E[0m'           # end underline
   export LESS_TERMCAP_us=$'\E[04;33;5;146m' # begin underline
 
-# aliases
-  alias be='bundle exec'
-  alias brspec='bundle exec rspec'
-  alias bspec='bundle exec rspec'
-  alias rs='rails server'
-  alias rc='rails console'
-  alias bi='bundle install'
-  alias bl="bundle --local"
-  alias bbs="bundle install --binstubs .bundle/bin"
+# shell aliases
   alias ll="ls -la"
-
   alias e='mvim -v'
-  alias g='hub'
-
-  alias run_cleanup_scripts="sudo periodic daily weekly monthly"
-
   alias less="less -R"
   alias lf="less +F"
 
 # autojump
   [[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh
 
-# git completion
+# git/github
+  alias g='hub'
+
   if [ -f $(brew --prefix)/etc/bash_completion ]; then
       . $(brew --prefix)/etc/bash_completion
   fi
@@ -55,10 +44,6 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 
 # homebrew
   export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
-
-# nvm
-  export NVM_DIR=~/.nvm
-  . $(brew --prefix nvm)/nvm.sh
 
 # prompt
   export PS1="$YELLOW\$(abbrev_path)/\W $BLUE@\$(git_branch) $GREEN$ $OFF"
@@ -73,13 +58,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
     echo "$abbreviated"
   }
 
-# chruby
-  source /usr/local/share/chruby/chruby.sh
-  source /usr/local/share/chruby/auto.sh
-  export RB_VERSION=2.3.0
-  chruby $RB_VERSION
-
-# ruby performance / etc
+# ruby
   export ARCHFLAGS='-arch x86_64'
   export CC=gcc
   export RUBYOPT=-Itest
@@ -90,10 +69,33 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   export RUBY_GC_MALLOC_LIMIT=500000000
   export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
 
-# python settings
+  source /usr/local/share/chruby/chruby.sh
+  source /usr/local/share/chruby/auto.sh
+  export RB_VERSION=2.3.0
+  chruby $RB_VERSION
+
+  alias be='bundle exec'
+  alias brspec='bundle exec rspec'
+  alias bspec='bundle exec rspec'
+  alias rs='rails server'
+  alias rc='rails console'
+  alias bi='bundle install'
+  alias bl="bundle --local"
+  alias bbs="bundle install --binstubs .bundle/bin"
+
+# python
   export PYTHONDONTWRITEBYTECODE=1
   export PIP_DOWNLOAD_CACHE=$HOME/.pip/cache
   export PIP_REQUIRE_VIRTUALENV=true
+
+# node
+  export NVM_DIR=~/.nvm
+  . $(brew --prefix nvm)/nvm.sh
+
+# docker
+  alias d="docker"
+  alias dc="docker-compose"
+  eval $(docker-machine env default)
 
 # secrets file
   if [ -f ~/.secrets ]; then
