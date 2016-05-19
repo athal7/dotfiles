@@ -18,7 +18,6 @@ set nowrap                       " don't wrap long lines
 set showcmd                      " show commands as we type them
 set showmatch                    " highlight matching brackets
 set scrolloff=4 sidescrolloff=10 " scroll the window when we get near the edge
-set relativenumber numberwidth=2 " enable line numbers, and don't make them any wider than necessary
 set incsearch                    " show the first match as search strings are typed
 set hlsearch                     " highlight the search matches
 set ignorecase smartcase         " searching is case insensitive when all lowercase
@@ -34,6 +33,10 @@ set backspace=indent,eol,start   " make backspace work in insert mode
 set wildmode=list:longest,full   " use tab-complete to see a list of possiblities when entering commands
 set clipboard=unnamed            " Use system clipboard
 set shell=bash\ -l               " Use login shell for commands
+
+" relative line numbers, with absolute on the current line
+  set relativenumber
+  set number
 
 " flip the default split directions to sane ones
   set splitright
@@ -97,16 +100,6 @@ set shell=bash\ -l               " Use login shell for commands
 
 " clean up trailing whitespace
   map <Leader>c :%s/\s\+$<cr>
-
-" toggle to and from relativenumber
-  function! NumberToggle()
-    if(&relativenumber == 1)
-      set number
-    else
-      set relativenumber
-    endif
-  endfunc
-  nnoremap <Leader>n :call NumberToggle()<cr>
 
 " refresh ctrlp and nerdtree
   function Refresh()
