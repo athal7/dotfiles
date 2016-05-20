@@ -211,5 +211,17 @@ set shell=bash\ -l               " Use login shell for commands
   let g:airline_theme='tomorrow'
   let g:airline_powerline_fonts = 1
 
+" Use airline for tmux status bar
+  Plugin 'edkolev/tmuxline.vim'
+  let g:tmuxline_preset = {
+    \'a'    : '#S',
+    \'b'    : '#W',
+    \'c'    : '#H',
+    \'win'  : '#I #W',
+    \'cwin' : '#I #W',
+    \'x'    : '#W',
+    \'y'    : '%a %l:%M%p',
+    \'z'    : '#H'}
+
   call vundle#end()
   filetype plugin indent on
