@@ -32,6 +32,7 @@ module AT
       install_apps
       install_language_versions
       install_libraries
+      install_fonts
       setup_vim
       message "All done!"
     end
@@ -85,6 +86,10 @@ module AT
             error("Unable to install #{l}")
         end
       end
+    end
+
+    def install_fonts
+      silent_system("fonts/install.sh")
     end
 
     def setup_vim

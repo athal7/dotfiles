@@ -205,5 +205,11 @@ set shell=bash\ -l               " Use login shell for commands
   Plugin 'vim-scripts/ZoomWin'
     map <Leader>z :ZoomWin<CR>
 
+" Airline status line
+  Plugin 'vim-airline/vim-airline'
+  Plugin 'vim-airline/vim-airline-themes'
+  let g:airline_theme='tomorrow'
+  let g:airline_powerline_fonts = 1
+
   call vundle#end()
   filetype plugin indent on
