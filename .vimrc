@@ -210,19 +210,20 @@ set shell=bash\ -l               " Use login shell for commands
   Plugin 'vim-airline/vim-airline-themes'
   let g:airline_theme='tomorrow'
   let g:airline_powerline_fonts = 1
-  let g:airline_extensions = ['syntastic', 'ctrlp', 'tmuxline']
+  let g:airline_extensions = ['syntastic', 'ctrlp']
 
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
+  let g:tmuxline_theme = 'airline'
   let g:tmuxline_preset = {
     \'a'    : '#S',
-    \'b'    : '#W',
-    \'c'    : '#H',
+    \'b'    : '#{battery_icon} #{battery_percentage} #{battery_remain}',
+    \'c'    : '',
     \'win'  : '#I #W',
     \'cwin' : '#I #W',
-    \'x'    : '#W',
-    \'y'    : '%a %l:%M%p',
-    \'z'    : '#H'}
+    \'x'    : '',
+    \'y'    : '#{net_speed}',
+    \'z'    : '%a %l:%M%p'}
 
 " Use airline for shell prompt
   Plugin 'edkolev/promptline.vim'
