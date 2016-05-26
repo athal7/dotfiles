@@ -155,7 +155,7 @@ set shell=bash\ -l               " Use login shell for commands
   Plugin 'vim-scripts/VimClojure'
     autocmd BufNewFile,BufRead *.clj set filetype=clojure
   Plugin 'elixir-lang/vim-elixir'
-    autocmd BufNewFile,BufRead *.exs set filetype=elixir
+    autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
   Plugin 'fatih/vim-go'
     au BufRead,BufNewFile *.go set filetype=go
   Plugin 'slim-template/vim-slim'
