@@ -11,7 +11,7 @@ module AT
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","bettertouchtool","caffeine",
             "daisydisk","dash","dropbox","firefox","flux","franz","gitx","google-drive","google-chrome","iterm2",
-            "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","viscosity"]
+            "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","spotify","viscosity"]
 
     LIBRARIES = [
       { language: "ruby", install_command: "gem install", libs: ["rcodetools","reek"] },
