@@ -48,15 +48,6 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 # prompt
   source ~/.shell/.shell_prompt.sh
 
-  function git_branch {
-    echo "$(__git_ps1 "%s")"
-  }
-
-  function abbrev_path {
-    local abbreviated=$(echo ${PWD%/*} | sed -e "s;\(/..\)[^/]*;\1;g")
-    echo "$abbreviated"
-  }
-
 # ruby
   export ARCHFLAGS='-arch x86_64'
   export CC=gcc
