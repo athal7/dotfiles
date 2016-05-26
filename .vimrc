@@ -210,6 +210,7 @@ set shell=bash\ -l               " Use login shell for commands
   Plugin 'vim-airline/vim-airline-themes'
   let g:airline_theme='tomorrow'
   let g:airline_powerline_fonts = 1
+  let g:airline_extensions = ['syntastic', 'ctrlp', 'tmuxline']
 
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
