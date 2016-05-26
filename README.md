@@ -8,11 +8,10 @@
 
 ### Includes:
   - Vim configs
-  - Tmux configs adapted from [tmux: Productive Mouse-Free Development](http://pragprog.com/book/bhtmux/tmux)
+  - Tmux configs
   - Custom git aliases
   - [Git completion](https://github.com/git/git/blob/master/contrib/completion/git-completion.bash)
-  - copy and paste to/from OSX clipboard in terminal vim (requires mvim as default terminal editor and `reattach-to-user-namespace` homebrew formula if using tmux)
-  - Custom bash prompt
+  - [airline](https://github.com/vim-airline/vim-airline) for vim, shell prompt, and tmux status
   - [autojump](https://github.com/joelthelion/autojump/wiki)
   - [AG](https://github.com/ggreer/the_silver_searcher)
   - ctags setup using http://tbaggery.com/2011/08/08/effortless-ctags-with-git.html

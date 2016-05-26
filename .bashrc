@@ -46,8 +46,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
 
 # prompt
-  export PS1="$YELLOW\$(abbrev_path)/\W $BLUE@\$(git_branch) $GREEN$ $OFF"
-
+  source ~/.shell/.shell_prompt.sh
 
   function git_branch {
     echo "$(__git_ps1 "%s")"
@@ -98,6 +97,4 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   eval $(docker-machine env default)
 
 # secrets file
-  if [ -f ~/.secrets ]; then
-     source ~/.secrets
-  fi
+  source ~/.secrets

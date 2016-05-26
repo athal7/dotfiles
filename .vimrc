@@ -224,5 +224,16 @@ set shell=bash\ -l               " Use login shell for commands
     \'y'    : '%a %l:%M%p',
     \'z'    : '#H'}
 
+" Use airline for shell prompt
+  Plugin 'edkolev/promptline.vim'
+  let g:promptline_preset = {
+      \'a'    : [ '$(hostname)' ],
+      \'b'    : [ '$(whoami)' ],
+      \'c'    : [ '$(pwd)' ],
+      \'options': {
+          \'left_sections' : [ 'b', 'a' ],
+          \'right_sections' : [ 'c' ],
+          \'left_only_sections' : [ 'b', 'a', 'c' ]}}
+
   call vundle#end()
   filetype plugin indent on
