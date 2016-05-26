@@ -85,7 +85,6 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 # docker
   alias d="docker"
   alias dc="docker-compose"
-  eval $(docker-machine env default)
 
 # secrets file
   source ~/.secrets
