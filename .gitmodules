@@ -1,0 +1,18 @@
+[submodule "fonts"]
+	path = fonts
+	url = git@github.com:powerline/fonts.git
+[submodule ".tmux/plugins/tpm"]
+	path = .tmux/plugins/tpm
+	url = git@github.com:tmux-plugins/tpm.git
+[submodule ".tmux/plugins/tmux-net-speed"]
+	path = .tmux/plugins/tmux-net-speed
+	url = git@github.com:tmux-plugins/tmux-net-speed
+[submodule ".tmux/plugins/tmux-prefix-highlight"]
+	path = .tmux/plugins/tmux-prefix-highlight
+	url = git@github.com:tmux-plugins/tmux-prefix-highlight
+[submodule ".tmux/plugins/tmux-battery"]
+	path = .tmux/plugins/tmux-battery
+	url = git@github.com:tmux-plugins/tmux-battery
+[submodule ".vim/vundle"]
+	path = .vim/vundle
+	url = git@github.com:VundleVim/Vundle.vim.git

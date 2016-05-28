@@ -27,6 +27,7 @@ module AT
 
     def initialize(location)
       self.location = location
+      sync_submodules
       setup_symlinks
       install_homebrew_packages
       install_apps
@@ -38,6 +39,11 @@ module AT
     end
 
     private
+
+    def sync_submodules
+      message "Syncing submodules..."
+      silent_system("git submodule sync")
+    end
 
     def setup_symlinks
       message "Setting up symlinks..."
@@ -89,6 +95,7 @@ module AT
     end
 
     def install_fonts
+      message "Installing powerline fonts"
       silent_system("fonts/install.sh")
     end
 
