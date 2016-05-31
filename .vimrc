@@ -46,6 +46,12 @@ set shell=bash\ -l               " Use login shell for commands
   set listchars=tab:>\ ,trail:·,extends:>,precedes:<,nbsp:+
   set list
 
+"folding settings
+  set foldmethod=indent   "fold based on indent
+  set foldnestmax=10      "deepest fold is 10 levels
+  set foldenable        "dont fold by default
+  set foldlevel=1         "this is just what i use
+
 " remember last position in file
   au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal g'\"" | endif
 
