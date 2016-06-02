@@ -223,13 +223,13 @@ set shell=bash\ -l               " Use login shell for commands
   let g:tmuxline_theme = 'airline'
   let g:tmuxline_preset = {
     \'a'    : '#S',
-    \'b'    : '#{battery_icon} #{battery_percentage} #{battery_remain}',
+    \'b'    : '',
     \'c'    : '',
     \'win'  : '#I #W',
     \'cwin' : '#I #W',
     \'x'    : '',
-    \'y'    : '#{net_speed}',
-    \'z'    : '%a %l:%M%p'}
+    \'y'    : '#{battery_icon} #{battery_percentage} #{battery_remain}',
+    \'z'    : '%a %l:%M%p '}
 
   call vundle#end()
   filetype plugin indent on
