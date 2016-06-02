@@ -239,10 +239,9 @@ set shell=bash\ -l               " Use login shell for commands
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {
       \'a'    : [ promptline#slices#cwd() ],
-      \'b'    : [ '$(whoami)' ],
-      \'c'    : [ promptline#slices#vcs_branch() ],
+      \'b'    : [ promptline#slices#vcs_branch() ],
       \'warn' : [ promptline#slices#last_exit_code() ],
       \'options': {
-          \'left_sections' : [ 'b', 'a' ],
-          \'right_sections' : [ 'warn', 'c' ],
-          \'left_only_sections' : [ 'b', 'a', 'c', 'warn' ]}}
+          \'left_sections' : [ 'a', 'b' ],
+          \'right_sections' : [ 'warn' ],
+          \'left_only_sections' : [ 'a', 'b', 'warn' ]}}
