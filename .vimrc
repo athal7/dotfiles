@@ -239,7 +239,7 @@ set shell=bash\ -l               " Use login shell for commands
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {
       \'a'    : [ promptline#slices#cwd() ],
-      \'b'    : [ promptline#slices#vcs_branch() ],
+      \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status() ],
       \'warn' : [ promptline#slices#last_exit_code() ],
       \'options': {
           \'left_sections' : [ 'a', 'b' ],
