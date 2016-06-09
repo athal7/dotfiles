@@ -85,6 +85,11 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 # docker
   alias d="docker"
   alias dc="docker-compose"
+  function docker_cleanup {
+    docker rm -v `docker ps -a -q -f status=exited`
+    docker rmi `docker images -f dangling=true -q`
+    docker rmi -f $( docker images | grep '<none>' | tr -s ' ' | cut -d ' ' -f 3)
+  }
 
 # secrets file
   source ~/.secrets
