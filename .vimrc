@@ -59,6 +59,7 @@ set shell=bash\ -l               " Use login shell for commands
   set t_Co=256
   set background=dark
   colorscheme hybrid
+  highlight Normal ctermbg=NONE
 
 " Highlight 80 character line
   highlight OverLength ctermbg=darkgrey
