@@ -10,8 +10,8 @@ module AT
                          "pgcli","python","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","caffeine",
-            "daisydisk","dash","divvy","dropbox","firefox","flux","franz","gitx","google-drive","google-chrome","iterm2",
-            "pomotodo","postman","screenhero","sketch","skitch","skype","slack","soulver","spotify","viscosity"]
+            "daisydisk","dash","divvy","dropbox","firefox","flux","franz","gitx","google-chrome","iterm2",
+            "pomotodo","postman","screenhero","sketch","skitch","soulver","spotify"]
 
     LIBRARIES = [
       { language: "ruby", install_command: "gem install", libs: ["rcodetools","reek"] },
