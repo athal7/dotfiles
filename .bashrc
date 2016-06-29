@@ -26,7 +26,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 
 # shell aliases
   alias ll="ls -la"
-  alias e='mvim -v'
+  alias e='vim'
   alias less="less -R"
   alias lf="less +F"
 

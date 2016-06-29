@@ -6,8 +6,8 @@ module AT
     FILES_TO_INCLUDE = [".vim"]
 
     HOMEBREW_PACKAGES = ["ag","autojump","bash-completion","chruby","ctags","git",
-                         "homebrew/completions/brew-cask-completion","hub","macvim","nvm",
-                         "pgcli","python","reattach-to-user-namespace","ruby-install","tmux","watch","wemux"]
+                         "homebrew/completions/brew-cask-completion","hub","nvm",
+                         "pgcli","python","ruby-install","tmux","watch","wemux"]
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","caffeine",
             "daisydisk","dash","divvy","dropbox","firefox","flux","franz","gitx","google-chrome","iterm2",
