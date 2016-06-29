@@ -76,7 +76,6 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 # python
   export PYTHONDONTWRITEBYTECODE=1
   export PIP_DOWNLOAD_CACHE=$HOME/.pip/cache
-  export PIP_REQUIRE_VIRTUALENV=true
 
 # node
   export NVM_DIR=~/.nvm
