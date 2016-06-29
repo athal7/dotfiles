@@ -5,7 +5,7 @@
   user = athal7
 [core]
   excludesfile = /Users/andrewthal/.gitignore_global
-  editor = mvim -v
+  editor = vim
 [color]
   branch = auto
   diff = auto
