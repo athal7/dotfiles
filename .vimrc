@@ -82,6 +82,10 @@ set shell=bash\ -l               " Use login shell for commands
   nnoremap <S-H> :vertical resize -10<cr>
   nnoremap <S-L> :vertical resize +10<cr>
 
+" buffer movement
+  nnoremap <Tab> :bnext<CR>
+  nnoremap <S-Tab> :bprevious<CR>
+
 " allow use of keypad
   :inoremap <Esc>Oq 1
   :inoremap <Esc>Or 2
@@ -217,7 +221,8 @@ set shell=bash\ -l               " Use login shell for commands
   Plugin 'vim-airline/vim-airline-themes'
   let g:airline_theme='tomorrow'
   let g:airline_powerline_fonts = 1
-  let g:airline_extensions = ['syntastic', 'ctrlp']
+  let g:airline#extensions#tabline#enabled = 1
+  let g:airline_extensions = ['syntastic', 'ctrlp', 'tabline']
 
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
