@@ -29,13 +29,12 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   alias e='vim'
   alias less="less -R"
   alias lf="less +F"
+  alias g='hub'
 
 # autojump
   [[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh
 
-# git/github
-  alias g='hub'
-
+# bash completion
   if [ -f $(brew --prefix)/etc/bash_completion ]; then
       . $(brew --prefix)/etc/bash_completion
   fi
