@@ -63,7 +63,7 @@ module AT
     def install_apps
       if with_log("brew cask help")
         message "Installing apps..."
-        with_log("brew cask install #{BREW_CASK_APPS.join(" ")}")
+        with_log("brew cask install #{BREW_CASK_APPS.join(" ")} --force")
       else
         error "Unable to install apps with brew cask, please install #{BREW_CASK_APPS}"
       end
