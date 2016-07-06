@@ -19,14 +19,9 @@ module AT
       { language: "node", install_command: "npm install -g", libs: ["eslint_d"] },
     ]
 
-    attr_accessor :location
-
-    def self.setup_dotfiles
-      new("$HOME")
-    end
-
-    def initialize(location)
-      self.location = location
+    def initialize(location:, verbose: false)
+      @location = location
+      @verbose = verbose
       sync_submodules
       setup_symlinks
       install_homebrew_packages
@@ -42,33 +37,33 @@ module AT
 
     def sync_submodules
       message "Syncing submodules..."
-      silent_system("git submodule sync")
+      with_log("git submodule sync")
     end
 
     def setup_symlinks
       message "Setting up symlinks..."
       Dir.foreach('./') do |filename|
         if should_symlink?(filename)
-          silent_system("rm -rf #{location}/#{filename}")
-          silent_system("ln -s #{Dir.pwd}/#{filename} #{location}/#{filename}")
+          with_log("rm -rf #{@location}/#{filename}")
+          with_log("ln -s #{Dir.pwd}/#{filename} #{@location}/#{filename}")
         end
       end
     end
 
     def install_homebrew_packages
-      if silent_system("brew info")
+      if with_log("brew info")
         message "Installing homebrew packages..."
-        silent_system("brew upgrade #{HOMEBREW_PACKAGES.join(" ")}")
-        silent_system("brew install #{HOMEBREW_PACKAGES.join(" ")}")
+        with_log("brew upgrade #{HOMEBREW_PACKAGES.join(" ")}")
+        with_log("brew install #{HOMEBREW_PACKAGES.join(" ")}")
       else
         error "Unable to install dependencies with homebrew, please install #{HOMEBREW_PACKAGES}"
       end
     end
 
     def install_apps
-      if silent_system("brew cask help")
+      if with_log("brew cask help")
         message "Installing apps..."
-        silent_system("brew cask install #{BREW_CASK_APPS.join(" ")}")
+        with_log("brew cask install #{BREW_CASK_APPS.join(" ")}")
       else
         error "Unable to install apps with brew cask, please install #{BREW_CASK_APPS}"
       end
@@ -76,19 +71,19 @@ module AT
 
     def install_language_versions
       message "Installing ruby #{ENV['RB_VERSION']}"
-      silent_system("ruby-install ruby #{ENV['RB_VERSION']} --no-reinstall") ||
+      with_log("ruby-install ruby #{ENV['RB_VERSION']} --no-reinstall") ||
         error("Unable to install ruby")
 
       node_version = "5.0"
       message "Installing node #{node_version}"
-      silent_system("nvm install #{node_version}") || error("Unable to install node")
+      with_log("nvm install #{node_version}") || error("Unable to install node")
     end
 
     def install_libraries
       LIBRARIES.each do |lib_def|
         message "Installing #{lib_def[:language]} libraries..."
         lib_def[:libs].each do |l|
-          silent_system("#{lib_def[:install_command]} #{l}") ||
+          with_log("#{lib_def[:install_command]} #{l}") ||
             error("Unable to install #{l}")
         end
       end
@@ -96,12 +91,12 @@ module AT
 
     def install_fonts
       message "Installing powerline fonts"
-      silent_system("fonts/install.sh")
+      with_log("fonts/install.sh")
     end
 
     def setup_vim
       message "Setting up vim..."
-      silent_system("cd .vim && rm -rf vundle && git clone http://github.com/gmarik/vundle.git")
+      with_log("cd .vim && rm -rf vundle && git clone http://github.com/gmarik/vundle.git")
       action "Make sure to run :PluginInstall the first time you open up vim!"
     end
 
@@ -122,13 +117,22 @@ module AT
       puts "\e[33m#{str}\e[0m"
     end
 
-    def silent_system(command)
-      system("#{command} >> /dev/null 2>&1")
+    def with_log(command)
+      if @verbose
+        system("#{command}")
+      else
+        system("#{command} >> /dev/null 2>&1")
+      end
     end
   end
 end
 
-desc "Symlinks relevant configs"
-task :default do
-  AT::DotfileSetupHandler.setup_dotfiles
+
+task :setup_configs, [:location, :verbose] do |t, args|
+  args.with_defaults(location: "$HOME", verbose: false)
+  AT::DotfileSetupHandler.new(args)
 end
+
+task :default, [:location, :verbose] => :setup_configs
+task :quiet,   [:location]           => :setup_configs
+task :loud,    [:location]           { |t, args| Rake::Task[:default].invoke(args[:location], true) }
