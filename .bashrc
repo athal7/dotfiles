@@ -83,6 +83,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
 # docker
   alias d="docker"
   alias dc="docker-compose"
+  alias dcr="docker-compose run --rm"
   function docker_cleanup {
     docker rm -v `docker ps -a -q -f status=exited`
     docker rmi `docker images -f dangling=true -q`
