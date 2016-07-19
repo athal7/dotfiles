@@ -182,8 +182,7 @@ set shell=bash\ -l               " Use login shell for commands
     let g:syntastic_javascript_eslint_exec='eslint_d'
     let g:syntastic_enable_elixir_checker = 1
     let g:syntastic_ruby_checkers=['reek']
-    let g:syntastic_python_checkers=['pylint']
-    let g:syntastic_quiet_messages={ "regex": "import-error" }
+    let g:syntastic_python_checkers=[]
 
 " xmpfilter
   Plugin 't9md/vim-ruby-xmpfilter'
