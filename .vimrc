@@ -218,14 +218,13 @@ set shell=bash\ -l               " Use login shell for commands
 " Airline status line
   Plugin 'vim-airline/vim-airline'
   Plugin 'vim-airline/vim-airline-themes'
-  let g:airline_theme='tomorrow'
+  let g:airline_theme='cool'
   let g:airline_powerline_fonts = 1
-  let g:airline#extensions#tabline#enabled = 1
-  let g:airline_extensions = ['syntastic', 'ctrlp', 'tabline']
+  let g:airline_extensions = ['syntastic', 'ctrlp']
 
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
-  let g:tmuxline_theme = 'airline'
+  let g:tmuxline_theme = 'jellybeans'
   let g:tmuxline_preset = {
     \'a'    : '#S',
     \'b'    : '',
@@ -236,15 +235,16 @@ set shell=bash\ -l               " Use login shell for commands
     \'y'    : '#{battery_icon} #{battery_percentage} #{battery_remain}',
     \'z'    : '%a %l:%M%p '}
 
-  call vundle#end()
-  filetype plugin indent on
-
 " Use airline for shell prompt
   Plugin 'edkolev/promptline.vim'
   let g:promptline_theme = 'airline'
+
+  call vundle#end()
+  filetype plugin indent on
+
   let g:promptline_preset = {
       \'a'    : [ promptline#slices#cwd() ],
-      \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status() ],
+      \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()],
       \'warn' : [ promptline#slices#last_exit_code() ],
       \'options': {
           \'left_sections' : [ 'a', 'b' ],
