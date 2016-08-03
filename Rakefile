@@ -10,7 +10,7 @@ module AT
                          "pgcli","python","ruby-install","tmux","watch","wemux"]
 
     BREW_CASK_APPS = ["1password","alfred","atom","bartender","caffeine",
-            "daisydisk","dash","divvy","dropbox","firefox","flux","franz","gitx","google-chrome","iterm2",
+            "daisydisk","dash","divvy","dropbox","firefox","flux","franz","gitx","google-chrome","hyperterm","iterm2",
             "pomotodo","postman","screenhero","sketch","skitch","soulver","spotify"]
 
     LIBRARIES = [

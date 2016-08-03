@@ -1,0 +1,10 @@
+{
+  "name": "hyperterm-plugins",
+  "description": "Auto-generated from `~/.hyperterm.js`!",
+  "private": true,
+  "version": "0.0.1",
+  "repository": "zeit/hyperterm",
+  "license": "MIT",
+  "homepage": "https://hyperterm.org",
+  "dependencies": {}
+}
