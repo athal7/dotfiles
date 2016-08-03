@@ -1,27 +1,12 @@
 require 'fileutils'
+require 'yaml'
 
 module AT
   class DotfileSetupHandler
-    FILES_TO_SKIP = [".","..",".git",".gitignore",".ruby-version"]
-    FILES_TO_INCLUDE = [".vim"]
-
-    HOMEBREW_PACKAGES = ["ag","autojump","bash-completion","chruby","ctags","git",
-                         "heroku","homebrew/completions/brew-cask-completion","hub","nvm",
-                         "pgcli","python","ruby-install","tmux","watch","wemux"]
-
-    BREW_CASK_APPS = ["1password","alfred","atom","bartender","caffeine",
-            "daisydisk","dash","divvy","dropbox","firefox","flux","franz","gitx","google-chrome","hyperterm","iterm2",
-            "pomotodo","postman","screenhero","sketch","skitch","soulver","spotify"]
-
-    LIBRARIES = [
-      { language: "ruby", install_command: "gem install", libs: ["rcodetools","reek"] },
-      { language: "python", install_command: "pip install", libs: ["ipython","pygments","pylint","virtualenv"] },
-      { language: "node", install_command: "npm install -g", libs: ["eslint_d"] },
-    ]
-
-    def initialize(location:, verbose: false)
+    def initialize(location:, verbose:, config_file:)
       @location = location
       @verbose = verbose
+      @config = YAML.load_file(config_file)
       sync_submodules
       setup_symlinks
       install_homebrew_packages
@@ -55,18 +40,18 @@ module AT
         message "Installing homebrew packages..."
         with_log("brew update")
         with_log("brew upgrade")
-        with_log("brew install #{HOMEBREW_PACKAGES.join(" ")}")
+        with_log("brew install #{@config['homebrew_packages'].join(' ')}")
       else
-        error "Unable to install dependencies with homebrew, please install #{HOMEBREW_PACKAGES}"
+        error "Unable to install dependencies with homebrew"
       end
     end
 
     def install_apps
       if with_log("brew cask help")
         message "Installing apps..."
-        with_log("brew cask install #{BREW_CASK_APPS.join(" ")} --force")
+        with_log("brew cask install #{@config['brew_cask_apps'].join(' ')} --force")
       else
-        error "Unable to install apps with brew cask, please install #{BREW_CASK_APPS}"
+        error "Unable to install apps with brew cask"
       end
     end
 
@@ -81,10 +66,10 @@ module AT
     end
 
     def install_libraries
-      LIBRARIES.each do |lib_def|
-        message "Installing #{lib_def[:language]} libraries..."
-        lib_def[:libs].each do |l|
-          with_log("#{lib_def[:install_command]} #{l}") ||
+      @config['libraries'].each do |language, lib_def|
+        message "Installing #{language} libraries..."
+        lib_def['libs'].each do |l|
+          with_log("#{lib_def['install_command']} #{l}") ||
             error("Unable to install #{l}")
         end
       end
@@ -102,8 +87,7 @@ module AT
     end
 
     def should_symlink?(filename)
-      FILES_TO_INCLUDE.include?(filename) ||
-        (filename[0] == '.' && !FILES_TO_SKIP.include?(filename))
+      filename[0] == '.' && !@config['symlinks_to_skip'].include?(filename)
     end
 
     def message(str)
@@ -129,11 +113,11 @@ module AT
 end
 
 
-task :setup_configs, [:location, :verbose] do |t, args|
-  args.with_defaults(location: "$HOME", verbose: false)
+task :setup_configs, [:location, :verbose, :config_file] do |t, args|
+  args.with_defaults(location: "$HOME", verbose: false, config_file: "install.yml")
   AT::DotfileSetupHandler.new(args)
 end
 
-task :default, [:location, :verbose] => :setup_configs
+task :default, [:location, :verbose, :config_file] => :setup_configs
 task :quiet,   [:location]           => :setup_configs
 task :loud,    [:location]           { |t, args| Rake::Task[:default].invoke(args[:location], true) }
