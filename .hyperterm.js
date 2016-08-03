@@ -13,10 +13,10 @@ module.exports = {
     cursorShape: 'BLOCK',
 
     // color of the text
-    foregroundColor: '#fff',
+    foregroundColor: '#eee',
 
     // terminal background color
-    backgroundColor: '#000',
+    backgroundColor: '#222',
 
     // border color (window, tabs)
     borderColor: '#333',
@@ -65,10 +65,16 @@ module.exports = {
   //   `hyperpower`
   //   `@company/project`
   //   `project#1.0.1`
-  plugins: [],
+  plugins: [
+    'hyperlinks',
+    "hypertheme",
+    "hyperterm-hybrid",
+    "hyperpower",
+    "hyperterm-paste"
+  ],
 
   // in development, you can create a directory under
   // `~/.hyperterm_plugins/local/` and include it here
   // to load it and avoid it being `npm install`ed
-  localPlugins: []
+  localPlugins: [],
 };
