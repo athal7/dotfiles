@@ -218,7 +218,7 @@ set shell=bash\ -l               " Use login shell for commands
 " Airline status line
   Plugin 'vim-airline/vim-airline'
   Plugin 'vim-airline/vim-airline-themes'
-  let g:airline_theme='cool'
+  let g:airline_theme='jellybeans'
   let g:airline_powerline_fonts = 1
   let g:airline_extensions = ['syntastic', 'ctrlp']
 
