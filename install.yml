@@ -28,7 +28,6 @@ brew_cask_apps:
   - bartender
   - caffeine
   - daisydisk
-  - dash
   - divvy
   - dropbox
   - firefox
@@ -40,7 +39,6 @@ brew_cask_apps:
   - pomotodo
   - postman
   - screenhero
-  - sketch
   - skitch
   - soulver
   - spotify
