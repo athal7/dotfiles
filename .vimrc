@@ -239,9 +239,6 @@ set shell=bash\ -l               " Use login shell for commands
   Plugin 'edkolev/promptline.vim'
   let g:promptline_theme = 'airline'
 
-  call vundle#end()
-  filetype plugin indent on
-
   let g:promptline_preset = {
       \'a'    : [ promptline#slices#cwd() ],
       \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()],
@@ -250,3 +247,6 @@ set shell=bash\ -l               " Use login shell for commands
           \'left_sections' : [ 'a', 'b' ],
           \'right_sections' : [ 'warn' ],
           \'left_only_sections' : [ 'a', 'b', 'warn' ]}}
+
+  call vundle#end()
+  filetype plugin indent on
