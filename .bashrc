@@ -86,7 +86,8 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   alias dcr="docker-compose run --rm"
   alias dnginx="docker run -d --name nginx -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy"
   function docker_cleanup {
-    docker rm -v `docker ps -a -q -f status=exited`
+    docker stop $(docker ps -a -q)
+    docker rm -f $(docker ps -a -q)
     docker rmi `docker images -f dangling=true -q`
     docker rmi -f $( docker images | grep '<none>' | tr -s ' ' | cut -d ' ' -f 3)
   }
