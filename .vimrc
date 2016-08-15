@@ -33,6 +33,7 @@ set backspace=indent,eol,start   " make backspace work in insert mode
 set wildmode=list:longest,full   " use tab-complete to see a list of possiblities when entering commands
 set clipboard^=unnamed           " Use system clipboard
 set shell=bash\ -l               " Use login shell for commands
+set encoding=utf-8               " utf encoding
 
 " relative line numbers, with absolute on the current line
   set relativenumber

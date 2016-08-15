@@ -10,7 +10,7 @@ module.exports = {
     cursorColor: 'rgba(248,28,229,0.75)',
 
     // `BEAM` for |, `UNDERLINE` for _, `BLOCK` for █
-    cursorShape: 'BEAM',
+    cursorShape: 'BLOCK',
 
     // color of the text
     foregroundColor: '#eee',
@@ -25,11 +25,7 @@ module.exports = {
     css: '',
 
     // custom css to embed in the terminal window
-    termCSS: `
-      * {
-        font-feature-settings: 'liga' 0;
-      }
-    `,
+    termCSS: '',
 
     // custom padding (css format, i.e.: `top right bottom left`)
     padding: '12px 14px',
