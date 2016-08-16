@@ -59,12 +59,12 @@ set encoding=utf-8               " utf encoding
 " default color scheme
   set t_Co=256
   set background=dark
-  colorscheme hybrid
-  highlight Normal ctermbg=NONE
+  colorscheme solarized
+  highlight Normal ctermbg=None
 
-" Highlight 80 character line
+" Highlight long lines
   highlight OverLength ctermbg=darkgrey
-  match OverLength /\%81v.\+/
+  match OverLength /\%121v.\+/
 
 " use 2 spaces for tabs
   set expandtab tabstop=2 softtabstop=2 shiftwidth=2
@@ -219,13 +219,13 @@ set encoding=utf-8               " utf encoding
 " Airline status line
   Plugin 'vim-airline/vim-airline'
   Plugin 'vim-airline/vim-airline-themes'
-  let g:airline_theme='jellybeans'
+  let g:airline_theme='solarized'
   let g:airline_powerline_fonts = 1
   let g:airline_extensions = ['syntastic', 'ctrlp']
 
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
-  let g:tmuxline_theme = 'jellybeans'
+  let g:tmuxline_theme = 'airline'
   let g:tmuxline_preset = {
     \'a'    : '#S',
     \'b'    : '',
