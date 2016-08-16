@@ -28,7 +28,6 @@ brew_cask_apps:
   - bartender
   - caffeine
   - daisydisk
-  - divvy
   - dropbox
   - firefox
   - flux
