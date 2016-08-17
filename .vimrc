@@ -236,10 +236,4 @@ set encoding=utf-8               " utf encoding
 
   let g:promptline_preset = {
       \'a'    : [ promptline#slices#cwd() ],
-      \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()],
-      \'warn' : [ promptline#slices#last_exit_code() ],
-      \'options': {
-          \'left_sections' : [ 'a', 'b' ],
-          \'right_sections' : [ 'warn' ],
-          \'left_only_sections' : [ 'a', 'b', 'warn' ]}}
-
+      \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()]}
