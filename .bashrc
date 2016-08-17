@@ -90,5 +90,11 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
     docker images --quiet --filter=dangling=true | xargs docker rmi
   }
 
+# AWS
+  export AWS_ACCOUNT_ID=$(aws ec2 describe-security-groups \
+    --group-names 'Default' \
+    --query 'SecurityGroups[0].OwnerId' \
+    --output text)
+
 # secrets file
   source ~/.secrets
