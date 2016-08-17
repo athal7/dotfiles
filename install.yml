@@ -58,4 +58,3 @@ libraries:
     install_command: npm install -g
     libs:
       - eslint_d
-      - hpm_cli
