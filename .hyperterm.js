@@ -1,7 +1,7 @@
 module.exports = {
   config: {
     // default font size in pixels for all tabs
-    fontSize: 12,
+    fontSize: 13,
 
     // font family with optional fallbacks
     fontFamily: 'Inconsolata for Powerline',
@@ -65,7 +65,7 @@ module.exports = {
   //   `hyperpower`
   //   `@company/project`
   //   `project#1.0.1`
-  plugins: ['hyperlinks', "hypertheme", "hyperterm-hybrid", "hyperpower"],
+  plugins: ['hyperlinks', "hypertheme", "hyperterm-solarized-light", "hyperpower"],
 
   // in development, you can create a directory under
   // `~/.hyperterm_plugins/local/` and include it here
