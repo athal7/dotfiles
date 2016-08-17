@@ -9,7 +9,7 @@
   "dependencies": {
     "hyperlinks": "latest",
     "hypertheme": "latest",
-    "hyperterm-solarized-light": "latest",
+    "hyperterm-one-light": "latest",
     "hyperpower": "latest"
   }
 }

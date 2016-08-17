@@ -4,7 +4,7 @@ module.exports = {
     fontSize: 13,
 
     // font family with optional fallbacks
-    fontFamily: 'Inconsolata for Powerline',
+    fontFamily: 'Ubuntu Mono derivative Powerline',
 
     // terminal cursor background color and opacity (hex, rgb, hsl, hsv, hwb or cmyk)
     cursorColor: 'rgba(248,28,229,0.75)',
@@ -65,7 +65,7 @@ module.exports = {
   //   `hyperpower`
   //   `@company/project`
   //   `project#1.0.1`
-  plugins: ['hyperlinks', "hypertheme", "hyperterm-solarized-light", "hyperpower"],
+  plugins: ['hyperlinks', "hypertheme", "hyperterm-one-light", "hyperpower"],
 
   // in development, you can create a directory under
   // `~/.hyperterm_plugins/local/` and include it here
