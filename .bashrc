@@ -24,16 +24,6 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
   export LESS_TERMCAP_ue=$'\E[0m'           # end underline
   export LESS_TERMCAP_us=$'\E[04;33;5;146m' # begin underline
 
-# language settings for airline spacing/hyperterm
-export LANG="en_US.UTF-8"
-export LC_COLLATE="en_US.UTF-8"
-export LC_CTYPE="en_US.UTF-8"
-export LC_MESSAGES="en_US.UTF-8"
-export LC_MONETARY="en_US.UTF-8"
-export LC_NUMERIC="en_US.UTF-8"
-export LC_TIME="en_US.UTF-8"
-export LC_ALL="en_US.UTF-8"
-
 # shell aliases
   alias ll="ls -la"
   alias e='vim'
