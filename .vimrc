@@ -176,15 +176,6 @@ set encoding=utf-8               " utf encoding
     au BufNewFile,BufRead *.json set ai filetype=javascript
   Plugin 'tpope/vim-haml'
 
-" Syntastic for catching syntax errors on save
-  Plugin 'scrooloose/syntastic'
-    let g:syntastic_enable_signs=1
-    let g:syntastic_javascript_checkers=['eslint']
-    let g:syntastic_javascript_eslint_exec='eslint_d'
-    let g:syntastic_enable_elixir_checker = 1
-    let g:syntastic_ruby_checkers=['reek']
-    let g:syntastic_python_checkers=[]
-
 " xmpfilter
   Plugin 't9md/vim-ruby-xmpfilter'
   nmap <Leader>x <Plug>(xmpfilter-mark) <Plug>(xmpfilter-run)
@@ -221,7 +212,7 @@ set encoding=utf-8               " utf encoding
   Plugin 'vim-airline/vim-airline-themes'
   let g:airline_theme='solarized'
   let g:airline_powerline_fonts = 1
-  let g:airline_extensions = ['syntastic', 'ctrlp']
+  let g:airline_extensions = ['ctrlp']
 
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
