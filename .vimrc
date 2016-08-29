@@ -50,7 +50,7 @@ set encoding=utf-8               " utf encoding
 "folding settings
   set foldmethod=indent   "fold based on indent
   set foldnestmax=10      "deepest fold is 10 levels
-  set foldenable        "dont fold by default
+  set nofoldenable        "dont fold by default
   set foldlevel=1         "this is just what i use
 
 " remember last position in file
