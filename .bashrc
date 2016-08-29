@@ -89,6 +89,7 @@ export DOTFILE_DIR=$(dirname $(readlink $BASH_SOURCE))
     docker images --all --format "{{.ID}}" | xargs docker rmi
     docker images --quiet --filter=dangling=true | xargs docker rmi
   }
+  alias kc="kubectl"
 
 # AWS
   export AWS_ACCOUNT_ID=$(aws ec2 describe-security-groups \
