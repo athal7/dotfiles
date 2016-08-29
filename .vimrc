@@ -63,7 +63,7 @@ set encoding=utf-8               " utf encoding
   highlight Normal ctermbg=None
 
 " Highlight long lines
-  highlight OverLength ctermbg=darkgrey
+  highlight OverLength ctermbg=lightgrey
   match OverLength /\%121v.\+/
 
 " use 2 spaces for tabs
