@@ -29,7 +29,6 @@ brew_cask_apps:
   - atom
   - bartender
   - caffeine
-  - daisydisk
   - dropbox
   - firefox
   - flux
@@ -37,7 +36,6 @@ brew_cask_apps:
   - gitx
   - google-chrome
   - hyperterm
-  - pomotodo
   - postman
   - screenhero
   - skitch
