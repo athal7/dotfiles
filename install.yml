@@ -15,6 +15,7 @@ homebrew_packages:
   - heroku
   - homebrew/completions/brew-cask-completion
   - hub
+  - kubectl
   - nvm
   - pgcli
   - python
@@ -26,6 +27,7 @@ homebrew_packages:
 brew_cask_apps:
   - 1password
   - alfred
+  - amazon-music
   - atom
   - bartender
   - caffeine
@@ -40,7 +42,6 @@ brew_cask_apps:
   - screenhero
   - skitch
   - soulver
-  - spotify
 libraries:
   ruby:
     install_command: gem install
