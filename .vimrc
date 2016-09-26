@@ -107,6 +107,9 @@ set encoding=utf-8               " utf encoding
 " reindent the entire file
   map <Leader>I gg=G``<cr>
 
+" format JSON
+  command FormatJSON %!python -m json.tool
+
 " Yank from the cursor to the end of the line, to be consistent with C and D.
   nnoremap Y y$
 
