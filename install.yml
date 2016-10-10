@@ -34,13 +34,13 @@ brew_cask_apps:
   - dropbox
   - firefox
   - flux
-  - franz
   - gitx
   - google-chrome
   - hyperterm
   - postman
   - screenhero
   - skitch
+  - slack
   - soulver
 libraries:
   ruby:
