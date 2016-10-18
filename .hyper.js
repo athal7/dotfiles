@@ -15,7 +15,7 @@ module.exports = {
   plugins: [
     "hyperlinks",
     "hypertheme",
-    "hyperterm-one-dark",
+    "hyperterm-one-light",
     "hyperterm-install-devtools",
     "hyperterm-final-say"
   ],

@@ -1,13 +1,20 @@
 # zsh
   export ZSH=$HOME/.oh-my-zsh
-  ZSH_THEME="agnoster"
   HYPHEN_INSENSITIVE=true
   ENABLE_CORRECTION=true
   COMPLETION_WAITING_DOTS=true
-  DISABLE_UNTRACKED_FILES_DIRTY=true
   DISABLE_UPDATE_PROMPT=true
-  plugins=(git bundler osx rake ruby zsh-completions)
+
+# zsh plugins
+  plugins=(bundler gitfast jsontools osx rake ruby tmux zsh-completions)
   source $ZSH/oh-my-zsh.sh
+  ZSH_TMUX_AUTOSTART=true
+
+  source $ZSH/plugins/gitfast/git-prompt.sh
+  PS1='[%n@%m %c$(__git_ps1 " (%s)")]\$ '
+  GIT_PS1_SHOWDIRTYSTATE=true
+  GIT_PS1_SHOWUNTRACKEDFILES=true
+  GIT_PS1_SHOWUPSTREAM="auto"
 
 # terminal color settings
   CLICOLOR=1
