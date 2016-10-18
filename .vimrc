@@ -32,7 +32,7 @@ set display=lastline             " When lines are cropped at the screen bottom, 
 set backspace=indent,eol,start   " make backspace work in insert mode
 set wildmode=list:longest,full   " use tab-complete to see a list of possiblities when entering commands
 set clipboard^=unnamed           " Use system clipboard
-set shell=bash\ -l               " Use login shell for commands
+set shell=zsh                    " Use login shell for commands
 set encoding=utf-8               " utf encoding
 
 " relative line numbers, with absolute on the current line
@@ -58,7 +58,7 @@ set encoding=utf-8               " utf encoding
 
 " default color scheme
   set t_Co=256
-  set background=light
+  set background=dark
   colorscheme papercolor
   highlight Normal ctermbg=None
 
@@ -213,7 +213,7 @@ set encoding=utf-8               " utf encoding
 " Airline status line
   Plugin 'vim-airline/vim-airline'
   Plugin 'vim-airline/vim-airline-themes'
-  let g:airline_theme='papercolor'
+  let g:airline_theme='hybrid'
   let g:airline_powerline_fonts = 1
   let g:airline_extensions = ['ctrlp']
 
@@ -230,13 +230,5 @@ set encoding=utf-8               " utf encoding
     \'y'    : '#{battery_icon} #{battery_percentage} #{battery_remain}',
     \'z'    : '%a %l:%M%p '}
 
-" Use airline for shell prompt
-  Plugin 'edkolev/promptline.vim'
-  let g:promptline_theme = 'airline'
-
   call vundle#end()
   filetype plugin indent on
-
-  let g:promptline_preset = {
-      \'a'    : [ promptline#slices#cwd() ],
-      \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()]}

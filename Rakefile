@@ -7,6 +7,7 @@ module AT
       @location = location
       @verbose = verbose
       @config = YAML.load_file(config_file)
+      setup_default_shell
       sync_submodules
       setup_symlinks
       install_homebrew_packages
@@ -19,6 +20,12 @@ module AT
     end
 
     private
+
+    def setup_default_shell
+      message "Setting up default shell..."
+      with_log("chsh -s $(which zsh)")
+      with_log("curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh")
+    end
 
     def sync_submodules
       message "Syncing submodules..."

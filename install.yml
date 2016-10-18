@@ -7,7 +7,6 @@ symlinks_to_skip:
 homebrew_packages:
   - ag
   - autojump
-  - bash-completion
   - chruby
   - ctags
   - git
@@ -24,6 +23,8 @@ homebrew_packages:
   - tmux
   - watch
   - wemux
+  - zsh
+  - zsh-completions
 brew_cask_apps:
   - 1password
   - alfred
@@ -36,7 +37,7 @@ brew_cask_apps:
   - flux
   - gitx
   - google-chrome
-  - hyperterm
+  - hyper
   - postman
   - screenhero
   - skitch
@@ -59,3 +60,4 @@ libraries:
     install_command: npm install -g
     libs:
       - eslint_d
+      - hyperzsh
