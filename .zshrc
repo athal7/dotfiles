@@ -11,7 +11,7 @@
   ZSH_TMUX_AUTOSTART=true
 
   source $ZSH/plugins/gitfast/git-prompt.sh
-  PS1='[%n@%m %c$(__git_ps1 " (%s)")]\$ '
+  PS1='%B%~ %b $(__git_ps1 "%s") \$ '
   GIT_PS1_SHOWDIRTYSTATE=true
   GIT_PS1_SHOWUNTRACKEDFILES=true
   GIT_PS1_SHOWUPSTREAM="auto"
