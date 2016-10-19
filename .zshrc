@@ -6,7 +6,7 @@
   DISABLE_UPDATE_PROMPT=true
 
 # zsh plugins
-  plugins=(bundler gitfast jsontools osx rake ruby tmux zsh-completions)
+  plugins=(autojump aws docker gitfast jsontools osx tmux vi-mode zsh-completions)
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
 
@@ -50,9 +50,6 @@
   function mkcd {
      mkdir -p "$1" && cd "$1"
   }
-
-# autojump
-  [[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh
 
 # homebrew
   export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
