@@ -210,13 +210,6 @@ set encoding=utf-8               " utf encoding
   Plugin 'vim-scripts/ZoomWin'
     map <Leader>z :ZoomWin<CR>
 
-" Airline status line
-  Plugin 'vim-airline/vim-airline'
-  Plugin 'vim-airline/vim-airline-themes'
-  let g:airline_theme='papercolor'
-  let g:airline_powerline_fonts = 1
-  let g:airline_extensions = ['ctrlp']
-
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
   let g:tmuxline_theme = 'airline'
@@ -229,6 +222,13 @@ set encoding=utf-8               " utf encoding
     \'x'    : '',
     \'y'    : '#{battery_icon} #{battery_percentage} #{battery_remain}',
     \'z'    : '%a %l:%M%p '}
+
+" Airline status line
+  Plugin 'vim-airline/vim-airline'
+  Plugin 'vim-airline/vim-airline-themes'
+  let g:airline_theme='papercolor'
+  let g:airline_powerline_fonts = 1
+  let g:airline_extensions = ['ctrlp', 'tmuxline']
 
   call vundle#end()
   filetype plugin indent on
