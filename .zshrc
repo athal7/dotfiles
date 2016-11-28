@@ -1,7 +1,6 @@
 # zsh
   export ZSH=$HOME/.oh-my-zsh
   HYPHEN_INSENSITIVE=true
-  ENABLE_CORRECTION=true
   COMPLETION_WAITING_DOTS=true
   DISABLE_UPDATE_PROMPT=true
 
