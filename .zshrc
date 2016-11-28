@@ -66,7 +66,7 @@
 
   source /usr/local/share/chruby/chruby.sh
   source /usr/local/share/chruby/auto.sh
-  export RB_VERSION=2.3.0
+  export RB_VERSION=2.3.3
   chruby $RB_VERSION
 
   alias be='bundle exec'
