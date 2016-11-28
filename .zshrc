@@ -96,6 +96,8 @@
     docker images --quiet --filter=dangling=true | xargs docker rmi
   }
   alias kc="kubectl"
+  alias kd="kubectl --context=dev"
+  alias kp="kubectl --context=prod"
 
 # AWS
   export AWS_ACCOUNT_ID=$(aws ec2 describe-security-groups \
