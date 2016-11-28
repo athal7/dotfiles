@@ -52,6 +52,7 @@ libraries:
   python:
     install_command: pip install
     libs:
+      - howdoi
       - ipython
       - pygments
       - pylint
