@@ -49,6 +49,7 @@
   function mkcd {
      mkdir -p "$1" && cd "$1"
   }
+  alias watch='watch '
 
 # homebrew
   export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
