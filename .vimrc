@@ -216,13 +216,9 @@ set encoding=utf-8               " utf encoding
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
   let g:tmuxline_preset = {
-    \'a'    : '#S',
-    \'b'    : '',
-    \'c'    : '',
-    \'win'  : '#I #W',
-    \'cwin' : '#I #W',
-    \'x'    : '',
-    \'y'    : '#{battery_icon} #{battery_percentage} #{battery_remain}',
+    \'a'      : '#h',
+    \'win'    : '#I #W',
+    \'cwin'    : '#I #W',
     \'z'    : '%a %l:%M%p '}
 
 " Airline status line
