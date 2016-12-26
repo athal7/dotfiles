@@ -210,6 +210,9 @@ set encoding=utf-8               " utf encoding
   Plugin 'vim-scripts/ZoomWin'
     map <Leader>z :ZoomWin<CR>
 
+" Use airline for the shell prompt
+  Plugin 'edkolev/promptline.vim'
+
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
   let g:tmuxline_theme = 'airline'
@@ -232,3 +235,7 @@ set encoding=utf-8               " utf encoding
 
   call vundle#end()
   filetype plugin indent on
+  let g:promptline_theme = 'airline'
+  let g:promptline_preset = {
+         \'a'    : [ promptline#slices#cwd() ],
+         \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()]}

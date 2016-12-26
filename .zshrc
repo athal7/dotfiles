@@ -9,11 +9,8 @@
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
 
-  source $ZSH/plugins/gitfast/git-prompt.sh
-  precmd () { __git_ps1 "$fg_bold[blue] %~$reset_color" " $ %s" }
-  GIT_PS1_SHOWDIRTYSTATE=true
-  GIT_PS1_SHOWUNTRACKEDFILES=true
-  GIT_PS1_SHOWUPSTREAM="auto"
+# prompt
+  source ~/.shell/.shell_prompt.sh
 
 # terminal color settings
   CLICOLOR=1
