@@ -215,7 +215,6 @@ set encoding=utf-8               " utf encoding
 
 " Use airline for tmux status bar
   Plugin 'edkolev/tmuxline.vim'
-  let g:tmuxline_theme = 'airline'
   let g:tmuxline_preset = {
     \'a'    : '#S',
     \'b'    : '',
@@ -235,6 +234,7 @@ set encoding=utf-8               " utf encoding
 
   call vundle#end()
   filetype plugin indent on
+
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {
          \'a'    : [ promptline#slices#cwd() ],
