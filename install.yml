@@ -32,6 +32,7 @@ brew_cask_apps:
   - atom
   - bartender
   - caffeine
+  - docker
   - dropbox
   - firefox
   - flux
