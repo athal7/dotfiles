@@ -9,6 +9,18 @@
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
 
+  fancy-ctrl-z () {
+    if [[ $#BUFFER -eq 0 ]]; then
+      BUFFER="fg"
+      zle accept-line
+    else
+      zle push-input
+      zle clear-screen
+    fi
+  }
+  zle -N fancy-ctrl-z
+  bindkey '^Z' fancy-ctrl-z
+
 # prompt
   source ~/.shell/.shell_prompt.sh
 
