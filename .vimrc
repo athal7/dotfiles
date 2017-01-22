@@ -175,6 +175,7 @@ set encoding=utf-8               " utf encoding
   Plugin 'othree/yajs'
     au BufNewFile,BufRead *.json set ai filetype=javascript
   Plugin 'tpope/vim-haml'
+  Plugin 'mitsuhiko/vim-python-combined'
 
 " xmpfilter
   Plugin 't9md/vim-ruby-xmpfilter'
