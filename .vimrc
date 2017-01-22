@@ -113,9 +113,6 @@ set encoding=utf-8               " utf encoding
 " Yank from the cursor to the end of the line, to be consistent with C and D.
   nnoremap Y y$
 
-" clean up trailing whitespace
-  map <Leader>c :%s/\s\+$<cr>
-
 " refresh ctrlp and nerdtree
   function Refresh()
     echo "refreshing files..."
