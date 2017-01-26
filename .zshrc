@@ -108,6 +108,9 @@
   alias kc="kubectl"
   alias kd="kubectl --context=dev"
   alias kp="kubectl --context=prod"
+  function kclog {
+    kubectl get po --no-headers -l $1 | cut -d ' ' -f 1 | xargs kubectl logs -f
+  }
 
 # AWS
   export AWS_ACCOUNT_ID=$(aws ec2 describe-security-groups \
