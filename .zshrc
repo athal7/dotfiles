@@ -5,7 +5,7 @@
   DISABLE_UPDATE_PROMPT=true
 
 # zsh plugins
-  plugins=(autojump aws docker gitfast jsontools osx tmux vi-mode zsh-completions)
+  plugins=(jsontools osx tmux vi-mode zsh-completions)
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
 
