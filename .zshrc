@@ -5,7 +5,7 @@
   DISABLE_UPDATE_PROMPT=true
 
 # zsh plugins
-  plugins=(autojump aws docker gitfast jsontools osx tmux vi-mode zsh-completions)
+  plugins=(autojump docker jsontools osx tmux vi-mode zsh-completions)
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
 
@@ -94,7 +94,7 @@
 
 # node
   export NVM_DIR=~/.nvm
-  . $(brew --prefix nvm)/nvm.sh
+  . $(brew --prefix nvm)/nvm.sh --no-use
 
 # docker
   alias d="docker"
