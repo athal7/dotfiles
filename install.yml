@@ -37,7 +37,6 @@ brew_cask_apps:
   - docker
   - dropbox
   - firefox
-  - flux
   - gitx
   - google-chrome
   - hyper
