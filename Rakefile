@@ -15,7 +15,6 @@ module AT
       install_language_versions
       install_libraries
       install_fonts
-      setup_vim
       message "All done!"
     end
 
@@ -29,6 +28,7 @@ module AT
 
     def sync_submodules
       message "Syncing submodules..."
+      with_log("git submodule update --init")
       with_log("git submodule sync")
     end
 
@@ -87,12 +87,6 @@ module AT
     def install_fonts
       message "Installing powerline fonts"
       with_log("fonts/install.sh")
-    end
-
-    def setup_vim
-      message "Setting up vim..."
-      with_log("cd .vim && rm -rf vundle && git clone http://github.com/gmarik/vundle.git")
-      action "Make sure to run :PluginInstall the first time you open up vim!"
     end
 
     def should_symlink?(filename)
