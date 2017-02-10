@@ -83,9 +83,11 @@ set encoding=utf-8               " utf encoding
   nnoremap <S-H> :vertical resize -10<cr>
   nnoremap <S-L> :vertical resize +10<cr>
 
-" buffer movement
+" buffer movement and closing
   nnoremap <Tab> :bnext<CR>
   nnoremap <S-Tab> :bprevious<CR>
+  cnoreabbrev x w<bar>bd
+
 
 " allow use of keypad
   :inoremap <Esc>Oq 1
