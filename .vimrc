@@ -224,7 +224,7 @@ set encoding=utf-8               " utf encoding
   Plugin 'vim-airline/vim-airline-themes'
   let g:airline_theme='papercolor'
   let g:airline_powerline_fonts = 1
-  let g:airline_extensions = ['ctrlp', 'tmuxline']
+  let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline']
 
   call vundle#end()
   filetype plugin indent on
