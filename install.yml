@@ -44,6 +44,7 @@ brew_cask_apps:
   - skitch
   - slack
   - soulver
+  - teensy
 libraries:
   ruby:
     install_command: gem install
