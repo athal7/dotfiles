@@ -33,7 +33,6 @@ brew_cask_apps:
   - amazon-music
   - atom
   - bartender
-  - caffeine
   - docker
   - dropbox
   - firefox
