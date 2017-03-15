@@ -199,8 +199,10 @@ set encoding=utf-8               " utf encoding
   Plugin 'edkolev/tmuxline.vim'
   let g:tmuxline_preset = {
     \'a'      : '#h',
+    \'b'      : 'kube: #(kubectl config get-contexts | grep "*" | tr -s " " | cut -d " " -f 3,5)',
     \'win'    : '#I #W',
     \'cwin'    : '#I #W',
+    \'y'    : '#(tmux show-window-options | grep synchronize-panes)',
     \'z'    : '%a %l:%M%p '}
 
 " Airline status line
