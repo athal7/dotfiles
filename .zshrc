@@ -108,11 +108,28 @@
     docker images --all --format "{{.ID}}" | xargs docker rmi
     docker images --quiet --filter=dangling=true | xargs docker rmi
   }
-  alias kc="kubectl"
+  alias k="kubectl"
   alias kd="kubectl --context=dev"
   alias kp="kubectl --context=prod"
-  function kclog {
-    kubectl get po --no-headers -l $1 | cut -d ' ' -f 1 | xargs kubectl logs -f
+  function kpod {
+    kubectl get pod --no-headers $@ | cut -d ' ' -f 1
+  }
+
+  function klog {
+    kubectl logs -f $(kpod "${@:1:2}") "${@:3}" bash
+  }
+
+  function ksh {
+    kubectl exec -it $(kpod "${@:1:2}") "${@:3}" bash
+  }
+
+  function ksc {
+    local context=${1}
+    if [[ -z "$context" ]]; then
+      kubectl config get-contexts
+    else
+      kubectl config use-context ${context}
+    fi
   }
 
 # AWS
