@@ -91,6 +91,9 @@
 # python
   export PYTHONDONTWRITEBYTECODE=1
   export PIP_DOWNLOAD_CACHE=$HOME/.pip/cache
+  export PATH="$HOME/.pyenv/bin:$PATH"
+  eval "$(pyenv init -)"
+  eval "$(pyenv virtualenv-init -)"
 
 # node
   export NVM_DIR=~/.nvm
