@@ -109,8 +109,6 @@
     docker images --quiet --filter=dangling=true | xargs docker rmi
   }
   alias k="kubectl"
-  alias kd="kubectl --context=dev"
-  alias kp="kubectl --context=prod"
   function kpod {
     kubectl get pod --no-headers $@ | cut -d ' ' -f 1
   }
@@ -129,6 +127,16 @@
       kubectl config get-contexts
     else
       kubectl config use-context ${context}
+    fi
+  }
+
+  function kns {
+    local namespace=${1}
+    if [[ -z "$namespace" ]]; then
+      kubectl get ns
+    else
+      local context=$(kubectl config current-context)
+      kubectl config set-context ${context} --namespace ${namespace}
     fi
   }
 
