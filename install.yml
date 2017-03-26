@@ -44,6 +44,7 @@ brew_cask_apps:
   - slack
   - soulver
   - teensy
+  - tunnelbear
 libraries:
   ruby:
     install_command: gem install
