@@ -16,6 +16,8 @@ homebrew_packages:
   - kubectl
   - nvm
   - pgcli
+  - pyenv
+  - pyenv-virtualenv
   - python
   - reattach-to-user-namespace
   - rename
