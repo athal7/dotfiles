@@ -114,7 +114,9 @@
   }
 
   function klog {
-    kubectl logs -f $(kpod "${@:1:2}") "${@:3}" bash
+    for pod in $(kpod "${@:1:2}"); do
+      kubectl logs -f $pod "${@:3}"
+    done
   }
 
   function ksh {
