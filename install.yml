@@ -7,8 +7,10 @@ symlinks_to_skip:
 homebrew_packages:
   - ag
   - autojump
+  - awscli
   - chruby
   - ctags
+  - dnsmasq
   - git
   - heroku
   - homebrew/completions/brew-cask-completion
@@ -40,12 +42,16 @@ brew_cask_apps:
   - dropbox
   - firefox
   - google-chrome
+  - mailplane
+  - pomotodo
   - postman
   - screenhero
   - skitch
   - slack
   - soulver
+  - tad
   - teensy
+  - zoomus
 libraries:
   ruby:
     install_command: gem install
