@@ -142,6 +142,13 @@
     fi
   }
 
+  function kcapacity {
+    for node in $(kubectl get no --no-headers | awk '$0 !~ /Disabled/ {print $1}'); do
+      echo -n "Node ${node} - "
+      kubectl describe no $node | grep -A4 'Allocated resources' | tail -n1 | awk '{print "CPU Requests " $1 " " $2 " Memory Requests: " $5 " " $6}'
+    done
+  }
+
 # AWS
   export AWS_ACCOUNT_ID=$(aws ec2 describe-security-groups \
     --group-names 'Default' \
