@@ -154,6 +154,10 @@ set encoding=utf-8               " utf encoding
   Plug 'tpope/vim-haml'
   Plug 'mitsuhiko/vim-python-combined'
 
+" linting
+  Plug 'w0rp/ale'
+  let g:ale_linters = {'python': ['flake8']}
+
 " xmpfilter
   Plug 't9md/vim-ruby-xmpfilter'
   nmap <Leader>x <Plug>(xmpfilter-mark) <Plug>(xmpfilter-run)
@@ -203,7 +207,7 @@ set encoding=utf-8               " utf encoding
   Plug 'vim-airline/vim-airline-themes'
   let g:airline_theme='papercolor'
   let g:airline_powerline_fonts = 1
-  let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline']
+  let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline', 'ale']
 
   call plug#end()
 
