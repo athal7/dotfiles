@@ -27,7 +27,7 @@
 # terminal color settings
   CLICOLOR=1
   export TERM=xterm-256color
-  export EDITOR="vim"
+  export EDITOR="nvim"
 
   BLACK="\[\033[0;30m\]"
   RED="\[\033[0;31m\]"
@@ -50,7 +50,7 @@
 
 # shell aliases
   alias ll="ls -la"
-  alias e='vim'
+  alias e=$EDITOR
   alias less="less -R"
   alias lf="less +F"
   alias g='hub'

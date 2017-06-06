@@ -17,6 +17,7 @@ homebrew_packages:
   - hub
   - kubectl
   - mailplane
+  - neovim/neovim/neovim
   - nvm
   - pgcli
   - pyenv
