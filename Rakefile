@@ -10,7 +10,7 @@ module AT
       setup_default_shell
       sync_submodules
       setup_symlinks
-      setup_nvim
+      setup_vim
       install_homebrew_packages
       install_apps
       install_language_versions
@@ -43,11 +43,14 @@ module AT
       end
     end
 
-    def setup_nvim
+    def setup_vim
       message "Setting up nvim..."
       with_log("mkdir -p #{@location}/.config/nvim")
       with_log("rm -rf #{@location}/.config/nvim/init.vim")
       with_log("ln -s #{Dir.pwd}/.init.vim #{@location}/.config/nvim/init.vim")
+
+      message "Setting up vimplug..."
+      with_log("curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim")
     end
 
     def install_homebrew_packages

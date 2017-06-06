@@ -1,12 +1,5 @@
 set nocompatible
-filetype off
-
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/vundle
-call vundle#begin()
-
-" let Vundle manage Vundle, required
-  Plugin 'VundleVim/Vundle.vim'
+call plug#begin('~/.vim/plugged')
 
 " Set leader
   let mapleader=","
@@ -117,56 +110,56 @@ set encoding=utf-8               " utf encoding
   map <Leader>r :call Refresh()<cr>
 
 " Adds 'end' in ruby
-  Plugin 'tpope/vim-endwise'
+  Plug 'tpope/vim-endwise'
 
 " Git wrapper
-  Plugin 'tpope/vim-fugitive'
+  Plug 'tpope/vim-fugitive'
 
 " Insert-mode auto-completion with 'tab'
-  Plugin 'ervandew/supertab'
+  Plug 'ervandew/supertab'
 
 " Universal comment plugin
-  Plugin 'tomtom/tcomment_vim'
+  Plug 'tomtom/tcomment_vim'
 
 " Syntax highlighting
     au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,config.ru} set ft=ruby
-  Plugin 'groenewege/vim-less'
+  Plug 'groenewege/vim-less'
     au BufNewFile,BufRead *.less set filetype=less
-  Plugin 'cakebaker/scss-syntax.vim'
+  Plug 'cakebaker/scss-syntax.vim'
     au BufRead,BufNewFile *.scss set filetype=scss
-  Plugin 'juvenn/mustache.vim'
+  Plug 'juvenn/mustache.vim'
     au BufNewFile,BufRead *.mustache,*.handlebars,*.hbs set filetype=mustache
-  Plugin 'nono/vim-handlebars'
+  Plug 'nono/vim-handlebars'
     au BufNewFile,BufRead *.hbs set filetype=handlebars
-  Plugin 'kchmck/vim-coffee-script'
+  Plug 'kchmck/vim-coffee-script'
     au BufNewFile,BufRead *.coffee,*.eco set filetype=coffee
-  Plugin 'rosstimson/scala-vim-support'
+  Plug 'rosstimson/scala-vim-support'
     au BufNewFile,BufRead *.scala set filetype=scala
-  Plugin 'tpope/vim-markdown'
+  Plug 'tpope/vim-markdown'
     augroup mkd
       autocmd BufNewFile,BufRead *.mkd      set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
       autocmd BufNewFile,BufRead *.md       set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
       autocmd BufNewFile,BufRead *.markdown set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
     augroup END
-  Plugin 'vim-scripts/VimClojure'
+  Plug 'vim-scripts/VimClojure'
     autocmd BufNewFile,BufRead *.clj set filetype=clojure
-  Plugin 'elixir-lang/vim-elixir'
+  Plug 'elixir-lang/vim-elixir'
     autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
-  Plugin 'fatih/vim-go'
+  Plug 'fatih/vim-go'
     au BufRead,BufNewFile *.go set filetype=go
-  Plugin 'slim-template/vim-slim'
+  Plug 'slim-template/vim-slim'
     autocmd BufNewFile,BufRead *.slim set filetype=haml
-  Plugin 'othree/yajs'
+  Plug 'othree/yajs'
     au BufNewFile,BufRead *.json set ai filetype=javascript
-  Plugin 'tpope/vim-haml'
-  Plugin 'mitsuhiko/vim-python-combined'
+  Plug 'tpope/vim-haml'
+  Plug 'mitsuhiko/vim-python-combined'
 
 " xmpfilter
-  Plugin 't9md/vim-ruby-xmpfilter'
+  Plug 't9md/vim-ruby-xmpfilter'
   nmap <Leader>x <Plug>(xmpfilter-mark) <Plug>(xmpfilter-run)
 
 " ctrlp
-  Plugin 'kien/ctrlp.vim'
+  Plug 'kien/ctrlp.vim'
   nnoremap <leader>b :CtrlPBuffer<CR>
   let g:ctrlp_working_path_mode = '' " enables search of entire filesystem
   let g:ctrlp_max_files = 0
@@ -175,28 +168,28 @@ set encoding=utf-8               " utf encoding
   let g:ctrlp_user_command = "ag %s -i --nocolor --nogroup --hidden --ignore  --ignore .svn --ignore .hg --ignore .DS_Store --ignore '**/*.pyc' -g ''"
 
 " AG, The Silver Searcher
-  Plugin 'rking/ag.vim'
+  Plug 'rking/ag.vim'
     nmap g/ :Ag<space>
     nmap g* :Ag -w <C-R><C-W><space>
 
 " Tabular for aligning text
-  Plugin 'godlygeek/tabular'
+  Plug 'godlygeek/tabular'
     map <Leader>a :Tabularize<space>
 
 " NERDTree for project drawer
-  Plugin 'scrooloose/nerdtree'
+  Plug 'scrooloose/nerdtree'
     let NERDTreeHijackNetrw = 0
     nmap <Leader>w :NERDTreeToggle<CR>
 
 " ZoomWin to fullscreen a particular buffer without losing others
-  Plugin 'vim-scripts/ZoomWin'
+  Plug 'vim-scripts/ZoomWin'
     map <Leader>z :ZoomWin<CR>
 
 " Use airline for the shell prompt
-  Plugin 'edkolev/promptline.vim'
+  Plug 'edkolev/promptline.vim'
 
 " Use airline for tmux status bar
-  Plugin 'edkolev/tmuxline.vim'
+  Plug 'edkolev/tmuxline.vim'
   let g:tmuxline_preset = {
     \'a'      : '#h',
     \'b'      : 'kube: #(kubectl config get-contexts | grep "*" | tr -s " " | cut -d " " -f 3,5)',
@@ -206,14 +199,13 @@ set encoding=utf-8               " utf encoding
     \'z'    : '%a %l:%M%p '}
 
 " Airline status line
-  Plugin 'vim-airline/vim-airline'
-  Plugin 'vim-airline/vim-airline-themes'
+  Plug 'vim-airline/vim-airline'
+  Plug 'vim-airline/vim-airline-themes'
   let g:airline_theme='papercolor'
   let g:airline_powerline_fonts = 1
   let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline']
 
-  call vundle#end()
-  filetype plugin indent on
+  call plug#end()
 
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {
