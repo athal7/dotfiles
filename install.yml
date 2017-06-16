@@ -35,7 +35,6 @@ homebrew_packages:
   - zsh-completions
 brew_cask_apps:
   - 1password
-  - alfred
   - amazon-music
   - atom
   - bartender
@@ -44,6 +43,7 @@ brew_cask_apps:
   - firefox
   - google-chrome
   - mailplane
+  - paste
   - pomotodo
   - postman
   - screenhero
