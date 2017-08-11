@@ -148,11 +148,5 @@
     done
   }
 
-# AWS
-  export AWS_ACCOUNT_ID=$(aws ec2 describe-security-groups \
-    --group-names 'Default' \
-    --query 'SecurityGroups[0].OwnerId' \
-    --output text)
-
 # secrets file
   source ~/.secrets
