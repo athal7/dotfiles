@@ -2,10 +2,9 @@
   export ZSH=$HOME/.oh-my-zsh
   HYPHEN_INSENSITIVE=true
   COMPLETION_WAITING_DOTS=true
-  DISABLE_UPDATE_PROMPT=true
 
 # zsh plugins
-  plugins=(autojump docker jsontools osx tmux vi-mode zsh-completions)
+  plugins=(autojump docker jsontools osx tmux zsh-completions)
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
 
