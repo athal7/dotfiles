@@ -11,6 +11,8 @@ homebrew_packages:
   - chruby
   - ctags
   - dnsmasq
+  - elixir
+  - exercism
   - git
   - heroku
   - homebrew/completions/brew-cask-completion
@@ -40,16 +42,17 @@ brew_cask_apps:
   - bartender
   - docker
   - dropbox
+  - emojipedia
   - firefox
   - google-chrome
   - mailplane
   - paste
   - pomotodo
   - postman
+  - rocket
   - screenhero
   - skitch
   - slack
-  - soulver
   - tad
   - teensy
   - zoomus
