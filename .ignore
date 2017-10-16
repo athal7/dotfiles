@@ -1,0 +1,5 @@
+**/_build/**/*
+**/.git/**/*
+**/node_modules/**/*
+**/site-packages/**/*
+**/deps/**/*
