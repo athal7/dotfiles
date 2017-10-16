@@ -109,14 +109,9 @@
     docker images --quiet --filter=dangling=true | xargs docker rmi
   }
   alias k="kubectl"
+  alias klog="kubetail"
   function kpod {
     kubectl get pod --no-headers $@ | cut -d ' ' -f 1
-  }
-
-  function klog {
-    for pod in $(kpod "${@:1:2}"); do
-      kubectl logs -f $pod "${@:3}"
-    done
   }
 
   function ksh {

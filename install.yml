@@ -17,6 +17,7 @@ homebrew_packages:
   - heroku
   - homebrew/completions/brew-cask-completion
   - hub
+  - johanhaleby/kubetail/kubetail
   - kubectl
   - mailplane
   - neovim/neovim/neovim
