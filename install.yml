@@ -43,8 +43,8 @@ brew_cask_apps:
   - bartender
   - docker
   - dropbox
-  - emojipedia
   - firefox
+  - github-desktop
   - google-chrome
   - mailplane
   - paste
