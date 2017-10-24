@@ -46,6 +46,7 @@ brew_cask_apps:
   - firefox
   - github-desktop
   - google-chrome
+  - hyper
   - mailplane
   - paste
   - pomotodo
@@ -75,4 +76,5 @@ libraries:
     install_command: npm install -g
     libs:
       - eslint_d
+      - hpm
       - hyperzsh
