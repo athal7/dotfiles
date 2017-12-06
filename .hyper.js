@@ -15,12 +15,9 @@ module.exports = {
   plugins: [
     "hyperlinks",
     "hypertheme",
-    "hyper-solarized-light",
-    "hyperterm-install-devtools",
+    "hyperterm-one-light",
     "hyperterm-final-say",
-    "hyperterm-paste",
-    "hyper-blink",
-    "hyper-autoprofile",
-    "gitrocket"
+    "hyperterm-install-devtools",
+    "hyper-blink"
   ],
 };

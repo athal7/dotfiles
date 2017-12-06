@@ -9,11 +9,9 @@
   "dependencies": {
     "hyperlinks": "latest",
     "hypertheme": "latest",
-    "hyper-solarized-light": "latest",
-    "hyperterm-install-devtools": "latest",
+    "hyperterm-one-light": "latest",
     "hyperterm-final-say": "latest",
-    "hyperterm-paste": "latest",
-    "hyper-blink": "latest",
-    "gitrocket": "latest"
+    "hyperterm-install-devtools": "latest",
+    "hyper-blink": "latest"
   }
 }
