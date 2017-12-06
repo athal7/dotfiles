@@ -43,6 +43,7 @@ brew_cask_apps:
   - bartender
   - docker
   - dropbox
+  - fantastical
   - firefox
   - github-desktop
   - google-chrome
@@ -51,7 +52,6 @@ brew_cask_apps:
   - paste
   - pomotodo
   - postman
-  - rocket
   - screenhero
   - skitch
   - slack
@@ -78,3 +78,5 @@ libraries:
       - eslint_d
       - hpm
       - hyperzsh
+      - nba-go
+      - tldr
