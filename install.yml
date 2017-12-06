@@ -18,6 +18,7 @@ homebrew_packages:
   - homebrew/completions/brew-cask-completion
   - hub
   - johanhaleby/kubetail/kubetail
+  - jq
   - kubectl
   - mailplane
   - neovim/neovim/neovim
