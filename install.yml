@@ -51,6 +51,7 @@ brew_cask_apps:
   - hyper
   - mailplane
   - paste
+  - pgadmin4
   - pomotodo
   - postman
   - screenhero
