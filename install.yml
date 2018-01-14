@@ -5,7 +5,7 @@ symlinks_to_skip:
   - .gitignore
   - .ruby-version
 homebrew_packages:
-  - ag
+  - ack
   - autojump
   - awscli
   - chruby

@@ -171,10 +171,10 @@ set encoding=utf-8               " utf encoding
   let g:ctrlp_max_depth = 40
   let g:ctrlp_user_command = "ag %s -i --nocolor --nogroup --hidden --ignore  --ignore .svn --ignore .hg --ignore .DS_Store --ignore '**/*.pyc' -g ''"
 
-" AG, The Silver Searcher
-  Plug 'rking/ag.vim'
-    nmap g/ :Ag<space>
-    nmap g* :Ag -w <C-R><C-W><space>
+" Ack
+  Plug 'mileszs/ack.vim'
+    nmap g/ :Ack<space>
+    nmap g* :Ack -w <C-R><C-W><space>
 
 " Tabular for aligning text
   Plug 'godlygeek/tabular'
