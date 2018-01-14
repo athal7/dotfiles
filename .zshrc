@@ -58,7 +58,6 @@
      mkdir -p "$1" && cd "$1"
   }
   alias watch='watch '
-  alias ag='ag --path-to-ignore ~/.ignore'
 
 # homebrew
   export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
