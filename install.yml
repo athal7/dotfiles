@@ -68,6 +68,7 @@ libraries:
   python:
     install_command: pip install
     libs:
+      - grip
       - howdoi
       - ipython
       - pygments

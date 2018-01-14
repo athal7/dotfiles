@@ -212,6 +212,11 @@ set encoding=utf-8               " utf encoding
 " Time tracking
   Plug 'wakatime/vim-wakatime'
 
+" Markdown preview
+  Plug 'JamshedVesuna/vim-markdown-preview'
+  let vim_markdown_preview_github=1
+  let vim_markdown_preview_hotkey='<C-m>'
+
   call plug#end()
 
   let g:promptline_theme = 'airline'
