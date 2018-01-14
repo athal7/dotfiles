@@ -169,7 +169,9 @@ set encoding=utf-8               " utf encoding
   let g:ctrlp_max_files = 0
   let g:ctrlp_follow_symlinks=1
   let g:ctrlp_max_depth = 40
-  let g:ctrlp_user_command = "ag %s -i --nocolor --nogroup --hidden --ignore  --ignore .svn --ignore .hg --ignore .DS_Store --ignore '**/*.pyc' -g ''"
+  let g:ctrlp_custom_ignore = {
+    \ 'dir': '\.git\|node_modules\|_build\|site-packages\|deps'
+    \ }
 
 " Ack
   Plug 'mileszs/ack.vim'
