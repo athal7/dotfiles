@@ -28,15 +28,15 @@
   export TERM=xterm-256color
   export EDITOR="nvim"
 
-  BLACK="\[\033[0;30m\]"
-  RED="\[\033[0;31m\]"
-  GREEN="\[\033[0;32m\]"
-  YELLOW="\[\033[0;33m\]"
-  DARKBLUE="\[\033[0;34m\]"
-  PINK="\[\033[0;35m\]"
-  BLUE="\[\033[0;36m\]"
-  WHITE="\[\033[1;37m\]"
-  OFF="\[\033[0m\]"
+  BLACK="\033[0;30m"
+  RED="\033[0;31m"
+  GREEN="\033[0;32m"
+  YELLOW="\033[0;33m"
+  DARKBLUE="\033[0;34m"
+  PINK="\033[0;35m"
+  BLUE="\033[0;36m"
+  WHITE="\033[1;37m"
+  OFF="\033[0m"
 
 # color for man pages
   export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
