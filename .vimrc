@@ -170,7 +170,7 @@ set encoding=utf-8               " utf encoding
   let g:ctrlp_follow_symlinks=1
   let g:ctrlp_max_depth = 40
   let g:ctrlp_custom_ignore = {
-    \ 'dir': '\.git\|node_modules\|_build\|site-packages\|deps'
+    \ 'dir': '\.git\|node_modules\|_build\|site-packages\|deps\|__pycache__'
     \ }
 
 " Ack

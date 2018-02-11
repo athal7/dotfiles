@@ -3,6 +3,7 @@
 --ignore-dir=_build/
 --ignore-dir=site-packages/
 --ignore-dir=deps/
+--ignore-dir=__pycache__/
 
 --pager
 less -r
