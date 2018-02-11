@@ -154,6 +154,8 @@ set encoding=utf-8               " utf encoding
     au BufNewFile,BufRead *.json set ai filetype=javascript
   Plug 'tpope/vim-haml'
   Plug 'mitsuhiko/vim-python-combined'
+  Plug 'elmcast/elm-vim'
+    let g:elm_setup_keybindings = 0
 
 " linting
   Plug 'w0rp/ale'
