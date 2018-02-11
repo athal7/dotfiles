@@ -145,6 +145,7 @@ set encoding=utf-8               " utf encoding
     autocmd BufNewFile,BufRead *.clj set filetype=clojure
   Plug 'elixir-lang/vim-elixir'
     autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
+    autocmd BufWritePost *.exs,*.ex execute ":!mix format <afile>"
   Plug 'fatih/vim-go'
     au BufRead,BufNewFile *.go set filetype=go
   Plug 'slim-template/vim-slim'
