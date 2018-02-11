@@ -20,7 +20,6 @@ homebrew_packages:
   - johanhaleby/kubetail/kubetail
   - jq
   - kubectl
-  - mailplane
   - neovim/neovim/neovim
   - nvm
   - pgcli
@@ -54,7 +53,6 @@ brew_cask_apps:
   - pgadmin4
   - pomotodo
   - postman
-  - screenhero
   - skitch
   - slack
   - tad
