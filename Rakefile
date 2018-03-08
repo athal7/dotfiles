@@ -81,7 +81,7 @@ module AT
       with_log("ruby-install ruby #{ENV['RB_VERSION']} --no-reinstall") ||
         error("Unable to install ruby")
 
-      node_version = "5.0"
+      node_version = "8.0"
       message "Installing node #{node_version}"
       with_log("nvm install #{node_version}") || error("Unable to install node")
     end
