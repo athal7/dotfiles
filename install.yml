@@ -80,3 +80,7 @@ libraries:
       - hyperzsh
       - nba-go
       - tldr
+  go:
+    install_command: go get
+    libs:
+      - github.com/paywithcurl/vault-update
