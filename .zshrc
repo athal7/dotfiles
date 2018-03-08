@@ -98,6 +98,9 @@
   export NVM_DIR=~/.nvm
   . $(brew --prefix nvm)/nvm.sh --no-use
 
+# go
+  export GOPATH="$HOME/go"
+
 # docker
   alias d="docker"
   alias dc="docker-compose"
