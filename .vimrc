@@ -159,7 +159,7 @@ set encoding=utf-8               " utf encoding
 
 " linting
   Plug 'w0rp/ale'
-  let g:ale_linters = {'python': ['flake8'], 'elixir': ['credo']}
+  let g:ale_linters = {'python': ['flake8'], 'elixir': ['credo'], 'json': ['fixjson']}
 
 " xmpfilter
   Plug 't9md/vim-ruby-xmpfilter'
