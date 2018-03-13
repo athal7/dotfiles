@@ -23,6 +23,7 @@ homebrew_packages:
   - neovim/neovim/neovim
   - nvm
   - pgcli
+  - postgresql
   - pyenv
   - pyenv-virtualenv
   - python
