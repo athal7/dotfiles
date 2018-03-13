@@ -30,6 +30,8 @@ homebrew_packages:
   - reattach-to-user-namespace
   - rename
   - ruby-install
+  - terraform
+  - terraform_landscape
   - tmux
   - vault
   - watch
