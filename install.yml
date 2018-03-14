@@ -21,7 +21,7 @@ homebrew_packages:
   - jq
   - kubectl
   - neovim/neovim/neovim
-  - nvm
+  - node
   - pgcli
   - postgresql
   - pyenv

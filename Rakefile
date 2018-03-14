@@ -80,10 +80,6 @@ module AT
       message "Installing ruby #{ENV['RB_VERSION']}"
       with_log("ruby-install ruby #{ENV['RB_VERSION']} --no-reinstall") ||
         error("Unable to install ruby")
-
-      node_version = "8.0"
-      message "Installing node #{node_version}"
-      with_log("nvm install #{node_version}") || error("Unable to install node")
     end
 
     def install_libraries
