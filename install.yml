@@ -48,12 +48,13 @@ brew_cask_apps:
   - dropbox
   - fantastical
   - firefox
-  - github-desktop
+  - ganache
+  - github
   - google-chrome
   - hyper
   - mailplane
   - paste
-  - pgadmin4
+  - popsql
   - postman
   - skitch
   - slack
@@ -64,6 +65,7 @@ libraries:
   ruby:
     install_command: gem install
     libs:
+      - vimgolf
       - rcodetools
       - reek
   python:
