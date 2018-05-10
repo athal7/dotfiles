@@ -51,8 +51,8 @@ set encoding=utf-8               " utf encoding
 
 " default color scheme
   set t_Co=256
-  set background=light
-  colorscheme papercolor
+  set background=dark
+  colorscheme hybrid
   highlight Normal ctermbg=None
 
 " Highlight long lines
@@ -210,7 +210,7 @@ set encoding=utf-8               " utf encoding
 " Airline status line
   Plug 'vim-airline/vim-airline'
   Plug 'vim-airline/vim-airline-themes'
-  let g:airline_theme='papercolor'
+  let g:airline_theme='hybrid'
   let g:airline_powerline_fonts = 1
   let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline', 'ale']
 

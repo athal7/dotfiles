@@ -9,9 +9,10 @@
   "dependencies": {
     "hyperlinks": "latest",
     "hypertheme": "latest",
-    "hyperterm-one-light": "latest",
+    "hyper-hybrid-reduced-contrast": "latest",
     "hyperterm-final-say": "latest",
     "hyperterm-install-devtools": "latest",
-    "hyper-blink": "latest"
+    "hyper-blink": "latest",
+    "hyper-search": "latest"
   }
 }

@@ -15,9 +15,10 @@ module.exports = {
   plugins: [
     "hyperlinks",
     "hypertheme",
-    "hyperterm-one-light",
+    "hyper-hybrid-reduced-contrast",
     "hyperterm-final-say",
     "hyperterm-install-devtools",
-    "hyper-blink"
+    "hyper-blink",
+    "hyper-search"
   ],
 };
