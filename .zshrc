@@ -108,7 +108,7 @@
   function docker_cleanup {
     docker rm -f $(docker ps -a -q)
     docker images --all --format "{{.ID}}" | xargs docker rmi
-    docker images --quiet --filter=dangling=true | xargs docker rmi
+    docker images --quiet --filter dangling=true | xargs docker rmi
   }
   alias k="kubectl"
   alias klog="kubetail"
