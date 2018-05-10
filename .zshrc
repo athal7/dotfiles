@@ -146,8 +146,5 @@
     done
   }
 
-# vault
-  export VAULT_TOKEN=`cat ~/.vault-token`
-
 # secrets file
   source ~/.secrets
