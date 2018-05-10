@@ -53,7 +53,8 @@ set encoding=utf-8               " utf encoding
   set t_Co=256
   set background=dark
   colorscheme hybrid
-  highlight Normal ctermbg=None
+  highlight Normal ctermbg=none
+  highlight CursorLine ctermbg=darkgrey
 
 " Highlight long lines
   highlight OverLength ctermbg=lightgrey
