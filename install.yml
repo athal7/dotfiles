@@ -41,24 +41,21 @@ homebrew_packages:
   - zsh-completions
 brew_cask_apps:
   - 1password
-  - amazon-music
-  - atom
   - bartender
   - docker
   - dropbox
   - fantastical
   - firefox
   - ganache
-  - github
   - google-chrome
   - hyper
+  - inboxer
   - mailplane
   - paste
   - popsql
   - postman
   - skitch
   - slack
-  - tad
   - teensy
   - zoomus
 libraries:
