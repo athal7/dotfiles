@@ -19,6 +19,7 @@ module.exports = {
     "hyperterm-final-say",
     "hyperterm-install-devtools",
     "hyper-blink",
-    "hyper-search"
+    "hyper-search",
+    "hyperminimal"
   ],
 };
