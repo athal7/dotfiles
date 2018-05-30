@@ -51,12 +51,10 @@ set encoding=utf-8               " utf encoding
 
 " default color scheme
   set t_Co=256
-  set background=dark
   colorscheme hybrid
   highlight Normal ctermbg=none
+  highlight LineNR ctermfg=lightgrey
   highlight CursorLine ctermbg=darkgrey
-
-" Highlight long lines
   highlight OverLength ctermbg=lightgrey
   match OverLength /\%121v.\+/
 
