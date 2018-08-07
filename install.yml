@@ -86,3 +86,4 @@ libraries:
     install_command: go get
     libs:
       - github.com/paywithcurl/vault-update
+      - github.com/jesseduffield/lazygit

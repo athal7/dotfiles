@@ -53,6 +53,7 @@
   alias less="less -R"
   alias lf="less +F"
   alias g='hub'
+  alias lg='lazygit'
   alias mkcd='mkdir $1 && cd $1'
   function mkcd {
      mkdir -p "$1" && cd "$1"
@@ -100,6 +101,7 @@
 
 # go
   export GOPATH="$HOME/go"
+  export PATH="$HOME/go/bin:$PATH"
 
 # docker
   alias d="docker"
