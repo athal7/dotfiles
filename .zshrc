@@ -3,7 +3,7 @@
   HYPHEN_INSENSITIVE=true
   COMPLETION_WAITING_DOTS=true
 
-# zsh plugins
+# plugins
   plugins=(autojump docker jsontools osx tmux zsh-completions)
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
@@ -19,6 +19,8 @@
   }
   zle -N fancy-ctrl-z
   bindkey '^Z' fancy-ctrl-z
+
+  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # prompt
   source ~/.shell/.shell_prompt.sh
@@ -48,12 +50,15 @@
   export LESS_TERMCAP_us=$'\E[04;33;5;146m' # begin underline
 
 # shell aliases
-  alias ll="ls -la"
+  alias cat='bat'
+  alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
   alias e=$EDITOR
+  alias help='tldr'
   alias less="less -R"
   alias lf="less +F"
-  alias g='hub'
   alias lg='lazygit'
+  alias ll="ls -la"
+  alias g='hub'
   alias mkcd='mkdir $1 && cd $1'
   function mkcd {
      mkdir -p "$1" && cd "$1"

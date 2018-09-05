@@ -8,11 +8,13 @@ homebrew_packages:
   - ack
   - autojump
   - awscli
+  - bat
   - chruby
   - ctags
   - dnsmasq
   - elixir
   - exercism
+  - fzf
   - git
   - heroku
   - homebrew/completions/brew-cask-completion
@@ -20,6 +22,7 @@ homebrew_packages:
   - johanhaleby/kubetail/kubetail
   - jq
   - kubectl
+  - ncdu
   - neovim/neovim/neovim
   - node
   - pgcli
@@ -78,6 +81,7 @@ libraries:
     install_command: npm install -g
     libs:
       - eslint_d
+      - diff-so-fancy
       - hpm
       - hyperzsh
       - nba-go

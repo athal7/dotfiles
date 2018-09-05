@@ -1,10 +1,11 @@
 [user]
-	name = Andrew Thal
-	email = athal7@me.com
+  name = Andrew Thal
+  email = athal7@me.com
 [github]
   user = athal7
 [core]
   excludesfile = /Users/andrewthal/.gitignore_global
+  pager = diff-so-fancy | less --tabs=4 -RFX
 [color]
   branch = auto
   diff = auto
@@ -15,10 +16,12 @@
   local = magenta
   remote = green
 [color "diff"]
-  meta = yellow bold
+  meta = yellow
   frag = magenta bold
   old = red bold
   new = green bold
+  commit = yellow bold
+  whitespace = red reverse
 [color "status"]
   added = yellow
   changed = green
@@ -76,7 +79,12 @@
 [help]
   autocorrect = 20
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
+[color "diff-highlight"]
+  oldNormal = red bold
+  oldHighlight = red bold 52
+  newNormal = green bold
+  newHighlight = green bold 22
