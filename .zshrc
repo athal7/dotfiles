@@ -108,6 +108,9 @@
   export GOPATH="$HOME/go"
   export PATH="$HOME/go/bin:$PATH"
 
+# elixir
+  export PATH="$HOME/.mix/escripts:$PATH"
+
 # docker
   alias d="docker"
   alias dc="docker-compose"
