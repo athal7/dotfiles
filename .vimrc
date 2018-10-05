@@ -84,7 +84,7 @@ set encoding=utf-8               " utf encoding
   map <Leader>I gg=G``<cr>
 
 " format JSON
-  command FormatJSON %!python -m json.tool
+  command FormatJSON %!jq '.'
 
 " Yank from the cursor to the end of the line, to be consistent with C and D.
   nnoremap Y y$
