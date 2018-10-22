@@ -1,6 +1,6 @@
 module.exports = {
   config: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Ubuntu Mono derivative Powerline',
     cursorColor: 'rgba(248,28,229,0.75)',
     installDevTools: {
