@@ -173,7 +173,7 @@ set encoding=utf-8               " utf encoding
   let g:ctrlp_max_depth = 40
   let g:ctrlp_custom_ignore = {
     \ 'dir': '\v[\/](\.git|node_modules|_build|site-packages|deps|__pycache__)$',
-    \ 'file': '\v\.(pyc|beam)$',
+    \ 'file': '\v\.(pyc|beam|log)$',
     \ }
 
 " Ack
