@@ -4,6 +4,7 @@
 --ignore-dir=site-packages/
 --ignore-dir=deps/
 --ignore-dir=__pycache__/
+--ignore-dir=log/
 
 --pager
 less -r
