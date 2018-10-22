@@ -68,6 +68,11 @@
 # homebrew
   export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
 
+# version management
+  source /usr/local/opt/asdf/asdf.sh
+  source /usr/local/etc/bash_completion.d
+
+
 # ruby
   export ARCHFLAGS='-arch x86_64'
   export CC=gcc
@@ -78,11 +83,6 @@
   export RUBY_HEAP_SLOTS_INCREMENT=250000
   export RUBY_GC_MALLOC_LIMIT=500000000
   export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
-
-  source /usr/local/share/chruby/chruby.sh
-  source /usr/local/share/chruby/auto.sh
-  export RB_VERSION=2.3.3
-  chruby $RB_VERSION
 
   alias be='bundle exec'
   alias brspec='bundle exec rspec'
@@ -96,13 +96,6 @@
 # python
   export PYTHONDONTWRITEBYTECODE=1
   export PIP_DOWNLOAD_CACHE=$HOME/.pip/cache
-  export PATH="$HOME/.pyenv/bin:$PATH"
-  eval "$(pyenv init -)"
-  eval "$(pyenv virtualenv-init -)"
-
-# node
-  export NVM_DIR=~/.nvm
-  . $(brew --prefix nvm)/nvm.sh --no-use
 
 # go
   export GOPATH="$HOME/go"
@@ -115,11 +108,7 @@
   alias d="docker"
   alias dc="docker-compose"
   alias dcr="docker-compose run --rm"
-  function docker_cleanup {
-    docker rm -f $(docker ps -a -q)
-    docker images --all --format "{{.ID}}" | xargs docker rmi
-    docker images --quiet --filter dangling=true | xargs docker rmi
-  }
+  alias docker_cleanup="docker system prune"
   alias k="kubectl"
   alias klog="kubetail"
   function kpod {
@@ -127,7 +116,14 @@
   }
 
   function ksh {
-    kubectl exec -it $(kpod "${@:1:2}") "${@:3}" bash
+    local pod=$(kpod "${@:1:2}")
+    shift
+    shift
+    if [ $# -lt 1 ]; then
+      kubectl exec -it $pod bash
+    else
+      kubectl exec -it $pod -- $*
+    fi
   }
 
   function ksc {

@@ -13,10 +13,9 @@ module AT
       setup_vim
       install_homebrew_packages
       install_apps
-      install_language_versions
-      install_libraries
       install_fonts
       setup_vpn_traffic_routing
+      setup_languages
       message "All done!"
     end
 
@@ -76,18 +75,23 @@ module AT
       end
     end
 
-    def install_language_versions
-      message "Installing ruby #{ENV['RB_VERSION']}"
-      with_log("ruby-install ruby #{ENV['RB_VERSION']} --no-reinstall") ||
-        error("Unable to install ruby")
-    end
+    def setup_languages
+      @config['languages'].each do |language, config|
+        message "Setting up #{language}..."
 
-    def install_libraries
-      @config['libraries'].each do |language, lib_def|
-        message "Installing #{language} libraries..."
-        lib_def['libs'].each do |l|
-          with_log("#{lib_def['install_command']} #{l}") ||
-            error("Unable to install #{l}")
+        with_log("asdf plugin-list | grep #{language}") ||
+          with_log("asdf plugin-add #{language}") ||
+          error("Unable to install #{language}")
+
+        (config['versions'] || []).each do |version|
+          with_log("asdf list #{language} | grep #{version}") ||
+            with_log("NODEJS_CHECK_SIGNATURES=no asdf install #{language} #{version}") ||
+            error("Unable to install #{language} #{version}")
+        end
+
+        (config['libs'] || []).each do |lib|
+          with_log("#{config['install_command']} #{lib}") ||
+            error("Unable to install #{lib}")
         end
       end
     end
@@ -138,5 +142,7 @@ task :setup_configs, [:location, :verbose, :config_file] do |t, args|
 end
 
 task :default, [:location, :verbose, :config_file] => :setup_configs
-task :quiet,   [:location]           => :setup_configs
-task :loud,    [:location]           { |t, args| Rake::Task[:default].invoke(args[:location], true) }
+task :quiet, [:location] => :setup_configs
+task :loud, [:location] do |t, args|
+  Rake::Task[:default].invoke(args[:location], true)
+end

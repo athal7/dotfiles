@@ -3,13 +3,12 @@ symlinks_to_skip:
   - ..
   - .git
   - .gitignore
-  - .ruby-version
 homebrew_packages:
   - ack
+  - asdf
   - autojump
   - awscli
   - bat
-  - chruby
   - ctags
   - dnsmasq
   - elixir
@@ -27,12 +26,9 @@ homebrew_packages:
   - node
   - pgcli
   - postgresql
-  - pyenv
-  - pyenv-virtualenv
   - python
   - reattach-to-user-namespace
   - rename
-  - ruby-install
   - terraform
   - terraform_landscape
   - tmux
@@ -59,14 +55,21 @@ brew_cask_apps:
   - slack
   - teensy
   - zoomus
-libraries:
+languages:
+  elixir:
+    versions:
+      - 1.7.3
   ruby:
-    install_command: gem install
+    versions:
+      - 2.5.1
+    install_command: gem install --conservative
     libs:
-      - vimgolf
       - rcodetools
       - reek
   python:
+    versions:
+      - 2.7.11
+      - 3.7.0
     install_command: pip install
     libs:
       - grip
@@ -75,7 +78,9 @@ libraries:
       - pygments
       - pylint
       - virtualenv
-  node:
+  nodejs:
+    versions:
+      - 10.12.0
     install_command: npm install -g
     libs:
       - eslint_d
@@ -84,7 +89,9 @@ libraries:
       - hyperzsh
       - nba-go
       - tldr
-  go:
+  golang:
+    versions:
+      - 1.11.1
     install_command: go get
     libs:
       - github.com/paywithcurl/vault-update
