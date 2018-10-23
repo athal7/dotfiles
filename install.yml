@@ -41,6 +41,7 @@ brew_cask_apps:
   - ganache
   - google-chrome
   - hyper
+  - macdown
   - mailplane
   - paste
   - popsql
