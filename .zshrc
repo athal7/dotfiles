@@ -20,6 +20,8 @@
   zle -N fancy-ctrl-z
   bindkey '^Z' fancy-ctrl-z
 
+  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 # prompt
   source ~/.shell/.shell_prompt.sh
 
