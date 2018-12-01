@@ -83,9 +83,6 @@ set encoding=utf-8               " utf encoding
 " reindent the entire file
   map <Leader>I gg=G``<cr>
 
-" format JSON
-  command FormatJSON %!jq '.'
-
 " Yank from the cursor to the end of the line, to be consistent with C and D.
   nnoremap Y y$
 
@@ -155,6 +152,12 @@ set encoding=utf-8               " utf encoding
   Plug 'mitsuhiko/vim-python-combined'
   Plug 'elmcast/elm-vim'
     let g:elm_setup_keybindings = 0
+  Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
+    let g:prettier#config#trailing_comma = 'all'
+    let g:prettier#config#semi = 'false'
+    let g:prettier#config#print_width = 120
+    let g:prettier#config#single_quote = 'true'
+    let g:prettier#config#bracket_spacing = 'true'
 
 " linting
   Plug 'w0rp/ale'
