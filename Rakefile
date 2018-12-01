@@ -16,6 +16,7 @@ module AT
       install_fonts
       setup_vpn_traffic_routing
       setup_languages
+      setup_launch_scripts
       message "All done!"
     end
 
@@ -107,6 +108,14 @@ module AT
       with_log("sudo ln -s #{Dir.pwd}/ip-up /etc/ppp/ip-up")
       with_log("sudo chmod 755 /etc/ppp/ip-up")
       action("Make sure to set uncheck 'Send all traffic over VPN connection' in your VPN network settings")
+    end
+
+    def setup_launch_scripts
+      message "Setting up launch scripts..."
+      Dir.foreach('./launch-scripts') do |filename|
+        with_log("launchctl unload -w ./launch-scripts/#{filename}")
+        with_log("launchctl load -w ./launch-scripts/#{filename}")
+      end
     end
 
     def should_symlink?(filename)

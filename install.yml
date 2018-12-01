@@ -16,6 +16,7 @@ homebrew_packages:
   - git
   - homebrew/completions/brew-cask-completion
   - hub
+  - ical-buddy
   - johanhaleby/kubetail/kubetail
   - jq
   - kubectl
