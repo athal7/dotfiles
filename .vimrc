@@ -217,9 +217,6 @@ set encoding=utf-8               " utf encoding
   let g:airline_powerline_fonts = 1
   let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline', 'ale']
 
-" Time tracking
-  Plug 'wakatime/vim-wakatime'
-
 " Markdown preview
   Plug 'JamshedVesuna/vim-markdown-preview'
   let vim_markdown_preview_github=1
