@@ -27,10 +27,7 @@ set wildmode=list:longest,full   " use tab-complete to see a list of possiblitie
 set clipboard^=unnamed           " Use system clipboard
 set shell=zsh                    " Use login shell for commands
 set encoding=utf-8               " utf encoding
-
-" relative line numbers, with absolute on the current line
-  set relativenumber
-  set number
+set number                       " line numbers
 
 " flip the default split directions to sane ones
   set splitright
