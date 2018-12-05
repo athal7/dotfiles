@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'yaml'
+require 'shellwords'
 
 module AT
   class DotfileSetupHandler
@@ -39,7 +40,7 @@ module AT
       Dir.foreach('./') do |filename|
         if should_symlink?(filename)
           with_log("rm -rf #{@location}/#{filename}")
-          with_log("ln -s #{Dir.pwd}/#{filename} #{@location}/#{filename}")
+          with_log("ln -s #{pwd}/#{filename} #{@location}/#{filename}")
         end
       end
     end
@@ -48,7 +49,7 @@ module AT
       message "Setting up nvim..."
       with_log("mkdir -p #{@location}/.config/nvim")
       with_log("rm -rf #{@location}/.config/nvim/init.vim")
-      with_log("ln -s #{Dir.pwd}/.init.vim #{@location}/.config/nvim/init.vim")
+      with_log("ln -s #{pwd}/.init.vim #{@location}/.config/nvim/init.vim")
 
       message "Setting up vimplug..."
       with_log("curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim")
@@ -105,7 +106,7 @@ module AT
     def setup_vpn_traffic_routing
       message "Routing only AWS traffic for your default region through the vpn"
       with_log("sudo rm -rf /etc/ppp/ip-up")
-      with_log("sudo ln -s #{Dir.pwd}/ip-up /etc/ppp/ip-up")
+      with_log("sudo ln -s #{pwd}/ip-up /etc/ppp/ip-up")
       with_log("sudo chmod 755 /etc/ppp/ip-up")
       action("Make sure to set uncheck 'Send all traffic over VPN connection' in your VPN network settings")
     end
@@ -132,6 +133,10 @@ module AT
 
     def action(str)
       puts "\e[33m#{str}\e[0m"
+    end
+
+    def pwd
+      Shellwords.shellescape(Dir.pwd)
     end
 
     def with_log(command)
