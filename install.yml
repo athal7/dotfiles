@@ -39,7 +39,8 @@ brew_cask_apps:
   - docker
   - dropbox
   - firefox
-  - ganache
+  - github
+  - gitify
   - google-chrome
   - hyper
   - macdown
@@ -47,7 +48,6 @@ brew_cask_apps:
   - paste
   - popsql
   - postman
-  - skitch
   - slack
   - teensy
   - zoomus
