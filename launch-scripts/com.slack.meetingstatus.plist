@@ -12,8 +12,11 @@
     </array>
     <key>RunAtLoad</key>
     <true/>
-    <key>StartInterval</key>
-    <integer>60</integer>
+    <key>StartCalendarInterval</key>
+    <dict>
+      <key>Second</key>
+      <integer>0</integer>
+    </dict>
     <key>StandardErrorPath</key>
     <string>/tmp/slackmeeting.err</string>
     <key>StandardOutPath</key>
