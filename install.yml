@@ -36,14 +36,12 @@ homebrew_packages:
 brew_cask_apps:
   - bartender
   - docker
-  - dropbox
   - firefox
   - github
   - gitify
   - google-chrome
   - hyper
   - macdown
-  - mailplane
   - paste
   - popsql
   - postman
