@@ -12,6 +12,7 @@ homebrew_packages:
   - ctags
   - dnsmasq
   - exercism
+  - fx
   - fzf
   - git
   - homebrew/completions/brew-cask-completion
