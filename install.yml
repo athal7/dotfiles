@@ -40,7 +40,6 @@ brew_cask_apps:
   - docker
   - firefox
   - github
-  - gitify
   - google-chrome
   - hyper
   - paste
