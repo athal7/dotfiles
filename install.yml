@@ -3,6 +3,8 @@ symlinks_to_skip:
   - ..
   - .git
   - .gitignore
+custom_symlinks:
+  slack-ssb-interop.js: Applications/Slack.app/Contents/Resources/app.asar.unpacked/src/static/ssb-interop.js
 homebrew_packages:
   - ack
   - asdf

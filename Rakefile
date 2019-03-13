@@ -43,6 +43,12 @@ module AT
           with_log("ln -s #{pwd}/#{filename} #{@location}/#{filename}")
         end
       end
+
+      @config['custom_symlinks'].each do |source, destination|
+        with_log("rm -rf #{@location}/#{destination}")
+        with_log("ln -s #{pwd}/#{source} #{@location}/#{destination}")
+      end
+
     end
 
     def setup_vim
