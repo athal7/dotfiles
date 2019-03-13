@@ -216,8 +216,9 @@ set number                       " line numbers
 
 " Markdown preview
   Plug 'JamshedVesuna/vim-markdown-preview'
-  let vim_markdown_preview_github=1
+  let vim_markdown_preview_toggle=2
   let vim_markdown_preview_hotkey='<C-m>'
+  let vim_markdown_preview_github=1
 
   call plug#end()
 
