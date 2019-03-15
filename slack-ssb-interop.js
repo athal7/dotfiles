@@ -258,7 +258,6 @@ ts-message .mention {
 }
 .c-member_slug--mention,
 .c-member_slug--mention:hover {
-    background-color: #252525!important;
     color: #e3b431!important;
 }
 #convo_tab .message_input,
@@ -416,6 +415,8 @@ ts-message .mention {
 .c-mrkdwn__mention:hover,
 .c-mrkdwn__user_group--mention,
 .c-mrkdwn__user_group--mention:hover {
+  background: #4f739b!important;
+  color: inherit!important;
 }
 #threads_msgs .inline_message_input_container.with_file_upload {
     border: 2px solid #545454!important;
@@ -913,52 +914,58 @@ input[type=text]:focus, input[type=password]:focus, input[type=datetime]:focus, 
     border-right:0px !important;
 }
 .c-message__editor__input_container {
-    border-radius: 4px;}
-    .c-message__editor__input--legacy.focus {
-        border-color: transparent;
-        background: #585858;
-        color: white;
-        border-radius: 3px;
-    }
-    .c-menu_item__header, .c-menu_item__header{
-        color:white !important;
-    }
-    #im_browser #im_list_container:not(.keyboard_active).not_scrolling .im_browser_row:not(.disabled_dm):hover, #im_browser .im_browser_row.highlighted{
-        background:black !important;
-    }
-    .c-calendar_view_header__stepper_btn{background: orange !important}
-    .c-react_search_input .ts_icon_times_small:active, .c-react_search_input .ts_icon_times_small:focus, .c-react_search_input .ts_icon_times_small:hover{
-        color:white !important;
-    }
-    .unread_group .unread_group_header .unread_group_mark, .unread_group .unread_group_header .unread_keyboard{
-        background: #0779ff !important;
-        color: white !important;
-    }
-    .p-threads_footer__input {
-        background:black;
-    }
-    .p-threads_footer__input .p-message_input_field {
-        border-color: transparent !important;
-        background: #adadad !important; color: black !important;}
+  border-radius: 4px;
+}
+.c-message__editor__input--legacy.focus {
+    border-color: transparent;
+    background: #585858;
+    color: white;
+    border-radius: 3px;
+}
+.c-menu_item__header, .c-menu_item__header{
+    color:white !important;
+}
+#im_browser #im_list_container:not(.keyboard_active).not_scrolling .im_browser_row:not(.disabled_dm):hover, #im_browser .im_browser_row.highlighted{
+    background:black !important;
+}
+.c-calendar_view_header__stepper_btn{background: orange !important}
+.c-react_search_input .ts_icon_times_small:active, .c-react_search_input .ts_icon_times_small:focus, .c-react_search_input .ts_icon_times_small:hover{
+    color:white !important;
+}
+.unread_group .unread_group_header .unread_group_mark, .unread_group .unread_group_header .unread_keyboard{
+    background: #0779ff !important;
+    color: white !important;
+}
+.p-threads_footer__input {
+    color: #424242!important;
+}
+.p-threads_footer__input .p-message_input_field {
+    border-color: transparent !important;
+    background: #484848 !important;
+    color: white!important;
+}
 .p-threads_footer__input .p-message_input_field.focus {
     border-color: transparent !important;
-    background: #adadad !important; color: black !important;}
-    .p-threads_footer__input .p-message_input_field.focus~.p-message_input_file_button:not(:hover){
-        border-color: transparent;
-        color:white !important;
-    }
-    .p-threads_footer__input--legacy .p-message_input_field .ql-editor{
-        color:black !important;
-    }
-    .p-threads_footer__input--legacy .p-message_input_file_button{
-        border: transparent !important;
-    }
+    background: #484848 !important;
+    color: white!important;
+}
+.p-threads_footer__input .p-message_input_field.focus~.p-message_input_file_button:not(:hover){
+    border-color: transparent;
+    color:white !important;
+}
+.p-threads_footer__input--legacy .p-message_input_field .ql-editor{
+    color:black !important;
+}
+.p-threads_footer__input--legacy .p-message_input_file_button{
+    border: transparent !important;
+}
 .p-threads_footer__input--legacy .p-message_input_plus {
     border: 1px solid transparent !important;
     border-radius: 4px 0 0 4px;
-    background: #0779ff !important;}
-    .ql-editor [aria-label] {
-color:white !important;
+    background: #0779ff !important;
+}
+.ql-editor [aria-label] {
+    color:white !important;
 }
 .p-threads_footer__input--legacy .p-message_input_field {
     min-height: 24px;
@@ -967,7 +974,8 @@ color:white !important;
     border-radius: 4px;
     border-color: #868686;
     background: black;
-    color: white;}
+    color: white;
+}
 
 .p-threads_footer__input .p-message_input_plus .p-message_input_plus_icon {
     transform: scale(1.11);
@@ -981,100 +989,99 @@ color:white !important;
     color: #9c9a97 !important;
 }
 .c-message__sender{
-color:white !important
-            font-weight: bold !important;
+    color:white !important
+    font-weight: bold !important;
 }
-    .c-dialog__footer .c-button {
-        background-color: #0779ff;
-        color: #ffffff;}
+.c-dialog__footer .c-button {
+    background-color: #0779ff;
+    color: #ffffff;
+}
 .btn_outline.hover, .btn_outline:focus, .btn_outline:hover {
-            background: black !important;
-            color: #ffffff !important;
-        }
-        a.c-message__sender_link{
-            color: white !important;
-            font-weight: bold !important;
-        }
-        .ql-editor[aria-label]{
-            color: white !important;
-        }
-        .c-menu_item__icon {
+    background: black !important;
+    color: #ffffff !important;
+}
+a.c-message__sender_link{
+    color: white !important;
+    font-weight: bold !important;
+}
+.ql-editor[aria-label]{
+    color: white !important;
+}
+.c-menu_item__icon {
 
-            color: rgba(162, 162, 162, 0.96);
-        }
-        .thrills_purple {
-            color: #ff3636!important;}
-            .feature_channel_browser_dropdown .show_which_channels_container .lfs_input_container .selected {
-                color: #ffffff;}
-                .feature_channel_browser_dropdown .channel_browser_sort_container .lfs_input_container .selected, .feature_channel_browser_dropdown .show_which_channels_container .lfs_input_container .selected{
-                    color: #ffffff;
-                }
-                .menu ul li a:not(.inline_menu_link) {
-                    color: #e6e6e6 !important;
-                }
-                .ql-container.texty_single_line_input.focus, .ql-container.texty_single_line_input:hover{
-                    box-shadow: none !important;
-                }
-                .ql-container.texty_single_line_input.focus, .ql-container.texty_single_line_input:hover{
-                    color: #e6e6e6 !important;
-                }
-                .c-message__reply_bar:hover, .c-message__reply_bar--focus{
-                    background-color: #484848;
-                }
-                .c-message__reply_bar--focus .c-message__reply_bar_view_thread, .c-message__reply_bar:hover .c-message__reply_bar_view_thread{
-                    background-color: #484848 !important;
-                }
-                .c-dialog__cancel{
-                    background: transparent !important;
-                }
-                .c-dialog__cancel:hover{
-                    background: transparent !important;
-                }
-                .c-search_modal .popover > div, .c-search_modal .c-search__input_box, .c-search_modal:not(.c-search_modal--primarysearch) .popover > div, .c-search_modal:not(.c-search_modal--primarysearch) .c-search__input_box{
-                    background: #2b2c2e !important;
-                }
-                .c-card_carousel__text_section p{
-                    color:white;
-                }
-                .c-card_carousel__page_count{
-                    color:black;
-                }
-                .c-file__slide--meta{
-                    background-color: #393939 !important;
-                }
-                #admin_invites_add_row{
-                    background: transparent;
-                    border:transparent;
-                }
-                .p-file_upload_dialog__footer_cancel_all{
-                    background: transparent !important;
-                }
-                .p-file_upload_dialog__footer_cancel_all:hover{
-                    background: black !important;
-                }
-                .p-threads_flexpane__header_permalink, .p-threads_flexpane__header_channel_name{
-                    color: #e3b431!important;
-                }
-                .c-message .c-button--primary{
-                    background-color: #ada8a3;
-                }
-                .c-message_kit__file__meta__text {
-                    font-size: 12px;
-                    color: #949494 !important;}
-                    .msg_input_btn {
-                        background-color: #0779ff !important;
-                    }
-                    .p-threads_footer__input--legacy .p-message_input_file_button{
-                        background-color: #0779ff !important;
-                        color: white;
-                    }
+    color: rgba(162, 162, 162, 0.96);
+}
+.thrills_purple {
+    color: #ff3636!important;
+}
+.feature_channel_browser_dropdown .show_which_channels_container .lfs_input_container .selected {
+    color: #ffffff;
+}
+.feature_channel_browser_dropdown .channel_browser_sort_container .lfs_input_container .selected, .feature_channel_browser_dropdown .show_which_channels_container .lfs_input_container .selected{
+    color: #ffffff;
+}
+.menu ul li a:not(.inline_menu_link) {
+    color: #e6e6e6 !important;
+}
+.ql-container.texty_single_line_input.focus, .ql-container.texty_single_line_input:hover{
+    box-shadow: none !important;
+}
+.ql-container.texty_single_line_input.focus, .ql-container.texty_single_line_input:hover{
+    color: #e6e6e6 !important;
+}
+.c-message__reply_bar:hover, .c-message__reply_bar--focus{
+    background-color: #484848;
+}
+.c-message__reply_bar--focus .c-message__reply_bar_view_thread, .c-message__reply_bar:hover .c-message__reply_bar_view_thread{
+    background-color: #484848 !important;
+}
+.c-dialog__cancel{
+    background: transparent !important;
+}
+.c-dialog__cancel:hover{
+    background: transparent !important;
+}
+.c-search_modal .popover > div, .c-search_modal .c-search__input_box, .c-search_modal:not(.c-search_modal--primarysearch) .popover > div, .c-search_modal:not(.c-search_modal--primarysearch) .c-search__input_box{
+    background: #2b2c2e !important;
+}
+.c-card_carousel__text_section p{
+    color:white;
+}
+.c-card_carousel__page_count{
+    color:black;
+}
+.c-file__slide--meta{
+    background-color: #393939 !important;
+}
+#admin_invites_add_row{
+    background: transparent;
+    border:transparent;
+}
+.p-file_upload_dialog__footer_cancel_all{
+    background: transparent !important;
+}
+.p-file_upload_dialog__footer_cancel_all:hover{
+    background: black !important;
+}
+.p-threads_flexpane__header_permalink, .p-threads_flexpane__header_channel_name{
+    color: #e3b431!important;
+}
+.c-message .c-button--primary{
+    background-color: #ada8a3;
+}
+.c-message_kit__file__meta__text {
+    font-size: 12px;
+    color: #949494 !important;
+}
+.msg_input_btn {
+    background-color: #0779ff !important;
+}
+.p-threads_footer__input--legacy .p-message_input_file_button{
+    background-color: #0779ff !important;
+    color: white;
+}
 `
 
-
-// $("div").each(function(){
-
-// 	$this.css("color","white");
-// });
     // Insert a style tag into the wrapper view
     cssPromise.then(css => {
         let s = document.createElement('style');
