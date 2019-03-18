@@ -945,9 +945,8 @@ input[type=text]:focus, input[type=password]:focus, input[type=datetime]:focus, 
     color: white!important;
 }
 .p-threads_footer__input .p-message_input_field.focus {
-    border-color: transparent !important;
-    background: #484848 !important;
-    color: white!important;
+  border-color: transparent !important;
+  background: #adadad !important; color: black !important;
 }
 .p-threads_footer__input .p-message_input_field.focus~.p-message_input_file_button:not(:hover){
     border-color: transparent;
@@ -958,11 +957,6 @@ input[type=text]:focus, input[type=password]:focus, input[type=datetime]:focus, 
 }
 .p-threads_footer__input--legacy .p-message_input_file_button{
     border: transparent !important;
-}
-.p-threads_footer__input--legacy .p-message_input_plus {
-    border: 1px solid transparent !important;
-    border-radius: 4px 0 0 4px;
-    background: #0779ff !important;
 }
 .ql-editor [aria-label] {
     color:white !important;
