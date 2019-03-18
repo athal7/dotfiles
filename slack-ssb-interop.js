@@ -946,7 +946,8 @@ input[type=text]:focus, input[type=password]:focus, input[type=datetime]:focus, 
 }
 .p-threads_footer__input .p-message_input_field.focus {
   border-color: transparent !important;
-  background: #adadad !important; color: black !important;
+  background: #484848 !important;
+  color: white!important;
 }
 .p-threads_footer__input .p-message_input_field.focus~.p-message_input_file_button:not(:hover){
     border-color: transparent;
