@@ -954,7 +954,7 @@ input[type=text]:focus, input[type=password]:focus, input[type=datetime]:focus, 
     color:white !important;
 }
 .p-threads_footer__input--legacy .p-message_input_field .ql-editor{
-    color:black !important;
+    color:white !important;
 }
 .p-threads_footer__input--legacy .p-message_input_file_button{
     border: transparent !important;
@@ -969,7 +969,7 @@ input[type=text]:focus, input[type=password]:focus, input[type=datetime]:focus, 
     border-radius: 4px;
     border-color: #868686;
     background: black;
-    color: white;
+    color: white!important;
 }
 
 .p-threads_footer__input .p-message_input_plus .p-message_input_plus_icon {
