@@ -769,6 +769,28 @@ a.file_download_link:hover {
     background: #828282;
     border-top: 1px solid #545454;
 }
+
+.p-threads_view__divider_line {
+    border-color: #393939 !important;
+}
+.p-threads_view__divider_label {
+    color: white !important;
+    background-color: #393939 !important;
+}
+.p_threads_view_load_older_button {
+    background-color: #252525 !important;
+    border-color: #393939 !important;
+}
+.p-threads_view__default_background {
+    background-color: #252525 !important;
+}
+
+.p-threads_view__default_background .c-message_kit__background {
+    border-color: #393939 !important;
+}
+.p-threads_view__footer {
+    border-color: #393939 !important;
+}
 #threads_msgs .inline_message_input_container.with_file_upload .inline_file_upload {
     background: #393939 !important;
     width: 40px;
