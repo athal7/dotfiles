@@ -796,6 +796,9 @@ a.file_download_link:hover {
     width: 40px;
     color: white;
 }
+.p-threads_view_reply--new_reply {
+    background: #393939 !important;
+}
 #threads_msgs .inline_message_input_container.with_file_upload .inline_file_upload.active .upload_plus_icon,
 #threads_msgs .inline_message_input_container.with_file_upload .inline_file_upload.focus-ring .upload_plus_icon,
 #threads_msgs .inline_message_input_container.with_file_upload .inline_file_upload:focus .upload_plus_icon,
