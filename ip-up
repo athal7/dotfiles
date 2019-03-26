@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-for ip in $(curl -s https://ip-ranges.amazonaws.com/ip-ranges.json | jq -r '.prefixes[] | select((.region=="us-west-2")) | .ip_prefix')
-do
-  /sbin/route add -net $ip  -interface ppp0
-done

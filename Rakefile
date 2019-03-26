@@ -15,7 +15,6 @@ module AT
       install_homebrew_packages
       install_apps
       install_fonts
-      setup_vpn_traffic_routing
       setup_languages
       setup_launch_scripts
       message "All done!"
@@ -107,14 +106,6 @@ module AT
     def install_fonts
       message "Installing powerline fonts"
       with_log("fonts/install.sh")
-    end
-
-    def setup_vpn_traffic_routing
-      message "Routing only AWS traffic for your default region through the vpn"
-      with_log("sudo rm -rf /etc/ppp/ip-up")
-      with_log("sudo ln -s #{pwd}/ip-up /etc/ppp/ip-up")
-      with_log("sudo chmod 755 /etc/ppp/ip-up")
-      action("Make sure to set uncheck 'Send all traffic over VPN connection' in your VPN network settings")
     end
 
     def setup_launch_scripts
