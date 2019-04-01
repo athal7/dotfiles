@@ -7,9 +7,13 @@ display dialog \"Set Slack Status?\"
 activate application \"Slack\"
 
 tell application \"System Events\"
-	set textToType to \"/status $1\"
-	keystroke textToType
-	keystroke return
+  keystroke \"k\" using command down
+  keystroke \"$(whoami)\"
+  keystroke return
+
+  set textToType to \"/status $1\"
+  keystroke textToType
+  keystroke return
 end tell
 "
 }
