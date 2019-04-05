@@ -1086,6 +1086,12 @@ a.c-message__sender_link{
 .p-threads_flexpane__header_permalink, .p-threads_flexpane__header_channel_name{
     color: #e3b431!important;
 }
+.p-threads_flexpane__header .c-icon--times:active,
+.p-threads_flexpane__header .c-icon--times:focus,
+.p-threads_flexpane__header .c-icon--times:hover,
+.p-threads_flexpane__header .c-icon--times:before{
+  color:white !important;
+}
 .c-message .c-button--primary{
     background-color: #ada8a3;
 }
