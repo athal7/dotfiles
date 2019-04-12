@@ -18,7 +18,7 @@ homebrew_packages:
   - fzf
   - git
   - grip
-  - homebrew/completions/brew-cask-completion
+  - brew-cask-completion
   - hub
   - ical-buddy
   - johanhaleby/kubetail/kubetail
