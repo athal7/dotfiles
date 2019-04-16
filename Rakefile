@@ -44,8 +44,8 @@ module AT
       end
 
       @config['custom_symlinks'].each do |source, destination|
-        with_log("rm -rf #{@location}/#{destination}")
-        with_log("ln -s #{pwd}/#{source} #{@location}/#{destination}")
+        with_log("rm -rf #{destination}")
+        with_log("ln -s #{pwd}/#{source} #{destination}")
       end
 
     end
