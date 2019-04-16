@@ -25,7 +25,7 @@ homebrew_packages:
   - jq
   - kubectl
   - ncdu
-  - neovim/neovim/neovim
+  - neovim
   - pgcli
   - postgresql
   - reattach-to-user-namespace
