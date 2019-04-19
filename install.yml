@@ -47,6 +47,7 @@ brew_cask_apps:
   - paste
   - popsql
   - postman
+  - spotify
   - slack
   - teensy
   - zoomus
