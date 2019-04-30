@@ -40,14 +40,11 @@ homebrew_packages:
 brew_cask_apps:
   - bartender
   - docker
-  - firefox
-  - github
-  - google-chrome
   - hyper
+  - microsoft-office
   - paste
   - popsql
   - postman
-  - spotify
   - slack
   - teensy
 languages:
