@@ -118,9 +118,10 @@ document.addEventListener("DOMContentLoaded", function() {
 --text: white;
 }
 
-body {
+body, .c-texty_input, .ql-container {
     font-family: 'San Francisco', sans-serif !important;
 }
+
 div.c-message.c-message--light.c-message--hover {
     color: grey !important;
 }
