@@ -46,6 +46,7 @@ brew_cask_apps:
   - popsql
   - postman
   - slack
+  - soulver
   - teensy
 languages:
   elixir:
