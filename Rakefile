@@ -17,6 +17,7 @@ module AT
       install_fonts
       setup_languages
       setup_launch_scripts
+      other_config
       message "All done!"
     end
 
@@ -113,6 +114,13 @@ module AT
       Dir.foreach('./launch-scripts') do |filename|
         with_log("launchctl unload -w ./launch-scripts/#{filename}")
         with_log("launchctl load -w ./launch-scripts/#{filename}")
+      end
+    end
+
+    def other_config
+      message "Running other configuration scripts..."
+      @config['other_config'].each do |command|
+        with_log(command)
       end
     end
 
