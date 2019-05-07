@@ -139,7 +139,13 @@ div.p-message_pane__foreword__description span {
     font-size: 15px;
     letter-spacing: 0.3px !important;
 }
-div.c-virtual_list__scroll_container {
+div.c-virtual_list__scroll_container,
+#team_menu,
+#team_menu_overlay,
+.c-scrollbar__hider,
+div.c-message__content:hover,
+.c-fullscreen_modal__header,
+.c-fullscreen_modal__content {
     background-color: #252525 !important;
 }
 .light_theme ts-message .timestamp {
@@ -149,13 +155,6 @@ div.c-virtual_list__scroll_container {
 .p-message_pane .c-message_list:not(.c-virtual_list--scrollbar),
 .p-message_pane .c-message_list.c-virtual_list--scrollbar>.c-scrollbar__hider {
     z-index: 0;
-}
-.c-scrollbar__hider {
-    background: #252525 !important;
-}
-#team_menu,
-#team_menu_overlay {
-    background: #252525 !important;
 }
 #client_body:not(.onboarding):not(.feature_global_nav_layout):before {
     box-shadow: none !important;
@@ -168,9 +167,6 @@ div.c-virtual_list__scroll_container {
 #team_menu,
 #team_menu_overlay {
     border-color: transparent !important;
-}
-div.c-message__content:hover {
-    background-color: #252525 !important;
 }
 .c-team__display-name,
 .c-unified_member__display-name,

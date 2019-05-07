@@ -4,7 +4,7 @@ symlinks_to_skip:
   - .git
   - .gitignore
 custom_symlinks:
-  slack-ssb-interop.js: /Applications/Slack.app/Contents/Resources/app.asar.unpacked/src/static/ssb-interop.js
+  slack-ssb-interop.js: ~/Applications/Slack.app/Contents/Resources/app.asar.unpacked/src/static/ssb-interop.js
 other_config:
   - defaults write com.apple.screencapture location ~/Downloads;killall SystemUIServer
   - defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder
