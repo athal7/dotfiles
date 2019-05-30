@@ -52,8 +52,6 @@ set number                       " line numbers
   highlight Normal ctermbg=none
   highlight LineNR ctermfg=lightgrey
   highlight CursorLine ctermbg=darkgrey
-  highlight OverLength ctermbg=lightgrey
-  match OverLength /\%121v.\+/
 
 " use 2 spaces for tabs
   set expandtab tabstop=2 softtabstop=2 shiftwidth=2
