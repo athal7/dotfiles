@@ -43,6 +43,7 @@ homebrew_packages:
 brew_cask_apps:
   - bartender
   - docker
+  - grammarly
   - hyper
   - microsoft-office
   - paste
