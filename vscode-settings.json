@@ -1,0 +1,16 @@
+{
+  "workbench.startupEditor": "newUntitledFile",
+  "editor.tabSize": 2,
+  "editor.renderWhitespace": "boundary",
+  "editor.wordWrap": "on",
+  "githubPullRequests.defaultMergeMethod": "squash",
+  "diffEditor.renderSideBySide": false,
+  "git.autofetch": true,
+  "git.enableSmartCommit": true,
+  "terminal.external.linuxExec": "xterm-256color",
+  "terminal.integrated.fontFamily": "Inconsolata for Powerline",
+  "workbench.statusBar.feedback.visible": false,
+  "githubPullRequests.showInSCM": true,
+  "git.fetchOnPull": true,
+  "git.postCommitCommand": "sync"
+}

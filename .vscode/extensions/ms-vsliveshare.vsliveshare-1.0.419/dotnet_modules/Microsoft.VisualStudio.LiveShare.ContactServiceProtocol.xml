@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.VisualStudio.LiveShare.ContactServiceProtocol</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.IRegisterContactServiceProvider">
+            <summary>
+            Interface to register a provider
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.IRegisterContactServiceProvider.Trace">
+            <summary>
+            The trace source available for providers
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.IRegisterContactServiceProvider.RegisterProviderAsync(System.String,Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.IContactServiceProvider,System.Threading.CancellationToken)">
+            <summary>
+            Register a contact/presence provider
+            </summary>
+            <param name="serviceId">Service identifier</param>
+            <param name="provider">Provider implementation</param>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.WorkspaceUri">
+            <summary>
+            A workspace Uri from vscode
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.WorkspaceFolder">
+            <summary>
+            Definition of a workspace folder
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.ContactServiceRequest`2">
+            <summary>
+            Request definition class
+            </summary>
+            <typeparam name="TIn"></typeparam>
+            <typeparam name="TOut"></typeparam>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.ContactServiceNotification`1">
+            <summary>
+            Notification definition class
+            </summary>
+            <typeparam name="TIn"></typeparam>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.NotifyContactServiceEventArgs">
+            <summary>
+            Notification class for contact service
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.IContactServiceProvider">
+            <summary>
+            Interface to implement a contact service provider
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.PresenceStatus">
+            <summary>
+            The presence status default options
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.ContactProperty">
+            <summary>
+            Contact property types
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.Contact">
+            <summary>
+            Contact entity
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.EmptyRequest">
+            <summary>
+            Empty parameters
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.EmptyResponse">
+            <summary>
+            Empty result
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.InitializeRequest">
+            <summary>
+            Parameters passed during Initialize method
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.Capabilities">
+            <summary>
+            Capabilities that a service would offer
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.InitializeResponse">
+            <summary>
+            Returned on the Initialized method
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.InitializeResponse.Description">
+            <summary>
+            Description name to display when refering to this provider
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.InitializeResponse.Capabilities">
+            <summary>
+            Supported capabilities
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.InitializeResponse.ProviderPriority">
+            <summary>
+            Priority of this provider
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.InitializeResponse.SelfContact">
+            <summary>
+            The self contact currently being used
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.ContactPresenceUpdate">
+            <summary>
+            A presence status changed for a contact entity
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.PresenceChangedNotification">
+            <summary>
+            Batch of presence changed for multiple contacts
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.LiveShare.ContactServiceProtocol.Methods">
+            <summary>
+            List methods for both requests/notifications
+            </summary>
+        </member>
+    </members>
+</doc>
