@@ -13,5 +13,6 @@
   "githubPullRequests.showInSCM": true,
   "git.fetchOnPull": true,
   "git.postCommitCommand": "sync",
-  "git.confirmSync": false
+  "git.confirmSync": false,
+  "liveshare.showInStatusBar": "whileCollaborating"
 }
