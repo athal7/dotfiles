@@ -12,5 +12,6 @@
   "workbench.statusBar.feedback.visible": false,
   "githubPullRequests.showInSCM": true,
   "git.fetchOnPull": true,
-  "git.postCommitCommand": "sync"
+  "git.postCommitCommand": "sync",
+  "git.confirmSync": false
 }
