@@ -44,7 +44,6 @@ brew_cask_apps:
   - bartender
   - docker
   - grammarly
-  - hyper
   - microsoft-office
   - paste
   - popsql
@@ -52,6 +51,7 @@ brew_cask_apps:
   - slack
   - soulver
   - teensy
+  - visual-studio-code
 languages:
   elixir:
     versions:
@@ -82,7 +82,6 @@ languages:
       - eslint_d
       - diff-so-fancy
       - hpm
-      - hyperzsh
       - nba-go
       - tldr
   golang:
