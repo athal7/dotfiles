@@ -1,0 +1,64 @@
+{
+	"name": "elixir-formatter",
+	"displayName": "Elixir Formatter",
+	"description": "Elixir code formatting using mix format",
+	"keywords": [
+		"Elixir",
+		"mix",
+		"formatter",
+		"mix formatter"
+	],
+	"version": "1.3.0",
+	"publisher": "saratravi",
+	"icon": "images/logo.png",
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.12.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onLanguage:elixir"
+	],
+	"main": "./out/src/extension",
+	"contributes": {},
+	"scripts": {
+		"vscode:prepublish": "tsc -p ./",
+		"compile": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "node ./node_modules/vscode/bin/test"
+	},
+	"configuration": {
+		"type": "object",
+		"title": "Elixir Formatter Settings",
+		"properties": {
+			"elixir.formatter.mixFormatArgs": {
+				"type": "string",
+				"default": "",
+				"description": "Arguments to pass to 'mix format'"
+			},
+			"elixir.formatter.formatterCwd": {
+				"type": "string",
+				"default": "",
+				"description": "The working directory to run 'mix format' from (relative to workspace directory)"
+			}
+		}
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sarat-ravi/elixir-formatter.git"
+	},
+	"devDependencies": {
+		"@types/mocha": "^5.2.6",
+		"@types/node": "^12.0.2",
+		"mocha": "^6.1.4",
+		"typescript": "^3.4.5",
+		"vscode": "^1.1.34"
+	},
+	"__metadata": {
+		"id": "1dbf7c1a-5725-4cb2-8fdd-ca39112218f5",
+		"publisherId": "25da6eb8-0275-44ea-bdbe-fd6680d13318",
+		"publisherDisplayName": "saratravi"
+	}
+}
