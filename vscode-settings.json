@@ -14,5 +14,6 @@
   "git.fetchOnPull": true,
   "git.postCommitCommand": "sync",
   "git.confirmSync": false,
-  "liveshare.showInStatusBar": "whileCollaborating"
+  "liveshare.showInStatusBar": "whileCollaborating",
+  "editor.formatOnSave": true
 }
