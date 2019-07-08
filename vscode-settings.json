@@ -24,5 +24,10 @@
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
   "workbench.editor.highlightModifiedTabs": true,
-  "workbench.editor.swipeToNavigate": true
+  "workbench.editor.swipeToNavigate": true,
+  "gitlens.views.repositories.location": "scm",
+  "gitlens.views.fileHistory.location": "scm",
+  "gitlens.views.lineHistory.location": "scm",
+  "gitlens.views.search.location": "scm",
+  "gitlens.views.compare.location": "scm"
 }
