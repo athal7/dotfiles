@@ -44,6 +44,7 @@ brew_cask_apps:
   - bartender
   - docker
   - grammarly
+  - hyper
   - microsoft-office
   - paste
   - popsql
@@ -82,6 +83,7 @@ languages:
       - eslint_d
       - diff-so-fancy
       - hpm
+      - hyperzsh
       - nba-go
       - tldr
   golang:
