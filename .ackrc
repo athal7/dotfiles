@@ -5,6 +5,9 @@
 --ignore-dir=deps/
 --ignore-dir=__pycache__/
 --ignore-dir=log/
+--ignore-dir=coverage/
+--ignore-dir=__snapshots__/
+--ignore-dir=crane/repos/
 
 --pager
 less -r
