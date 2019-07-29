@@ -63,6 +63,7 @@
   function mkcd {
      mkdir -p "$1" && cd "$1"
   }
+  alias tf='terraform'
   alias watch='watch '
 
 # homebrew
