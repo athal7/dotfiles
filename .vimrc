@@ -48,10 +48,7 @@ set number                       " line numbers
 
 " default color scheme
   set t_Co=256
-  colorscheme hybrid
-  highlight Normal ctermbg=none
-  highlight LineNR ctermfg=lightgrey
-  highlight CursorLine ctermbg=darkgrey
+  colorscheme bubblegum
 
 " use 2 spaces for tabs
   set expandtab tabstop=2 softtabstop=2 shiftwidth=2
@@ -198,17 +195,13 @@ set number                       " line numbers
 " Use airline for tmux status bar
   Plug 'edkolev/tmuxline.vim'
   let g:tmuxline_preset = {
-    \'a'      : '#h',
-    \'b'      : "kube: #(kubectl config get-contexts | grep \"*\" | awk '{print $3, $5}')",
-    \'win'    : '#I #W',
-    \'cwin'    : '#I #W',
-    \'y'    : "sync-panes: #(tmux show-window-options | grep synchronize-panes | awk '{print $2}')",
+    \'a'    : '#I #W',
     \'z'    : '%a %l:%M%p '}
 
 " Airline status line
   Plug 'vim-airline/vim-airline'
   Plug 'vim-airline/vim-airline-themes'
-  let g:airline_theme='hybrid'
+  let g:airline_theme='bubblegum'
   let g:airline_powerline_fonts = 1
   let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline', 'ale']
 
