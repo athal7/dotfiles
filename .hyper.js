@@ -1,9 +1,6 @@
 module.exports = {
   config: {
-    fontSize: 12,
     fontFamily: 'Ubuntu Mono derivative Powerline',
-    cursorColor: 'rgba(248,28,229,0.75)',
-    backgroundColor: "#212121",
     env: {
       "SHELL": "/usr/local/bin/zsh"
     },
@@ -22,8 +19,7 @@ module.exports = {
   plugins: [
     "hyperlinks",
     "hypertheme",
-    "hyper-hybrid-reduced-contrast",
-    "hyperterm-final-say",
+    "hyperterm-gooey",
     "hyperterm-install-devtools",
     "hyper-blink",
     "hyper-search"
