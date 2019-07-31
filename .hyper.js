@@ -19,7 +19,7 @@ module.exports = {
     "hyperlinks",
     "hypertheme",
     "hyperminimal",
-    "hyperterm-gooey",
+    "hyper-zenburn",
     "hyperterm-install-devtools",
     "hyper-blink",
     "hyper-search"
