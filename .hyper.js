@@ -18,6 +18,7 @@ module.exports = {
   plugins: [
     "hyperlinks",
     "hypertheme",
+    "hyperminimal",
     "hyperterm-gooey",
     "hyperterm-install-devtools",
     "hyper-blink",

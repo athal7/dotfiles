@@ -198,8 +198,8 @@ set number                       " line numbers
 " Use airline for tmux status bar
   Plug 'edkolev/tmuxline.vim'
   let g:tmuxline_preset = {
-    \'a'    : '#I #W',
-    \'z'    : '%a %l:%M%p '}
+    \'win'    : '#I #W',
+    \'cwin'    : '#I #W #F'}
   let g:tmuxline_powerline_separators = 0
 
 " Airline status line
