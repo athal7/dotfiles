@@ -189,30 +189,32 @@ set number                       " line numbers
   Plug 'vim-scripts/ZoomWin'
     map <Leader>z :ZoomWin<CR>
 
-" Use airline for the shell prompt
-  Plug 'edkolev/promptline.vim'
-
-" Use airline for tmux status bar
-  Plug 'edkolev/tmuxline.vim'
-  let g:tmuxline_preset = {
-    \'a'    : '#I #W',
-    \'z'    : '%a %l:%M%p '}
-
-" Airline status line
-  Plug 'vim-airline/vim-airline'
-  Plug 'vim-airline/vim-airline-themes'
-  let g:airline_theme='bubblegum'
-  let g:airline_powerline_fonts = 1
-  let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline', 'ale']
-
 " Markdown preview
   Plug 'JamshedVesuna/vim-markdown-preview'
   let vim_markdown_preview_toggle=2
   let vim_markdown_preview_hotkey='<C-m>'
   let vim_markdown_preview_github=1
 
+" Use airline for tmux status bar
+  Plug 'edkolev/tmuxline.vim'
+  let g:tmuxline_preset = {
+    \'a'    : '#I #W',
+    \'z'    : '%a %l:%M%p '}
+  let g:tmuxline_powerline_separators = 0
+
+" Airline status line
+  Plug 'vim-airline/vim-airline'
+  Plug 'vim-airline/vim-airline-themes'
+  let g:airline_theme='bubblegum'
+  let g:airline_powerline_fonts = 0
+  let g:airline_extensions = ['ctrlp', 'tmuxline', 'tabline', 'ale']
+
+" Use airline for the shell prompt
+  Plug 'edkolev/promptline.vim'
+
   call plug#end()
 
+  let g:promptline_powerline_symbols = 0
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {
          \'a'    : [ promptline#slices#cwd() ],

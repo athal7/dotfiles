@@ -1,6 +1,5 @@
 module.exports = {
   config: {
-    fontFamily: 'Ubuntu Mono derivative Powerline',
     env: {
       "SHELL": "/usr/local/bin/zsh"
     },

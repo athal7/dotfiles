@@ -5,6 +5,7 @@
 
 # plugins
   plugins=(autojump docker jsontools osx tmux zsh-completions)
+
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
 
