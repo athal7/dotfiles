@@ -14,7 +14,6 @@ module AT
       setup_vim
       install_homebrew_packages
       install_apps
-      install_fonts
       setup_languages
       setup_launch_scripts
       other_config
@@ -102,11 +101,6 @@ module AT
             error("Unable to install #{lib}")
         end
       end
-    end
-
-    def install_fonts
-      message "Installing powerline fonts"
-      with_log("fonts/install.sh")
     end
 
     def setup_launch_scripts
