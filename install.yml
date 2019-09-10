@@ -15,6 +15,7 @@ homebrew_packages:
   - awscli
   - bat
   - ctags
+  - diff-so-fancy
   - dnsmasq
   - exercism
   - fx
@@ -43,7 +44,7 @@ homebrew_packages:
 brew_cask_apps:
   - bartender
   - docker
-  - grammarly
+  - finicky
   - hyper
   - microsoft-office
   - paste
@@ -52,11 +53,10 @@ brew_cask_apps:
   - slack
   - soulver
   - teensy
-  - visual-studio-code
 languages:
   elixir:
     versions:
-      - 1.7.3
+      - 1.9
   ruby:
     versions:
       - 2.5.1
@@ -67,7 +67,7 @@ languages:
   python:
     versions:
       - 2.7.11
-      - 3.7.0
+      - 3.7.3
     install_command: pip install
     libs:
       - howdoi
