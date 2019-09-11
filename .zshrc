@@ -67,9 +67,6 @@
   alias tf='terraform'
   alias watch='watch '
 
-# homebrew
-  export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
-
 # version management
   source /usr/local/opt/asdf/asdf.sh
   source /usr/local/etc/bash_completion.d
