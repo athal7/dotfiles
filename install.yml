@@ -45,6 +45,7 @@ brew_cask_apps:
   - bartender
   - docker
   - finicky
+  - fluid
   - hyper
   - microsoft-office
   - paste
