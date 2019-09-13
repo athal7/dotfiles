@@ -4,7 +4,8 @@
   COMPLETION_WAITING_DOTS=true
 
 # plugins
-  plugins=(autojump docker jsontools osx tmux zsh-completions)
+  fpath=(/usr/local/share/zsh-completions $fpath)
+  plugins=(autojump docker jsontools osx tmux)
 
   source $ZSH/oh-my-zsh.sh
   ZSH_TMUX_AUTOSTART=true
