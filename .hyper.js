@@ -11,7 +11,6 @@ module.exports = {
       forceDownload: false
     },
     shell: "/usr/local/bin/zsh",
-    showWindowControls: false,
     defaultSSHApp: true
   },
 
