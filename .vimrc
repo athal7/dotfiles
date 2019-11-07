@@ -128,6 +128,7 @@ set number                       " line numbers
     autocmd BufNewFile,BufRead *.slim set filetype=haml
   Plug 'othree/yajs'
     au BufNewFile,BufRead *.json set ai filetype=javascript
+  Plug 'leafgarland/typescript-vim'
   Plug 'tpope/vim-haml'
   Plug 'mitsuhiko/vim-python-combined'
   Plug 'elmcast/elm-vim'
