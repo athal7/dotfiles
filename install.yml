@@ -15,6 +15,7 @@ homebrew_packages:
   - awscli
   - bat
   - ctags
+  - denisidoro/tools/navi
   - diff-so-fancy
   - dnsmasq
   - exercism
