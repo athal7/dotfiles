@@ -46,6 +46,7 @@ brew_cask_apps:
   - docker
   - finicky
   - hyper
+  - istat-menus
   - microsoft-office
   - paste
   - popsql
