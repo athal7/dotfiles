@@ -44,7 +44,7 @@ homebrew_packages:
   - zsh-completions
 brew_cask_apps:
   - docker
-  - finicky
+  - github
   - hyper
   - istat-menus
   - microsoft-office
@@ -85,7 +85,7 @@ languages:
       - diff-so-fancy
       - hpm
       - hyperzsh
-      - nba-go
+      - prettier
       - tldr
   golang:
     versions:
