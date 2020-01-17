@@ -73,28 +73,12 @@
 
 # version management
   source /usr/local/opt/asdf/asdf.sh
-  source /usr/local/etc/bash_completion.d
-
+  export PATH="$HOME/.asdf/shims:$PATH"
 
 # ruby
   export ARCHFLAGS='-arch x86_64'
   export CC=gcc
-  export RUBYOPT=-Itest
-  export JRUBY_OPTS=--1.9
-  export RUBY_HEAP_FREE_MIN=1024
-  export RUBY_GC_HEAP_INT_SLOTS=4000000
-  export RUBY_HEAP_SLOTS_INCREMENT=250000
-  export RUBY_GC_MALLOC_LIMIT=500000000
-  export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
-
   alias be='bundle exec'
-  alias brspec='bundle exec rspec'
-  alias bspec='bundle exec rspec'
-  alias rs='rails server'
-  alias rc='rails console'
-  alias bi='bundle install'
-  alias bl="bundle --local"
-  alias bbs="bundle install --binstubs .bundle/bin"
 
 # python
   export PYTHONDONTWRITEBYTECODE=1
