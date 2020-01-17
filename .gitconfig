@@ -4,7 +4,7 @@
 [github]
   user = athal7
 [core]
-  excludesfile = /Users/andrewthal/.gitignore_global
+  excludesfile = /Users/athal/.gitignore_global
   pager = diff-so-fancy | less --tabs=4 -RFX
 [color]
   branch = auto
