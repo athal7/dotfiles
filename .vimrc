@@ -63,9 +63,6 @@ set number                       " line numbers
   nnoremap <S-Tab> :bprevious<CR>
   cnoreabbrev x w<bar>bd
 
-" reindent the entire file
-  map <Leader>I gg=G``<cr>
-
 " Yank from the cursor to the end of the line, to be consistent with C and D.
   nnoremap Y y$
 
@@ -87,12 +84,6 @@ set number                       " line numbers
     endif
   endfunction
   map <Leader>r :call Refresh()<cr>
-
-" Adds 'end' in ruby
-  Plug 'tpope/vim-endwise'
-
-" Insert-mode auto-completion with 'tab'
-  Plug 'ervandew/supertab'
 
 " Universal comment plugin
   Plug 'tomtom/tcomment_vim'
@@ -134,20 +125,17 @@ set number                       " line numbers
   Plug 'elmcast/elm-vim'
     let g:elm_setup_keybindings = 0
 
-" auto-formatting
-  Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
-    let g:prettier#config#trailing_comma = 'all'
-    let g:prettier#config#semi = 'false'
-    let g:prettier#config#print_width = 120
-    let g:prettier#config#single_quote = 'true'
-    let g:prettier#config#bracket_spacing = 'true'
-
   Plug 'editorconfig/editorconfig-vim'
   let g:EditorConfig_exclude_patterns = ['fugitive://.\*', 'scp://.\*']
 
-" linting
+" linting, auto-formatting, and completion
   Plug 'w0rp/ale'
-  let g:ale_linters = {'python': ['flake8'], 'elixir': ['credo'], 'json': ['fixjson'], 'ruby': ['rubocop']}
+  let g:ale_linters = {'python': ['flake8'], 'elixir': ['credo'], 'json': ['fixjson'], 'ruby': ['rubocop'], 'javascript': ['eslint']}
+  let g:ale_fixers =  ['prettier', 'eslint']
+  let g:ale_fix_on_save = 1
+  let g:ale_completion_tsserver_autoimport = 1
+  let g:ale_completion_enabled = 1
+  set omnifunc=ale#completion#OmniFunc
 
 " ctrlp
   Plug 'kien/ctrlp.vim'
@@ -166,13 +154,14 @@ set number                       " line numbers
     nmap g/ :Ack<space>
     nmap g* :Ack -w <C-R><C-W><space>
 
-" Tabular for aligning text
+" Aligning text
   Plug 'godlygeek/tabular'
     map <Leader>a :Tabularize<space>
 
-" NERDTree for project drawer
+" Project drawer
   Plug 'scrooloose/nerdtree'
     let NERDTreeHijackNetrw = 0
+    let NERDTreeShowHidden=1
     nmap <Leader>w :NERDTreeToggle<CR>
 
 " ZoomWin to fullscreen a particular buffer without losing others
@@ -185,21 +174,21 @@ set number                       " line numbers
   let vim_markdown_preview_hotkey='<C-m>'
   let vim_markdown_preview_github=1
 
-" Use airline for tmux status bar
+" Tmux status bar
   Plug 'edkolev/tmuxline.vim'
   let g:tmuxline_preset = {
     \'win'    : '#I #W',
     \'cwin'    : '#I #W #F'}
   let g:tmuxline_powerline_separators = 0
 
-" Airline status line
+" Status line
   Plug 'vim-airline/vim-airline'
   Plug 'vim-airline/vim-airline-themes'
   let g:airline_theme='bubblegum'
   let g:airline_extensions = ['ctrlp', 'tmuxline', 'ale', 'tabline']
   let g:airline_detect_spell=1
 
-" Use airline for the shell prompt
+" Shell prompt
   Plug 'edkolev/promptline.vim'
 
   call plug#end()
