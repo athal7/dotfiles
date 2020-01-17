@@ -14,8 +14,10 @@ set scrolloff=4 sidescrolloff=10 " scroll the window when we get near the edge
 set incsearch                    " show the first match as search strings are typed
 set hlsearch                     " highlight the search matches
 set ignorecase smartcase         " searching is case insensitive when all lowercase
+set gdefault                     " assume the /g flag on substitutions to replace all matches in a line
 set directory=/tmp/              " set temporary directory (don't litter local dir with swp/tmp files)
 set autoread                     " pick up external file modifications
+set hidden                       " don't abandon buffers when unloading
 set autoindent                   " match indentation of previous line
 set laststatus=2                 " show status line
 set display=lastline             " When lines are cropped at the screen bottom, show as much as possible
