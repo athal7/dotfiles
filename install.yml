@@ -34,8 +34,6 @@ homebrew_packages:
   - pgcli
   - postgresql
   - reattach-to-user-namespace
-  - terraform
-  - terraform_landscape
   - tmux
   - vault
   - watch
@@ -94,3 +92,7 @@ languages:
     libs:
       - github.com/paywithcurl/vault-update
       - github.com/jesseduffield/lazygit
+  terraform:
+    versions:
+      - 0.11.14
+      - 0.12.19
