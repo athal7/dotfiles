@@ -8,7 +8,7 @@
   plugins=(autojump docker jsontools osx tmux)
 
   source $ZSH/oh-my-zsh.sh
-  ZSH_TMUX_AUTOSTART=true
+  if [ "$TMUX" = "" ]; then tmux; fi
 
   fancy-ctrl-z () {
     if [[ $#BUFFER -eq 0 ]]; then
