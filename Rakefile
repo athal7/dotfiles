@@ -15,7 +15,6 @@ module AT
       install_homebrew_packages
       install_apps
       setup_languages
-      setup_launch_scripts
       other_config
       message "All done!"
     end
@@ -100,14 +99,6 @@ module AT
           with_log("#{config['install_command']} #{lib}") ||
             error("Unable to install #{lib}")
         end
-      end
-    end
-
-    def setup_launch_scripts
-      message "Setting up launch scripts..."
-      Dir.foreach('./launch-scripts') do |filename|
-        with_log("launchctl unload -w ./launch-scripts/#{filename}")
-        with_log("launchctl load -w ./launch-scripts/#{filename}")
       end
     end
 
