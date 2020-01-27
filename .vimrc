@@ -160,7 +160,6 @@ set number                       " line numbers
 
 " Aligning text
   Plug 'godlygeek/tabular'
-    map <Leader>a :Tabularize<space>
 
 " Project drawer
   Plug 'scrooloose/nerdtree'
