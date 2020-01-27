@@ -1,13 +1,10 @@
 module.exports = {
   config: {
     env: {
-      "SHELL": "/usr/local/bin/zsh"
+      SHELL: "/usr/local/bin/zsh"
     },
     installDevTools: {
-      extensions: [
-        'REACT_DEVELOPER_TOOLS',
-        'REDUX_DEVTOOLS'
-      ],
+      extensions: ["REACT_DEVELOPER_TOOLS", "REDUX_DEVTOOLS"],
       forceDownload: false
     },
     shell: "/usr/local/bin/zsh",
@@ -17,9 +14,9 @@ module.exports = {
   plugins: [
     "hyperlinks",
     "hypertheme",
-    "hyper-zenburn",
+    "hyper-one-dark",
     "hyperterm-install-devtools",
     "hyper-blink",
     "hyper-search"
-  ],
+  ]
 };

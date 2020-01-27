@@ -40,8 +40,10 @@ set number                       " line numbers
 " remember last position in file
   au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal g'\"" | endif
 
-" default color scheme
-  colorscheme bubblegum
+" color scheme
+  Plug 'rakr/vim-one'
+  set background=dark
+  colorscheme one
 
 " use 2 spaces for tabs
   set expandtab tabstop=2 softtabstop=2 shiftwidth=2
@@ -186,7 +188,7 @@ set number                       " line numbers
 " Status line
   Plug 'vim-airline/vim-airline'
   Plug 'vim-airline/vim-airline-themes'
-  let g:airline_theme='bubblegum'
+  let g:airline_theme='one'
   let g:airline_extensions = ['ctrlp', 'tmuxline', 'ale', 'tabline']
   let g:airline_detect_spell=1
 
