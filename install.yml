@@ -43,6 +43,7 @@ homebrew_packages:
 brew_cask_apps:
   - docker
   - github
+  - hiddenbar
   - hyper
   - istat-menus
   - microsoft-office
