@@ -8,7 +8,8 @@ module.exports = {
       forceDownload: false
     },
     shell: "/usr/local/bin/zsh",
-    defaultSSHApp: true
+    defaultSSHApp: true,
+    fontSize: 13
   },
 
   plugins: [
