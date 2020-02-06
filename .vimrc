@@ -93,41 +93,21 @@ set number                       " line numbers
   Plug 'tomtom/tcomment_vim'
 
 " Syntax highlighting
-    au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,config.ru} set ft=ruby
-  Plug 'groenewege/vim-less'
-    au BufNewFile,BufRead *.less set filetype=less
-  Plug 'cakebaker/scss-syntax.vim'
-    au BufRead,BufNewFile *.scss set filetype=scss
-  Plug 'juvenn/mustache.vim'
-    au BufNewFile,BufRead *.mustache,*.handlebars,*.hbs set filetype=mustache
-  Plug 'nono/vim-handlebars'
-    au BufNewFile,BufRead *.hbs set filetype=handlebars
-  Plug 'kchmck/vim-coffee-script'
-    au BufNewFile,BufRead *.coffee,*.eco set filetype=coffee
-  Plug 'rosstimson/scala-vim-support'
-    au BufNewFile,BufRead *.scala set filetype=scala
-  Plug 'tpope/vim-markdown'
-    augroup mkd
-      autocmd BufNewFile,BufRead *.mkd      set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
-      autocmd BufNewFile,BufRead *.md       set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
-      autocmd BufNewFile,BufRead *.markdown set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
-    augroup END
-  Plug 'vim-scripts/VimClojure'
-    autocmd BufNewFile,BufRead *.clj set filetype=clojure
-  Plug 'elixir-lang/vim-elixir'
-    autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
-    autocmd BufWritePost *.exs,*.ex execute ":!mix format <afile>"
-  Plug 'fatih/vim-go'
-    au BufRead,BufNewFile *.go set filetype=go
-  Plug 'slim-template/vim-slim'
-    autocmd BufNewFile,BufRead *.slim set filetype=haml
-  Plug 'othree/yajs'
-    au BufNewFile,BufRead *.json set ai filetype=javascript
+  " Plug 'tpope/vim-markdown'
+  "   augroup mkd
+  "     autocmd BufNewFile,BufRead *.mkd      set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
+  "     autocmd BufNewFile,BufRead *.md       set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
+  "     autocmd BufNewFile,BufRead *.markdown set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
+  "   augroup END
+  " Plug 'elixir-lang/vim-elixir'
+  "   autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
+  "   autocmd BufWritePost *.exs,*.ex execute ':!mix format <afile>'
+  " Plug 'fatih/vim-go'
+  "   au BufRead,BufNewFile *.go set filetype=go
+  " Plug 'othree/yajs'
+  "   au BufNewFile,BufRead *.json set ai filetype=javascript
   Plug 'leafgarland/typescript-vim'
-  Plug 'tpope/vim-haml'
   Plug 'mitsuhiko/vim-python-combined'
-  Plug 'elmcast/elm-vim'
-    let g:elm_setup_keybindings = 0
 
   Plug 'editorconfig/editorconfig-vim'
   let g:EditorConfig_exclude_patterns = ['fugitive://.\*', 'scp://.\*']
