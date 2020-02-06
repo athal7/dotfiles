@@ -68,6 +68,16 @@
   function mkcd {
      mkdir -p "$1" && cd "$1"
   }
+  function move-last-download {
+    local download_dir="${HOME}/Downloads/"
+    local last_download="$(ls -t ${download_dir} | head -1)"
+    local destination_file="${PWD}/${1:-${last_download}}"
+
+    echo "MV: ${download_dir}${last_download}"
+    echo "TO: ${destination_file}"
+
+    mv "${download_dir}${last_download}" "${destination_file}"
+  }
   alias tf='terraform'
   alias watch='watch '
 
