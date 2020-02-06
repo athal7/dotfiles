@@ -44,6 +44,7 @@ brew_cask_apps:
   - docker
   - github
   - hiddenbar
+  - homebrew/cask-drivers/zsa-wally
   - hyper
   - istat-menus
   - microsoft-office
@@ -52,7 +53,6 @@ brew_cask_apps:
   - postman
   - slack
   - soulver
-  - teensy
 languages:
   elixir:
     versions:
