@@ -4,7 +4,6 @@ symlinks_to_skip:
   - .git
   - .gitignore
 custom_symlinks:
-  vscode-settings.json: ~/Library/Application\ Support/Code/User/settings.json
 other_config:
   - defaults write com.apple.screencapture location ~/Downloads;killall SystemUIServer
   - defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder

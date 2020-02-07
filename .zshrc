@@ -28,7 +28,7 @@
   source "$(navi widget zsh)"
 
 # prompt
-  source ~/.shell/.shell_prompt.sh
+  source ~/.prompt.sh
 
 # terminal color settings
   CLICOLOR=1
