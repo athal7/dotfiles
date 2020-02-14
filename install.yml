@@ -21,6 +21,7 @@ homebrew_packages:
   - fx
   - fzf
   - git
+  - github/gh/gh
   - grip
   - brew-cask-completion
   - hub
