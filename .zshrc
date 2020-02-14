@@ -90,10 +90,6 @@
   export CC=gcc
   alias be='bundle exec'
 
-# python
-  export PYTHONDONTWRITEBYTECODE=1
-  export PIP_DOWNLOAD_CACHE=$HOME/.pip/cache
-
 # go
   export GOPATH="$HOME/go"
   export PATH="$HOME/go/bin:$PATH"
