@@ -99,9 +99,9 @@ set number                       " line numbers
   "     autocmd BufNewFile,BufRead *.md       set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
   "     autocmd BufNewFile,BufRead *.markdown set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
   "   augroup END
-  " Plug 'elixir-lang/vim-elixir'
-  "   autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
-  "   autocmd BufWritePost *.exs,*.ex execute ':!mix format <afile>'
+  Plug 'elixir-lang/vim-elixir'
+    autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
+    autocmd BufWritePost *.exs,*.ex execute ':!mix format <afile>'
   " Plug 'fatih/vim-go'
   "   au BufRead,BufNewFile *.go set filetype=go
   " Plug 'othree/yajs'
