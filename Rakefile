@@ -13,7 +13,6 @@ module AT
       setup_symlinks
       setup_vim
       install_homebrew_packages
-      install_apps
       setup_languages
       other_config
       message "All done!"
@@ -66,16 +65,6 @@ module AT
         with_log("brew cleanup")
       else
         error "Unable to install dependencies with homebrew"
-      end
-    end
-
-    def install_apps
-      if with_log("brew cask help")
-        message "Installing apps..."
-        with_log("brew cask install #{@config['brew_cask_apps'].join(' ')} --force")
-        with_log("brew cask cleanup")
-      else
-        error "Unable to install apps with brew cask"
       end
     end
 
