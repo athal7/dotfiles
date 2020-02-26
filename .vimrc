@@ -27,7 +27,11 @@ set clipboard^=unnamed           " Use system clipboard
 set shell=zsh                    " Use login shell for commands
 set encoding=utf-8               " utf encoding
 set number                       " line numbers
-set smarttab                     " match tabs/spaces
+
+" match tabs/spaces
+  set smarttab
+  set smartindent
+  set expandtab tabstop=2 softtabstop=2 shiftwidth=2
 
 " flip the default split directions to sane ones
   set splitright
@@ -102,17 +106,17 @@ set smarttab                     " match tabs/spaces
 " linting, auto-formatting, and completion
   Plug 'w0rp/ale'
   let g:ale_linters = {
-    'elixir': ['credo'],
-    'javascript': ['eslint'],
-    'json': ['fixjson'],
-    'python': ['flake8'],
-    'ruby': ['rubocop']
-  }
-  let g:ale_fixers =  {
-    '*': ['remove_trailing_lines', 'trim_whitespace'],
-    'elixir': ['mix_format'],
-    'javascript': ['prettier', 'eslint']
-  }
+    \ 'elixir': ['credo'],
+    \ 'javascript': ['eslint'],
+    \ 'json': ['fixjson'],
+    \ 'python': ['flake8'],
+    \ 'ruby': ['rubocop'],
+    \ }
+  let g:ale_fixers = {
+    \ '*': ['remove_trailing_lines','trim_whitespace'],
+    \ 'elixir': ['mix_format'],
+    \ 'javascript': ['prettier','eslint'],
+    \ }
   let g:ale_fix_on_save = 1
   let g:ale_completion_tsserver_autoimport = 1
   let g:ale_completion_enabled = 1
