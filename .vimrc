@@ -27,6 +27,7 @@ set clipboard^=unnamed           " Use system clipboard
 set shell=zsh                    " Use login shell for commands
 set encoding=utf-8               " utf encoding
 set number                       " line numbers
+set smarttab                     " match tabs/spaces
 
 " flip the default split directions to sane ones
   set splitright
@@ -45,12 +46,6 @@ set number                       " line numbers
   set background=dark
   colorscheme one
 
-" use 2 spaces for tabs
-  set expandtab tabstop=2 softtabstop=2 shiftwidth=2
-  set smarttab
-
-" Strip whitespace on save
-  autocmd FileType * autocmd BufWritePre <buffer> :%s/\s\+$//e
 
 " mapping the jumping between splits. Hold control while using vim nav.
   nmap <C-J> <C-W>j
@@ -92,20 +87,12 @@ set number                       " line numbers
 " Universal comment plugin
   Plug 'tomtom/tcomment_vim'
 
-" Syntax highlighting
-  " Plug 'tpope/vim-markdown'
-  "   augroup mkd
-  "     autocmd BufNewFile,BufRead *.mkd      set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
-  "     autocmd BufNewFile,BufRead *.md       set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
-  "     autocmd BufNewFile,BufRead *.markdown set ai formatoptions=tcroqn2 comments=n:> filetype=markdown
-  "   augroup END
   Plug 'elixir-lang/vim-elixir'
     autocmd BufNewFile,BufRead *.exs,*.ex set filetype=elixir
-    autocmd BufWritePost *.exs,*.ex execute ':!mix format <afile>'
-  " Plug 'fatih/vim-go'
-  "   au BufRead,BufNewFile *.go set filetype=go
-  " Plug 'othree/yajs'
-  "   au BufNewFile,BufRead *.json set ai filetype=javascript
+  Plug 'fatih/vim-go'
+    au BufRead,BufNewFile *.go set filetype=go
+  Plug 'othree/yajs'
+    au BufNewFile,BufRead *.json set ai filetype=javascript
   Plug 'leafgarland/typescript-vim'
   Plug 'mitsuhiko/vim-python-combined'
 
@@ -114,8 +101,18 @@ set number                       " line numbers
 
 " linting, auto-formatting, and completion
   Plug 'w0rp/ale'
-  let g:ale_linters = {'python': ['flake8'], 'elixir': ['credo'], 'json': ['fixjson'], 'ruby': ['rubocop'], 'javascript': ['eslint']}
-  let g:ale_fixers =  ['prettier', 'eslint']
+  let g:ale_linters = {
+    'elixir': ['credo'],
+    'javascript': ['eslint'],
+    'json': ['fixjson'],
+    'python': ['flake8'],
+    'ruby': ['rubocop']
+  }
+  let g:ale_fixers =  {
+    '*': ['remove_trailing_lines', 'trim_whitespace'],
+    'elixir': ['mix_format'],
+    'javascript': ['prettier', 'eslint']
+  }
   let g:ale_fix_on_save = 1
   let g:ale_completion_tsserver_autoimport = 1
   let g:ale_completion_enabled = 1
