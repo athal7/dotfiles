@@ -62,9 +62,7 @@ module AT
     def install_homebrew_packages
       if with_log("brew info")
         message "Installing homebrew packages..."
-        with_log("brew update")
-        with_log("brew upgrade")
-        with_log("brew install #{@config['homebrew_packages'].join(' ')}")
+        with_log("brew bundle")
         with_log("brew cleanup")
       else
         error "Unable to install dependencies with homebrew"
