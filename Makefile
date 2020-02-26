@@ -14,7 +14,7 @@ dotfiles = .ackrc \
 				.vimrc \
 				.zshrc
 
-install: symlink submodules packages shell vim other
+install: symlink submodules packages shell vim languages other
 
 symlink:
 	for file in $(dotfiles); do \
@@ -37,6 +37,9 @@ vim:
 	rm -rf ~/.config/nvim/init.vim ;\
 	ln -s $(shell pwd)/.init.vim ~/.config/nvim/init.vim ;\
 	curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+languages:
+	asdf install
 
 other:
 	defaults write com.apple.screencapture location ~/Downloads;killall SystemUIServer ;\
