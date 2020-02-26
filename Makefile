@@ -1,12 +1,11 @@
 .DEFAULT_GOAL := install
 
 dotfiles = .ackrc \
-				.asdfc \
+				.asdfrc \
 				.fzf.zsh \
 				.gitconfig \
 				.gitignore_global \
 				.hyper.js \
-				.irbrc \
 				.prompt.sh \
 				.tmux \
 				.tmux.conf \
