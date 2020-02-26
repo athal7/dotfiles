@@ -162,7 +162,8 @@ set number                       " line numbers
   Plug 'edkolev/tmuxline.vim'
   let g:tmuxline_preset = {
     \'win'    : '#I #W',
-    \'cwin'    : '#I #W #F'}
+    \'cwin'    : '#I #W #F',
+    \ }
   let g:tmuxline_powerline_separators = 0
 
 " Status line
@@ -181,4 +182,5 @@ set number                       " line numbers
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {
          \'a'    : [ promptline#slices#cwd() ],
-         \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()]}
+         \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()],
+         \ }
