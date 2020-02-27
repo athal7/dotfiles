@@ -9,6 +9,7 @@ dotfiles = .ackrc \
 				.prompt.sh \
 				.tmux \
 				.tmux.conf \
+				.tool-versions \
 				.vim \
 				.vimrc \
 				.zshrc
