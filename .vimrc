@@ -116,11 +116,13 @@ set number                       " line numbers
     \ '*': ['remove_trailing_lines','trim_whitespace'],
     \ 'elixir': ['mix_format'],
     \ 'javascript': ['prettier','eslint'],
+    \ 'typescript': ['prettier','tslint'],
     \ }
-  let g:ale_fix_on_save = 1
+  let g:ale_fix_on_save = 0
   let g:ale_completion_tsserver_autoimport = 1
   let g:ale_completion_enabled = 1
   set omnifunc=ale#completion#OmniFunc
+  nmap <Leader>x :ALEFix<CR>
 
 " ctrlp
   Plug 'kien/ctrlp.vim'
