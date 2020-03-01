@@ -121,6 +121,7 @@ set number                       " line numbers
   let g:ale_fix_on_save = 0
   let g:ale_completion_tsserver_autoimport = 1
   let g:ale_completion_enabled = 1
+  filetype plugin on
   set omnifunc=ale#completion#OmniFunc
   nmap <Leader>x :ALEFix<CR>
 
