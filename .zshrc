@@ -63,7 +63,7 @@
   alias lf="less +F"
   alias lg='lazygit'
   alias ll="ls -la"
-  alias g='hub'
+  alias g='git'
   alias mkcd='mkdir $1 && cd $1'
   function mkcd {
      mkdir -p "$1" && cd "$1"
