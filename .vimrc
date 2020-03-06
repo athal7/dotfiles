@@ -104,7 +104,7 @@ set number                       " line numbers
   let g:EditorConfig_exclude_patterns = ['fugitive://.\*', 'scp://.\*']
 
 " linting, auto-formatting, and completion
-  Plug 'w0rp/ale'
+  Plug 'dense-analysis/ale'
   let g:ale_linters = {
     \ 'elixir': ['credo'],
     \ 'javascript': ['eslint'],
