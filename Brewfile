@@ -45,7 +45,6 @@ cask "istat-menus"
 cask "microsoft-office"
 cask "popsql"
 cask "postman"
-cask "slack"
 cask "soulver"
 cask "zsa-wally"
 
