@@ -6,6 +6,7 @@ dotfiles = .ackrc \
 				.gitconfig \
 				.gitignore_global \
 				.hyper.js \
+				.prettierrc \
 				.prompt.sh \
 				.tmux \
 				.tmux.conf \
@@ -48,4 +49,5 @@ languages: echo.languages
 
 other: echo.other
 	defaults write com.apple.screencapture location ~/Downloads;killall SystemUIServer ;\
-  defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder
+  defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder ;\
+  npm i -g prettier

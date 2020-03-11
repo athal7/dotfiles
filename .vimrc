@@ -105,22 +105,20 @@ set number                       " line numbers
 
 " linting, auto-formatting, and completion
   Plug 'dense-analysis/ale'
-  let g:ale_linters = {
-    \ 'elixir': ['credo'],
-    \ 'javascript': ['eslint'],
-    \ 'json': ['fixjson'],
-    \ 'python': ['flake8'],
-    \ 'ruby': ['rubocop'],
-    \ }
   let g:ale_fixers = {
     \ '*': ['remove_trailing_lines','trim_whitespace'],
     \ 'elixir': ['mix_format'],
-    \ 'javascript': ['prettier','eslint'],
-    \ 'typescript': ['prettier','tslint'],
+    \ 'javascript': ['prettier'],
+    \ 'typescript': ['prettier'],
     \ }
   let g:ale_fix_on_save = 0
   let g:ale_completion_tsserver_autoimport = 1
+  let g:ale_javascript_eslint_suppress_missing_config = 1
   let g:ale_completion_enabled = 1
+  let g:ale_sign_error = '✘'
+  let g:ale_sign_warning = '⚠'
+  highlight ALEErrorSign ctermbg=NONE ctermfg=red
+  highlight ALEWarningSign ctermbg=NONE ctermfg=yellow
   filetype plugin on
   set omnifunc=ale#completion#OmniFunc
   nmap <Leader>x :ALEFix<CR>
