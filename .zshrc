@@ -58,10 +58,9 @@
   alias cat='bat'
   alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
   alias e=$EDITOR
-  alias help='tldr'
+  alias help='navi'
   alias less="less -R"
   alias lf="less +F"
-  alias lg='lazygit'
   alias ll="ls -la"
   alias g='git'
   alias mkcd='mkdir $1 && cd $1'
