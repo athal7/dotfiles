@@ -48,8 +48,11 @@ set number                       " line numbers
 " color scheme
   Plug 'rakr/vim-one'
   set background=dark
+  set termguicolors
+  let g:one_allow_italics = 1
+  set t_8b=^[[48;2;%lu;%lu;%lum
+  set t_8f=^[[38;2;%lu;%lu;%lum
   colorscheme one
-
 
 " mapping the jumping between splits. Hold control while using vim nav.
   nmap <C-J> <C-W>j
@@ -103,7 +106,7 @@ set number                       " line numbers
   Plug 'editorconfig/editorconfig-vim'
   let g:EditorConfig_exclude_patterns = ['fugitive://.\*', 'scp://.\*']
 
-" linting, auto-formatting, and completion
+" linting, auto-formatting
   Plug 'dense-analysis/ale'
   let g:ale_fixers = {
     \ '*': ['remove_trailing_lines','trim_whitespace'],
@@ -114,14 +117,15 @@ set number                       " line numbers
   let g:ale_fix_on_save = 0
   let g:ale_completion_tsserver_autoimport = 1
   let g:ale_javascript_eslint_suppress_missing_config = 1
-  let g:ale_completion_enabled = 1
   let g:ale_sign_error = '✘'
   let g:ale_sign_warning = '⚠'
   highlight ALEErrorSign ctermbg=NONE ctermfg=red
   highlight ALEWarningSign ctermbg=NONE ctermfg=yellow
-  filetype plugin on
-  set omnifunc=ale#completion#OmniFunc
   nmap <Leader>x :ALEFix<CR>
+
+" Completion
+  Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+  let g:deoplete#enable_at_startup = 1
 
 " ctrlp
   Plug 'kien/ctrlp.vim'

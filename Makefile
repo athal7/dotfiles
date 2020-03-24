@@ -50,4 +50,6 @@ languages: echo.languages
 other: echo.other
 	defaults write com.apple.screencapture location ~/Downloads;killall SystemUIServer ;\
   defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder ;\
-  npm i -g prettier
+  npm i -g prettier ;\
+	pip3 install --user pynvim
+
