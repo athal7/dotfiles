@@ -45,6 +45,7 @@ cask "zsa-wally"
 
 mas "1Password 7", id: 1333542190
 mas "Day One", id: 1055511498
+mas "Houseparty", id: 1381523962
 mas "JSONViewer", id: 1438520258
 mas "Magnet", id: 441258766
 mas "Paste", id: 967805235
