@@ -25,7 +25,7 @@
   [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # interactive cheatsheet
-  source "$(navi widget zsh)"
+  source <(navi widget zsh)
 
 # prompt
   source ~/.prompt.sh
