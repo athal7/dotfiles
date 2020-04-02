@@ -2,6 +2,7 @@ tap "homebrew/cask"
 tap "github/gh"
 cask_args appdir: "/Applications"
 
+brew "ack"
 brew "asdf"
 brew "autojump"
 brew "bat"
@@ -53,7 +54,6 @@ mas "Slack", id: 803453959
 mas "Twitter", id: 1482454543
 mas "Xcode", id: 497799835
 
-whalebrew "whalebrew/ack"
 whalebrew "whalebrew/awscli"
 whalebrew "whalebrew/httpie"
 whalebrew "whalebrew/jq"
