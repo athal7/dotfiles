@@ -7,7 +7,9 @@
 --ignore-dir=log/
 --ignore-dir=coverage/
 --ignore-dir=__snapshots__/
---ignore-dir=crane/repos/
+--ignore-dir=repos/
+--ignore-dir=rendered/
+--ignore-dir=site/
 
 --pager
 less -r
