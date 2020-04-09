@@ -176,7 +176,7 @@ set number                       " line numbers
   Plug 'vim-airline/vim-airline'
   Plug 'vim-airline/vim-airline-themes'
   let g:airline_theme='one'
-  let g:airline_extensions = ['ctrlp', 'tmuxline', 'ale', 'tabline']
+  let g:airline_extensions = ['ctrlp', 'tmuxline', 'ale']
   let g:airline_detect_spell=1
 
 " Shell prompt
