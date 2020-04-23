@@ -118,6 +118,7 @@ set number                       " line numbers
   let g:ale_completion_tsserver_autoimport = 1
   let g:ale_sign_error = '✘'
   let g:ale_sign_warning = '⚠'
+  let g:airline#extensions#ale#enabled = 1
   highlight ALEErrorSign ctermbg=NONE ctermfg=red
   highlight ALEWarningSign ctermbg=NONE ctermfg=yellow
   nmap <Leader>x :ALEFix<CR>
