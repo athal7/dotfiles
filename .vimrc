@@ -116,7 +116,6 @@ set number                       " line numbers
     \ }
   let g:ale_fix_on_save = 0
   let g:ale_completion_tsserver_autoimport = 1
-  let g:ale_javascript_eslint_suppress_missing_config = 1
   let g:ale_sign_error = '✘'
   let g:ale_sign_warning = '⚠'
   highlight ALEErrorSign ctermbg=NONE ctermfg=red
