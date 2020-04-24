@@ -35,6 +35,7 @@ brew "zsh-completions"
 
 cask "blackhole" # https://github.com/ExistentialAudio/BlackHole
 cask "docker"
+cask "finicky"
 cask "github"
 cask "hiddenbar"
 cask "hyper"

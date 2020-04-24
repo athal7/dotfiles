@@ -2,6 +2,7 @@
 
 dotfiles = .ackrc \
 				.asdfrc \
+				.finicky.js \
 				.fzf.zsh \
 				.gitconfig \
 				.gitignore_global \
