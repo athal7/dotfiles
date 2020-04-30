@@ -3,11 +3,13 @@ module.exports = {
   handlers: [
     {
       match: finicky.matchHostnames([
-        "github.com", 
-        /.*\.google.com$/,
-        /.*\.slack.com$/,
-        /.*\.onelogin.com$/,
-        /.*\.2u.com$/,
+        /github/, 
+        /google/,
+        /slack/,
+        /onelogin/,
+        /2u/,
+        /fellow/,
+        /zoom/,
       ]),
       browser: "Google Chrome"
     }
