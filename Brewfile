@@ -44,6 +44,7 @@ cask "microsoft-office"
 cask "popsql"
 cask "postman"
 cask "soulver"
+cask "stay"
 cask "zsa-wally"
 
 mas "1Password 7", id: 1333542190
