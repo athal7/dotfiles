@@ -10,6 +10,7 @@ module.exports = {
         /2u/,
         /fellow/,
         /zoom/,
+        /lucidchart/,
       ]),
       browser: "Google Chrome"
     }
