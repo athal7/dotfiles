@@ -11,6 +11,7 @@ module.exports = {
         /fellow/,
         /zoom/,
         /lucidchart/,
+        /imsglobal/,
       ]),
       browser: "Google Chrome"
     }
