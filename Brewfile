@@ -33,6 +33,7 @@ brew "yarn"
 brew "zsh"
 brew "zsh-completions"
 
+cask "1password-cli"
 cask "blackhole" # https://github.com/ExistentialAudio/BlackHole
 cask "docker"
 cask "finicky"
