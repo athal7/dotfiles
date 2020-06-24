@@ -1,0 +1,11 @@
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: ".hyper_plugins"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "weekly"
