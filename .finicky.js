@@ -12,6 +12,8 @@ module.exports = {
         /zoom/,
         /lucidchart/,
         /imsglobal/,
+        /localhost/,
+        /127.0.0.1/,
       ]),
       browser: "Google Chrome"
     }
