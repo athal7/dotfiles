@@ -47,13 +47,11 @@
   h   = log --pretty=format:'%h %ad | %s [%an]' --graph --date=short
   l   = pull
   lb  = checkout -
-  lom = pull origin master
   o   = checkout
   m   = merge
   mf  = merge --ff-only
   p   = push -u
   poh = push -u origin head
-  pom = push origin master
   pr  = pull-request
   s   = stash
   ra  = remote add

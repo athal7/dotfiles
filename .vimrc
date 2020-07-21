@@ -101,6 +101,7 @@ set number                       " line numbers
   Plug 'othree/yajs'
     au BufNewFile,BufRead *.json set ai filetype=javascript
   Plug 'leafgarland/typescript-vim'
+    au BufNewFile,BufRead *.tsx set ai filetype=typescript
   Plug 'mitsuhiko/vim-python-combined'
 
   Plug 'editorconfig/editorconfig-vim'
