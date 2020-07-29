@@ -74,6 +74,7 @@
   default = tracking
 [pull]
   default = tracking
+  rebase = true
 [init]
   templatedir = ~/.git_template
 [help]
