@@ -45,14 +45,11 @@ set number                       " line numbers
 " remember last position in file
   au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal g'\"" | endif
 
-" color scheme
-  Plug 'rakr/vim-one'
+" visual scheme
+  Plug 'dracula/vim', { 'as': 'dracula' }
   set background=dark
   set termguicolors
-  let g:one_allow_italics = 1
-  set t_8b=^[[48;2;%lu;%lu;%lum
-  set t_8f=^[[38;2;%lu;%lu;%lum
-  colorscheme one
+  set guifont=Fira\ Code:h12
 
 " mapping the jumping between splits. Hold control while using vim nav.
   nmap <C-J> <C-W>j
@@ -165,19 +162,11 @@ set number                       " line numbers
   let vim_markdown_preview_hotkey='<C-m>'
   let vim_markdown_preview_github=1
 
-" Tmux status bar
-  Plug 'edkolev/tmuxline.vim'
-  let g:tmuxline_preset = {
-    \'win'    : '#I #W',
-    \'cwin'    : '#I #W #F',
-    \ }
-  let g:tmuxline_powerline_separators = 0
-
 " Status line
   Plug 'vim-airline/vim-airline'
   Plug 'vim-airline/vim-airline-themes'
-  let g:airline_theme='one'
-  let g:airline_extensions = ['ctrlp', 'tmuxline', 'ale']
+  let g:airline_theme='dracula'
+  let g:airline_extensions = ['ctrlp', 'ale']
   let g:airline_detect_spell=1
 
 " Shell prompt
@@ -185,6 +174,7 @@ set number                       " line numbers
 
   call plug#end()
 
+  colorscheme dracula
   let g:promptline_powerline_symbols = 0
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {

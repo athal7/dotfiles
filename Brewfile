@@ -1,5 +1,6 @@
 tap "homebrew/cask"
 tap "github/gh"
+tap "homebrew/cask-fonts"
 cask_args appdir: "/Applications"
 
 brew "ack"
@@ -37,6 +38,7 @@ cask "1password-cli"
 cask "blackhole" # https://github.com/ExistentialAudio/BlackHole
 cask "docker"
 cask "finicky"
+cask "font-fira-code"
 cask "github"
 cask "hiddenbar"
 cask "hyper"
