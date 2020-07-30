@@ -178,7 +178,3 @@ set number                       " line numbers
   colorscheme dracula
   let g:promptline_powerline_symbols = 1
   let g:promptline_theme = 'airline'
-  let g:promptline_preset = {
-         \'a'    : [ promptline#slices#cwd() ],
-         \'b'    : [ promptline#slices#vcs_branch(), promptline#slices#git_status()],
-         \ }
