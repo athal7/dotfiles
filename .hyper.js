@@ -21,5 +21,6 @@ module.exports = {
         'hyper-search',
         'hyper-font-ligatures',
         'hyper-dracula',
+        'hyper-hide-title',
     ],
 }
