@@ -167,7 +167,8 @@ set number                       " line numbers
   Plug 'vim-airline/vim-airline-themes'
   let g:airline_theme='dracula'
   let g:airline_extensions = ['ctrlp', 'ale']
-  let g:airline_detect_spell=1
+  let g:airline_detect_spell = 1
+  let g:airline_powerline_fonts = 1
 
 " Shell prompt
   Plug 'edkolev/promptline.vim'
@@ -175,7 +176,7 @@ set number                       " line numbers
   call plug#end()
 
   colorscheme dracula
-  let g:promptline_powerline_symbols = 0
+  let g:promptline_powerline_symbols = 1
   let g:promptline_theme = 'airline'
   let g:promptline_preset = {
          \'a'    : [ promptline#slices#cwd() ],
