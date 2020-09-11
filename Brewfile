@@ -30,6 +30,7 @@ brew "redis"
 brew "tmux"
 brew "vault"
 brew "watch"
+brew "whalebrew"
 brew "yarn"
 brew "zsh"
 brew "zsh-completions"
@@ -41,10 +42,8 @@ cask "docker"
 cask "finicky"
 cask "cask-fonts/font-fira-code"
 cask "github"
-cask "hiddenbar"
 cask "hyper"
 cask "kindle"
-cask "mailplane"
 cask "microsoft-office"
 cask "popsql"
 cask "postman"
@@ -52,13 +51,11 @@ cask "soulver"
 cask "zsa-wally"
 
 mas "1Password 7", id: 1333542190
-mas "Day One", id: 1055511498
 mas "JSONViewer", id: 1438520258
 mas "Magnet", id: 441258766
 mas "Paste", id: 967805235
 mas "PiPifier", id: 1160374471
 mas "Slack", id: 803453959
-mas "Twitter", id: 1482454543
 mas "Xcode", id: 497799835
 
 whalebrew "whalebrew/awscli"
