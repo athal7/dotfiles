@@ -17,7 +17,6 @@ dotfiles = .ackrc \
 				.zshrc
 
 install: symlink submodules packages shell vim languages other
-codespaces: symlink shell
 
 cyan = "\\033[1\;96m"
 off  = "\\033[0m"
