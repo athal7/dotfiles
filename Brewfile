@@ -56,6 +56,7 @@ mas "Grammarly", id: 1462114288
 mas "JSONViewer", id: 1438520258
 mas "Kiwi for Gmail Lite", id: 1006184923
 mas "Magnet", id: 441258766
+mas "OneLogin", id: 1475824389
 mas "PiPifier", id: 1160374471
 mas "Slack", id: 803453959
 mas "Xcode", id: 497799835
