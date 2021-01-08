@@ -39,7 +39,6 @@ cask "1password-cli"
 cask "balenaetcher"
 cask "blackhole" # https://github.com/ExistentialAudio/BlackHole
 cask "docker"
-cask "finicky"
 cask "cask-fonts/font-fira-code"
 cask "github"
 cask "hyper"
