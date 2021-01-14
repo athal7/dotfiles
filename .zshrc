@@ -5,10 +5,9 @@
 
 # plugins
   fpath=(/usr/local/share/zsh-completions $fpath)
-  plugins=(autojump docker jsontools osx tmux)
+  plugins=(autojump docker jsontools osx)
 
   source $ZSH/oh-my-zsh.sh
-  if [ "$TMUX" = "" ]; then tmux; fi
 
   fancy-ctrl-z () {
     if [[ $#BUFFER -eq 0 ]]; then
