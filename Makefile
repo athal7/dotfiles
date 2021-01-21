@@ -16,7 +16,8 @@ dotfiles = .ackrc \
 				.tool-versions \
 				.vim \
 				.vimrc \
-				.zshrc
+				.zshrc \
+				docker-compose.yml
 
 install: symlink submodules packages shell vim languages other
 
@@ -53,4 +54,3 @@ languages: echo.languages
 other: echo.other
 	defaults write com.apple.screencapture location ~/Downloads;killall SystemUIServer ;\
   defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder
-

@@ -143,5 +143,7 @@
     done
   }
 
+  docker-compose -f ~/docker-compose.yml up -d
+
 # secrets file
   source ~/.secrets
