@@ -1,1 +1,5 @@
 services:
+  languagetool:
+    image: silviof/docker-languagetool
+    ports:
+      - "8081:8010"
