@@ -32,7 +32,7 @@
 # terminal color settings
   CLICOLOR=1
   export TERM=xterm-256color
-  export EDITOR="nvim"
+  export EDITOR="code"
 
   BLACK="\033[0;30m"
   RED="\033[0;31m"
