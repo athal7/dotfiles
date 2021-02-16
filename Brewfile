@@ -4,6 +4,7 @@ cask_args appdir: "/Applications"
 
 brew "ack"
 brew "asdf"
+brew "awscli@1"
 brew "autojump"
 brew "bat"
 brew "brew-cask-completion"
@@ -51,7 +52,6 @@ mas "Magnet", id: 441258766
 mas "Slack", id: 803453959
 mas "Xcode", id: 497799835
 
-whalebrew "whalebrew/awscli"
 whalebrew "whalebrew/httpie"
 whalebrew "whalebrew/jq"
 whalebrew "whalebrew/kubectl"
