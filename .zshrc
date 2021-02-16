@@ -145,5 +145,8 @@
 
   docker-compose -f ~/docker-compose.yml up -d
 
+# aws
+export PATH="/usr/local/opt/awscli@1/bin:$PATH"
+
 # secrets file
   source ~/.secrets
