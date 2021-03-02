@@ -6,6 +6,7 @@
 [core]
   excludesfile = /Users/athal/.gitignore_global
   pager = delta --plus-color="#012800" --minus-color="#340001" --theme='Monokai Extended'
+  editor = nvim
 [interactive]
   diffFilter = delta --color-only
 [color]
