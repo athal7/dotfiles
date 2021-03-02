@@ -19,7 +19,7 @@ dotfiles = .ackrc \
 				.zshrc \
 				docker-compose.yml
 
-install: symlink submodules packages shell vim languages other
+install: symlink submodules packages shell sudoauth vim languages other
 
 cyan = "\\033[1\;96m"
 off  = "\\033[0m"
@@ -41,6 +41,11 @@ packages: echo.packages
 
 shell: echo.shell
 	chsh -s /bin/zsh
+	
+sudoauth: echo.sudoauth
+	(echo "auth sufficient pam_tid.so"; sudo cat /etc/pam.d/sudo) >tmpfile ;\
+  sudo cp tmpfile /etc/pam.d/sudo ;\
+  rm tmpfile
 
 vim: echo.vim
 	mkdir -p ~/.config/nvim ;\
