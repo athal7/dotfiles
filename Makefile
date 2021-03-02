@@ -19,7 +19,7 @@ dotfiles = .ackrc \
 				.zshrc \
 				docker-compose.yml
 
-install: symlink submodules packages shell sudoauth vim languages other
+install: symlink submodules packages shell vim languages other
 
 cyan = "\\033[1\;96m"
 off  = "\\033[0m"
