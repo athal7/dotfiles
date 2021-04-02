@@ -4,6 +4,7 @@ tap "johanhaleby/kubetail"
 cask_args appdir: "/Applications"
 
 brew "ack"
+brew "act"
 brew "asdf"
 brew "awscli@1"
 brew "autojump"
