@@ -5,30 +5,12 @@
   user = athal7
 [core]
   excludesfile = /Users/athal/.gitignore_global
-  pager = delta --plus-color="#012800" --minus-color="#340001" --theme='Monokai Extended'
-  editor = nvim
+  pager = delta --theme='Dracula'
+  editor = vi
 [interactive]
   diffFilter = delta --color-only
-[color]
-  branch = auto
-  diff = auto
-  status = auto
-  ui = true
-[color "branch"]
-  current = magenta reverse
-  local = magenta
-  remote = green
-[color "diff"]
-  meta = yellow
-  frag = magenta bold
-  old = red bold
-  new = green bold
-  commit = yellow bold
-  whitespace = red reverse
-[color "status"]
-  added = yellow
-  changed = green
-  untracked = cyan
+[delta]
+  features = side-by-side line-numbers decorations
 [alias]
   a   = add
   aa  = add -A :/
@@ -86,8 +68,3 @@
   smudge = git-lfs smudge -- %f
   process = git-lfs filter-process
   required = true
-[color "diff-highlight"]
-  oldNormal = red bold
-  oldHighlight = red bold 52
-  newNormal = green bold
-  newHighlight = green bold 22
