@@ -6,18 +6,12 @@ dotfiles = .ackrc \
         .default-python-packages \
 				.gitconfig \
 				.gitignore_global \
-				.hyper.js \
 				.prettierrc \
-				.prompt.sh \
-				.tmux \
-				.tmux.conf \
 				.tool-versions \
-				.vim \
-				.vimrc \
 				.zshrc \
 				docker-compose.yml
 
-install: symlink submodules packages shell vim languages other
+install: symlink packages shell languages other
 
 echo.%:
 	@echo "\n`tput smso`Building $*`tput rmso`"
@@ -27,10 +21,6 @@ symlink: echo.symlink
 		rm -rf ~/$$file ;\
 		ln -s $(shell pwd)/$$file ~/$$file ;\
 	done
-
-submodules: echo.submodules
-	git submodule update --init ;\
-  git submodule sync
 
 packages: echo.packages
 	brew bundle
@@ -42,12 +32,6 @@ sudoauth: echo.sudoauth
 	(echo "auth sufficient pam_tid.so"; sudo cat /etc/pam.d/sudo) >tmpfile ;\
   sudo cp tmpfile /etc/pam.d/sudo ;\
   rm tmpfile
-
-vim: echo.vim
-	mkdir -p ~/.config/nvim ;\
-	rm -rf ~/.config/nvim/init.vim ;\
-	ln -s $(shell pwd)/.init.vim ~/.config/nvim/init.vim ;\
-	curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 languages: echo.languages
 	asdf install
