@@ -43,13 +43,10 @@ brew "zsh"
 brew "zsh-completions"
 
 cask "1password-cli"
-cask "balenaetcher"
 cask "docker"
 cask "cask-fonts/font-fira-code"
 cask "github"
-cask "hyper"
 cask "visual-studio-code"
-cask "zsa-wally"
 
 mas "1Password 7", id: 1333542190
 mas "CopyClip", id: 595191960
