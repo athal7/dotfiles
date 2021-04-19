@@ -3,7 +3,6 @@
 dotfiles = .ackrc \
 				.asdfrc \
         .default-npm-packages \
-        .default-python-packages \
 				.gitconfig \
 				.gitignore_global \
 				.prettierrc \
