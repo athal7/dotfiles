@@ -1,6 +1,5 @@
 tap "homebrew/cask"
 tap "github/gh"
-tap "johanhaleby/kubetail"
 cask_args appdir: "/Applications"
 
 brew "ack"
@@ -19,22 +18,11 @@ brew "git-delta"
 brew "gh"
 brew "graphviz"
 brew "grip"
-brew "kubetail"
-brew "kubectl"
 brew "mas"
-brew "mysql"
 brew "navi"
 brew "ncdu"
-brew "neovim"
 brew "openssl"
-brew "pgcli"
-brew "postgresql"
 brew "prettier"
-brew "reattach-to-user-namespace"
-brew "redis"
-brew "shellcheck"
-brew "tmux"
-brew "vault"
 brew "watch"
 brew "whalebrew"
 brew "yarn"
@@ -50,9 +38,7 @@ cask "visual-studio-code"
 
 mas "1Password 7", id: 1333542190
 mas "CopyClip", id: 595191960
-mas "JSONViewer", id: 1438520258
 mas "Magnet", id: 441258766
-mas "Slack", id: 803453959
 mas "Xcode", id: 497799835
 
 whalebrew "whalebrew/httpie"
