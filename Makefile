@@ -4,8 +4,6 @@ dotfiles = .ackrc \
 				.asdfrc \
         .default-npm-packages \
         .default-python-packages \
-				.finicky.js \
-				.fzf.zsh \
 				.gitconfig \
 				.gitignore_global \
 				.hyper.js \
@@ -21,10 +19,8 @@ dotfiles = .ackrc \
 
 install: symlink submodules packages shell vim languages other
 
-cyan = "\\033[1\;96m"
-off  = "\\033[0m"
 echo.%:
-	@echo "\n$(cyan)Building $*$(off)"
+	@echo "\n`tput smso`Building $*`tput rmso`"
 
 symlink: echo.symlink
 	@for file in $(dotfiles); do \

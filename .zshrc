@@ -1,13 +1,31 @@
+# basic
+  export EDITOR="code"
+
 # zsh
-  export ZSH=$HOME/.oh-my-zsh
+  export ZPLUG_HOME=/usr/local/opt/zplug
+  source $ZPLUG_HOME/init.zsh
   HYPHEN_INSENSITIVE=true
   COMPLETION_WAITING_DOTS=true
 
 # plugins
-  fpath=(/usr/local/share/zsh-completions $fpath)
-  plugins=(autojump docker jsontools osx)
+  fpath=(/usr/local/share/zsh/site-functions $fpath)
+  zplug "plugins/autojump", from:oh-my-zsh
+  zplug "plugins/docker", from:oh-my-zsh
+  zplug "plugins/jsontools", from:oh-my-zsh
+  zplug "plugins/osx", from:oh-my-zsh
+  zplug "jhawthorn/fzy", \
+    as:command, \
+    rename-to:fzy, \
+    hook-build:"make && sudo make install"
+  zplug "dracula/zsh", as:theme
 
-  source $ZSH/oh-my-zsh.sh
+  if ! zplug check; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    fi
+  fi
+  zplug load
 
   fancy-ctrl-z () {
     if [[ $#BUFFER -eq 0 ]]; then
@@ -21,37 +39,8 @@
   zle -N fancy-ctrl-z
   bindkey '^Z' fancy-ctrl-z
 
-  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
 # interactive cheatsheet
   source <(navi widget zsh)
-
-# prompt
-  source ~/.prompt.sh
-
-# terminal color settings
-  CLICOLOR=1
-  export TERM=xterm-256color
-  export EDITOR="code"
-
-  BLACK="\033[0;30m"
-  RED="\033[0;31m"
-  GREEN="\033[0;32m"
-  YELLOW="\033[0;33m"
-  DARKBLUE="\033[0;34m"
-  PINK="\033[0;35m"
-  BLUE="\033[0;36m"
-  WHITE="\033[1;37m"
-  OFF="\033[0m"
-
-# color for man pages
-  export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
-  export LESS_TERMCAP_md=$'\E[01;38;5;74m'  # begin bold
-  export LESS_TERMCAP_me=$'\E[0m'           # end mode
-  export LESS_TERMCAP_se=$'\E[0m'           # end standout-mode
-  export LESS_TERMCAP_so=$'\E[1;31m'        # begin standout-mode - info box
-  export LESS_TERMCAP_ue=$'\E[0m'           # end underline
-  export LESS_TERMCAP_us=$'\E[04;33;5;146m' # begin underline
 
 # shell aliases
   alias cat='bat'

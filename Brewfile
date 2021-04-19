@@ -38,6 +38,7 @@ brew "vault"
 brew "watch"
 brew "whalebrew"
 brew "yarn"
+brew "zplug"
 brew "zsh"
 brew "zsh-completions"
 
