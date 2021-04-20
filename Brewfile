@@ -18,13 +18,14 @@ brew "git-delta"
 brew "gh"
 brew "graphviz"
 brew "grip"
+brew "httpie"
+brew "jq"
 brew "mas"
 brew "navi"
 brew "ncdu"
 brew "openssl"
 brew "prettier"
 brew "watch"
-brew "whalebrew"
 brew "yarn"
 brew "zplug"
 brew "zsh"
@@ -40,8 +41,3 @@ mas "1Password 7", id: 1333542190
 mas "CopyClip", id: 595191960
 mas "Magnet", id: 441258766
 mas "Xcode", id: 497799835
-
-whalebrew "whalebrew/httpie"
-whalebrew "whalebrew/jq"
-whalebrew "whalebrew/pygmentize"
-whalebrew "whalebrew/speedtest"
