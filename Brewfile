@@ -39,5 +39,5 @@ cask "visual-studio-code"
 
 mas "1Password 7", id: 1333542190
 mas "CopyClip", id: 595191960
-mas "Magnet", id: 441258766
+mas "Divvy", id: 413857545
 mas "Xcode", id: 497799835
