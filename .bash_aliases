@@ -1,0 +1,9 @@
+export EDITOR="code"
+alias be='bundle exec'
+alias cat='bat'
+alias e=$EDITOR
+alias help='navi'
+alias less="less -R"
+alias lf="less +F"
+alias ll="ls -la"
+alias g='git'

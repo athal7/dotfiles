@@ -2,6 +2,7 @@
 
 dotfiles = .ackrc \
 				.asdfrc \
+				.bash_aliases \
         .default-npm-packages \
 				.gitconfig \
 				.gitignore_global \
