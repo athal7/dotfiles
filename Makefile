@@ -35,6 +35,9 @@ sudoauth: echo.sudoauth
 languages: echo.languages
 	asdf install
 
+# macos only
 other: echo.other
+	@if [ "$(uname)" == "Darwin" ]; then \
 	defaults write com.apple.screencapture location ~/Downloads;killall SystemUIServer ;\
-  defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder
+  defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder ;\
+	fi
