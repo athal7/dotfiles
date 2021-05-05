@@ -43,16 +43,8 @@
   source <(navi widget zsh)
 
 # shell aliases
-  alias cat='bat'
   alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
-  alias e=$EDITOR
   alias help='navi'
-  alias less="less -R"
-  alias lf="less +F"
-  alias ll="ls -la"
-  alias g='git'
-  alias tf='terraform'
-  alias watch='watch '
 
 # version management
   source /usr/local/opt/asdf/asdf.sh
@@ -61,7 +53,6 @@
 # ruby
   export ARCHFLAGS='-arch x86_64'
   export CC=gcc
-  alias be='bundle exec'
 
 # go
   export GOPATH="$HOME/go"
@@ -78,6 +69,9 @@
   
 # aws
   export PATH="/usr/local/opt/awscli@1/bin:$PATH"
+  alias tf='terraform'
 
+# aliases for compat with codespaces
+  source ~/.bash_aliases
 # secrets file
   source ~/.secrets
