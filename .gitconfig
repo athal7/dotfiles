@@ -18,38 +18,31 @@
   b   = for-each-ref --count=10 --sort=-committerdate refs/heads/ --format='%(refname:short)'
   bd  = branch -D
   bn  = checkout -b
-  br  = browse
   c   = commit
-  ca  = commit -a
   caa = commit -a --amend
-  cl  = clone
-  co  = checkout
   cm  = commit -v -m
   d   = diff
   f   = fetch
   h   = log --pretty=format:'%h %ad | %s [%an]' --graph --date=short
   l   = pull
-  lb  = checkout -
   o   = checkout
   m   = merge
   mf  = merge --ff-only
   p   = push -u
   poh = push -u origin head
-  pr  = pull-request
   s   = stash
   ra  = remote add
   rb  = rebase
   rbc = rebase --continue
   rbi = rebase -i
-  re  = reset
   rr  = remote rm
   rs  = remote -v show
-  ru  = clean  -d  -fx "" # delete untracked files
+  rt  = restore
   rv  = revert
   sa  = stash apply
   sh  = show
   st  = status
-  tr  = branch -t
+  sw  = switch
   ctags = !.git/hooks/ctags
 [apply]
   whitespace = fix
