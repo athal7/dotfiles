@@ -32,13 +32,11 @@ brew "zplug"
 brew "zsh"
 brew "zsh-completions"
 
-cask "1password-cli"
 cask "docker"
 cask "cask-fonts/font-fira-code"
 cask "github"
 cask "visual-studio-code"
 
-mas "1Password 7", id: 1333542190
 mas "CopyClip", id: 595191960
 mas "Divvy", id: 413857545
 mas "Xcode", id: 497799835
