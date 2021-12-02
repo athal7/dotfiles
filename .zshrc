@@ -73,3 +73,5 @@
 
 # secrets file
   source ~/.secrets
+# Added by Amplify CLI binary installer
+export PATH="$HOME/.amplify/bin:$PATH"
