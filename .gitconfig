@@ -5,7 +5,7 @@
   user = athal7
 [core]
   excludesfile = /Users/athal/.gitignore_global
-  pager = delta --theme='Dracula'
+  pager = delta
   editor = vi
 [interactive]
   diffFilter = delta --color-only
