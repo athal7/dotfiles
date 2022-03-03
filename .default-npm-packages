@@ -1,3 +1,2 @@
 prettier
-eslint
-prettier-eslint
+@prettier/plugin-ruby
