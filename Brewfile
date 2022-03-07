@@ -35,7 +35,6 @@ brew "zsh-completions"
 cask "devtoys"
 cask "docker"
 cask "cask-fonts/font-fira-code"
-cask "github"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 595191960
