@@ -1,11 +1,16 @@
+
+# chezmoi
+  export PATH="$HOME/bin:$PATH"
+
+# homebrew
+  eval "$($HOME/homebrew/bin/brew shellenv)"
+
 # zsh
-  export ZPLUG_HOME=/usr/local/opt/zplug
-  source $ZPLUG_HOME/init.zsh
+  source $(brew --prefix)/opt/zplug/init.zsh
   HYPHEN_INSENSITIVE=true
   COMPLETION_WAITING_DOTS=true
 
 # plugins
-  fpath=(/usr/local/share/zsh/site-functions $fpath)
   zplug "plugins/autojump", from:oh-my-zsh
   zplug "plugins/docker", from:oh-my-zsh
   zplug "plugins/jsontools", from:oh-my-zsh
@@ -40,7 +45,6 @@
   source <(navi widget zsh)
   
 # version management
-  source /usr/local/opt/asdf/asdf.sh
   export PATH="$HOME/.asdf/shims:$PATH"
 
 # ruby
