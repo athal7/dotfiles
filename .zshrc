@@ -59,9 +59,6 @@
   alias dc="docker-compose"
   alias dcr="docker-compose run --rm"
   alias docker_cleanup="docker system prune"
-  
-# aws
-  export PATH="/usr/local/opt/awscli@1/bin:$PATH"
 
 # mac only aliases
   alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
@@ -73,5 +70,3 @@
 
 # secrets file
   source ~/.secrets
-# Added by Amplify CLI binary installer
-export PATH="$HOME/.amplify/bin:$PATH"
