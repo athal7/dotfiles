@@ -11,10 +11,15 @@ dotfiles = .ackrc \
 				.zshrc \
 				docker-compose.yml
 
-install: symlink packages shell languages other
+install: symlink homebrew packages shell languages other
 
 echo.%:
 	@echo "\n`tput smso`Building $*`tput rmso`"
+
+homebrew: echo.homebrew
+ifndef brew
+	@/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+endif
 
 symlink: echo.symlink
 	@for file in $(dotfiles); do \
