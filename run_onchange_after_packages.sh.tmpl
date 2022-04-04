@@ -1,0 +1,7 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+brew bundle
+asdf install
+{{- else -}}
+brew install bat git-delta eslint navi prettier
+{{ end -}}
