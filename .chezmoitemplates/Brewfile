@@ -1,0 +1,39 @@
+tap "github/gh"
+
+brew "ack"
+brew "act"
+brew "bat"
+brew "chezmoi"
+brew "fzf"
+brew "git-delta"
+brew "gh"
+brew "jq"
+brew "zplug"
+brew "zsh-completions"
+
+{{ if not .codespaces -}}
+brew "asdf"
+brew "autojump"
+brew "awscli"
+brew "brew-cask-completion"
+brew "colima"
+brew "dnsmasq"
+brew "docker"
+brew "iconsur"
+brew "mas"
+brew "navi"
+brew "ncdu"
+brew "openssl"
+brew "watch"
+
+tap "homebrew/cask"
+tap "homebrew/cask-fonts"
+cask_args appdir: "/Applications"
+
+cask "devtoys"
+cask "font-fira-code"
+cask "visual-studio-code"
+
+mas "CopyClip 2", id: 1020812363
+mas "Divvy", id: 413857545
+{{ end -}}

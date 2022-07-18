@@ -1,0 +1,15 @@
+--ignore-dir=.git/
+--ignore-dir=node_modules/
+--ignore-dir=_build/
+--ignore-dir=site-packages/
+--ignore-dir=deps/
+--ignore-dir=__pycache__/
+--ignore-dir=log/
+--ignore-dir=coverage/
+--ignore-dir=__snapshots__/
+--ignore-dir=repos/
+--ignore-dir=rendered/
+--ignore-dir=site/
+
+--pager
+less -r

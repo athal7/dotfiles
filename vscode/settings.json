@@ -1,0 +1,60 @@
+{
+    "editor.codeLensFontFamily": "Fira Code",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.fontFamily": "Fira Code",
+    "editor.fontLigatures": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modifications",
+    "editor.inlineSuggest.enabled": true,
+    "editor.minimap.enabled": false,
+    "editor.tabSize": 2,
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "files.autoSave": "off",
+    "git.alwaysSignOff": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    "git.fetchOnPull": true,
+    "git.ignoreRebaseWarning": true,
+    "git.pullTags": true,
+    "github.codespaces.createCodespaceInNewWindow": true,
+    "github.copilot.enable": {
+        "*": true,
+        "yaml": true,
+        "plaintext": false,
+        "markdown": false
+    },
+    "githubIssues.queries": [
+        {
+            "label": "My Issues",
+            "query": "default"
+        },
+        {
+            "label": "Created Issues",
+            "query": "author:${user} state:open repo:${owner}/${repository} sort:created-desc"
+        },
+        {
+            "label": "All Issues",
+            "query": "state:open repo:${owner}/${repository} sort:created-desc"
+        }
+    ],
+    "githubPullRequests.createOnPublishBranch": "never",
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "prettier.endOfLine": "auto",
+    "prettier.requireConfig": false,
+    "prettier.semi": false,
+    "prettier.singleQuote": true,
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.fontFamily": "Fira Code",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "workbench.colorTheme": "Dracula",
+    "workbench.editorAssociations": {
+        "git-rebase-todo": "default",
+        "*.ipynb": "jupyter.notebook.ipynb"
+    },
+    "workbench.preferredDarkColorTheme": "Dracula",
+    "workbench.startupEditor": "none",
+    "telemetry.telemetryLevel": "off"
+}

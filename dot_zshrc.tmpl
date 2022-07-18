@@ -1,0 +1,68 @@
+{{ template "brewenv" . }}
+
+# the basics
+  export EDITOR="code"
+  alias e=$EDITOR
+  
+  alias cat='bat'
+  alias g='git'
+  alias less="less -R"
+  alias lf="less +F"
+  alias ll="ls -la"
+{{ if not .codespaces }}
+  alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
+  alias tf='terraform'
+  alias watch='watch '
+
+  fancyCtrlZ() {
+    if [[ $#BUFFER -eq 0 ]]; then
+      BUFFER="fg"
+      zle accept-line
+    else
+      zle push-input
+      zle clear-screen
+    fi
+  }
+  zle -N fancyCtrlZ
+  bindkey '^Z' fancyCtrlZ
+  
+# interactive cheatsheet
+  . <(navi widget zsh)
+  alias help='navi'
+
+# docker
+  alias d="docker"
+  alias dc="docker-compose"
+  alias dcr="docker-compose run --rm"
+  alias docker_cleanup="docker system prune"
+{{ end -}}
+
+# chezmoi
+  export PATH="$HOME/bin:$PATH"
+  alias c="chezmoi"
+  alias cg="chezmoi git"
+
+# zsh
+  export ZPLUG_HOME=$(brew --prefix)/opt/zplug
+  . $ZPLUG_HOME/init.zsh
+  HYPHEN_INSENSITIVE=true
+  COMPLETION_WAITING_DOTS=true
+  zplug "plugins/jsontools", from:oh-my-zsh
+  zplug "plugins/osx", from:oh-my-zsh
+  {{ if not .codespaces }}
+  zplug "asdf-vm/asdf", from:github
+  alias ae="asdf exec"
+  
+  zplug "plugins/autojump", from:oh-my-zsh
+  zplug "plugins/docker", from:oh-my-zsh
+  zplug "jhawthorn/fzy", \
+    as:command, \
+    rename-to:fzy, \
+    hook-build:"make && sudo make install"
+  {{ end }}
+  zplug "dracula/zsh", as:theme
+
+  if ! zplug check; then
+    zplug install
+  fi
+  zplug load

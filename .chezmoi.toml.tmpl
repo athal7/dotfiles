@@ -1,0 +1,17 @@
+{{- $codespaces := env "CODESPACES" | not | not -}}
+sourceDir = {{ .chezmoi.sourceDir | quote }}
+
+[data]
+    codespaces = {{ $codespaces }}
+{{- if $codespaces }}
+    github.email = {{ env "GIT_COMMITTER_EMAIL" | quote }}
+    github.user = {{ env "GITHUB_USER" | quote }}
+{{- else }}
+    github.email = {{ promptString "email" | quote }}
+    github.user = {{ promptString "github username" | quote }}
+{{- end }}
+[edit]
+    command = "code"
+    args = ["--wait"]
+[diff]
+    exclude = ["scripts"]
