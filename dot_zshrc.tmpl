@@ -42,6 +42,9 @@
   alias c="chezmoi"
   alias cg="chezmoi git"
 
+# source machine-specific config
+  . ~/.secret
+
 # zsh
   export ZPLUG_HOME=$(brew --prefix)/opt/zplug
   . $ZPLUG_HOME/init.zsh
