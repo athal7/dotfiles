@@ -33,7 +33,8 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
+# Other #
+#########
 .bundle
-
-.DS_Store
 .vscode
+.dccache
