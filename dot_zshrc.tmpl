@@ -26,10 +26,6 @@
   zle -N fancyCtrlZ
   bindkey '^Z' fancyCtrlZ
   
-# interactive cheatsheet
-  . <(navi widget zsh)
-  alias help='navi'
-
 # docker
   alias d="docker"
   alias dc="docker-compose"
@@ -50,11 +46,11 @@
   . $ZPLUG_HOME/init.zsh
   HYPHEN_INSENSITIVE=true
   COMPLETION_WAITING_DOTS=true
-  zplug "plugins/jsontools", from:oh-my-zsh
   zplug "plugins/osx", from:oh-my-zsh
   {{ if not .codespaces }}
   zplug "asdf-vm/asdf", from:github
   alias ae="asdf exec"
+  . $(brew --prefix asdf)/asdf.sh
   
   zplug "plugins/autojump", from:oh-my-zsh
   zplug "plugins/docker", from:oh-my-zsh
