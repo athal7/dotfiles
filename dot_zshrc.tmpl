@@ -37,6 +37,12 @@
   export PATH="$HOME/bin:$PATH"
   alias c="chezmoi"
   alias cg="chezmoi git"
+  function getSecret() {
+    chezmoi secret keyring get --service=$1 --user=$(git config github.user)
+  }
+  function setSecret() {
+    chezmoi secret keyring set --service=$1 --user=$(git config github.user) --value=$2
+  }
 
 # source machine-specific config
   . ~/.secret
