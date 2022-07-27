@@ -1,0 +1,8 @@
+#!/bin/sh
+{{ if not .codespaces }}
+EXTENSIONS="{{ template "vscode-extensions" . }}"
+IFS=$'\n'; for EXTENSION in $EXTENSIONS
+do
+  code --install-extension $EXTENSION
+done
+{{ end -}}
