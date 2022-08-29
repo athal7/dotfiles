@@ -39,13 +39,13 @@
   alias c="chezmoi"
   alias cg="chezmoi git"
   function getSecret() {
-    chezmoi secret keyring get --service=$1 --user=$(git config github.user)
+    chezmoi secret keyring get --service=$1 --user=$(whoami)
   }
   function setSecret() {
-    chezmoi secret keyring set --service=$1 --user=$(git config github.user) --value=$2
+    chezmoi secret keyring set --service=$1 --user=$(whoami) --value=$2
   }
   function listSecretNames() {
-    security dump-keychain | grep -b4 -A0 "\"acct\"<blob>=\"$(git config github.user)\"" | grep -A3 genp | awk -F'=' '/0x00000007/ { print $2 }'
+    security dump-keychain | grep -b4 -A0 "\"acct\"<blob>=\"$(whoami)\"" | grep -A3 genp | awk -F'=' '/0x00000007/ { print $2 }'
   }
 
 # source machine-specific config
