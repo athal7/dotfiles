@@ -3,7 +3,7 @@
 	email = {{ .github.email | quote }}
 [github]
   user = {{ .github.user | quote }}
-  token = {{ keyring "github" .github.user | quote }}
+  token = {{ keyring "github-token" .chezmoi.username | quote }}
 [core]
   excludesfile = ~/.gitignore_global
   pager = delta
