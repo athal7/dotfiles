@@ -39,14 +39,27 @@
   alias c="chezmoi"
   alias cg="chezmoi git"
   function getSecret() {
-    chezmoi secret keyring get --service=$1 --user=$(whoami)
+    chezmoi secret keyring get --service=$1 --user={{.chezmoi.username}}
   }
   function setSecret() {
-    chezmoi secret keyring set --service=$1 --user=$(whoami) --value=$2
+    chezmoi secret keyring set --service=$1 --user={{.chezmoi.username}} --value=$2
+  }
+  function deleteSecret() {
+    chezmoi secret keyring delete --service=$1 --user={{.chezmoi.username}}
   }
   function listSecretNames() {
-    security dump-keychain | grep -b4 -A0 "\"acct\"<blob>=\"$(whoami)\"" | grep -A3 genp | awk -F'=' '/0x00000007/ { print $2 }'
+    security dump-keychain \
+    | grep -b4 -A0 "\"acct\"<blob>=\"{{.chezmoi.username}}\"" \
+    | grep -A3 genp \
+    | grep 0x00000007 \
+    | cut -d = -f 2 \
+    | tr -d '"'
   }
+
+  for secret in $(listSecretNames); do
+    env_var=$(echo $secret | tr '[:lower:]' '[:upper:]' | sed -e 's/-/_/g')
+    export $env_var=$(getSecret $secret)
+  done
 
 # source machine-specific config
   . ~/.secret
