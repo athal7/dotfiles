@@ -1,4 +1,4 @@
-{{- if not .codespaces -}}
 #!/bin/bash
-chsh -s /bin/zsh
-{{ end -}}
+sudo sh -c "echo $(which zsh) >> /etc/shells"
+chsh -s $(which zsh) $whoami
+

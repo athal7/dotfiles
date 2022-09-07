@@ -9,7 +9,7 @@ brew "gh"
 brew "jq"
 brew "zplug"
 
-{{ if not .codespaces -}}
+{{ if .macos -}}
 brew "asdf"
 brew "autojump"
 brew "awscli"
