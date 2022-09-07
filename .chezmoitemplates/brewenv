@@ -1,5 +1,5 @@
 {{ if .codespaces -}}
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-{{ else }}
+{{ else if .macos }}
 eval "$(/opt/homebrew/bin/brew shellenv)"
 {{ end -}}

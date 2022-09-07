@@ -1,14 +1,16 @@
 {{- $codespaces := env "CODESPACES" | not | not -}}
+{{- $macos := eq .chezmoi.os "darwin" }}
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
 [data]
     codespaces = {{ $codespaces }}
-{{- if $codespaces }}
-    github.email = {{ env "GIT_COMMITTER_EMAIL" | quote }}
-    github.user = {{ env "GITHUB_USER" | quote }}
-{{- else }}
+    macos = {{ $macos }}
+{{- if stdinIsATTY }}
     github.email = {{ promptString "email" | quote }}
     github.user = {{ promptString "github username" | quote }}
+{{- else if $codespaces }}
+    github.email = {{ env "GIT_COMMITTER_EMAIL" | quote }}
+    github.user = {{ env "GITHUB_USER" | quote }}
 {{- end }}
 [edit]
     command = "code"
