@@ -67,19 +67,8 @@
 # zsh
   export ZPLUG_HOME=$(brew --prefix)/opt/zplug
   . $ZPLUG_HOME/init.zsh
-  HYPHEN_INSENSITIVE=true
-  COMPLETION_WAITING_DOTS=true
   {{ if not .codespaces }}
-  zplug "asdf-vm/asdf", from:github
-  alias ae="asdf exec"
   . $(brew --prefix asdf)/asdf.sh
-  
-  zplug "plugins/autojump", from:oh-my-zsh
-  zplug "plugins/docker", from:oh-my-zsh
-  zplug "jhawthorn/fzy", \
-    as:command, \
-    rename-to:fzy, \
-    hook-build:"make && sudo make install"
   {{ end }}
   zplug "dracula/zsh", as:theme
 
