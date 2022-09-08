@@ -38,6 +38,7 @@
   export ZPLUG_HOME=$(brew --prefix)/opt/zplug
   . $ZPLUG_HOME/init.zsh
   zplug "dracula/zsh", as:theme
+  DRACULA_DISPLAY_TIME=1
 
   if ! zplug check; then
     zplug install
