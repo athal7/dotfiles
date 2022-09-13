@@ -56,5 +56,8 @@
     },
     "workbench.preferredDarkColorTheme": "Dracula",
     "workbench.startupEditor": "none",
-    "telemetry.telemetryLevel": "off"
+    "telemetry.telemetryLevel": "off",
+    "python.formatting.provider": "black",
+    "python.linting.mypyArgs": [],
+    "python.linting.mypyEnabled": true
 }
