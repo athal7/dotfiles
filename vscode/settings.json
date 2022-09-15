@@ -5,7 +5,7 @@
     "editor.fontLigatures": true,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "modifications",
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
     "editor.inlineSuggest.enabled": true,
     "editor.minimap.enabled": false,
     "editor.tabSize": 2,
