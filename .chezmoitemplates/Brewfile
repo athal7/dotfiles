@@ -6,6 +6,7 @@ brew "bat"
 brew "chezmoi"
 brew "git-delta"
 brew "gh"
+brew "jc"
 brew "jq"
 brew "zplug"
 
