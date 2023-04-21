@@ -12,10 +12,8 @@ brew "zplug"
 
 {{ if .macos -}}
 brew "asdf"
-brew "autojump"
 brew "awscli"
 brew "docker"
-brew "iconsur"
 brew "mas"
 brew "openssl"
 brew "watch"
@@ -24,7 +22,6 @@ tap "homebrew/cask"
 tap "homebrew/cask-fonts"
 cask_args appdir: "/Applications"
 
-cask "devtoys"
 cask "font-fira-code"
 cask "visual-studio-code"
 
