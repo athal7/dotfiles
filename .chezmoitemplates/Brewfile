@@ -9,11 +9,8 @@ brew "jc"
 brew "jq"
 brew "zplug"
 
-vscode "dracula-theme.theme-dracula"
 vscode "esbenp.prettier-vscode"
-vscode "GrapeCity.gc-excelviewer"
 vscode "ms-vscode-remote.remote-containers"
-vscode "ms-vsliveshare.vsliveshare"
 vscode "redhat.vscode-yaml"
 
 {{ if .macos -}}
