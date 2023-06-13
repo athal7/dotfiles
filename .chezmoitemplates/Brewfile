@@ -1,6 +1,5 @@
 tap "github/gh"
 
-brew "ack"
 brew "act"
 brew "bat"
 brew "chezmoi"

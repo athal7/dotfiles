@@ -1,9 +1,0 @@
-#!/bin/sh
-{{ if not .codespaces }}
-PLUGINS="{{ template "asdf-plugins" . }}"
-IFS=$'\n'; for PLUGIN in $PLUGINS 
-do
-  echo $PLUGIN | cut -d' ' -f1 | xargs asdf plugin add
-  echo $PLUGIN | xargs asdf install
-done
-{{ end -}}
