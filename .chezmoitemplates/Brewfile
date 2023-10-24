@@ -1,6 +1,5 @@
 tap "github/gh"
 
-brew "act"
 brew "bat"
 brew "chezmoi"
 brew "git-delta"
@@ -9,9 +8,8 @@ brew "jc"
 brew "jq"
 brew "zplug"
 
-vscode "esbenp.prettier-vscode"
 vscode "ms-vscode-remote.remote-containers"
-vscode "redhat.vscode-yaml"
+vscode "github.codespaces"
 
 {{ if .macos -}}
 brew "asdf"
@@ -28,6 +26,6 @@ cask_args appdir: "/Applications"
 cask "font-fira-code"
 cask "visual-studio-code"
 
-mas "CopyClip 2", id: 1020812363
+mas "CopyClip", id: 1020812363
 mas "Divvy", id: 413857545
 {{ end -}}
