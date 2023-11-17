@@ -1,4 +1,6 @@
 tap "github/gh"
+tap "homebrew/cask"
+tap "homebrew/cask-fonts"
 
 brew "bat"
 brew "chezmoi"
@@ -7,6 +9,8 @@ brew "gh"
 brew "jc"
 brew "jq"
 brew "zplug"
+
+cask "font-monaspace"
 
 vscode "ms-vscode-remote.remote-containers"
 vscode "github.codespaces"
@@ -19,11 +23,7 @@ brew "mas"
 brew "openssl"
 brew "watch"
 
-tap "homebrew/cask"
-tap "homebrew/cask-fonts"
 cask_args appdir: "/Applications"
-
-cask "font-fira-code"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
