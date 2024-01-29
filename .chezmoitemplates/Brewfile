@@ -1,5 +1,4 @@
 tap "github/gh"
-tap "homebrew/cask"
 tap "homebrew/cask-fonts"
 
 brew "bat"
