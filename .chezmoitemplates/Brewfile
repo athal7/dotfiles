@@ -12,8 +12,9 @@ brew "zplug"
 
 cask "font-monaspace"
 
-vscode "ms-vscode-remote.remote-containers"
+vscode "ex3ndr.llama-coder"
 vscode "github.codespaces"
+vscode "ms-vscode-remote.remote-containers"
 
 {{ if .macos -}}
 brew "asdf"
@@ -25,6 +26,7 @@ brew "watch"
 
 cask_args appdir: "/Applications"
 cask "mac-mouse-fix"
+cask "ollama"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
