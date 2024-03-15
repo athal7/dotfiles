@@ -30,4 +30,5 @@ cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
 mas "Divvy", id: 413857545
+mas "Enchanted", id: 6474268307
 {{ end -}}
