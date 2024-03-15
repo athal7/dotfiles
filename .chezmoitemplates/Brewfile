@@ -11,7 +11,7 @@ brew "zplug"
 
 cask "font-monaspace"
 
-vscode "ex3ndr.llama-coder"
+vscode "Continue.continue"
 vscode "github.codespaces"
 vscode "ms-vscode-remote.remote-containers"
 
