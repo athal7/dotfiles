@@ -29,6 +29,3 @@
     env_var=$(echo $secret | tr '[:lower:]' '[:upper:]' | sed -e 's/-/_/g')
     export $env_var=$(getSecret $secret)
   done
-
-# plugins
-  . $(brew --prefix asdf)/libexec/asdf.sh
