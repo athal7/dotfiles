@@ -29,3 +29,5 @@
     env_var=$(echo $secret | tr '[:lower:]' '[:upper:]' | sed -e 's/-/_/g')
     export $env_var=$(getSecret $secret)
   done
+
+  [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh

@@ -16,6 +16,7 @@ vscode "github.codespaces"
 vscode "ms-vscode-remote.remote-containers"
 
 {{ if .macos -}}
+brew "autojump"
 brew "awscli"
 brew "docker"
 brew "mas"
