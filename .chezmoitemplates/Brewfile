@@ -26,6 +26,7 @@ brew "watch"
 cask_args appdir: "/Applications"
 cask "mac-mouse-fix"
 cask "ollama"
+cask "stay"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
