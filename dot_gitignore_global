@@ -36,5 +36,4 @@ Thumbs.db
 # Other #
 #########
 .bundle
-.vscode
 .dccache
