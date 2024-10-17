@@ -24,12 +24,8 @@ brew "openssl"
 brew "watch"
 
 cask_args appdir: "/Applications"
-cask "mac-mouse-fix"
 cask "ollama"
-cask "stay"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
-mas "Divvy", id: 413857545
-mas "Enchanted", id: 6474268307
 {{ end -}}
