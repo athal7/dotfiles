@@ -24,7 +24,7 @@ brew "openssl"
 brew "watch"
 
 cask_args appdir: "/Applications"
-cask "ollama"
+cask "lm-studio"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
