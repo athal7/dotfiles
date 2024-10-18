@@ -11,20 +11,13 @@ brew "zplug"
 
 cask "font-monaspace"
 
-vscode "Continue.continue"
-vscode "github.codespaces"
-vscode "ms-vscode-remote.remote-containers"
-
 {{ if .macos -}}
 brew "autojump"
-brew "awscli"
-brew "docker"
 brew "mas"
 brew "openssl"
 brew "watch"
 
 cask_args appdir: "/Applications"
-cask "lm-studio"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
