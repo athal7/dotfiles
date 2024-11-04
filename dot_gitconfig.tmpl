@@ -5,12 +5,9 @@
   user = {{ .github.user | quote }}
 [core]
   excludesfile = ~/.gitignore_global
-  pager = delta
   editor = vi
-[interactive]
-  diffFilter = delta --color-only
-[delta]
-  features = side-by-side line-numbers decorations
+[diff]
+  external = difft
 [alias]
   a   = add
   aa  = add -A :/
