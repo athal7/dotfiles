@@ -3,7 +3,7 @@ tap "homebrew/cask-fonts"
 
 brew "bat"
 brew "chezmoi"
-brew "git-delta"
+brew "difftastic"
 brew "gh"
 brew "jc"
 brew "jq"
