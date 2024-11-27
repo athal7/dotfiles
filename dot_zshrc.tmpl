@@ -1,16 +1,23 @@
 {{ template "brewenv" . }}
 
-# basics
-  export EDITOR="code"
-  alias e=$EDITOR
-  
+export EDITOR="code"
+
+# aliases
   alias cat='bat'
+  alias d="docker"
+  alias dc="docker-compose"
+  alias dcr="docker-compose run --rm"
+  alias docker_cleanup="docker system prune"
+  alias e=$EDITOR
   alias g='git'
+  alias k="kubectl"
   alias less="less -R"
   alias lf="less +F"
   alias ll="ls -la"
   alias tf='terraform'
+  alias watch='watch -c '
 
+# functions
   fancyCtrlZ() {
     if [[ $#BUFFER -eq 0 ]]; then
       BUFFER="fg"
@@ -23,24 +30,33 @@
   zle -N fancyCtrlZ
   bindkey '^Z' fancyCtrlZ
 
-# chezmoi
-  export PATH="$HOME/bin:$PATH"
-  alias c="chezmoi"
-  alias cg="chezmoi git"
+  function getSecret() {
+    chezmoi secret keyring get --service=$1 --user={{.chezmoi.username}}
+  }
+  function setSecret() {
+    chezmoi secret keyring set --service=$1 --user={{.chezmoi.username}} --value=$2
+  }
+  function deleteSecret() {
+    chezmoi secret keyring delete --service=$1 --user={{.chezmoi.username}}
+  }
+  function listSecretNames() {
+    security dump-keychain \
+    | grep -b4 -A0 "\"acct\"<blob>=\"{{.chezmoi.username}}\"" \
+    | grep -A3 genp \
+    | grep 0x00000007 \
+    | cut -d = -f 2 \
+    | tr -d '"'
+  }
 
-# machine-specific config
-  . ~/.secret
-  {{ if .macos }}
-  . ~/.zshrc_macos
-  {{ end }}
+  for secret in $(listSecretNames); do
+    env_var=$(echo $secret | tr '[:lower:]' '[:upper:]' | sed -e 's/-/_/g')
+    export $env_var=$(getSecret $secret)
+  done
 
 # plugins
-  export ZPLUG_HOME=$(brew --prefix)/opt/zplug
-  . $ZPLUG_HOME/init.zsh
-  zplug "dracula/zsh", as:theme
-  DRACULA_DISPLAY_TIME=1
+  eval "$(starship init zsh)"
+  eval "$(direnv hook zsh)"
+  [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
 
-  if ! zplug check; then
-    zplug install
-  fi
-  zplug load
+export PATH="$HOME/bin:$PATH"
+. ~/.secret
