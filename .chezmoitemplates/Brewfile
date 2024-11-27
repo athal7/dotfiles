@@ -1,24 +1,22 @@
 tap "github/gh"
 tap "homebrew/cask-fonts"
 
+brew "autojump"
 brew "bat"
 brew "chezmoi"
 brew "difftastic"
+brew "direnv"
 brew "gh"
 brew "jc"
 brew "jq"
-brew "zplug"
-
-cask "font-monaspace"
-
-{{ if .macos -}}
-brew "autojump"
 brew "mas"
 brew "openssl"
+brew "starship"
 brew "watch"
 
 cask_args appdir: "/Applications"
+cask "font-monaspace"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
-{{ end -}}
+
