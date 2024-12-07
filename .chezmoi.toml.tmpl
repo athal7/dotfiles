@@ -1,8 +1,5 @@
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
-[data]
-    github.email = {{ promptString "email" | quote }}
-    github.user = {{ promptString "github username" | quote }}
 [edit]
     command = "code"
     args = ["--wait"]
