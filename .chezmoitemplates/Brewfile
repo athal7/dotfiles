@@ -16,6 +16,7 @@ brew "watch"
 
 cask_args appdir: "/Applications"
 cask "font-monaspace"
+cask "sensiblesidebuttons"
 cask "visual-studio-code"
 
 mas "CopyClip", id: 1020812363
