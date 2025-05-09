@@ -1,6 +1,8 @@
 {{ template "brewenv" . }}
 
 export EDITOR="code"
+export DOCKER_HOST="unix:///${HOME}/.colima/default/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 
 # aliases
   alias cat='bat'
@@ -16,42 +18,6 @@ export EDITOR="code"
   alias ll="ls -la"
   alias tf='terraform'
   alias watch='watch -c '
-
-# functions
-  fancyCtrlZ() {
-    if [[ $#BUFFER -eq 0 ]]; then
-      BUFFER="fg"
-      zle accept-line
-    else
-      zle push-input
-      zle clear-screen
-    fi
-  }
-  zle -N fancyCtrlZ
-  bindkey '^Z' fancyCtrlZ
-
-  function getSecret() {
-    chezmoi secret keyring get --service=$1 --user={{.chezmoi.username}}
-  }
-  function setSecret() {
-    chezmoi secret keyring set --service=$1 --user={{.chezmoi.username}} --value=$2
-  }
-  function deleteSecret() {
-    chezmoi secret keyring delete --service=$1 --user={{.chezmoi.username}}
-  }
-  function listSecretNames() {
-    security dump-keychain \
-    | grep -b4 -A0 "\"acct\"<blob>=\"{{.chezmoi.username}}\"" \
-    | grep -A3 genp \
-    | grep 0x00000007 \
-    | cut -d = -f 2 \
-    | tr -d '"'
-  }
-
-  for secret in $(listSecretNames); do
-    env_var=$(echo $secret | tr '[:lower:]' '[:upper:]' | sed -e 's/-/_/g')
-    export $env_var=$(getSecret $secret)
-  done
 
 # plugins
   eval "$(starship init zsh)"
