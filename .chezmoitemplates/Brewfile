@@ -18,6 +18,3 @@ cask_args appdir: "/Applications"
 cask "font-monaspace"
 cask "mac-mouse-fix"
 cask "visual-studio-code"
-
-mas "CopyClip", id: 1020812363
-
