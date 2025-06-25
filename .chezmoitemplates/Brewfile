@@ -1,7 +1,6 @@
 tap "github/gh"
 tap "homebrew/cask-fonts"
 
-brew "autojump"
 brew "bat"
 brew "chezmoi"
 brew "difftastic"
