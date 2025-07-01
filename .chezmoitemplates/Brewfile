@@ -3,7 +3,6 @@ tap "homebrew/cask-fonts"
 
 brew "bat"
 brew "chezmoi"
-brew "difftastic"
 brew "direnv"
 brew "gh"
 brew "jc"
