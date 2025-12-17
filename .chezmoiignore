@@ -1,0 +1,2 @@
+# Keep gh authentication tokens local (don't sync across machines)
+.config/gh/hosts.yml
