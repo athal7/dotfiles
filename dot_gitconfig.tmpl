@@ -1,5 +1,9 @@
+{{- $name := output "gh" "api" "user" "--jq" ".name" | trim -}}
+{{- $id := output "gh" "api" "user" "--jq" ".id" | trim -}}
+{{- $login := output "gh" "api" "user" "--jq" ".login" | trim -}}
 [user]
-  name = Andrew Thal
+  name = {{ $name }}
+  email = {{ $id }}+{{ $login }}@users.noreply.github.com
 [core]
   excludesfile = ~/.gitignore_global
   editor = vi
