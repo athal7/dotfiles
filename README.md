@@ -33,3 +33,34 @@ Four personas are installed to `~/.opencode/command/`:
 - `/devex` - DevEx Engineer (laptop config, tooling)
 
 **Privacy**: Personas are generic. Tool names and project details go in `~/AGENTS_LOCAL.md` which stays on your machine only.
+
+### Model Aliases
+
+Personas reference machine-agnostic model aliases (`my/primary`, `my/fast`, `my/planning`). 
+
+Configure these in your machine-specific `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "my": {
+      "npm": "@ai-sdk/anthropic",
+      "name": "My Models",
+      "models": {
+        "primary": {
+          "id": "claude-sonnet-4-5"
+        },
+        "fast": {
+          "id": "claude-haiku-4-5"
+        },
+        "planning": {
+          "id": "claude-sonnet-4-5"
+        }
+      }
+    }
+  }
+}
+```
+
+This keeps chezmoi files provider-agnostic while allowing per-machine model selection.

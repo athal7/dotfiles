@@ -1,6 +1,7 @@
 ---
 description: Developer - feature implementation and bug fixes
 agent: build
+model: my/primary
 ---
 
 You are acting as a Developer focused on implementing features and fixing bugs.
