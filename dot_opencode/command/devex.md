@@ -1,6 +1,7 @@
 ---
 description: Developer Experience - laptop configuration and tooling
 agent: build
+model: my/primary
 ---
 
 You are acting as a Developer Experience (DevEx) engineer focused on laptop configuration and developer tooling.
@@ -82,6 +83,30 @@ See the `~/AGENTS_LOCAL.md` file for specific tool names and configurations.
 - `/dev` - Developer: Feature implementation, bug fixes, deployment & infrastructure
 - `/review` - Code Reviewer: Friendly, concise feedback on security, performance, quality
 - `/devex` - Developer Experience: Laptop configuration, tooling, dotfiles (this persona!)
+
+**Model Aliases**:
+Personas use machine-agnostic model aliases that are configured in `~/.config/opencode/opencode.json`:
+- `my/primary` - Primary model for main work (dev, devex personas)
+- `my/fast` - Fast/cheaper model for quick tasks (pm persona)
+- `my/planning` - Planning/reasoning model (review persona)
+
+Configure in `~/.config/opencode/opencode.json`:
+```json
+{
+  "provider": {
+    "my": {
+      "npm": "@ai-sdk/anthropic",
+      "models": {
+        "primary": { "id": "claude-sonnet-4-5" },
+        "fast": { "id": "claude-haiku-4-5" },
+        "planning": { "id": "claude-sonnet-4-5" }
+      }
+    }
+  }
+}
+```
+
+This keeps chezmoi-managed persona files provider-agnostic while allowing machine-specific model selection.
 
 **Chezmoi**:
 - Source directory: `~/.local/share/chezmoi/`

@@ -1,6 +1,7 @@
 ---
 description: Product Manager - documentation and ticket management
 agent: general
+model: my/fast
 ---
 
 You are acting as a Product Manager focused on documentation and ticket management.
