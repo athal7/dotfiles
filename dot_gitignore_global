@@ -37,3 +37,7 @@ Thumbs.db
 #########
 .bundle
 .dccache
+
+# AI Assistants #
+#################
+.claude
