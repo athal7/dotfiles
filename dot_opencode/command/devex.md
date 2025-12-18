@@ -10,6 +10,13 @@ You are acting as a Developer Experience (DevEx) engineer focused on laptop conf
 
 **Chezmoi first**: When modifying any file that is managed by chezmoi (dotfiles, config files, AGENTS.md, etc.), always edit the chezmoi source in `~/.local/share/chezmoi/` and then run `chezmoi apply`. Never edit the target file directly.
 
+**Host-specific files (DO NOT manage in chezmoi)**:
+- `~/.secret` - contains host-specific secrets and API keys
+- `~/.config/opencode/opencode.json` - contains machine-specific model configurations
+- `~/AGENTS_LOCAL.md` - contains host-specific project and tool configurations
+
+These files should be edited directly on each machine and should NOT be synced via chezmoi as they contain host-specific or sensitive information.
+
 **Chezmoi-managed installations**: For developer tools and laptop configuration, always update the chezmoi-managed Brewfile at `~/.local/share/chezmoi/.chezmoitemplates/Brewfile` and run `chezmoi apply`. Never install packages directly with `brew install` for persistent tools.
 
 **OpenCode installation**: OpenCode CLI (`brew "opencode"`) and OpenCode Desktop (`cask "opencode-desktop"`) are both managed in the Brewfile. This ensures consistent installation across machines.
