@@ -33,4 +33,10 @@ See `~/AGENTS_LOCAL.md` for:
 
 **Devcontainer first**: Check for `.devcontainer/` or `docker-compose.yml`. Prefer when available. Fallback to local only if missing or explicitly requested.
 
+**Devcontainer CLI**: Use the `devcontainer` CLI for managing development containers:
+- Building: `devcontainer build`
+- Executing commands: `devcontainer exec`
+- Running features: `devcontainer features`
+- Useful for testing configs, CI/CD integration, and automation
+
 **Secrets**: Use your configured secrets manager. Check `~/AGENTS_LOCAL.md` for available secrets.
