@@ -2,7 +2,15 @@
 
 ## Safety Rules
 
-**Always ask for user confirmation before modifying remote services**: Issue tracker issues/comments, version control PRs/comments, API calls that modify data, production database changes. Read-only operations don't require confirmation.
+**STOP and wait for explicit user approval before modifying remote services.**
+
+For any remote modification (issues, PRs, comments, commits, API writes):
+1. Show the full proposed content in your response
+2. Ask "Do you approve?" and STOP
+3. Do NOT execute the action in the same response as showing the draft
+4. Only execute after user explicitly approves (e.g., "yes", "approve", "go ahead")
+
+Read-only operations don't require confirmation.
 
 ## Project-Specific Context
 
