@@ -5,7 +5,7 @@ Using [chezmoi](https://chezmoi.io) for dotfile management.
 ## What's Included
 
 - **Shell**: zsh with starship prompt, direnv
-- **OpenCode**: Generic personas (pm, dev, review, devex) without tool-specific details
+- **OpenCode**: Generic agents (pm, dev, review, devex) without tool-specific details
 - **Development**: Docker, Git, GitHub CLI, VS Code
 - **Secrets**: Pattern like `.zshrc` + `.secret` - shared config in Chezmoi, machine-specific in local files
 
@@ -26,41 +26,16 @@ Then fill in machine-specific details:
 
 ## OpenCode Configuration
 
-Four personas are installed to `~/.opencode/command/`:
-- `/pm` - Product Manager (tickets, docs, thinking frameworks)
-- `/dev` - Developer (features, bugs, deployment)
-- `/review` - Code Reviewer (friendly, concise feedback)
-- `/devex` - DevEx Engineer (laptop config, tooling)
+Four primary agents are installed to `~/.config/opencode/agent/`:
+- `dev` - Developer (features, bugs, deployment)
+- `devex` - DevEx Engineer (laptop config, tooling)
+- `pm` - Product Manager (tickets, docs, thinking frameworks)
+- `review` - Code Reviewer (friendly, concise feedback, read-only)
 
-**Privacy**: Personas are generic. Tool names and project details go in `~/AGENTS_LOCAL.md` which stays on your machine only.
+**Usage**: Press **Tab** to cycle through agents. The active agent shows in the lower right corner.
 
-### Model Aliases
+**Privacy**: Agents are generic. Tool names and project details go in `~/AGENTS_LOCAL.md` which stays on your machine only.
 
-Personas reference machine-agnostic model aliases (`my/primary`, `my/fast`, `my/planning`). 
+Global safety rules are in `~/.config/opencode/AGENTS.md` and apply to all agents. 
 
-Configure these in your machine-specific `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "my": {
-      "npm": "@ai-sdk/anthropic",
-      "name": "My Models",
-      "models": {
-        "primary": {
-          "id": "claude-sonnet-4-5"
-        },
-        "fast": {
-          "id": "claude-haiku-4-5"
-        },
-        "planning": {
-          "id": "claude-sonnet-4-5"
-        }
-      }
-    }
-  }
-}
-```
-
-This keeps chezmoi files provider-agnostic while allowing per-machine model selection.
+Agents use the globally configured model. Optionally configure per-agent models in your machine-specific `~/.config/opencode/opencode.json`:
