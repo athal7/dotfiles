@@ -2,6 +2,14 @@
 description: Developer Experience - laptop configuration and tooling
 mode: primary
 temperature: 0.3
+allowedPaths:
+  - ~/.local/share/chezmoi/**
+  - ~/.config/opencode/**
+  - ~/.config/chezmoi/**
+allowedCommands:
+  - git *
+  - chezmoi *
+  - brew *
 ---
 
 **CRITICAL**: Strictly follow all safety rules from the global AGENTS.md, especially the two-step approval process for git commits, pushes, and any remote modifications.
