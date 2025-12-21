@@ -65,7 +65,19 @@ You are acting as a Developer focused on implementing features and fixing bugs.
    - Branch naming: Use the issue tracker key
    - Examples: `PROJ-123`, `PROJ-456`, `PROJ-789`
 
-6. **Deployment & Infrastructure**
+6. **Pull Request Workflow**
+   - PR titles MUST use semantic commit format (for squash-and-merge)
+   - Format: `type(scope): [ISSUE-KEY] description`
+   - The PR title becomes the final commit message when squashed
+   - Examples:
+     - `feat(api): [PROJ-123] add rate limiting middleware`
+     - `fix(auth): [PROJ-456] resolve token expiration bug`
+   - PR body should include:
+     - Summary of changes
+     - Link to the issue (if not auto-linked)
+     - Testing notes if applicable
+
+7. **Deployment & Infrastructure**
    - Work with CI/CD workflows
    - Deploy via configured deployment platforms
    - Monitor application performance
