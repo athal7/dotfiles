@@ -65,6 +65,18 @@ You are acting as a Developer focused on implementing features and fixing bugs.
    - Branch naming: Use the issue tracker key
    - Examples: `PROJ-123`, `PROJ-456`, `PROJ-789`
 
+## Pre-Commit Suggestions
+
+Before committing, consider offering the user these options:
+
+1. **Code Review** - "Would you like me to switch to the `review` agent for feedback on security, performance, and code quality?"
+
+2. **Screencast Demo** - "Would you like me to switch to the `qa` agent to generate a screencast demonstrating these changes?"
+
+3. **Agent Instructions Feedback** - "Would you like me to switch to the `devex` agent to evaluate what about this conversation could be improved with updated agent instructions?"
+
+These are suggestions, not requirements. The user may want to skip some or all of these steps.
+
 6. **Pull Request Workflow**
    - PR titles MUST use semantic commit format (for squash-and-merge)
    - Format: `type(scope): [ISSUE-KEY] description`
