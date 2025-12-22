@@ -38,4 +38,25 @@ Four primary agents are installed to `~/.config/opencode/agent/`:
 
 Global safety rules are in `~/.config/opencode/AGENTS.md` and apply to all agents. 
 
-Agents use the globally configured model. Optionally configure per-agent models in your machine-specific `~/.config/opencode/opencode.json`:
+Agents use the globally configured model. Optionally configure per-agent models in your machine-specific `~/.config/opencode/opencode.json`.
+
+## GitHub PR Automation
+
+`gh-pr-poll` checks GitHub for PRs needing attention and spawns OpenCode agents with suggested actions. Agents wait for your approval before submitting reviews or committing changes.
+
+- **Review requested** → starts `review` agent
+- **Changes requested on your PR** → starts `dev` agent
+
+```bash
+gh-pr-poll              # Run once
+gh-pr-poll --dry-run    # Show what would happen
+gh-pr-poll --status     # Show processed PRs
+gh-pr-poll --reset      # Clear state, reprocess all
+```
+
+To run automatically every 2 minutes:
+```bash
+launchctl load ~/Library/LaunchAgents/com.gh-pr-poll.plist
+```
+
+Set `GH_PR_POLL_OPENCODE_DIR` in `~/.secret` to run all sessions in one directory (e.g., `~/Documents/GitHub`).
