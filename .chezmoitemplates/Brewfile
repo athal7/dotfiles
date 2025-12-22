@@ -18,6 +18,9 @@ brew "starship"
 brew "tmux"
 brew "watch"
 
+brew "ffmpeg"
+brew "playwright-mcp"
+
 cask_args appdir: "/Applications"
 cask "font-monaspace"
 cask "mac-mouse-fix"
