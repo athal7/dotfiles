@@ -15,6 +15,7 @@ brew "opencode"
 brew "openssl"
 brew "opentofu"
 brew "starship"
+brew "tmux"
 brew "watch"
 
 cask_args appdir: "/Applications"

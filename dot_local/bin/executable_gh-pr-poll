@@ -1,0 +1,238 @@
+#!/usr/bin/env bash
+#
+# gh-pr-poll - Check GitHub for PR work and trigger OpenCode agents
+#
+# Checks for:
+#   - PRs where your review is requested → spawns review agent
+#   - Your PRs with changes requested → spawns dev agent
+#
+# Uses gh CLI to check GitHub, only calls opencode when there's work.
+# Skips repos with uncommitted changes or not on default branch.
+#
+# Usage:
+#   gh-pr-poll              # Run once
+#   gh-pr-poll --dry-run    # Show what would happen
+#   gh-pr-poll --sessions   # List active tmux sessions
+#
+# Environment:
+#   GH_PR_POLL_OPENCODE_DIR  Override directory for opencode sessions (default: repo directory)
+#
+# To run automatically every 2 minutes:
+#   launchctl load ~/Library/LaunchAgents/com.gh-pr-poll.plist
+#
+
+set -euo pipefail
+
+STATE_DIR="${HOME}/.local/share/gh-pr-poll"
+STATE_FILE="${STATE_DIR}/state.json"
+OPENCODE_DIR="${GH_PR_POLL_OPENCODE_DIR:-}"
+DRY_RUN=false
+
+mkdir -p "$STATE_DIR"
+[[ -f "$STATE_FILE" ]] || echo '{"reviews":[],"feedback":[]}' > "$STATE_FILE"
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
+
+# Check if repo has no uncommitted changes
+repo_ready() {
+  local repo_path="$1"
+  [[ -d "$repo_path/.git" ]] || return 1
+  
+  cd "$repo_path"
+  
+  if ! git diff --quiet HEAD 2>/dev/null; then
+    log "  Skipping: uncommitted changes"
+    return 1
+  fi
+  
+  return 0
+}
+
+# Check if already processed
+already_processed() {
+  local key="$1" field="$2"
+  jq -e --arg k "$key" ".${field} | index(\$k)" "$STATE_FILE" >/dev/null 2>&1
+}
+
+# Mark as processed
+mark_processed() {
+  local key="$1" field="$2"
+  local tmp=$(mktemp)
+  jq --arg k "$key" ".${field} += [\$k]" "$STATE_FILE" > "$tmp" && mv "$tmp" "$STATE_FILE"
+}
+
+# Find local repo path for a GitHub repo
+find_repo() {
+  local owner="$1" repo="$2"
+  
+  # Check common locations
+  for base in "${HOME}/Documents/GitHub" "${HOME}/Projects" "${HOME}/code" "${HOME}/src"; do
+    local path="${base}/${repo}"
+    if [[ -d "$path/.git" ]]; then
+      echo "$path"
+      return
+    fi
+  done
+}
+
+poll() {
+  log "Checking GitHub for PR work..."
+  
+  local username=$(gh api user --jq '.login' 2>/dev/null) || true
+  if [[ -z "$username" ]]; then
+    log "ERROR: Could not get GitHub username. Is gh authenticated?"
+    exit 1
+  fi
+  
+  # 1. PRs where my review is requested
+  log "Checking for PRs needing review..."
+  local review_prs=$(gh api "search/issues?q=is:pr+is:open+review-requested:${username}" --jq '.items // []' 2>/dev/null || echo '[]')
+  
+  echo "$review_prs" | jq -c '.[]' | while read -r pr; do
+    local url=$(echo "$pr" | jq -r '.html_url')
+    local num=$(echo "$pr" | jq -r '.number')
+    local title=$(echo "$pr" | jq -r '.title')
+    local updated_at=$(echo "$pr" | jq -r '.updated_at')
+    local repo_full=$(echo "$url" | sed -E 's|https://github.com/([^/]+/[^/]+)/pull/.*|\1|')
+    local owner=$(echo "$repo_full" | cut -d/ -f1)
+    local repo=$(echo "$repo_full" | cut -d/ -f2)
+    
+    # Track by url:updated_at so re-review requests trigger new sessions
+    local key="${url}:${updated_at}"
+    if already_processed "$key" "reviews"; then
+      continue
+    fi
+    
+    log "Found: PR #$num needs review ($repo_full)"
+    
+    local opencode_dir="$OPENCODE_DIR"
+    if [[ -z "$opencode_dir" ]]; then
+      opencode_dir=$(find_repo "$owner" "$repo")
+      if [[ -z "$opencode_dir" ]]; then
+        log "  Skipping: repo not found locally"
+        continue
+      fi
+    fi
+    
+    local prompt="Please review this pull request:
+
+**PR #$num: $title**
+Repository: $repo_full
+URL: $url
+
+Please review the code changes and provide feedback on security, performance, and code quality. Wait for my approval before submitting the review on GitHub."
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+      log "  [DRY RUN] Would start review agent in $opencode_dir"
+    else
+      local session_name="review-${repo}-${num}"
+      log "  Starting review agent in tmux session: $session_name"
+      tmux new-session -d -s "$session_name" -c "$opencode_dir" "opencode -p '$prompt' --agent review"
+      mark_processed "$key" "reviews"
+    fi
+  done
+  
+  # 2. My PRs with changes requested
+  log "Checking for PRs with feedback..."
+  local my_prs=$(gh api "search/issues?q=is:pr+is:open+author:${username}" --jq '.items // []' 2>/dev/null || echo '[]')
+  
+  echo "$my_prs" | jq -c '.[]' | while read -r pr; do
+    local url=$(echo "$pr" | jq -r '.html_url')
+    local num=$(echo "$pr" | jq -r '.number')
+    local title=$(echo "$pr" | jq -r '.title')
+    local repo_full=$(echo "$url" | sed -E 's|https://github.com/([^/]+/[^/]+)/pull/.*|\1|')
+    local owner=$(echo "$repo_full" | cut -d/ -f1)
+    local repo=$(echo "$repo_full" | cut -d/ -f2)
+    
+    # Check if changes were requested
+    local reviews=$(gh api "repos/${repo_full}/pulls/${num}/reviews" --jq '.' 2>/dev/null || echo '[]')
+    local latest_state=$(echo "$reviews" | jq -r 'last | .state // empty')
+    
+    if [[ "$latest_state" != "CHANGES_REQUESTED" ]]; then
+      continue
+    fi
+    
+    local review_id=$(echo "$reviews" | jq -r 'last | .id')
+    local key="${url}:${review_id}"
+    
+    if already_processed "$key" "feedback"; then
+      continue
+    fi
+    
+    log "Found: PR #$num has changes requested ($repo_full)"
+    
+    local repo_path=$(find_repo "$owner" "$repo")
+    if [[ -z "$repo_path" ]]; then
+      log "  Skipping: repo not found locally"
+      continue
+    fi
+    
+    if ! repo_ready "$repo_path"; then
+      continue
+    fi
+    
+    local reviewer=$(echo "$reviews" | jq -r 'last | .user.login // "reviewer"')
+    local review_body=$(echo "$reviews" | jq -r 'last | .body // "(see inline comments)"')
+    
+    local prompt="I received feedback on my pull request that requires changes:
+
+**PR #$num: $title**
+Repository: $repo_full
+URL: $url
+
+**Review from $reviewer:**
+$review_body
+
+Please checkout my PR branch, read the review comments, and address each piece of feedback. Wait for my approval before committing."
+
+    local opencode_dir="${OPENCODE_DIR:-$repo_path}"
+    if [[ "$DRY_RUN" == "true" ]]; then
+      log "  [DRY RUN] Would start dev agent in $opencode_dir"
+    else
+      local session_name="dev-${repo}-${num}"
+      log "  Starting dev agent in tmux session: $session_name"
+      tmux new-session -d -s "$session_name" -c "$opencode_dir" "opencode -p '$prompt' --agent dev"
+      mark_processed "$key" "feedback"
+    fi
+  done
+  
+  log "Poll complete"
+}
+
+case "${1:-}" in
+  --dry-run|-n)
+    DRY_RUN=true
+    poll
+    ;;
+  --reset|-r)
+    echo '{"reviews":[],"feedback":[]}' > "$STATE_FILE"
+    echo "State reset"
+    ;;
+  --status|-s)
+    echo "State file: $STATE_FILE"
+    cat "$STATE_FILE" | jq .
+    ;;
+  --sessions|-l)
+    echo "Active gh-pr-poll tmux sessions:"
+    tmux list-sessions 2>/dev/null | grep -E '^(review|dev)-' || echo "  (none)"
+    ;;
+  --help|-h)
+    echo "Usage: gh-pr-poll [--dry-run|--reset|--status|--sessions|--help]"
+    echo
+    echo "Checks GitHub for PR work and triggers OpenCode agents in tmux sessions."
+    echo "Looks for repos in ~/Documents/GitHub, ~/Projects, ~/code, ~/src"
+    echo
+    echo "Options:"
+    echo "  --dry-run, -n   Show what would happen without spawning agents"
+    echo "  --reset, -r     Clear the state file"
+    echo "  --status, -s    Show current state"
+    echo "  --sessions, -l  List active tmux sessions"
+    echo
+    echo "Set GH_PR_POLL_OPENCODE_DIR to override the opencode session directory."
+    echo
+    echo "To attach to a session: tmux attach -t <session-name>"
+    ;;
+  *)
+    poll
+    ;;
+esac
