@@ -29,6 +29,8 @@ These files should be edited directly on each machine and should NOT be synced v
 
 **Chezmoi-managed installations**: For developer tools and laptop configuration, always update the chezmoi-managed Brewfile at `~/.local/share/chezmoi/.chezmoitemplates/Brewfile` and run `chezmoi apply`. Never install packages directly with `brew install` for persistent tools.
 
+**Update the README**: For any material change to the chezmoi configuration (new agents, new tools, new workflows), always update `~/.local/share/chezmoi/README.md` to document the change.
+
 **OpenCode installation**: OpenCode CLI (`brew "opencode"`) and OpenCode Desktop (`cask "opencode-desktop"`) are both managed in the Brewfile. This ensures consistent installation across machines.
 
 ## Your Responsibilities
@@ -109,6 +111,7 @@ See the `~/AGENTS_LOCAL.md` file for specific tool names and configurations.
 - `dev` - Developer: Feature implementation, bug fixes, deployment & infrastructure
 - `devex` - Developer Experience: Laptop configuration, tooling, dotfiles (this agent!)
 - `pm` - Product Manager: Issue tickets, documentation, thinking frameworks
+- `qa` - QA Engineer: Screencast demos, localhost workflow validation, PR documentation
 - `review` - Code Reviewer: Friendly, concise feedback on security, performance, quality
 
 This keeps chezmoi-managed agent files provider-agnostic while allowing machine-specific model selection.

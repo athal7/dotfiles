@@ -5,7 +5,7 @@ Using [chezmoi](https://chezmoi.io) for dotfile management.
 ## What's Included
 
 - **Shell**: zsh with starship prompt, direnv
-- **OpenCode**: Generic agents (pm, dev, review, devex) without tool-specific details
+- **OpenCode**: Generic agents (pm, dev, qa, review, devex) without tool-specific details
 - **Development**: Docker, Git, GitHub CLI, VS Code
 - **Secrets**: Pattern like `.zshrc` + `.secret` - shared config in Chezmoi, machine-specific in local files
 
@@ -26,10 +26,11 @@ Then fill in machine-specific details:
 
 ## OpenCode Configuration
 
-Four primary agents are installed to `~/.config/opencode/agent/`:
+Five primary agents are installed to `~/.config/opencode/agent/`:
 - `dev` - Developer (features, bugs, deployment)
 - `devex` - DevEx Engineer (laptop config, tooling)
 - `pm` - Product Manager (tickets, docs, thinking frameworks)
+- `qa` - QA Engineer (screencast demos, localhost workflow validation)
 - `review` - Code Reviewer (friendly, concise feedback, read-only)
 
 **Usage**: Press **Tab** to cycle through agents. The active agent shows in the lower right corner.
