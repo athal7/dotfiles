@@ -47,22 +47,45 @@ If not running, guide the user to start it or start it yourself if you know how.
 Use Playwright to automate the browser and record:
 
 ```javascript
-// Example Playwright script for recording
 const { chromium } = require('playwright');
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const recordingsDir = '/tmp/screencast/recordings/';
+  const downloadsDir = path.join(os.homedir(), 'Downloads');
+  
+  // Clean up old recordings first
+  fs.mkdirSync(recordingsDir, { recursive: true });
+  fs.readdirSync(recordingsDir).forEach(f => fs.unlinkSync(path.join(recordingsDir, f)));
+  
+  const browser = await chromium.launch({ headless: false, slowMo: 150 });
   const context = await browser.newContext({
-    recordVideo: { dir: './recordings/', size: { width: 1280, height: 720 } }
+    recordVideo: { dir: recordingsDir, size: { width: 1280, height: 720 } },
+    viewport: { width: 1280, height: 720 }
   });
   const page = await context.newPage();
   
-  // Navigate and perform actions
-  await page.goto('http://localhost:3000');
-  // ... demo steps ...
-  
-  await context.close(); // Video is saved on context close
-  await browser.close();
+  try {
+    // Navigate and perform actions
+    await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+    // ... demo steps ...
+  } finally {
+    await context.close();
+    await browser.close();
+    
+    // Convert and save to Downloads
+    const files = fs.readdirSync(recordingsDir).filter(f => f.endsWith('.webm'));
+    if (files.length > 0) {
+      const webmPath = path.join(recordingsDir, files[0]);
+      const mp4Path = path.join(downloadsDir, 'demo-name.mp4');
+      execSync(`ffmpeg -y -i "${webmPath}" -c:v libx264 -preset fast -crf 22 "${mp4Path}"`);
+      fs.unlinkSync(webmPath);
+      console.log(`Screencast saved to: ${mp4Path}`);
+    }
+  }
 })();
 ```
 
@@ -82,13 +105,32 @@ Alternatively, use the Playwright MCP server for interactive browser control wit
 
 ## Tools & Commands
 
-### Playwright Recording
+### Playwright Setup
 ```bash
-# Run a Playwright script that records
-npx playwright test --headed --video=on
+# Create temp directory and install playwright
+mkdir -p /tmp/screencast && cd /tmp/screencast
+npm init -y && npm install playwright
+```
 
-# Or use the codegen tool to generate and record
-npx playwright codegen http://localhost:3000 --save-storage=auth.json
+### Playwright Best Practices
+- Use `slowMo: 150` for visible interactions in recordings
+- Use `waitUntil: 'networkidle'` for page loads
+- Add `waitForTimeout(1000-1500)` after actions for animations to complete
+- Always check `await element.count() > 0` and `await element.isVisible()` before interacting
+- Use fresh browser context to avoid caching issues
+- Use `page.reload({ waitUntil: 'networkidle' })` if seeing stale data
+
+### Output Requirements
+- **Always save the final MP4 directly to `~/Downloads/`** with a descriptive name (e.g., `taxonomy-generation-demo.mp4`)
+- **Use temp directory** `/tmp/screencast/` for intermediate files
+- **Clean up intermediate files** (webm, screenshots) - only keep the final MP4
+
+### Converting Video Formats
+Playwright records as `.webm`. Always convert to MP4 and clean up:
+```bash
+# Convert webm to MP4, save to Downloads, remove original
+ffmpeg -y -i recording.webm -c:v libx264 -preset fast -crf 22 ~/Downloads/demo-name.mp4
+rm recording.webm
 ```
 
 ### macOS Screen Recording (Alternative)
@@ -98,19 +140,6 @@ screencapture -v -V 30 demo.mov
 
 # Record with audio
 screencapture -v -g -V 30 demo.mov
-```
-
-### Output Requirements
-- **Always save the final MP4 directly to `~/Downloads/`** with a descriptive name (e.g., `taxonomy-generation-demo.mp4`)
-- **Never create subfolders** for recordings
-- **Clean up intermediate files** (webm, screenshots) - only keep the final MP4
-
-### Converting Video Formats
-Playwright records as `.webm`. Always convert to MP4 and clean up:
-```bash
-# Convert webm to MP4, save to Downloads, remove original
-ffmpeg -y -i recording.webm -c:v libx264 -preset fast -crf 22 ~/Downloads/demo-name.mp4
-rm recording.webm
 ```
 
 ## PR Description Template
