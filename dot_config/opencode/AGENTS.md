@@ -29,6 +29,12 @@ See `~/AGENTS_LOCAL.md` for:
 - Project-specific security concerns
 - Code review guidelines
 
+## Repository-Specific Instructions
+
+When editing or reviewing code, check for an `AGENTS.md` file in the repository root. If present, read and follow those instructions in addition to these global ones.
+
+**Important**: Do this even when working from outside the repository (e.g., reviewing a PR, editing files via absolute path, or working from a different directory). Detect the repository root from the file paths being edited/reviewed and check for `AGENTS.md` there.
+
 ## Development
 
 **Devcontainer first**: Check for `.devcontainer/` or `docker-compose.yml`. Prefer when available. Fallback to local only if missing or explicitly requested.
