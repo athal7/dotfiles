@@ -9,6 +9,8 @@ permission:
   edit: deny
   bash:
     "git *": allow
+    "gh api *": allow
+    "gh pr *": allow
     "*": ask
 ---
 
