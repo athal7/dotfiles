@@ -8,7 +8,8 @@
 #
 # Uses gh CLI to check GitHub, only calls opencode when there's work.
 # For PRs needing changes, clones to a sibling directory (e.g., repo-pr-123)
-# to avoid conflicts with your main working directory.
+# to avoid conflicts with your main working directory. Automatically cleans
+# up these directories when PRs are merged or closed.
 #
 # Usage:
 #   gh-pr-poll              # Run once
@@ -95,6 +96,40 @@ find_repo() {
       echo "$path"
       return
     fi
+  done
+}
+
+# Clean up PR directories for merged/closed PRs
+cleanup_pr_dirs() {
+  log "Cleaning up merged/closed PR directories..."
+  
+  for base in "${HOME}/Documents/GitHub" "${HOME}/Projects" "${HOME}/code" "${HOME}/src"; do
+    [[ -d "$base" ]] || continue
+    
+    for pr_dir in "$base"/*-pr-[0-9]*; do
+      [[ -d "$pr_dir" ]] || continue
+      
+      # Extract repo name and PR number from directory name
+      local dirname=$(basename "$pr_dir")
+      local repo=$(echo "$dirname" | sed -E 's/-pr-[0-9]+$//')
+      local num=$(echo "$dirname" | sed -E 's/.*-pr-([0-9]+)$/\1/')
+      
+      # Get the remote URL to find owner
+      local remote_url=$(git -C "$pr_dir" remote get-url origin 2>/dev/null) || continue
+      local repo_full=$(echo "$remote_url" | sed -E 's|.*github.com[:/]([^/]+/[^/.]+)(\.git)?$|\1|')
+      
+      # Check PR state
+      local pr_state=$(gh api "repos/${repo_full}/pulls/${num}" --jq '.state' 2>/dev/null) || continue
+      
+      if [[ "$pr_state" == "closed" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+          log "  [DRY RUN] Would remove $pr_dir (PR #$num is closed)"
+        else
+          log "  Removing $pr_dir (PR #$num is closed)"
+          rm -rf "$pr_dir"
+        fi
+      fi
+    done
   done
 }
 
@@ -223,6 +258,9 @@ Please read the review comments and address each piece of feedback. Wait for my 
       mark_processed "$key" "feedback"
     fi
   done
+  
+  # 3. Clean up directories for merged/closed PRs
+  cleanup_pr_dirs
   
   log "Poll complete"
 }
