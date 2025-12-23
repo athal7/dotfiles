@@ -7,7 +7,8 @@
 #   - Your PRs with changes requested → spawns dev agent
 #
 # Uses gh CLI to check GitHub, only calls opencode when there's work.
-# Skips repos with uncommitted changes or not on default branch.
+# For PRs needing changes, clones to a sibling directory (e.g., repo-pr-123)
+# to avoid conflicts with your main working directory.
 #
 # Usage:
 #   gh-pr-poll              # Run once
@@ -33,19 +34,41 @@ mkdir -p "$STATE_DIR"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
-# Check if repo has no uncommitted changes
-repo_ready() {
-  local repo_path="$1"
-  [[ -d "$repo_path/.git" ]] || return 1
+# Clone PR to a sibling directory for working on changes
+# Returns the path to the cloned directory
+clone_pr_worktree() {
+  local repo_full="$1" num="$2" branch="$3"
+  local repo=$(echo "$repo_full" | cut -d/ -f2)
   
-  cd "$repo_path"
+  # Find base directory from existing repo or use default
+  local base_dir="${HOME}/Documents/GitHub"
+  for dir in "${HOME}/Documents/GitHub" "${HOME}/Projects" "${HOME}/code" "${HOME}/src"; do
+    if [[ -d "${dir}/${repo}/.git" ]]; then
+      base_dir="$dir"
+      break
+    fi
+  done
   
-  if ! git diff --quiet HEAD 2>/dev/null; then
-    log "  Skipping: uncommitted changes"
-    return 1
+  local pr_dir="${base_dir}/${repo}-pr-${num}"
+  
+  # If already cloned, just return the path
+  if [[ -d "$pr_dir/.git" ]]; then
+    cd "$pr_dir"
+    git fetch origin "$branch" 2>/dev/null || true
+    git checkout "$branch" 2>/dev/null || true
+    git pull origin "$branch" 2>/dev/null || true
+    echo "$pr_dir"
+    return
   fi
   
-  return 0
+  # Clone fresh
+  log "  Cloning PR #$num to $pr_dir"
+  if gh repo clone "$repo_full" "$pr_dir" -- --branch "$branch" 2>/dev/null; then
+    echo "$pr_dir"
+  else
+    log "  ERROR: Failed to clone $repo_full"
+    return 1
+  fi
 }
 
 # Check if already processed
@@ -161,13 +184,10 @@ Please review the code changes and provide feedback on security, performance, an
     
     log "Found: PR #$num has changes requested ($repo_full)"
     
-    local repo_path=$(find_repo "$owner" "$repo")
-    if [[ -z "$repo_path" ]]; then
-      log "  Skipping: repo not found locally"
-      continue
-    fi
-    
-    if ! repo_ready "$repo_path"; then
+    # Get the PR branch name
+    local pr_branch=$(gh api "repos/${repo_full}/pulls/${num}" --jq '.head.ref' 2>/dev/null)
+    if [[ -z "$pr_branch" ]]; then
+      log "  Skipping: could not get PR branch"
       continue
     fi
     
@@ -179,13 +199,21 @@ Please review the code changes and provide feedback on security, performance, an
 **PR #$num: $title**
 Repository: $repo_full
 URL: $url
+Branch: $pr_branch
 
 **Review from $reviewer:**
 $review_body
 
-Please checkout my PR branch, read the review comments, and address each piece of feedback. Wait for my approval before committing."
+Please read the review comments and address each piece of feedback. Wait for my approval before committing."
 
-    local opencode_dir="${OPENCODE_DIR:-$repo_path}"
+    # Clone PR to sibling directory (or use override)
+    local opencode_dir="$OPENCODE_DIR"
+    if [[ -z "$opencode_dir" ]]; then
+      opencode_dir=$(clone_pr_worktree "$repo_full" "$num" "$pr_branch")
+      if [[ -z "$opencode_dir" ]]; then
+        continue
+      fi
+    fi
     if [[ "$DRY_RUN" == "true" ]]; then
       log "  [DRY RUN] Would start dev agent in $opencode_dir"
     else
