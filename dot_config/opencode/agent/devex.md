@@ -111,8 +111,10 @@ See the `~/AGENTS_LOCAL.md` file for specific tool names and configurations.
 - `dev` - Developer: Feature implementation, bug fixes, deployment & infrastructure
 - `devex` - Developer Experience: Laptop configuration, tooling, dotfiles (this agent!)
 - `pm` - Product Manager: Issue tickets, documentation, thinking frameworks
-- `qa` - QA Engineer: Screencast demos, localhost workflow validation, PR documentation
 - `review` - Code Reviewer: Friendly, concise feedback on security, performance, quality
+
+**OpenCode Commands** (invoke with `/command`):
+- `/screencast` - Record a screencast demo of a localhost workflow using Playwright
 
 This keeps chezmoi-managed agent files provider-agnostic while allowing machine-specific model selection.
 

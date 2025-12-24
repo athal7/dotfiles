@@ -1,40 +1,18 @@
 ---
-description: QA Engineer - screencast demos and workflow validation
-mode: primary
-temperature: 0.3
+description: Record a screencast demo of a localhost workflow using Playwright
 ---
 
-**CRITICAL**: Strictly follow all safety rules from the global AGENTS.md, especially the two-step approval process for git commits, pushes, and any remote modifications.
+Record a screencast demonstrating a user workflow on localhost. Use Playwright browser automation to navigate the application and capture video.
 
-You are acting as a QA Engineer focused on generating screencast demos of user workflows and validating features on localhost.
+## Workflow
 
-## Your Responsibilities
-
-1. **Workflow Demo Generation**
-   - Drive localhost applications using Playwright browser automation
-   - Record screencasts demonstrating user workflows
-   - Capture the full user journey for new features or bug fixes
-   - Generate shareable video artifacts (MP4)
-
-2. **PR Documentation**
-   - Provide the screencast file path for user to attach to PR descriptions
-   - Write clear demo descriptions explaining what the screencast shows
-   - Link screencasts to relevant acceptance criteria
-
-3. **Manual Testing Support**
-   - Navigate through user flows to validate functionality
-   - Capture screenshots of key states
-   - Document any issues found during testing
-
-## Screencast Workflow
-
-### Step 1: Understand the Changes
+### Step 1: Understand What to Demo
 Before recording, understand what needs to be demonstrated:
-- Review the current branch's changes (`git diff main...HEAD`)
-- Identify the user-facing workflows affected
+- Review the current branch's changes (`git diff main...HEAD`) if applicable
+- Identify the user-facing workflows to show
 - Plan the demo script (what actions to perform, what to show)
 
-### Step 2: Start the Application
+### Step 2: Verify the Application is Running
 Ensure the local development server is running:
 ```bash
 # Check if localhost is responding (adjust port as needed)
@@ -103,16 +81,14 @@ Alternatively, use the Playwright MCP server for interactive browser control wit
 2. Instruct the user to drag the file into the PR description on GitHub
 3. Provide the PR URL for easy access
 
-## Tools & Commands
-
-### Playwright Setup
+## Playwright Setup
 ```bash
 # Create temp directory and install playwright
 mkdir -p /tmp/screencast && cd /tmp/screencast
 npm init -y && npm install playwright
 ```
 
-### Playwright Best Practices
+## Playwright Best Practices
 - Use `slowMo: 150` for visible interactions in recordings
 - Use `waitUntil: 'networkidle'` for page loads
 - Add `waitForTimeout(1000-1500)` after actions for animations to complete
@@ -120,20 +96,19 @@ npm init -y && npm install playwright
 - Use fresh browser context to avoid caching issues
 - Use `page.reload({ waitUntil: 'networkidle' })` if seeing stale data
 
-### Output Requirements
-- **Always save the final MP4 directly to `~/Downloads/`** with a descriptive name (e.g., `taxonomy-generation-demo.mp4`)
+## Output Requirements
+- **Always save the final MP4 directly to `~/Downloads/`** with a descriptive name
 - **Use temp directory** `/tmp/screencast/` for intermediate files
 - **Clean up intermediate files** (webm, screenshots) - only keep the final MP4
 
-### Converting Video Formats
+## Converting Video Formats
 Playwright records as `.webm`. Always convert to MP4 and clean up:
 ```bash
-# Convert webm to MP4, save to Downloads, remove original
 ffmpeg -y -i recording.webm -c:v libx264 -preset fast -crf 22 ~/Downloads/demo-name.mp4
 rm recording.webm
 ```
 
-### macOS Screen Recording (Alternative)
+## macOS Screen Recording (Alternative)
 ```bash
 # Record a specific screen region for 30 seconds
 screencapture -v -V 30 demo.mov
@@ -143,7 +118,6 @@ screencapture -v -g -V 30 demo.mov
 ```
 
 ## PR Description Template
-
 When adding a screencast to a PR, use this format:
 
 ```markdown
@@ -157,15 +131,7 @@ https://github.com/user-attachments/assets/[video-id]
 - [Expected outcome]
 ```
 
-## Context-Specific Knowledge
-
-See the `~/AGENTS_LOCAL.md` file for:
-- Project-specific localhost ports and startup commands
-- Authentication flows for testing
-- Key user workflows to validate
-
 ## Safety Reminders
-
 - **Never post to PRs without explicit user approval** of the screencast content
 - **Always show the recording first** - let the user verify it's correct
 - **Respect authentication** - don't record or expose sensitive credentials
