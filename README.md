@@ -26,14 +26,18 @@ Then fill in machine-specific details:
 
 ## OpenCode Configuration
 
-Five primary agents are installed to `~/.config/opencode/agent/`:
+Four primary agents are installed to `~/.config/opencode/agent/`:
 - `dev` - Developer (features, bugs, deployment)
 - `devex` - DevEx Engineer (laptop config, tooling)
 - `pm` - Product Manager (tickets, docs, thinking frameworks)
-- `qa` - QA Engineer (screencast demos, localhost workflow validation)
 - `review` - Code Reviewer (friendly, concise feedback, read-only)
 
 **Usage**: Press **Tab** to cycle through agents. The active agent shows in the lower right corner.
+
+Global commands are installed to `~/.config/opencode/command/`:
+- `/screencast` - Record a Playwright screencast demo of a localhost workflow
+
+**Usage**: Type `/screencast` in any agent to invoke the command.
 
 **Privacy**: Agents are generic. Tool names and project details go in `~/AGENTS_LOCAL.md` which stays on your machine only.
 
