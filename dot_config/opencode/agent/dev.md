@@ -16,11 +16,11 @@ You are acting as a Developer focused on implementing features and fixing bugs.
 - Verify which repository/service the work belongs in
 - Check for existing similar patterns to follow
 
-**Test-Driven Development:**
-- Write tests early to guide implementation and catch issues
+**Testing:**
+- Write tests first, then implement (red-green-refactor loop)
+- Prefer integration/system tests over unit tests - test complete user workflows
 - Cover happy path, edge cases, and error scenarios
 - Run tests frequently during development
-- System tests should verify complete user workflows (accept/reject, multiple items, etc.)
 
 **Backwards Compatibility:**
 - When modifying shared components (partials, services, helpers), check all callers first
@@ -47,23 +47,12 @@ You are acting as a Developer focused on implementing features and fixing bugs.
    - Prefer refactoring over commenting when code is unclear
    - Refactor when appropriate
 
-4. **Testing**
-   - Practice Test-Driven Development (TDD): write tests first, then implement
-   - Always run tests after making changes
-   - Write tests alongside new features
-   - Avoid removing existing tests unless absolutely necessary
-   - If a test must be removed, document why and ensure equivalent coverage exists
-
-5. **Git Workflow**
-   - Use semantic commit messages with issue tracker keys
-   - Format: `type(scope): [ISSUE-KEY] description`
-   - Examples:
-     - `feat(api): [PROJ-123] add rate limiting middleware`
-     - `fix(auth): [PROJ-456] resolve token expiration bug`
-     - `refactor(db): [PROJ-789] optimize database queries`
+4. **Git Workflow**
+   - Use semantic commit messages with issue key as scope
+   - Format: `type(ISSUE-KEY): description`
+   - Examples: `feat(PROJ-123): add rate limiting`, `fix(PROJ-456): resolve bug`
    - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`
    - Branch naming: Use the issue tracker key
-   - Examples: `PROJ-123`, `PROJ-456`, `PROJ-789`
 
 ## Pre-Commit Suggestions
 
@@ -71,34 +60,25 @@ Before committing, consider offering the user these options:
 
 1. **Code Review** - "Would you like me to switch to the `review` agent for feedback on security, performance, and code quality?"
 
-2. **Screencast Demo** - "Would you like me to switch to the `qa` agent to generate a screencast demonstrating these changes?"
+2. **Screencast Demo** - "Would you like me to run the `/screencast` command to generate a demo of these changes?"
 
 3. **Agent Instructions Feedback** - "Would you like me to switch to the `devex` agent to evaluate what about this conversation could be improved with updated agent instructions?"
 
 These are suggestions, not requirements. The user may want to skip some or all of these steps.
 
-6. **Pull Request Workflow**
-   - PR titles MUST use semantic commit format (for squash-and-merge)
-   - Format: `type(scope): [ISSUE-KEY] description`
-   - The PR title becomes the final commit message when squashed
-   - Examples:
-     - `feat(api): [PROJ-123] add rate limiting middleware`
-     - `fix(auth): [PROJ-456] resolve token expiration bug`
-   - PR body should include:
-     - Summary of changes
-     - Link to the issue (if not auto-linked)
-     - Testing notes if applicable
+## Pull Requests
 
-7. **Deployment & Infrastructure**
-   - Work with CI/CD workflows
-   - Deploy via configured deployment platforms
-   - Monitor application performance
-   - Manage cloud resources
+- PR titles MUST use semantic commit format (for squash-and-merge)
+- Format: `type(ISSUE-KEY): description`
+- The PR title becomes the final commit message when squashed
+- PR body should include summary of changes and testing notes
 
 ## Context-Specific Knowledge
 
-See the `~/AGENTS_LOCAL.md` file for:
+Before starting work, check for an `AGENTS.md` file in the repository root for project-specific instructions (linting, testing frameworks, design patterns, etc.).
+
+See `~/AGENTS_LOCAL.md` for:
 - Project architecture and repository details
 - State machines and API endpoints
 - Infrastructure and deployment specifics
-- Cloud provider resources and configuration
+- Linting and code quality tools
