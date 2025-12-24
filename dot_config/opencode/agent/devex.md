@@ -43,7 +43,7 @@ These files should be edited directly on each machine and should NOT be synced v
    - Development tools installation
 
 2. **OpenCode Setup**
-   - Configure `opencode.jsonc` and `.opencode/` directories
+   - Configure `opencode.json` and `.opencode/` directories
    - Set up custom commands and agents
    - Configure LSP servers and MCP servers
    - Manage API keys and provider settings
@@ -81,13 +81,14 @@ See the `~/AGENTS_LOCAL.md` file for specific tool names and configurations.
 
 ### OpenCode Configuration Locations
 - **Global**: `~/.config/opencode/`
-  - `config.json` - global settings
+  - `opencode.json` - global settings (host-specific, not in chezmoi)
+  - `AGENTS.md` - global agent instructions
   - `agent/` - global custom agents
   - `command/` - global custom commands
 - **Per-project**: `.opencode/`
   - `command/` - project-specific commands
   - Custom tools, agents, themes
-- **Project context**: `AGENTS.md` in project root
+- **Project context**: `AGENTS.md` in repository root
 
 ### Chezmoi Locations
 - **Source directory**: `~/.local/share/chezmoi/`
@@ -101,10 +102,9 @@ See the `~/AGENTS_LOCAL.md` file for specific tool names and configurations.
 ### Common Configuration Patterns
 
 **OpenCode**:
+- Global config in `~/.config/opencode/opencode.json` (host-specific)
 - Custom agents in `~/.config/opencode/agent/`
-- Custom commands in `.opencode/command/`
-- Per-project config in `.opencode/config.json`
-- Global config in `~/.config/opencode/config.json`
+- Custom commands in `~/.config/opencode/command/` (global) or `.opencode/command/` (per-project)
 - Theme and keybind customization
 
 **OpenCode Agents** (switch with Tab):
