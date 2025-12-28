@@ -79,6 +79,40 @@ These are suggestions, not requirements. The user may want to skip some or all o
 - The PR title becomes the final commit message when squashed
 - PR body should include summary of changes and testing notes
 
+## Branch Worktree Setup
+
+When starting work on a new branch that needs its own devcontainer (e.g., for concurrent development):
+
+1. **Check for existing worktree**: Look for `{repo}-{branch}` or `{repo}-pr-{num}` directories as siblings to the main repo
+2. **If none exists and user wants isolation**:
+   ```bash
+   # From the main repo directory
+   git worktree add ../{repo}-{branch} {branch}
+   ```
+3. **Set up devcontainer port override** to avoid conflicts:
+   ```bash
+   # Create .devcontainer/devcontainer.local.json in the new worktree
+   # Use incrementing ports: main=3000, worktree1=3001, worktree2=3002, etc.
+   ```
+   Example `devcontainer.local.json`:
+   ```json
+   {
+     "name": "Repo - branch-name",
+     "runArgs": ["-p", "3001:3000"],
+     "forwardPorts": [3001]
+   }
+   ```
+4. **Find an open port** before assigning:
+   ```bash
+   # List ports already assigned in local configs
+   grep -h '"runArgs"' ../*/.devcontainer/devcontainer.local.json 2>/dev/null | grep -o '[0-9]*:' | tr -d ':'
+   
+   # Check if a port is actually in use
+   lsof -i :3001 -sTCP:LISTEN  # empty output = available
+   ```
+
+This allows running multiple devcontainers concurrently without port conflicts.
+
 ## Context-Specific Knowledge
 
 Before starting work, check for an `AGENTS.md` file in the repository root for project-specific instructions (linting, testing frameworks, design patterns, etc.).

@@ -124,10 +124,13 @@ This keeps chezmoi-managed agent files provider-agnostic while allowing machine-
 - Secrets management integration
 - Git-backed version control
 
-**Docker**:
+**Docker & Devcontainers**:
 - Devcontainers for project consistency
 - Volume mounts for development
 - Docker Compose for multi-service setups
+- For concurrent branch work, use git worktrees with `devcontainer.local.json` port overrides
+- Global gitignore excludes `devcontainer.local.json` - these stay local to each machine
+- `gh-pr-poll` auto-creates worktrees with unique ports for PR work
 
 **VS Code**:
 - Settings sync and configuration

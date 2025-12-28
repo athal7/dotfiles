@@ -7,9 +7,11 @@
 #   - Your PRs with changes requested → spawns dev agent
 #
 # Uses gh CLI to check GitHub, only calls opencode when there's work.
-# For PRs needing changes, clones to a sibling directory (e.g., repo-pr-123)
-# to avoid conflicts with your main working directory. Automatically cleans
-# up these directories when PRs are merged or closed.
+# For PRs needing changes, creates a git worktree as a sibling directory
+# (e.g., repo-pr-123) to avoid conflicts with your main working directory.
+# Also sets up devcontainer.local.json with unique ports for concurrent
+# devcontainer usage. Automatically cleans up worktrees when PRs are merged
+# or closed.
 #
 # Usage:
 #   gh-pr-poll              # Run once
@@ -35,40 +37,126 @@ mkdir -p "$STATE_DIR"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
-# Clone PR to a sibling directory for working on changes
-# Returns the path to the cloned directory
-clone_pr_worktree() {
+# Create a git worktree for PR work (preferred over clone for disk efficiency)
+# Returns the path to the worktree directory
+create_pr_worktree() {
   local repo_full="$1" num="$2" branch="$3"
   local repo=$(echo "$repo_full" | cut -d/ -f2)
   
-  # Find base directory from existing repo or use default
+  # Find the main repo directory
+  local main_repo=""
   local base_dir="${HOME}/Documents/GitHub"
   for dir in "${HOME}/Documents/GitHub" "${HOME}/Projects" "${HOME}/code" "${HOME}/src"; do
-    if [[ -d "${dir}/${repo}/.git" ]]; then
-      base_dir="$dir"
-      break
+    if [[ -d "${dir}/${repo}/.git" ]] || [[ -f "${dir}/${repo}/.git" ]]; then
+      # Check if it's the main repo (not a worktree itself)
+      if [[ -d "${dir}/${repo}/.git" ]]; then
+        main_repo="${dir}/${repo}"
+        base_dir="$dir"
+        break
+      fi
     fi
   done
   
   local pr_dir="${base_dir}/${repo}-pr-${num}"
   
-  # If already cloned, just return the path
-  if [[ -d "$pr_dir/.git" ]]; then
+  # If worktree already exists, just update it
+  if [[ -d "$pr_dir" ]] && [[ -f "$pr_dir/.git" ]]; then
     cd "$pr_dir"
     git fetch origin "$branch" 2>/dev/null || true
-    git checkout "$branch" 2>/dev/null || true
+    git checkout "$branch" 2>/dev/null || git checkout -b "$branch" "origin/$branch" 2>/dev/null || true
     git pull origin "$branch" 2>/dev/null || true
     echo "$pr_dir"
     return
   fi
   
-  # Clone fresh
-  log "  Cloning PR #$num to $pr_dir"
+  # If main repo exists, create worktree (preferred)
+  if [[ -n "$main_repo" ]]; then
+    log "  Creating worktree for PR #$num at $pr_dir"
+    cd "$main_repo"
+    git fetch origin "$branch" 2>/dev/null || true
+    if git worktree add "$pr_dir" "$branch" 2>/dev/null || \
+       git worktree add "$pr_dir" -b "$branch" "origin/$branch" 2>/dev/null; then
+      # Set up devcontainer port override to avoid conflicts
+      setup_devcontainer_port "$pr_dir" "$repo" "$num"
+      echo "$pr_dir"
+      return
+    fi
+  fi
+  
+  # Fallback: clone if no main repo found
+  log "  Cloning PR #$num to $pr_dir (no main repo found for worktree)"
   if gh repo clone "$repo_full" "$pr_dir" -- --branch "$branch" 2>/dev/null; then
+    setup_devcontainer_port "$pr_dir" "$repo" "$num"
     echo "$pr_dir"
   else
     log "  ERROR: Failed to clone $repo_full"
     return 1
+  fi
+}
+
+# Check if a port is in use (listening)
+port_in_use() {
+  local port="$1"
+  lsof -i ":$port" -sTCP:LISTEN >/dev/null 2>&1
+}
+
+# Set up devcontainer.local.json with unique port to avoid conflicts
+setup_devcontainer_port() {
+  local pr_dir="$1" repo="$2" num="$3"
+  local devcontainer_dir="${pr_dir}/.devcontainer"
+  local local_config="${devcontainer_dir}/devcontainer.local.json"
+  
+  # Only if devcontainer exists and local config doesn't
+  if [[ -d "$devcontainer_dir" ]] && [[ ! -f "$local_config" ]]; then
+    # Collect all ports already assigned in local configs
+    local -a assigned_ports=()
+    local base_dir=$(dirname "$pr_dir")
+    
+    for config in "$base_dir"/*/.devcontainer/devcontainer.local.json; do
+      if [[ -f "$config" ]]; then
+        local port=$(grep -o '"runArgs".*\["-p".*"[0-9]*:' "$config" 2>/dev/null | grep -o '[0-9]*:' | tr -d ':' | head -1)
+        if [[ -n "$port" ]]; then
+          assigned_ports+=("$port")
+        fi
+      fi
+    done
+    
+    # Find next available port starting from 3000
+    local new_port=3000
+    while true; do
+      # Check if port is assigned in any local config
+      local is_assigned=false
+      for p in "${assigned_ports[@]}"; do
+        if [[ "$p" == "$new_port" ]]; then
+          is_assigned=true
+          break
+        fi
+      done
+      
+      # Check if port is actually in use on the system
+      if [[ "$is_assigned" == "false" ]] && ! port_in_use "$new_port"; then
+        break
+      fi
+      
+      new_port=$((new_port + 1))
+      
+      # Safety: don't scan forever
+      if [[ "$new_port" -gt 3100 ]]; then
+        log "  WARNING: Could not find open port in range 3000-3100"
+        new_port=3000  # Fall back to default
+        break
+      fi
+    done
+    
+    log "  Setting up devcontainer on port $new_port"
+    
+    cat > "$local_config" << EOF
+{
+  "name": "${repo} - PR-${num}",
+  "runArgs": ["-p", "${new_port}:3000"],
+  "forwardPorts": [${new_port}]
+}
+EOF
   fi
 }
 
@@ -100,6 +188,7 @@ find_repo() {
 }
 
 # Clean up PR directories for merged/closed PRs
+# Handles both worktrees and clones
 cleanup_pr_dirs() {
   log "Cleaning up merged/closed PR directories..."
   
@@ -114,7 +203,7 @@ cleanup_pr_dirs() {
       local repo=$(echo "$dirname" | sed -E 's/-pr-[0-9]+$//')
       local num=$(echo "$dirname" | sed -E 's/.*-pr-([0-9]+)$/\1/')
       
-      # Get the remote URL to find owner
+      # Get the remote URL to find owner (works for both worktrees and clones)
       local remote_url=$(git -C "$pr_dir" remote get-url origin 2>/dev/null) || continue
       local repo_full=$(echo "$remote_url" | sed -E 's|.*github.com[:/]([^/]+/[^/.]+)(\.git)?$|\1|')
       
@@ -126,7 +215,19 @@ cleanup_pr_dirs() {
           log "  [DRY RUN] Would remove $pr_dir (PR #$num is closed)"
         else
           log "  Removing $pr_dir (PR #$num is closed)"
-          rm -rf "$pr_dir"
+          
+          # Check if it's a worktree (has .git file, not directory)
+          if [[ -f "$pr_dir/.git" ]]; then
+            # Find the main repo to remove worktree properly
+            local main_repo="${base}/${repo}"
+            if [[ -d "$main_repo/.git" ]]; then
+              git -C "$main_repo" worktree remove "$pr_dir" --force 2>/dev/null || rm -rf "$pr_dir"
+            else
+              rm -rf "$pr_dir"
+            fi
+          else
+            rm -rf "$pr_dir"
+          fi
         fi
       fi
     done
@@ -241,10 +342,10 @@ $review_body
 
 Please read the review comments and address each piece of feedback. Wait for my approval before committing."
 
-    # Clone PR to sibling directory (or use override)
+    # Create worktree for PR (or use override)
     local opencode_dir="$OPENCODE_DIR"
     if [[ -z "$opencode_dir" ]]; then
-      opencode_dir=$(clone_pr_worktree "$repo_full" "$num" "$pr_branch")
+      opencode_dir=$(create_pr_worktree "$repo_full" "$num" "$pr_branch")
       if [[ -z "$opencode_dir" ]]; then
         continue
       fi
