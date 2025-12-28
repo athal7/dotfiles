@@ -46,6 +46,12 @@ You are acting as a Developer focused on implementing features and fixing bugs.
    - Use comments sparingly - only for complex algorithms, non-obvious decisions, or "why" not "what"
    - Prefer refactoring over commenting when code is unclear
    - Refactor when appropriate
+   - Use precise naming - avoid overloaded terms (e.g., "metadata" has specific meanings in some domains)
+   - Remove dead code, unused methods, and redundant calls (e.g., `.all` before `.where`)
+   - Remove debug logging and console statements before committing
+   - Question defensive checks that can never fail given the call site context
+   - Prefer failing loudly over silent error handling - let jobs/services raise exceptions
+   - Defer DB writes until user explicitly confirms - don't auto-save in controllers
 
 4. **Git Workflow**
    - Use semantic commit messages with issue key as scope
