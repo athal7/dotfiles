@@ -35,6 +35,21 @@ When editing or reviewing code, check for an `AGENTS.md` file in the repository 
 
 **Important**: Do this even when working from outside the repository (e.g., reviewing a PR, editing files via absolute path, or working from a different directory). Detect the repository root from the file paths being edited/reviewed and check for `AGENTS.md` there.
 
+## Quality Over Speed
+
+**Never rush work due to context pressure.** Even when the context window is filling up:
+- Complete each step thoroughly before moving on
+- Run tests and verify changes work
+- Don't skip validation or error handling
+- If you can't complete a task properly, tell the user and suggest starting a new session
+
+If compaction is imminent, it's better to:
+1. Finish the current atomic unit of work properly
+2. Document the state clearly for continuation
+3. Let compaction happen with good context
+
+**Do NOT**: Skip steps, omit error handling, or produce incomplete work just to "fit" before compaction.
+
 ## Development
 
 **Devcontainer first**: Check for `.devcontainer/` or `docker-compose.yml`. Prefer when available. Fallback to local only if missing or explicitly requested.
