@@ -15,23 +15,23 @@ Then fill in machine-specific details:
 
 ## OpenCode
 
-**Agents** (Tab to switch):
-- `dev` - Feature implementation, bug fixes
-- `devex` - Laptop config, tooling, dotfiles
+**Agent instructions**: Global instructions in `~/.config/opencode/AGENTS.md` apply to all sessions. Repository-specific instructions in `AGENTS.md` at repo root.
+
+**Subagents** (delegated via Task tool):
 - `pm` - Tickets, docs, thinking frameworks
 - `review` - Code review (read-only)
 
 **Commands**: `/screencast` - Record a Playwright demo
 
-**Skills** (loaded automatically):
+**Skills**:
 - `worktree-setup` - Git worktrees for concurrent development
 - `devcontainer-ports` - Port config for multiple devcontainers
 
 ## gh-pr-poll
 
 Checks GitHub for PRs needing attention:
-- Review requested → starts `review` agent
-- Changes requested → starts `dev` agent in a worktree
+- Review requested → starts `review` subagent
+- Changes requested → opens in a worktree
 
 ```bash
 gh-pr-poll              # Run once

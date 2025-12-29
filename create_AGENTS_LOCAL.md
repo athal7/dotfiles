@@ -1,10 +1,22 @@
-# AGENTS_LOCAL.md - Machine/Project-Specific Context
+# Machine-Specific Agent Context
 
-# This file contains tool names, project details, and infrastructure info
-# that are specific to this machine. It's like .secret for shell config.
-#
-# Add your specific details below:
-# - Tool names (issue tracker, VCS, CI/CD, cloud provider, secrets manager, etc.)
-# - Project repositories and architecture
-# - Infrastructure and deployment details
-# - Security patterns and code review guidelines
+This file contains project and infrastructure details specific to this machine. Referenced by all agents via `~/AGENTS_LOCAL.md`.
+
+## Tools
+
+| Purpose | Tool |
+|---------|------|
+| Issue tracker | |
+| CI/CD | |
+| Cloud provider | |
+| Secrets manager | |
+
+## Projects
+
+<!-- Add your active projects here -->
+<!--
+### Project Name
+- **Repo**: https://github.com/...
+- **Stack**: 
+- **Notes**: 
+-->
