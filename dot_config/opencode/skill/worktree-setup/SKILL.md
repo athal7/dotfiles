@@ -11,7 +11,7 @@ Set up a git worktree for working on a separate branch while keeping the main re
 
 - Working on a PR while main development continues
 - Reviewing code that needs a separate environment
-- Running multiple branches with devcontainers simultaneously
+- Running multiple branches simultaneously
 
 ## Steps
 
@@ -25,21 +25,18 @@ Set up a git worktree for working on a separate branch while keeping the main re
    git worktree add -b new-branch ../repo-new-branch origin/main
    ```
 
-2. **If using devcontainers**, use the `devcontainer-ports` skill to configure unique ports.
-
-3. **Open in VS Code** (will detect devcontainer):
+2. **Open in editor**:
    ```bash
    code ../repo-branch-name
    ```
 
-## Cleanup
+3. **Cleanup** when done:
+   ```bash
+   git worktree remove ../repo-branch-name
+   ```
 
-When done with the worktree:
-```bash
-git worktree remove ../repo-branch-name
-```
+## With Devcontainers
 
-## Notes
+If the project uses devcontainers, use **local development** for worktrees. Keep devcontainers for the main repo only.
 
-- Global gitignore excludes `devcontainer.local.json` so port configs stay local
-- `gh-pr-poll` automatically creates worktrees with unique ports for PR reviews
+Devcontainers have a [known limitation](https://github.com/devcontainers/cli/issues/796) with worktrees - the `.git` file pointing to the main repo breaks inside containers. The workarounds are fragile and not worth the complexity.

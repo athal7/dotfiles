@@ -5,55 +5,33 @@ description: Configure unique ports for running multiple devcontainer instances 
 
 # Devcontainer Port Configuration
 
-Configure unique ports for devcontainers to run multiple instances simultaneously.
+Configure unique ports when running multiple devcontainer instances (e.g., multiple repos open simultaneously).
 
 ## When to Use
 
-- Running multiple worktrees with devcontainers
-- Port conflicts between devcontainer instances
-- Setting up a new worktree for PR review
+- Running multiple devcontainer projects at once
+- Port conflicts between containers
 
-## Ports to Avoid
+## Port Assignment
 
-Common ports likely already in use:
-- **x001-x005** (e.g., 3001-3005, 4001-4005) - often used by local services
-- **3000** - Rails, Node, React
-- **5000** - Flask, .NET
-- **5432** - Postgres
-- **6379** - Redis
-- **8080** - various web servers
-
-## Find an Available Port
-
-```bash
-# Check ports already assigned in sibling worktrees
-grep -rh '"runArgs"' ../*/.devcontainer/devcontainer.local.json 2>/dev/null
-
-# Find a port not in use (empty output = available)
-lsof -i :PORT -sTCP:LISTEN
-```
-
-## Create the Override File
-
-Create `.devcontainer/devcontainer.local.json` in the worktree:
+Update `devcontainer.json` with unique ports per project:
 
 ```json
 {
-  "name": "ProjectName - branch-name",
-  "runArgs": ["-p", "HOST_PORT:CONTAINER_PORT"],
-  "forwardPorts": [HOST_PORT]
+  "name": "Project Name",
+  "runArgs": ["-p", "3010:3000"],
+  "forwardPorts": [3010]
 }
 ```
 
-Replace `HOST_PORT` with an available port and `CONTAINER_PORT` with the port the app listens on inside the container.
+## Port Convention
 
-## How It Works
+| Project/Instance | Host Port |
+|------------------|-----------|
+| Primary project  | 3000      |
+| Secondary        | 3010      |
+| Third            | 3020      |
 
-- VS Code merges `devcontainer.local.json` with `devcontainer.json`
-- Global gitignore excludes `devcontainer.local.json` so it's never committed
+## Worktrees
 
-## Troubleshooting
-
-**Port in use**: `lsof -i :PORT -sTCP:LISTEN` then `kill -9 <PID>`
-
-**Container not picking up port**: Rebuild container in VS Code (Cmd+Shift+P → "Dev Containers: Rebuild Container")
+Don't use devcontainers with git worktrees. There's a [known limitation](https://github.com/devcontainers/cli/issues/796) where the `.git` file breaks inside containers. Use local development for worktrees instead.
