@@ -14,7 +14,7 @@
 1. Edit files in this repo
 2. Run `chezmoi apply` to deploy
 3. For new packages, update `.chezmoitemplates/Brewfile`
-4. Update `README.md` for material changes
+4. Update `README.md` and `AGENTS.md` files when functionality changes
 
 ## Host-Specific Files (NOT managed by chezmoi)
 
@@ -50,4 +50,5 @@ These files are created once but not tracked:
 
 ## Skills
 
-Use the `worktree-setup` and `devcontainer-ports` skills for concurrent branch development with devcontainers.
+- `worktree-setup` - Git worktrees for concurrent branch development
+- `devcontainer-ports` - Port config when running multiple devcontainer projects
