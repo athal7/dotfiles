@@ -1,63 +1,77 @@
-# Agent Context
+# Agent Instructions
 
-## Safety Rules
+## Safety
 
-**STOP and wait for explicit user approval before modifying remote services.**
+**Confirm before modifying remote services.**
 
-For any remote modification, you MUST follow this two-step process:
-1. **First response**: Show the full proposed content and ask "Do you approve?" - then STOP
-2. **Second response**: Only after explicit approval, execute the action
+For any remote modification:
+1. Show the full proposed content and ask "Do you approve?" - then STOP
+2. Only after explicit approval, execute the action
 
-This applies to ALL remote modifications, including:
-- Git operations: `git push`, `git commit` (commits modify repository history)
-- GitHub/GitLab: creating/updating issues, PRs, comments
-- API calls that write/modify data
-- Production database changes
-- Any other operation that modifies state outside the local machine
+This applies to:
+- Git: `git push`, `git commit`
+- GitHub/GitLab: issues, PRs, comments
+- APIs that write/modify data
+- Production databases
 
-**Important**: Even if the user says "commit and push" or "go ahead", you MUST still show the proposed commit message and changes first, then wait for confirmation. The user's initial request does NOT count as approval of the specific content.
+Even if the user says "commit and push", show the proposed content first and wait for confirmation. Read-only operations don't require confirmation.
 
-Read-only operations (git status, git diff, git log, fetching data, etc.) don't require confirmation.
+## Context Sources
 
-## Project-Specific Context
+1. **`~/AGENTS_LOCAL.md`** - Machine-specific: tool names, repos, infrastructure, secrets
+2. **Repository `AGENTS.md`** - Project-specific: linting, testing, patterns
 
-See `~/AGENTS_LOCAL.md` for:
-- Tool names (issue tracker, VCS, CI/CD, cloud provider, secrets manager, etc.)
-- Platform architecture and repositories
-- State machines and API structures
-- Infrastructure and deployment details
-- Project-specific security concerns
-- Code review guidelines
-
-## Repository-Specific Instructions
-
-When editing or reviewing code, check for an `AGENTS.md` file in the repository root. If present, read and follow those instructions in addition to these global ones.
-
-**Important**: Do this even when working from outside the repository (e.g., reviewing a PR, editing files via absolute path, or working from a different directory). Detect the repository root from the file paths being edited/reviewed and check for `AGENTS.md` there.
+Always check for a repository `AGENTS.md` when editing code, even when working from outside the repo.
 
 ## Quality Over Speed
 
-**Never rush work due to context pressure.** Even when the context window is filling up:
-- Complete each step thoroughly before moving on
-- Run tests and verify changes work
-- Don't skip validation or error handling
-- If you can't complete a task properly, tell the user and suggest starting a new session
+Never rush due to context pressure. If the context window is filling:
+- Complete the current task thoroughly
+- Run tests and verify changes
+- If you can't finish properly, say so and suggest a new session
 
-If compaction is imminent, it's better to:
-1. Finish the current atomic unit of work properly
-2. Document the state clearly for continuation
-3. Let compaction happen with good context
-
-**Do NOT**: Skip steps, omit error handling, or produce incomplete work just to "fit" before compaction.
+Don't skip steps or produce incomplete work just to "fit" before compaction.
 
 ## Development
 
-**Devcontainer first**: Check for `.devcontainer/` or `docker-compose.yml`. Prefer when available. Fallback to local only if missing or explicitly requested.
+**Devcontainers first**: Prefer `.devcontainer/` or `docker-compose.yml` when available. Use the `devcontainer` CLI for building, executing commands, and automation.
 
-**Devcontainer CLI**: Use the `devcontainer` CLI for managing development containers:
-- Building: `devcontainer build`
-- Executing commands: `devcontainer exec`
-- Running features: `devcontainer features`
-- Useful for testing configs, CI/CD integration, and automation
+**Clarify before implementing**: For UI features, confirm placement, behavior, and user flow. Ask about edge cases (empty states, errors, permissions) and verify which repo/service the work belongs in.
 
-**Secrets**: Use your configured secrets manager. Check `~/AGENTS_LOCAL.md` for available secrets.
+**Secrets**: Check `~/AGENTS_LOCAL.md` for your configured secrets manager.
+
+## Git
+
+**Worktrees**: Use `worktree-setup` skill for feature branches. For projects with `.devcontainer/`, also use `devcontainer-ports` skill for unique ports.
+
+**Commits**: `type(ISSUE-KEY): description`
+- Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+- PR titles use same format (for squash-merge)
+
+**Post-push**: Offer to clean up worktree (`git worktree remove <path>`)
+
+## Code Quality
+
+- Follow project conventions (check linter/formatter configs)
+- Self-documenting code; comments only for "why" not "what"
+- Remove dead code, debug logging, unused methods
+- Fail loudly over silent error handling
+- Defer DB writes until user explicitly confirms
+- Question defensive checks that can never fail
+- Use precise naming; avoid overloaded terms
+
+**Testing**: Write tests first when practical. Prefer integration tests. Cover happy path, edge cases, and errors.
+
+**Backwards compatibility**: When modifying shared components, check all callers first.
+
+## Pre-Commit
+
+Before committing, consider offering:
+1. **Code review** - Delegate to `review` subagent for security/performance/quality feedback
+2. **Screencast demo** - Run `/screencast` to record a demo of the changes
+
+## Subagents
+
+Delegate specialized work:
+- `review` - Code review feedback on PRs or changes
+- `pm` - Writing issues, project specs, documentation
