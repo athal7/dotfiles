@@ -50,5 +50,4 @@ These files are created once but not tracked:
 
 ## Skills
 
-- `worktree-setup` - Git worktrees for concurrent branch development
-- `devcontainer-ports` - Port config when running multiple devcontainer projects
+- `devcontainer-worktrees` - Concurrent branch development with devcontainers using clone-based isolation
