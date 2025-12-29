@@ -25,12 +25,17 @@ Set up a git worktree for working on a separate branch while keeping the main re
    git worktree add -b new-branch ../repo-new-branch origin/main
    ```
 
-2. **Open in editor**:
+2. **Install pre-commit hooks** (if the project uses pre-commit):
+   ```bash
+   cd ../repo-branch-name && pre-commit install
+   ```
+
+3. **Open in editor**:
    ```bash
    code ../repo-branch-name
    ```
 
-3. **Cleanup** when done:
+4. **Cleanup** when done:
    ```bash
    git worktree remove ../repo-branch-name
    ```
