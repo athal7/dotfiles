@@ -218,14 +218,10 @@ cleanup_pr_dirs() {
           
           # Check if it's a worktree (has .git file, not directory)
           if [[ -f "$pr_dir/.git" ]]; then
-            # Find the main repo to remove worktree properly
-            local main_repo="${base}/${repo}"
-            if [[ -d "$main_repo/.git" ]]; then
-              git -C "$main_repo" worktree remove "$pr_dir" --force 2>/dev/null || rm -rf "$pr_dir"
-            else
-              rm -rf "$pr_dir"
-            fi
+            # Use git worktree remove - works from any directory
+            git worktree remove "$pr_dir" --force 2>/dev/null || rm -rf "$pr_dir"
           else
+            # Regular clone, just remove the directory
             rm -rf "$pr_dir"
           fi
         fi
