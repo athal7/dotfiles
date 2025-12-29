@@ -18,6 +18,7 @@ Then fill in machine-specific details:
 **Agent instructions**: Global instructions in `~/.config/opencode/AGENTS.md` apply to all sessions. Repository-specific instructions in `AGENTS.md` at repo root.
 
 **Subagents** (delegated via Task tool):
+- `architect` - Design questions, tradeoffs, system boundaries
 - `pm` - Tickets, docs, thinking frameworks
 - `review` - Code review (read-only)
 
