@@ -147,6 +147,7 @@ async function smoothScroll(page, selector) {
 
 - **Click, don't navigate** - Use `clickWithPointer()` instead of `page.goto()` (except initial load)
 - **Smooth scroll** - Use `smoothScroll()` instead of instant jumps
+- **Type fast, screenshot after** - Use `page.fill()` for instant typing, then take a screenshot to verify the input
 - **Check logs after** - Look for 500s, exceptions, errors before showing to user
 - **Get approval** - Never post without user confirming the recording looks good
 - **User uploads** - Videos can't be uploaded via API; user drags file to PR
