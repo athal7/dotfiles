@@ -73,5 +73,6 @@ Before committing, consider offering:
 ## Subagents
 
 Delegate specialized work:
+- `architect` - Design questions, tradeoffs, system boundaries
 - `review` - Code review feedback on PRs or changes
 - `pm` - Writing issues, project specs, documentation
