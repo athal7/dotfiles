@@ -42,7 +42,7 @@ Don't skip steps or produce incomplete work just to "fit" before compaction.
 
 ## Git
 
-**Worktrees**: Use `worktree-setup` skill for feature branches. For projects with `.devcontainer/`, also use `devcontainer-ports` skill for unique ports.
+**Worktrees**: Use `worktree-setup` skill for feature branches. For projects with devcontainers, use local development for worktrees (devcontainers don't support worktrees well).
 
 **Commits**: `type(ISSUE-KEY): description`
 - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
