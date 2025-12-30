@@ -4,6 +4,8 @@ description: Add item(s) to the todo list without interrupting current work
 
 Add the specified item(s) to your todo list. Do NOT stop or change what you're currently working on.
 
+**Items to add:** $ARGUMENTS
+
 ## Instructions
 
 1. Use `TodoWrite` to add the new item(s) with status `pending`
