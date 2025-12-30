@@ -5,16 +5,22 @@
 **Confirm before modifying remote services.**
 
 For any remote modification:
-1. Show the full proposed content and ask "Do you approve?" - then STOP
-2. Only after explicit approval, execute the action
+1. Show the full proposed content and ask "Do you approve?" - then STOP and wait
+2. Only after receiving explicit "yes" or approval, execute the action
+3. If no response is possible (background task, automation), do NOT proceed with the modification
 
 This applies to:
 - Git: `git push`, `git commit`
-- GitHub/GitLab: issues, PRs, comments
+- GitHub/GitLab: issues, PRs, comments, **reviews**
 - APIs that write/modify data
 - Production databases
 
-Even if the user says "commit and push", show the proposed content first and wait for confirmation. Read-only operations don't require confirmation.
+**Examples:**
+- "Review this PR" → analyze and show review, but do NOT submit to GitHub without approval
+- "Commit and push" → show diff and commit message, wait for approval before executing
+- Background/automated tasks → analyze and prepare only, never submit
+
+Even if the prompt implies end-to-end completion, always stop before remote modifications. Read-only operations don't require confirmation.
 
 ## Context Sources
 
