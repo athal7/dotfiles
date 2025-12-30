@@ -4,6 +4,10 @@ description: Record a screencast demo of a localhost workflow using Playwright
 
 Record a screencast demonstrating a user workflow on localhost using Playwright.
 
+**Requested flow:** $ARGUMENTS
+
+If no flow is specified, analyze the branch changes to determine what to demo.
+
 ## Workflow
 
 1. **Plan** - Review branch changes, identify workflows to demo
