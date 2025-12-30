@@ -10,7 +10,7 @@ For any remote modification:
 3. If no response is possible (background task, automation), do NOT proceed with the modification
 
 This applies to:
-- Git: `git push`, `git commit`
+- Git: `git push`, final commits (not WIP amends - see Git Workflow below)
 - GitHub/GitLab: issues, PRs, comments, **reviews**
 - APIs that write/modify data
 - Production databases
@@ -34,6 +34,7 @@ Always check for a repository `AGENTS.md` when editing code, even when working f
 Never rush due to context pressure. If the context window is filling:
 - Complete the current task thoroughly
 - Run tests and verify changes
+- Use WIP commits to protect in-flight work (see Git Workflow)
 - If you can't finish properly, say so and suggest a new session
 
 Don't skip steps or produce incomplete work just to "fit" before compaction.
@@ -46,13 +47,34 @@ Don't skip steps or produce incomplete work just to "fit" before compaction.
 
 **Secrets**: Check `~/AGENTS_LOCAL.md` for your configured secrets manager.
 
-## Git
+## Git Workflow
 
-**Worktrees**: Use `devcontainer-worktrees` skill for concurrent branch development. For devcontainer projects, use clone-based isolation instead of git worktrees.
+### WIP Commits (No Approval Needed)
 
-**Commits**: `type(ISSUE-KEY): description`
-- Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
-- PR titles use same format (for squash-merge)
+Protect in-flight work by continuously amending a WIP commit. This prevents losing changes to context compaction or session interruption.
+
+**During development:**
+1. After tests pass, immediately stage all changes and amend to the WIP commit
+2. Use message: `wip: <brief description of current state>`
+3. Do this automatically after every green test run - no approval needed
+4. WIP amends are local-only safety saves, not meaningful commits
+
+### Final Commit (Approval Required)
+
+When work is complete:
+1. Ask: "Ready to finalize. What should the commit message be?"
+2. Show the full diff of all accumulated changes
+3. Wait for user to provide the final message
+4. Amend with proper format: `type(ISSUE-KEY): description`
+5. Offer code review via `review` subagent before finalizing
+6. Ask for push approval per normal safety rules
+
+**Commit types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+**PR titles**: Use same format (for squash-merge)
+
+### Worktrees
+
+Use `devcontainer-worktrees` skill for concurrent branch development. For devcontainer projects, use clone-based isolation instead of git worktrees.
 
 **Post-push**: Offer to clean up worktree (`git worktree remove <path>`)
 
@@ -69,12 +91,6 @@ Don't skip steps or produce incomplete work just to "fit" before compaction.
 **Testing**: Write tests first when practical. Prefer integration tests. Cover happy path, edge cases, and errors.
 
 **Backwards compatibility**: When modifying shared components, check all callers first.
-
-## Pre-Commit
-
-Before committing, consider offering:
-1. **Code review** - Delegate to `review` subagent for security/performance/quality feedback
-2. **Screencast demo** - Run `/screencast` to record a demo of the changes
 
 ## Subagents
 
