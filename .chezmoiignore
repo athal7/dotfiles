@@ -1,2 +1,6 @@
 # Keep gh authentication tokens local (don't sync across machines)
 .config/gh/hosts.yml
+
+# Repo documentation - not for home directory
+AGENTS.md
+README.md
