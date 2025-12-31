@@ -10,7 +10,7 @@ For any remote modification:
 3. If no response is possible (background task, automation), do NOT proceed with the modification
 
 This applies to:
-- Git: `git push`, final commits (not WIP amends - see Git Workflow below)
+- Git: `git push`
 - GitHub/GitLab: issues, PRs, comments, **reviews**
 - APIs that write/modify data
 - Production databases
@@ -34,7 +34,7 @@ Always check for a repository `AGENTS.md` when editing code, even when working f
 Never rush due to context pressure. If the context window is filling:
 - Complete the current task thoroughly
 - Run tests and verify changes
-- Use WIP commits to protect in-flight work (see Git Workflow)
+- Commit completed work before context fills
 - If you can't finish properly, say so and suggest a new session
 
 Don't skip steps or produce incomplete work just to "fit" before compaction.
@@ -47,28 +47,35 @@ Don't skip steps or produce incomplete work just to "fit" before compaction.
 
 **Secrets**: Check `~/AGENTS_LOCAL.md` for your configured secrets manager.
 
-## Git Workflow
+## Plan Agent
 
-### WIP Commits (No Approval Needed)
+**Delegate design decisions to `architect`**. Before proposing implementation approaches:
+- Use `architect` for any non-trivial design question
+- Use `architect` when there are multiple viable approaches
+- Use `architect` when changes affect system boundaries or module structure
+- Use `architect` to validate tradeoffs before committing to a direction
 
-Protect in-flight work by continuously amending a WIP commit. This prevents losing changes to context compaction or session interruption.
+Don't skip architectural review to save time. Poor design decisions are expensive to fix.
 
-**During development:**
-1. After tests pass, immediately stage all changes and amend to the WIP commit
-2. Use message: `wip: <brief description of current state>`
-3. Do this automatically after every green test run - no approval needed
-4. WIP amends are local-only safety saves, not meaningful commits
+## Build Agent
 
-### Final Commit (Approval Required)
+**Strict Red-Green-Refactor-Commit workflow**. Every change follows TDD:
 
-When work is complete:
-1. Ask: "Ready to finalize. What should the commit message be?"
-2. Show the full diff of all accumulated changes
-3. Wait for user to provide the final message
-4. Amend with proper format: `type(ISSUE-KEY): description`
-5. Offer code review via `review` subagent before finalizing
-6. Ask for push approval per normal safety rules
+1. **Red**: Write a failing test first. Run it. Confirm it fails for the right reason.
+2. **Green**: Write the minimum code to make the test pass. Run tests. Confirm green.
+3. **Refactor**: Clean up the code while keeping tests green. Run tests after each change.
+4. **Commit**: Commit immediately. Small, frequent commits.
 
+**Rules**:
+- Never write production code without a failing test
+- Never commit with failing tests
+- Commit after every green-refactor cycle (many tiny commits)
+- Refactor only when tests are green
+- Run the full test suite before push
+
+**Before push**: Squash into logical groupings (not necessarily one commit). Ask for approval before pushing (per Safety rules).
+
+**Commit format**: `type(ISSUE-KEY): description`
 **Commit types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 **PR titles**: Use same format (for squash-merge)
 
@@ -87,8 +94,6 @@ Use `devcontainer-worktrees` skill for concurrent branch development. For devcon
 - Defer DB writes until user explicitly confirms
 - Question defensive checks that can never fail
 - Use precise naming; avoid overloaded terms
-
-**Testing**: Write tests first when practical. Prefer integration tests. Cover happy path, edge cases, and errors.
 
 **Backwards compatibility**: When modifying shared components, check all callers first.
 
