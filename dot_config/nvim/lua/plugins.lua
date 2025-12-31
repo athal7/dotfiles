@@ -1,11 +1,11 @@
 require("lazy").setup({
   -- Colorscheme
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "projekt0n/github-nvim-theme",
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme("catppuccin-mocha")
+      require("github-theme").setup({})
+      vim.cmd.colorscheme("github_dark")
     end,
   },
 
@@ -174,7 +174,7 @@ require("lazy").setup({
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("lualine").setup({
-        options = { theme = "catppuccin" },
+        options = { theme = "github_dark" },
       })
     end,
   },
@@ -201,13 +201,96 @@ require("lazy").setup({
     "folke/which-key.nvim",
     event = "VeryLazy",
     config = function()
-      require("which-key").setup()
-      require("which-key").add({
+      local wk = require("which-key")
+      wk.setup({
+        preset = "classic",
+        win = {
+          border = "single",
+          padding = { 1, 2 },
+        },
+        layout = {
+          width = { min = 20, max = 50 },
+          spacing = 3,
+        },
+        icons = {
+          breadcrumb = ">>",
+          separator = "->",
+          group = "+",
+          ellipsis = "...",
+          mappings = false,
+          keys = {
+            Up = "Up ", Down = "Down ", Left = "Left ", Right = "Right ",
+            C = "C-", M = "M-", D = "D-", S = "S-",
+            CR = "Enter ", Esc = "Esc ", BS = "BS ", Space = "SPC ", Tab = "Tab ",
+            NL = "NL ", ScrollWheelDown = "ScrollDn ", ScrollWheelUp = "ScrollUp ",
+            F1 = "F1", F2 = "F2", F3 = "F3", F4 = "F4", F5 = "F5", F6 = "F6",
+            F7 = "F7", F8 = "F8", F9 = "F9", F10 = "F10", F11 = "F11", F12 = "F12",
+          },
+        },
+      })
+      wk.add({
+        -- Groups
         { "<leader>f", group = "find" },
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
-        { "<leader>r", group = "rename" },
         { "<leader>o", group = "opencode" },
+
+        -- File explorer
+        { "<leader>n", desc = "Toggle file tree" },
+
+        -- Find (Telescope)
+        { "<leader>ff", desc = "Find files" },
+        { "<leader>fg", desc = "Live grep" },
+        { "<leader>fb", desc = "Buffers" },
+        { "<leader>fh", desc = "Help tags" },
+        { "<leader>fr", desc = "Recent files" },
+
+        -- Buffer
+        { "<leader>bd", desc = "Delete buffer" },
+
+        -- LSP/Code
+        { "<leader>ca", desc = "Code action" },
+        { "<leader>rn", desc = "Rename symbol" },
+
+        -- Diagnostics
+        { "<leader>e", desc = "Show diagnostic" },
+
+        -- Save
+        { "<leader>w", desc = "Save file" },
+
+        -- Paste
+        { "<leader>p", desc = "Paste without yank", mode = "x" },
+
+        -- OpenCode
+        { "<leader>oo", desc = "Toggle opencode" },
+        { "<leader>oa", desc = "Ask opencode" },
+        { "<leader>os", desc = "Select action" },
+        { "<leader>or", desc = "Review code" },
+        { "<leader>oe", desc = "Explain code" },
+        { "<leader>of", desc = "Fix diagnostics" },
+
+        -- Comments
+        { "gc", desc = "Comment (motion/visual)" },
+        { "gcc", desc = "Comment line" },
+
+        -- LSP navigation (shown when LSP attached)
+        { "gd", desc = "Go to definition" },
+        { "gr", desc = "Go to references" },
+        { "K", desc = "Hover docs" },
+
+        -- Diagnostics navigation
+        { "[d", desc = "Prev diagnostic" },
+        { "]d", desc = "Next diagnostic" },
+
+        -- Buffer navigation
+        { "<S-h>", desc = "Prev buffer" },
+        { "<S-l>", desc = "Next buffer" },
+
+        -- Window navigation
+        { "<C-h>", desc = "Go to left window" },
+        { "<C-j>", desc = "Go to lower window" },
+        { "<C-k>", desc = "Go to upper window" },
+        { "<C-l>", desc = "Go to right window" },
       })
     end,
   },
