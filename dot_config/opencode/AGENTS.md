@@ -81,9 +81,7 @@ Don't skip architectural review to save time. Poor design decisions are expensiv
 
 ### Worktrees
 
-Use `devcontainer-worktrees` skill for concurrent branch development. For devcontainer projects, use clone-based isolation instead of git worktrees.
-
-**Post-push**: Offer to clean up worktree (`git worktree remove <path>`)
+Load the `worktrees` skill for concurrent branch development. It covers git worktrees (for non-devcontainer projects) and clone-based isolation with `dcup`/`dcdown`/`dclist`/`dcgo`/`dctui` (for devcontainer projects).
 
 ## Code Quality
 
