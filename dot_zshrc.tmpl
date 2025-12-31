@@ -28,3 +28,6 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && source $(brew --prefix)/etc/profile.d/autojump.sh
 
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+
+# Enable reverse search (ctrl-r)
+bindkey '^R' history-incremental-search-backward
