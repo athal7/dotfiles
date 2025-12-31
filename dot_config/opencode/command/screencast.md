@@ -11,7 +11,7 @@ If no flow is specified, analyze the branch changes to determine what to demo.
 ## Workflow
 
 1. **Plan** - Review branch changes, identify workflows to demo
-2. **Verify** - Ensure dev server is running (auto-detects port from `devcontainer.local.json`)
+2. **Verify** - Ensure dev server is running; determine port from project config (see Port Detection)
 3. **Record** - Use Playwright with pink click indicators and smooth scrolling
 4. **Check logs** - Verify no server errors during recording
 5. **Review** - Show user the recording, get approval before posting
@@ -31,12 +31,8 @@ const os = require('os');
   const branchName = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' })
     .trim().replace(/[^a-zA-Z0-9-_]/g, '-');
   
-  // Auto-detect port from devcontainer.local.json
-  let port = 3000;
-  if (fs.existsSync('.devcontainer/devcontainer.local.json')) {
-    const match = fs.readFileSync('.devcontainer/devcontainer.local.json', 'utf-8').match(/"(\d+):\d+"/);
-    if (match) port = parseInt(match[1], 10);
-  }
+  // Port determined from project config (see Port Detection section)
+  const port = PORT_FROM_PROJECT;
   
   const recordingsDir = `/tmp/screencast/${branchName}/`;
   const downloadsDir = path.join(os.homedir(), 'Downloads');
@@ -155,6 +151,19 @@ async function smoothScroll(page, selector) {
 - **Check logs after** - Look for 500s, exceptions, errors before showing to user
 - **Get approval** - Never post without user confirming the recording looks good
 - **User uploads** - Videos can't be uploaded via API; user drags file to PR
+
+## Port Detection
+
+Before recording, determine the dev server port by checking these sources in order:
+
+1. **`.env` or `.env.local`** - Look for `PORT=`, `APP_PORT=`, `DEV_PORT=`
+2. **`package.json`** - Check `scripts.dev` or `scripts.start` for `--port` flags
+3. **`devcontainer.json`** - Check `forwardPorts` array
+4. **`docker-compose.yml`** - Check port mappings (e.g., `"3000:3000"`)
+5. **`README.md`** - Search for localhost URLs or port mentions
+6. **Default** - Fall back to 3000
+
+Replace `PORT_FROM_PROJECT` in the template with the detected port.
 
 ## Setup
 

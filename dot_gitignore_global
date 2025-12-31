@@ -41,6 +41,3 @@ Thumbs.db
 # AI Assistants #
 #################
 .claude
-
-# Devcontainer local overrides (for concurrent worktree ports)
-.devcontainer/devcontainer.local.json
