@@ -1,0 +1,66 @@
+" Sensible defaults
+set nocompatible
+filetype plugin indent on
+syntax on
+
+" UI
+set number
+set relativenumber
+set cursorline
+set showcmd
+set showmode
+set wildmenu
+set laststatus=2
+set ruler
+
+" Search
+set incsearch
+set hlsearch
+set ignorecase
+set smartcase
+
+" Editing
+set backspace=indent,eol,start
+set autoindent
+set smartindent
+set tabstop=2
+set shiftwidth=2
+set expandtab
+set smarttab
+
+" Behavior
+set hidden
+set autoread
+set scrolloff=5
+set sidescrolloff=5
+set mouse=a
+set ttimeoutlen=50
+
+" Splits
+set splitbelow
+set splitright
+
+" No backup/swap clutter
+set nobackup
+set noswapfile
+set nowritebackup
+
+" Undo persistence
+set undofile
+set undodir=~/.vim/undo
+silent !mkdir -p ~/.vim/undo
+
+" Clear search highlight with Escape
+nnoremap <Esc> :nohlsearch<CR>
+
+" Better window navigation
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" Quick save
+nnoremap <leader>w :w<CR>
+
+" Y yanks to end of line (consistent with D and C)
+nnoremap Y y$
