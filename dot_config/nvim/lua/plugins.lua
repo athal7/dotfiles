@@ -42,59 +42,58 @@ require("lazy").setup({
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    config = function()
-      require("nvim-treesitter.configs").setup({
-        ensure_installed = {
-          "bash", "css", "dockerfile", "go", "html", "javascript",
-          "json", "lua", "markdown", "python", "rust", "toml",
-          "tsx", "typescript", "yaml",
-        },
-        highlight = { enable = true },
-        indent = { enable = true },
-      })
-    end,
+    main = "nvim-treesitter",
+    opts = {
+      ensure_installed = {
+        "bash", "css", "dockerfile", "go", "html", "javascript",
+        "json", "lua", "markdown", "python", "rust", "toml",
+        "tsx", "typescript", "yaml",
+      },
+    },
   },
 
   -- LSP
   {
-    "neovim/nvim-lspconfig",
-    dependencies = {
-      "williamboman/mason.nvim",
-      "williamboman/mason-lspconfig.nvim",
+    "williamboman/mason.nvim",
+    config = true,
+  },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    opts = {
+      ensure_installed = { "lua_ls", "ts_ls" },
     },
+  },
+  {
+    "neovim/nvim-lspconfig",
+    dependencies = { "williamboman/mason-lspconfig.nvim" },
     config = function()
-      require("mason").setup()
-      require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "ts_ls" },
-      })
-
-      local lspconfig = require("lspconfig")
-      local on_attach = function(_, bufnr)
-        local map = function(keys, func, desc)
-          vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc })
-        end
-        map("gd", vim.lsp.buf.definition, "Go to definition")
-        map("gr", vim.lsp.buf.references, "Go to references")
-        map("K", vim.lsp.buf.hover, "Hover docs")
-        map("<leader>ca", vim.lsp.buf.code_action, "Code action")
-        map("<leader>rn", vim.lsp.buf.rename, "Rename")
-      end
-
-      require("mason-lspconfig").setup_handlers({
-        function(server_name)
-          lspconfig[server_name].setup({ on_attach = on_attach })
-        end,
-        ["lua_ls"] = function()
-          lspconfig.lua_ls.setup({
-            on_attach = on_attach,
-            settings = {
-              Lua = {
-                diagnostics = { globals = { "vim" } },
-              },
-            },
-          })
+      -- LSP keymaps on attach
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+          local map = function(keys, func, desc)
+            vim.keymap.set("n", keys, func, { buffer = args.buf, desc = desc })
+          end
+          map("gd", vim.lsp.buf.definition, "Go to definition")
+          map("gr", vim.lsp.buf.references, "Go to references")
+          map("K", vim.lsp.buf.hover, "Hover docs")
+          map("<leader>ca", vim.lsp.buf.code_action, "Code action")
+          map("<leader>rn", vim.lsp.buf.rename, "Rename")
         end,
       })
+
+      -- Configure LSP servers using vim.lsp.config (Neovim 0.11+)
+      vim.lsp.config("lua_ls", {
+        settings = {
+          Lua = {
+            diagnostics = { globals = { "vim" } },
+          },
+        },
+      })
+      vim.lsp.config("ts_ls", {})
+
+      -- Enable configured servers
+      vim.lsp.enable({ "lua_ls", "ts_ls" })
     end,
   },
 
@@ -208,7 +207,25 @@ require("lazy").setup({
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
         { "<leader>r", group = "rename" },
+        { "<leader>o", group = "opencode" },
       })
+    end,
+  },
+
+  -- OpenCode AI integration
+  {
+    "NickvanDyke/opencode.nvim",
+    dependencies = {
+      { "folke/snacks.nvim", opts = { input = {}, picker = {}, terminal = {} } },
+    },
+    config = function()
+      vim.o.autoread = true
+      vim.keymap.set({ "n", "x" }, "<leader>oa", function() require("opencode").ask("@this: ", { submit = false }) end, { desc = "Ask opencode" })
+      vim.keymap.set({ "n", "x" }, "<leader>os", function() require("opencode").select() end, { desc = "Select opencode action" })
+      vim.keymap.set({ "n", "t" }, "<leader>oo", function() require("opencode").toggle() end, { desc = "Toggle opencode" })
+      vim.keymap.set({ "n", "x" }, "<leader>or", function() require("opencode").ask("Review @this for correctness and readability", { submit = true }) end, { desc = "Review with opencode" })
+      vim.keymap.set({ "n", "x" }, "<leader>oe", function() require("opencode").ask("Explain @this and its context", { submit = true }) end, { desc = "Explain with opencode" })
+      vim.keymap.set({ "n", "x" }, "<leader>of", function() require("opencode").ask("Fix @diagnostics", { submit = true }) end, { desc = "Fix diagnostics with opencode" })
     end,
   },
 })
