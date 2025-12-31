@@ -1,6 +1,7 @@
 # Machine-Specific Agent Context
 
-This file contains project and infrastructure details specific to this machine. Referenced by all agents via `~/AGENTS_LOCAL.md`.
+This file contains project and infrastructure details specific to this machine.
+Auto-discovered by opencode alongside `AGENTS.md`.
 
 ## Tools
 

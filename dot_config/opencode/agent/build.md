@@ -32,8 +32,6 @@ You MUST follow strict Red-Green-Refactor-Commit for every code change:
 
 **Clarify before implementing**: For UI features, confirm placement, behavior, and user flow. Ask about edge cases (empty states, errors, permissions) and verify which repo/service the work belongs in.
 
-**Secrets**: Check `~/AGENTS_LOCAL.md` for your configured secrets manager.
-
 ## Code Quality
 
 - Follow project conventions (check linter/formatter configs)
