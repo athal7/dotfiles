@@ -1,6 +1,9 @@
 {{ template "brewenv" . }}
 
-export EDITOR="code"
+# Load secrets from ~/.env if it exists
+[[ -f ~/.env ]] && set -a && source ~/.env && set +a
+
+export EDITOR="nvim"
 export DOCKER_HOST="unix:///${HOME}/.colima/default/docker.sock"
 export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 
@@ -22,5 +25,6 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 # plugins
   eval "$(starship init zsh)"
   eval "$(direnv hook zsh)"
+  [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && source $(brew --prefix)/etc/profile.d/autojump.sh
 
 export PATH="$HOME/bin:$PATH"
