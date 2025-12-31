@@ -28,9 +28,6 @@ Even if the prompt implies end-to-end completion, always stop before remote modi
 
 ## Context Sources
 
-1. **`~/AGENTS_LOCAL.md`** - Machine-specific: tool names, repos, infrastructure, secrets
-2. **Repository `AGENTS.md`** - Project-specific: linting, testing, patterns
-
 Always check for a repository `AGENTS.md` when editing code, even when working from outside the repo.
 
 ## Quality Over Speed

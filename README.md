@@ -10,7 +10,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 
 Then fill in machine-specific details:
 - `~/.env` - environment variables and API keys (loaded by direnv)
-- `~/AGENTS_LOCAL.md` - project context (tool names, repos, etc.)
+- `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 - `~/.config/opencode/opencode.json` - model configuration
 
 ## OpenCode
