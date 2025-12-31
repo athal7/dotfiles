@@ -25,6 +25,7 @@ You MUST follow strict Red-Green-Refactor-Commit for every code change:
 **Commit format**: `type(ISSUE-KEY): description`
 **Commit types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 **PR titles**: Use same format (for squash-merge)
+**PR descriptions**: Only bullet points summarizing changes. No headers, no sections, no additional formatting.
 
 ## Development
 
