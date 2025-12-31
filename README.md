@@ -25,8 +25,11 @@ Then fill in machine-specific details:
 **Commands**: `/screencast` - Record a Playwright demo
 
 **Skills**:
-- `worktree-setup` - Git worktrees for concurrent development
-- `devcontainer-ports` - Port config for multiple devcontainers
+- `worktrees` - Concurrent branch development (git worktrees or devcontainer clones)
+
+## Devcontainer Multi-Instance
+
+Run multiple devcontainer instances simultaneously with auto-assigned ports. See [athal7/devcontainer-multi](https://github.com/athal7/devcontainer-multi) for usage.
 
 ## gh-pr-poll
 

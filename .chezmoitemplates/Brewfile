@@ -1,9 +1,11 @@
+tap "athal7/tap"
 tap "github/gh"
 
 brew "autojump"
 brew "bat"
 brew "chezmoi"
 brew "colima"
+brew "devcontainer-multi"
 brew "direnv"
 brew "docker"
 brew "docker-compose"
