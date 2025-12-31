@@ -22,6 +22,10 @@ This applies to:
 
 Even if the prompt implies end-to-end completion, always stop before remote modifications. Read-only operations don't require confirmation.
 
+## Environment Variables
+
+**Never read `.env` files.** All secrets and API keys are loaded into environment variables via direnv. Access them directly from the environment - do not attempt to read, parse, or cat `.env` files.
+
 ## Context Sources
 
 1. **`~/AGENTS_LOCAL.md`** - Machine-specific: tool names, repos, infrastructure, secrets
