@@ -1,8 +1,2 @@
-fileignoreconfig:
-- filename: dot_config/ocdc/polls/odin-reviews.yaml
-  checksum: c2cf4b391cc65cfce26effa03de079bf75318be5d8468dd455176fd5918d759e
-- filename: dot_config/ocdc/polls/github-issues.yaml
-  checksum: 431b426f358f588f9b298778a53137f5ba618e0e2981a097c3b922a4c7db9ae3
-- filename: dot_config/ocdc/polls/odin-linear.yaml
-  checksum: d2af0f659510ce48996b7b2465b705d2bb128cf0176deb75df76cc22e265a552
+fileignoreconfig: []
 version: "1.0"
