@@ -29,7 +29,6 @@ These files are created once but not tracked:
 |----------|----------|
 | `dot_zshrc.tmpl` | Shell configuration |
 | `dot_config/starship.toml` | Prompt configuration |
-| `dot_local/bin/` | Custom scripts (`gh-pr-poll`) |
 | `.chezmoitemplates/Brewfile` | Homebrew packages (includes `opencode` and `opencode-desktop`) |
 
 ## OpenCode Configuration

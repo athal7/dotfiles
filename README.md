@@ -31,20 +31,4 @@ Then fill in machine-specific details:
 - `/todo` - Manage todo list
 
 **Skills**:
-- `worktrees` - Concurrent branch development (git worktrees or devcontainer clones)
-
-## Devcontainer Multi-Instance
-
-Run multiple devcontainer instances simultaneously with auto-assigned ports. See [athal7/devcontainer-multi](https://github.com/athal7/devcontainer-multi) for usage.
-
-## gh-pr-poll
-
-Checks GitHub for PRs needing attention:
-- Review requested → starts `review` subagent
-- Changes requested → opens in a worktree
-
-```bash
-gh-pr-poll              # Run once
-gh-pr-poll --dry-run    # Preview
-launchctl load ~/Library/LaunchAgents/com.gh-pr-poll.plist  # Auto-run
-```
+- `ocdc` - Concurrent branch development using devcontainer clones
