@@ -13,6 +13,12 @@ Then fill in machine-specific details:
 - `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 - `~/.config/opencode/opencode.json` - model configuration
 
+Automatic setup includes:
+- ✅ Homebrew packages via Brewfile
+- ✅ ocdc polling service (`brew services start ocdc`)
+- ✅ Poll configurations for GitHub and Linear
+- ✅ OpenCode plugin for ocdc integration
+
 ## OpenCode
 
 **Agent instructions**: Global instructions in `~/.config/opencode/AGENTS.md` apply to all sessions. Repository-specific instructions in `AGENTS.md` at repo root.
