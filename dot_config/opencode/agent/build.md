@@ -22,9 +22,9 @@ You MUST follow strict Red-Green-Refactor-Commit for every code change:
 
 **Before push**:
 1. Squash into logical groupings (not necessarily one commit)
-2. Delegate to the `review` agent for feedback on all changes
+2. Run `/review` for feedback on all changes
 3. Implement all feedback from the review
-4. Repeat steps 2-3 until the review agent has no more feedback
+4. Repeat steps 2-3 until `/review` has no more feedback
 5. Ask for approval before pushing (per Safety rules in AGENTS.md)
 
 **Commit format**: `type(ISSUE-KEY): description`
