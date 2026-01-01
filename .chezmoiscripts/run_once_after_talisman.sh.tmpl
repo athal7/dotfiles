@@ -1,0 +1,27 @@
+#!/bin/bash
+# Set up Talisman as a global pre-commit hook
+{{ template "brewenv" . }}
+
+HOOKS_DIR="$HOME/.git-hooks"
+HOOK_FILE="$HOOKS_DIR/pre-commit"
+
+# Create hooks directory
+mkdir -p "$HOOKS_DIR"
+
+# Create pre-commit hook that runs talisman
+cat > "$HOOK_FILE" << 'EOF'
+#!/bin/bash
+# Global pre-commit hook - runs talisman
+
+# Check if talisman is installed
+if command -v talisman &> /dev/null; then
+    talisman --githook pre-commit
+fi
+EOF
+
+chmod +x "$HOOK_FILE"
+
+# Configure git to use global hooks directory
+git config --global core.hooksPath "$HOOKS_DIR"
+
+echo "Talisman configured as global pre-commit hook"
