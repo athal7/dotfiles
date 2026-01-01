@@ -50,6 +50,6 @@ You MUST follow strict Red-Green-Refactor-Commit for every code change:
 
 **Backwards compatibility**: When modifying shared components, check all callers first.
 
-## Worktrees
+## Devcontainers
 
-Load the `worktrees` skill for concurrent branch development.
+Load the `ocdc` skill for concurrent branch development with devcontainers.

@@ -65,4 +65,4 @@ When modifying agent behavior, choose the right location:
 
 ## Skills
 
-- `worktrees` - Concurrent branch development using git worktrees or devcontainer clones
+- `ocdc` - Concurrent branch development using devcontainer clones (for devcontainer projects)
