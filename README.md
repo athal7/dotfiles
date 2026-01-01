@@ -17,7 +17,7 @@ Then fill in machine-specific details:
 Automatic setup includes:
 - ✅ Homebrew packages via Brewfile
 - ✅ ocdc polling service (`brew services start ocdc`)
-- ✅ OpenCode plugin for ocdc integration
+- ✅ opencode-ntfy plugin (run `opencode-ntfy-setup` after brew install)
 
 ## OpenCode
 
