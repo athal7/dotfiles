@@ -12,7 +12,7 @@ Strategies for working on multiple branches simultaneously.
 | Project type | Approach |
 |--------------|----------|
 | No devcontainer | Git worktrees |
-| Has devcontainer | Clones via `dcup` |
+| Has devcontainer | Clones via `ocdc up` |
 
 Git worktrees don't work inside devcontainers because the `.git` file references a path outside the mounted directory.
 
@@ -31,48 +31,48 @@ git worktree remove ../myapp-feature-x
 
 Worktrees share the same `.git` directory, so commits in one are immediately visible in others.
 
-## Devcontainer Clones
+## Devcontainer Clones (ocdc)
 
-Use `dcup` for automatic port assignment and clone management:
+Use `ocdc` for automatic port assignment and clone management:
 
 ```bash
 # Start devcontainer for current branch
 cd ~/Projects/myapp
-dcup                    # Starts on port 13000
+ocdc up                 # Starts on port 13000
 
 # Start devcontainer for a feature branch (creates clone automatically)
-dcup feature-x          # Starts on port 13001
+ocdc up feature-x       # Starts on port 13001
 
 # Interactive TUI for managing all instances
-dctui
+ocdc                    # No args launches TUI
 
 # List all running instances
-dclist
+ocdc list
 
 # Execute commands in container
-dcexec bash
-dcexec bin/rails console
+ocdc exec bash
+ocdc exec bin/rails console
 
 # Navigate to existing clone
-dcgo feature-x          # Opens VS Code in VS Code terminal, prints cd otherwise
+ocdc go feature-x       # Opens VS Code in VS Code terminal, prints cd otherwise
 
 # Stop instances
-dcdown                  # Stop current
-dcdown --all            # Stop all
-dcdown --prune          # Clean up stale entries
-dcdown --remove-clone   # Stop and delete clone
+ocdc down               # Stop current
+ocdc down --all         # Stop all
+ocdc down --prune       # Clean up stale entries
+ocdc down --remove-clone # Stop and delete clone
 ```
 
 ### How It Works
 
-1. **Auto-port assignment**: Ports assigned from 13000-13099, tracked in `~/.cache/devcontainer-multi/ports.json`
+1. **Auto-port assignment**: Ports assigned from 13000-13099, tracked in `~/.cache/ocdc/ports.json`
 2. **Override config**: Creates ephemeral override files using `--override-config` flag - repo's devcontainer.json is never modified
 3. **Clones**: Stored in `~/.cache/devcontainer-clones/<repo>/<branch>/` (uses `--reference --dissociate` to save space)
 4. **Isolation**: Each instance gets its own port and database
 
 ### Configuration
 
-Create `~/.config/devcontainer-multi/config.json` to customize:
+Create `~/.config/ocdc/config.json` to customize:
 
 ```json
 {
@@ -84,7 +84,7 @@ Create `~/.config/devcontainer-multi/config.json` to customize:
 ### Installation
 
 ```bash
-brew install athal7/tap/devcontainer-multi
+brew install athal7/tap/ocdc
 ```
 
 ## Cleanup
@@ -92,4 +92,4 @@ brew install athal7/tap/devcontainer-multi
 After merging a branch:
 
 - **Worktrees**: `git worktree remove <path>`
-- **Devcontainer clones**: `dcdown --remove-clone` or `rm -rf ~/.cache/devcontainer-clones/<repo>/<branch>`
+- **Devcontainer clones**: `ocdc down --remove-clone` or `rm -rf ~/.cache/devcontainer-clones/<repo>/<branch>`
