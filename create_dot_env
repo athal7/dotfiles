@@ -1,3 +1,8 @@
 # Add your secrets here (loaded by direnv)
-# Example:
-# export API_KEY=your-key-here
+
+# ntfy notifications (for opencode-ntfy plugin)
+# Required:
+# export NTFY_TOPIC=your-secret-topic
+# export NTFY_CALLBACK_HOST=your-machine.tailnet.ts.net
+# Optional (for protected topics):
+# export NTFY_TOKEN=tk_xxx
