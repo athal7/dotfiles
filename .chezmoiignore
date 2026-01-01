@@ -1,6 +1,9 @@
 # Keep gh authentication tokens local (don't sync across machines)
 .config/gh/hosts.yml
 
+# Keep poll configs private (contains repo paths and personal workflow)
+.config/ocdc/
+
 # Repo documentation - not for home directory
 AGENTS.md
 README.md
