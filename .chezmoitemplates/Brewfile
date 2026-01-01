@@ -19,6 +19,7 @@ brew "opencode"
 brew "openssl"
 brew "opentofu"
 brew "starship"
+brew "talisman"
 brew "tmux"
 brew "watch"
 
