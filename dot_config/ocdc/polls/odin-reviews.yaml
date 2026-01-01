@@ -1,0 +1,37 @@
+# Odin GitHub Review Requests Poll Configuration
+#
+# Polls for PRs in the odin repo where my review is requested
+# and creates devcontainer sessions with OpenCode to review them.
+
+id: odin-reviews
+enabled: true
+
+# Query GitHub for PRs requesting my review in the odin repo
+fetch_command: |
+  gh pr list --repo 0din-ai/odin --search "review-requested:@me" --json number,title,body,url,headRefName | jq '[.[] | . + {repo: "0din-ai/odin", repo_short: "odin"}]'
+
+item_mapping:
+  key: '"odin-review-\(.number)"'
+  repo: '.repo'
+  repo_short: '.repo_short'
+  number: '.number'
+  title: '.title'
+  body: '.body // ""'
+  url: '.url'
+  branch: '.headRefName'
+
+repo_paths:
+  "0din-ai/odin": "~/Documents/GitHub/odin"
+
+prompt:
+  template: |
+    Review PR #{number}: {title}
+    {url}
+
+    {body}
+
+    Please review this pull request and provide feedback.
+
+session:
+  name_template: "ocdc-odin-review-{number}"
+  agent: review
