@@ -30,9 +30,9 @@ Automatic setup includes:
 **Subagents** (delegated via Task tool):
 - `architect` - Design questions, tradeoffs, system boundaries
 - `pm` - Tickets, docs, thinking frameworks
-- `review` - Code review (read-only)
 
 **Commands**:
+- `/review` - Code review (commit, branch, PR, or uncommitted changes)
 - `/screencast` - Record a Playwright demo
 - `/todo` - Manage todo list
 

@@ -1,2 +1,4 @@
-fileignoreconfig: []
+fileignoreconfig:
+- filename: dot_config/opencode/command/review.md
+  checksum: 5d1d60eecc4c21844e8fe81b6811ec4f8b52aa5674c26c7e3159d03ce12dc7bc
 version: "1.0"
