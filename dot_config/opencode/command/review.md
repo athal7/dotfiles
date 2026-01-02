@@ -5,6 +5,19 @@ subtask: true
 
 Input: $ARGUMENTS
 
+## Workspace Detection
+
+Before reviewing, determine the correct workspace directory:
+
+1. **Check `OCDC_WORKSPACE` env var** - Run `echo $OCDC_WORKSPACE` to check for ocdc poll context
+2. **Check for active ocdc context** - Use the `ocdc` tool (no arguments) to check if a devcontainer is targeted
+   - If active, use the workspace path from the output for all file operations
+3. **Otherwise** - Use the current working directory
+
+When a workspace is detected, use it as the base path for:
+- Reading files (AGENTS.md, source files)
+- Git operations (use `--git-dir` and `--work-tree` or `cd` to workspace first)
+
 ## Determining What to Review
 
 Based on the input provided, determine which type of review to perform:
@@ -29,7 +42,7 @@ Based on the input provided, determine which type of review to perform:
 
 - Use the diff to identify which files changed
 - Read the full file to understand existing patterns, control flow, and error handling
-- Check for existing conventions files (CONVENTIONS.md, AGENTS.md, .editorconfig, etc.)
+- Check for existing conventions files (CONVENTIONS.md, AGENTS.md, .editorconfig, etc.) **in the detected workspace directory**
 
 ## Style
 
