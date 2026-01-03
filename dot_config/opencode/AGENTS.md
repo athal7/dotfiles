@@ -42,7 +42,10 @@ Don't skip steps or produce incomplete work just to "fit" before compaction.
 
 ## Subagents
 
-Delegate specialized work:
+Delegate specialized work via `plan` (the delegation hub):
 - `architect` - Design questions, tradeoffs, system boundaries
-- `review` - Code review feedback on PRs or changes
-- `pm` - Writing issues, project specs, documentation
+- `pm` - Customer context, requirements, problem definition
+- `docs` - READMEs, guides, ADRs, markdown documentation
+- `explore` - Codebase investigation (quick/medium/thorough)
+
+`/review` is a command for code review feedback.

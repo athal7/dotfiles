@@ -78,6 +78,28 @@ Based on the input provided, determine which type of review to perform:
 
 **Don't be a zealot about style.** Some "violations" are acceptable when they're the simplest option.
 
+## Specialist Checklists
+
+Apply based on files changed:
+
+### Security (auth/*, api/*, *auth*, *token*, *.env*)
+- [ ] No secrets in code
+- [ ] Input validation present
+- [ ] Auth checks on protected routes
+- [ ] Injection risks addressed (SQL, NoSQL, command)
+
+### Accessibility (*.tsx, *.jsx, *.vue, *.html)
+- [ ] Interactive elements keyboard accessible
+- [ ] Images have alt text
+- [ ] Form inputs have labels
+- [ ] Color not sole indicator of state
+
+### Performance (queries/*, *repository*, api/*)
+- [ ] N+1 query risk assessed
+- [ ] Pagination for unbounded lists
+- [ ] Indexes considered for new queries
+- [ ] Caching opportunities evaluated
+
 ## Output
 
 Keep it short, thoughtful, and helpful. No flattery.

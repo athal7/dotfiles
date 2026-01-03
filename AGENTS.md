@@ -51,9 +51,10 @@ When modifying agent behavior, choose the right location:
 |------|---------|
 | `dot_config/opencode/AGENTS.md` | Universal rules (safety, env vars, quality) |
 | `dot_config/opencode/agent/build.md` | Development workflow: TDD, commits, PRs, code quality |
-| `dot_config/opencode/agent/plan.md` | Read-only analysis and planning mode |
-| `dot_config/opencode/agent/architect.md` | Design decisions and tradeoffs |
-| `dot_config/opencode/agent/pm.md` | Issues, specs, documentation |
+| `dot_config/opencode/agent/plan.md` | Delegation hub: analysis, research, coordination |
+| `dot_config/opencode/agent/architect.md` | Design decisions and tradeoffs (Fowler-style) |
+| `dot_config/opencode/agent/pm.md` | Customer context, requirements (Cagan-style) |
+| `dot_config/opencode/agent/docs.md` | READMEs, guides, ADRs, markdown documentation |
 | `dot_config/opencode/command/review.md` | `/review` command for code review feedback |
 
 **When updating agent instructions**:
