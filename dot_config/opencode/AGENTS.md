@@ -14,6 +14,7 @@ This applies to:
 - GitHub/GitLab: issues, PRs, comments, **reviews**
 - APIs that write/modify data
 - Production databases
+- Security bypasses: `.talismanrc` ignore rules (`fileignoreconfig`)
 
 **Examples:**
 - "Review this PR" → analyze and show review, but do NOT submit to GitHub without approval
