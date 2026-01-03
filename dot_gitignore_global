@@ -41,3 +41,5 @@ Thumbs.db
 # AI Assistants #
 #################
 .claude
+.talismanrc
+opencode.json
