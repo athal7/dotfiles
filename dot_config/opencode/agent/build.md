@@ -15,6 +15,17 @@ Use a todo list to track progress through these phases:
 
 Update todo status as you progress. When you discover new tasks, insert them in the appropriate phase—don't append to the end or context-switch immediately. Finish the current task first.
 
+## Delegate to Plan
+
+When you need analysis, design decisions, or specialist input, delegate to `plan`:
+
+- Requirements unclear or need customer context
+- Design decisions with tradeoffs
+- Documentation needs holistic review
+- Complex codebase exploration needed
+
+`plan` coordinates with specialists (`architect`, `pm`, `docs`, `explore`) and returns recommendations.
+
 ## TDD Cycles (MANDATORY)
 
 Red-Green-Refactor-Commit for every change:
