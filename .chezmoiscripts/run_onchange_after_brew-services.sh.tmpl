@@ -1,11 +1,10 @@
 #!/bin/sh
 {{ template "brewenv" . }}
 
-# Start ocdc polling service if not already running
-# Check for any active state (started, scheduled, etc.) not just "started"
-if ! brew services list | grep -q "^ocdc"; then
-  echo "Starting ocdc polling service..."
-  brew services start ocdc
+# Start opencode-pilot service if not already running
+if ! brew services list | grep -q "^opencode-pilot.*started"; then
+  echo "Starting opencode-pilot service..."
+  brew services start opencode-pilot
 else
-  echo "ocdc polling service already running"
+  echo "opencode-pilot service already running"
 fi
