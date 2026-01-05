@@ -8,10 +8,21 @@ Record a screencast demonstrating a user workflow on localhost using Playwright.
 
 If no flow is specified, analyze the branch changes to determine what to demo.
 
+## Workspace Detection
+
+Before setting up or recording, check for active devcontainer context:
+
+1. **Check devcontainer status** - Use the `devcontainer` tool (no arguments)
+2. **If a devcontainer is targeted**:
+   - The dev server runs inside the container (use forwarded port)
+   - Playwright setup and recording **must run on the host** (requires display)
+   - Use `HOST:` prefix for all bash commands
+3. **Otherwise** - Run all commands normally on the host
+
 ## Workflow
 
 1. **Plan** - Review branch changes, identify workflows to demo
-2. **Verify** - Ensure dev server is running; determine port from project config (see Port Detection)
+2. **Verify** - Ensure dev server is running; determine port from project config (see Port Detection). If using a devcontainer, use the forwarded port on localhost.
 3. **Record** - Use Playwright with pink click indicators and smooth scrolling
 4. **Check logs** - Verify no server errors during recording
 5. **Review** - Show user the recording, get approval before posting
@@ -166,6 +177,8 @@ Before recording, determine the dev server port by checking these sources in ord
 Replace `PORT_FROM_PROJECT` in the template with the detected port.
 
 ## Setup
+
+**Important**: Playwright requires a display and must run on the host machine, not inside a devcontainer. If a devcontainer session is active, use `HOST:` prefix for these commands.
 
 ```bash
 mkdir -p /tmp/screencast && cd /tmp/screencast
