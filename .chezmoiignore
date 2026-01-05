@@ -4,6 +4,9 @@
 # Keep poll configs private (contains repo paths and personal workflow)
 .config/opencode-pilot/
 
+# opencode.json is host-specific (model config, MCP servers)
+.config/opencode/opencode.json
+
 # Repo documentation - not for home directory
 AGENTS.md
 README.md
