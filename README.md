@@ -12,12 +12,11 @@ Then fill in machine-specific details:
 - `~/.env` - environment variables and API keys (loaded by direnv)
 - `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 - `~/.config/opencode/opencode.json` - model configuration
-- `~/.config/ocdc/polls/*.yaml` - optional poll configurations (not synced)
+- `~/.config/opencode-pilot/repos.yaml` - optional polling configurations (not synced)
 
 Automatic setup includes:
 - ✅ Homebrew packages via Brewfile
-- ✅ ocdc polling service (`brew services start ocdc`)
-- ✅ opencode-ntfy plugin (run `opencode-ntfy-setup` after brew install)
+- ✅ OpenCode plugins installed via npm (`npx opencode-pilot setup`, `npx opencode-devcontainers setup`)
 
 ## OpenCode
 
@@ -37,4 +36,4 @@ Automatic setup includes:
 - `/todo` - Manage todo list
 
 **Skills**:
-- `ocdc` - Concurrent branch development using devcontainer clones
+- `opencode-devcontainers` - Concurrent branch development using devcontainer clones

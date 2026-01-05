@@ -1,6 +1,6 @@
 # Add your secrets here (loaded by direnv)
 
-# ntfy notifications (for opencode-ntfy plugin)
+# ntfy notifications (for opencode-pilot plugin)
 # Required:
 # export NTFY_TOPIC=your-secret-topic
 # export NTFY_CALLBACK_HOST=your-machine.tailnet.ts.net

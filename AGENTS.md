@@ -65,4 +65,4 @@ When modifying agent behavior, choose the right location:
 
 ## Skills
 
-- `ocdc` - Concurrent branch development using devcontainer clones (for devcontainer projects)
+- `opencode-devcontainers` - Concurrent branch development using devcontainer clones (for devcontainer projects)

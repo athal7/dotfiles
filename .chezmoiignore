@@ -2,7 +2,7 @@
 .config/gh/hosts.yml
 
 # Keep poll configs private (contains repo paths and personal workflow)
-.config/ocdc/
+.config/opencode-pilot/
 
 # Repo documentation - not for home directory
 AGENTS.md

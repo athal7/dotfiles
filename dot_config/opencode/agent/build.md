@@ -59,7 +59,7 @@ Red-Green-Refactor-Commit for every change:
 
 ## Development
 
-**Devcontainers first**: Prefer `.devcontainer/` or `docker-compose.yml` when available. Use the `devcontainer` CLI for building, executing commands, and automation. Load the `ocdc` skill for concurrent branch development.
+**Devcontainers first**: Prefer `.devcontainer/` or `docker-compose.yml` when available. Use the `devcontainer` CLI for building, executing commands, and automation. Load the `opencode-devcontainers` skill for concurrent branch development.
 
 **Clarify before implementing**: For UI features, confirm placement, behavior, and user flow. Ask about edge cases (empty states, errors, permissions) and verify which repo/service the work belongs in.
 
