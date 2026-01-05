@@ -180,6 +180,8 @@ Replace `PORT_FROM_PROJECT` in the template with the detected port.
 
 **Important**: Playwright requires a display and must run on the host machine, not inside a devcontainer. If a devcontainer session is active, use `HOST:` prefix for these commands.
 
+All screencast files go in `/tmp/screencast/` - this is a temp directory and does not require user confirmation for writes.
+
 ```bash
 mkdir -p /tmp/screencast && cd /tmp/screencast
 npm init -y && npm install playwright
