@@ -38,14 +38,16 @@ const path = require('path');
 const os = require('os');
 
 (async () => {
-  // Branch-aware setup
+  // Repo and branch for isolation (prevents parallel session collisions)
+  const repoName = path.basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim());
   const branchName = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' })
     .trim().replace(/[^a-zA-Z0-9-_]/g, '-');
   
   // Port determined from project config (see Port Detection section)
   const port = PORT_FROM_PROJECT;
   
-  const recordingsDir = `/tmp/screencast/${branchName}/`;
+  const baseDir = `/tmp/screencast/${repoName}/${branchName}`;
+  const recordingsDir = `${baseDir}/recordings/`;
   const downloadsDir = path.join(os.homedir(), 'Downloads');
   
   fs.mkdirSync(recordingsDir, { recursive: true });
@@ -75,7 +77,7 @@ const os = require('os');
     const files = fs.readdirSync(recordingsDir).filter(f => f.endsWith('.webm'));
     if (files.length > 0) {
       const webmPath = path.join(recordingsDir, files[0]);
-      const mp4Path = path.join(downloadsDir, `demo-${branchName}.mp4`);
+      const mp4Path = path.join(downloadsDir, `demo-${repoName}-${branchName}.mp4`);
       execSync(`ffmpeg -y -i "${webmPath}" -c:v libx264 -preset fast -crf 22 "${mp4Path}"`);
       fs.unlinkSync(webmPath);
       console.log(`Saved: ${mp4Path}`);
@@ -180,10 +182,11 @@ Replace `PORT_FROM_PROJECT` in the template with the detected port.
 
 **Important**: Playwright requires a display and must run on the host machine, not inside a devcontainer. If a devcontainer session is active, use `HOST:` prefix for these commands.
 
-All screencast files go in `/tmp/screencast/` - this is a temp directory and does not require user confirmation for writes.
+All screencast files go in `/tmp/screencast/<repo>/<branch>/` - this is a temp directory and does not require user confirmation for writes. The repo/branch structure prevents collisions between parallel sessions.
 
 ```bash
-mkdir -p /tmp/screencast && cd /tmp/screencast
+# Replace <repo> and <branch> with actual values
+mkdir -p /tmp/screencast/<repo>/<branch> && cd /tmp/screencast/<repo>/<branch>
 npm init -y && npm install playwright
 ```
 
