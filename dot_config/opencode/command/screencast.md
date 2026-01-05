@@ -53,7 +53,7 @@ const os = require('os');
   fs.mkdirSync(recordingsDir, { recursive: true });
   fs.readdirSync(recordingsDir).forEach(f => fs.unlinkSync(path.join(recordingsDir, f)));
   
-  const browser = await chromium.launch({ headless: false, slowMo: 150 });
+  const browser = await chromium.launch({ headless: true, slowMo: 150 });
   const context = await browser.newContext({
     recordVideo: { dir: recordingsDir, size: { width: 1280, height: 720 } },
     viewport: { width: 1280, height: 720 }
