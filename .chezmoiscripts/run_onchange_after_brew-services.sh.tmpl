@@ -1,10 +1,12 @@
 #!/bin/sh
 {{ template "brewenv" . }}
 
-# Start opencode-pilot service if not already running
-if ! brew services list | grep -q "^opencode-pilot.*started"; then
-  echo "Starting opencode-pilot service..."
-  brew services start opencode-pilot
-else
-  echo "opencode-pilot service already running"
+# Start opencode-pilot service if installed and not already running
+if brew list --formula | grep -q "^opencode-pilot$"; then
+  if ! brew services list | grep -q "^opencode-pilot.*started"; then
+    echo "Starting opencode-pilot service..."
+    brew services start opencode-pilot
+  else
+    echo "opencode-pilot service already running"
+  fi
 fi
