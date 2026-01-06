@@ -1,7 +1,16 @@
 {{ template "brewenv" . }}
 
+# Version managers
+eval "$(rbenv init - --no-rehash zsh)"
+
 # Load secrets from ~/.env if it exists
 [[ -f ~/.env ]] && set -a && source ~/.env && set +a
+
+# XDG Base Directory compliance
+export HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
+mkdir -p "$(dirname "$HISTFILE")"
+export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
+mkdir -p "$(dirname "$ZSH_COMPDUMP")"
 
 export EDITOR="nvim"
 export DOCKER_HOST="unix:///${HOME}/.colima/default/docker.sock"
