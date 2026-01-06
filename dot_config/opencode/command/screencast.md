@@ -42,12 +42,33 @@ Only fall back to Port Detection (below) if AGENTS.local.md doesn't have the inf
 ## Workflow
 
 1. **Plan** - Review branch changes, identify workflows to demo
-2. **Verify** - Ensure dev server is running; use port from AGENTS.local.md or detect it
+2. **Pre-flight** - Run verification checks (see Pre-flight Checks)
 3. **Setup** - Ensure Playwright is installed (see Setup section)
 4. **Record** - Use Playwright with pink click indicators and smooth scrolling
 5. **Check logs** - Verify no server errors during recording
 6. **Review** - Show user the recording, get approval before posting
 7. **Attach** - User drags MP4 to PR (no API upload for videos)
+
+## Pre-flight Checks (REQUIRED)
+
+Before writing ANY recording script, verify the environment:
+
+```bash
+# 1. Check ~/.config/opencode/AGENTS.local.md for project-specific port
+# Look for "Development Server" or "Port" sections
+# Default to 3000 if not specified
+PORT=3000  # ← Update from AGENTS.local.md!
+
+# 2. Verify server is running and responding
+curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT
+# Should return 200 or 302 (redirect to login)
+
+# 3. If using devcontainer, check forwarded ports
+# devcontainer status shows forwarded ports
+```
+
+**If curl fails**: The server isn't running. Do NOT proceed with recording.
+**If wrong port**: Check AGENTS.local.md - it has the correct port for each project.
 
 ## Recording Template
 
@@ -194,6 +215,65 @@ async function smoothScroll(page, selector) {
 - **Check logs after** - Look for 500s, exceptions, errors before showing to user
 - **Get approval for posting only** - The recording itself doesn't need approval, but confirm before user uploads to PR
 - **User uploads** - Videos can't be uploaded via API; user drags file to PR
+
+## Iteration & Troubleshooting
+
+When a recording fails or doesn't capture the right flow:
+
+### Debug Mode (Non-headless)
+Create a minimal debug script to inspect the page interactively:
+
+```javascript
+// debug.js - Run with: NODE_PATH=~/.local/share/opencode/screencast/node_modules node debug.js
+const { chromium } = require('playwright');
+
+(async () => {
+  const port = 3000;  // ← Update this! Check AGENTS.local.md for project port
+  const browser = await chromium.launch({ headless: false, slowMo: 500 });
+  const page = await browser.newPage();
+  
+  await page.goto(`http://localhost:${port}`, { waitUntil: 'networkidle' });
+  
+  // Inspect selectors - copy these from browser DevTools
+  const elements = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('button, a, input[type="submit"]'))
+      .map(el => ({
+        tag: el.tagName,
+        text: el.innerText?.substring(0, 30),
+        id: el.id,
+        classes: el.className,
+        visible: el.offsetParent !== null
+      }))
+      .slice(0, 20);
+  });
+  console.log('Clickable elements:', JSON.stringify(elements, null, 2));
+  
+  // Take screenshot for reference
+  await page.screenshot({ path: '/tmp/debug-screenshot.png' });
+  
+  // Keep browser open for manual inspection
+  console.log('Browser open for inspection. Press Ctrl+C to close.');
+  await new Promise(() => {});  // Keep alive
+})();
+```
+
+### Common Issues
+
+| Problem | Solution |
+|---------|----------|
+| `ERR_CONNECTION_REFUSED` | Server not running. Start it first, then verify with curl. |
+| Element not found | Use debug mode to inspect actual selectors. DOM may differ from expected. |
+| Click indicator not showing | Call `await page.addStyleTag({ content: CLICK_STYLES });` after each `page.goto()`. |
+| Video not created | Ensure `context.close()` is called - video is only saved on context close. |
+| Wrong port | Check AGENTS.local.md for project-specific port. Don't guess. |
+
+### Iteration Cycle
+
+1. **Fail fast**: Run the script and capture the error
+2. **Debug**: Use non-headless mode to see what's actually on the page
+3. **Fix selectors**: Update selectors based on actual DOM
+4. **Test incrementally**: Comment out later steps, verify each step works
+5. **Record**: Only run full recording once individual steps are verified
 
 ## Port Detection (Fallback)
 
