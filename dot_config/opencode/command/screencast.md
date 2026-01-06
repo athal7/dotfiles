@@ -8,27 +8,50 @@ Record a screencast demonstrating a user workflow on localhost using Playwright.
 
 If no flow is specified, analyze the branch changes to determine what to demo.
 
-## Workspace Detection
+## IMPORTANT: No Confirmation Required
 
-Before setting up or recording, check for active devcontainer context:
+All screencast operations are pre-approved and do not require user confirmation:
+- Writing to `~/.local/share/opencode/screencast/` (persistent Playwright installation)
+- Writing to `/tmp/screencast/<repo>/<branch>/` (recording workspace)
+- Running npm install, node commands for recording
+- Converting webm to mp4 with ffmpeg
+
+**Proceed with all screencast setup and recording steps without asking for permission.**
+
+## Devcontainer Handling
+
+**CRITICAL**: Playwright requires a display and MUST run on the host, never inside a devcontainer.
 
 1. **Check devcontainer status** - Use the `devcontainer` tool (no arguments)
 2. **If a devcontainer is targeted**:
-   - The dev server runs inside the container (use forwarded port)
-   - Playwright setup and recording **must run on the host** (requires display)
-   - Use `HOST:` prefix for all bash commands
-3. **Otherwise** - Run all commands normally on the host
+   - ALL screencast bash commands MUST use `HOST:` prefix (e.g., `HOST: node record.js`)
+   - The dev server runs inside container but is accessible via forwarded localhost port
+   - Get the forwarded port from devcontainer status output
+3. **Otherwise** - Run commands normally on host
+
+## Project Context from AGENTS.local.md
+
+Before detecting ports/credentials, check `~/.config/opencode/AGENTS.local.md` for project-specific defaults:
+- **Port**: Look for "Development Server" or "Port" sections
+- **Test credentials**: Look for "Test Credentials" sections  
+- **Login selectors**: Look for "Authentication Flow" sections
+- **URL patterns**: Look for routing conventions (e.g., UUIDs vs integer IDs)
+
+Only fall back to Port Detection (below) if AGENTS.local.md doesn't have the info.
 
 ## Workflow
 
 1. **Plan** - Review branch changes, identify workflows to demo
-2. **Verify** - Ensure dev server is running; determine port from project config (see Port Detection). If using a devcontainer, use the forwarded port on localhost.
-3. **Record** - Use Playwright with pink click indicators and smooth scrolling
-4. **Check logs** - Verify no server errors during recording
-5. **Review** - Show user the recording, get approval before posting
-6. **Attach** - User drags MP4 to PR (no API upload for videos)
+2. **Verify** - Ensure dev server is running; use port from AGENTS.local.md or detect it
+3. **Setup** - Ensure Playwright is installed (see Setup section)
+4. **Record** - Use Playwright with pink click indicators and smooth scrolling
+5. **Check logs** - Verify no server errors during recording
+6. **Review** - Show user the recording, get approval before posting
+7. **Attach** - User drags MP4 to PR (no API upload for videos)
 
 ## Recording Template
+
+Write this to `/tmp/screencast/<repo>/<branch>/record.js`:
 
 ```javascript
 const { chromium } = require('playwright');
@@ -38,21 +61,20 @@ const path = require('path');
 const os = require('os');
 
 (async () => {
-  // Repo and branch for isolation (prevents parallel session collisions)
-  const repoName = path.basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim());
-  const branchName = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' })
-    .trim().replace(/[^a-zA-Z0-9-_]/g, '-');
-  
-  // Port determined from project config (see Port Detection section)
-  const port = PORT_FROM_PROJECT;
+  // CUSTOMIZE THESE VALUES (from AGENTS.local.md or detected):
+  const repoName = 'REPO_NAME';      // e.g., 'odin'
+  const branchName = 'BRANCH_NAME';  // e.g., '0DIN-701'
+  const port = PORT_NUMBER;          // e.g., 3000 or devcontainer forwarded port
   
   const baseDir = `/tmp/screencast/${repoName}/${branchName}`;
   const recordingsDir = `${baseDir}/recordings/`;
   const downloadsDir = path.join(os.homedir(), 'Downloads');
   
   fs.mkdirSync(recordingsDir, { recursive: true });
-  fs.readdirSync(recordingsDir).forEach(f => fs.unlinkSync(path.join(recordingsDir, f)));
+  // Clear old recordings
+  fs.readdirSync(recordingsDir).filter(f => f.endsWith('.webm')).forEach(f => fs.unlinkSync(path.join(recordingsDir, f)));
   
+  console.log('Launching browser...');
   const browser = await chromium.launch({ headless: true, slowMo: 150 });
   const context = await browser.newContext({
     recordVideo: { dir: recordingsDir, size: { width: 1280, height: 720 } },
@@ -60,14 +82,18 @@ const os = require('os');
   });
   const page = await context.newPage();
   
-  // Inject click indicator styles
+  // Inject click indicator styles (defined below)
   await page.addStyleTag({ content: CLICK_STYLES });
   
   try {
     await page.goto(`http://localhost:${port}`, { waitUntil: 'networkidle' });
     
-    // Demo steps using clickWithPointer() and smoothScroll()
-    // ...
+    // === DEMO STEPS GO HERE ===
+    // Use clickWithPointer(selector) and smoothScroll(selector)
+    // Example login flow (customize from AGENTS.local.md):
+    // await page.fill('input[name="user[email]"]', 'admin@test.com');
+    // await page.fill('input[name="user[password]"]', '12345678');
+    // await clickWithPointer('input[type="submit"]');
     
   } finally {
     await context.close();
@@ -78,13 +104,16 @@ const os = require('os');
     if (files.length > 0) {
       const webmPath = path.join(recordingsDir, files[0]);
       const mp4Path = path.join(downloadsDir, `demo-${repoName}-${branchName}.mp4`);
+      console.log(`Converting to ${mp4Path}...`);
       execSync(`ffmpeg -y -i "${webmPath}" -c:v libx264 -preset fast -crf 22 "${mp4Path}"`);
       fs.unlinkSync(webmPath);
-      console.log(`Saved: ${mp4Path}`);
+      console.log(`\n✅ Saved: ${mp4Path}`);
     }
   }
 })();
 ```
+
+Run with: `NODE_PATH=~/.local/share/opencode/screencast/node_modules node record.js`
 
 ## Click Indicator (Pink Pointer)
 
@@ -158,36 +187,63 @@ async function smoothScroll(page, selector) {
 
 ## Key Rules
 
+- **No confirmation needed** - All screencast operations are pre-approved
 - **Click, don't navigate** - Use `clickWithPointer()` instead of `page.goto()` (except initial load)
 - **Smooth scroll** - Use `smoothScroll()` instead of instant jumps
-- **Type fast, screenshot after** - Use `page.fill()` for instant typing, then take a screenshot to verify the input
+- **Type fast** - Use `page.fill()` for instant typing
 - **Check logs after** - Look for 500s, exceptions, errors before showing to user
-- **Get approval** - Never post without user confirming the recording looks good
+- **Get approval for posting only** - The recording itself doesn't need approval, but confirm before user uploads to PR
 - **User uploads** - Videos can't be uploaded via API; user drags file to PR
 
-## Port Detection
+## Port Detection (Fallback)
 
-Before recording, determine the dev server port by checking these sources in order:
+**First**: Check `~/.config/opencode/AGENTS.local.md` for project-specific port configuration.
 
-1. **`.env` or `.env.local`** - Look for `PORT=`, `APP_PORT=`, `DEV_PORT=`
-2. **`package.json`** - Check `scripts.dev` or `scripts.start` for `--port` flags
-3. **`devcontainer.json`** - Check `forwardPorts` array
-4. **`docker-compose.yml`** - Check port mappings (e.g., `"3000:3000"`)
-5. **`README.md`** - Search for localhost URLs or port mentions
+**If not found**, detect the dev server port by checking these sources in order:
+
+1. **Devcontainer forwarded port** - If using devcontainer, check the forwarded port from status
+2. **`.env` or `.env.local`** - Look for `PORT=`, `APP_PORT=`, `DEV_PORT=`
+3. **`package.json`** - Check `scripts.dev` or `scripts.start` for `--port` flags
+4. **`devcontainer.json`** - Check `forwardPorts` array
+5. **`docker-compose.yml`** - Check port mappings (e.g., `"3000:3000"`)
 6. **Default** - Fall back to 3000
 
-Replace `PORT_FROM_PROJECT` in the template with the detected port.
+## Setup (No Confirmation Needed)
 
-## Setup
+Playwright is installed once in a persistent location and reused across sessions.
 
-**Important**: Playwright requires a display and must run on the host machine, not inside a devcontainer. If a devcontainer session is active, use `HOST:` prefix for these commands.
-
-All screencast files go in `/tmp/screencast/<repo>/<branch>/` - this is a temp directory and does not require user confirmation for writes. The repo/branch structure prevents collisions between parallel sessions.
-
+### One-time Setup (if needed)
+Check if Playwright is already installed:
 ```bash
-# Replace <repo> and <branch> with actual values
-mkdir -p /tmp/screencast/<repo>/<branch> && cd /tmp/screencast/<repo>/<branch>
-npm init -y && npm install playwright
+# Check for existing installation
+ls ~/.local/share/opencode/screencast/node_modules/playwright 2>/dev/null && echo "Playwright ready" || echo "Need to install"
 ```
 
-Requires `ffmpeg` for webm→mp4 conversion.
+If not installed, set it up (only once):
+```bash
+mkdir -p ~/.local/share/opencode/screencast
+cd ~/.local/share/opencode/screencast
+npm init -y
+npm install playwright
+npx playwright install chromium
+```
+
+### Per-Recording Setup
+Create the recording workspace (fast, no npm install needed):
+```bash
+# Replace <repo> and <branch> with actual values
+mkdir -p /tmp/screencast/<repo>/<branch>/recordings
+```
+
+### Recording Script Location
+Write `record.js` to `/tmp/screencast/<repo>/<branch>/record.js`
+
+Run it using the shared node_modules:
+```bash
+cd /tmp/screencast/<repo>/<branch>
+NODE_PATH=~/.local/share/opencode/screencast/node_modules node record.js
+```
+
+### Requirements
+- `ffmpeg` for webm→mp4 conversion (in Brewfile)
+- Chromium browser (installed via `npx playwright install chromium`)
