@@ -10,25 +10,25 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 
 Then fill in machine-specific details:
 - `~/.env` - environment variables and API keys (loaded by direnv)
-- `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 - `~/.config/opencode/opencode.json` - model configuration
-- `~/.config/opencode-pilot/repos.yaml` - optional polling configurations (not synced)
+- `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 
 Automatic setup includes:
-- ✅ Homebrew packages via Brewfile
-- ✅ OpenCode plugins installed via npm (`npx opencode-pilot setup`, `npx opencode-devcontainers setup`)
+- ✅ Homebrew packages via Brewfile (including `opencode` and `opencode-desktop`)
 
 ## OpenCode
 
 **Agent instructions**: Global instructions in `~/.config/opencode/AGENTS.md` apply to all sessions. Repository-specific instructions in `AGENTS.md` at repo root.
 
-**Primary agents** (switch modes):
-- `build` - TDD workflow, commits, PRs, code quality
-- `plan` - Read-only analysis and planning
+**Agents**:
+- `build` - TDD workflow, commits, PRs, code quality (primary)
+- `plan` - Delegation hub: analysis, research, coordination
 
-**Subagents** (delegated via Task tool):
+**Subagents** (delegated via plan):
 - `architect` - Design questions, tradeoffs, system boundaries
-- `pm` - Tickets, docs, thinking frameworks
+- `pm` - Customer context, requirements, problem definition
+- `docs` - READMEs, guides, ADRs, markdown documentation
+- `explore` - Codebase investigation
 
 **Commands**:
 - `/review` - Code review (commit, branch, PR, or uncommitted changes)
