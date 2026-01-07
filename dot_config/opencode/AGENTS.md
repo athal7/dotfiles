@@ -1,5 +1,24 @@
 # Agent Instructions
 
+## Session Context
+
+**Never assume prior conversation context.** When asked about previous work or to continue a task:
+
+1. **Verify actual state first** - Check `git status`, `git branch`, `git log`, and the working directory
+2. **Do not fabricate summaries** - If you don't have conversation history, say so and investigate the actual codebase state
+3. **Worktree changes reset context** - When a worktree is created or switched (especially programmatically), treat it as a fresh session
+
+This is critical because:
+- Programmatic worktree creation (via prompts) does not preserve conversation context
+- UI worktree selection may preserve context, but don't rely on it
+- Hallucinated "continuation summaries" cause confusion and wasted effort
+
+**When asked "what did we do" or "continue":**
+- Run `git log`, `git status`, `git diff` to see actual changes
+- Check the current branch name for issue context
+- Look up the relevant GitHub issue if the branch follows `issue-N` naming
+- Only then summarize what you can **verify**
+
 ## Safety
 
 **Confirm before modifying remote services.**

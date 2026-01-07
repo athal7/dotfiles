@@ -9,9 +9,11 @@ Input: $ARGUMENTS
 
 Before reviewing, determine the correct workspace directory:
 
-1. **Check for active devcontainer context** - Use the `devcontainer` tool (no arguments) to check if a devcontainer is targeted
+1. **Check if in a git worktree** - Run: `git rev-parse --git-dir`
+   - If output contains `.git/worktrees/`, you're in a worktree—use the current working directory and **skip devcontainer detection**
+2. **Check for active devcontainer context** - Use the `devcontainer` tool (no arguments) to check if a devcontainer is targeted
    - If active, use the workspace path from the output for all file operations
-2. **Otherwise** - Use the current working directory
+3. **Otherwise** - Use the current working directory
 
 When a workspace is detected, use it as the base path for:
 - Reading files (AGENTS.md, source files)
