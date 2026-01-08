@@ -47,10 +47,10 @@ grep -o 'PORT=[0-9]*' .envrc 2>/dev/null | cut -d= -f2 || echo 3000
 3. **Create .screencast/** - `mkdir -p .screencast/recordings .screencast/screenshots`
 4. **Write record.js** - Single script, use selectors from AGENTS.local.md
 5. **Run with screenshots** - Take screenshots at key moments for verification
-6. **Review screenshots** - Read the screenshots to verify each step worked correctly
-7. **Iterate if needed** - If screenshots show unexpected state, fix the script and re-run
-8. **Convert** - ffmpeg to mp4, save to ~/Downloads
-9. **Show user** - They drag to PR
+6. **Self-verify screenshots** - Read EVERY screenshot with the Read tool to verify correctness
+7. **Iterate until correct** - If any screenshot shows wrong state, fix script and re-run (do NOT involve user)
+8. **Convert** - Only after screenshots confirm success, ffmpeg to mp4, save to ~/Downloads
+9. **Present to user** - Show the ~/Downloads path, they drag to PR
 
 ## Recording Script Pattern
 
@@ -130,22 +130,29 @@ Run with:
 NODE_PATH=~/.local/share/opencode/screencast/node_modules node .screencast/record.js
 ```
 
-## Screenshot Verification (REQUIRED)
+## Screenshot Verification (REQUIRED - BEFORE ASKING USER)
 
-After each run, **you MUST review the screenshots** to verify the automation worked correctly:
+After each run, **you MUST review ALL screenshots yourself** before involving the user:
 
-1. **Read the screenshots** using the Read tool on each `.screencast/screenshots/*.png` file
+1. **Read every screenshot** using the Read tool on each `.screencast/screenshots/*.png` file
 2. **Verify each checkpoint** shows the expected UI state
-3. **If something looks wrong**, fix the script and re-run before proceeding
+3. **If something looks wrong**, fix the script and re-run - do NOT ask the user to verify a broken recording
+4. **Iterate until screenshots confirm success** - only then proceed to video conversion
 
-**Common issues to catch:**
+**Common issues to catch yourself:**
 - Page didn't load correctly (blank or error page)
 - Wrong element was clicked (unexpected state)
 - Form didn't submit (still showing form instead of result)
 - Modal didn't appear/disappear as expected
 - Navigation didn't complete
+- Timing issues (screenshot taken before animation/load completed)
 
-**Do NOT proceed to video conversion** until screenshots confirm the flow is correct. The video is just a recording of what happened - if the screenshots show failures, the video will too.
+**Do NOT ask the user to verify or review** until you have:
+1. Read all screenshots yourself
+2. Confirmed each step shows the expected result
+3. Converted to mp4 and saved to ~/Downloads
+
+The user's only job is to drag the final video to the PR. They should never see a failed or incorrect recording.
 
 ## Click Indicator Helper
 
