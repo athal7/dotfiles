@@ -44,11 +44,13 @@ grep -o 'PORT=[0-9]*' .envrc 2>/dev/null | cut -d= -f2 || echo 3000
 
 1. **Detect port** - Check `.envrc` first, then AGENTS.local.md
 2. **Verify server** - `curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT`
-3. **Create .screencast/** - `mkdir -p .screencast/recordings`
+3. **Create .screencast/** - `mkdir -p .screencast/recordings .screencast/screenshots`
 4. **Write record.js** - Single script, use selectors from AGENTS.local.md
-5. **Run and iterate** - Edit the SAME file if fixes needed
-6. **Convert** - ffmpeg to mp4, save to ~/Downloads
-7. **Show user** - They drag to PR
+5. **Run with screenshots** - Take screenshots at key moments for verification
+6. **Review screenshots** - Read the screenshots to verify each step worked correctly
+7. **Iterate if needed** - If screenshots show unexpected state, fix the script and re-run
+8. **Convert** - ffmpeg to mp4, save to ~/Downloads
+9. **Show user** - They drag to PR
 
 ## Recording Script Pattern
 
@@ -63,11 +65,15 @@ const os = require('os');
   // Port from .envrc or default
   const port = process.env.PORT || 3000;
   const recordingsDir = '.screencast/recordings';
+  const screenshotsDir = '.screencast/screenshots';
   fs.mkdirSync(recordingsDir, { recursive: true });
+  fs.mkdirSync(screenshotsDir, { recursive: true });
   
-  // Clear old recordings
+  // Clear old recordings and screenshots
   fs.readdirSync(recordingsDir).filter(f => f.endsWith('.webm')).forEach(f => 
     fs.unlinkSync(path.join(recordingsDir, f)));
+  fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).forEach(f => 
+    fs.unlinkSync(path.join(screenshotsDir, f)));
 
   const browser = await chromium.launch({ headless: true, slowMo: 150 });
   const context = await browser.newContext({
@@ -75,10 +81,25 @@ const os = require('os');
     viewport: { width: 1280, height: 720 }
   });
   const page = await context.newPage();
+  
+  // Screenshot counter for ordering
+  let screenshotIndex = 0;
+  async function checkpoint(name) {
+    screenshotIndex++;
+    const filename = `${String(screenshotIndex).padStart(2, '0')}-${name}.png`;
+    await page.screenshot({ path: path.join(screenshotsDir, filename) });
+    console.log(`📸 ${filename}`);
+  }
 
   try {
     // === YOUR DEMO STEPS ===
     // Use selectors from AGENTS.local.md - don't discover them
+    // Call checkpoint('description') after each significant action
+    
+    await page.goto(`http://localhost:${port}`);
+    await checkpoint('initial-load');
+    
+    // ... more steps with checkpoint() calls ...
     
   } finally {
     await context.close();
@@ -93,6 +114,13 @@ const os = require('os');
       fs.unlinkSync(webmPath);
       console.log(`✅ Saved: ${mp4Path}`);
     }
+    
+    // List screenshots for review
+    const screenshots = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).sort();
+    if (screenshots.length > 0) {
+      console.log(`\n📷 Screenshots saved for review:`);
+      screenshots.forEach(s => console.log(`   ${screenshotsDir}/${s}`));
+    }
   }
 })();
 ```
@@ -101,6 +129,23 @@ Run with:
 ```bash
 NODE_PATH=~/.local/share/opencode/screencast/node_modules node .screencast/record.js
 ```
+
+## Screenshot Verification (REQUIRED)
+
+After each run, **you MUST review the screenshots** to verify the automation worked correctly:
+
+1. **Read the screenshots** using the Read tool on each `.screencast/screenshots/*.png` file
+2. **Verify each checkpoint** shows the expected UI state
+3. **If something looks wrong**, fix the script and re-run before proceeding
+
+**Common issues to catch:**
+- Page didn't load correctly (blank or error page)
+- Wrong element was clicked (unexpected state)
+- Form didn't submit (still showing form instead of result)
+- Modal didn't appear/disappear as expected
+- Navigation didn't complete
+
+**Do NOT proceed to video conversion** until screenshots confirm the flow is correct. The video is just a recording of what happened - if the screenshots show failures, the video will too.
 
 ## Click Indicator Helper
 
@@ -135,7 +180,9 @@ async function clickWithIndicator(page, selector) {
 - **One script file** - Edit `record.js` in place, never create `record2.js` or `debug.js`
 - **Use AGENTS.local.md selectors** - Don't write discovery scripts
 - **Shared node_modules** - Never `npm install` in project directories
-- **If it fails** - Read the error, fix the ONE script, run again
+- **Always checkpoint** - Add `await checkpoint('description')` after each significant action
+- **Always review screenshots** - Read every screenshot after each run to verify correctness
+- **If it fails** - Read the error AND the screenshots, fix the ONE script, run again
 
 ## Devcontainer Note
 
