@@ -41,3 +41,10 @@ export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
 # Enable reverse search (ctrl-r)
 bindkey '^R' history-incremental-search-backward
+
+# bun completions
+[ -s "/Users/athal/.bun/_bun" ] && source "/Users/athal/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
