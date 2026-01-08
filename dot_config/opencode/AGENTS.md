@@ -63,9 +63,9 @@ Don't skip steps or produce incomplete work just to "fit" before compaction.
 ## Subagents
 
 Delegate specialized work via `plan` (the delegation hub):
-- `architect` - Design questions, tradeoffs, system boundaries
-- `pm` - Customer context, requirements, problem definition
+- `architect` - Design questions, tradeoffs, system boundaries. Draws on Fowler (evolutionary architecture), Newman (microservices), Uncle Bob (SOLID/Clean Architecture).
+- `pm` - Customer context, requirements, problem definition. Draws on Cagan (product discovery, four risks) and Torres (opportunity solution trees).
 - `docs` - READMEs, guides, ADRs, markdown documentation
 - `explore` - Codebase investigation (quick/medium/thorough)
 
-`/review` is a command for code review feedback.
+`/review` is a command for code review feedback. Applies Uncle Bob (clean code), Fowler (code smells), Beck (test quality).

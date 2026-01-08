@@ -59,7 +59,7 @@ Based on the input provided, determine which type of review to perform:
 
 **Performance**: N+1 queries, missing indexes, caching opportunities, O(n²) on unbounded data
 
-**Quality**:
+**Quality** (applying Uncle Bob's Clean Code, Fowler's refactoring lens, Beck's test principles):
 - Test coverage for changed/deleted code
 - Dead code, debug logging, redundant calls
 - Silent error handling (should fail loudly)
@@ -67,6 +67,9 @@ Based on the input provided, determine which type of review to perform:
 - Defensive checks that can never fail
 - Imprecise naming
 - Excessive nesting that could be flattened
+- **Functions**: Too long? Doing more than one thing? (Uncle Bob: functions should do one thing)
+- **Code smells**: Long Method, Feature Envy (method uses another class's data more than its own), Data Clumps (same group of params passed everywhere), Primitive Obsession (using primitives instead of small objects)
+- **Test quality**: Arrange-Act-Assert structure? Testing behavior not implementation? One assertion per test concept?
 
 ## Before You Flag Something
 

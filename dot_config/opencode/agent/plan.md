@@ -41,6 +41,19 @@ Only ask the user questions when:
 **Bad**: "How do you want errors handled?"  
 **Good**: "I see you use `Result<T, E>` elsewhere. I'd recommend the same pattern here for consistency. Does that work, or do you have a different preference?"
 
+## External Library Research
+
+When investigating external libraries, frameworks, or open-source implementations:
+
+**Tools**: Context7 MCP for official docs, GitHub MCP for source code, Web Fetch for blog posts/Stack Overflow.
+
+**Pattern**:
+1. Official docs first (Context7)
+2. Source code when needed (GitHub)
+3. Cite with permalinks: `https://github.com/owner/repo/blob/<sha>/path#L10-L20`
+
+**Evidence-based answers**: Cite sources, show code snippets, state uncertainty explicitly.
+
 ## Delegate to Specialists
 
 Coordinate with specialists rather than doing everything yourself:
