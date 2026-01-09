@@ -1,0 +1,39 @@
+#!/bin/bash
+# Modify opencode.json by merging chezmoi-managed settings with existing config
+# This preserves machine-specific settings (like MCP configs) while ensuring
+# chezmoi-managed settings are always present.
+
+set -euo pipefail
+
+# Settings managed by chezmoi - these will always be applied
+CHEZMOI_SETTINGS='
+{
+  "instructions": [
+    "~/.config/opencode/AGENTS.local.md"
+  ],
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": [
+        "mcp-server-playwright",
+        "--browser=chromium",
+        "--headless",
+        "--isolated",
+        "--save-video=1280x720"
+      ],
+      "enabled": true
+    }
+  }
+}
+'
+
+# Read existing config from stdin (chezmoi passes current file contents)
+EXISTING=$(cat)
+
+# If no existing config, start with empty object
+if [ -z "$EXISTING" ] || [ "$EXISTING" = "{}" ]; then
+  EXISTING='{}'
+fi
+
+# Merge: existing config + chezmoi settings (chezmoi settings win on conflict)
+echo "$EXISTING" | jq -s '.[0] * '"$CHEZMOI_SETTINGS"

@@ -10,7 +10,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 
 Then fill in machine-specific details:
 - `~/.env` - environment variables and API keys (loaded by direnv)
-- `~/.config/opencode/opencode.json` - model configuration
+- `~/.config/opencode/opencode.json` - model configuration (merged with chezmoi-managed MCP settings)
 - `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 
 Automatic setup includes:
@@ -32,7 +32,7 @@ Automatic setup includes:
 
 **Commands**:
 - `/review` - Code review (commit, branch, PR, or uncommitted changes)
-- `/screencast` - Record a Playwright demo
+- `/qa` - QA verification and demo recording using Playwright MCP
 - `/todo` - Manage todo list
 
 **Skills**:

@@ -20,7 +20,7 @@
 
 These files are created once but not tracked:
 - `~/.env` - API keys and secrets (loaded by direnv)
-- `~/.config/opencode/opencode.json` - model configuration
+- `~/.config/opencode/opencode.json` - model configuration (chezmoi merges MCP settings via modify script)
 - `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 
 ## Key Locations
@@ -56,6 +56,7 @@ When modifying agent behavior, choose the right location:
 | `dot_config/opencode/agent/pm.md` | Customer context, requirements (Cagan-style) |
 | `dot_config/opencode/agent/docs.md` | READMEs, guides, ADRs, markdown documentation |
 | `dot_config/opencode/command/review.md` | `/review` command for code review feedback |
+| `dot_config/opencode/command/qa.md` | `/qa` command for QA verification and demo recording |
 
 **When updating agent instructions**:
 1. Review all agents to ensure appropriate placement
