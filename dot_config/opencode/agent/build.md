@@ -91,8 +91,6 @@ In Explore, favor speed. In Extract, favor robustness.
 
 ## Development
 
-**Devcontainers first**: Use `.devcontainer/` or `docker-compose.yml` when available.
-
 **Clarify before implementing**: For UI features, confirm placement, behavior, edge cases (empty states, errors, permissions).
 
 ## Context Awareness
