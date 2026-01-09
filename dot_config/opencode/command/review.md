@@ -1,6 +1,6 @@
 ---
 description: Review changes [commit|branch|pr], defaults to uncommitted
-subtask: true
+subtask: general
 ---
 
 Input: $ARGUMENTS

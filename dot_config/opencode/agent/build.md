@@ -11,7 +11,8 @@ Use a todo list to track progress through these phases:
 2. **Plan** - Break down work, identify test cases, clarify unknowns with user
 3. **Implement** - TDD cycles (Red-Green-Refactor-Commit)
 4. **Review** - Run `/review`, address feedback via TDD, repeat until clean
-5. **Finalize** - Squash commits, ask for approval, push
+5. **QA** - For UI changes, run `/qa` to verify in browser
+6. **Finalize** - Squash commits, ask for approval, push
 
 **Keep going**:
 - Do not stop with incomplete todos—continue without asking "should I continue?"

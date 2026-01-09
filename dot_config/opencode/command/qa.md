@@ -1,38 +1,32 @@
 ---
-description: QA and demo recording using Playwright MCP for browser automation
+description: QA verification with video recording using Playwright MCP
+subtask: general
 ---
 
-Perform QA verification or record a demo of a localhost workflow using Playwright MCP.
+Perform QA verification of a localhost workflow using Playwright MCP. **Always records video.**
 
 **Request:** $ARGUMENTS
 
 ## Capabilities
 
 This command uses the Playwright MCP tools for:
-- **Screenshots** - `playwright_browser_take_screenshot` for verification
-- **Video recording** - Automatic via `--save-video` flag (saves on browser close)
+- **Video recording** - Automatic (saves on browser close)
+- **Screenshots** - `playwright_browser_take_screenshot` for key moments
 - **Accessibility snapshots** - `playwright_browser_snapshot` for element references
 - **Form filling** - `playwright_browser_fill_form` for authentication flows
 - **Navigation** - `playwright_browser_navigate`, `playwright_browser_click`
 
-## Modes
+## Output
 
-### QA Verification (default if no specific request)
-1. Navigate to the feature/page
-2. Take screenshots at key states
-3. Verify UI elements match expectations
-4. Report pass/fail with evidence
-
-### Demo Recording
-1. Plan the user flow to demonstrate
-2. Navigate through the workflow (video records automatically)
-3. Take screenshots at key moments for thumbnails/highlights
-4. Close browser to finalize video
-5. Convert webm to mp4 and save to ~/Downloads
+1. Video recording saved to `~/Downloads/qa-<feature>-<date>.mp4`
+2. Pass/fail summary with any issues found
 
 ## Workflow
 
-### 1. Detect Port
+### 1. Plan the Flow
+Based on the request, identify the user flow to verify. Keep it focused - one feature per QA run.
+
+### 2. Detect Port
 Check in order:
 1. **`.envrc`** - Worktrees have `export PORT=<number>`
 2. **`AGENTS.local.md`** - Project-specific defaults
@@ -71,20 +65,41 @@ playwright_browser_take_screenshot filename=01-initial-state.png
 playwright_browser_take_screenshot filename=02-after-action.png
 ```
 
-### 6. Finalize
+### 6. Finalize Recording
 
-**For QA:** Review screenshots, report findings.
-
-**For Demo:**
 1. Close browser to save video:
    ```
    playwright_browser_close
    ```
-2. Find video in `/tmp/playwright-mcp-output/*/`
-3. Convert and save:
+
+2. Find and analyze the video:
    ```bash
-   ffmpeg -i /tmp/playwright-mcp-output/*/*.webm -c:v libx264 -preset fast -crf 23 ~/Downloads/demo-$(date +%Y%m%d).mp4
+   VIDEO=$(ls -t /tmp/playwright-mcp-output/*/*.webm | head -1)
+   ffprobe -v error -show_entries format=duration -of csv=p=0 "$VIDEO"
    ```
+
+3. Trim the video to remove dead time:
+   - Track timestamps during recording: note when you start waiting (for snapshots, figuring out selectors, retries)
+   - Identify segments to keep (actual user-visible interactions)
+   - Cut out: initial loading, selector discovery pauses, idle time between actions, trailing time
+   
+   ```bash
+   # Simple trim (start/end only):
+   ffmpeg -i "$VIDEO" -ss 1.5 -t 26.5 -c:v libx264 -preset fast -crf 23 output.mp4
+   
+   # Multi-segment concat (cut out middle pauses):
+   # 1. Extract good segments
+   ffmpeg -i "$VIDEO" -ss 0 -t 5 -c copy seg1.webm
+   ffmpeg -i "$VIDEO" -ss 12 -t 8 -c copy seg2.webm
+   ffmpeg -i "$VIDEO" -ss 25 -t 10 -c copy seg3.webm
+   # 2. Concat and encode
+   echo -e "file 'seg1.webm'\nfile 'seg2.webm'\nfile 'seg3.webm'" > list.txt
+   ffmpeg -f concat -safe 0 -i list.txt -c:v libx264 -preset fast -crf 23 ~/Downloads/qa-<feature>-$(date +%Y%m%d).mp4
+   ```
+
+4. Verify the output video plays correctly
+
+5. Report pass/fail with video path
 
 ## Key Rules
 
@@ -92,6 +107,8 @@ playwright_browser_take_screenshot filename=02-after-action.png
 - **Self-verify screenshots** - Read screenshots yourself before reporting to user
 - **Iterate silently** - If something fails, fix and retry without asking user
 - **Video saves on close** - Always close browser to get the video file
+- **Trim aggressively** - Remove all dead time: loading screens, selector discovery pauses, idle moments, blank frames
+- **Track timestamps** - Note start/end of each meaningful action during recording so you know what to keep
 - **Accessibility snapshots** - Use `playwright_browser_snapshot` to get element refs for clicking
 
 ## Common Patterns
@@ -130,7 +147,8 @@ playwright_browser_install
 ### Video not saving
 Ensure you close the browser properly with `playwright_browser_close` - the video only finalizes on close.
 
-## Output
+## Final Output
 
-- **QA:** Summary of verification results with screenshot paths
-- **Demo:** Path to mp4 in ~/Downloads, ready to drag to PR
+- Video path in `~/Downloads/`
+- Pass/fail summary
+- Any issues found during verification
