@@ -10,20 +10,7 @@ CHEZMOI_SETTINGS='
 {
   "instructions": [
     "~/.config/opencode/AGENTS.local.md"
-  ],
-  "mcp": {
-    "playwright": {
-      "type": "local",
-      "command": [
-        "mcp-server-playwright",
-        "--browser=chromium",
-        "--headless",
-        "--isolated",
-        "--save-video=1280x720"
-      ],
-      "enabled": true
-    }
-  }
+  ]
 }
 '
 

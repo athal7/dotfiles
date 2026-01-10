@@ -1,19 +1,10 @@
 ---
-description: QA verification with video recording using Playwright MCP
+description: QA verification with video recording using Playwright scripts
 ---
 
-Perform QA verification of a localhost workflow using Playwright MCP. **Always records video.**
+Perform QA verification of a localhost workflow using Playwright. **Always records video.**
 
 **Request:** $ARGUMENTS
-
-## Capabilities
-
-This command uses the Playwright MCP tools for:
-- **Video recording** - Automatic (saves on browser close)
-- **Screenshots** - `playwright_browser_take_screenshot` for key moments
-- **Accessibility snapshots** - `playwright_browser_snapshot` for element references
-- **Form filling** - `playwright_browser_fill_form` for authentication flows
-- **Navigation** - `playwright_browser_navigate`, `playwright_browser_click`
 
 ## Output
 
@@ -35,119 +26,152 @@ Check in order:
 grep -o 'PORT=[0-9]*' .envrc 2>/dev/null | cut -d= -f2 || echo 3000
 ```
 
-### 2. Verify Server
+### 3. Verify Server
 ```bash
 curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT
 ```
 
-### 3. Set Viewport
-```
-playwright_browser_resize width=1280 height=720
-```
+### 4. Write the Test Script
 
-### 4. Authenticate (if needed)
-Use selectors from AGENTS.local.md - don't discover them:
-```
-playwright_browser_navigate url=http://localhost:$PORT/users/sign_in
-playwright_browser_fill_form fields=[
-  {"name": "Email", "type": "textbox", "ref": "...", "value": "admin@test.com"},
-  {"name": "Password", "type": "textbox", "ref": "...", "value": "12345678"}
-]
-playwright_browser_click element="Sign in button" ref="..."
-```
+Create `.screencast/qa-test.spec.ts` (directory is globally gitignored):
 
-### 5. Execute Flow
-Navigate through the workflow, taking screenshots at key moments:
-```
-playwright_browser_take_screenshot filename=01-initial-state.png
-# ... perform actions ...
-playwright_browser_take_screenshot filename=02-after-action.png
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('QA: <feature name>', async ({ page }) => {
+  await page.goto('/');
+  
+  // Perform actions and assertions
+  await expect(page.locator('h1')).toBeVisible();
+  
+  // Take screenshots at key moments
+  await page.screenshot({ path: 'screenshots/01-initial.png' });
+  
+  // ... more actions ...
+  
+  await page.screenshot({ path: 'screenshots/02-final.png' });
+});
 ```
 
-### 6. Finalize Recording
+### 5. Create Playwright Config
 
-1. Close browser to save video:
-   ```
-   playwright_browser_close
-   ```
+Create `.screencast/playwright.config.ts`:
 
-2. Find and analyze the video:
-   ```bash
-   VIDEO=$(ls -t /tmp/playwright-mcp-output/*/*.webm | head -1)
-   ffprobe -v error -show_entries format=duration -of csv=p=0 "$VIDEO"
-   ```
+```typescript
+import { defineConfig } from '@playwright/test';
 
-3. Trim the video to remove dead time:
-   - Track timestamps during recording: note when you start waiting (for snapshots, figuring out selectors, retries)
-   - Identify segments to keep (actual user-visible interactions)
-   - Cut out: initial loading, selector discovery pauses, idle time between actions, trailing time
-   
-   ```bash
-   # Simple trim (start/end only):
-   ffmpeg -i "$VIDEO" -ss 1.5 -t 26.5 -c:v libx264 -preset fast -crf 23 output.mp4
-   
-   # Multi-segment concat (cut out middle pauses):
-   # 1. Extract good segments
-   ffmpeg -i "$VIDEO" -ss 0 -t 5 -c copy seg1.webm
-   ffmpeg -i "$VIDEO" -ss 12 -t 8 -c copy seg2.webm
-   ffmpeg -i "$VIDEO" -ss 25 -t 10 -c copy seg3.webm
-   # 2. Concat and encode
-   echo -e "file 'seg1.webm'\nfile 'seg2.webm'\nfile 'seg3.webm'" > list.txt
-   ffmpeg -f concat -safe 0 -i list.txt -c:v libx264 -preset fast -crf 23 ~/Downloads/qa-<feature>-$(date +%Y%m%d).mp4
-   ```
+export default defineConfig({
+  testDir: '.',
+  testMatch: 'qa-test.spec.ts',
+  timeout: 60000,
+  use: {
+    baseURL: 'http://localhost:3000',
+    viewport: { width: 1280, height: 720 },
+    video: 'on',
+    screenshot: 'on',
+    trace: 'on',
+  },
+  outputDir: './results',
+  reporter: [['list']],
+});
+```
 
-4. Verify the output video plays correctly
+### 6. Run the Test
 
-5. Report pass/fail with video path
+```bash
+mkdir -p .screencast
+cd .screencast && npx playwright test --headed
+```
+
+### 7. Process Video
+
+1. Find the video:
+```bash
+VIDEO=$(find .screencast/results -name "*.webm" -type f | head -1)
+ffprobe -v error -show_entries format=duration -of csv=p=0 "$VIDEO"
+```
+
+2. Trim if needed (cut dead time at start/end):
+```bash
+ffmpeg -i "$VIDEO" -ss 0.5 -c:v libx264 -preset fast -crf 23 ~/Downloads/qa-<feature>-$(date +%Y%m%d).mp4
+```
+
+For longer videos with idle sections in the middle, extract and concat segments:
+```bash
+ffmpeg -i "$VIDEO" -ss 0 -t 5 -c copy seg1.webm
+ffmpeg -i "$VIDEO" -ss 12 -t 8 -c copy seg2.webm
+echo -e "file 'seg1.webm'\nfile 'seg2.webm'" > list.txt
+ffmpeg -f concat -safe 0 -i list.txt -c:v libx264 -preset fast -crf 23 output.mp4
+```
+
+### 8. Report Results
+
+- Pass/fail based on test exit code
+- Video path in `~/Downloads/`
+- Any assertion failures or errors from test output
 
 ## Key Rules
 
-- **Use AGENTS.local.md selectors** - Don't write discovery scripts for known pages
+- **Check AGENTS.local.md first** - Use selectors/credentials documented there, don't rediscover
+- **Write focused scripts** - One user flow per test
+- **Add assertions** - Use `expect()` to verify expected behavior
+- **Screenshots at key moments** - Capture before/after states
 - **Self-verify screenshots** - Read screenshots yourself before reporting to user
-- **Iterate silently** - If something fails, fix and retry without asking user
-- **Video saves on close** - Always close browser to get the video file
-- **Trim aggressively** - Remove all dead time: loading screens, selector discovery pauses, idle moments, blank frames
-- **Track timestamps** - Note start/end of each meaningful action during recording so you know what to keep
-- **Accessibility snapshots** - Use `playwright_browser_snapshot` to get element refs for clicking
+- **Iterate silently** - If test fails, fix the script and retry without asking user
 
-## Common Patterns
+## Script Patterns
 
-### Login Flow (Odin)
-```
-playwright_browser_navigate url=http://localhost:$PORT/users/sign_in
-playwright_browser_snapshot  # Get refs
-playwright_browser_fill_form fields=[...]
-playwright_browser_click element="Sign in" ref="..."
-playwright_browser_wait_for text="Signed in successfully"
+### Login Flow
+```typescript
+await page.goto('/login');
+await page.fill('input[name="email"]', 'user@example.com');
+await page.fill('input[name="password"]', 'password');
+await page.click('button[type="submit"]');
+await expect(page).toHaveURL('/dashboard');
 ```
 
-### Navigate and Screenshot
-```
-playwright_browser_navigate url=http://localhost:$PORT/vulnerabilities
-playwright_browser_snapshot  # Get current state
-playwright_browser_take_screenshot filename=vulnerabilities-list.png
+### Wait for Navigation
+```typescript
+await page.click('a:has-text("Dashboard")');
+await page.waitForURL('**/dashboard');
 ```
 
-### Click and Verify
+### Fill Form
+```typescript
+await page.fill('#title', 'Test Title');
+await page.selectOption('#status', 'active');
+await page.check('#published');
+await page.click('button:has-text("Save")');
 ```
-playwright_browser_click element="Submit button" ref="e123"
-playwright_browser_wait_for text="Success"
-playwright_browser_take_screenshot filename=after-submit.png
+
+### Assert Table Content
+```typescript
+const rows = page.locator('table tbody tr');
+await expect(rows).toHaveCount(10);
+await expect(rows.first()).toContainText('Expected text');
 ```
 
 ## Troubleshooting
 
 ### Browser not installed
-If you get an error about the browser not being installed:
-```
-playwright_browser_install
+```bash
+npx playwright install chromium
 ```
 
-### Video not saving
-Ensure you close the browser properly with `playwright_browser_close` - the video only finalizes on close.
+### Test times out
+Increase timeout in config or add explicit waits:
+```typescript
+await page.waitForSelector('.loading', { state: 'hidden' });
+```
+
+### Selectors not found
+Use Playwright's codegen to discover selectors:
+```bash
+npx playwright codegen http://localhost:3000
+```
 
 ## Final Output
 
 - Video path in `~/Downloads/`
 - Pass/fail summary
-- Any issues found during verification
+- Test output with any failures
