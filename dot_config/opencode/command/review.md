@@ -1,31 +1,41 @@
 ---
 description: Review changes [commit|branch|pr], defaults to uncommitted
-subtask: general
 ---
 
 Input: $ARGUMENTS
 
 ## Workspace Detection
 
-Before reviewing, determine the correct workspace directory:
+Before reviewing, ensure you're in the correct git repository:
 
-1. **Check if in a git worktree** - Run: `git rev-parse --git-dir`
-   - If output contains `.git/worktrees/`, you're in a worktree—use the current working directory and **skip devcontainer detection**
-2. **Check for active devcontainer context** - Use the `devcontainer` tool (no arguments) to check if a devcontainer is targeted
-   - If active, use the workspace path from the output for all file operations
-3. **Otherwise** - Use the current working directory
+1. **Get git root and branch** - Run:
+   ```bash
+   git rev-parse --show-toplevel
+   git branch --show-current
+   ```
 
-When a workspace is detected, use it as the base path for:
-- Reading files (AGENTS.md, source files)
-- Git operations (use `--git-dir` and `--work-tree` or `cd` to workspace first)
+2. **Verify context makes sense**:
+   - If on `main`/`master` with no uncommitted changes, you're likely in the wrong directory
+   - Search for worktrees: `git worktree list`
+   - If worktrees exist, identify the one matching the expected feature branch and `cd` to it
+   - If no worktrees match, check for devcontainer context using the `devcontainer` tool
+
+3. **Use the correct workspace** for all operations:
+   - `cd` to the detected workspace before running git commands
+   - Read files (AGENTS.md, source files) from that workspace path
+
+**Do not ask the user which directory to use** - find the right one automatically based on branch names and worktree list.
 
 ## Determining What to Review
 
 Based on the input provided, determine which type of review to perform:
 
-1. **No arguments (default)**: Review all uncommitted changes
-   - Run: `git diff` for unstaged changes
-   - Run: `git diff --cached` for staged changes
+1. **No arguments (default)**: Review changes on current branch
+   - First check for uncommitted changes: `git diff` and `git diff --cached`
+   - If no uncommitted changes, review commits on current branch vs origin default:
+     - Detect default branch: `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`
+     - Run: `git diff origin/<default>...HEAD`
+   - If both are empty, report "No changes to review"
 
 2. **Commit hash** (40-char SHA or short hash): Review that specific commit
    - Run: `git show $ARGUMENTS`

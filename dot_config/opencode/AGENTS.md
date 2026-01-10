@@ -42,6 +42,14 @@ This applies to:
 
 Even if the prompt implies end-to-end completion, always stop before remote modifications. Read-only operations don't require confirmation.
 
+## Pull Requests
+
+**Always create PRs as draft.** When using `github_create_pull_request` or `gh pr create`:
+- Set `draft: true` (API) or use `--draft` flag (CLI)
+- Only mark as ready for review after explicit user approval
+
+This ensures PRs go through proper review before notifying reviewers.
+
 ## Environment Variables
 
 **Never read `.env` files.** All secrets and API keys are loaded into environment variables via direnv. Access them directly from the environment - do not attempt to read, parse, or cat `.env` files.
