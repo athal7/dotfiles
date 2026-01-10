@@ -1,6 +1,5 @@
 ---
 description: QA verification with video recording using Playwright MCP
-subtask: general
 ---
 
 Perform QA verification of a localhost workflow using Playwright MCP. **Always records video.**

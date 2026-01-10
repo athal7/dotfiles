@@ -1,6 +1,5 @@
 ---
 description: Add item(s) to the todo list without interrupting current work
-subtask: general
 ---
 
 Add the specified item(s) to your todo list. Do NOT stop or change what you're currently working on.

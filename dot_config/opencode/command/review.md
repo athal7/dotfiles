@@ -16,15 +16,16 @@ Before reviewing, ensure you're in the correct git repository:
 
 2. **Verify context makes sense**:
    - If on `main`/`master` with no uncommitted changes, you're likely in the wrong directory
-   - Search for worktrees: `git worktree list`
-   - If worktrees exist, identify the one matching the expected feature branch and `cd` to it
-   - If no worktrees match, check for devcontainer context using the `devcontainer` tool
+   - Search all workspace locations for a feature branch:
+     - Git worktrees: `git worktree list`
+     - Opencode workspaces: `ls ~/.local/share/opencode/worktree/*/ ~/.local/share/opencode/clone/*/`
+   - Identify the workspace with the expected feature branch and `cd` to it
 
 3. **Use the correct workspace** for all operations:
    - `cd` to the detected workspace before running git commands
    - Read files (AGENTS.md, source files) from that workspace path
 
-**Do not ask the user which directory to use** - find the right one automatically based on branch names and worktree list.
+**Do not ask the user which directory to use** - find the right one automatically.
 
 ## Determining What to Review
 

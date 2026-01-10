@@ -13,6 +13,18 @@ This is critical because:
 - UI worktree selection may preserve context, but don't rely on it
 - Hallucinated "continuation summaries" cause confusion and wasted effort
 
+## Git Worktrees
+
+When creating git worktrees, use the standard opencode location for discoverability:
+
+```bash
+git worktree add ~/.local/share/opencode/worktree/<repo-hash>/<branch-name> <branch>
+```
+
+Where `<repo-hash>` is a short identifier for the repo (e.g., first 8 chars of `git rev-parse HEAD` from main repo, or just the repo name if unique).
+
+This ensures all workspaces are discoverable in `~/.local/share/opencode/`.
+
 **When asked "what did we do" or "continue":**
 - Run `git log`, `git status`, `git diff` to see actual changes
 - Check the current branch name for issue context
