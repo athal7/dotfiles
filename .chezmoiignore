@@ -4,6 +4,13 @@
 # Keep poll configs private (contains repo paths and personal workflow)
 .config/opencode-pilot/
 
+# Machine-specific attention sources (Linear team IDs, local tools, etc.)
+.config/opencode/attention-sources.local
+.config/opencode/pilot/
+
+# Local command overrides (contain personal details like locations, team IDs)
+.config/opencode/command.local/
+
 # opencode.json is host-specific (model config, MCP servers)
 # Using modify_ script to merge chezmoi-managed settings with local config
 # .config/opencode/opencode.json
