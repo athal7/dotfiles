@@ -1,0 +1,62 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "~/.config/opencode/AGENTS.local.md"
+  ],
+  "server": {
+    "hostname": "0.0.0.0"
+  },
+  "model": "anthropic/claude-opus-4-5",
+  "small_model": "anthropic/claude-sonnet-4-20250514",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen2.5-coder:14b": {
+          "name": "Qwen 2.5 Coder 14B"
+        },
+        "qwen2.5:7b": {
+          "name": "Qwen 2.5 7B"
+        },
+        "qwen2.5:3b": {
+          "name": "Qwen 2.5 3B"
+        }
+      }
+    }
+  },
+  
+  "formatter": {
+    "rubocop": {
+      "disabled": true
+    }
+  },
+  "plugin": [
+    "opencode-devcontainers"
+  ],
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "figma": {
+      "type": "local",
+      "command": ["npx", "-y", "figma-developer-mcp", "--stdio"],
+      "enabled": true
+    },
+    "granola": {
+      "type": "local",
+      "command": ["sh", "-c", "cd ~/.config/opencode/mcps && uv run granola-mcp.py"],
+      "enabled": true
+    }
+  },
+  "tools": {
+    "playwright_*": false,
+    "figma_*": false,
+    "granola_*": false
+  }
+}

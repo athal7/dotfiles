@@ -20,7 +20,6 @@
 
 These files are created once but not tracked:
 - `~/.env` - API keys and secrets (loaded by direnv)
-- `~/.config/opencode/opencode.json` - model configuration (chezmoi merges MCP settings via modify script)
 - `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 
 ## Key Locations
@@ -34,10 +33,11 @@ These files are created once but not tracked:
 ## OpenCode Configuration
 
 **Global config** (`~/.config/opencode/`):
-- `opencode.json` - model settings (host-specific, not in chezmoi)
+- `opencode.json` - models, MCPs, tools config (managed by chezmoi)
 - `AGENTS.md` - instructions for all agents
 - `agent/` - primary agent overrides and subagents
 - `command/` - global slash commands
+- `mcps/` - custom MCP servers (granola-mcp.py)
 
 **Per-project config** (`.opencode/` in repo root):
 - `command/` - project-specific slash commands
@@ -57,9 +57,13 @@ When modifying agent behavior, choose the right location:
 | `dot_config/opencode/agent/docs.md` | READMEs, guides, ADRs, markdown documentation |
 | `dot_config/opencode/agent/ux.md` | Figma MCP access for design specs and visual details |
 | `dot_config/opencode/agent/qa.md` | Playwright MCP for browser testing and verification |
+| `dot_config/opencode/agent/context.md` | Granola MCP for meeting notes and conversation context |
+| `dot_config/opencode/agent/local.md` | Fast local code agent (Ollama 14B) for quick file ops |
+| `dot_config/opencode/agent/local-plan.md` | Fast local planning agent (Ollama 7B) for triage and routing |
 | `dot_config/opencode/command/review.md` | `/review` command for code review feedback |
 | `dot_config/opencode/command/ux.md` | `/ux` command - delegates to ux agent for Figma lookups |
 | `dot_config/opencode/command/qa.md` | `/qa` command - delegates to qa agent for browser verification |
+| `dot_config/opencode/command/context.md` | `/context` command - delegates to context agent for meeting notes |
 
 **When updating agent instructions**:
 1. Review all agents to ensure appropriate placement

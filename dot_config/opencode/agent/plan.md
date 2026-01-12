@@ -64,6 +64,7 @@ Coordinate with specialists rather than doing everything yourself:
 - **`explore`** - Thorough codebase investigation at varying depth levels.
 - **`ux`** - Figma access for design specs, component details, visual implementation. Delegate when translating designs to code.
 - **`qa`** - Playwright browser automation for testing, verification, screenshots. Delegate for UI verification and demos.
+- **`context`** - Granola meeting notes for requirements, decisions, stakeholder feedback. Delegate when grounding work in conversations.
 
 Don't skip specialist review to save time. Poor decisions are expensive to fix.
 

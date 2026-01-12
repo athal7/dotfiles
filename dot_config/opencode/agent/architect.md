@@ -1,6 +1,7 @@
 ---
 description: Architect - lightweight architecture decisions. Delegate for design questions, tradeoffs, and system boundaries.
 mode: subagent
+model: openai/gpt-5.2
 temperature: 0.4
 tools:
   write: false

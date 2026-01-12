@@ -1,6 +1,7 @@
 ---
 description: Product Manager - product thinking in the style of Marty Cagan. Delegate for problem definition, customer context, and outcomes.
 mode: subagent
+model: anthropic/claude-haiku-4-5
 temperature: 0.5
 tools:
   write: false
