@@ -70,6 +70,7 @@ When modifying agent behavior, choose the right location:
 | `dot_config/opencode/command/todo.md` | `/todo` command - add items to todo list without interrupting |
 | `dot_config/opencode/command/project-updates.md` | `/project-updates` command - draft status updates |
 | `dot_config/opencode/command/event-digest.md` | `/event-digest` command - weekly local events digest |
+| `dot_config/opencode/command/cleanup.md` | `/cleanup` command - clean up old worktrees and devcontainer clones |
 
 **When updating agent instructions**:
 1. Review all agents to ensure appropriate placement
