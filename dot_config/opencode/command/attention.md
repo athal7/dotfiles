@@ -15,12 +15,28 @@ If the file doesn't exist, fall back to these generic GitHub checks:
 # PRs needing my review
 gh search prs --review-requested=@me --state=open --limit=20 --json=number,title,url,repository,updatedAt
 
-# My PRs with feedback
-gh search prs --author=@me --state=open --limit=20 --json=number,title,url,repository,commentsCount,updatedAt
+# My open PRs (we'll check for human comments separately)
+gh search prs --author=@me --state=open --limit=20 --json=number,title,url,repository,updatedAt
 
 # Issues assigned to me
 gh search issues --assignee=@me --state=open --limit=20 --json=number,title,url,repository,updatedAt
 ```
+
+## Filtering Comments
+
+For each PR, fetch comments and filter out bots AND the PR author (your own comments don't need your attention):
+
+```bash
+# Get comments for a specific PR, filter out bots and PR author
+gh pr view <number> --repo <owner/repo> --json author,comments --jq '.author.login as $author | [.comments[] | select(.author.login != $author) | select(.author.login | test("\\[bot\\]$|^github-actions$|^dependabot$|^renovate$|^codecov$|^vercel$|^linear$"; "i") | not)] | length'
+```
+
+Exclude:
+- PR author's own comments
+- Usernames ending in `[bot]`
+- `github-actions`, `dependabot`, `renovate`, `codecov`, `vercel`, `linear`
+
+Only flag PRs that have comments **from others** as needing attention.
 
 ## Output
 
