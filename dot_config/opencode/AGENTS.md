@@ -86,6 +86,20 @@ Delegate specialized work via `plan` (the delegation hub):
 - `architect` - Design questions, tradeoffs, system boundaries. Draws on Fowler (evolutionary architecture), Newman (microservices), Uncle Bob (SOLID/Clean Architecture).
 - `pm` - Customer context, requirements, problem definition. Draws on Cagan (product discovery, four risks) and Torres (opportunity solution trees).
 - `docs` - READMEs, guides, ADRs, markdown documentation
-- `explore` - Codebase investigation (quick/medium/thorough)
+- `explore` - Codebase investigation (quick/medium/thorough). Built-in agent.
+- `ux` - Figma MCP access for design specs and visual details
+- `qa` - Playwright MCP for browser testing and verification
+- `context` - Granola MCP for meeting notes and conversation context
 
-`/review` is a command for code review feedback. Applies Uncle Bob (clean code), Fowler (code smells), Beck (test quality).
+**Local agents** (Ollama, for fast/cheap operations):
+- `local` - Quick file ops, simple changes (14B model)
+- `local-plan` - Issue triage, docs lookup, routing (7B model)
+
+## Commands
+
+- `/review` - Code review feedback. Applies Uncle Bob (clean code), Fowler (code smells), Beck (test quality).
+- `/ux` - Design specs lookup from Figma (delegates to `ux` agent)
+- `/qa` - Browser verification via Playwright (delegates to `qa` agent)
+- `/context` - Meeting context from Granola (delegates to `context` agent)
+- `/attention` - Check what needs attention across GitHub, Linear, etc.
+- `/todo` - Add items to todo list without interrupting current work

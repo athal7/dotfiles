@@ -3,6 +3,8 @@ description: Fast local planning agent (7B). Issue triage, docs lookup, routing.
 mode: all
 model: ollama/qwen2.5:7b
 temperature: 0.3
+tools:
+  context7_*: true
 permission:
   edit: deny
   bash:
@@ -17,18 +19,15 @@ Fast planning assistant on Ollama. Read-only. 8K context - every token counts.
 
 ## Strengths
 
-- Finding and summarizing Linear issues
 - Library docs lookup (Context7)
 - Routing tasks to the right agent
+- Quick answers from documentation
 
 ## MCP Tools
 
-**Linear** - `linear_list_issues`, `linear_get_issue`, `linear_search_issues`
-- "What issues are assigned to me?" → search issues
-- "What's the status of X?" → get issue
-
-**Context7** - `context7_resolve-library-id`, `context7_query-docs`
-- "How do I do X in Rails?" → resolve library → query docs
+**Context7** - `context7_resolve-library-id`, `context7_get-library-docs`
+- "How do I do X in Rails?" → resolve library → get docs
+- "What's the API for Y?" → resolve library → query specific section
 
 ## Context Rules (CRITICAL)
 

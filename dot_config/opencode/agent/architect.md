@@ -3,6 +3,7 @@ description: Architect - lightweight architecture decisions. Delegate for design
 mode: subagent
 model: openai/gpt-5.2
 temperature: 0.4
+thinking: high
 tools:
   write: false
   edit: false

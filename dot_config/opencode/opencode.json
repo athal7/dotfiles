@@ -28,7 +28,6 @@
       }
     }
   },
-  
   "formatter": {
     "rubocop": {
       "disabled": true
@@ -52,11 +51,17 @@
       "type": "local",
       "command": ["sh", "-c", "cd ~/.config/opencode/mcps && uv run granola-mcp.py"],
       "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "enabled": true
     }
   },
   "tools": {
     "playwright_*": false,
     "figma_*": false,
-    "granola_*": false
+    "granola_*": false,
+    "context7_*": false
   }
 }

@@ -2,6 +2,8 @@
 description: Planning, analysis, and delegation hub. Coordinates specialists for design, requirements, and documentation.
 mode: all
 temperature: 0.3
+tools:
+  context7_*: true
 permission:
   edit: deny
   bash:
@@ -45,11 +47,11 @@ Only ask the user questions when:
 
 When investigating external libraries, frameworks, or open-source implementations:
 
-**Tools**: Context7 MCP for official docs, GitHub MCP for source code, Web Fetch for blog posts/Stack Overflow.
+**Tools**: Context7 MCP for official docs, `gh` CLI for source code, Web Fetch for blog posts/Stack Overflow.
 
 **Pattern**:
-1. Official docs first (Context7)
-2. Source code when needed (GitHub)
+1. Official docs first (Context7 `resolve-library-id` → `get-library-docs`)
+2. Source code when needed (`gh api` or `gh browse`)
 3. Cite with permalinks: `https://github.com/owner/repo/blob/<sha>/path#L10-L20`
 
 **Evidence-based answers**: Cite sources, show code snippets, state uncertainty explicitly.
