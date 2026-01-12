@@ -1,7 +1,7 @@
 ---
 description: Code reviewer applying Uncle Bob, Fowler, and Beck principles. Delegate for thorough code review.
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: anthropic/claude-sonnet-4-5
 thinking: medium
 temperature: 0.2
 tools:
