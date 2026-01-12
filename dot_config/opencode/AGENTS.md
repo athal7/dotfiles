@@ -97,7 +97,7 @@ Delegate specialized work via `plan` (the delegation hub):
 
 ## Commands
 
-- `/review` - Code review feedback. Applies Uncle Bob (clean code), Fowler (code smells), Beck (test quality).
+- `/review` - Code review feedback (delegates to `review` agent)
 - `/ux` - Design specs lookup from Figma (delegates to `ux` agent)
 - `/qa` - Browser verification via Playwright (delegates to `qa` agent)
 - `/context` - Meeting context from Granola (delegates to `context` agent)

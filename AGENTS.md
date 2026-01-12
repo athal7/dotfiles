@@ -60,7 +60,8 @@ When modifying agent behavior, choose the right location:
 | `dot_config/opencode/agent/context.md` | Granola MCP for meeting notes and conversation context |
 | `dot_config/opencode/agent/local.md` | Fast local code agent (Ollama 14B) for quick file ops |
 | `dot_config/opencode/agent/local-plan.md` | Fast local planning agent (Ollama 7B) for triage and routing |
-| `dot_config/opencode/command/review.md` | `/review` command for code review feedback |
+| `dot_config/opencode/agent/review.md` | Code review agent with Uncle Bob/Fowler/Beck principles |
+| `dot_config/opencode/command/review.md` | `/review` command - delegates to review agent |
 | `dot_config/opencode/command/ux.md` | `/ux` command - delegates to ux agent for Figma lookups |
 | `dot_config/opencode/command/qa.md` | `/qa` command - delegates to qa agent for browser verification |
 | `dot_config/opencode/command/context.md` | `/context` command - delegates to context agent for meeting notes |
