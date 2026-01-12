@@ -58,6 +58,7 @@ When modifying agent behavior, choose the right location:
 | `dot_config/opencode/agent/ux.md` | Figma MCP access for design specs and visual details |
 | `dot_config/opencode/agent/qa.md` | Playwright MCP for browser testing and verification |
 | `dot_config/opencode/agent/context.md` | Granola MCP for meeting notes and conversation context |
+| `dot_config/opencode/agent/observability.md` | Elasticsearch MCP for APM traces, logs, metrics investigation |
 | `dot_config/opencode/agent/local.md` | Fast local code agent (Ollama 14B) for quick file ops |
 | `dot_config/opencode/agent/local-plan.md` | Fast local planning agent (Ollama 7B) for triage and routing |
 | `dot_config/opencode/agent/review.md` | Code review agent with Uncle Bob/Fowler/Beck principles |

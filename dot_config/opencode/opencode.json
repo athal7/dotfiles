@@ -16,24 +16,10 @@
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "qwen2.5-coder:14b": {
-          "name": "Qwen 2.5 Coder 14B",
+        "qwen2.5:14b": {
+          "name": "Qwen 2.5 14B",
           "limit": {
-            "context": 32768,
-            "output": 8192
-          }
-        },
-        "qwen2.5:7b": {
-          "name": "Qwen 2.5 7B",
-          "limit": {
-            "context": 32768,
-            "output": 8192
-          }
-        },
-        "qwen2.5:3b": {
-          "name": "Qwen 2.5 3B",
-          "limit": {
-            "context": 32768,
+            "context": 131072,
             "output": 8192
           }
         }
@@ -70,12 +56,18 @@
       "type": "local",
       "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
       "enabled": true
+    },
+    "elasticsearch": {
+      "type": "local",
+      "command": ["sh", "-c", "ES_HOST=\"$ES_URL\" npx -y @awesome-ai/elasticsearch-mcp"],
+      "enabled": true
     }
   },
   "tools": {
     "playwright_*": false,
     "figma_*": false,
     "granola_*": false,
-    "context7_*": false
+    "context7_*": false,
+    "elasticsearch_*": false
   }
 }

@@ -1,7 +1,7 @@
 ---
-description: Fast local planning agent (7B). Issue triage, docs lookup, routing.
+description: Fast local planning agent (14B). Issue triage, docs lookup, routing.
 mode: all
-model: ollama/qwen2.5:7b
+model: ollama/qwen2.5:14b
 temperature: 0.3
 tools:
   context7_*: true
@@ -15,7 +15,7 @@ permission:
     "*": deny
 ---
 
-Fast planning assistant on Ollama. Read-only. 8K context - every token counts.
+Fast planning assistant on Ollama. Read-only. 128K context available.
 
 ## Strengths
 

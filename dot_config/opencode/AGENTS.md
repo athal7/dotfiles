@@ -90,6 +90,7 @@ Delegate specialized work via `plan` (the delegation hub):
 - `ux` - Figma MCP access for design specs and visual details
 - `qa` - Playwright MCP for browser testing and verification
 - `context` - Granola MCP for meeting notes and conversation context
+- `observability` - Elasticsearch MCP for APM traces, logs, metrics investigation
 
 **Local agents** (Ollama, for fast/cheap operations):
 - `local` - Quick file ops, simple changes (14B model)

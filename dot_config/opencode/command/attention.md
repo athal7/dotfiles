@@ -1,6 +1,5 @@
 ---
 description: Check what needs my attention across all sources
-agent: plan
 ---
 
 Check what needs my attention and help me prioritize.
@@ -65,3 +64,18 @@ For each item, include:
 - Suggested action
 
 Ask which items I want to work on, then help me tackle them.
+
+## Observability (delegate to `observability` agent)
+
+Check for alerts or anomalies that need attention:
+
+1. **Error spikes** - Services with elevated error rates in the last 24h
+2. **Latency degradation** - P95 latency significantly above baseline
+3. **Failed transactions** - Recent transaction failures by service
+
+The `observability` agent has Elasticsearch access to query APM indices. Ask it to:
+- Check `traces-apm*` for error rate spikes
+- Look for services with degraded performance
+- Report any anomalies worth investigating
+
+Only include findings that are actionable - skip normal fluctuations.
