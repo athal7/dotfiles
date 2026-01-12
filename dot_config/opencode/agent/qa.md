@@ -42,16 +42,22 @@ Report findings with:
 - Steps to reproduce any issues
 - Suggestions for fixes
 
-## Error Handling
+## Resilience
+
+**Persist through transient failures:**
+- Element not found → try alternative selectors, wait longer, scroll into view
+- Timeout → increase wait time, check if page is still loading
+- Click failed → ensure element is visible and not covered
+- Try at least 3 different approaches before giving up on any single action
 
 **Do NOT create Linear issues for:**
 - Playwright tool failures (browser in use, connection errors, timeouts)
 - Your own tooling problems
 - Infrastructure issues blocking verification
 
-These are operational issues, not product bugs. Simply report the blocker to the parent agent and stop.
+These are operational issues, not product bugs.
 
-**When blocked:**
+**When truly blocked (after multiple attempts):**
 1. Report what you were able to verify
-2. Explain the blocker briefly
-3. Return immediately - do not retry indefinitely or repeat yourself
+2. Explain what you tried and why it failed
+3. Suggest what might fix the issue (missing element, wrong URL, server not running, etc.)
