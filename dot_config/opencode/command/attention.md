@@ -7,42 +7,55 @@ Check what needs my attention and help me prioritize.
 
 ## Sources
 
-Read `~/.config/opencode/attention-sources.local` for machine-specific data sources and commands. Run each command and gather the results.
+Read `~/.config/opencode/attention-sources.local` for machine-specific data sources (Linear, Reminders, etc). Run each command and gather the results.
 
-If the file doesn't exist, fall back to these generic GitHub checks:
+### GitHub (always check)
 
 ```bash
 # PRs needing my review
 gh search prs --review-requested=@me --state=open --limit=20 --json=number,title,url,repository,updatedAt
 
-# My open PRs (we'll check for human comments separately)
+# My open PRs
 gh search prs --author=@me --state=open --limit=20 --json=number,title,url,repository,updatedAt
 
 # Issues assigned to me
 gh search issues --assignee=@me --state=open --limit=20 --json=number,title,url,repository,updatedAt
 ```
 
-## Filtering Comments
+### PR Details
 
-For each PR, fetch comments and filter out bots AND the PR author (your own comments don't need your attention):
+For each of my open PRs, fetch merge status and comments:
 
 ```bash
-# Get comments for a specific PR, filter out bots and PR author
-gh pr view <number> --repo <owner/repo> --json author,comments --jq '.author.login as $author | [.comments[] | select(.author.login != $author) | select(.author.login | test("\\[bot\\]$|^github-actions$|^dependabot$|^renovate$|^codecov$|^vercel$|^linear$"; "i") | not)] | length'
+gh pr view <number> --repo <owner/repo> --json mergeable,mergeStateStatus,comments,reviews,author
 ```
 
-Exclude:
-- PR author's own comments
-- Usernames ending in `[bot]`
-- `github-actions`, `dependabot`, `renovate`, `codecov`, `vercel`, `linear`
+## Processing Rules
 
-Only flag PRs that have comments **from others** as needing attention.
+### Merge Conflicts
+
+Flag PRs where `mergeable: "CONFLICTING"` or `mergeStateStatus: "DIRTY"` - these block merging and need rebasing.
+
+### Actionable Feedback
+
+Only flag PRs with comments/reviews that need my attention:
+
+1. **Exclude bots**: `github-actions`, `linear`, `dependabot`, `renovate`, `codecov`, `vercel`, usernames ending in `[bot]`
+2. **Exclude my own comments**: filter by PR author login
+3. **Include**: Review comments requesting changes, questions from teammates
+
+### What to Skip
+
+- Linear linkback comments (auto-generated issue links)
+- Bot automation comments
+- My own replies (I already know what I said)
+- Approval reviews with no comments
 
 ## Output
 
 Summarize what needs attention in priority order:
 
-1. **Urgent** - PRs waiting for my review > 2 days, blocked items
+1. **Urgent** - PRs waiting for my review > 2 days, blocked items, merge conflicts
 2. **Today** - PR feedback to address, time-sensitive items
 3. **This week** - Issues in progress, pending tasks
 
