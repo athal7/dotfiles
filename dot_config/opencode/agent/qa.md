@@ -1,7 +1,7 @@
 ---
 description: QA specialist with Playwright browser automation. Delegate for testing, verification, and demo recording.
 mode: subagent
-model: google/gemini-2.5-flash
+model: anthropic/claude-sonnet-4-5
 temperature: 0.2
 tools:
   playwright_*: true
@@ -41,3 +41,17 @@ Report findings with:
 - Screenshots as evidence
 - Steps to reproduce any issues
 - Suggestions for fixes
+
+## Error Handling
+
+**Do NOT create Linear issues for:**
+- Playwright tool failures (browser in use, connection errors, timeouts)
+- Your own tooling problems
+- Infrastructure issues blocking verification
+
+These are operational issues, not product bugs. Simply report the blocker to the parent agent and stop.
+
+**When blocked:**
+1. Report what you were able to verify
+2. Explain the blocker briefly
+3. Return immediately - do not retry indefinitely or repeat yourself
