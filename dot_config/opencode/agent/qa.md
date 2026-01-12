@@ -1,6 +1,7 @@
 ---
 description: QA specialist with Playwright browser automation. Delegate for testing, verification, and demo recording.
 mode: subagent
+model: google/gemini-2.5-flash
 temperature: 0.2
 tools:
   playwright_*: true

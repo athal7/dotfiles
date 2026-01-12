@@ -1,6 +1,7 @@
 ---
 description: Meeting context from Granola. Delegate for requirements and decisions from conversations.
 mode: subagent
+model: google/gemini-2.5-flash
 temperature: 0.3
 tools:
   granola_*: true

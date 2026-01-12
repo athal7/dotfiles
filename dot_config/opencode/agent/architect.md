@@ -1,7 +1,7 @@
 ---
 description: Architect - lightweight architecture decisions. Delegate for design questions, tradeoffs, and system boundaries.
 mode: subagent
-model: anthropic/claude-opus-4-5
+model: openai/gpt-5.2
 temperature: 0.4
 thinking: high
 tools:

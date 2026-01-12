@@ -1,6 +1,7 @@
 ---
 description: Technical writer - holistic documentation. Delegate for READMEs, guides, ADRs, and markdown docs.
 mode: subagent
+model: google/gemini-2.5-flash
 temperature: 0.5
 tools:
   background_task: false

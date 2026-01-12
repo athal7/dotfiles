@@ -47,7 +47,8 @@
   },
   "plugin": [
     "opencode-devcontainers",
-    "@tarquinen/opencode-dcp@latest"
+    "opencode-gemini-auth@latest",
+    "opencode-openai-codex-auth@latest"
   ],
   "mcp": {
     "playwright": {
