@@ -55,8 +55,11 @@ When modifying agent behavior, choose the right location:
 | `dot_config/opencode/agent/architect.md` | Design decisions and tradeoffs (Fowler-style) |
 | `dot_config/opencode/agent/pm.md` | Customer context, requirements (Cagan-style) |
 | `dot_config/opencode/agent/docs.md` | READMEs, guides, ADRs, markdown documentation |
+| `dot_config/opencode/agent/ux.md` | Figma MCP access for design specs and visual details |
+| `dot_config/opencode/agent/qa.md` | Playwright MCP for browser testing and verification |
 | `dot_config/opencode/command/review.md` | `/review` command for code review feedback |
-| `dot_config/opencode/command/qa.md` | `/qa` command for QA verification and demo recording |
+| `dot_config/opencode/command/ux.md` | `/ux` command - delegates to ux agent for Figma lookups |
+| `dot_config/opencode/command/qa.md` | `/qa` command - delegates to qa agent for browser verification |
 
 **When updating agent instructions**:
 1. Review all agents to ensure appropriate placement

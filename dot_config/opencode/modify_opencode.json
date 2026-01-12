@@ -10,7 +10,23 @@ CHEZMOI_SETTINGS='
 {
   "instructions": [
     "~/.config/opencode/AGENTS.local.md"
-  ]
+  ],
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "figma": {
+      "type": "local",
+      "command": ["npx", "-y", "figma-developer-mcp", "--stdio"],
+      "enabled": true
+    }
+  },
+  "tools": {
+    "playwright_*": false,
+    "figma_*": false
+  }
 }
 '
 
