@@ -17,13 +17,25 @@
       },
       "models": {
         "qwen2.5-coder:14b": {
-          "name": "Qwen 2.5 Coder 14B"
+          "name": "Qwen 2.5 Coder 14B",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
         },
         "qwen2.5:7b": {
-          "name": "Qwen 2.5 7B"
+          "name": "Qwen 2.5 7B",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
         },
         "qwen2.5:3b": {
-          "name": "Qwen 2.5 3B"
+          "name": "Qwen 2.5 3B",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
         }
       }
     }
@@ -34,7 +46,8 @@
     }
   },
   "plugin": [
-    "opencode-devcontainers"
+    "opencode-devcontainers",
+    "@tarquinen/opencode-dcp@latest"
   ],
   "mcp": {
     "playwright": {
