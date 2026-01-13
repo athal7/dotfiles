@@ -74,7 +74,11 @@ In Explore, favor speed. In Extract, favor robustness.
 
 **PR titles**: Same format as commits (for squash-merge)
 
-**PR descriptions**: Bullet points only. No headers or extra formatting.
+**PR descriptions**: 
+- Bullet points only, no headers or formatting
+- Focus on "why" and non-obvious decisions
+- Omit: tests added, files changed, how it works (visible in diff)
+- Omit: context, benefits, requirements (visible in linked issue)
 
 ## Code Quality (Uncle Bob)
 
