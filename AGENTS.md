@@ -65,6 +65,7 @@ When modifying agent behavior, choose the right location:
 | `dot_config/opencode/command/qa.md` | `/qa` command - delegates to qa agent for browser verification |
 | `dot_config/opencode/command/context.md` | `/context` command - delegates to context agent for meeting notes |
 | `dot_config/opencode/command/attention.md` | `/attention` command - check what needs attention (GitHub, etc.) |
+| `dot_config/opencode/command/standup.md` | `/standup` command - prepare standup answers from recent activity |
 | `dot_config/opencode/command/todo.md` | `/todo` command - add items to todo list without interrupting |
 | `dot_config/opencode/command/project-updates.md` | `/project-updates` command - draft status updates |
 | `dot_config/opencode/command/event-digest.md` | `/event-digest` command - weekly local events digest |

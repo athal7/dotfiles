@@ -103,4 +103,5 @@ Delegate specialized work via `plan` (the delegation hub):
 - `/qa` - Browser verification via Playwright (delegates to `qa` agent)
 - `/context` - Meeting context from Granola (delegates to `context` agent)
 - `/attention` - Check what needs attention across GitHub, Linear, etc.
+- `/standup` - Prepare standup answers from recent activity
 - `/todo` - Add items to todo list without interrupting current work
