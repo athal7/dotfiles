@@ -9,22 +9,17 @@ Review code changes for bugs, security issues, and quality concerns.
 
 ## Workspace Detection
 
-Before reviewing, ensure you're in the correct git repository:
+**Default to `$PWD`**, but verify it matches the conversation context.
 
-1. **Get git root and branch**:
-   ```bash
-   git rev-parse --show-toplevel
-   git branch --show-current
-   ```
+If the conversation mentions specific PRs, branches, files, or technologies that don't exist in `$PWD`, search for the correct workspace:
+- Check `~/.local/share/opencode/worktree/*/` and `~/.local/share/opencode/clone/*/`
+- Match based on PR numbers, branch names, or file paths mentioned in conversation
+- Use `gh pr view` or `git branch -a` to verify matches
 
-2. **Verify context makes sense**:
-   - If on `main`/`master` with no uncommitted changes, you're likely in the wrong directory
-   - Search workspace locations for a feature branch:
-     - Git worktrees: `git worktree list`
-     - Opencode workspaces: `ls ~/.local/share/opencode/worktree/*/ ~/.local/share/opencode/clone/*/`
-   - Identify and use the workspace with the expected feature branch
-
-**Do not ask the user which directory to use** - find it automatically.
+Examples of mismatch:
+- Conversation about "PWA changes" and "service workers" but `$PWD` is a dotfiles repo
+- Conversation mentions PR #7258 but `$PWD` repo has no such PR
+- Conversation references `prompt-input.tsx` but no such file in `$PWD`
 
 ## Determining What to Review
 
