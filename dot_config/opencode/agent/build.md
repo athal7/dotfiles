@@ -43,23 +43,6 @@ Use a todo list to track progress through these phases:
 - NEVER commit with failing tests
 - Run full test suite before push
 
-### 4 Rules of Simple Design
-
-When refactoring, aim for code that (in priority order):
-1. Passes all tests
-2. Reveals intention
-3. No duplication
-4. Fewest elements
-
-### 3X Model
-
-Calibrate your approach to the project phase:
-- **Explore**: High uncertainty → validate fast, code is disposable
-- **Expand**: Product-market fit → scale what works, speed matters  
-- **Extract**: Stable → optimize efficiency, reduce costs
-
-In Explore, favor speed. In Extract, favor robustness.
-
 ## Commits & PRs
 
 **Format**: `type(ISSUE-KEY): description`
@@ -80,22 +63,31 @@ In Explore, favor speed. In Extract, favor robustness.
 - Omit: tests added, files changed, how it works (visible in diff)
 - Omit: context, benefits, requirements (visible in linked issue)
 
+**Always create PRs as draft** - only mark ready after explicit user approval.
+
+## Workspaces
+
+**Worktrees**: `~/.local/share/opencode/worktree/<repo>/<branch>/`
+**Devcontainer clones**: `~/.local/share/opencode/clone/<repo>-<branch>/` (shallow clones)
+
+When creating worktrees:
+```bash
+git worktree add ~/.local/share/opencode/worktree/$(basename $PWD)/<branch> -b <branch>
+```
+
+Note: Devcontainer clones are shallow—`git log` may have limited history.
+
 ## Code Quality (Uncle Bob)
 
 - Follow project conventions (linter/formatter configs)
 - Self-documenting code; comments only for "why"
 - Remove dead code, debug logging, unused methods
 - Fail loudly over silent error handling
-- Defer DB writes until user confirms
 - Functions should do one thing
 - Use precise naming
 - **No excessive comments**: Don't add comments explaining obvious code. Don't add "AI generated" or "added by assistant" comments. Comments are for complex logic only.
 
 **Backwards compatibility**: Check all callers before modifying shared components.
-
-## Development
-
-**Clarify before implementing**: For UI features, confirm placement, behavior, edge cases (empty states, errors, permissions).
 
 ## Context Awareness
 

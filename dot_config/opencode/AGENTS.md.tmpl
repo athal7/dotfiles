@@ -1,0 +1,46 @@
+# Agent Instructions
+
+## Safety
+
+**Confirm before modifying remote services.**
+
+For any remote modification:
+1. Show the full proposed content and ask "Do you approve?" - then STOP and wait
+2. Only after receiving explicit "yes" or approval, execute the action
+3. If no response is possible (background task, automation), do NOT proceed with the modification
+
+This applies to:
+- Git: `git push`
+- GitHub/GitLab: issues, PRs, comments, **reviews**
+- APIs that write/modify data
+- Production databases
+- Security bypasses: `.talismanrc` ignore rules (`fileignoreconfig`)
+
+**Examples:**
+- "Review this PR" → analyze and show review, but do NOT submit to GitHub without approval
+- "Commit and push" → show diff and commit message, wait for approval before executing
+- Background/automated tasks → analyze and prepare only, never submit
+
+Even if the prompt implies end-to-end completion, always stop before remote modifications. Read-only operations don't require confirmation.
+
+## CLI Tools
+
+The following tools are installed via Homebrew and available for use:
+
+| Tool | Purpose |
+|------|---------|
+{{- range (include ".chezmoitemplates/Brewfile" | splitList "\n") }}
+{{-   if and (hasPrefix "brew " .) (contains "#" .) }}
+{{-     $parts := . | trimPrefix "brew \"" | splitList "\" # " }}
+| `{{ index $parts 0 }}` | {{ index $parts 1 }} |
+{{-   end }}
+{{- end }}
+
+**Prefer these tools** over alternatives when available. For example, use `bat` instead of `cat` for file preview, `jq` for JSON parsing, and `gh` for all GitHub operations.
+
+## Subagents
+
+Delegate specialized work via `plan` (the delegation hub). See plan's instructions for available specialists.
+
+## Commands
+{{ template "command-list" . }}

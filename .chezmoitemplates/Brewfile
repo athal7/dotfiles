@@ -1,29 +1,29 @@
 tap "github/gh"
 
+# CLI tools - descriptions after # are parsed into AGENTS.md
 brew "autojump"
-brew "bat"
-brew "chezmoi"
-brew "colima"
-brew "direnv"
-brew "docker"
-brew "docker-compose"
-brew "gh"
-brew "ical-buddy"
-brew "jc"
-brew "jq"
-brew "kubernetes-cli"
-brew "mas"
+brew "bat" # Better cat with syntax highlighting
+brew "chezmoi" # Dotfiles manager
+brew "colima" # Docker runtime for macOS
+brew "direnv" # Per-directory environment variables
+brew "docker" # Container runtime
+brew "docker-compose" # Multi-container Docker applications
+brew "ffmpeg" # Video/audio processing
+brew "gh" # GitHub CLI for issues, PRs, repos
+brew "ical-buddy" # Query macOS calendar events
+brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
+brew "jq" # JSON processing and querying
+brew "kubernetes-cli" # Kubernetes CLI (kubectl)
+brew "mas" # Mac App Store CLI
 brew "neovim"
 brew "opencode"
 brew "openssl"
-brew "opentofu"
+brew "opentofu" # Terraform-compatible infrastructure as code
+brew "playwright-mcp" # Browser automation MCP server
 brew "starship"
-brew "talisman"
+brew "talisman" # Git secrets scanner (pre-commit hook)
 brew "tmux"
-brew "watch"
-
-brew "ffmpeg"
-brew "playwright-mcp"
+brew "watch" # Run commands periodically
 
 cask_args appdir: "/Applications"
 cask "font-monaspace"

@@ -1,0 +1,16 @@
+{{- $agentDir := "dot_config/opencode/agent" -}}
+{{- $agentFiles := output "ls" (joinPath .chezmoi.sourceDir $agentDir) | trim | splitList "\n" -}}
+- `explore` - Codebase investigation (quick/medium/thorough). Built-in agent.
+{{- range $agentFiles -}}
+{{-   $path := joinPath $agentDir . -}}
+{{-   $name := . | trimSuffix ".tmpl" | trimSuffix ".md" -}}
+{{-   $content := include $path -}}
+{{-   $mode := "" -}}{{- $desc := "" -}}
+{{-   range (splitList "\n" $content) -}}
+{{-     if hasPrefix "mode:" . }}{{ $mode = (. | trimPrefix "mode:" | trim) }}{{ end -}}
+{{-     if hasPrefix "description:" . }}{{ $desc = (. | trimPrefix "description:" | trim) }}{{ end -}}
+{{-   end -}}
+{{-   if eq $mode "subagent" }}
+- `{{ $name }}` - {{ $desc }}
+{{-   end -}}
+{{- end -}}

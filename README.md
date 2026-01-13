@@ -14,26 +14,14 @@ Then fill in machine-specific details:
 - `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 
 Automatic setup includes:
-- ✅ Homebrew packages via Brewfile (including `opencode` and `opencode-desktop`)
+- Homebrew packages via Brewfile (including `opencode` and `opencode-desktop`)
 
-## OpenCode
+## OpenCode Configuration
 
-**Agent instructions**: Global instructions in `~/.config/opencode/AGENTS.md` apply to all sessions. Repository-specific instructions in `AGENTS.md` at repo root.
+See [AGENTS.md](AGENTS.md) for structure and conventions when editing this repo.
 
-**Agents**:
-- `build` - TDD workflow, commits, PRs, code quality (primary)
-- `plan` - Delegation hub: analysis, research, coordination
-
-**Subagents** (delegated via plan):
-- `architect` - Design questions, tradeoffs, system boundaries
-- `pm` - Customer context, requirements, problem definition
-- `docs` - READMEs, guides, ADRs, markdown documentation
-- `explore` - Codebase investigation
-
-**Commands**:
-- `/review` - Code review (commit, branch, PR, or uncommitted changes)
-- `/qa` - QA verification and demo recording using Playwright MCP
-- `/todo` - Manage todo list
-
-**Skills**:
-- `opencode-devcontainers` - Concurrent branch development using devcontainer clones
+Global agent instructions deploy to `~/.config/opencode/AGENTS.md` and auto-generate lists of:
+- CLI tools (from Brewfile comments)
+- Subagents (from `agent/*.md` with `mode: subagent`)
+- Local agents (from `agent/*.md` with `model: ollama/*`)
+- Commands (from `command/*.md`)

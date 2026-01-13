@@ -43,39 +43,22 @@
 
 ## Agent Override Structure
 
-When modifying agent behavior, choose the right location:
+| Location | Purpose |
+|----------|---------|
+| `dot_config/opencode/AGENTS.md.tmpl` | Universal rules (safety, env vars, CLI tools, quality) - auto-generates subagent/command lists |
+| `dot_config/opencode/agent/build.md` | Primary agent: TDD workflow, commits, PRs |
+| `dot_config/opencode/agent/plan.md.tmpl` | Delegation hub - auto-generates subagent list |
+| `dot_config/opencode/agent/*.md` | Subagents (mode: subagent) and local agents (model: ollama/*) |
+| `dot_config/opencode/command/*.md` | Slash commands |
 
-| File | Purpose |
-|------|---------|
-| `dot_config/opencode/AGENTS.md` | Universal rules (safety, env vars, quality) |
-| `dot_config/opencode/agent/build.md` | Development workflow: TDD, commits, PRs, code quality |
-| `dot_config/opencode/agent/plan.md` | Delegation hub: analysis, research, coordination |
-| `dot_config/opencode/agent/architect.md` | Design decisions and tradeoffs (Fowler-style) |
-| `dot_config/opencode/agent/pm.md` | Customer context, requirements (Cagan-style) |
-| `dot_config/opencode/agent/docs.md` | READMEs, guides, ADRs, markdown documentation |
-| `dot_config/opencode/agent/ux.md` | Figma MCP access for design specs and visual details |
-| `dot_config/opencode/agent/qa.md` | Playwright MCP for browser testing and verification |
-| `dot_config/opencode/agent/context.md` | Granola MCP for meeting notes and conversation context |
-| `dot_config/opencode/agent/observability.md` | Elasticsearch MCP for APM traces, logs, metrics investigation |
-| `dot_config/opencode/agent/local.md` | Fast local code agent (Ollama 14B) for quick file ops |
-| `dot_config/opencode/agent/local-plan.md` | Fast local planning agent (Ollama 7B) for triage and routing |
-| `dot_config/opencode/agent/review.md` | Code review agent with Uncle Bob/Fowler/Beck principles |
-| `dot_config/opencode/command/review.md` | `/review` command - delegates to review agent |
-| `dot_config/opencode/command/ux.md` | `/ux` command - delegates to ux agent for Figma lookups |
-| `dot_config/opencode/command/qa.md` | `/qa` command - delegates to qa agent for browser verification |
-| `dot_config/opencode/command/context.md` | `/context` command - delegates to context agent for meeting notes |
-| `dot_config/opencode/command/attention.md` | `/attention` command - check what needs attention (GitHub, etc.) |
-| `dot_config/opencode/command/standup.md` | `/standup` command - prepare standup answers from recent activity |
-| `dot_config/opencode/command/todo.md` | `/todo` command - add items to todo list without interrupting |
-| `dot_config/opencode/command/project-updates.md` | `/project-updates` command - draft status updates |
-| `dot_config/opencode/command/event-digest.md` | `/event-digest` command - weekly local events digest |
-| `dot_config/opencode/command/cleanup.md` | `/cleanup` command - clean up old worktrees and devcontainer clones |
+**Adding a new agent/command**:
+1. Create the `.md` file with YAML frontmatter including `description:` and `mode:`
+2. Run `chezmoi apply` - lists auto-update in AGENTS.md, plan.md, and README.md
 
-**When updating agent instructions**:
-1. Review all agents to ensure appropriate placement
-2. Check for conflicting or duplicative guidance across agents
-3. Clean up as appropriate
-4. Update this table if adding/removing/renaming agents
+**Frontmatter fields used for templating**:
+- `description:` - Short description (required for listing)
+- `mode:` - `primary`, `subagent`, or `all` (determines categorization)
+- `model:` - If starts with `ollama/`, listed under "Local agents"
 
 ## Skills
 

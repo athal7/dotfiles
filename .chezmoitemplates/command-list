@@ -1,0 +1,12 @@
+{{- $cmdDir := "dot_config/opencode/command" -}}
+{{- $cmdFiles := output "ls" (joinPath .chezmoi.sourceDir $cmdDir) | trim | splitList "\n" -}}
+{{- range $cmdFiles -}}
+{{-   $path := joinPath $cmdDir . -}}
+{{-   $name := . | trimSuffix ".tmpl" | trimSuffix ".md" -}}
+{{-   $content := include $path -}}
+{{-   $desc := "" -}}
+{{-   range (splitList "\n" $content) -}}
+{{-     if hasPrefix "description:" . }}{{ $desc = (. | trimPrefix "description:" | trim) }}{{ end -}}
+{{-   end }}
+- `/{{ $name }}` - {{ $desc }}
+{{- end -}}
