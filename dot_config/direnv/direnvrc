@@ -1,0 +1,5 @@
+# Always load ~/.env for all directories
+# This ensures worktrees and other non-home directories get secrets
+if [[ -f "$HOME/.env" ]]; then
+  dotenv "$HOME/.env"
+fi
