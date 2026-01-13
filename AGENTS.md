@@ -18,9 +18,7 @@
 
 ## Host-Specific Files (NOT managed by chezmoi)
 
-These files are created once but not tracked:
 - `~/.env` - API keys and secrets (loaded by direnv)
-- `~/.config/opencode/AGENTS.local.md` - machine-specific context (auto-discovered)
 
 ## Key Locations
 

@@ -29,7 +29,7 @@ Use the Playwright MCP tools to:
 
 ## Rules
 
-- **Check AGENTS.local.md first** - Use selectors/credentials documented there
+- **Check project AGENTS.md first** - Use selectors/credentials documented there
 - **One flow per QA run** - Keep verification focused
 - **Screenshot key moments** - Before/after states
 - **Persist through failures** - If a selector fails, try alternative approaches (different selectors, waiting longer, scrolling into view). Only give up after 3+ attempts with different strategies.

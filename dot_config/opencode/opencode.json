@@ -1,8 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [
-    "~/.config/opencode/AGENTS.local.md"
-  ],
+  "instructions": [],
   "server": {
     "hostname": "0.0.0.0"
   },
