@@ -48,6 +48,15 @@ linearis issues search "" --status "In Progress" --limit 20
 ~/.local/bin/granola-cli meetings list 10
 ```
 
+For meetings from **yesterday** that have notes (`has_notes: true`), delegate to the `context` agent to fetch full meeting details and extract action items:
+
+> Fetch meeting notes for [meeting ID] and extract:
+> - Action items (especially any assigned to Andrew/me)
+> - Key decisions or commitments made
+> - Open questions or blockers mentioned
+
+Meetings from the last 3 days are listed for context (relating to current work), but only check yesterday's for new action items.
+
 ### macOS Calendar
 
 ```bash
@@ -73,6 +82,13 @@ Only flag comments/reviews needing attention:
 ### Calendar
 
 Use today's events to help prioritize - flag meeting conflicts, prep time needed.
+
+### Meeting Action Items
+
+Include action items from yesterday's meetings in the output:
+- Group by meeting
+- Highlight items assigned to me or unassigned
+- Note any that relate to current PRs or issues
 
 ## Output
 
