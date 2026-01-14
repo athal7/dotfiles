@@ -1,8 +1,16 @@
 ---
-description: Plan my day - calendar, tasks, and what needs attention
+description: What needs my attention right now
 ---
 
-Help me plan my day based on my calendar, tasks, and what needs attention.
+Show me what needs attention based on my calendar, PRs, and recent meetings.
+
+First, check the current time:
+
+```bash
+date "+%H:%M %A"
+```
+
+Use this to contextualize what's relevant NOW vs later.
 
 ## Sources
 
@@ -37,8 +45,8 @@ linearis issues search "" --status "In Progress" --limit 20
 ### Apple Reminders
 
 ```bash
-# Agent tasks list
-~/.local/bin/remind show 'Agent Tasks'
+# All reminders (includes unscheduled)
+~/.local/bin/remind show
 ```
 
 ### Granola Meetings
@@ -60,11 +68,8 @@ Meetings from the last 3 days are listed for context (relating to current work),
 ### macOS Calendar
 
 ```bash
-# Today's events
-icalBuddy -f -ea -nc -nrd eventsToday
-
-# Next 3 days
-icalBuddy -f -ea -nc -nrd eventsFrom:today to:today+3
+# Remaining events today and tomorrow
+icalBuddy -f -ea -nc -nrd eventsFrom:today to:today+1
 ```
 
 ## Processing Rules
@@ -85,26 +90,15 @@ Use today's events to help prioritize - flag meeting conflicts, prep time needed
 
 ### Meeting Action Items
 
-Include action items from yesterday's meetings in the output:
-- Group by meeting
-- Highlight items assigned to me or unassigned
-- Note any that relate to current PRs or issues
+Include action items from yesterday's meetings - especially items assigned to me or unassigned.
 
 ## Output
 
-Summarize in priority order:
+Single flat list, one line per item. Use markers:
+- `🔴` urgent (overdue, blocking others, conflicts)
+- `⏰` time-sensitive today
+- `📋` can do anytime
 
-1. **Urgent** - PRs waiting for my review > 2 days, merge conflicts, blocked items
-2. **Today** - PR feedback, meetings, time-sensitive items
-3. **This week** - Issues in progress, pending tasks
+Include link at end of line. Adapt list length to time remaining in workday (assume 5-6pm end) - shorter list later in day. If light, include unscheduled reminders as options.
 
-For each item: what it is (with link), why it needs attention, suggested action.
-
-## Day Planning
-
-Based on all sources, suggest a plan for the day:
-1. **Morning** - What to tackle first (urgent items, deep work before meetings)
-2. **Around meetings** - Prep needed, buffer time
-3. **Afternoon** - Lower priority items, follow-ups
-
-Ask which items I want to work on, then help me tackle them.
+Ask which I want to work on.
