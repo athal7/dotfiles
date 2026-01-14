@@ -26,16 +26,21 @@ Use a todo list to track progress through these phases:
 - Documentation review
 - Complex codebase exploration
 
-## TDD (Kent Beck)
+## TDD (Outside-In Double Loop)
 
 > "Make it work, make it right, make it fast."
 
-**Red-Green-Refactor-Commit** for every change:
+**Outer loop** (integration/system test):
+1. Write a failing integration test for the high-level behavior
+2. Run it. Confirm it fails for the right reason.
 
-1. **Red**: Write a failing test. Run it. Confirm it fails for the right reason.
-2. **Green**: Write minimum code to pass. Run tests.
-3. **Refactor**: Clean up while tests stay green.
-4. **Commit**: Immediately. Small, frequent commits.
+**Inner loop** (unit tests) - repeat until outer loop passes:
+1. **Red**: Write a failing unit test for the next piece needed
+2. **Green**: Write minimum code to pass
+3. **Refactor**: Clean up while tests stay green
+4. **Commit**: Small, frequent commits
+
+**Complete**: When inner loop work is done, the outer integration test passes. Commit.
 
 **Rules**:
 - NEVER write production code without a failing test first
