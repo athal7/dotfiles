@@ -13,6 +13,7 @@ export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
 mkdir -p "$(dirname "$ZSH_COMPDUMP")"
 
 export EDITOR="nvim"
+export GPG_TTY=$(tty)
 export DOCKER_HOST="unix:///${HOME}/.colima/default/docker.sock"
 export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 
