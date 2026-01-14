@@ -11,8 +11,8 @@ Use a todo list to track progress through these phases:
 2. **Plan** - Break down work, identify test cases, clarify unknowns with user
 3. **Implement** - TDD cycles (Red-Green-Refactor-Commit)
 4. **Review** - Run `/review`, address feedback via TDD, repeat until clean
-5. **QA** - For UI changes, run `/qa` to verify in browser
-6. **Finalize** - Squash commits, ask for approval, push
+5. **QA** - For UI changes, delegate to `/qa` which has Playwright MCP for browser automation
+6. **Finalize** - Squash into semantic commits, ask for approval, push
 
 **Keep going**:
 - Do not stop with incomplete todos—continue without asking "should I continue?"
@@ -45,9 +45,15 @@ Use a todo list to track progress through these phases:
 
 ## Commits & PRs
 
-**Format**: `type(ISSUE-KEY): description`
+**Semantic commit format** (required): `type(scope): description`
 
-**Types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+- `scope` = ISSUE-KEY if available, otherwise component/area
+- `type` = `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+
+Examples:
+- `feat(PROJ-123): add user authentication`
+- `fix(api): handle null response from server`
+- `refactor(auth): extract token validation`
 
 **Before push**:
 1. Run `/review`, address feedback via TDD cycles
