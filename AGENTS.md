@@ -61,4 +61,4 @@
 
 ## Skills
 
-- `opencode-devcontainers` - Concurrent branch development using devcontainer clones (for devcontainer projects)
+- `opencode-devcontainers` - Isolated branch workspaces via devcontainers or git worktrees
