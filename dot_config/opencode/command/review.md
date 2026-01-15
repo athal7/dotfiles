@@ -42,9 +42,16 @@ Based on input, determine review type:
 
 1. Get the diff using appropriate method above
 2. Identify which files changed
-3. Read full files to understand context (not just diff)
-4. Check for CONVENTIONS.md, AGENTS.md in the workspace
-5. Apply review criteria and produce findings
+3. **CRITICAL: Checkout the PR branch** if reviewing a PR:
+   ```bash
+   gh pr checkout $PR_NUMBER
+   ```
+4. **Read the actual files** to get correct line numbers:
+   - Use the Read tool on each changed file
+   - Note the line numbers where issues occur
+   - Line numbers must match the file content, not the diff
+5. Check for CONVENTIONS.md, AGENTS.md in the workspace
+6. Apply review criteria and produce findings
 
 ## Output Format
 
@@ -57,15 +64,22 @@ Return findings in this format:
 
 ## Issues Found
 
-### [File path:Line number]
-[Issue description - be constructive and brief]
-[Optional: code suggestion]
+### app/helpers/activity_helper.rb:10
+This will cause blog markers to appear on the wrong week. The chart data uses `in_time_zone` for week boundaries.
 
-### [File path:Line number]
-[Issue description]
+```suggestion
+date: entry[:post].published_at.in_time_zone.beginning_of_week.strftime("%Y-%m-%d"),
+```
+
+### app/javascript/controllers/dashboard_charts_controller.js:78
+If two posts are published in the same week, this will overwrite the first title. Consider storing multiple titles or showing a count.
 
 ## Recommendation
 [Approve / Request changes / Comment]
 ```
 
-**DO NOT submit comments directly to GitHub.** The user will review and submit after approval.
+**IMPORTANT:**
+- Line numbers MUST be from the actual file (use Read tool), not from the diff
+- DO NOT submit comments directly to GitHub
+- Return formatted findings for user to review and approve
+- User will handle GitHub API submission with correct line/position mapping

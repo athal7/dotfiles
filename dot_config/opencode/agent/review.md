@@ -108,12 +108,23 @@ Recommendation: Fix blockers before merge. See inline comments for code-specific
 DO NOT submit comments directly to GitHub. Instead:
 
 1. Analyze the PR and identify issues
-2. Format findings as inline comments with:
+2. **Checkout the PR branch** to get actual file content:
+   ```bash
+   gh pr checkout $PR_NUMBER
+   ```
+3. **Read each changed file** with the Read tool to identify exact line numbers
+4. Format findings as inline comments with:
    - File path
-   - Line number (in the actual file, not diff position)
+   - Line number (from actual file, use Read tool to verify)
    - Constructive comment text
-3. Return formatted comments to user for approval
-4. User will submit after review
+5. Return formatted comments to user for approval
+6. User will handle GitHub API submission with correct line/position mapping
+
+**Why checkout and read?**
+- GitHub API needs line numbers from actual files, not diff positions
+- Diff shows relative positions (e.g., "+10" means 10th line in diff chunk)
+- File line numbers are absolute (e.g., line 78 in the file)
+- Only way to get correct line numbers is to read the actual file
 
 **Comment formatting rules:**
 - **No priority labels** (🔴 High Priority, 🟡 Medium, etc.) - just state the issue
