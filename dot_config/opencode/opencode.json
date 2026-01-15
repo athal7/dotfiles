@@ -59,6 +59,11 @@
       "type": "local",
       "command": ["sh", "-c", "ES_HOST=\"$ES_URL\" npx -y @awesome-ai/elasticsearch-mcp"],
       "enabled": true
+    },
+    "linear": {
+      "type": "local",
+      "command": ["npx", "-y", "@mseep/linear-mcp"],
+      "enabled": true
     }
   },
   "tools": {
@@ -66,6 +71,7 @@
     "figma_*": false,
     "granola_*": false,
     "context7_*": false,
-    "elasticsearch_*": false
+    "elasticsearch_*": false,
+    "linear_*": false
   }
 }

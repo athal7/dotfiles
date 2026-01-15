@@ -28,18 +28,18 @@ gh search prs --author=@me --state=open --visibility=private --limit=10 --json=n
 gh search prs --reviewed-by=@me --updated=">=$(date -v-2d +%Y-%m-%d)" --visibility=private --limit=10 --json=number,title,url,repository,state
 ```
 
-### Linear (if LINEAR_API_KEY set)
+### Linear
 
-```bash
-# My issues - completed recently
-linearis issues search "" --status "Done" --limit 10
+Delegate to the `pm` agent to fetch Linear issues:
 
-# My issues - in progress
-linearis issues search "" --status "In Progress" --limit 10
-
-# My issues - blocked or on hold
-linearis issues search "" --status "Blocked" --limit 10
-```
+> Fetch my assigned Linear issues in these statuses: Done (last 7 days), In Progress, and Blocked. Return for each:
+> - Issue ID (e.g., ABC-123)
+> - Title
+> - Status
+> - Priority
+> - URL
+>
+> Format as JSON array grouped by status.
 
 ### Granola Meetings
 
@@ -58,43 +58,52 @@ For meetings from **yesterday** with notes (`has_notes: true`), delegate to the 
 ```bash
 # Today's schedule (for planning what to complete)
 icalBuddy -f -ea -nc -nrd eventsToday
+
+# Recent personal events for fun highlight (last 7 days)
+# Look for non-work events: social, sports, concerts, travel, etc.
+icalBuddy -f -nc -nrd eventsFrom:"$(date -v-7d +%Y-%m-%d)" to:"$(date +%Y-%m-%d)"
 ```
 
 ## Processing Rules
 
+### Framing
+
+**Talk in terms of tickets and outcomes, not GitHub activity.** PRs are implementation details - focus on what was accomplished for each issue and the user-facing or business impact.
+
 ### Progress (Since Last Standup)
 
-Look back ~24 hours (or since Friday if it's Monday):
-- PRs merged or significantly updated
-- Issues completed or moved to review
-- Code reviews completed
-- Meetings with key decisions
+Look back ~24 hours (or since Friday if it's Monday). Group by ticket:
+- Extract ticket IDs from PR titles (e.g., `PROJ-123`, `ABC-456`)
+- Summarize what was accomplished for each ticket, not individual PRs
+- For PRs without tickets, describe the outcome (bug fixed, performance improved, etc.)
+- Include key decisions from meetings
 
 ### Today's Plan
 
 Based on:
-- Open PRs that need attention (reviews received, conflicts)
-- In-progress issues
+- In-progress tickets (from Linear or PR titles)
+- What's needed to close those tickets
 - Today's calendar (meetings, focus time)
-- Reminders/tasks due
 
 ### Blockers
 
 Flag anything where:
-- PR is waiting on review > 2 days
-- Issue is marked blocked
-- Dependency on someone else's work
-- Need decision or clarification
+- Ticket is explicitly blocked
+- Waiting on someone else > 2 days (review, decision, dependency)
+- Need clarification on requirements
 
 For each blocker, suggest who might help (based on PR reviewers, issue assignees, or meeting attendees).
 
 ### Fun Highlights
 
-Look for:
-- Interesting technical wins or learnings
-- Good discussions in meetings
-- Shipped features users will notice
-- Team moments from Slack/meetings
+This should be something **personal**, not work-related. Scan recent calendar events and filter out obvious work meetings (standups, syncs, 1:1s, interviews). Look for:
+- Social events, dinners, hangouts
+- Sports, concerts, shows, games
+- Hobbies, classes, activities
+- Travel or day trips
+- Holidays or celebrations
+
+If no personal events found in calendar, ask the user what fun thing happened this week.
 
 ## Output
 
@@ -103,10 +112,12 @@ Draft standup answers in this format:
 ---
 
 **Progress since last standup:**
-- [Bullet points of completed/progressed work with links]
+- [Ticket ID]: [What was accomplished/outcome] ([link])
+- [Description of non-ticket work if any]
 
 **Plan for today:**
-- [Bullet points of what you'll work on]
+- [Ticket ID]: [What needs to happen to close it]
+- [Other planned work]
 
 **Blockers:**
 - [Any blockers with specific asks and suggested @mentions, or "None"]
