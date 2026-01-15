@@ -78,13 +78,9 @@ Examples:
 
 ## Workspaces
 
-**Worktrees**: `~/.local/share/opencode/worktree/<repo>/<branch>/`
-**Devcontainer clones**: `~/.local/share/opencode/clone/<repo>-<branch>/` (shallow clones)
+For isolated branch work, use `/worktree <branch>` to create a worktree with proper setup (secrets, environment, database isolation).
 
-When creating worktrees:
-```bash
-git worktree add ~/.local/share/opencode/worktree/$(basename $PWD)/<branch> -b <branch>
-```
+For devcontainer projects, use `/devcontainer <branch>` instead.
 
 Note: Devcontainer clones are shallow—`git log` may have limited history.
 
