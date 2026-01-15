@@ -45,3 +45,27 @@ Based on input, determine review type:
 3. Read full files to understand context (not just diff)
 4. Check for CONVENTIONS.md, AGENTS.md in the workspace
 5. Apply review criteria and produce findings
+
+## Output Format
+
+Return findings in this format:
+
+**For PR reviews:**
+```
+## Summary
+[One line description of what the PR does]
+
+## Issues Found
+
+### [File path:Line number]
+[Issue description - be constructive and brief]
+[Optional: code suggestion]
+
+### [File path:Line number]
+[Issue description]
+
+## Recommendation
+[Approve / Request changes / Comment]
+```
+
+**DO NOT submit comments directly to GitHub.** The user will review and submit after approval.

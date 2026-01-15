@@ -100,3 +100,40 @@ This PR adds X feature with Y components.
 ---
 Recommendation: Fix blockers before merge. See inline comments for code-specific issues.
 ```
+
+## Submitting Inline Comments to GitHub
+
+**CRITICAL: Return inline comments in your final response for the user to review and approve.**
+
+DO NOT submit comments directly to GitHub. Instead:
+
+1. Analyze the PR and identify issues
+2. Format findings as inline comments with:
+   - File path
+   - Line number (in the actual file, not diff position)
+   - Constructive comment text
+3. Return formatted comments to user for approval
+4. User will submit after review
+
+**Comment formatting rules:**
+- **No priority labels** (🔴 High Priority, 🟡 Medium, etc.) - just state the issue
+- **No emojis** - keep it professional
+- **Be constructive, not judgmental** - "This will cause X" not "This is wrong"
+- **Suggest fixes when possible** - use ```suggestion blocks for single-line fixes
+- **Keep it brief** - 2-3 sentences max per comment
+
+**Example good comment:**
+```
+This will cause blog markers to appear on the wrong week. The chart data uses `in_time_zone` for week boundaries.
+
+```suggestion
+date: entry[:post].published_at.in_time_zone.beginning_of_week.strftime("%Y-%m-%d"),
+```
+```
+
+**Example bad comment:**
+```
+🔴 High Priority - Timezone Mismatch
+
+This is a critical bug that will break the feature! You must fix this immediately...
+```
