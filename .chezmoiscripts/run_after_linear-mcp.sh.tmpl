@@ -1,0 +1,32 @@
+#!/bin/bash
+# Clone/update and build Linear MCP server
+set -e
+
+{{ template "brewenv" . }}
+
+LINEAR_MCP_DIR="$HOME/.config/opencode/mcps/linear-mcp"
+
+if [ ! -d "$LINEAR_MCP_DIR" ]; then
+    echo "Cloning linear-mcp..."
+    git clone https://github.com/cline/linear-mcp.git "$LINEAR_MCP_DIR"
+    cd "$LINEAR_MCP_DIR"
+    npm install
+    npm run build
+    echo "Linear MCP installed at $LINEAR_MCP_DIR"
+else
+    cd "$LINEAR_MCP_DIR"
+    # Check if there are updates
+    git fetch origin
+    LOCAL=$(git rev-parse HEAD)
+    REMOTE=$(git rev-parse origin/main)
+    
+    if [ "$LOCAL" != "$REMOTE" ]; then
+        echo "Updating linear-mcp..."
+        git pull --ff-only
+        npm install
+        npm run build
+        echo "Linear MCP updated"
+    else
+        echo "Linear MCP is up to date"
+    fi
+fi

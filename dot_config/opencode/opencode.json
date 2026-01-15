@@ -62,7 +62,7 @@
     },
     "linear": {
       "type": "local",
-      "command": ["npx", "-y", "@mseep/linear-mcp"],
+      "command": ["sh", "-c", "node $HOME/.config/opencode/mcps/linear-mcp/build/index.js"],
       "enabled": true
     }
   },
