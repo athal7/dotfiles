@@ -21,10 +21,7 @@ opt.hlsearch = true
 opt.incsearch = true
 
 -- Appearance
--- Only enable termguicolors if terminal supports it
-if vim.fn.has("termguicolors") == 1 and vim.env.COLORTERM == "truecolor" then
-  opt.termguicolors = true
-end
+opt.termguicolors = true
 opt.background = "dark"
 opt.signcolumn = "yes"
 opt.cursorline = true

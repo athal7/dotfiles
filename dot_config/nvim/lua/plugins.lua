@@ -5,7 +5,7 @@ require("lazy").setup({
     priority = 1000,
     config = function()
       require("github-theme").setup({})
-      vim.cmd.colorscheme("github_dark")
+      vim.cmd.colorscheme("github_dark_default")
     end,
   },
 
@@ -174,7 +174,7 @@ require("lazy").setup({
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("lualine").setup({
-        options = { theme = "github_dark" },
+        options = { theme = "github_dark_default" },
       })
     end,
   },
