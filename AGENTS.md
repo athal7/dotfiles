@@ -48,7 +48,7 @@
 | `dot_config/opencode/AGENTS.md.tmpl` | Universal rules (safety, env vars, CLI tools, quality) - auto-generates subagent/command lists |
 | `dot_config/opencode/agent/build.md` | Primary agent: TDD workflow, commits, PRs |
 | `dot_config/opencode/agent/plan.md.tmpl` | Delegation hub - auto-generates subagent list |
-| `dot_config/opencode/agent/*.md` | Subagents (mode: subagent) and local agents (model: ollama/*) |
+| `dot_config/opencode/agent/*.md` | Subagents (mode: subagent) |
 | `dot_config/opencode/command/*.md` | Slash commands |
 
 **Adding a new agent/command**:
@@ -58,7 +58,6 @@
 **Frontmatter fields used for templating**:
 - `description:` - Short description (required for listing)
 - `mode:` - `primary`, `subagent`, or `all` (determines categorization)
-- `model:` - If starts with `ollama/`, listed under "Local agents"
 
 ## Skills
 

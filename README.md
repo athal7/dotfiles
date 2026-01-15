@@ -23,5 +23,4 @@ See [AGENTS.md](AGENTS.md) for structure and conventions when editing this repo.
 Global agent instructions deploy to `~/.config/opencode/AGENTS.md` and auto-generate lists of:
 - CLI tools (from Brewfile comments)
 - Subagents (from `agent/*.md` with `mode: subagent`)
-- Local agents (from `agent/*.md` with `model: ollama/*`)
 - Commands (from `command/*.md`)
