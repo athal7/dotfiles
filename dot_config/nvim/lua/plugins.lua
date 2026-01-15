@@ -27,7 +27,6 @@ require("lazy").setup({
   -- Fuzzy finder
   {
     "nvim-telescope/telescope.nvim",
-    branch = "0.1.x",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
       { "<leader>ff", "<cmd>Telescope find_files<CR>", desc = "Find files" },
@@ -61,7 +60,8 @@ require("lazy").setup({
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
     opts = {
-      ensure_installed = { "lua_ls", "ts_ls" },
+      ensure_installed = { "lua_ls", "ts_ls", "pyright", "rust_analyzer", "yamlls" },
+      automatic_enable = true,
     },
   },
   {
@@ -82,7 +82,7 @@ require("lazy").setup({
         end,
       })
 
-      -- Configure LSP servers using vim.lsp.config (Neovim 0.11+)
+      -- Server-specific configs
       vim.lsp.config("lua_ls", {
         settings = {
           Lua = {
@@ -90,10 +90,12 @@ require("lazy").setup({
           },
         },
       })
-      vim.lsp.config("ts_ls", {})
 
-      -- Enable configured servers
-      vim.lsp.enable({ "lua_ls", "ts_ls" })
+      -- Ruby LSP: use rbenv shim instead of Mason (handles .ruby-version)
+      vim.lsp.config("ruby_lsp", {
+        cmd = { vim.fn.expand("~/.rbenv/shims/ruby-lsp") },
+      })
+      vim.lsp.enable("ruby_lsp")
     end,
   },
 
