@@ -1,5 +1,5 @@
 ---
-description: Product Manager - product thinking in the style of Marty Cagan. Delegate for problem definition, customer context, and outcomes.
+description: Product Manager with Linear MCP access. Delegate for issues, problem definition, and outcomes.
 mode: subagent
 model: google/gemini-2.5-flash
 temperature: 0.5
