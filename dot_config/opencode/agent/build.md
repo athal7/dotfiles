@@ -1,6 +1,10 @@
 ---
 description: Development agent with strict TDD workflow
 mode: primary
+tools:
+  ast-grep_*: true
+  pty_*: true
+  context7_*: true
 ---
 
 ## Workflow

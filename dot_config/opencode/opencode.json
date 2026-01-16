@@ -32,7 +32,8 @@
   "plugin": [
     "opencode-devcontainers",
     "opencode-gemini-auth@latest",
-    "opencode-openai-codex-auth@latest"
+    "opencode-openai-codex-auth@latest",
+    "opencode-pty"
   ],
   "mcp": {
     "playwright": {
@@ -64,6 +65,11 @@
       "type": "local",
       "command": ["sh", "-c", "node $HOME/.config/opencode/mcps/linear-mcp/build/index.js"],
       "enabled": true
+    },
+    "ast-grep": {
+      "type": "local",
+      "command": ["uvx", "--from", "git+https://github.com/ast-grep/ast-grep-mcp", "ast-grep-server"],
+      "enabled": true
     }
   },
   "tools": {
@@ -72,6 +78,8 @@
     "granola_*": false,
     "context7_*": false,
     "elasticsearch_*": false,
-    "linear_*": false
+    "linear_*": false,
+    "ast-grep_*": false,
+    "pty_*": false
   }
 }

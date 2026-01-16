@@ -1,6 +1,7 @@
 tap "github/gh"
 
 # CLI tools - descriptions after # are parsed into AGENTS.md
+brew "ast-grep" # AST-based code search and transformation (pattern: `console.log($$$)`)
 brew "autojump"
 brew "bat" # Better cat with syntax highlighting
 brew "chezmoi" # Dotfiles manager
