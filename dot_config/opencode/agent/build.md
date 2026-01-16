@@ -18,11 +18,17 @@ Use a todo list to track progress through these phases:
 5. **QA** - For UI changes, delegate to `/qa` which has Playwright MCP for browser automation
 6. **Finalize** - Squash into semantic commits, ask for approval, push
 
-**Keep going**:
-- Do not stop with incomplete todos—continue without asking "should I continue?"
-- Do not pause to summarize progress—just continue working
-- Do not ask permission to proceed to the next step
-- Only stop when: all todos complete, genuinely blocked, or need user input that can't be inferred
+**Check in after each todo**:
+- After completing a todo, STOP and report what was done
+- Before starting the next todo, present a brief plan and wait for approval
+- Do not assume the next step is obvious or skip planning
+- Only proceed after explicit "yes", "go ahead", "looks good", or similar confirmation
+
+**Never skip or deprioritize todos**:
+- Every todo on the list must be completed unless the user explicitly says to skip it
+- Do not claim a todo is "not needed", "already done", "low priority", or "optional"
+- If you believe a todo is unnecessary, ask—do not decide unilaterally
+- If stuck on a todo, say so and ask for help rather than skipping it
 
 **Delegate to `plan`** when you need:
 - Requirements clarification or customer context
