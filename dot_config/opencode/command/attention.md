@@ -109,9 +109,9 @@ icalBuddy -f -ea -nc -nrd eventsFrom:today to:today+1
 3. If a PR references an issue ID NOT in the Linear results, note it as "issue not in active backlog"
 
 **Output format for linked PRs:**
-- `PR #309 → 0DIN-647 (P2 High, In Progress)` — when Linear issue found
-- `PR #344 (no issue linked)` — when no issue ID in title
-- `PR #329 → 0DIN-718 (not in active backlog)` — when issue ID found but not in Linear results
+- `PR #123 → PROJ-456 (P2 High, In Progress)` — when Linear issue found
+- `PR #124 (no issue linked)` — when no issue ID in title
+- `PR #125 → PROJ-789 (not in active backlog)` — when issue ID found but not in Linear results
 
 ### Priority Ranking
 
@@ -194,10 +194,10 @@ Single flat list, one line per item, **sorted by priority** (highest first withi
 
 **PR format:**
 ```
-🔴 PR #309 → 0DIN-647 (P2 High) — ❌ CI failing, self-review: "Missing system tests" [link]
-🔴 PR #329 → 0DIN-718 (not in backlog) — ❌ CI failing [link]
-⏰ PR #345 → 0DIN-797 (P2 High) — ✅ CI green, question from @teammate: "Can we also..." [link]
-📋 PR #344 (no issue) — ✅ CI green, awaiting review [link]
+🔴 PR #123 → PROJ-456 (P2 High) — ❌ CI failing, self-review: "Missing system tests" [link]
+🔴 PR #125 → PROJ-789 (not in backlog) — ❌ CI failing [link]
+⏰ PR #126 → PROJ-101 (P2 High) — ✅ CI green, 3 comments from @reviewer [link]
+📋 PR #124 (no issue) — ✅ CI green, awaiting review [link]
 ```
 
 **Do NOT flag as needing attention:**
