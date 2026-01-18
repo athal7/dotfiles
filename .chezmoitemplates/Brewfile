@@ -17,7 +17,6 @@ brew "jq" # JSON processing and querying
 brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
 brew "neovim" # Modern Vim-based editor
-brew "opencode" # AI coding assistant CLI
 brew "openssl" # TLS/SSL cryptography library
 brew "opentofu" # Terraform-compatible infrastructure as code
 brew "playwright-mcp" # Browser automation MCP server
