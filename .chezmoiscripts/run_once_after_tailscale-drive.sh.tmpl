@@ -1,5 +1,5 @@
 #!/bin/sh
-# Set up Tailscale Drive to share home directory
+# Set up Tailscale Drive to share specific directories
 # Requires ACL config: drive:share and drive:access node attributes
 
 # Check if tailscale is available
@@ -15,16 +15,18 @@ if [ "$current_operator" != "{{ .chezmoi.username }}" ]; then
   sudo tailscale set --operator={{ .chezmoi.username }}
 fi
 
-# Check if already shared
-if tailscale drive list 2>/dev/null | grep -q "^home"; then
-  echo "Tailscale drive 'home' already shared"
-  exit 0
-fi
+# Shares to create (name:path)
+SHARES="desktop:{{ .chezmoi.homeDir }}/Desktop documents:{{ .chezmoi.homeDir }}/Documents downloads:{{ .chezmoi.homeDir }}/Downloads"
 
-# Try to share (will fail if ACLs not configured, which is fine)
-if tailscale drive share home {{ .chezmoi.homeDir }} 2>&1; then
-  echo "Shared home directory via Tailscale Drive"
-else
-  echo "Could not share via Tailscale Drive (ACLs may not be configured)"
-  echo "Configure ACLs in Tailscale admin, then run: tailscale drive share home ~"
-fi
+for share in $SHARES; do
+  name="${share%%:*}"
+  path="${share#*:}"
+  
+  if tailscale drive list 2>/dev/null | grep -q "^${name}"; then
+    echo "Tailscale drive '$name' already shared"
+  elif tailscale drive share "$name" "$path" 2>&1; then
+    echo "Shared $path as '$name' via Tailscale Drive"
+  else
+    echo "Could not share '$name' (ACLs may not be configured)"
+  fi
+done
