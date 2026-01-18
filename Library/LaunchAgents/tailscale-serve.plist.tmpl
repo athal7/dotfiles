@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.{{ .chezmoi.username }}.tailscale-serve</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/tailscale</string>
+        <string>serve</string>
+        <string>--https</string>
+        <string>4096</string>
+        <string>http://127.0.0.1:4096</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/tailscale-serve.log</string>
+    <key>StandardErrorPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/tailscale-serve.error.log</string>
+</dict>
+</plist>
