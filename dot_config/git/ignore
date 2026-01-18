@@ -43,4 +43,5 @@ Thumbs.db
 .claude
 .talismanrc
 opencode.json
+.opencode/context-log.md
 .screencast/

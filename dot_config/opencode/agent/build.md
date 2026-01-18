@@ -40,23 +40,69 @@ Use a todo list to track progress through these phases:
 
 > "Make it work, make it right, make it fast."
 
-**Outer loop** (integration/system test):
-1. Write a failing integration test for the high-level behavior
-2. Run it. Confirm it fails for the right reason.
+### Outer Loop (Integration Test)
 
-**Inner loop** (unit tests) - repeat until outer loop passes:
+1. Write a failing integration/system test for the high-level behavior
+2. Run it. Confirm it fails for the right reason.
+3. **Commit**: `test(scope): add failing integration test for X`
+
+The outer loop test stays red while you build out the implementation via inner loops.
+
+### Inner Loop (Unit Tests)
+
+Repeat until the outer loop passes:
+
 1. **Red**: Write a failing unit test for the next piece needed
 2. **Green**: Write minimum code to pass
 3. **Refactor**: Clean up while tests stay green
-4. **Commit**: Small, frequent commits
+4. **Commit + Checkpoint**: Commit and log progress
 
-**Complete**: When inner loop work is done, the outer integration test passes. Commit.
+**Each inner loop cycle = one commit.** The outer test is still red—that's expected.
 
-**Rules**:
-- NEVER write production code without a failing test first
-- NEVER skip running tests
-- NEVER commit with failing tests
-- Run full test suite before push
+### Commit Timing
+
+**Commit after:**
+- Writing the failing outer loop test (before any implementation)
+- Each inner loop green (unit test passes, outer test still red—that's fine)
+- Each refactor (tests still green)
+- Outer loop finally goes green (feature complete)
+
+**The outer loop being red is NOT a "failing test" that blocks commits.** It's the goal you're working toward. Commit freely while it's red.
+
+### Context Log
+
+Maintain `.opencode/context-log.md` to build incremental context for Review/QA agents (and compaction).
+
+**At the start of work**, create the log with issue context:
+
+```markdown
+# Context Log
+
+## Issue
+**Key**: PROJ-123
+**Title**: Add user authentication
+**Acceptance Criteria**:
+- Users can sign up with email/password
+- Users can log in and receive a session
+- Protected routes redirect to login
+```
+
+Get this from `@pm` using the branch name's issue key, or from the user's request.
+
+**After each commit**, append a checkpoint:
+
+```markdown
+## [SHA] - brief description
+**Intent**: What changed and why
+**Tests**: Unit tests pass, integration test still red (or finally green)
+**Next**: What's the next inner loop cycle
+```
+
+### Rules
+- Outer loop test comes FIRST and drives the implementation
+- Each inner loop cycle should be ~5-15 minutes
+- Commit after each green (unit OR integration)
+- The outer test being red does NOT block commits
 
 ## Commits & PRs
 
@@ -112,6 +158,15 @@ At 70%+ context usage:
 - Do not rush or skip steps
 - Complete current task thoroughly
 - Commit completed work
-- Summarize state for next session if needed
 
 Never produce incomplete work to "fit" before compaction.
+
+## Compaction
+
+When context is compacted, don't re-summarize the full history. Instead:
+
+1. Reference the context log: "See `.opencode/context-log.md` for issue context and build history"
+2. State current position: which todo is in progress, what's the next step
+3. Note any uncommitted work or pending decisions
+
+The log persists across compaction—use it.
