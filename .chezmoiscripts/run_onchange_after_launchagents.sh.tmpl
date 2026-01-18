@@ -1,0 +1,23 @@
+#!/bin/sh
+# Load/reload LaunchAgents managed by chezmoi
+# Hashes for change detection:
+{{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
+# {{ . | include | sha256sum }}
+{{- end }}
+
+MANAGED_PLISTS="
+{{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
+{{ base . | trimSuffix ".tmpl" }}
+{{- end }}
+"
+
+for name in $MANAGED_PLISTS; do
+  plist="{{ .chezmoi.homeDir }}/Library/LaunchAgents/$name"
+  [ -f "$plist" ] || continue
+  label=$(defaults read "$plist" Label 2>/dev/null) || continue
+  
+  # Unload if already loaded (ignore errors)
+  launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+  # Load the agent
+  launchctl bootstrap "gui/$(id -u)" "$plist" && echo "Loaded $label" || echo "Failed to load $label"
+done

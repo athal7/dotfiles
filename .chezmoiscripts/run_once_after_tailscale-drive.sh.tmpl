@@ -1,0 +1,30 @@
+#!/bin/sh
+# Set up Tailscale Drive to share home directory
+# Requires ACL config: drive:share and drive:access node attributes
+
+# Check if tailscale is available
+if ! command -v tailscale >/dev/null 2>&1; then
+  echo "tailscale not installed, skipping drive setup"
+  exit 0
+fi
+
+# Set operator to allow non-root tailscale commands
+current_operator=$(tailscale debug prefs 2>/dev/null | grep -o '"OperatorUser":"[^"]*"' | cut -d'"' -f4)
+if [ "$current_operator" != "{{ .chezmoi.username }}" ]; then
+  echo "Setting tailscale operator to {{ .chezmoi.username }}..."
+  sudo tailscale set --operator={{ .chezmoi.username }}
+fi
+
+# Check if already shared
+if tailscale drive list 2>/dev/null | grep -q "^home"; then
+  echo "Tailscale drive 'home' already shared"
+  exit 0
+fi
+
+# Try to share (will fail if ACLs not configured, which is fine)
+if tailscale drive share home {{ .chezmoi.homeDir }} 2>&1; then
+  echo "Shared home directory via Tailscale Drive"
+else
+  echo "Could not share via Tailscale Drive (ACLs may not be configured)"
+  echo "Configure ACLs in Tailscale admin, then run: tailscale drive share home ~"
+fi

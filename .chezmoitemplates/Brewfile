@@ -22,9 +22,11 @@ brew "openssl"
 brew "opentofu" # Terraform-compatible infrastructure as code
 brew "playwright-mcp" # Browser automation MCP server
 brew "starship"
+brew "tailscale" # Mesh VPN for secure networking
 brew "talisman" # Git secrets scanner (pre-commit hook)
 brew "tmux"
 brew "watch" # Run commands periodically
+
 
 cask_args appdir: "/Applications"
 cask "font-monaspace"
