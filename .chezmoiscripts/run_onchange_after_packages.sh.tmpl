@@ -1,6 +1,6 @@
 #!/bin/sh
 {{ template "brewenv" . }}
 
-brew bundle --file=-<<EOF
+brew bundle --file=-<<'EOF'
 {{ template "Brewfile" . }}
 EOF

@@ -33,6 +33,9 @@ The following tools are installed via Homebrew and available for use:
 {{-   if and (hasPrefix "brew " .) (contains "#" .) }}
 {{-     $parts := . | trimPrefix "brew \"" | splitList "\" # " }}
 | `{{ index $parts 0 }}` | {{ index $parts 1 }} |
+{{-   else if and (hasPrefix "cask " .) (contains "#" .) }}
+{{-     $parts := . | trimPrefix "cask \"" | splitList "\" # " }}
+| `{{ index $parts 0 }}` | {{ index $parts 1 }} |
 {{-   end }}
 {{- end }}
 

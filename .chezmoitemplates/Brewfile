@@ -2,7 +2,7 @@ tap "github/gh"
 
 # CLI tools - descriptions after # are parsed into AGENTS.md
 brew "ast-grep" # AST-based code search and transformation (pattern: `console.log($$$)`)
-brew "autojump"
+brew "autojump" # Directory jump based on frecency
 brew "bat" # Better cat with syntax highlighting
 brew "chezmoi" # Dotfiles manager
 brew "colima" # Docker runtime for macOS
@@ -16,21 +16,20 @@ brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying
 brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
-brew "neovim"
-brew "opencode"
-brew "openssl"
+brew "neovim" # Modern Vim-based editor
+brew "opencode" # AI coding assistant CLI
+brew "openssl" # TLS/SSL cryptography library
 brew "opentofu" # Terraform-compatible infrastructure as code
 brew "playwright-mcp" # Browser automation MCP server
-brew "starship"
-brew "tailscale" # Mesh VPN for secure networking
+brew "starship" # Cross-shell prompt
 brew "talisman" # Git secrets scanner (pre-commit hook)
-brew "tmux"
+brew "tmux" # Terminal multiplexer
 brew "watch" # Run commands periodically
 
-
 cask_args appdir: "/Applications"
-cask "font-monaspace"
-cask "kitty"
-cask "mac-mouse-fix"
-cask "opencode-desktop"
-cask "visual-studio-code"
+cask "font-monaspace" # Monospace font family
+cask "kitty" # GPU-accelerated terminal emulator
+cask "mac-mouse-fix" # Mouse customization utility
+cask "opencode-desktop" # AI coding assistant desktop app
+cask "tailscale-app" # Mesh VPN for secure networking
+cask "visual-studio-code" # Code editor
