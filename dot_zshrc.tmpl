@@ -1,10 +1,5 @@
-{{ template "brewenv" . }}
-
-# Version managers
+# Version managers (shims set in .zshenv for non-interactive shells)
 eval "$(rbenv init - --no-rehash zsh)"
-
-# Load secrets from ~/.env if it exists
-[[ -f ~/.env ]] && set -a && source ~/.env && set +a
 
 # XDG Base Directory compliance
 export HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"

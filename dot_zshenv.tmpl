@@ -1,0 +1,7 @@
+{{ template "brewenv" . }}
+
+# rbenv shims (available in all shells)
+export PATH="$HOME/.rbenv/shims:$PATH"
+
+# Load secrets from ~/.env if it exists (fallback for non-direnv contexts)
+[[ -f ~/.env ]] && set -a && source ~/.env && set +a
