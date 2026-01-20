@@ -267,7 +267,7 @@ require("lazy").setup({
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
         { "<leader>g", group = "github" },
-        { "<leader>o", group = "opencode" },
+        { "<leader>x", group = "execute" },
         { "<leader>t", group = "test" },
 
         -- File explorer
@@ -303,13 +303,9 @@ require("lazy").setup({
         -- GitHub (octo.nvim)
         { "<leader>gp", desc = "Open PR" },
 
-        -- OpenCode
-        { "<leader>oo", desc = "Toggle opencode" },
-        { "<leader>oa", desc = "Ask opencode" },
-        { "<leader>os", desc = "Select action" },
-        { "<leader>or", desc = "Review code" },
-        { "<leader>oe", desc = "Explain code" },
-        { "<leader>of", desc = "Fix diagnostics" },
+        -- Execute
+        { "<leader>xo", desc = "OpenCode" },
+        { "<leader>xt", desc = "Terminal" },
 
         -- Comments
         { "gc", desc = "Comment (motion/visual)" },
@@ -363,12 +359,9 @@ require("lazy").setup({
     },
     config = function()
       vim.o.autoread = true
-      vim.keymap.set({ "n", "x" }, "<leader>oa", function() require("opencode").ask("@this: ", { submit = false }) end, { desc = "Ask opencode" })
-      vim.keymap.set({ "n", "x" }, "<leader>os", function() require("opencode").select() end, { desc = "Select opencode action" })
-      vim.keymap.set({ "n", "t" }, "<leader>oo", function() require("opencode").toggle() end, { desc = "Toggle opencode" })
-      vim.keymap.set({ "n", "x" }, "<leader>or", function() require("opencode").ask("Review @this for correctness and readability", { submit = true }) end, { desc = "Review with opencode" })
-      vim.keymap.set({ "n", "x" }, "<leader>oe", function() require("opencode").ask("Explain @this and its context", { submit = true }) end, { desc = "Explain with opencode" })
-      vim.keymap.set({ "n", "x" }, "<leader>of", function() require("opencode").ask("Fix @diagnostics", { submit = true }) end, { desc = "Fix diagnostics with opencode" })
+      vim.keymap.set({ "n", "t" }, "<leader>xo", function() require("opencode").toggle() end, { desc = "OpenCode" })
+      vim.keymap.set("n", "<leader>xt", function() Snacks.terminal() end, { desc = "Terminal" })
+      vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
     end,
   },
 })
