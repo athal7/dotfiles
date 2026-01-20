@@ -45,7 +45,7 @@ require("lazy").setup({
     opts = {
       ensure_installed = {
         "bash", "css", "dockerfile", "go", "html", "javascript",
-        "json", "lua", "markdown", "python", "rust", "toml",
+        "json", "lua", "markdown", "python", "ruby", "rust", "toml",
         "tsx", "typescript", "yaml",
       },
     },
@@ -236,6 +236,7 @@ require("lazy").setup({
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
         { "<leader>o", group = "opencode" },
+        { "<leader>t", group = "test" },
 
         -- File explorer
         { "<leader>n", desc = "Toggle file tree" },
@@ -248,7 +249,11 @@ require("lazy").setup({
         { "<leader>fr", desc = "Recent files" },
 
         -- Buffer
+        { "<leader>bb", desc = "Switch buffer" },
         { "<leader>bd", desc = "Delete buffer" },
+        { "<leader>bn", desc = "Next buffer" },
+        { "<leader>bp", desc = "Prev buffer" },
+        { "<leader>bo", desc = "Delete other buffers" },
 
         -- LSP/Code
         { "<leader>ca", desc = "Code action" },
@@ -294,6 +299,24 @@ require("lazy").setup({
         { "<C-k>", desc = "Go to upper window" },
         { "<C-l>", desc = "Go to right window" },
       })
+    end,
+  },
+
+  -- Testing (vim-test with convention-based file mapping)
+  {
+    "vim-test/vim-test",
+    keys = {
+      { "<leader>tt", function() require("test-utils").run_nearest() end, desc = "Run nearest" },
+      { "<leader>tf", function() require("test-utils").run_file() end, desc = "Run file" },
+      { "<leader>tl", "<cmd>TestLast<cr>", desc = "Run last" },
+      { "<leader>ts", "<cmd>TestSuite<cr>", desc = "Run suite" },
+      { "<leader>ta", function() require("test-utils").alternate() end, desc = "Alternate file" },
+    },
+    config = function()
+      vim.g["test#strategy"] = "neovim"
+      vim.g["test#neovim#start_normal"] = 1
+      -- Use binstubs (bin/rspec, bin/rails) if present, otherwise bundle exec
+      vim.g["test#ruby#use_binstubs"] = 1
     end,
   },
 

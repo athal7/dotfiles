@@ -31,7 +31,7 @@ opt.sidescrolloff = 8
 -- Behavior
 opt.hidden = true
 opt.mouse = "a"
-opt.clipboard = "unnamedplus"
+opt.clipboard = "unnamed,unnamedplus"
 opt.splitbelow = true
 opt.splitright = true
 opt.timeoutlen = 300
