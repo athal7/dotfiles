@@ -20,6 +20,9 @@ opt.smartcase = true
 opt.hlsearch = true
 opt.incsearch = true
 
+-- Terminal title
+opt.title = true
+
 -- Appearance
 opt.termguicolors = true
 opt.background = "dark"
