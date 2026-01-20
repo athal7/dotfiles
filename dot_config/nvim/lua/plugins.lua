@@ -78,7 +78,7 @@ require("lazy").setup({
           map("gr", vim.lsp.buf.references, "Go to references")
           map("K", vim.lsp.buf.hover, "Hover docs")
           map("<leader>ca", vim.lsp.buf.code_action, "Code action")
-          map("<leader>rn", vim.lsp.buf.rename, "Rename")
+          map("<leader>cr", vim.lsp.buf.rename, "Rename")
         end,
       })
 
@@ -150,6 +150,37 @@ require("lazy").setup({
           { name = "buffer" },
           { name = "path" },
         }),
+      })
+    end,
+  },
+
+  -- GitHub PR comments
+  {
+    "pwntester/octo.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim",
+      "nvim-tree/nvim-web-devicons",
+    },
+    keys = {
+      {
+        "<leader>gp",
+        function()
+          local pr = vim.fn.system("gh pr view --json number -q .number 2>/dev/null"):gsub("%s+", "")
+          if pr == "" then
+            vim.notify("No PR found for this branch", vim.log.levels.ERROR)
+            return
+          end
+          vim.cmd("Octo pr edit " .. pr)
+        end,
+        desc = "Open PR",
+      },
+    },
+    config = function()
+      require("octo").setup({
+        suppress_missing_scope = {
+          projects_v2 = true,
+        },
       })
     end,
   },
@@ -235,6 +266,7 @@ require("lazy").setup({
         { "<leader>f", group = "find" },
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
+        { "<leader>g", group = "github" },
         { "<leader>o", group = "opencode" },
         { "<leader>t", group = "test" },
 
@@ -257,7 +289,7 @@ require("lazy").setup({
 
         -- LSP/Code
         { "<leader>ca", desc = "Code action" },
-        { "<leader>rn", desc = "Rename symbol" },
+        { "<leader>cr", desc = "Rename symbol" },
 
         -- Diagnostics
         { "<leader>e", desc = "Show diagnostic" },
@@ -267,6 +299,9 @@ require("lazy").setup({
 
         -- Paste
         { "<leader>p", desc = "Paste without yank", mode = "x" },
+
+        -- GitHub (octo.nvim)
+        { "<leader>gp", desc = "Open PR" },
 
         -- OpenCode
         { "<leader>oo", desc = "Toggle opencode" },
