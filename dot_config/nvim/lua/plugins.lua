@@ -145,6 +145,7 @@ require("lazy").setup({
           end, { "i", "s" }),
         }),
         sources = cmp.config.sources({
+          { name = "copilot" },
           { name = "nvim_lsp" },
           { name = "luasnip" },
           { name = "buffer" },
@@ -209,6 +210,26 @@ require("lazy").setup({
       require("lualine").setup({
         options = { theme = "github_dark_default" },
       })
+    end,
+  },
+
+  -- GitHub Copilot (integrated into nvim-cmp)
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = function()
+      require("copilot").setup({
+        suggestion = { enabled = false }, -- Using cmp instead
+        panel = { enabled = false },
+      })
+    end,
+  },
+  {
+    "zbirenbaum/copilot-cmp",
+    dependencies = { "zbirenbaum/copilot.lua" },
+    config = function()
+      require("copilot_cmp").setup()
     end,
   },
 
