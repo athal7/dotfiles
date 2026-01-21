@@ -4,6 +4,8 @@ description: What needs my attention right now
 
 Show me what needs attention based on my calendar, PRs, and recent meetings.
 
+> **Profile required**: `product` - Start session with `OPENCODE_CONFIG=~/.config/opencode/profiles/product.json` to enable Linear and Granola MCPs.
+
 First, check the current time:
 
 ```bash

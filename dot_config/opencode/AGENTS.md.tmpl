@@ -43,11 +43,6 @@ The following tools are installed via Homebrew and available for use:
 
 ## Tool Tips
 
-**AST-grep** (when enabled) - patterns are more precise than regex:
-- `console.log($$$)` - matches any console.log call with any arguments
-- `function $NAME($$$) { $$$ }` - matches function declarations
-- Use `sg_dump_ast` when patterns don't match to understand structure
-
 **PTY** (when enabled) - for background processes:
 - Send Ctrl+C with `\x03`, Ctrl+D with `\x04`
 - Use regex filtering in `pty_read` to find errors: `pattern="error|ERROR"`

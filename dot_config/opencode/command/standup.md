@@ -4,6 +4,8 @@ description: Prepare standup answers from recent activity
 
 Help me prepare for standup by answering these questions based on my recent activity.
 
+> **Profile required**: `product` - Start session with `OPENCODE_CONFIG=~/.config/opencode/profiles/product.json` to enable Linear and Granola MCPs.
+
 ## Questions
 
 1. **What progress have you made since last standup?**
