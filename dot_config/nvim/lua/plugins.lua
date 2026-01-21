@@ -313,7 +313,7 @@ require("lazy").setup({
         standardrb = {
           -- Use bundle exec to respect project's Gemfile version
           command = "bundle",
-          args = { "exec", "standardrb", "--fix", "--stdin", "$FILENAME" },
+          args = { "exec", "standardrb", "--stdin", "$FILENAME", "--fix", "--stderr" },
           stdin = true,
         },
       },
