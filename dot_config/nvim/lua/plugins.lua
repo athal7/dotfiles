@@ -130,6 +130,8 @@ require("lazy").setup({
               cmp.select_next_item()
             elseif luasnip.expand_or_jumpable() then
               luasnip.expand_or_jump()
+            elseif vim.fn["copilot#GetDisplayedSuggestion"]().text ~= "" then
+              vim.api.nvim_feedkeys(vim.fn["copilot#Accept"](), "n", true)
             else
               fallback()
             end
@@ -145,7 +147,6 @@ require("lazy").setup({
           end, { "i", "s" }),
         }),
         sources = cmp.config.sources({
-          { name = "copilot" },
           { name = "nvim_lsp" },
           { name = "luasnip" },
           { name = "buffer" },
@@ -165,6 +166,33 @@ require("lazy").setup({
     },
     keys = {
       {
+        "<leader>gc",
+        function()
+          local file = vim.fn.expand("%:.")
+          local comments = vim.fn.system("gh pr view --json reviewThreads --jq '.reviewThreads[] | select(.path == \"" .. file .. "\") | \"L\\(.line): \\(.comments[0].body)\"' 2>/dev/null")
+          if comments == "" then
+            vim.notify("No PR comments for this file", vim.log.levels.INFO)
+            return
+          end
+          -- Show in a floating window
+          local lines = vim.split(comments, "\n", { trimempty = true })
+          local buf = vim.api.nvim_create_buf(false, true)
+          vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+          vim.api.nvim_open_win(buf, true, {
+            relative = "editor",
+            width = math.min(80, vim.o.columns - 4),
+            height = math.min(#lines, 20),
+            row = 2,
+            col = 2,
+            style = "minimal",
+            border = "rounded",
+            title = " PR Comments: " .. file .. " ",
+          })
+          vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = buf })
+        end,
+        desc = "PR comments",
+      },
+      {
         "<leader>gp",
         function()
           local pr = vim.fn.system("gh pr view --json number -q .number 2>/dev/null"):gsub("%s+", "")
@@ -182,8 +210,31 @@ require("lazy").setup({
         suppress_missing_scope = {
           projects_v2 = true,
         },
+        mappings = {
+          pull_request = {
+            goto_file = { lhs = "<leader>gf", desc = "go to file" },
+          },
+          review_diff = {
+            goto_file = { lhs = "<leader>gf", desc = "go to file" },
+          },
+          file_panel = {
+            select_entry = { lhs = "<leader>gf", desc = "go to file" },
+          },
+        },
       })
     end,
+  },
+
+  -- Git diff viewer
+  {
+    "sindrets/diffview.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    keys = {
+      { "<leader>gd", "<cmd>DiffviewOpen<CR>", desc = "Diff uncommitted" },
+      { "<leader>gD", "<cmd>DiffviewOpen main<CR>", desc = "Diff from main" },
+      { "<leader>gq", "<cmd>DiffviewClose<CR>", desc = "Close diff" },
+    },
+    opts = {},
   },
 
   -- Git signs
@@ -213,23 +264,22 @@ require("lazy").setup({
     end,
   },
 
-  -- GitHub Copilot (integrated into nvim-cmp)
+  -- GitHub Copilot (official - inline ghost text)
   {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
+    "github/copilot.vim",
     event = "InsertEnter",
-    config = function()
-      require("copilot").setup({
-        suggestion = { enabled = false }, -- Using cmp instead
-        panel = { enabled = false },
-      })
+    init = function()
+      -- Disable default Tab map (we handle it in cmp)
+      vim.g.copilot_no_tab_map = true
+      -- Enable for markdown/yaml (disabled by default)
+      vim.g.copilot_filetypes = { markdown = true, yaml = true }
     end,
-  },
-  {
-    "zbirenbaum/copilot-cmp",
-    dependencies = { "zbirenbaum/copilot.lua" },
     config = function()
-      require("copilot_cmp").setup()
+      vim.keymap.set("i", "<M-Right>", "<Plug>(copilot-accept-word)")
+      vim.keymap.set("i", "<M-Down>", "<Plug>(copilot-accept-line)")
+      vim.keymap.set("i", "<M-]>", "<Plug>(copilot-next)")
+      vim.keymap.set("i", "<M-[>", "<Plug>(copilot-previous)")
+      vim.keymap.set("i", "<C-]>", "<Plug>(copilot-dismiss)")
     end,
   },
 
@@ -321,12 +371,24 @@ require("lazy").setup({
         -- Paste
         { "<leader>p", desc = "Paste without yank", mode = "x" },
 
-        -- GitHub (octo.nvim)
+        -- Git/GitHub
+        { "<leader>gc", desc = "PR comments" },
+        { "<leader>gD", desc = "Diff from main" },
+        { "<leader>gd", desc = "Diff uncommitted" },
+        { "<leader>gf", desc = "Go to file" },
         { "<leader>gp", desc = "Open PR" },
+        { "<leader>gq", desc = "Close diff" },
 
-        -- Execute
+        -- Execute / AI
         { "<leader>xo", desc = "OpenCode" },
         { "<leader>xt", desc = "Terminal" },
+        { "<leader>xa", desc = "Ask AI" },
+        { "<leader>xe", desc = "Explain cursor" },
+        { "<leader>xr", desc = "Review file" },
+        { "<leader>xf", desc = "Fix diagnostics" },
+        { "<leader>xp", desc = "Optimize selection", mode = "v" },
+        { "<leader>xd", desc = "Document selection", mode = "v" },
+        { "<leader>xs", desc = "Test selection", mode = "v" },
 
         -- Comments
         { "gc", desc = "Comment (motion/visual)" },
@@ -380,9 +442,26 @@ require("lazy").setup({
     },
     config = function()
       vim.o.autoread = true
-      vim.keymap.set({ "n", "t" }, "<leader>xo", function() require("opencode").toggle() end, { desc = "OpenCode" })
+      local oc = require("opencode")
+
+      -- Toggle and terminal
+      vim.keymap.set({ "n", "t" }, "<leader>xo", oc.toggle, { desc = "OpenCode" })
       vim.keymap.set("n", "<leader>xt", function() Snacks.terminal() end, { desc = "Terminal" })
       vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+      -- AI code actions (normal mode)
+      vim.keymap.set("n", "<leader>xa", function() oc.ask() end, { desc = "Ask AI" })
+      vim.keymap.set("n", "<leader>xe", function() oc.prompt("Explain @cursor and its context") end, { desc = "Explain cursor" })
+      vim.keymap.set("n", "<leader>xr", function() oc.prompt("Review @file for correctness and readability") end, { desc = "Review file" })
+      vim.keymap.set("n", "<leader>xf", function() oc.prompt("Fix these @diagnostics") end, { desc = "Fix diagnostics" })
+
+      -- AI code actions (visual mode - on selection)
+      vim.keymap.set("v", "<leader>xa", function() oc.ask() end, { desc = "Ask AI about selection" })
+      vim.keymap.set("v", "<leader>xe", function() oc.prompt("Explain @selection") end, { desc = "Explain selection" })
+      vim.keymap.set("v", "<leader>xr", function() oc.prompt("Review @selection for correctness and readability") end, { desc = "Review selection" })
+      vim.keymap.set("v", "<leader>xp", function() oc.prompt("Optimize @selection for performance and readability") end, { desc = "Optimize selection" })
+      vim.keymap.set("v", "<leader>xd", function() oc.prompt("Add documentation comments for @selection") end, { desc = "Document selection" })
+      vim.keymap.set("v", "<leader>xs", function() oc.prompt("Add tests for @selection") end, { desc = "Test selection" })
     end,
   },
 })
