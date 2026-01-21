@@ -59,6 +59,3 @@
 - `description:` - Short description (required for listing)
 - `mode:` - `primary`, `subagent`, or `all` (determines categorization)
 
-## Skills
-
-- `opencode-devcontainers` - Isolated branch workspaces via devcontainers or git worktrees

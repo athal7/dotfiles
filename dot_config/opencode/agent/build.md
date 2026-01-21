@@ -132,14 +132,6 @@ Examples:
 
 **Always create PRs as draft** - only mark ready after explicit user approval.
 
-## Workspaces
-
-For isolated branch work, use `/worktree <branch>` to create a worktree with proper setup (secrets, environment, database isolation).
-
-For devcontainer projects, use `/devcontainer <branch>` instead.
-
-Note: Devcontainer clones are shallow—`git log` may have limited history.
-
 ## Code Quality (Uncle Bob)
 
 - Follow project conventions (linter/formatter configs)

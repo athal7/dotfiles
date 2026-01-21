@@ -11,10 +11,7 @@ Review code changes for bugs, security issues, and quality concerns.
 
 **Default to `$PWD`**, but verify it matches the conversation context.
 
-If the conversation mentions specific PRs, branches, files, or technologies that don't exist in `$PWD`, search for the correct workspace:
-- Check `~/.local/share/opencode/worktree/*/` and `~/.local/share/opencode/clone/*/`
-- Match based on PR numbers, branch names, or file paths mentioned in conversation
-- Use `gh pr view` or `git branch -a` to verify matches
+If the conversation mentions specific PRs, branches, files, or technologies that don't exist in `$PWD`, ask for clarification.
 
 Examples of mismatch:
 - Conversation about "PWA changes" and "service workers" but `$PWD` is a dotfiles repo
