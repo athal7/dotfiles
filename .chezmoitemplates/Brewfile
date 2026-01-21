@@ -31,5 +31,6 @@ cask "font-monaspace" # Monospace font family
 cask "kitty" # GPU-accelerated terminal emulator
 cask "mac-mouse-fix" # Mouse customization utility
 cask "opencode-desktop" # AI coding assistant desktop app
+cask "stats" # Menu bar system monitor (CPU, memory, disk, network)
 cask "tailscale-app" # Mesh VPN for secure networking
 cask "visual-studio-code" # Code editor
