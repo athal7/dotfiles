@@ -5,6 +5,8 @@ agent: context
 
 Retrieve context from Granola meeting notes to inform planning or implementation.
 
+> **Profile required**: `product` - Start session with `OPENCODE_CONFIG=~/.config/opencode/profiles/product.json` to enable Granola MCP.
+
 **Request:** $ARGUMENTS
 
 ## Usage Examples

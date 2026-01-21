@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "granola": {
+      "enabled": true
+    },
+    "linear": {
+      "enabled": true
+    }
+  },
+  "tools": {
+    "granola_*": true,
+    "linear_*": true
+  }
+}

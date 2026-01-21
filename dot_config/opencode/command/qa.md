@@ -5,6 +5,8 @@ agent: qa
 
 Perform QA verification of a localhost workflow using Playwright browser automation.
 
+> **Profile required**: `qa` - Start session with `OPENCODE_CONFIG=~/.config/opencode/profiles/qa.json` to enable Playwright MCP.
+
 **Request:** $ARGUMENTS
 
 ## Setup

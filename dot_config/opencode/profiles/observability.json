@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "elasticsearch": {
+      "enabled": true
+    }
+  },
+  "tools": {
+    "elasticsearch_*": true
+  }
+}

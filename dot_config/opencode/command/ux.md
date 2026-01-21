@@ -5,6 +5,8 @@ agent: ux
 
 Look up design specifications from Figma.
 
+> **Profile required**: `ux` - Start session with `OPENCODE_CONFIG=~/.config/opencode/profiles/ux.json` to enable Figma MCP.
+
 **Request:** $ARGUMENTS
 
 ## Use For
