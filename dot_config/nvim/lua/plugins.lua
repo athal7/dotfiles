@@ -283,6 +283,43 @@ require("lazy").setup({
     end,
   },
 
+  -- Autoformatting
+  {
+    "stevearc/conform.nvim",
+    event = { "BufWritePre" },
+    cmd = { "ConformInfo" },
+    keys = {
+      { "<leader>cf", function() require("conform").format({ async = true }) end, desc = "Format buffer" },
+    },
+    opts = {
+      formatters_by_ft = {
+        ruby = { "standardrb" },
+        javascript = { "prettier" },
+        typescript = { "prettier" },
+        javascriptreact = { "prettier" },
+        typescriptreact = { "prettier" },
+        css = { "prettier" },
+        html = { "prettier" },
+        json = { "prettier" },
+        yaml = { "prettier" },
+        markdown = { "prettier" },
+        lua = { "stylua" },
+      },
+      format_on_save = {
+        timeout_ms = 3000,
+        lsp_format = "fallback",
+      },
+      formatters = {
+        standardrb = {
+          -- Use bundle exec to respect project's Gemfile version
+          command = "bundle",
+          args = { "exec", "standardrb", "--fix", "--stdin", "$FILENAME" },
+          stdin = true,
+        },
+      },
+    },
+  },
+
   -- Auto pairs
   {
     "windwp/nvim-autopairs",
@@ -360,6 +397,7 @@ require("lazy").setup({
 
         -- LSP/Code
         { "<leader>ca", desc = "Code action" },
+        { "<leader>cf", desc = "Format buffer" },
         { "<leader>cr", desc = "Rename symbol" },
 
         -- Diagnostics
