@@ -24,6 +24,17 @@ map("n", "<leader>bn", "<cmd>bnext<CR>", { desc = "Next buffer" })
 map("n", "<leader>bp", "<cmd>bprevious<CR>", { desc = "Prev buffer" })
 map("n", "<leader>bo", "<cmd>%bd|e#|bd#<CR>", { desc = "Delete other buffers" })
 
+-- Window/split management
+map("n", "<leader>b+", "<cmd>resize +5<CR>", { desc = "Increase height" })
+map("n", "<leader>b-", "<cmd>resize -5<CR>", { desc = "Decrease height" })
+map("n", "<leader>b>", "<cmd>vertical resize +5<CR>", { desc = "Increase width" })
+map("n", "<leader>b<", "<cmd>vertical resize -5<CR>", { desc = "Decrease width" })
+map("n", "<leader>b=", "<C-w>=", { desc = "Equalize splits" })
+map("n", "<leader>bm", "<C-w>_<C-w>|", { desc = "Maximize split" })
+map("n", "<leader>bv", "<cmd>vsplit<CR>", { desc = "Vertical split" })
+map("n", "<leader>bs", "<cmd>split<CR>", { desc = "Horizontal split" })
+map("n", "<leader>bc", "<cmd>close<CR>", { desc = "Close split" })
+
 -- Move lines
 map("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move down" })
 map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move up" })

@@ -395,6 +395,17 @@ require("lazy").setup({
         { "<leader>bp", desc = "Prev buffer" },
         { "<leader>bo", desc = "Delete other buffers" },
 
+        -- Window/split management
+        { "<leader>b+", desc = "Increase height" },
+        { "<leader>b-", desc = "Decrease height" },
+        { "<leader>b>", desc = "Increase width" },
+        { "<leader>b<", desc = "Decrease width" },
+        { "<leader>b=", desc = "Equalize splits" },
+        { "<leader>bm", desc = "Maximize split" },
+        { "<leader>bv", desc = "Vertical split" },
+        { "<leader>bs", desc = "Horizontal split" },
+        { "<leader>bc", desc = "Close split" },
+
         -- LSP/Code
         { "<leader>ca", desc = "Code action" },
         { "<leader>cf", desc = "Format buffer" },
