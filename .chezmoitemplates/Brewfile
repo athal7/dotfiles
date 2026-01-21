@@ -20,6 +20,7 @@ brew "neovim" # Modern Vim-based editor
 brew "openssl" # TLS/SSL cryptography library
 brew "opentofu" # Terraform-compatible infrastructure as code
 brew "playwright-mcp" # Browser automation MCP server
+brew "ripgrep" # Fast recursive grep (rg) - required by OpenCode
 brew "starship" # Cross-shell prompt
 brew "talisman" # Git secrets scanner (pre-commit hook)
 brew "tmux" # Terminal multiplexer
