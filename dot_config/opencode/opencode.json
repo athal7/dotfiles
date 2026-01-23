@@ -35,29 +35,17 @@
     "opencode-pty"
   ],
   "mcp": {
+    "team-context": {
+      "type": "remote",
+      "url": "http://localhost:8100/sse"
+    },
     "playwright": {
       "type": "remote",
       "url": "http://localhost:8101/sse"
     },
-    "figma": {
-      "type": "remote",
-      "url": "http://localhost:8102/sse"
-    },
-    "granola": {
-      "type": "remote",
-      "url": "http://localhost:8104/sse"
-    },
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp"
-    },
-    "elasticsearch": {
-      "type": "remote",
-      "url": "http://localhost:8103/sse"
-    },
-    "linear": {
-      "type": "remote",
-      "url": "https://mcp.linear.app/mcp"
     }
   }
 }
