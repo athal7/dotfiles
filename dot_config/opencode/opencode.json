@@ -37,11 +37,11 @@
   "mcp": {
     "team-context": {
       "type": "remote",
-      "url": "http://localhost:8100/sse"
+      "url": "http://localhost:8100/mcp"
     },
     "playwright": {
       "type": "remote",
-      "url": "http://localhost:8101/sse"
+      "url": "http://localhost:8101/mcp"
     },
     "context7": {
       "type": "remote",
