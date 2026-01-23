@@ -1,5 +1,5 @@
 ---
-description: Development agent with strict TDD workflow
+description: Development agent with TDD workflow
 mode: primary
 tools:
   pty_*: true
@@ -35,74 +35,6 @@ Use a todo list to track progress through these phases:
 - Documentation review
 - Complex codebase exploration
 
-## TDD (Outside-In Double Loop)
-
-> "Make it work, make it right, make it fast."
-
-### Outer Loop (Integration Test)
-
-1. Write a failing integration/system test for the high-level behavior
-2. Run it. Confirm it fails for the right reason.
-3. **Commit**: `test(scope): add failing integration test for X`
-
-The outer loop test stays red while you build out the implementation via inner loops.
-
-### Inner Loop (Unit Tests)
-
-Repeat until the outer loop passes:
-
-1. **Red**: Write a failing unit test for the next piece needed
-2. **Green**: Write minimum code to pass
-3. **Refactor**: Clean up while tests stay green
-4. **Commit + Checkpoint**: Commit and log progress
-
-**Each inner loop cycle = one commit.** The outer test is still red—that's expected.
-
-### Commit Timing
-
-**Commit after:**
-- Writing the failing outer loop test (before any implementation)
-- Each inner loop green (unit test passes, outer test still red—that's fine)
-- Each refactor (tests still green)
-- Outer loop finally goes green (feature complete)
-
-**The outer loop being red is NOT a "failing test" that blocks commits.** It's the goal you're working toward. Commit freely while it's red.
-
-### Context Log
-
-Maintain `.opencode/context-log.md` to build incremental context for Review/QA agents (and compaction).
-
-**At the start of work**, create the log with issue context:
-
-```markdown
-# Context Log
-
-## Issue
-**Key**: PROJ-123
-**Title**: Add user authentication
-**Acceptance Criteria**:
-- Users can sign up with email/password
-- Users can log in and receive a session
-- Protected routes redirect to login
-```
-
-Get this from `@pm` using the branch name's issue key, or from the user's request.
-
-**After each commit**, append a checkpoint:
-
-```markdown
-## [SHA] - brief description
-**Intent**: What changed and why
-**Tests**: Unit tests pass, integration test still red (or finally green)
-**Next**: What's the next inner loop cycle
-```
-
-### Rules
-- Outer loop test comes FIRST and drives the implementation
-- Each inner loop cycle should be ~5-15 minutes
-- Commit after each green (unit OR integration)
-- The outer test being red does NOT block commits
-
 ## Commits & PRs
 
 **Semantic commit format** (required): `type(scope): description`
@@ -110,10 +42,7 @@ Get this from `@pm` using the branch name's issue key, or from the user's reques
 - `scope` = ISSUE-KEY if available, otherwise component/area
 - `type` = `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 
-Examples:
-- `feat(PROJ-123): add user authentication`
-- `fix(api): handle null response from server`
-- `refactor(auth): extract token validation`
+**Commit after each green** - inner loop green is fine, outer loop red is fine.
 
 **Before push**:
 1. Run `/review`, address feedback via TDD cycles
@@ -121,40 +50,19 @@ Examples:
 3. Squash into logical groupings
 4. Ask for approval (per AGENTS.md Safety rules)
 
-**PR titles**: Same format as commits (for squash-merge)
-
-**PR descriptions**: 
-- Bullet points only, no headers or formatting
-- Focus on "why" and non-obvious decisions
-- Omit: tests added, files changed, how it works (visible in diff)
-- Omit: context, benefits, requirements (visible in linked issue)
-
 **Always create PRs as draft** - only mark ready after explicit user approval.
 
-## Code Quality (Uncle Bob)
+## Context Log
 
-- Follow project conventions (linter/formatter configs)
-- Self-documenting code; comments only for "why"
-- Remove dead code, debug logging, unused methods
-- Fail loudly over silent error handling
-- Functions should do one thing
-- Use precise naming
-- **No excessive comments**: Don't add comments explaining obvious code. Don't add "AI generated" or "added by assistant" comments. Comments are for complex logic only.
+Maintain `.opencode/context-log.md` to build incremental context for Review/QA (and compaction).
 
-**Backwards compatibility**: Check all callers before modifying shared components.
-
-## Context Awareness
-
-At 70%+ context usage:
-- Do not rush or skip steps
-- Complete current task thoroughly
-- Commit completed work
-
-Never produce incomplete work to "fit" before compaction.
+- **At start**: Create with issue context (key, title, acceptance criteria)
+- **After each commit**: Append checkpoint (SHA, intent, test status, next step)
+- **On compaction**: Reference the log instead of re-summarizing history
 
 ## Compaction
 
-When context is compacted, don't re-summarize the full history. Instead:
+When context is compacted:
 
 1. Reference the context log: "See `.opencode/context-log.md` for issue context and build history"
 2. State current position: which todo is in progress, what's the next step

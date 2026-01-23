@@ -1,22 +1,24 @@
 ---
 description: Review changes [commit|branch|pr], defaults to uncommitted
-agent: review
+tools:
+  context7_*: true
 ---
 
 Review code changes for bugs, security issues, and quality concerns.
 
 **Input:** $ARGUMENTS
 
-## Workspace Detection
+## Context Gathering
 
-**Default to `$PWD`**, but verify it matches the conversation context.
+**Before reviewing, read `.opencode/context-log.md`** which contains:
+- Issue context and acceptance criteria
+- Build narrative (how the code evolved)
+- Test signals (what passed/failed at each step)
 
-If the conversation mentions specific PRs, branches, files, or technologies that don't exist in `$PWD`, ask for clarification.
-
-Examples of mismatch:
-- Conversation about "PWA changes" and "service workers" but `$PWD` is a dotfiles repo
-- Conversation mentions PR #7258 but `$PWD` repo has no such PR
-- Conversation references `prompt-input.tsx` but no such file in `$PWD`
+**Diffs alone are not enough.** After getting the diff:
+- Read the entire file(s) being modified to understand full context
+- Code that looks wrong in isolation may be correct given surrounding logic
+- Check for CONVENTIONS.md, AGENTS.md in the workspace
 
 ## Determining What to Review
 
@@ -34,49 +36,61 @@ Based on input, determine review type:
 4. **PR URL or number**: 
    - `gh pr view $ARGUMENTS` for context
    - `gh pr diff $ARGUMENTS` for diff
+   - `gh pr checkout $ARGUMENTS` to read actual files
 
-## Review Process
+## Review Priorities
 
-1. Get the diff using appropriate method above
-2. Identify which files changed
-3. **CRITICAL: Checkout the PR branch** if reviewing a PR:
-   ```bash
-   gh pr checkout $PR_NUMBER
-   ```
-4. **Read the actual files** to get correct line numbers:
-   - Use the Read tool on each changed file
-   - Note the line numbers where issues occur
-   - Line numbers must match the file content, not the diff
-5. Check for CONVENTIONS.md, AGENTS.md in the workspace
-6. Apply review criteria and produce findings
+1. **Correctness** - Does it work? Are there bugs?
+2. **Security** - Auth/authz, injection, secrets, state integrity
+3. **Performance** - N+1, indexes, O(n²) on unbounded data
+4. **Maintainability** - Readability, testability, simplicity
+
+## What to Check
+
+**Security** (auth/*, api/*, *token*, *.env*):
+- No secrets in code
+- Input validation present
+- Auth checks on protected routes
+
+**Quality**:
+- Test coverage for changed code
+- Dead code, debug logging removed
+- Functions doing one thing
+- Precise naming
+
+## Before Flagging
+
+**Be certain.** Only flag bugs you're confident about.
+
+- Only review changes, not pre-existing code
+- Investigate before flagging as bug
+- Don't invent hypothetical problems
+- If uncertain, read more files first
+
+## Style
+
+- Use "I" statements: "If it were me...", "I wonder if..."
+- Frame as questions, not directives
+- Keep comments short and focused
+- **No flattery** - No "strengths" sections, no praise
 
 ## Output Format
 
-Return findings in this format:
-
-**For PR reviews:**
-```
+```markdown
 ## Summary
-[One line description of what the PR does]
+[One line description of what changed]
 
 ## Issues Found
 
-### app/helpers/activity_helper.rb:10
-This will cause blog markers to appear on the wrong week. The chart data uses `in_time_zone` for week boundaries.
+### path/to/file.rb:10
+[Issue description]
 
 ```suggestion
-date: entry[:post].published_at.in_time_zone.beginning_of_week.strftime("%Y-%m-%d"),
+suggested fix if applicable
 ```
-
-### app/javascript/controllers/dashboard_charts_controller.js:78
-If two posts are published in the same week, this will overwrite the first title. Consider storing multiple titles or showing a count.
 
 ## Recommendation
 [Approve / Request changes / Comment]
 ```
 
-**IMPORTANT:**
-- Line numbers MUST be from the actual file (use Read tool), not from the diff
-- DO NOT submit comments directly to GitHub
-- Return formatted findings for user to review and approve
-- User will handle GitHub API submission with correct line/position mapping
+**Line numbers must be from actual files** (use Read tool), not from diff positions.

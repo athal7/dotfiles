@@ -1,27 +1,54 @@
 ---
 description: QA verification using browser automation
-agent: qa
+tools:
+  playwright_*: true
 ---
 
-Perform QA verification of a localhost workflow using Playwright browser automation.
-
-> **Profile required**: `qa` - Start session with `OPENCODE_CONFIG=~/.config/opencode/profiles/qa.json` to enable Playwright MCP.
+Perform QA verification using Playwright browser automation.
 
 **Request:** $ARGUMENTS
 
+## Context Gathering
+
+**Before testing, read `.opencode/context-log.md`** which contains:
+- Issue context and acceptance criteria
+- Components modified (focus testing there)
+- Known risks and edge cases to verify
+
 ## Setup
 
-1. **Detect Port** - Run `source .envrc && echo $PORT` to get the actual port (handles dynamic calculation). Fall back to 3000 if that fails.
-2. **Verify Server** - Use curl to confirm localhost:PORT is responding before starting browser automation
-3. **If server not running** - Report this clearly and stop (don't attempt browser automation)
+1. **Detect Port** - Run `source .envrc && echo $PORT` to get the actual port. Fall back to 3000 if that fails.
+2. **Verify Server** - Use curl to confirm localhost:PORT is responding before browser automation
+3. **If server not running** - Report clearly and stop (don't attempt browser automation)
 
-## Verification
+## Verification Approach
+
+1. **Happy path first**: Verify the main flow works
+2. **Edge cases**: Empty states, errors, boundaries
+3. **Visual check**: Screenshot key states
+4. **Accessibility**: Tab navigation, focus states
+
+## Playwright Tools
 
 Use the Playwright MCP tools to:
-1. Navigate to the relevant pages
-2. Perform the user flow being tested
-3. Take screenshots at key states
-4. Verify expected behavior with assertions
+- Navigate to pages
+- Interact with elements (click, type, select)
+- Take screenshots at key states
+- Evaluate page state
+- Wait for conditions
+
+## Resilience
+
+**Persist through transient failures:**
+- Element not found → try alternative selectors, wait longer, scroll into view
+- Timeout → increase wait time, check if page is still loading
+- Click failed → ensure element is visible and not covered
+- Try at least 3 different approaches before giving up on any single action
+
+**When truly blocked (after multiple attempts):**
+1. Report what you were able to verify
+2. Explain what you tried and why it failed
+3. Suggest what might fix it (missing element, wrong URL, server not running)
 
 ## Output
 
@@ -34,5 +61,3 @@ Use the Playwright MCP tools to:
 - **Check project AGENTS.md first** - Use selectors/credentials documented there
 - **One flow per QA run** - Keep verification focused
 - **Screenshot key moments** - Before/after states
-- **Persist through failures** - If a selector fails, try alternative approaches (different selectors, waiting longer, scrolling into view). Only give up after 3+ attempts with different strategies.
-- **Report actionable feedback** - If blocked, explain what you tried and suggest what might fix it

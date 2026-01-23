@@ -33,29 +33,35 @@
 **Global config** (`~/.config/opencode/`):
 - `opencode.json` - models, MCPs, tools config (managed by chezmoi)
 - `AGENTS.md` - instructions for all agents
-- `agent/` - primary agent overrides and subagents
-- `command/` - global slash commands
-- `mcps/` - custom MCP servers (granola-mcp.py)
+- `agent/` - primary agent overrides (`build.md`, `plan.md`)
+- `command/` - slash commands (`/qa`, `/review`, `/todo`)
 
 **Per-project config** (`.opencode/` in repo root):
 - `command/` - project-specific slash commands
 - Custom tools, agents, themes
 
-## Agent Override Structure
+## Agent Structure
 
 | Location | Purpose |
 |----------|---------|
-| `dot_config/opencode/AGENTS.md.tmpl` | Universal rules (safety, env vars, CLI tools, quality) - auto-generates subagent/command lists |
-| `dot_config/opencode/agent/build.md` | Primary agent: TDD workflow, commits, PRs |
-| `dot_config/opencode/agent/plan.md.tmpl` | Delegation hub - auto-generates subagent list |
-| `dot_config/opencode/agent/*.md` | Subagents (mode: subagent) |
-| `dot_config/opencode/command/*.md` | Slash commands |
+| `dot_config/opencode/AGENTS.md.tmpl` | Universal rules (safety, CLI tools, task completion) - auto-generates command list |
+| `dot_config/opencode/agent/build.md` | Primary agent: TDD workflow, commits, context log |
+| `dot_config/opencode/agent/plan.md.tmpl` | Primary agent: read-only analysis and architecture |
+| `dot_config/opencode/command/*.md` | Slash commands (loaded on-demand when invoked) |
 
-**Adding a new agent/command**:
-1. Create the `.md` file with YAML frontmatter including `description:` and `mode:`
-2. Run `chezmoi apply` - lists auto-update in AGENTS.md, plan.md, and README.md
+**Adding a new command**:
+1. Create `.md` file in `command/` with YAML frontmatter including `description:`
+2. Run `chezmoi apply` - command list auto-updates in AGENTS.md
 
-**Frontmatter fields used for templating**:
-- `description:` - Short description (required for listing)
-- `mode:` - `primary`, `subagent`, or `all` (determines categorization)
+## Agent File Guidelines
 
+**Keep agent files lean** to maintain compliance as sessions grow:
+
+- **Target**: 50-80 lines per agent file
+- **Behavioral rules** (what to do/not do) → keep in agent
+- **Reference material** (formats, examples, checklists) → move to skills or docs
+- **On-demand content** (verification steps, review criteria) → use commands
+
+**Test for necessity**: If an instruction isn't followed after several sessions:
+1. Make it more prominent (move up, simplify wording)
+2. Or remove it (not important enough to enforce)
