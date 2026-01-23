@@ -24,7 +24,7 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   alias less="less -R"
   alias lf="less +F"
   alias ll="ls -la"
-  alias oc='opencode'
+  alias oc='/Applications/OpenCode.app/Contents/MacOS/opencode-cli'
   alias tf='tofu'
   alias watch='watch -c '
 
@@ -33,7 +33,7 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   eval "$(direnv hook zsh)"
   [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && source $(brew --prefix)/etc/profile.d/autojump.sh
 
-export PATH="$HOME/.opencode/bin:$HOME/.local/bin:$HOME/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
 # Enable reverse search (ctrl-r)
 bindkey '^R' history-incremental-search-backward

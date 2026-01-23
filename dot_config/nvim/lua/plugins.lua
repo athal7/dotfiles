@@ -489,6 +489,14 @@ require("lazy").setup({
     dependencies = {
       { "folke/snacks.nvim", opts = { input = {}, picker = {}, terminal = {} } },
     },
+    init = function()
+      -- Use the app bundle CLI since ~/.opencode/bin/opencode crashes with SIGKILL
+      vim.g.opencode_opts = {
+        provider = {
+          cmd = "/Applications/OpenCode.app/Contents/MacOS/opencode-cli --port",
+        },
+      }
+    end,
     config = function()
       vim.o.autoread = true
       local oc = require("opencode")
