@@ -1,9 +1,7 @@
 ---
 description: Development agent with TDD workflow
 mode: primary
-tools:
-  pty_*: true
-  context7_*: true
+model: anthropic/claude-opus-4-5
 ---
 
 ## Workflow
