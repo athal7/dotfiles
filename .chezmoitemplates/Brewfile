@@ -25,6 +25,7 @@ brew "starship" # Cross-shell prompt
 brew "talisman" # Git secrets scanner (pre-commit hook)
 brew "tmux" # Terminal multiplexer
 brew "watch" # Run commands periodically
+brew "worktrunk" # Git worktree switcher (wt switch, wt list)
 
 cask_args appdir: "/Applications"
 cask "font-monaspace" # Monospace font family

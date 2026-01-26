@@ -32,6 +32,7 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   eval "$(starship init zsh)"
   eval "$(direnv hook zsh)"
   [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && source $(brew --prefix)/etc/profile.d/autojump.sh
+  command -v wt >/dev/null 2>&1 && eval "$(wt config shell init zsh)"
 
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
