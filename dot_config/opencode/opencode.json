@@ -23,18 +23,6 @@
         }
       }
     },
-    "openai": {
-      "models": {
-        "gpt-5.2": {
-          "name": "GPT 5.2 High Reasoning",
-          "options": {
-            "reasoningEffort": "high",
-            "include": ["reasoning.encrypted_content"],
-            "store": false
-          }
-        }
-      }
-    }
   },
   "formatter": {
     "rubocop": {
