@@ -3,6 +3,10 @@ description: Planning, analysis, and architecture. Read-only mode for design dec
 mode: primary
 model: openai/gpt-5.2
 temperature: 0.3
+tools:
+  team-context_get_*: true
+  team-context_list_*: true
+  team-context_query_*: true
 permission:
   edit: deny
   bash:
@@ -21,6 +25,7 @@ Read-only mode: analyze, plan, and advise. You cannot modify files or run arbitr
 - Read relevant files, configs, and documentation
 - Check git history for context on past decisions
 - Fetch external documentation when needed
+- Query team-context MCP for meeting notes, tickets, and APM alerts
 
 Only ask the user questions when information isn't discoverable. When you do ask, include a recommendation with reasoning.
 
