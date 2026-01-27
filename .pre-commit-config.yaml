@@ -1,0 +1,45 @@
+repos:
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  # JSON Schema validation (validates opencode.json against its $schema)
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.30.0
+    hooks:
+      - id: check-jsonschema
+        name: validate opencode.json schema
+        files: opencode\.json$
+        args: ["--check-metaschema"]
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        # Exclude zsh scripts (shellcheck doesn't support zsh) and direnvrc
+        exclude: (direnvrc|reload-shell\.sh)$
+        args: [--shell=bash]
+
+  # Chezmoi template validation
+  - repo: local
+    hooks:
+      - id: chezmoi-templates
+        name: validate chezmoi templates
+        entry: bash -c 'for f in "$@"; do chezmoi execute-template < "$f" > /dev/null || exit 1; done' --
+        language: system
+        files: \.tmpl$
+
+  # Talisman (secrets scanning) - already configured, keep it
+  - repo: https://github.com/thoughtworks/talisman
+    rev: v1.32.0
+    hooks:
+      - id: talisman-commit

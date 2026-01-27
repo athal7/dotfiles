@@ -4,7 +4,7 @@ import { existsSync } from "fs"
 
 /**
  * Compaction hook that preserves context across session compaction.
- * 
+ *
  * Injects:
  * - Context log contents (if .opencode/context-log.md exists)
  * - Continuation rules for key behavioral compliance

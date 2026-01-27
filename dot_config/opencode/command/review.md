@@ -33,7 +33,7 @@ Based on input, determine review type:
 
 3. **Branch name**: `git diff $ARGUMENTS...HEAD`
 
-4. **PR URL or number**: 
+4. **PR URL or number**:
    - `gh pr view $ARGUMENTS` for context
    - `gh pr diff $ARGUMENTS` for diff
    - `gh pr checkout $ARGUMENTS` to read actual files

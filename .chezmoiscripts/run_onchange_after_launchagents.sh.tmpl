@@ -15,7 +15,7 @@ for name in $MANAGED_PLISTS; do
   plist="{{ .chezmoi.homeDir }}/Library/LaunchAgents/$name"
   [ -f "$plist" ] || continue
   label=$(defaults read "$plist" Label 2>/dev/null) || continue
-  
+
   # Unload if already loaded (ignore errors)
   launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
   # Load the agent
