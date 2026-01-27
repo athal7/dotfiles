@@ -13,6 +13,9 @@ permission:
     "git *": allow
     "gh pr *": allow
     "gh issue *": allow
+    "gh api *": allow
+    "gh repo view *": allow
+    "gh search *": allow
     "*": deny
 ---
 
