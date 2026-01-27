@@ -6,17 +6,6 @@
   },
   "model": "anthropic/claude-opus-4-5",
   "small_model": "anthropic/claude-sonnet-4-5",
-  "models": {
-    "anthropic/claude-opus-4-5": {
-      "favorite": true
-    },
-    "anthropic/claude-sonnet-4-5": {
-      "favorite": true
-    },
-    "openai/gpt-5.2": {
-      "favorite": true
-    }
-  },
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -33,7 +22,7 @@
           }
         }
       }
-    },
+    }
   },
   "formatter": {
     "rubocop": {
