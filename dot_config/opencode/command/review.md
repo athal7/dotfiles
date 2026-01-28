@@ -94,3 +94,23 @@ suggested fix if applicable
 ```
 
 **Line numbers must be from actual files** (use Read tool), not from diff positions.
+
+## Learnings Check
+
+After completing the review, assess whether the session involved discoveries worth preserving:
+
+- Multiple debugging attempts before finding root cause
+- Non-obvious relationships between files/modules
+- Workarounds for tool/API quirks
+- Architectural constraints that weren't documented
+
+If any apply, add a "Learnings" section to your output:
+
+```markdown
+## Learnings
+
+This session involved [brief description]. Consider running `/learn` to capture:
+- [specific insight worth preserving]
+```
+
+If nothing non-obvious was discovered, omit this section entirely.
