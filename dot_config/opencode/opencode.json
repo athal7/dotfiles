@@ -9,9 +9,6 @@
   "agent": {
     "explore": {
       "model": "github-copilot/gemini-2.5-pro"
-    },
-    "plan": {
-      "model": "github-copilot/gpt-5"
     }
   },
   "provider": {
