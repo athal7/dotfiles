@@ -76,6 +76,8 @@ Based on input, determine review type:
 
 ## Output Format
 
+For **local reviews** (uncommitted changes, commits, branches):
+
 ```markdown
 ## Summary
 [One line description of what changed]
@@ -92,6 +94,20 @@ suggested fix if applicable
 ## Recommendation
 [Approve / Request changes / Comment]
 ```
+
+For **PR reviews** when posting to GitHub:
+- **Inline comments only** - no summary comment unless explicitly requested
+- Use `gh api` (since `gh pr review` doesn't support inline comments):
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
+  --method POST \
+  -f event="COMMENT" \
+  -f 'comments=[{"path":"file.rb","line":10,"body":"Comment"}]'
+```
+
+- `event`: `COMMENT`, `APPROVE`, or `REQUEST_CHANGES`
+- Omit top-level `body` field (that's the summary comment)
 
 **Line numbers must be from actual files** (use Read tool), not from diff positions.
 
