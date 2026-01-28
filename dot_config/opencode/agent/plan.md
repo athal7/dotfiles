@@ -1,7 +1,6 @@
 ---
 description: Planning, analysis, and architecture. Read-only mode for design decisions and requirements.
 mode: primary
-model: openai/gpt-5.2
 temperature: 0.3
 tools:
   team-context_get_*: true
