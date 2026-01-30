@@ -35,7 +35,8 @@
     }
   },
   "plugin": [
-    "opencode-pty"
+    "opencode-pty",
+    "@simonwjackson/opencode-direnv"
   ],
   "mcp": {
     "team-context": {
