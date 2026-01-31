@@ -64,6 +64,11 @@ Based on input, determine review type:
 - New parameters not used in function body
 - New variables assigned but never read
 
+**Minimize diff** (only flag for your own code, not others' PRs):
+- Unnecessary whitespace or formatting changes
+- Unrelated refactors that could be separate PRs
+- Changes to files not needed for the feature
+
 ## Before Flagging
 
 **Be certain.** Only flag bugs you're confident about.
