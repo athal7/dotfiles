@@ -58,6 +58,12 @@ Based on input, determine review type:
 - Functions doing one thing
 - Precise naming
 
+**Unused code** (read call sites to verify):
+- New functions/methods not called anywhere
+- New exports not imported elsewhere
+- New parameters not used in function body
+- New variables assigned but never read
+
 ## Before Flagging
 
 **Be certain.** Only flag bugs you're confident about.
