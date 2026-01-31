@@ -35,6 +35,7 @@
     }
   },
   "plugin": [
+    "opencode-pilot",
     "opencode-pty",
     "@simonwjackson/opencode-direnv"
   ],

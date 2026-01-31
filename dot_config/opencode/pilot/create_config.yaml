@@ -1,0 +1,15 @@
+# opencode-pilot configuration
+# Automation daemon for OpenCode - polls issues and spawns sessions
+
+defaults:
+  agent: plan
+  working_dir: ~/code
+
+sources:
+  # GitHub PRs where my review is requested
+  - preset: github/review-requests
+    prompt: review
+
+  # My PRs that have received review feedback
+  - preset: github/my-prs-feedback
+    prompt: review-feedback
