@@ -3,13 +3,17 @@
 
 defaults:
   agent: plan
-  working_dir: ~/code
+
+# Auto-discover repos from ~/code via git remote origin
+# Worktree support auto-detected at runtime via OpenCode API
+repos_dir: ~/code
 
 sources:
   # GitHub PRs where my review is requested
   - preset: github/review-requests
-    prompt: review
 
   # My PRs that have received review feedback
   - preset: github/my-prs-feedback
-    prompt: review-feedback
+
+  # GitHub issues assigned to me
+  - preset: github/my-issues
