@@ -2,7 +2,7 @@
 {{ template "brewenv" . }}
 
 # Brew services to start
-SERVICES="postgresql@16"
+SERVICES="ollama postgresql@16"
 
 for svc in $SERVICES; do
   if brew list --formula 2>/dev/null | grep -q "^${svc}$"; then
@@ -14,3 +14,17 @@ for svc in $SERVICES; do
     fi
   fi
 done
+
+# Ollama models to pull
+OLLAMA_MODELS="qwen2.5:14b"
+
+if brew list --formula 2>/dev/null | grep -q "^ollama$"; then
+  for model in $OLLAMA_MODELS; do
+    if ! ollama list 2>/dev/null | grep -q "^${model}"; then
+      echo "Pulling ollama model $model..."
+      ollama pull "$model"
+    else
+      echo "Ollama model $model already installed"
+    fi
+  done
+fi
