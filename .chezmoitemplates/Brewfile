@@ -17,6 +17,7 @@ brew "jq" # JSON processing and querying
 brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
 brew "neovim" # Modern Vim-based editor
+brew "ollama" # Local LLM runtime
 brew "openssl" # TLS/SSL cryptography library
 brew "opentofu" # Terraform-compatible infrastructure as code
 brew "playwright-mcp" # Browser automation MCP server
@@ -24,6 +25,7 @@ brew "ripgrep" # Fast recursive grep (rg) - required by OpenCode
 brew "starship" # Cross-shell prompt
 brew "talisman" # Git secrets scanner (pre-commit hook)
 brew "tmux" # Terminal multiplexer
+brew "wakatime-cli" # Time tracking for developers
 brew "watch" # Run commands periodically
 brew "worktrunk" # Git worktree switcher (wt switch, wt list)
 

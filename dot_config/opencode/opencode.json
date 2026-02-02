@@ -37,7 +37,8 @@
   "plugin": [
     "opencode-pilot",
     "opencode-pty",
-    "@simonwjackson/opencode-direnv"
+    "@simonwjackson/opencode-direnv",
+    "opencode-wakatime"
   ],
   "mcp": {
     "team-context": {
