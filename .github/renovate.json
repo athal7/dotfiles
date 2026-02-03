@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["dot_config/opencode/opencode\\.json$"],
+      "matchStrings": [
+        "\"(?<depName>@?[a-zA-Z0-9-]+(/[a-zA-Z0-9-]+)?)@(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchFileNames": ["dot_config/opencode/opencode.json"],
+      "groupName": "opencode plugins",
+      "schedule": ["before 9am on monday"]
+    }
+  ]
+}
