@@ -16,7 +16,7 @@
     {
       "matchFileNames": ["dot_config/opencode/opencode.json"],
       "groupName": "opencode plugins",
-      "schedule": ["before 9am on monday"]
+      "schedule": ["before 9am every day"]
     }
   ]
 }
