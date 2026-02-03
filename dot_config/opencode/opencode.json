@@ -39,10 +39,10 @@
     }
   },
   "plugin": [
-    "opencode-pilot",
-    "opencode-pty",
-    "@simonwjackson/opencode-direnv",
-    "opencode-wakatime"
+    "opencode-pilot@0.18.2",
+    "opencode-pty@0.1.5",
+    "@simonwjackson/opencode-direnv@2025.1211.9",
+    "opencode-wakatime@1.1.1"
   ],
   "mcp": {
     "team-context": {
