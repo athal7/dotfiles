@@ -11,6 +11,10 @@
     "build": {
       "model": "anthropic/claude-opus-4-5"
     },
+    "plan": {
+      "model": "github-copilot/gpt-5",
+      "textVerbosity": "low"
+    },
     "explore": {
       "model": "github-copilot/gemini-2.5-pro"
     }
