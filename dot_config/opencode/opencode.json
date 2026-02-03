@@ -4,6 +4,7 @@
   "server": {
     "hostname": "127.0.0.1"
   },
+  "default_agent": "plan",
   "model": "github-copilot/gpt-5",
   "small_model": "anthropic/claude-sonnet-4-5",
   "agent": {
