@@ -20,6 +20,18 @@
     }
   },
   "provider": {
+    "anthropic": {
+      "models": {
+        "claude-opus-4-5": { "name": "opus" },
+        "claude-sonnet-4-5": { "name": "sonnet" }
+      }
+    },
+    "github-copilot": {
+      "models": {
+        "gpt-5": { "name": "gpt" },
+        "gemini-2.5-pro": { "name": "gemini" }
+      }
+    },
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "Ollama (local)",
@@ -28,7 +40,7 @@
       },
       "models": {
         "qwen2.5:14b": {
-          "name": "Qwen 2.5 14B",
+          "name": "qwen",
           "limit": {
             "context": 131072,
             "output": 8192
@@ -43,7 +55,7 @@
     }
   },
   "plugin": [
-    "opencode-pilot@0.18.2",
+    "opencode-pilot@0.19.0",
     "opencode-pty@0.1.5",
     "@simonwjackson/opencode-direnv@2025.1211.9",
     "opencode-wakatime@1.1.1"
