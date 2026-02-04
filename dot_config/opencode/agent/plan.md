@@ -6,6 +6,7 @@ tools:
   team-context_get_*: true
   team-context_list_*: true
   team-context_query_*: true
+  context7_*: true
 permission:
   edit: deny
   bash:
