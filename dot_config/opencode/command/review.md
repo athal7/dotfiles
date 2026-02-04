@@ -2,6 +2,9 @@
 description: Review changes [commit|branch|pr], defaults to uncommitted
 tools:
   context7_*: true
+skills:
+  - review-checklist
+  - gh-pr-inline
 ---
 
 Review code changes for bugs, security issues, and quality concerns.
@@ -10,134 +13,55 @@ Review code changes for bugs, security issues, and quality concerns.
 
 ## Context Gathering
 
-**Before reviewing, read `.opencode/context-log.md`** which contains:
-- Issue context and acceptance criteria
-- Build narrative (how the code evolved)
-- Test signals (what passed/failed at each step)
+**Before reviewing, read `.opencode/context-log.md`** for issue context and build history.
 
 **Diffs alone are not enough.** After getting the diff:
-- Read the entire file(s) being modified to understand full context
-- Code that looks wrong in isolation may be correct given surrounding logic
+- Read entire modified file(s) to understand full context
 - Check for CONVENTIONS.md, AGENTS.md in the workspace
 
 ## Determining What to Review
 
-Based on input, determine review type:
+Based on input:
 
-1. **No arguments (default)**: Review changes on current branch
-   - First check: `git diff` and `git diff --cached`
-   - If no uncommitted changes: `git diff origin/<default>...HEAD`
-   - If both empty: report "No changes to review"
-
-2. **Commit hash** (SHA): `git show $ARGUMENTS`
-
+1. **No arguments**: `git diff` + `git diff --cached`, then `git diff origin/<default>...HEAD`
+2. **Commit hash**: `git show $ARGUMENTS`
 3. **Branch name**: `git diff $ARGUMENTS...HEAD`
+4. **PR URL/number**: `gh pr view`, `gh pr diff`, `gh pr checkout`
 
-4. **PR URL or number**:
-   - `gh pr view $ARGUMENTS` for context
-   - `gh pr diff $ARGUMENTS` for diff
-   - `gh pr checkout $ARGUMENTS` to read actual files
+## Review Process
 
-## Review Priorities
-
-1. **Correctness** - Does it work? Are there bugs?
-2. **Security** - Auth/authz, injection, secrets, state integrity
-3. **Performance** - N+1, indexes, O(n²) on unbounded data
-4. **Maintainability** - Readability, testability, simplicity
-
-## What to Check
-
-**Security** (auth/*, api/*, *token*, *.env*):
-- No secrets in code
-- Input validation present
-- Auth checks on protected routes
-
-**Quality**:
-- Test coverage for changed code
-- Dead code, debug logging removed
-- Functions doing one thing
-- Precise naming
-
-**Unused code** (read call sites to verify):
-- New functions/methods not called anywhere
-- New exports not imported elsewhere
-- New parameters not used in function body
-- New variables assigned but never read
-
-**Minimize diff** (only flag for your own code, not others' PRs):
-- Unnecessary whitespace or formatting changes
-- Unrelated refactors that could be separate PRs
-- Changes to files not needed for the feature
-
-## Before Flagging
-
-**Be certain.** Only flag bugs you're confident about.
-
-- Only review changes, not pre-existing code
-- Investigate before flagging as bug
-- Don't invent hypothetical problems
-- If uncertain, read more files first
+1. Get diff using appropriate method above
+2. Read full files for context (not just changed lines)
+3. Apply `review-checklist` skill criteria
+4. **Be certain** - only flag bugs you're confident about
+5. Investigate before flagging; read more files if uncertain
 
 ## Style
 
 - Use "I" statements: "If it were me...", "I wonder if..."
 - Frame as questions, not directives
 - Keep comments short and focused
-- **No flattery** - No "strengths" sections, no praise
+- **No flattery** - no "strengths" sections
 
 ## Output Format
 
-For **local reviews** (uncommitted changes, commits, branches):
+**Local reviews** (uncommitted, commits, branches):
 
 ```markdown
 ## Summary
-[One line description of what changed]
+[One line description]
 
 ## Issues Found
 
 ### path/to/file.rb:10
 [Issue description]
 
-```suggestion
-suggested fix if applicable
-```
-
 ## Recommendation
 [Approve / Request changes / Comment]
 ```
 
-For **PR reviews** when posting to GitHub:
-- **Inline comments only** - no summary comment unless explicitly requested
-- Use `gh api` (since `gh pr review` doesn't support inline comments):
-
-```bash
-gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
-  --method POST \
-  -f event="COMMENT" \
-  -f 'comments=[{"path":"file.rb","line":10,"body":"Comment"}]'
-```
-
-- `event`: `COMMENT`, `APPROVE`, or `REQUEST_CHANGES`
-- Omit top-level `body` field (that's the summary comment)
-
-**Line numbers must be from actual files** (use Read tool), not from diff positions.
+**PR reviews**: Use `gh-pr-inline` skill for posting format. Always show proposed comments and wait for approval before posting.
 
 ## Learnings Check
 
-After completing the review, assess whether the session involved discoveries worth preserving:
-
-- Multiple debugging attempts before finding root cause
-- Non-obvious relationships between files/modules
-- Workarounds for tool/API quirks
-- Architectural constraints that weren't documented
-
-If any apply, add a "Learnings" section to your output:
-
-```markdown
-## Learnings
-
-This session involved [brief description]. Consider running `/learn` to capture:
-- [specific insight worth preserving]
-```
-
-If nothing non-obvious was discovered, omit this section entirely.
+If session involved debugging breakthroughs or non-obvious discoveries, suggest `/learn`.

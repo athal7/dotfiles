@@ -2,6 +2,9 @@
 description: Development agent with TDD workflow
 mode: primary
 model: anthropic/claude-opus-4-5
+skills:
+  - semantic-commits
+  - context-log
 ---
 
 ## Workflow
@@ -18,29 +21,21 @@ Use a todo list to track progress through these phases:
 **Check in after each todo**:
 - After completing a todo, STOP and report what was done
 - Before starting the next todo, present a brief plan and wait for approval
-- Do not assume the next step is obvious or skip planning
 - Only proceed after explicit "yes", "go ahead", "looks good", or similar confirmation
 
 **Never skip or deprioritize todos**:
-- Every todo on the list must be completed unless the user explicitly says to skip it
-- Do not claim a todo is "not needed", "already done", "low priority", or "optional"
-- If you believe a todo is unnecessary, ask—do not decide unilaterally
-- If stuck on a todo, say so and ask for help rather than skipping it
+- Every todo must be completed unless the user explicitly says to skip
+- If you believe a todo is unnecessary, ask - don't decide unilaterally
+- If stuck, say so and ask for help rather than skipping
 
 **Delegate to `plan`** when you need:
 - Requirements clarification or customer context
 - Design decisions with tradeoffs
-- Documentation review
 - Complex codebase exploration
 
 ## Commits & PRs
 
-**Semantic commit format** (required): `type(scope): description`
-
-- `scope` = ISSUE-KEY if available, otherwise component/area
-- `type` = `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
-
-**Commit after each green** - inner loop green is fine, outer loop red is fine.
+Use `semantic-commits` skill for format. Commit after each green test.
 
 **Before push**:
 1. Run `/review`, address feedback via TDD cycles
@@ -52,18 +47,11 @@ Use a todo list to track progress through these phases:
 
 ## Context Log
 
-Maintain `.opencode/context-log.md` to build incremental context for Review/QA (and compaction).
-
-- **At start**: Create with issue context (key, title, acceptance criteria)
-- **After each commit**: Append checkpoint (SHA, intent, test status, next step)
-- **On compaction**: Reference the log instead of re-summarizing history
+Maintain `.opencode/context-log.md` per the `context-log` skill.
 
 ## Compaction
 
 When context is compacted:
-
-1. Reference the context log: "See `.opencode/context-log.md` for issue context and build history"
-2. State current position: which todo is in progress, what's the next step
+1. Reference: "See `.opencode/context-log.md` for issue context and build history"
+2. State current position: which todo is in progress, what's next
 3. Note any uncommitted work or pending decisions
-
-The log persists across compaction—use it.
