@@ -45,20 +45,34 @@ Based on input:
 
 ## Output Format
 
-**Local reviews** (uncommitted, commits, branches):
+**Be terse.** Developers can read code—don't explain what the diff does.
 
 ```markdown
-## Summary
-[One line description]
+## Verdict: [APPROVE | CHANGES REQUESTED | COMMENT]
 
-## Issues Found
+[One sentence why, if not obvious]
 
-### path/to/file.rb:10
-[Issue description]
+## Blockers
 
-## Recommendation
-[Approve / Request changes / Comment]
+- **file.rb:10** - [2-5 word issue]. [1 sentence context if needed]
+
+## Suggestions (non-blocking)
+
+- **file.rb:25** - [2-5 word suggestion]
+
+## Nits
+
+- **file.rb:30** - [tiny thing]
 ```
+
+**Rules:**
+- Skip sections with no items (don't say "None")
+- Max 1-2 sentences per item
+- No "Good job" / "Looks good" filler
+- Don't narrate obvious changes ("adds a new function that...")
+- Use code snippets only if fix is non-obvious
+
+**For PR reviews**, add a brief TL;DR at the top summarizing what the PR does (1-2 sentences).
 
 **PR reviews**: Use `gh-pr-inline` skill for posting format. Always show proposed comments and wait for approval before posting.
 
