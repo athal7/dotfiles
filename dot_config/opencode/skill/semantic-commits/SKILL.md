@@ -49,3 +49,17 @@ Before push, squash related commits:
 - Multiple attempts at same feature → single `feat`
 - Fix + test for same issue → single `fix`
 - Keep logical separation (don't squash unrelated changes)
+
+## PR Descriptions
+
+Keep minimal—no headers, just the essentials:
+- 1-2 sentence summary of the change
+- Link to issue (if applicable)
+- Only add detail if something is non-obvious
+
+Example:
+```
+Adds retry logic for flaky external API calls. Closes #123
+```
+
+Skip: bullet lists, `## Summary` headers, implementation details obvious from the diff.
