@@ -23,6 +23,8 @@ This applies to:
 
 Even if the prompt implies end-to-end completion, always stop before remote modifications. Read-only operations don't require confirmation.
 
+**Never commit globally-ignored files.** Files in `~/.config/git/ignore` are intentionally untracked. Before staging, verify files aren't globally ignored with `git check-ignore <file>`. Key examples: `.talismanrc`, `opencode.json`, `.opencode/context-log.md`.
+
 ## CLI Tools
 
 The following tools are installed via Homebrew and available for use:
@@ -46,6 +48,12 @@ The following tools are installed via Homebrew and available for use:
 **PTY** (when enabled) - for background processes:
 - Send Ctrl+C with `\x03`, Ctrl+D with `\x04`
 - Use regex filtering in `pty_read` to find errors: `pattern="error|ERROR"`
+
+**GitHub PR Inline Comments** via `gh api`:
+- Use `--input -` with heredoc JSON, not `-f 'comments=[...]'` (gets stringified, not parsed as array)
+- Creating a review with comments returns PENDING state; must POST to `/reviews/{id}/events` with `event` to submit
+- Line numbers are file lines in HEAD commit, but verify against GitHub's diff display - off-by-one errors are common
+- To delete a comment: `gh api repos/{owner}/{repo}/pulls/comments/{id} --method DELETE`
 
 ## Task Completion
 

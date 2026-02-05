@@ -9,11 +9,20 @@ description: Post inline comments on GitHub PRs via gh api
 
 ## Posting Inline Comments
 
+Use `--input -` with heredoc JSON (not `-f 'comments=[...]'` which gets stringified):
+
 ```bash
 gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
   --method POST \
-  -f event="COMMENT" \
-  -f 'comments=[{"path":"file.rb","line":10,"body":"Comment text"}]'
+  --input - << 'EOF'
+{
+  "event": "REQUEST_CHANGES",
+  "comments": [
+    {"path":"file.rb","line":10,"body":"Comment text"},
+    {"path":"other.rb","line":25,"body":"Another comment"}
+  ]
+}
+EOF
 ```
 
 ## Event Types
@@ -26,13 +35,19 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
 
 For comments spanning lines, add `start_line`:
 
-```bash
--f 'comments=[{"path":"file.rb","start_line":5,"line":10,"body":"This block..."}]'
+```json
+{"path":"file.rb","start_line":5,"line":10,"body":"This block..."}
 ```
+
+## Line Number Gotchas
+
+- Line numbers are file lines in HEAD commit (new file version)
+- GitHub's diff display can be off-by-one from what you expect
+- Always verify comments landed on the right line after posting
+- To delete a misplaced comment: `gh api repos/{owner}/{repo}/pulls/comments/{id} --method DELETE`
 
 ## Important Notes
 
-- **Line numbers must be from actual files** (use Read tool), not diff positions
 - Omit top-level `body` field to skip summary comment
 - Each comment needs: `path`, `line`, `body`
 - Safety: Always show proposed comments and wait for approval before posting
