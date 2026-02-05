@@ -1,0 +1,36 @@
+#!/bin/sh
+# Ensure LaunchAgents are loaded (runs every chezmoi apply)
+# Hashes for change detection (reload on plist change):
+{{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
+# {{ . | include | sha256sum }}
+{{- end }}
+
+MANAGED_PLISTS="
+{{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
+{{ base . | trimSuffix ".tmpl" }}
+{{- end }}
+"
+
+uid=$(id -u)
+
+for name in $MANAGED_PLISTS; do
+  plist="{{ .chezmoi.homeDir }}/Library/LaunchAgents/$name"
+  [ -f "$plist" ] || continue
+  label=$(defaults read "$plist" Label 2>/dev/null) || continue
+
+  # Check if already loaded
+  if launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
+    # Already loaded - check if plist changed (hash in comment above triggers script rerun)
+    # Reload by bootout then bootstrap
+    launchctl bootout "gui/$uid/$label" 2>/dev/null || true
+    sleep 0.5
+  fi
+
+  # Load the agent
+  if launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null; then
+    echo "Loaded $label"
+  else
+    # Already bootstrapped is OK
+    launchctl kickstart -k "gui/$uid/$label" 2>/dev/null && echo "Restarted $label" || true
+  fi
+done
