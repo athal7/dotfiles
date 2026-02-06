@@ -2,7 +2,7 @@
 {{ template "brewenv" . }}
 
 # Brew services to start
-SERVICES="ollama postgresql@16"
+SERVICES="ollama opencode-pilot postgresql@16"
 
 for svc in $SERVICES; do
   if brew list --formula 2>/dev/null | grep -q "^${svc}$"; then
