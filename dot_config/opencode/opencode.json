@@ -7,22 +7,15 @@
   "permission": {
     "skill": "allow"
   },
-  "default_agent": "router",
+  "default_agent": "plan",
   "model": "anthropic/claude-sonnet-4-5",
-  "small_model": "ollama/devstral-small-2",
   "agent": {
-    "router": {
-      "model": "ollama/devstral-small-2"
-    },
     "build": {
       "model": "anthropic/claude-opus-4-6"
     },
     "plan": {
       "model": "anthropic/claude-opus-4-6",
       "textVerbosity": "low"
-    },
-    "explore": {
-      "model": "ollama/devstral-small-2"
     }
   },
   "provider": {
@@ -39,22 +32,6 @@
         "gemini-3-flash-preview": { "name": "flash" },
         "gpt-4.1": { "name": "gpt" },
         "gpt-5-mini": { "name": "gpt-mini" }
-      }
-    },
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama (local)",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
-      },
-      "models": {
-        "devstral-small-2": {
-          "name": "devstral",
-          "limit": {
-            "context": 384000,
-            "output": 16384
-          }
-        }
       }
     }
   },
