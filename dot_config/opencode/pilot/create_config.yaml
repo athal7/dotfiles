@@ -12,8 +12,8 @@ sources:
   # GitHub PRs where my review is requested
   - preset: github/review-requests
 
-  # My PRs that have received review feedback
-  - preset: github/my-prs-feedback
+  # My PRs needing attention (conflicts OR human feedback)
+  - preset: github/my-prs-attention
 
   # GitHub issues assigned to me
   - preset: github/my-issues
