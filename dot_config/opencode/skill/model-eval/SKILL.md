@@ -93,7 +93,24 @@ Ensure every provider with working models has aliases configured:
 - Short names: `opus`, `sonnet`, `gemini`, `flash`, `gpt`, `qwen`
 - Keep aliases for quota-exceeded models (they'll work when quota resets)
 
-### Step 7: Apply and Verify
+### Step 7: Cleanup Unused Local Models
+
+List installed Ollama models and compare to config:
+
+```bash
+ollama list
+cat ~/.config/opencode/opencode.json | jq -r '.agent[].model, .small_model, .model' | grep ollama | sort -u
+```
+
+Remove any models not referenced in config:
+
+```bash
+ollama rm <unused-model>
+```
+
+**Ask user before removing** - they may want to keep models for experimentation.
+
+### Step 8: Apply and Verify
 
 Apply and test each role's model:
 
@@ -116,7 +133,8 @@ $CLI run -m <small-model> "Say 'small ok'"
 | **plan** | Reasoning, architecture, read-only analysis | Flagship or Standard |
 | **explore** | Large context window, fast navigation | Standard (high context) |
 | **small_model** | Speed, cost efficiency for quick tasks | Fast |
-| **default** | All-around capability | Usually matches plan |
+| **router** | Fast triage, delegation to specialized agents | Local (MoE) |
+| **default** | All-around capability | Usually matches plan or router |
 
 ## Provider Reference
 
@@ -132,3 +150,20 @@ $CLI run -m <small-model> "Say 'small ok'"
 - Short (4-8 chars): `opus`, `sonnet`, `gemini`, `flash`, `gpt`, `qwen`
 - Version suffix only when multiple versions coexist: `opus46`, `opus45`
 - Keep aliases for models across providers (user picks via model switcher)
+
+## Model ID Best Practices
+
+**Use aliases, not dated snapshots.** Model IDs with dates (e.g., `claude-sonnet-4-5-20250514`) break when providers release new snapshots.
+
+| Provider | Dated ID (avoid) | Alias (prefer) |
+|----------|------------------|----------------|
+| Anthropic | `claude-sonnet-4-5-20250929` | `claude-sonnet-4-5` |
+| Anthropic | `claude-opus-4-6` | `claude-opus-4-6` (same) |
+| Anthropic | `claude-haiku-4-5-20251001` | `claude-haiku-4-5` |
+
+Check current aliases: https://docs.anthropic.com/en/docs/about-claude/models/all-models
+
+**When a model stops working:**
+1. Check if the dated ID changed (new snapshot released)
+2. Switch to alias if available
+3. If no alias, check docs for current dated ID

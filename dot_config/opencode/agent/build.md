@@ -1,7 +1,7 @@
 ---
 description: Development agent with TDD workflow
-mode: primary
-model: anthropic/claude-opus-4-5
+mode: all
+model: anthropic/claude-opus-4-6
 skills:
   - semantic-commits
   - context-log

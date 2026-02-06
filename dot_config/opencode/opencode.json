@@ -7,26 +7,29 @@
   "permission": {
     "skill": "allow"
   },
-  "default_agent": "plan",
-  "model": "anthropic/claude-sonnet-4-5-20250514",
-  "small_model": "github-copilot/gpt-5-mini",
+  "default_agent": "router",
+  "model": "anthropic/claude-sonnet-4-5",
+  "small_model": "ollama/devstral-small-2",
   "agent": {
+    "router": {
+      "model": "ollama/devstral-small-2"
+    },
     "build": {
       "model": "anthropic/claude-opus-4-6"
     },
     "plan": {
-      "model": "anthropic/claude-sonnet-4-5-20250514",
+      "model": "anthropic/claude-opus-4-6",
       "textVerbosity": "low"
     },
     "explore": {
-      "model": "anthropic/claude-sonnet-4-5-20250514"
+      "model": "ollama/devstral-small-2"
     }
   },
   "provider": {
     "anthropic": {
       "models": {
         "claude-opus-4-6": { "name": "opus" },
-        "claude-sonnet-4-5-20250514": { "name": "sonnet" }
+        "claude-sonnet-4-5": { "name": "sonnet" }
       }
     },
     "github-copilot": {
@@ -45,11 +48,11 @@
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "qwen2.5:14b": {
-          "name": "qwen",
+        "devstral-small-2": {
+          "name": "devstral",
           "limit": {
-            "context": 131072,
-            "output": 8192
+            "context": 384000,
+            "output": 16384
           }
         }
       }
