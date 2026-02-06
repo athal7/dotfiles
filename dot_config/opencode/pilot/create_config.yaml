@@ -2,7 +2,7 @@
 # Automation daemon for OpenCode - polls issues and spawns sessions
 
 defaults:
-  agent: plan
+  agent: router
 
 # Auto-discover repos from ~/code via git remote origin
 # Worktree support auto-detected at runtime via OpenCode API
