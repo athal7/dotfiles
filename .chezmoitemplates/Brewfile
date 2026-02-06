@@ -12,6 +12,7 @@ brew "docker" # Container runtime
 brew "docker-compose" # Multi-container Docker applications
 brew "ffmpeg" # Video/audio processing
 brew "gh" # GitHub CLI for issues, PRs, repos
+brew "git-spice" # Manage stacked Git branches
 brew "ical-buddy" # Query macOS calendar events
 brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying

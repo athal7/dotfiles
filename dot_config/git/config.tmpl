@@ -39,6 +39,10 @@
   sh  = show
   st  = status
   sw  = switch
+  # PR Stack aliases
+  stack-log = log --graph --oneline --decorate --first-parent
+  stack-diff = "!f() { git diff $(git merge-base HEAD ${1:-origin/main})..HEAD; }; f"
+  stack-range = "!f() { echo \"$(git merge-base HEAD ${1:-origin/main})..HEAD\"; }; f"
 [apply]
   whitespace = fix
 [push]
