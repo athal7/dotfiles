@@ -8,31 +8,34 @@
     "skill": "allow"
   },
   "default_agent": "plan",
-  "model": "github-copilot/gpt-5",
-  "small_model": "anthropic/claude-sonnet-4-5",
+  "model": "anthropic/claude-sonnet-4-5-20250514",
+  "small_model": "github-copilot/gpt-5-mini",
   "agent": {
     "build": {
-      "model": "anthropic/claude-opus-4-5"
+      "model": "anthropic/claude-opus-4-6"
     },
     "plan": {
-      "model": "github-copilot/gpt-5",
+      "model": "anthropic/claude-sonnet-4-5-20250514",
       "textVerbosity": "low"
     },
     "explore": {
-      "model": "github-copilot/gemini-2.5-pro"
+      "model": "anthropic/claude-sonnet-4-5-20250514"
     }
   },
   "provider": {
     "anthropic": {
       "models": {
-        "claude-opus-4-5": { "name": "opus" },
-        "claude-sonnet-4-5": { "name": "sonnet" }
+        "claude-opus-4-6": { "name": "opus" },
+        "claude-sonnet-4-5-20250514": { "name": "sonnet" }
       }
     },
     "github-copilot": {
       "models": {
-        "gpt-5": { "name": "gpt" },
-        "gemini-2.5-pro": { "name": "gemini" }
+        "claude-opus-4.6": { "name": "opus-cp" },
+        "gemini-3-pro-preview": { "name": "gemini" },
+        "gemini-3-flash-preview": { "name": "flash" },
+        "gpt-4.1": { "name": "gpt" },
+        "gpt-5-mini": { "name": "gpt-mini" }
       }
     },
     "ollama": {
