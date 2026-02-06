@@ -1,4 +1,5 @@
 tap "github/gh"
+tap "athal7/opencode-pilot"
 
 # CLI tools - descriptions after # are parsed into AGENTS.md
 brew "ast-grep" # AST-based code search and transformation (pattern: `console.log($$$)`)
@@ -18,6 +19,7 @@ brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
 brew "neovim" # Modern Vim-based editor
 brew "ollama" # Local LLM runtime
+brew "opencode-pilot" # Automation daemon for OpenCode - polls issues and spawns sessions
 brew "openssl" # TLS/SSL cryptography library
 brew "opentofu" # Terraform-compatible infrastructure as code
 brew "playwright-mcp" # Browser automation MCP server
