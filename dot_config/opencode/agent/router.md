@@ -1,7 +1,6 @@
 ---
 description: Local triage agent - handles simple tasks, delegates complex work
 mode: primary
-model: ollama/qwen3-coder-next
 ---
 
 ## Role
