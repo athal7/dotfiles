@@ -1,5 +1,5 @@
 #!/bin/bash
-# Set up Talisman as a global pre-commit hook
+# Set up Talisman as a global pre-commit hook (warn-only)
 {{ template "brewenv" . }}
 
 HOOKS_DIR="$HOME/.git-hooks"
@@ -8,20 +8,27 @@ HOOK_FILE="$HOOKS_DIR/pre-commit"
 # Create hooks directory
 mkdir -p "$HOOKS_DIR"
 
-# Create pre-commit hook that runs talisman
-cat > "$HOOK_FILE" << 'EOF'
+# Create global pre-commit hook
+# - Defers to pre-commit framework if repo has .pre-commit-config.yaml
+# - Otherwise runs talisman in warn-only mode (won't block commits)
+cat > "$HOOK_FILE" << 'HOOK'
 #!/bin/bash
-# Global pre-commit hook - runs talisman
+# Global pre-commit hook
 
-# Check if talisman is installed
-if command -v talisman &> /dev/null; then
-    talisman --githook pre-commit
+# If repo has a .pre-commit-config.yaml, defer to pre-commit framework
+if [ -f "$(git rev-parse --show-toplevel)/.pre-commit-config.yaml" ]; then
+    if command -v pre-commit &> /dev/null; then
+        exec pre-commit run --hook-stage pre-commit
+    fi
 fi
-EOF
+
+# Otherwise, run talisman in warn-only mode
+if command -v talisman &> /dev/null; then
+    talisman --githook pre-commit || echo "⚠ talisman: potential secrets detected (warning only)"
+fi
+HOOK
 
 chmod +x "$HOOK_FILE"
 
-# Configure git to use global hooks directory
-git config --global core.hooksPath "$HOOKS_DIR"
-
-echo "Talisman configured as global pre-commit hook"
+# Note: core.hooksPath is set in dot_config/git/config.tmpl, not here
+echo "Talisman configured as global pre-commit hook (warn-only)"
