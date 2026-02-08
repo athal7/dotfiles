@@ -22,7 +22,8 @@
     "anthropic": {
       "models": {
         "claude-opus-4-6": { "name": "opus" },
-        "claude-sonnet-4-5": { "name": "sonnet" }
+        "claude-sonnet-4-5": { "name": "sonnet" },
+        "claude-haiku-4": { "name": "haiku" }
       }
     },
     "github-copilot": {
