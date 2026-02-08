@@ -3,7 +3,7 @@
 
 defaults:
   agent: plan
-  model: &model haiku
+  model: claude-haiku-4-5
 
 # Auto-discover repos from ~/code via git remote origin
 # Worktree support auto-detected at runtime via OpenCode API
