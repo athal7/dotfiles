@@ -3,13 +3,24 @@
 
 defaults:
   agent: plan
-  model: claude-haiku-4-5
+  model: haiku
 
 # Auto-discover repos from ~/code via git remote origin
 # Worktree support auto-detected at runtime via OpenCode API
 repos_dir: ~/code
 
 sources:
+  # Linear tickets assigned to me in 0DIN-Devs team (via team-context MCP)
+  - preset: linear/my-issues
+    tool:
+      mcp: team-context
+      name: list_issues
+    args:
+      team: "0DIN-Devs"
+      assignee: "me"
+      state: "in_progress"
+    repos: [0din-ai/odin]
+
   # GitHub PRs where my review is requested
   - preset: github/review-requests
 
@@ -18,3 +29,10 @@ sources:
 
   # GitHub issues assigned to me
   - preset: github/my-issues
+
+tools:
+  team-context:
+    response_key: issues
+    mappings:
+      body: description
+      number: identifier
