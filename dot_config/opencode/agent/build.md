@@ -5,6 +5,7 @@ model: anthropic/claude-opus-4-6
 skills:
   - semantic-commits
   - context-log
+  - pr-stack
 ---
 
 ## Workflow
