@@ -34,6 +34,8 @@ autoload -Uz compinit && compinit -i -d "$ZSH_COMPDUMP"
 
 # plugins
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# Disable highlighting in OpenCode (Ghostty crashes on region_highlight)
+[[ -n "$OPENCODE" ]] && ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=""
 source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 eval "$(starship init zsh)"
 eval "$(direnv hook zsh)"
