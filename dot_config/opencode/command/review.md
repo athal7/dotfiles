@@ -2,6 +2,9 @@
 description: Review changes [commit|branch|pr], defaults to uncommitted
 tools:
   context7_*: true
+  team-context_get_issue: true
+  team-context_list_comments: true
+  team-context_get_project: true
 skills:
   - review-checklist
   - gh-pr-inline
@@ -14,6 +17,25 @@ Review code changes for bugs, security issues, and quality concerns.
 ## Context Gathering
 
 **Before reviewing, read `.opencode/context-log.md`** for issue context and build history.
+
+### Feature/Issue Context
+
+**Extract issue IDs** from branch name or PR, then fetch details:
+
+1. Get current branch: `git branch --show-current`
+2. Parse for issue patterns:
+   - Linear: `ENG-123`, `PROJ-456` (uppercase letters + hyphen + numbers)
+   - GitHub: `#123` or `gh-123`
+3. For PR reviews: also check PR body and linked issues via `gh pr view --json body,title`
+4. Fetch issue details:
+   - Linear issues → `team-context_get_issue` (also fetch project if issue has one)
+   - GitHub issues → `gh issue view`
+
+**Use issue/project context to verify:**
+- Changes align with stated requirements
+- Acceptance criteria are addressed
+- Scope creep (changes unrelated to the issue)
+- Fits within project goals (if project context available)
 
 **Diffs alone are not enough.** After getting the diff:
 - Read entire modified file(s) to understand full context
@@ -73,6 +95,13 @@ Based on input:
 - Use code snippets only if fix is non-obvious
 
 **For PR reviews**, add a brief TL;DR at the top summarizing what the PR does (1-2 sentences).
+
+**If issue context was found**, add after verdict:
+```markdown
+## Requirements Check
+- [x] Requirement 1 from issue
+- [ ] Requirement 2 (not addressed)
+```
 
 **PR reviews**: Use `gh-pr-inline` skill for posting format. Always show proposed comments and wait for approval before posting.
 
