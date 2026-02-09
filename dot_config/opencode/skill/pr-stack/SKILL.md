@@ -8,12 +8,17 @@ description: Managing stacked/dependent pull requests with GitHub
 **git-spice** (`gs`) is the primary tool for stacked PRs:
 
 ```bash
-gs stack tree              # Visualize stack structure
-gs stack sync              # Rebase entire stack after base changes
-gs stack submit            # Create/update all PRs in stack
-gs branch create <name>    # Create new layer in stack
-gs upstack restack         # Rebase branches above current
-gs ls                      # List all tracked branches
+gs repo init                   # Initialize git-spice in a repo
+gs branch create <name>        # Create new branch in stack
+gs commit create -m "msg"      # Commit with tracking
+gs log short                   # List tracked branches (alias: gs ls)
+gs log long                    # List branches with commits
+
+# Navigation
+gs up / gs down                # Move between stack layers
+gs top / gs bottom             # Jump to top/bottom of stack
+gs trunk                       # Switch to trunk branch
+gs branch checkout <name>      # Switch to a tracked branch
 ```
 
 **Git aliases** available:
@@ -21,20 +26,23 @@ gs ls                      # List all tracked branches
 - `git stack-diff <base>` — diff from merge-base to HEAD
 - `git stack-range <base>` — commit range for current layer
 
-**Manual stack detection** (when git-spice isn't initialized):
-```bash
-gh pr list --json number,title,baseRefName,headRefName,state
-```
-Chains: PR's `headRefName` equals another PR's `baseRefName`.
-
 ## Stack Operations
+
+**Submit** — create/update PRs for the stack:
+```bash
+gs branch submit               # Submit current branch as PR
+gs stack submit                 # Submit all branches in stack
+gs downstack submit             # Submit current + below
+gs upstack submit               # Submit current + above
+```
+
+Navigation comments are auto-synced on downstack PRs (configured via `spice.submit.navigationCommentSync`).
 
 **Sync** — after base branch changes, rebase bottom-up:
 ```bash
-gs stack sync                          # preferred
-# or manually:
-git rebase origin/<base-branch>
-git push --force-with-lease
+gs repo sync                   # Pull trunk + restack all branches
+gs stack restack               # Restack entire stack
+gs upstack restack             # Restack current + above
 ```
 
 **Review one layer** — show only this PR's changes:
@@ -43,25 +51,26 @@ git log <base>..<head> --oneline       # commits
 git diff <base>..<head>                # diff
 ```
 
+**Reorder** — change branch order in a stack:
+```bash
+gs stack edit                  # Edit full stack order
+gs downstack edit              # Edit below current
+gs upstack onto <branch>       # Move current branch onto another
+```
+
 **Merge** — always bottom-up, rebase dependents after each:
 ```bash
 gh pr merge <pr> --squash --delete-branch
-gh pr edit <dependent-pr> --base main  # retarget after merge
+gs repo sync                   # Restacks remaining branches
 ```
 
-## PR Body Template
+## Manual stack detection
 
-```markdown
-## Summary
-[Changes in this layer]
-
-## Dependencies
-- Based on #<parent-pr> (`<parent-branch>`)
-
-## Review Notes
-View only this PR's changes:
-`git diff <parent-branch>..<this-branch>`
+When git-spice isn't initialized:
+```bash
+gh pr list --json number,title,baseRefName,headRefName,state
 ```
+Chains: PR's `headRefName` equals another PR's `baseRefName`.
 
 ## Safety
 
