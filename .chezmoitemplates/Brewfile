@@ -31,6 +31,9 @@ brew "tmux" # Terminal multiplexer
 brew "wakatime-cli" # Time tracking for developers
 brew "watch" # Run commands periodically
 brew "worktrunk" # Git worktree switcher (wt switch, wt list)
+brew "zsh-autosuggestions" # Fish-like autosuggestions for zsh
+brew "zsh-completions" # Additional zsh completions
+brew "zsh-syntax-highlighting" # Syntax highlighting for zsh
 
 cask_args appdir: "/Applications"
 cask "font-monaspace" # Monospace font family
