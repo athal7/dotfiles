@@ -2,7 +2,8 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [],
   "server": {
-    "hostname": "127.0.0.1"
+    "hostname": "127.0.0.1",
+    "port": 4096
   },
   "permission": {
     "skill": "allow"
@@ -15,7 +16,19 @@
     },
     "plan": {
       "model": "anthropic/claude-opus-4-6",
-      "textVerbosity": "low"
+      "textVerbosity": "low",
+      "temperature": 0.3,
+      "permission": {
+        "bash": {
+          "*": "deny",
+          "git *": "allow",
+          "gh pr *": "allow",
+          "gh issue *": "allow",
+          "gh api *": "allow",
+          "gh repo view *": "allow",
+          "gh search *": "allow"
+        }
+      }
     }
   },
   "provider": {

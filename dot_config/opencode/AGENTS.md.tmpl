@@ -55,13 +55,28 @@ The following tools are installed via Homebrew and available for use:
 - Line numbers are file lines in HEAD commit, but verify against GitHub's diff display - off-by-one errors are common
 - To delete a comment: `gh api repos/{owner}/{repo}/pulls/comments/{id} --method DELETE`
 
+## Development Workflow
+
+**Check in after each todo.** After completing a todo, STOP and report what was done. Before starting the next, present a brief plan and wait for approval. Never skip todos — if stuck, ask for help.
+
+**TDD.** Write tests first, then implement. Commit after each green test.
+
+**Before push:**
+1. Review your own changes for bugs, security, and quality
+2. Squash into semantic commits (load `semantic-commits` skill for format)
+3. Create PRs as draft
+4. Ask for approval before pushing (per Safety rules)
+
+**Research before asking.** Explore the codebase, read files, check git history, query team-context MCP. Only ask the user when information isn't discoverable.
+
+**Architecture decisions:** Present 2-3 options with tradeoffs. Recommend one. Prefer YAGNI, simplicity, and reversibility.
+
 ## Task Completion
 
 **Track progress with todos.** Before ending your response:
 1. Ensure current work is saved (committed if applicable)
 2. Update todo status to reflect actual progress
-3. If workflow rules specify check-ins (e.g., "wait for approval"), follow them
-4. Never abandon work silently—report status and next steps
+3. Never abandon work silently—report status and next steps
 
 ## Commands
 
