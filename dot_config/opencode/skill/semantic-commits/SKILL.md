@@ -50,6 +50,15 @@ Before push, squash related commits:
 - Fix + test for same issue → single `fix`
 - Keep logical separation (don't squash unrelated changes)
 
+## Branch Names
+
+**Before pushing**, check if the branch name is meaningful. Auto-generated worktree branches (e.g., `opencode/cosmic-wizard`) should be renamed to reflect the change:
+```bash
+[[ "$(git branch --show-current)" =~ ^opencode/ ]] && git branch -m "$(git branch --show-current)" <new-name>
+```
+
+**Naming convention**: `<type>/<short-description>` — type matches the commit type, description is 2-4 kebab-case words (e.g., `feat/add-auth-middleware`, `fix/token-refresh-race`).
+
 ## PR Descriptions
 
 Keep minimal—no headers, just the essentials:
