@@ -1,0 +1,59 @@
+#!/bin/sh
+# git-worktree-sync - Fast-forward default branch in repos with active worktrees
+#
+# Iterates over repos in ~/code/ that have git worktrees and:
+# 1. Fetches the default branch from origin
+# 2. Fast-forwards the local default branch ref (without checkout)
+#
+# Designed to run on a schedule via LaunchAgent. Pairs well with
+# `git maintenance` prefetch for near-instant fetches.
+
+set -eu
+
+CODE_DIR="${HOME}/code"
+LOG_TAG="git-worktree-sync"
+
+log() { logger -t "$LOG_TAG" "$@" 2>/dev/null; printf '%s %s\n' "$(date +%H:%M:%S)" "$*"; }
+
+for repo in "$CODE_DIR"/*/; do
+  [ -d "$repo/.git" ] || continue
+
+  # Only process repos with active worktrees
+  worktree_dir="$repo/.git/worktrees"
+  [ -d "$worktree_dir" ] && [ "$(ls -A "$worktree_dir" 2>/dev/null)" ] || continue
+
+  name=$(basename "$repo")
+
+  # Detect default branch: worktrunk config > origin/HEAD > skip
+  default_branch=$(git -C "$repo" config worktrunk.default-branch 2>/dev/null) || \
+  default_branch=$(git -C "$repo" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||') || {
+    log "$name: skipped (no default branch detected)"
+    continue
+  }
+
+  # Fetch default branch from origin
+  if ! git -C "$repo" fetch --quiet origin "$default_branch" 2>/dev/null; then
+    log "$name: fetch failed"
+    continue
+  fi
+
+  local_ref=$(git -C "$repo" rev-parse "refs/heads/$default_branch" 2>/dev/null) || {
+    log "$name: no local $default_branch ref"
+    continue
+  }
+  remote_ref=$(git -C "$repo" rev-parse "refs/remotes/origin/$default_branch" 2>/dev/null) || {
+    log "$name: no remote $default_branch ref"
+    continue
+  }
+
+  # Already up to date
+  [ "$local_ref" != "$remote_ref" ] || continue
+
+  # Only fast-forward (remote must be a descendant of local)
+  if git -C "$repo" merge-base --is-ancestor "$local_ref" "$remote_ref" 2>/dev/null; then
+    git -C "$repo" update-ref "refs/heads/$default_branch" "$remote_ref" "$local_ref"
+    log "$name: $default_branch fast-forwarded to $(echo "$remote_ref" | cut -c1-8)"
+  else
+    log "$name: $default_branch diverged, skipping"
+  fi
+done

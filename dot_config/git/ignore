@@ -46,3 +46,7 @@ opencode.json
 .opencode/context-log.md
 .screencast/
 favicon.svg
+
+# Worktrunk (personal worktree config) #
+#########################################
+.config/wt.toml
