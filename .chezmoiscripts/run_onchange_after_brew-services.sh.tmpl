@@ -2,7 +2,7 @@
 {{ template "brewenv" . }}
 
 # Brew services to start
-SERVICES="ollama opencode-pilot postgresql@16"
+SERVICES="opencode-pilot postgresql@16"
 
 for svc in $SERVICES; do
   if brew list --formula 2>/dev/null | grep -q "^${svc}$"; then
@@ -15,16 +15,16 @@ for svc in $SERVICES; do
   fi
 done
 
-# Ollama models to pull
-OLLAMA_MODELS="qwen2.5:14b"
-
-if brew list --formula 2>/dev/null | grep -q "^ollama$"; then
-  for model in $OLLAMA_MODELS; do
-    if ! ollama list 2>/dev/null | grep -q "^${model}"; then
-      echo "Pulling ollama model $model..."
-      ollama pull "$model"
+# llama-server for fast local routing (Qwen3-4B via llama.cpp)
+# Model auto-downloads on first run via -hf flag in the plist.
+LLAMA_PLIST="$HOME/Library/LaunchAgents/com.{{ .chezmoi.username }}.llama-server.plist"
+if brew list --formula 2>/dev/null | grep -q "^llama.cpp$"; then
+  if [ -f "$LLAMA_PLIST" ]; then
+    if ! launchctl list 2>/dev/null | grep -q "llama-server"; then
+      echo "Starting llama-server..."
+      launchctl load "$LLAMA_PLIST"
     else
-      echo "Ollama model $model already installed"
+      echo "llama-server already running"
     fi
-  done
+  fi
 fi
