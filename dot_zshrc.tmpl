@@ -28,6 +28,9 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   alias tf='tofu'
   alias watch='watch -c '
 
+# completions
+  autoload -Uz compinit && compinit -d "$ZSH_COMPDUMP"
+
 # plugins
   eval "$(starship init zsh)"
   eval "$(direnv hook zsh)"
