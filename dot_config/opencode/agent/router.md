@@ -3,20 +3,8 @@ description: Local triage agent - handles simple tasks, delegates complex work
 mode: primary
 model: llama-local/qwen3-4b
 tools:
-  read: true
-  edit: true
-  write: true
-  bash: true
-  glob: true
-  grep: true
-  task: true
-  todowrite: true
   webfetch: false
-  skill: false
-  pty_*: false
-  team-context_*: false
   playwright_*: false
-  context7_*: false
 ---
 
 /nothink
