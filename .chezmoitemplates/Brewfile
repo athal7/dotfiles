@@ -34,7 +34,7 @@ brew "worktrunk" # Git worktree switcher (wt switch, wt list)
 
 cask_args appdir: "/Applications"
 cask "font-monaspace" # Monospace font family
-cask "kitty" # GPU-accelerated terminal emulator
+cask "ghostty" # GPU-accelerated terminal emulator
 cask "mac-mouse-fix" # Mouse customization utility
 cask "opencode-desktop" # AI coding assistant desktop app
 cask "stats" # Menu bar system monitor (CPU, memory, disk, network)
