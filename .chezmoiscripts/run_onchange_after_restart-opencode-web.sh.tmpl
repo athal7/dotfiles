@@ -1,0 +1,16 @@
+#!/bin/sh
+# Restart opencode-web when server-level config changes
+# Hashes for change detection:
+# opencode.json: {{ joinPath .chezmoi.sourceDir "dot_config/opencode/opencode.json" | include | sha256sum }}
+{{- range (glob (joinPath .chezmoi.sourceDir "dot_config/opencode/plugins/*")) }}
+# plugin: {{ . | include | sha256sum }}
+{{- end }}
+
+label="com.athal.opencode-web"
+uid=$(id -u)
+
+if launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
+  launchctl kickstart -k "gui/$uid/$label" 2>/dev/null && echo "Restarted $label (config changed)" || true
+else
+  echo "$label not loaded, skipping restart"
+fi

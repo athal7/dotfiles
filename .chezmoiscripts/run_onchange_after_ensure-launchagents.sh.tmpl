@@ -1,5 +1,5 @@
 #!/bin/sh
-# Ensure LaunchAgents are loaded (runs every chezmoi apply)
+# Ensure LaunchAgents are loaded (runs when plist files change)
 # Hashes for change detection (reload on plist change):
 {{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
 # {{ . | include | sha256sum }}
