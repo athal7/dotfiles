@@ -22,9 +22,7 @@ type(scope): description
 
 ## Scope
 
-Priority order:
-1. **Issue key** if available (e.g., `feat(PROJ-123): ...`)
-2. **Component/area** (e.g., `fix(auth): ...`, `refactor(api): ...`)
+Always use **component/area** (e.g., `fix(auth): ...`, `refactor(api): ...`). Keep scope semantic — don't use ticket numbers as scope.
 
 ## Description
 
@@ -36,7 +34,7 @@ Priority order:
 ## Examples
 
 ```
-feat(PROJ-123): add password reset flow
+feat(auth): add password reset flow
 fix(auth): prevent token refresh race condition
 refactor(api): extract validation middleware
 test(user): add edge cases for email validation
@@ -63,8 +61,9 @@ Before push, squash related commits:
 
 Keep minimal—no headers, just the essentials:
 - 1-2 sentence summary of the change
-- Link to issue (if applicable)
 - Only add detail if something is non-obvious
+- Link to the issue when the issue tracker is visible to the repo's audience (e.g., `Closes #123` for GitHub issues, `Closes PROJ-123` for private repos)
+- **Never reference internal/private issue keys** (e.g., Linear) in public repos
 
 Example:
 ```
@@ -72,3 +71,9 @@ Adds retry logic for flaky external API calls. Closes #123
 ```
 
 Skip: bullet lists, `## Summary` headers, implementation details obvious from the diff.
+
+## Issue Traceability
+
+When the issue tracker is internal (e.g., Linear) and the repo is public, don't reference issues in commits or PRs. Instead, update the Linear issue with a link to the PR.
+
+Check repo visibility with: `gh repo view --json visibility -q '.visibility'`
