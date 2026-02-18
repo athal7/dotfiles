@@ -2,9 +2,6 @@
 description: Local triage agent - handles simple tasks, delegates complex work
 mode: primary
 model: llama-local/qwen3-4b
-tools:
-  webfetch: false
-  playwright_*: false
 ---
 
 /nothink
