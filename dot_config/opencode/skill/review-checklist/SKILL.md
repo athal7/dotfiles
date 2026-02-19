@@ -30,10 +30,15 @@ description: Code review checklist - security, correctness, performance, maintai
 - Error states have clear user feedback
 - Async operations have proper error handling
 - State mutations are intentional
+- Inverse operations are symmetric (create/destroy, archive/unarchive fully reverse each other)
+- UI-indicated requirements (e.g. `*` on labels) enforced server-side
+- No unnecessary indirection (wrapping single values in arrays, passing locals already in scope)
 
 ## Performance
 
 - No N+1 queries (check loops with DB calls)
+- No over-fetching: eager-loads only pull associations the action actually uses
+- Broad loading scopes applied per-action, not blanket per-controller
 - Indexes exist for filtered/sorted columns
 - No O(n^2) on unbounded data
 - Large lists paginated or virtualized
@@ -43,13 +48,31 @@ description: Code review checklist - security, correctness, performance, maintai
 - Functions do one thing
 - Names are precise (not `data`, `info`, `handle`)
 - No dead code or debug logging
-- Test coverage for changed code
+- Test coverage for changed code, at the right tier (don't use slow browser tests for things fast tests cover)
+
+## DRY / Reuse
+
+- New views/templates: does a similar one already exist? Extend it rather than duplicating.
+- New controllers/services: check for existing patterns that can be shared via extraction.
+- Duplicated markup/logic will drift — flag the risk.
+
+## Side Effects
+
+- Trace the callback/job chain: does this trigger emails, notifications, webhooks?
+- Side effects should fire after the operation succeeds, not before
+- Guard clauses and early returns belong at the top
 
 ## Behavior Changes
 
 - Flag any behavioral change (especially if possibly unintentional)
 - Changed defaults, reordered operations, modified return values
 - API contract changes (new required params, changed response shape)
+
+## API Completeness (when adding/modifying APIs)
+
+- Field parity with existing API (check for missing fields, filters, arguments)
+- Response examples in documentation
+- Breaking changes flagged explicitly
 
 ## Unused Code Detection
 
@@ -71,7 +94,7 @@ Before flagging style issues:
 
 - Unnecessary whitespace/formatting changes
 - Unrelated refactors (separate PR)
-- Changes to files not needed for feature
+- Changes to files outside the feature's domain — ask why
 
 ## Output Format
 

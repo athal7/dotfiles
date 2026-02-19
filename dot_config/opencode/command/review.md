@@ -11,3 +11,5 @@ Based on input:
 - **Commit hash**: `git show $ARGUMENTS`
 - **Branch name**: `git diff $ARGUMENTS...HEAD`
 - **PR URL/number**: `gh pr view`, `gh pr diff`. Use `gh-pr-inline` skill for posting inline comments.
+
+If the diff modifies views, templates, Turbo streams, or frontend code, suggest running `/qa` for browser-based verification after the review.
