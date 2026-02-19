@@ -4,9 +4,20 @@ description: Reset "Modified Files" sidebar to match actual git state
 
 Reset the "Modified Files" panel so it reflects `git diff HEAD` instead of stale internal snapshots. Run this after committing when the sidebar still shows committed files.
 
-**Session ID (required):** $ARGUMENTS
+**Session ID (optional override):** $ARGUMENTS
 
-If no session ID is provided, ask the user for one. Do not default to the current session — the live diff engine will overwrite results immediately.
+## Session Resolution
+
+If `$ARGUMENTS` contains a session ID (matches `ses_` prefix), use it directly. Otherwise, **auto-detect** the current session by querying the database for the most recently updated session whose directory matches the current working directory:
+
+```bash
+DB=~/.local/share/opencode/opencode.db
+SESSION=$(sqlite3 "$DB" "SELECT id FROM session WHERE directory = '$(pwd)' ORDER BY time_updated DESC LIMIT 1")
+[ -z "$SESSION" ] && { echo "error: no session found for $(pwd)"; exit 1; }
+echo "auto-detected session: $SESSION"
+```
+
+**Warning:** If you are running this command from the session you are resetting, the live diff engine may overwrite the results on the next prompt. The reset will still take effect after the session is resumed fresh (e.g., after restarting OpenCode or switching sessions and back).
 
 ## Steps
 
@@ -14,12 +25,21 @@ All steps use `DB=~/.local/share/opencode/opencode.db`. Run each step as a singl
 
 ### 1. Resolve session
 
-Validate the session ID format first (`ses_` prefix, alphanumeric), then query:
+If `$ARGUMENTS` matches a session ID (`ses_` prefix), use it directly. Otherwise, auto-detect from the working directory:
 
 ```bash
 DB=~/.local/share/opencode/opencode.db
-SESSION='<SESSION_ID>'
-[[ "$SESSION" =~ ^ses_[a-zA-Z0-9]+$ ]] || { echo "invalid session ID: $SESSION"; exit 1; }
+ARG='$ARGUMENTS'
+
+if [[ "$ARG" =~ ^ses_[a-zA-Z0-9]+$ ]]; then
+  SESSION="$ARG"
+  echo "using provided session: $SESSION"
+else
+  SESSION=$(sqlite3 "$DB" "SELECT id FROM session WHERE directory = '$(pwd)' ORDER BY time_updated DESC LIMIT 1")
+  [ -z "$SESSION" ] && { echo "error: no session found for $(pwd)"; exit 1; }
+  echo "auto-detected session: $SESSION"
+fi
+
 sqlite3 "$DB" "SELECT s.id, s.directory, s.project_id, p.vcs
   FROM session s LEFT JOIN project p ON p.id = s.project_id
   WHERE s.id = '$SESSION'"
