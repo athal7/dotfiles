@@ -57,15 +57,20 @@ The following tools are installed via Homebrew and available for use:
 
 ## Development Workflow
 
-**Check in after each todo.** After completing a todo, STOP and report what was done. Before starting the next, present a brief plan and wait for approval. Never skip todos — if stuck, ask for help.
+**Check in at natural breakpoints.** Complete a logical group of related todos before stopping. Only pause for approval when: (1) the next step is destructive or irreversible, (2) you are genuinely uncertain how to proceed, or (3) you have finished all todos. Do not stop after every single todo — maintain momentum unless a decision is needed. If stuck, ask for help.
 
 **TDD.** Write tests first, then implement. Commit after each green test.
 
 **Before push:**
-1. Review your own changes for bugs, security, and quality
-2. Squash into semantic commits (load `semantic-commits` skill for format)
-3. Create PRs as draft
-4. Ask for approval before pushing (per Safety rules)
+1. Run tests locally — do not rely on CI as your test runner
+2. Review your own changes for bugs, security, and quality
+3. Squash into semantic commits (load `semantic-commits` skill for format)
+4. Create PRs as draft
+5. Ask for approval before pushing (per Safety rules)
+
+**PR reviews vs implementation.** "Review this PR" means: analyze and draft a written review — do NOT implement fixes unless explicitly asked. "Address feedback" or "implement fixes" means: make code changes.
+
+**Scope discipline.** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features. If you notice something worth fixing that is out of scope, mention it but do not change it.
 
 **Research before asking.** Explore the codebase, read files, check git history, query team-context MCP. Only ask the user when information isn't discoverable.
 
