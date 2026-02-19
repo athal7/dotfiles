@@ -14,17 +14,3 @@ for svc in $SERVICES; do
     fi
   fi
 done
-
-# llama-server for fast local routing (Qwen3-4B via llama.cpp)
-# Model auto-downloads on first run via -hf flag in the plist.
-LLAMA_PLIST="$HOME/Library/LaunchAgents/com.{{ .chezmoi.username }}.llama-server.plist"
-if brew list --formula 2>/dev/null | grep -q "^llama.cpp$"; then
-  if [ -f "$LLAMA_PLIST" ]; then
-    if ! launchctl list 2>/dev/null | grep -q "llama-server"; then
-      echo "Starting llama-server..."
-      launchctl load "$LLAMA_PLIST"
-    else
-      echo "llama-server already running"
-    fi
-  fi
-fi

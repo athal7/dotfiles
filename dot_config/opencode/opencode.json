@@ -9,13 +9,13 @@
     "skill": "allow"
   },
   "default_agent": "plan",
-  "model": "anthropic/claude-sonnet-4-5",
+  "model": "anthropic/claude-sonnet-4-6",
   "agent": {
     "build": {
       "model": "anthropic/claude-opus-4-6"
     },
     "plan": {
-      "model": "anthropic/claude-opus-4-6",
+      "model": "anthropic/claude-sonnet-4-6",
       "textVerbosity": "low",
       "temperature": 0.3,
       "permission": {
@@ -35,33 +35,8 @@
     "anthropic": {
       "models": {
         "claude-opus-4-6": { "name": "opus" },
-        "claude-sonnet-4-5": { "name": "sonnet" },
+        "claude-sonnet-4-6": { "name": "sonnet" },
         "claude-haiku-4-5": { "name": "haiku" }
-      }
-    },
-    "github-copilot": {
-      "models": {
-        "claude-opus-4.6": { "name": "opus-cp" },
-        "gemini-3-pro-preview": { "name": "gemini" },
-        "gemini-3-flash-preview": { "name": "flash" },
-        "gpt-4.1": { "name": "gpt" },
-        "gpt-5-mini": { "name": "gpt-mini" }
-      }
-    },
-    "llama-local": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "llama.cpp (local)",
-      "options": {
-        "baseURL": "http://localhost:8090/v1"
-      },
-      "models": {
-        "qwen3-4b": {
-          "name": "qwen3-4b",
-          "limit": {
-            "context": 32768,
-            "output": 4096
-          }
-        }
       }
     }
   },
