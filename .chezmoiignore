@@ -14,6 +14,7 @@
 # Using modify_ script to merge chezmoi-managed settings with local config
 # .config/opencode/opencode.json
 
-# Repo documentation - not for home directory
+# Repo documentation and project config - not for home directory
 AGENTS.md
 README.md
+opencode.json
