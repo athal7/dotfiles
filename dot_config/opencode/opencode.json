@@ -33,7 +33,7 @@
   "provider": {
     "opencode": {
       "models": {
-        "trinity-large-preview-free": { "name": "free" },
+        "trinity-large-preview-free": { "name": "trinity" },
         "big-pickle": { "name": "pickle" },
         "kimi-k2.5-free": { "name": "kimi" },
         "glm-5-free": { "name": "glm" },
