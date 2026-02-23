@@ -61,12 +61,13 @@ The following tools are installed via Homebrew and available for use:
 
 **TDD.** Write tests first, then implement. Commit after each green test.
 
+**Before commit:** Run `/review staged` to review staged changes. If the review returns blockers, fix them before committing. Do not skip this step — it is the pre-commit quality gate.
+
 **Before push:**
 1. Run tests locally — do not rely on CI as your test runner
-2. Review your own changes for bugs, security, and quality
-3. Squash into semantic commits (load `semantic-commits` skill for format)
-4. Create PRs as draft
-5. Ask for approval before pushing (per Safety rules)
+2. Squash into semantic commits (load `semantic-commits` skill for format)
+3. Create PRs as draft
+4. Ask for approval before pushing (per Safety rules)
 
 **PR reviews vs implementation.** "Review this PR" means: analyze and draft a written review — do NOT implement fixes unless explicitly asked. "Address feedback" or "implement fixes" means: make code changes.
 

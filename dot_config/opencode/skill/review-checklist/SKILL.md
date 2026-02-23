@@ -1,6 +1,6 @@
 ---
 name: review-checklist
-description: Code review checklist - security, correctness, performance, maintainability
+description: Code review checklist - coordinates specialist reviewers for thorough analysis
 ---
 
 ## Context Gathering
@@ -16,85 +16,57 @@ description: Code review checklist - security, correctness, performance, maintai
 
 **After getting the diff:** read entire modified file(s) for full context. Check for CONVENTIONS.md, AGENTS.md.
 
-## Security (auth/*, api/*, *token*, *.env*)
+## Dispatch Strategy
 
-- No secrets in code
-- Input validation present
-- Auth checks on protected routes
-- SQL/NoSQL injection prevention
-- XSS prevention for user input rendering
+Count the diff size (lines changed). Then choose a path:
 
-## Correctness
+### Small diff (<150 lines changed): Single-pass
 
-- Edge cases handled (null, empty, boundary values)
-- Error states have clear user feedback
-- Async operations have proper error handling
-- State mutations are intentional
-- Inverse operations are symmetric (create/destroy, archive/unarchive fully reverse each other)
-- UI-indicated requirements (e.g. `*` on labels) enforced server-side
-- No unnecessary indirection (wrapping single values in arrays, passing locals already in scope)
+Run the checklist below yourself. Do NOT spawn subagents — the overhead isn't worth it.
 
-## Performance
+**Checklist (scan all):**
+- **Security** — secrets, input validation, auth, injection, XSS, CSRF, data exposure
+- **Correctness** — edge cases, error handling, async issues, state mutations, inverse symmetry, behavior changes, API contracts
+- **Performance** — N+1 queries, over-fetching, missing indexes, O(n^2), pagination
+- **Maintainability** — single responsibility, naming, dead code, DRY, test coverage, minimize diff, unused code detection
 
-- No N+1 queries (check loops with DB calls)
-- No over-fetching: eager-loads only pull associations the action actually uses
-- Broad loading scopes applied per-action, not blanket per-controller
-- Indexes exist for filtered/sorted columns
-- No O(n^2) on unbounded data
-- Large lists paginated or virtualized
+Before flagging unused code, **read call sites** to verify. Before flagging style, verify it actually violates project conventions.
 
-## Maintainability
+### Large diff (>=150 lines changed): Parallel specialists
 
-- Functions do one thing
-- Names are precise (not `data`, `info`, `handle`)
-- No dead code or debug logging
-- Test coverage for changed code, at the right tier (don't use slow browser tests for things fast tests cover)
+Prepare a **base payload** containing:
+1. The full diff
+2. Full contents of every modified file
 
-## DRY / Reuse
+Prepare **extended context** (only for agents that need it):
+- **Issue context** (requirements, acceptance criteria) — for correctness and maintainability agents
+- **Project conventions** (CONVENTIONS.md, AGENTS.md) — for maintainability agent
 
-- New views/templates: does a similar one already exist? Extend it rather than duplicating.
-- New controllers/services: check for existing patterns that can be shared via extraction.
-- Duplicated markup/logic will drift — flag the risk.
+Then spawn **four Task calls in parallel** (all in a single message), each with `subagent_type` set to the specialist agent name. Tailor each prompt:
 
-## Side Effects
+```
+Task(subagent_type="review-security",        prompt="<base payload>\n\nReview for security issues only.")
+Task(subagent_type="review-correctness",     prompt="<base payload>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\nReview for correctness and logic issues only.")
+Task(subagent_type="review-performance",     prompt="<base payload>\n\nReview for performance issues only.")
+Task(subagent_type="review-maintainability", prompt="<base payload>\n\n## Issue Context\n<issue details>\n\n## Project Conventions\n<conventions>\n\nReview for maintainability issues only.")
+```
 
-- Trace the callback/job chain: does this trigger emails, notifications, webhooks?
+Each specialist returns a JSON array of findings.
+
+### Merge Results
+
+After all specialists return:
+1. Parse each JSON array
+2. Deduplicate — if two specialists flag the same line, keep the higher-severity one and note both concerns
+3. Classify into: Blockers, Suggestions, Nits
+4. Determine verdict based on blockers
+
+## Side Effects Check
+
+Regardless of path, always trace the callback/job chain:
+- Does this trigger emails, notifications, webhooks?
 - Side effects should fire after the operation succeeds, not before
 - Guard clauses and early returns belong at the top
-
-## Behavior Changes
-
-- Flag any behavioral change (especially if possibly unintentional)
-- Changed defaults, reordered operations, modified return values
-- API contract changes (new required params, changed response shape)
-
-## API Completeness (when adding/modifying APIs)
-
-- Field parity with existing API (check for missing fields, filters, arguments)
-- Response examples in documentation
-- Breaking changes flagged explicitly
-
-## Unused Code Detection
-
-Before flagging, **read call sites** to verify:
-
-- New functions/methods not called anywhere
-- New exports not imported elsewhere
-- New parameters not used in function body
-- New variables assigned but never read
-
-## Style Tolerance
-
-Before flagging style issues:
-- Verify the code is *actually* in violation
-- Some "violations" are acceptable when they're the simplest option
-- Don't flag style preferences unless they clearly violate established project conventions
-
-## Minimize Diff (own code only)
-
-- Unnecessary whitespace/formatting changes
-- Unrelated refactors (separate PR)
-- Changes to files outside the feature's domain — ask why
 
 ## Output Format
 
