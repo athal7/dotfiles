@@ -43,10 +43,16 @@ chore(deps): bump lodash to 4.17.21
 
 ## Squashing
 
-Before push, squash related commits:
+**Before first push**, squash related commits:
 - Multiple attempts at same feature → single `feat`
 - Fix + test for same issue → single `fix`
 - Keep logical separation (don't squash unrelated changes)
+
+**After review feedback**, add new commits instead of rewriting history:
+- Each round of feedback gets its own commit(s)
+- Use the appropriate type for the change (e.g., `fix(auth): address review — validate token expiry`)
+- Do NOT force-push to rewrite already-pushed commits — reviewers lose context
+- Squashing happens at merge time (via GitHub's "Squash and merge")
 
 ## Branch Names
 
