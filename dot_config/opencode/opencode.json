@@ -67,7 +67,6 @@
     }
   },
   "plugin": [
-    "@simonwjackson/opencode-direnv@^2025",
     "opencode-pty@^0.1",
     "opencode-wakatime@^1.2"
   ],
