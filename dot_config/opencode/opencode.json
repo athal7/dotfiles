@@ -30,20 +30,20 @@
       }
     },
     "review-security": {
-      "model": "anthropic/claude-sonnet-4-6",
-      "temperature": 0.1
+      "model": "anthropic/claude-opus-4-6",
+      "temperature": 0
     },
     "review-correctness": {
-      "model": "anthropic/claude-sonnet-4-6",
-      "temperature": 0.1
+      "model": "anthropic/claude-opus-4-6",
+      "temperature": 0
     },
     "review-performance": {
       "model": "anthropic/claude-sonnet-4-6",
-      "temperature": 0.1
+      "temperature": 0
     },
     "review-maintainability": {
       "model": "anthropic/claude-sonnet-4-6",
-      "temperature": 0.1
+      "temperature": 0
     }
   },
   "provider": {
