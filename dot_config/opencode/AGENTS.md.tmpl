@@ -61,13 +61,21 @@ The following tools are installed via Homebrew and available for use:
 
 **TDD.** Write tests first, then implement. Commit after each green test.
 
-**Before commit:** Run `/review staged` to review staged changes. If the review returns blockers, fix them before committing. Do not skip this step — it is the pre-commit quality gate.
+**Before commit:** Run `/review staged` to review staged changes. If the review returns blockers, fix them and re-run `/review staged`. Repeat until there are no blockers, then commit. Do not skip this step — it is the pre-commit quality gate.
 
 **Before push:**
 1. Run tests locally — do not rely on CI as your test runner
 2. Squash into semantic commits (load `semantic-commits` skill for format)
 3. Create PRs as draft
 4. Ask for approval before pushing (per Safety rules)
+
+**After push — watch CI and fix failures:**
+After a successful push, stay in the session and watch CI:
+1. Poll with `gh run list --branch <branch> --limit 1` every 30s until status is not `queued` or `in_progress`
+2. If all checks pass: done
+3. If any check fails: `gh run view <run-id> --log-failed` to get failure output, then fix the root cause, commit, and push
+4. Repeat from step 1 until CI is green
+Do not give up after one fix attempt — keep iterating until the branch is green.
 
 **PR reviews vs implementation.** "Review this PR" means: analyze and draft a written review — do NOT implement fixes unless explicitly asked. "Address feedback" or "implement fixes" means: make code changes.
 
