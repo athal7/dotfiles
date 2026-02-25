@@ -132,4 +132,4 @@ Regardless of path, always trace the callback/job chain:
 - **Always include a `suggestion` code block** with the concrete fix, unless the fix requires architectural changes that can't be expressed as a snippet
 - Use "I" statements, frame as questions not directives
 
-**For PRs:** add TL;DR at top. If issue context found, add Requirements Check after verdict.
+**For PRs:** output the PR URL as a clickable link at the very top (before TL;DR), then add TL;DR. If issue context found, add Requirements Check after verdict.
