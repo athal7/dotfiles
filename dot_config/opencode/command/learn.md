@@ -29,6 +29,14 @@ AGENTS.md files can exist at any directory level. When an agent reads a file, an
 - Verbose explanations
 - Session-specific details
 
+**AGENTS.md vs Skills:**
+
+Put it in AGENTS.md if agents need it proactively on every session (safety rules, workflow constraints, always-applicable tool tips).
+
+Put it in a skill if it's reactive/situational — only needed when a specific problem arises or task is requested. Skills are loaded on demand via the skill tool. Good candidates: troubleshooting procedures, specialized workflows, fix recipes for recurring issues.
+
+When in doubt: if you'd only reach for it when something goes wrong or a specific task is asked, make it a skill. Create skills under `~/.config/opencode/skill/<name>/SKILL.md` with `name:` and `description:` frontmatter.
+
 **Process:**
 
 1. Review session for discoveries, errors that took multiple attempts, unexpected connections
