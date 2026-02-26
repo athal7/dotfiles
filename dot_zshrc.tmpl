@@ -33,6 +33,7 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 
 # plugins
   eval "$(starship init zsh)"
+  export DIRENV_LOG_FORMAT=
   eval "$(direnv hook zsh)"
   [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && source $(brew --prefix)/etc/profile.d/autojump.sh
   command -v wt >/dev/null 2>&1 && eval "$(wt config shell init zsh)"
