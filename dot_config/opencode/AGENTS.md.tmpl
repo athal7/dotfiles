@@ -59,7 +59,15 @@ The following tools are installed via Homebrew and available for use:
 
 **Check in at natural breakpoints.** Complete a logical group of related todos before stopping. Only pause for approval when: (1) the next step is destructive or irreversible, (2) you are genuinely uncertain how to proceed, or (3) you have finished all todos. Do not stop after every single todo — maintain momentum unless a decision is needed. If stuck, ask for help.
 
-**TDD.** Write tests first, then implement. Commit after each green test.
+**TDD (Strict).** Follow the complete red/green/refactor loop for ALL code changes:
+1. **Red**: Write a failing test first — run it and confirm it fails with a clear error
+2. **Green**: Write the minimal code to make it pass — nothing more
+3. **Refactor**: Clean up while keeping tests green
+4. **Commit**: After each green/refactor cycle
+
+**NEVER write implementation before a failing test exists.** If you catch yourself implementing first, stop, delete the implementation, write the test, confirm it fails, then re-implement.
+
+**Verify the red phase.** Running the test and seeing it fail is not optional — it confirms the test actually exercises the code. A test that passes before implementation is wrong.
 
 **Before commit:** Run `/review staged` to review staged changes. If the review returns blockers, fix them and re-run `/review staged`. Repeat until there are no blockers, then commit. Do not skip this step — it is the pre-commit quality gate.
 
