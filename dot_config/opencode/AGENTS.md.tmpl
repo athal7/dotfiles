@@ -1,29 +1,32 @@
 # Agent Instructions
 
-## Safety
+## Development Workflow
 
-**Confirm before modifying remote services.**
+**Check in at natural breakpoints.** Complete a logical group of related todos before stopping. Only pause for approval when: (1) the next step is destructive or irreversible, (2) you are genuinely uncertain how to proceed, or (3) you have finished all todos. Do not stop after every single todo — maintain momentum unless a decision is needed. If stuck, ask for help.
 
-For any remote modification:
-1. Show the full proposed content and ask "Do you approve?" - then STOP and wait
-2. Only after receiving explicit "yes" or approval, execute the action
-3. If no response is possible (background task, automation), do NOT proceed with the modification
+**Track progress with todos.** Before ending your response: ensure current work is saved, update todo status, and never abandon work silently — report status and next steps.
 
-This applies to:
-- Git: `git push`
-- GitHub/GitLab: issues, PRs, comments, **reviews**
-- APIs that write/modify data
-- Production databases
-- Security bypasses: `.talismanrc` ignore rules (`fileignoreconfig`)
+**Research before asking.** Explore the codebase, read files, check git history, query team-context MCP. Only ask the user when information isn't discoverable.
 
-**Examples:**
-- "Review this PR" → analyze and show review, but do NOT submit to GitHub without approval
-- "Commit and push" → show diff and commit message, wait for approval before executing
-- Background/automated tasks → analyze and prepare only, never submit
+**Scope discipline.** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features. If you notice something worth fixing that is out of scope, mention it but do not change it.
 
-Even if the prompt implies end-to-end completion, always stop before remote modifications. Read-only operations don't require confirmation.
+**Architecture decisions:** Present 2-3 options with tradeoffs. Recommend one. Prefer YAGNI, simplicity, and reversibility.
 
-**Never commit globally-ignored files.** Files in `~/.config/git/ignore` are intentionally untracked. Before staging, verify files aren't globally ignored with `git check-ignore <file>`. Key examples: `.talismanrc`, `.opencode/context-log.md`.
+**TDD (Strict).** Load the `tdd` skill at the start of any implementation task and follow its red/green/refactor/commit loop without exception. Do not write implementation before a failing test exists — ever.
+
+**Before commit:** Load the `commit` skill — it includes the pre-commit review gate.
+
+**Before push:** Load the `push` skill — it covers approval protocol and CI watching.
+
+**Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval. If no response is possible (background task, automation), do NOT proceed. Read-only operations don't require confirmation.
+
+**PR reviews vs implementation.** "Review this PR" means: analyze and draft a written review — do NOT submit to GitHub or implement fixes unless explicitly asked.
+
+**Never commit globally-ignored files.** Files in `~/.config/git/ignore` are intentionally untracked. Before staging, verify with `git check-ignore <file>`. Key examples: `.talismanrc`, `.opencode/context-log.md`.
+
+## Commands
+
+{{ template "command-list" . }}
 
 ## CLI Tools
 
@@ -54,52 +57,3 @@ The following tools are installed via Homebrew and available for use:
 - Creating a review with comments returns PENDING state; must POST to `/reviews/{id}/events` with `event` to submit
 - Line numbers are file lines in HEAD commit, but verify against GitHub's diff display - off-by-one errors are common
 - To delete a comment: `gh api repos/{owner}/{repo}/pulls/comments/{id} --method DELETE`
-
-## Development Workflow
-
-**Check in at natural breakpoints.** Complete a logical group of related todos before stopping. Only pause for approval when: (1) the next step is destructive or irreversible, (2) you are genuinely uncertain how to proceed, or (3) you have finished all todos. Do not stop after every single todo — maintain momentum unless a decision is needed. If stuck, ask for help.
-
-**TDD (Strict).** Follow the complete red/green/refactor loop for ALL code changes:
-1. **Red**: Write a failing test first — run it and confirm it fails with a clear error
-2. **Green**: Write the minimal code to make it pass — nothing more
-3. **Refactor**: Clean up while keeping tests green
-4. **Commit**: After each green/refactor cycle
-
-**NEVER write implementation before a failing test exists.** If you catch yourself implementing first, stop, delete the implementation, write the test, confirm it fails, then re-implement.
-
-**Verify the red phase.** Running the test and seeing it fail is not optional — it confirms the test actually exercises the code. A test that passes before implementation is wrong.
-
-**Before commit:** Run `/review staged` to review staged changes. If the review returns blockers, fix them and re-run `/review staged`. Repeat until there are no blockers, then commit. Do not skip this step — it is the pre-commit quality gate.
-
-**Before push:**
-1. Run tests locally — do not rely on CI as your test runner
-2. Squash into semantic commits (load `semantic-commits` skill for format)
-3. Create PRs as draft
-4. Ask for approval before pushing (per Safety rules)
-
-**After push — watch CI and fix failures:**
-After a successful push, stay in the session and watch CI:
-1. Poll with `gh run list --branch <branch> --limit 1` every 30s until status is not `queued` or `in_progress`
-2. If all checks pass: done
-3. If any check fails: `gh run view <run-id> --log-failed` to get failure output, then fix the root cause, commit, and push
-4. Repeat from step 1 until CI is green
-Do not give up after one fix attempt — keep iterating until the branch is green.
-
-**PR reviews vs implementation.** "Review this PR" means: analyze and draft a written review — do NOT implement fixes unless explicitly asked. "Address feedback" or "implement fixes" means: make code changes.
-
-**Scope discipline.** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features. If you notice something worth fixing that is out of scope, mention it but do not change it.
-
-**Research before asking.** Explore the codebase, read files, check git history, query team-context MCP. Only ask the user when information isn't discoverable.
-
-**Architecture decisions:** Present 2-3 options with tradeoffs. Recommend one. Prefer YAGNI, simplicity, and reversibility.
-
-## Task Completion
-
-**Track progress with todos.** Before ending your response:
-1. Ensure current work is saved (committed if applicable)
-2. Update todo status to reflect actual progress
-3. Never abandon work silently—report status and next steps
-
-## Commands
-
-{{ template "command-list" . }}

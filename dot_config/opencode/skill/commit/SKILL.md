@@ -1,7 +1,14 @@
 ---
-name: semantic-commits
-description: Semantic commit format and squashing guidance
+name: commit
+description: Pre-commit review gate, semantic commit format, and squashing guidance
 ---
+
+## Before Every Commit
+
+1. **Run the full test suite** — unit, integration, e2e, and system tests. Do not commit with failing tests.
+2. **Run `/review staged`** — if it returns blockers, fix them and re-run. Repeat until no blockers.
+
+Do not skip either step.
 
 ## Format
 
