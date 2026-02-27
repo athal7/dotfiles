@@ -1,5 +1,8 @@
 {{ template "brewenv" . }}
 
+# Silence direnv load messages (must be set before direnv hook fires)
+export DIRENV_LOG_FORMAT=
+
 # Ensure standard macOS system tools are always reachable (path_helper omits
 # these when PATH is already set by the parent process)
 export PATH="/usr/sbin:/sbin:$PATH"
