@@ -1,0 +1,15 @@
+[tools]
+ruby = "3.4"                        # Ruby runtime
+node = "lts"                        # Node.js runtime (LTS)
+python = "3"                        # Python runtime
+rust = "stable"                     # Rust toolchain via rustup
+ruff = "latest"                     # Python linter and formatter
+uv = "latest"                       # Fast Python package installer and resolver
+pre-commit = "latest"               # Git hook manager
+terraform = "latest"                # Infrastructure as code
+helm = "latest"                     # Kubernetes package manager
+argocd = "latest"                   # ArgoCD CLI for GitOps deployments
+"pipx:check-jsonschema" = "latest"  # JSON Schema validation CLI
+
+[settings]
+idiomatic_version_file_enable_tools = ["ruby"]

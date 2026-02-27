@@ -1,0 +1,20 @@
+{{- range (include ".chezmoitemplates/Brewfile" | splitList "\n") -}}
+{{-   if and (hasPrefix "brew " .) (contains "#" .) -}}
+{{-     $parts := . | trimPrefix "brew \"" | splitList "\" # " }}
+| `{{ index $parts 0 }}` | {{ index $parts 1 }} |
+{{-   else if and (hasPrefix "cask " .) (contains "#" .) -}}
+{{-     $parts := . | trimPrefix "cask \"" | splitList "\" # " }}
+| `{{ index $parts 0 }}` | {{ index $parts 1 }} |
+{{-   end -}}
+{{- end -}}
+{{- range (include "dot_config/mise/config.toml" | splitList "\n") -}}
+{{-   if and (contains "=" .) (contains "#" .) (not (hasPrefix "[" .)) (not (hasPrefix "#" .)) -}}
+{{-     $parts := . | splitList " # " -}}
+{{-     $tool := index $parts 0 | splitList " = " | first | trim | trimAll "\"" -}}
+{{-     $desc := index $parts 1 | trim -}}
+{{-     if contains ":" $tool -}}
+{{-       $tool = $tool | splitList ":" | last -}}
+{{-     end }}
+| `{{ $tool }}` | {{ $desc }} |
+{{-   end -}}
+{{- end }}

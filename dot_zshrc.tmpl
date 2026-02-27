@@ -1,5 +1,5 @@
-# Version managers (shims set in .zshenv for non-interactive shells)
-eval "$(rbenv init - --no-rehash zsh)"
+# Version managers
+eval "$(mise activate zsh)"
 
 # XDG Base Directory compliance
 export HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"

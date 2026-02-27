@@ -91,9 +91,9 @@ require("lazy").setup({
         },
       })
 
-      -- Ruby LSP: use rbenv shim instead of Mason (handles .ruby-version)
+      -- Ruby LSP: use mise shim instead of Mason (handles .ruby-version / mise.toml)
       vim.lsp.config("ruby_lsp", {
-        cmd = { vim.fn.expand("~/.rbenv/shims/ruby-lsp") },
+        cmd = { vim.fn.expand("~/.local/share/mise/shims/ruby-lsp") },
       })
       vim.lsp.enable("ruby_lsp")
     end,

@@ -18,6 +18,7 @@ brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying
 brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
+brew "mise" # Polyglot version manager (ruby, node, python, rust, etc.)
 brew "neovim" # Modern Vim-based editor
 brew "opencode-pilot" # Automation daemon for OpenCode - polls issues and spawns sessions
 brew "openssl" # TLS/SSL cryptography library

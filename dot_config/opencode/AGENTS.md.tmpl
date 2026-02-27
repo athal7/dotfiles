@@ -30,20 +30,11 @@
 
 ## CLI Tools
 
-The following tools are installed via Homebrew and available for use:
+The following tools are available on this machine:
 
 | Tool | Purpose |
 |------|---------|
-{{- range (include ".chezmoitemplates/Brewfile" | splitList "\n") }}
-{{-   if and (hasPrefix "brew " .) (contains "#" .) }}
-{{-     $parts := . | trimPrefix "brew \"" | splitList "\" # " }}
-| `{{ index $parts 0 }}` | {{ index $parts 1 }} |
-{{-   else if and (hasPrefix "cask " .) (contains "#" .) }}
-{{-     $parts := . | trimPrefix "cask \"" | splitList "\" # " }}
-| `{{ index $parts 0 }}` | {{ index $parts 1 }} |
-{{-   end }}
-{{- end }}
-
+{{- template "tools" . }}
 **Prefer these tools** over alternatives when available. For example, use `bat` instead of `cat` for file preview, `jq` for JSON parsing, and `gh` for all GitHub operations.
 
 ## Tool Tips
