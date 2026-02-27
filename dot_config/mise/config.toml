@@ -10,6 +10,7 @@ terraform = "latest"                # Infrastructure as code
 helm = "latest"                     # Kubernetes package manager
 argocd = "latest"                   # ArgoCD CLI for GitOps deployments
 "pipx:check-jsonschema" = "latest"  # JSON Schema validation CLI
+"pipx:grip" = "latest"              # GitHub-flavored markdown preview in browser
 
 [settings]
 idiomatic_version_file_enable_tools = ["ruby"]
