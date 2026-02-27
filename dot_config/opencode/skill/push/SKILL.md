@@ -32,9 +32,21 @@ You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
 - "keep going" or other general continuation
 - Any approval from earlier in the conversation
 
-## After Push — Watch CI
+## After Push — Create/Update Draft PR
 
-After every successful push, watch CI to completion. Do not hand back to the user and consider the task done.
+After every successful push, automatically create or update a draft PR (default behavior).
+
+1. Check if a PR already exists for this branch: `gh pr list --head <branch> --state all`
+2. If no PR exists:
+   - Create a draft PR: `gh pr create --draft --title "..." --body "..."`
+   - Use commits from the branch to populate title/body
+3. If a PR already exists (any state):
+   - Leave it as-is; do not update the PR state
+4. Once PR is created/confirmed, proceed to CI watching
+
+## After Draft PR — Watch CI
+
+After the draft PR is created/confirmed, watch CI to completion. Do not hand back to the user and consider the task done.
 
 1. Poll every 30s: `gh run list --branch <branch> --limit 1`
 2. Wait until status is no longer `queued` or `in_progress`
