@@ -40,6 +40,10 @@
     "review-maintainability": {
       "model": "anthropic/claude-opus-4-6",
       "temperature": 0
+    },
+    "architecture": {
+      "model": "anthropic/claude-opus-4-6",
+      "temperature": 0
     }
   },
   "provider": {

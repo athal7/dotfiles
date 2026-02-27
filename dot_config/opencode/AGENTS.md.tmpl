@@ -10,7 +10,7 @@
 
 **Scope discipline.** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features. If you notice something worth fixing that is out of scope, mention it but do not change it.
 
-**Architecture decisions:** Present 2-3 options with tradeoffs. Recommend one. Prefer YAGNI, simplicity, and reversibility.
+**Architecture decisions:** Load the `architecture` skill whenever a meaningful design decision is at stake — multiple valid approaches, hard to reverse, or crosses system boundaries.
 
 **TDD (Strict).** Load the `tdd` skill at the start of any implementation task and follow its red/green/refactor/commit loop without exception. Do not write implementation before a failing test exists — ever.
 
@@ -39,12 +39,6 @@ The following tools are available on this machine:
 
 ## Tool Tips
 
-**PTY** (when enabled) - for background processes:
-- Send Ctrl+C with `\x03`, Ctrl+D with `\x04`
-- Use regex filtering in `pty_read` to find errors: `pattern="error|ERROR"`
+**PTY** (when enabled): Load the `pty` skill when working with background processes.
 
-**GitHub PR Inline Comments** via `gh api`:
-- Use `--input -` with heredoc JSON, not `-f 'comments=[...]'` (gets stringified, not parsed as array)
-- Creating a review with comments returns PENDING state; must POST to `/reviews/{id}/events` with `event` to submit
-- Line numbers are file lines in HEAD commit, but verify against GitHub's diff display - off-by-one errors are common
-- To delete a comment: `gh api repos/{owner}/{repo}/pulls/comments/{id} --method DELETE`
+**GitHub PR Inline Comments**: Load the `gh-pr-inline` skill when posting inline comments on PRs via `gh api`.
