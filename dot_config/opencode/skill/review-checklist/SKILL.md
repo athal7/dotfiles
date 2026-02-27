@@ -44,6 +44,8 @@ Count the diff size (lines changed). Then choose a path:
 
 Run the checklist below yourself. Do NOT spawn subagents — the overhead isn't worth it.
 
+**Use the issue context you fetched above** when evaluating correctness and scope — check that the diff actually satisfies the requirements and acceptance criteria.
+
 **Checklist (scan all):**
 - **Security** — secrets, input validation, auth, injection, XSS, CSRF, data exposure
 - **Correctness** — edge cases, error handling, async issues, state mutations, inverse symmetry, behavior changes, API contracts
@@ -62,6 +64,8 @@ Prepare a **base payload** containing:
 Prepare **extended context**:
 - **Project rules** (AGENTS.md, CONVENTIONS.md content) — for **all** agents
 - **Issue context** (requirements, acceptance criteria) — for correctness and maintainability agents
+  - Use the **actual fetched text** from `team-context_get_issue` / `gh issue view` — not the placeholder.
+  - If no issue was found, write "No issue context available."
 
 Then spawn **four Task calls in parallel** (all in a single message), each with `subagent_type` set to the specialist agent name. **Critical: instruct each agent to actively explore the codebase** — they have full tool access (grep, glob, read). Tailor each prompt:
 
