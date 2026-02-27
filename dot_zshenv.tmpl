@@ -1,5 +1,9 @@
 {{ template "brewenv" . }}
 
+# Ensure standard macOS system tools are always reachable (path_helper omits
+# these when PATH is already set by the parent process)
+export PATH="/usr/sbin:/sbin:$PATH"
+
 # mise shims (available in all shells, including non-interactive)
 export PATH="$HOME/.local/share/mise/shims:$PATH"
 
