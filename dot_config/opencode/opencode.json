@@ -61,6 +61,12 @@
         "claude-sonnet-4-6": { "name": "sonnet" },
         "claude-haiku-4-5": { "name": "haiku" }
       }
+    },
+    "ollama": {
+      "baseURL": "http://localhost:11434",
+      "models": {
+        "llama3.1": { "name": "llama3.1" }
+      }
     }
   },
   "formatter": {

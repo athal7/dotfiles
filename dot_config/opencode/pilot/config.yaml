@@ -1,6 +1,8 @@
 # opencode-pilot configuration
 # Automation daemon for OpenCode - polls issues and spawns sessions
 
+startup_delay: 0
+
 defaults:
   agent: plan
 
@@ -28,6 +30,23 @@ sources:
 
   # GitHub issues assigned to me
   - preset: github/my-issues
+
+  # Apple Reminders - Agent list
+  - name: reminders
+    prompt: reminder
+    model: ollama/llama3.1
+    tool:
+      command: "remindctl show all --list Agent --json | jq '[.[] | select(.isCompleted == false)]'"
+    working_dir: /Users/athal/code/dotfiles
+    item:
+      id: "reminder:{id}"
+    session:
+      name: "{title}"
+    tools:
+      reminders:
+        response_key: ""
+        mappings:
+          body: notes
 
 tools:
   team-context:
