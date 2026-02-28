@@ -7,9 +7,13 @@
   "permission": {
     "skill": "allow"
   },
-  "default_agent": "plan",
-  "model": "anthropic/claude-sonnet-4-6",
+  "default_agent": "build",
+  "model": "anthropic/claude-haiku-4-5",
   "agent": {
+    "build": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "temperature": 0.3
+    },
     "plan": {
       "textVerbosity": "low",
       "temperature": 0.3,
@@ -63,7 +67,10 @@
       }
     },
     "ollama": {
-      "baseURL": "http://localhost:11434",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
       "models": {
         "llama3.1": { "name": "llama3.1" }
       }
