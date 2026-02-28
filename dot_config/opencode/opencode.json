@@ -57,6 +57,9 @@
         "headers": {
           "Authorization": "Bearer {auth:github-copilot.access}"
         }
+      },
+      "models": {
+        "gpt-4o": { "name": "gpt-4o" }
       }
     },
     "opencode": {
