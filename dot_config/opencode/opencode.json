@@ -8,13 +8,14 @@
     "skill": "allow"
   },
   "default_agent": "build",
-  "model": "anthropic/claude-haiku-4-5",
+  "model": "github-copilot/gpt-4o",
   "agent": {
     "build": {
       "model": "anthropic/claude-sonnet-4-6",
       "temperature": 0.3
     },
     "plan": {
+      "model": "github-copilot/gpt-4o",
       "textVerbosity": "low",
       "temperature": 0.3,
       "permission": {
@@ -51,6 +52,13 @@
     }
   },
   "provider": {
+    "github-copilot": {
+      "options": {
+        "headers": {
+          "Authorization": "Bearer {auth:github-copilot.access}"
+        }
+      }
+    },
     "opencode": {
       "models": {
         "trinity-large-preview-free": { "name": "trinity" },
