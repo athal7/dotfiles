@@ -11,8 +11,7 @@
   "model": "github-copilot/gpt-4o",
   "agent": {
     "build": {
-      "model": "anthropic/claude-sonnet-4-6",
-      "temperature": 0.3
+      "model": "anthropic/claude-sonnet-4-6"
     },
     "plan": {
       "model": "github-copilot/gpt-4o",
