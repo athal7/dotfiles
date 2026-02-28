@@ -7,7 +7,7 @@
   "permission": {
     "skill": "allow"
   },
-  "default_agent": "build",
+  "default_agent": "plan",
   "model": "github-copilot/gpt-4o",
   "agent": {
     "build": {
