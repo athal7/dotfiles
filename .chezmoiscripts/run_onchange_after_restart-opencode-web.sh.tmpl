@@ -6,6 +6,16 @@
 # plugin: {{ . | include | sha256sum }}
 {{- end }}
 
+# Validate config before restarting — a bad config should not take down the running server
+config="$HOME/.config/opencode/opencode.json"
+if command -v check-jsonschema >/dev/null 2>&1 && [ -f "$config" ]; then
+  if ! check-jsonschema --schemafile "https://opencode.ai/config.json" "$config" 2>&1; then
+    echo "ERROR: opencode.json failed schema validation — skipping restart to keep current server running" >&2
+    echo "Fix the config and run 'chezmoi apply' again" >&2
+    exit 1
+  fi
+fi
+
 label="com.athal.opencode-web"
 uid=$(id -u)
 
