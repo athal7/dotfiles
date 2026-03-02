@@ -8,13 +8,9 @@
     "skill": "allow"
   },
   "default_agent": "plan",
-  "model": "github-copilot/gpt-4o",
+  "model": "anthropic/claude-sonnet-4-6",
   "agent": {
-    "build": {
-      "model": "anthropic/claude-sonnet-4-6"
-    },
     "plan": {
-      "model": "github-copilot/gpt-4o",
       "textVerbosity": "low",
       "temperature": 0.3,
       "permission": {
