@@ -90,3 +90,15 @@ Skip: bullet lists, `## Summary` headers, implementation details obvious from th
 When the issue tracker is internal (e.g., Linear) and the repo is public, don't reference issues in commits or PRs. Instead, update the Linear issue with a link to the PR.
 
 Check repo visibility with: `gh repo view --json visibility -q '.visibility'`
+
+## After Committing — Memory Check
+
+After a successful commit, briefly consider whether this session produced non-obvious learnings worth preserving. If any of these apply, load the `learn` skill and extract learnings:
+
+- Debugging took multiple attempts or the error was misleading
+- You discovered a hidden dependency between files or modules
+- A workaround was needed for a tool, API, or framework quirk
+- An architectural decision was made that future sessions should know about
+- Configuration or env var behavior was non-obvious
+
+Skip on routine commits where nothing surprising happened.
