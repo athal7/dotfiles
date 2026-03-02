@@ -35,13 +35,6 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   eval "$(starship init zsh)"
   export DIRENV_LOG_FORMAT=
   eval "$(direnv hook zsh)"
-  # Redefine _direnv_hook to redirect stderr, preventing direnv messages from
-  # corrupting TUI input boxes (e.g. in OpenCode) when the hook fires on startup
-  _direnv_hook() {
-    trap -- '' SIGINT
-    eval "$("/opt/homebrew/bin/direnv" export zsh 2>/dev/null)"
-    trap - SIGINT
-  }
   [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && source $(brew --prefix)/etc/profile.d/autojump.sh
   command -v wt >/dev/null 2>&1 && eval "$(wt config shell init zsh)"
   alias gs=git-spice
