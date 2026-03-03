@@ -43,6 +43,7 @@ Thumbs.db
 .claude
 .talismanrc
 .opencode/context-log.md
+.opencode/opencode.json
 .screencast/
 favicon.svg
 

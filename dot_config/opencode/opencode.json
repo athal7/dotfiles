@@ -8,7 +8,7 @@
     "skill": "allow"
   },
   "default_agent": "plan",
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "github-copilot/gpt-4.1",
   "agent": {
     "plan": {
       "textVerbosity": "low",
@@ -38,7 +38,9 @@
         }
       },
       "models": {
-        "gpt-4o": { "name": "gpt-4o" }
+        "gpt-4o": { "name": "gpt-4o" },
+        "gpt-4.1": { "name": "gpt-4.1" },
+        "gpt-5-mini": { "name": "gpt-5-mini" }
       }
     },
     "opencode": {
