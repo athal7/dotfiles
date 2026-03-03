@@ -40,12 +40,16 @@ Put it in a **skill** if it's reactive/situational — only needed when a specif
 
 When in doubt: if you'd only reach for it when something goes wrong or a specific task is asked, make it a skill.
 
+## Input
+
+If the agent loading this skill was given specific context about what to capture (e.g., "capture the retry logic discovery" or "focus on the auth module"), prioritize that over general session introspection.
+
 ## Process
 
 1. Review session for discoveries, errors that took multiple attempts, unexpected connections
 2. Determine scope — what directory does each learning apply to?
 3. Read existing AGENTS.md files at relevant levels
-4. Create or update AGENTS.md (or create a new skill) at the appropriate level
+4. Create or update AGENTS.md (or create a new skill) at the appropriate level — check existing skills under `~/.config/opencode/skill/` before creating new ones to avoid duplicates
 5. Keep entries to 1-3 lines per insight
 
 After updating, summarize which files were created/updated and how many learnings per file.

@@ -38,23 +38,9 @@ The LLM's job is to find **semantic issues that tools can't catch** — logic er
 
 ## Dispatch Strategy
 
-Count the diff size (lines changed). Then choose a path:
+**Always dispatch to specialists.** Do not review the diff yourself — your job is coordination: gather context, build the payload, dispatch, handle escalations, merge, verify, and format output.
 
-### Small diff (<150 lines changed): Single-pass
-
-Run the checklist below yourself. Do NOT spawn subagents — the overhead isn't worth it.
-
-**Use the issue context you fetched above** when evaluating correctness and scope — check that the diff actually satisfies the requirements and acceptance criteria.
-
-**Checklist (scan all):**
-- **Security** — secrets, input validation, auth, injection, XSS, CSRF, data exposure
-- **Correctness** — edge cases, error handling, async issues, state mutations, inverse symmetry, behavior changes, API contracts
-- **Performance** — N+1 queries, over-fetching, missing indexes, O(n^2), pagination
-- **Maintainability** — single responsibility, naming, dead code, DRY, test coverage, minimize diff, unused code detection
-
-**Agentic exploration (even for small diffs):** Before flagging any issue, use `grep` and `read` to follow references. If the diff calls a function, read that function. If it changes a type, find all callers. Do not flag "unused code" or "missing error handling" without verifying against the actual codebase.
-
-### Large diff (>=150 lines changed): Parallel specialists
+### Parallel specialists
 
 Prepare a **base payload** containing:
 1. The full diff
@@ -76,22 +62,43 @@ Task(subagent_type="expert", prompt="Load the `review-correctness` skill and fol
 
 Task(subagent_type="expert", prompt="Load the `review-performance` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>")
 
-Task(subagent_type="expert", prompt="Load the `review-maintainability` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details>\n\n## Static Analysis Findings\n<linter output>")
+Task(subagent_type="expert", prompt="Load the `review-maintainability` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>")
 ```
 
-Each specialist returns a JSON array of findings.
+Each specialist returns a JSON object containing a `findings` array and an `escalations` array.
+
+### Handle Escalations
+
+After all specialists return, collect all `escalations` from each specialist's output. For each escalation:
+
+1. Group escalations by `for_reviewer` (security / correctness / performance / maintainability)
+2. If any group is non-empty, spawn **targeted follow-up Task calls** — one per group — with `subagent_type="expert"`.
+
+For **correctness or maintainability** follow-ups (include `## Issue Context`):
+```
+Task(subagent_type="expert", prompt="Load the `review-<domain>` skill. The following specific areas were flagged by other reviewers as needing your attention:\n\n<list of escalations with file:line and note>\n\nFull diff:\n<diff>\n\nFull file contents:\n<files>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>\n\nNote: This is a follow-up review pass. Put all issues you find in `findings`. Any `escalations` you output will be discarded by the coordinator — focus only on findings.")
+```
+
+For **security or performance** follow-ups (no `## Issue Context`):
+```
+Task(subagent_type="expert", prompt="Load the `review-<domain>` skill. The following specific areas were flagged by other reviewers as needing your attention:\n\n<list of escalations with file:line and note>\n\nFull diff:\n<diff>\n\nFull file contents:\n<files>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\nNote: This is a follow-up review pass. Put all issues you find in `findings`. Any `escalations` you output will be discarded by the coordinator — focus only on findings.")
+```
+
+These follow-up agents return additional `findings`. The coordinator discards all `escalations` from follow-up agents to prevent infinite loops.
 
 ### Merge and Verify Results
 
-After all specialists return:
-1. Parse each JSON array
+After all specialists and follow-up agents return:
+
+1. Collect all `findings` from all agents (initial + follow-up)
 2. Deduplicate — if two specialists flag the same line, keep the higher-severity one and note both concerns
-3. **Verification pass** — for each finding, spot-check it against the codebase:
+3. **Additive verification pass** — for each finding, verify it against the codebase:
    - "Unused variable/function" → grep for usages; discard if found
    - "Missing null check" → read the caller to see if it's already guarded upstream
    - "N+1 query" → check if eager loading is configured elsewhere (e.g., default_scope, includes)
    - "Security: user input unsanitized" → trace the input to see if a framework-level sanitizer handles it
-   - Discard any finding you cannot verify. Prefer fewer, higher-confidence comments over volume.
+   - Discard any finding you cannot verify
+   - **While verifying, read the surrounding code actively** — if you spot a new issue the specialists missed, add it to the list. Specifically look for cross-cutting concerns: security implications of correctness issues, correctness implications of performance changes. You are not only pruning — you are also a final reviewer.
 4. Classify remaining findings into: Blockers, Suggestions, Nits
 5. Determine verdict based on blockers
 
@@ -136,4 +143,26 @@ Regardless of path, always trace the callback/job chain:
 - **Always include a `suggestion` code block** with the concrete fix, unless the fix requires architectural changes that can't be expressed as a snippet
 - Use "I" statements, frame as questions not directives
 
-**For PRs:** output the PR URL as a clickable link at the very top (before TL;DR), then add TL;DR. If issue context found, add Requirements Check after verdict.
+**For PRs:** extend the output as follows:
+
+```markdown
+[PR URL as clickable link]
+
+## TL;DR
+
+[One sentence summary of what this PR does]
+
+## Verdict: [APPROVE | CHANGES REQUESTED | COMMENT]
+
+[One sentence why, if not obvious]
+
+## Requirements Check
+
+> Only include this section if issue context was found.
+
+- [Acceptance criterion 1]: [met / not met — one sentence]
+- [Acceptance criterion 2]: [met / not met — one sentence]
+
+## Blockers
+...
+```
