@@ -62,3 +62,5 @@
 **Adding a new skill**:
 1. Create `skill/<name>/SKILL.md` with `name:` and `description:` in frontmatter
 2. Run `chezmoi apply` - skill appears in skill tool listing
+
+**Editing skills/commands**: Always edit in `dot_config/opencode/` here, then `chezmoi apply`. Edits made directly to `~/.config/opencode/` will be overwritten on the next `chezmoi apply`. If a skill was already edited at the target path, copy it back here first.
