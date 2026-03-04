@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.local.clean-playwright-browsers</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>{{ .chezmoi.homeDir }}/.local/bin/clean-playwright-browsers</string>
+	</array>
+	<key>StartCalendarInterval</key>
+	<array>
+		<dict>
+			<key>Day</key>
+			<integer>1</integer>
+			<key>Hour</key>
+			<integer>2</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+		</dict>
+	</array>
+	<key>StandardOutPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/clean-playwright-browsers.log</string>
+	<key>StandardErrorPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/clean-playwright-browsers.log</string>
+</dict>
+</plist>

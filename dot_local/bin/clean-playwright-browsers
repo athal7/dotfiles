@@ -1,0 +1,22 @@
+#!/bin/bash
+# Clean old Playwright browser versions, keeping only the latest of each type
+# This prevents the Playwright cache from accumulating multiple browser versions
+
+CACHE_DIR="$HOME/Library/Caches/ms-playwright"
+
+if [ ! -d "$CACHE_DIR" ]; then
+  exit 0
+fi
+
+# Browser types to clean
+for browser_type in chromium chromium_headless_shell firefox webkit; do
+  # Find all versions, sort by version number (descending), skip the first (latest)
+  versions=$(ls -d "$CACHE_DIR/$browser_type"-* 2>/dev/null | sort -V -r | tail -n +2)
+
+  if [ -n "$versions" ]; then
+    echo "Cleaning old $browser_type versions..."
+    echo "$versions" | xargs rm -rf
+  fi
+done
+
+echo "Playwright browser cache cleanup complete"
