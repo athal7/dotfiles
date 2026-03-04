@@ -22,6 +22,9 @@
           "gh api *": "allow",
           "gh repo view *": "allow",
           "gh search *": "allow"
+        },
+        "task": {
+          "*": "allow"
         }
       }
     },
