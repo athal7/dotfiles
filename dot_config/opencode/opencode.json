@@ -8,7 +8,7 @@
     "skill": "allow"
   },
   "default_agent": "plan",
-  "model": "github-copilot/gpt-4.1",
+  "model": "anthropic/claude-haiku-4-5",
   "agent": {
     "plan": {
       "textVerbosity": "low",
