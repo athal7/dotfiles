@@ -19,13 +19,11 @@ Load this skill when:
 | `anthropic` | API key | **Work** | Pay-per-token |
 | `github-copilot` | Copilot Business seat | **Work** | Monthly seat + premium request multipliers |
 | `opencode` | `OPENCODE_API_KEY` env var | **Personal** | OpenCode Zen subscription — only use free-tier models |
-| `ollama` | None (local) | Free | Free |
 
 Cost philosophy:
 - `anthropic` is work-provided — use freely, including premium models
 - `github-copilot` is work-provided but **premium request allowance is limited** — reserve it for Copilot PR review; in OpenCode, **only use 0× multiplier models** (`gpt-4o`, `gpt-4.1`, `gpt-5-mini`)
 - `opencode` is personal — **only use free-tier models** (cost.input == 0 && cost.output == 0)
-- `ollama` is always free
 
 ## GitHub Copilot — Cost Tiers
 
@@ -58,14 +56,7 @@ Requires `OPENCODE_API_KEY` env var.
 
 | Model ID | Config alias | Capabilities | Notes |
 |---|---|---|---|
-| `trinity-large-preview-free` | `trinity` | tool_call ✓ | General coding |
 | `big-pickle` | `pickle` | tool_call ✓, reasoning ✓ | Strong reasoning, 200k context |
-| `minimax-m2.5-free` | `minimax` | tool_call ✓, reasoning ✓ | 200k context |
-| `gpt-5-nano` | `nano` | tool_call ✓, reasoning ✓, vision ✓ | Fast, 400k context |
-
-Deprecated (don't use): `minimax-m2.1-free`, `glm-5-free`, `glm-4.7-free`, `kimi-k2.5-free`, `grok-code`
-
-To refresh: `curl -s https://models.dev/api.json | jq '[.[] | select(.id == "opencode") | .models[] | select(.cost.input == 0 and .cost.output == 0) | select(.status != "deprecated") | {id, name}]'`
 
 ## Anthropic Direct — Cost Reference
 
@@ -127,9 +118,8 @@ same model as the default session — no redundant config needed.
 2. **Deep code review or architecture?** → `anthropic/claude-opus-4-6` (work-paid)
 3. **Read-only research or planning?** → `github-copilot/gpt-4.1` (0× — no premium spend)
 4. **Lightweight single-shot question?** → `github-copilot/gpt-5-mini` (0× — no premium spend)
-5. **Personal project, no work account?** → `opencode/big-pickle` or `opencode/gpt-5-nano` (free tier)
-6. **Completely offline?** → `ollama/llama3.1` (limited tool-calling, not for agentic work)
-7. **Never use Copilot premium models in OpenCode** — premium allowance is reserved for Copilot PR review
+5. **Personal project, no work account?** → `opencode/big-pickle` (free tier)
+6. **Never use Copilot premium models in OpenCode** — premium allowance is reserved for Copilot PR review
 8. **Never use `opencode` paid models** — personal cost
 
 ## How to Refresh the Copilot Model List

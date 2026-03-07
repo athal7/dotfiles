@@ -48,10 +48,7 @@
     },
     "opencode": {
       "models": {
-        "trinity-large-preview-free": { "name": "trinity" },
-        "big-pickle": { "name": "pickle" },
-        "minimax-m2.5-free": { "name": "minimax" },
-        "gpt-5-nano": { "name": "nano" }
+        "big-pickle": { "name": "pickle" }
       }
     },
     "anthropic": {
@@ -59,15 +56,6 @@
         "claude-opus-4-6": { "name": "opus" },
         "claude-sonnet-4-6": { "name": "sonnet" },
         "claude-haiku-4-5": { "name": "haiku" }
-      }
-    },
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
-      },
-      "models": {
-        "llama3.1": { "name": "llama3.1" }
       }
     }
   },

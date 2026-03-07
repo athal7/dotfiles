@@ -14,14 +14,12 @@ brew "docker-compose" # Multi-container Docker applications
 brew "ffmpeg" # Video/audio processing
 brew "gh" # GitHub CLI for issues, PRs, repos
 brew "git-spice" # Manage stacked Git branches
-brew "ical-buddy" # Query macOS calendar events
 brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying
 brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
 brew "mise" # Polyglot version manager (ruby, node, python, rust, etc.)
 brew "neovim" # Modern Vim-based editor
-brew "ollama" # Local LLM runner
 brew "opencode" # AI coding assistant CLI
 brew "opencode-pilot" # Automation daemon for OpenCode - polls issues and spawns sessions
 brew "openssl" # TLS/SSL cryptography library
@@ -29,7 +27,6 @@ brew "opentofu" # Terraform-compatible infrastructure as code
 brew "playwright-mcp" # Browser automation MCP server
 brew "ripgrep" # Fast recursive grep (rg) - required by OpenCode
 brew "starship" # Cross-shell prompt
-brew "steipete/tap/remindctl" # Manage Apple Reminders from CLI
 brew "talisman" # Git secrets scanner (pre-commit hook)
 brew "tmux" # Terminal multiplexer
 brew "wakatime-cli" # Time tracking for developers
