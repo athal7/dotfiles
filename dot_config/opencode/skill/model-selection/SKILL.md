@@ -22,7 +22,7 @@ Load this skill when:
 
 Cost philosophy:
 - `anthropic` is work-provided — use freely, including premium models
-- `github-copilot` is work-provided but **premium request allowance is limited** — reserve it for Copilot PR review; in OpenCode, **only use 0× multiplier models** (`gpt-4o`, `gpt-4.1`, `gpt-5-mini`)
+- `github-copilot` is work-provided but **premium request allowance is limited** — reserve it for Copilot PR review; in OpenCode, **only use 0× multiplier models** (`gpt-4.1`, `gpt-5-mini`)
 - `opencode` is personal — **only use free-tier models** (cost.input == 0 && cost.output == 0)
 
 ## GitHub Copilot — Cost Tiers
@@ -34,7 +34,6 @@ All models below confirmed working with a Copilot Business seat
 
 | Model ID | Config alias | Best for |
 |---|---|---|
-| `gpt-4o` | `gpt-4o` | General-purpose fallback |
 | `gpt-4.1` | `gpt-4.1` | General coding, planning, research |
 | `gpt-5-mini` | `gpt-5-mini` | Fast, lightweight tasks |
 
@@ -72,12 +71,6 @@ Billed per token. Approximate relative costs (not absolute):
 Copilot Business makes them free or cheaper (0–1× vs pay-per-token).
 
 Exception: if Copilot has an outage or you need a model only on Anthropic direct.
-
-## Ollama — Local Models
-
-Free, no network cost. Current model: `llama3.1`.
-Only useful for tasks that don't require strong tool-calling or reasoning.
-Not suitable for agentic coding.
 
 ## Configuration Architecture
 
@@ -120,7 +113,7 @@ same model as the default session — no redundant config needed.
 4. **Lightweight single-shot question?** → `github-copilot/gpt-5-mini` (0× — no premium spend)
 5. **Personal project, no work account?** → `opencode/big-pickle` (free tier)
 6. **Never use Copilot premium models in OpenCode** — premium allowance is reserved for Copilot PR review
-8. **Never use `opencode` paid models** — personal cost
+7. **Never use `opencode` paid models** — personal cost
 
 ## How to Refresh the Copilot Model List
 

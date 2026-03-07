@@ -41,7 +41,6 @@
         }
       },
       "models": {
-        "gpt-4o": { "name": "gpt-4o" },
         "gpt-4.1": { "name": "gpt-4.1" },
         "gpt-5-mini": { "name": "gpt-5-mini" }
       }
