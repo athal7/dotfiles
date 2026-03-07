@@ -104,3 +104,37 @@ After any fix: fully quit (Cmd+Q) and reopen Desktop.
 - Sessions use a `directory` column (not `sandboxes`) — query `session.directory` to find which worktree paths need to exist
 - `project.sandboxes` and `global.dat` `workspaceOrder` must be updated together — fixing only one leaves them inconsistent and the UI stays blank
 - Desktop dev tools (`Cmd+Option+I`) are not available in production builds; check logs at `~/Library/Logs/ai.opencode.desktop/`
+
+## OpenCode Binary Architecture
+
+Three distinct `opencode` binaries exist — they are NOT interchangeable:
+
+| Binary | Type | Standalone? | TUI? | Web? |
+|--------|------|-------------|------|------|
+| Brew native (`/opt/homebrew/opt/opencode/.../opencode-darwin-arm64/bin/opencode`) | Mach-O Bun binary | Yes | Yes | Yes |
+| Brew wrapper (`/opt/homebrew/bin/opencode`) | Node.js script | Broken — walks `node_modules` from `bin/` dir, never finds native binary in `libexec/` | No | No |
+| Desktop CLI (`/Applications/OpenCode.app/Contents/MacOS/opencode-cli`) | Mach-O Electron IPC | No — requires Desktop app running, exits silently with code 0 if app not running | No | No |
+
+**Key facts:**
+- The brew wrapper checks `OPENCODE_BIN_PATH` env var first — set this to bypass the broken `node_modules` walk
+- The install-script binary (`~/.opencode/bin/opencode`) is a self-contained Bun binary, self-updating via `opencode upgrade`
+- Brew `opencode` formula has no `service` stanza — `brew services` cannot manage it
+- The web service plist must point directly at the native Mach-O binary, not the Node wrapper or Desktop CLI
+- Stable brew native binary path: `/opt/homebrew/opt/opencode/libexec/lib/node_modules/opencode-ai/node_modules/opencode-darwin-arm64/bin/opencode` (the `opt` symlink survives upgrades, but `darwin-arm64` is arch-specific)
+
+## Web UI Frontend Asset Bug Diagnosis
+
+When the web UI crashes with `e.text.length` (undefined is not an object):
+1. Check the asset hashes in the error URL (e.g., `session-BBe8m5zc.js`)
+2. Compare with `curl -s http://localhost:<port> | grep -o 'session-[^"]*\.js'` — if hashes match after upgrade, the web bundle wasn't rebuilt
+3. The `part` table has types `text`, `tool`, `step-start`, `step-finish`, `reasoning`, `agent`, `compaction`, `patch`, `file`, `subtask` — the UI may crash on newer types that lack a `.text` field
+4. DB data being clean (no null `.text` on text parts) means the bug is in the frontend renderer, not corrupted data — don't waste time investigating the DB
+
+## LaunchAgent Reload
+
+`launchctl unload`/`load` can leave stale PIDs. Use `bootout`/`bootstrap` for clean restarts:
+```sh
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/<plist>
+sleep 1
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/<plist>
+```

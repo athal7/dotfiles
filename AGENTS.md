@@ -32,7 +32,8 @@
 |----------|----------|
 | `dot_zshrc.tmpl` | Shell configuration |
 | `dot_config/starship.toml` | Prompt configuration |
-| `.chezmoitemplates/Brewfile` | Homebrew packages (includes `opencode` and `opencode-desktop`) |
+| `.chezmoitemplates/Brewfile` | Homebrew packages (includes `opencode` CLI + `opencode-desktop`) |
+| `Library/LaunchAgents/opencode-web.plist.tmpl` | Web service (port 4096, Tailscale-served) |
 
 ## OpenCode Configuration
 

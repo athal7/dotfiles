@@ -24,7 +24,6 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   alias less="less -R"
   alias lf="less +F"
   alias ll="ls -la"
-  alias oc='~/.opencode/bin/opencode'
   alias tf='tofu'
   alias watch='watch -c '
 
@@ -51,6 +50,3 @@ bindkey '^R' history-incremental-search-backward
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-
-# opencode
-export PATH={{ .chezmoi.homeDir }}/.opencode/bin:$PATH
