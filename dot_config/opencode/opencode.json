@@ -28,6 +28,9 @@
         }
       }
     },
+    "build": {
+      "model": "anthropic/claude-sonnet-4-6"
+    },
     "expert": {
       "model": "anthropic/claude-opus-4-6",
       "temperature": 0
