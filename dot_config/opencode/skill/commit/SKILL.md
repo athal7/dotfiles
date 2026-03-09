@@ -5,10 +5,12 @@ description: Pre-commit review gate, semantic commit format, and squashing guida
 
 ## Before Every Commit
 
-1. **Run the full test suite** — unit, integration, e2e, and system tests. Do not commit with failing tests.
-2. **Run `/review staged`** — if it returns blockers, fix them and re-run. Repeat until no blockers.
+Run these steps automatically — do not ask the user before starting:
 
-Do not skip either step.
+1. **Stage all changes**: `git add -A`
+2. **Run the full test suite** — unit, integration, e2e, and system tests. Do not commit with failing tests.
+3. **Run `/review staged`** — if it returns blockers, fix them and re-run. Repeat until no blockers.
+4. **Commit** — create the commit immediately. Do not ask for approval. (Pushing is where approval happens.)
 
 ## Format
 
