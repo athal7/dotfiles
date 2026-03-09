@@ -24,6 +24,8 @@
 
 **PR reviews vs implementation.** "Review this PR" means: analyze and draft a written review — do NOT submit to GitHub or implement fixes unless explicitly asked.
 
+**Conflict resolution on reviewed PRs.** When a PR has already received reviews and has conflicts with the base branch, use `git merge` (not `git rebase`) to resolve them. Rebasing rewrites history and invalidates existing review comments, causing reviewers to lose context. Merging preserves the commit history reviewers have already seen.
+
 **Never commit globally-ignored files.** Files in `~/.config/git/ignore` are intentionally untracked. Before staging, verify with `git check-ignore <file>`. Key examples: `.talismanrc`, `.opencode/context-log.md`.
 
 ## Commands
