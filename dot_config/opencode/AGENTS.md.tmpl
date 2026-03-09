@@ -18,9 +18,7 @@
 
 **TDD (Strict).** Load the `tdd` skill at the start of any implementation task and follow its red/green/refactor/commit loop without exception. Do not write implementation before a failing test exists — ever.
 
-**Before commit:** Load the `commit` skill — it includes the pre-commit review gate.
-
-**Before push:** Load the `push` skill — it covers approval protocol and CI watching.
+**After completing all todos:** Load the `commit` skill — it runs stage → test → review → iterate → commit automatically. Then load the `push` skill for approval and CI watching. This is a single approval flow at push time, not two separate gates.
 
 **Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval. If no response is possible (background task, automation), do NOT proceed. Read-only operations don't require confirmation.
 
@@ -45,4 +43,4 @@ The following tools are available on this machine:
 
 **PTY** (when enabled): Load the `pty` skill when working with background processes.
 
-**GitHub PR Inline Comments**: Load the `gh-pr-inline` skill when posting inline comments on PRs via `gh api`.
+**GitHub PR Inline Comments**: Load the `gh-pr-inline` skill when posting inline comments on PRs or responding to review feedback. When addressing feedback: resolve threads you fixed (no reply needed), reply only to threads you're not addressing.

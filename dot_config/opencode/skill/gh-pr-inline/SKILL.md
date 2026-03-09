@@ -1,6 +1,6 @@
 ---
 name: gh-pr-inline
-description: Post inline comments on GitHub PRs via gh api
+description: Post inline comments on GitHub PRs and respond to review feedback via gh api
 ---
 
 ## Why Not `gh pr review`
@@ -37,6 +37,61 @@ For comments spanning lines, add `start_line`:
 
 ```json
 {"path":"file.rb","start_line":5,"line":10,"body":"This block..."}
+```
+
+## Responding to PR Feedback
+
+When addressing reviewer comments after making fixes, **don't reply to every comment**. Use this workflow:
+
+1. **Fixed it?** Resolve the conversation thread (no reply needed).
+2. **Not addressing it?** Reply explaining why (disagreement, out of scope, etc.).
+
+### Listing Review Threads
+
+Fetch all threads with their resolution status and comment IDs:
+
+```bash
+gh api graphql -f query='
+  query($owner:String!,$repo:String!,$pr:Int!) {
+    repository(owner:$owner,name:$repo) {
+      pullRequest(number:$pr) {
+        reviewThreads(first:100) {
+          nodes {
+            id
+            isResolved
+            path
+            line
+            comments(first:5) {
+              nodes { id body author { login } }
+            }
+          }
+        }
+      }
+    }
+  }' -f owner=OWNER -f repo=REPO -F pr=NUMBER
+```
+
+### Resolving a Thread (Fixed)
+
+Use the thread's GraphQL `id` (starts with `PRRT_`):
+
+```bash
+gh api graphql -f query='
+  mutation($id:ID!) {
+    resolveReviewThread(input:{threadId:$id}) {
+      thread { isResolved }
+    }
+  }' -f id=PRRT_kwDOxxxxxxx
+```
+
+### Replying to a Thread (Not Fixing)
+
+Use the REST API with the **top comment's numeric ID** from the thread:
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
+  --method POST \
+  -f body="Intentionally left as-is because..."
 ```
 
 ## Line Number Gotchas
