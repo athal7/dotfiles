@@ -29,12 +29,21 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 
 # completions
   autoload -Uz compinit && compinit -d "$ZSH_COMPDUMP"
+  _brew_prefix="$(brew --prefix)"
+  # gcloud SDK shell integration (completions + PATH)
+  [[ -f "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc" ]] && source "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc"
+  [[ -f "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc" ]] && source "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc"
+  # kubectl completions
+  command -v kubectl >/dev/null 2>&1 && source <(kubectl completion zsh)
+
+# Private shell config (not tracked in dotfiles)
+[[ -f ~/.config/zsh/private.zsh ]] && source ~/.config/zsh/private.zsh
 
 # plugins
   eval "$(starship init zsh)"
   export DIRENV_LOG_FORMAT=
   eval "$(direnv hook zsh)"
-  [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && source $(brew --prefix)/etc/profile.d/autojump.sh
+  [[ -s "$_brew_prefix/etc/profile.d/autojump.sh" ]] && source "$_brew_prefix/etc/profile.d/autojump.sh"
   command -v wt >/dev/null 2>&1 && eval "$(wt config shell init zsh)"
   alias gs=git-spice
   command -v git-spice >/dev/null 2>&1 && eval "$(git-spice shell completion zsh)"

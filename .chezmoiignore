@@ -1,3 +1,6 @@
+# Private shell config (work-specific aliases, internal hostnames, etc.)
+.config/zsh/
+
 # Keep gh authentication tokens local (don't sync across machines)
 .config/gh/hosts.yml
 

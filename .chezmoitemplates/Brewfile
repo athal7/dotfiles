@@ -16,6 +16,7 @@ brew "gh" # GitHub CLI for issues, PRs, repos
 brew "git-spice" # Manage stacked Git branches
 brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying
+brew "k9s" # Terminal UI for Kubernetes clusters
 brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
 brew "mise" # Polyglot version manager (ruby, node, python, rust, etc.)
@@ -34,6 +35,7 @@ brew "watch" # Run commands periodically
 brew "worktrunk" # Git worktree switcher (wt switch, wt list)
 
 cask_args appdir: "/Applications"
+cask "gcloud-cli" # Google Cloud CLI (gcloud, gsutil, bq)
 cask "font-monaspace" # Monospace font family
 cask "ghostty" # GPU-accelerated terminal emulator
 cask "mac-mouse-fix" # Mouse customization utility
