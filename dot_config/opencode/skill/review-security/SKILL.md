@@ -57,6 +57,14 @@ Examples:
 - You notice missing pagination on a data-returning endpoint → escalate to performance
 - You see duplicated auth logic that should be centralized → escalate to maintainability
 
+## Prior Reviews
+
+The coordinator may include a `## Prior Reviews` section with threads from previous review rounds.
+
+- **Do NOT re-raise issues already addressed** — if a prior comment exists for a line and the author replied with a fix (or the code was changed to address it), skip it.
+- **Flag unresolved threads in your scope** — if a prior reviewer raised a security issue and there's been no resolution, include it in `findings` with a note: `"(Prior feedback from @reviewer — still unresolved)"`.
+- **Merge duplicates** — if you independently find the same issue as an unresolved prior comment, cite the prior comment rather than treating it as a fresh finding.
+
 ## Rules
 
 - Do NOT include style, naming, performance, or maintainability issues in `findings`

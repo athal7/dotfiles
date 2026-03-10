@@ -16,6 +16,14 @@ description: Code review checklist - coordinates specialist reviewers for thorou
 
 **After getting the diff:** read entire modified file(s) for full context.
 
+**For PR reviews, fetch prior review history:**
+1. `gh pr reviews <PR> --json author,state,submittedAt,body` — all submitted reviews with their verdict and top-level body
+2. `gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments` — all inline review comments; note `path`, `line`, `body`, `in_reply_to_id` (a non-null `in_reply_to_id` means it's a reply in a thread)
+3. Build a **prior review summary**: group inline comments by thread (using `in_reply_to_id`), identify the last message per thread, and mark threads as:
+   - **Resolved** — author replied acknowledging the fix, or the thread was explicitly resolved
+   - **Unresolved** — no author reply, or last reply disagrees/defers
+4. Attach the full prior review summary to the payload for all sub-agents.
+
 **Read project rules:** Check for and read `AGENTS.md`, `.opencode/AGENTS.md`, `CONVENTIONS.md`, `.github/copilot-instructions.md`, and `REVIEW.md` in the repo root. `REVIEW.md` contains review-specific guidance (paths to skip, things to always flag, team conventions) — treat it as the highest-priority override. Include relevant rules in the payload to **all** sub-agents (not just maintainability) — security rules go to security, testing expectations go to correctness, etc.
 
 ## Static Analysis Pass
@@ -46,23 +54,25 @@ Prepare a **base payload** containing:
 1. The full diff
 2. Full contents of every modified file
 3. Static analysis findings (from the pass above)
+4. Prior review summary (for PRs — threads with resolved/unresolved status; omit section if not a PR review)
 
 Prepare **extended context**:
 - **Project rules** (AGENTS.md, CONVENTIONS.md content) — for **all** agents
 - **Issue context** (requirements, acceptance criteria) — for correctness and maintainability agents
   - Use the **actual fetched text** from `team-context_get_issue` / `gh issue view` — not the placeholder.
   - If no issue was found, write "No issue context available."
+- **Prior reviews** (PR only) — for **all** agents; include the full prior review summary
 
 Then spawn **four Task calls in parallel** (all in a single message), all with `subagent_type="expert"`. Each prompt instructs the expert to load a specific review skill. Tailor each prompt:
 
 ```
-Task(subagent_type="expert", prompt="Load the `review-security` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>")
+Task(subagent_type="expert", prompt="Load the `review-security` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
 
-Task(subagent_type="expert", prompt="Load the `review-correctness` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>")
+Task(subagent_type="expert", prompt="Load the `review-correctness` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
 
-Task(subagent_type="expert", prompt="Load the `review-performance` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>")
+Task(subagent_type="expert", prompt="Load the `review-performance` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
 
-Task(subagent_type="expert", prompt="Load the `review-maintainability` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>")
+Task(subagent_type="expert", prompt="Load the `review-maintainability` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
 ```
 
 Each specialist returns a JSON object containing a `findings` array and an `escalations` array.
@@ -180,6 +190,12 @@ The correctness specialist handles side effect tracing as part of Phase 1. When 
 - [Acceptance criterion 1]: [met / not met — one sentence]
 - [Acceptance criterion 2]: [met / not met — one sentence]
 
+## Unresolved Prior Feedback
+
+> Only include this section if prior reviews exist and any threads are still unresolved.
+
+- **file.rb:10** (@reviewer, [date]) - [original comment summary]. [Status: author hasn't responded / author replied but issue remains]
+
 ## Blockers
 ...
 
@@ -189,3 +205,9 @@ The correctness specialist handles side effect tracing as part of Phase 1. When 
 
 - **file.rb:55** - [issue title]. [1 sentence explanation]
 ```
+
+**Prior review rules:**
+- Do NOT re-raise issues that were already raised in a prior review and have been addressed (author replied with a fix, or the code changed to resolve it). Mark them as handled.
+- DO surface unresolved threads in the "Unresolved Prior Feedback" section — these are higher priority than new findings since they represent reviewer expectations not yet met.
+- Unresolved prior feedback counts toward the verdict the same as blockers if they were originally `CHANGES REQUESTED` items.
+- If a new finding duplicates an unresolved prior comment, merge them: cite the prior comment and note it remains unresolved rather than presenting it as a fresh finding.
