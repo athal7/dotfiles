@@ -14,6 +14,7 @@ For each function, method, or endpoint modified in the diff:
 3. **Read auth/authz middleware** — find the before_action, middleware chain, or guards protecting changed endpoints
 4. **Grep for similar patterns** — if you find a vulnerability class, check if the same pattern exists elsewhere in touched files
 5. **Check the test file(s)** — verify whether security properties are tested
+6. **Determine origin of each issue** — before reporting, run `git blame <file>` or check the base branch to confirm whether the vulnerability was introduced by this diff or already existed
 
 **You must output an exploration log before your findings:**
 
@@ -23,6 +24,7 @@ For each function, method, or endpoint modified in the diff:
 - Traced `params[:id]` → UserService#find → SELECT query (no parameterization check needed — uses AR)
 - Read auth middleware at `path/to/auth.rb` — before_action :authenticate_user covers all actions
 - Grepped for `html_safe` / `raw` in modified files — found 1 instance at line 45
+- git blame `path/to/controller.rb:45` — line present since commit abc123 (pre-existing)
 - ...
 ```
 
@@ -62,6 +64,7 @@ Examples:
 - Frame feedback as questions, use "I" statements
 - Only report actual issues verified through exploration, not theoretical concerns
 - For each finding: file path, line number, 2-5 word title, 1 sentence explanation
+- **Tag pre-existing vulnerabilities** — if the vulnerability exists on the base branch (not introduced by this diff), use severity `pre-existing`. Still report it, but it should not block the PR.
 - If you find nothing, return an empty `findings` array — do not invent issues
 
 ## Output Format
@@ -74,7 +77,7 @@ Return a JSON object (not just an array). Include both findings and escalations.
     {
       "file": "path/to/file.rb",
       "line": 42,
-      "severity": "blocker|suggestion|nit",
+      "severity": "blocker|suggestion|nit|pre-existing",
       "title": "Brief title",
       "body": "One sentence explanation.",
       "suggested_fix": "code snippet or null"

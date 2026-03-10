@@ -16,7 +16,7 @@ description: Code review checklist - coordinates specialist reviewers for thorou
 
 **After getting the diff:** read entire modified file(s) for full context.
 
-**Read project rules:** Check for and read `AGENTS.md`, `.opencode/AGENTS.md`, `CONVENTIONS.md`, `.github/copilot-instructions.md` in the repo root. These contain project-specific coding standards, architectural decisions, and review expectations. Include relevant rules in the payload to **all** sub-agents (not just maintainability) — security rules go to security, testing expectations go to correctness, etc.
+**Read project rules:** Check for and read `AGENTS.md`, `.opencode/AGENTS.md`, `CONVENTIONS.md`, `.github/copilot-instructions.md`, and `REVIEW.md` in the repo root. `REVIEW.md` contains review-specific guidance (paths to skip, things to always flag, team conventions) — treat it as the highest-priority override. Include relevant rules in the payload to **all** sub-agents (not just maintainability) — security rules go to security, testing expectations go to correctness, etc.
 
 ## Static Analysis Pass
 
@@ -92,22 +92,32 @@ After all specialists and follow-up agents return:
 
 1. Collect all `findings` from all agents (initial + follow-up)
 2. Deduplicate — if two specialists flag the same line, keep the higher-severity one and note both concerns
-3. **Additive verification pass** — for each finding, verify it against the codebase:
-   - "Unused variable/function" → grep for usages; discard if found
-   - "Missing null check" → read the caller to see if it's already guarded upstream
-   - "N+1 query" → check if eager loading is configured elsewhere (e.g., default_scope, includes)
-   - "Security: user input unsanitized" → trace the input to see if a framework-level sanitizer handles it
-   - Discard any finding you cannot verify
-   - **While verifying, read the surrounding code actively** — if you spot a new issue the specialists missed, add it to the list. Specifically look for cross-cutting concerns: security implications of correctness issues, correctness implications of performance changes. You are not only pruning — you are also a final reviewer.
-4. Classify remaining findings into: Blockers, Suggestions, Nits
-5. Determine verdict based on blockers
+3. **Verification pass** — for each finding, attempt to disprove it using the method appropriate to the claim:
+
+   | Claim type | How to disprove |
+   |---|---|
+   | "Unused variable/function" | `rg` for all usages including dynamic calls, string interpolation, metaprogramming; discard only if zero real usages found |
+   | "Missing null check" | Read the full call chain upstream — is there a guard, `presence` validation, or DB constraint that guarantees non-null? Discard only if protection is confirmed |
+   | "N+1 query" | Check `default_scope`, `after_find`, controller `includes`, and any concern that wraps the association; discard only if eager loading is confirmed for this access path |
+   | "Unsanitized input" | Trace the full input path — does a framework layer (Rack, Rails strong params, ORM) sanitize it before use? Discard only if sanitization is confirmed end-to-end |
+   | "Race condition" | Read the surrounding transaction, lock, or mutex scope; discard only if the critical section is provably atomic |
+   | "Side effect fires on failure" | Read the callback/hook definition and check whether it is wrapped in `after_commit`, `after_save` with a condition, or guarded by the success of the preceding operation |
+   | "Pre-existing" tag | Confirm with `git blame` — if the line was touched by this diff, reclassify to appropriate severity |
+
+   **Default: keep, don't discard.** Discard a finding only if you can positively disprove the claim above. A finding that is hard to verify is not the same as a false positive. When in doubt, keep it as a `suggestion` with a note that further investigation is needed.
+
+   **While verifying, read the surrounding code actively** — if you spot a new issue the specialists missed, add it to the list. Specifically look for cross-cutting concerns: security implications of correctness issues, correctness implications of performance changes. You are not only pruning — you are also a final reviewer.
+
+4. Classify remaining findings:
+   - `blocker` → **Blockers** section
+   - `suggestion` → **Suggestions** section
+   - `nit` → **Nits** section
+   - `pre-existing` → **Pre-existing Issues** section (separate, never affects verdict)
+5. Determine verdict based on blockers only (pre-existing findings never trigger CHANGES REQUESTED)
 
 ## Side Effects Check
 
-Regardless of path, always trace the callback/job chain:
-- Does this trigger emails, notifications, webhooks?
-- Side effects should fire after the operation succeeds, not before
-- Guard clauses and early returns belong at the top
+The correctness specialist handles side effect tracing as part of Phase 1. When building the payload for the correctness agent, explicitly flag any callbacks, jobs, events, or webhooks visible in the diff so the specialist traces them. If the diff modifies an `after_*` callback, background job, or event emitter, include the full chain in the base payload.
 
 ## Output Format
 
@@ -135,6 +145,12 @@ Regardless of path, always trace the callback/job chain:
 ## Nits
 
 - **file.rb:30** - [tiny thing]
+
+## Pre-existing Issues
+
+> These bugs exist in the codebase but were not introduced by this PR. They do not affect the verdict.
+
+- **file.rb:55** - [issue title]. [1 sentence explanation]
 ```
 
 **Rules:**
@@ -142,6 +158,7 @@ Regardless of path, always trace the callback/job chain:
 - Max 1-2 sentences per item. No filler.
 - **Always include a `suggestion` code block** with the concrete fix, unless the fix requires architectural changes that can't be expressed as a snippet
 - Use "I" statements, frame as questions not directives
+- Pre-existing Issues never influence the verdict — they are informational only
 
 **For PRs:** extend the output as follows:
 
@@ -165,4 +182,10 @@ Regardless of path, always trace the callback/job chain:
 
 ## Blockers
 ...
+
+## Pre-existing Issues
+
+> These bugs exist in the codebase but were not introduced by this PR. They do not affect the verdict.
+
+- **file.rb:55** - [issue title]. [1 sentence explanation]
 ```

@@ -25,6 +25,12 @@ For each function, method, or class modified in the diff:
 4. **Read the test file(s)** — check what behavior is already tested and what's missing
 5. **Trace data flows** — follow inputs from entry point through to output/storage
 6. **Check inverse operations** — if something is created, find where it's destroyed; if something is enabled, find where it's disabled
+7. **Trace side effect chains** — for every write, save, or state change in the diff:
+   - Find all callbacks, after_* hooks, observers, event emitters, or job enqueues triggered by this code
+   - Check whether side effects fire on the success path only, or also on failure/rollback
+   - Verify guard clauses and early returns come before side effects, not after
+   - Check whether the same side effect is triggered multiple times in concurrent scenarios
+8. **Determine origin of each issue** — before reporting, run `git log --follow -p <file> | grep -n "<relevant code>"` or check `git blame <file>` to confirm whether the bug exists on the base branch or was introduced by this diff
 
 **You must output an exploration log before your findings:**
 
@@ -34,6 +40,8 @@ For each function, method, or class modified in the diff:
 - Grepped for callers of `method_name` — found in X, Y, Z
 - Read `path/to/test_file.rb` — covers A, B but not C
 - Traced input `params[:user_id]` → UserService#find → DB query
+- Traced side effects: `after_save :send_notification` — fires even on failed validations
+- git blame `path/to/file.rb:42` — line present since commit abc123 (pre-existing)
 - ...
 ```
 
@@ -57,7 +65,7 @@ Only report findings related to:
 - **API contracts** — changed response shape, new required params, missing fields vs existing API
 - **Constraint enforcement** — UI-indicated requirements (e.g. `*` on labels) not enforced server-side
 - **Unnecessary indirection** — wrapping single values in arrays, passing locals already in scope
-- **Side effect ordering** — side effects firing before the operation succeeds, missing guard clauses
+- **Side effect ordering** — side effects (callbacks, jobs, events, emails) firing before the operation succeeds, on failure paths, or firing multiple times; missing guard clauses; side effects not rolled back on transaction failure
 
 ## Escalations
 
@@ -75,6 +83,7 @@ Examples:
 - Frame feedback as questions, use "I" statements
 - Only report actual bugs or high-confidence logic issues verified through exploration
 - For each finding: file path, line number, 2-5 word title, 1 sentence explanation
+- **Tag pre-existing bugs** — if a bug exists on the base branch (not introduced by this diff), use severity `pre-existing` instead of `blocker`. Still report it so the coordinator can surface it, but it should not block the PR.
 - If you find nothing, return an empty `findings` array — do not invent issues
 
 ## Output Format
@@ -87,7 +96,7 @@ Return a JSON object (not just an array). Include both findings and escalations.
     {
       "file": "path/to/file.rb",
       "line": 42,
-      "severity": "blocker|suggestion|nit",
+      "severity": "blocker|suggestion|nit|pre-existing",
       "title": "Brief title",
       "body": "One sentence explanation.",
       "suggested_fix": "code snippet or null"

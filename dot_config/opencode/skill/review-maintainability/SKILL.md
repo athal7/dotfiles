@@ -23,6 +23,7 @@ For each function, method, or class modified in the diff:
 3. **Find all call sites** — before flagging unused code, grep for every caller; only flag if zero usages found
 4. **Read AGENTS.md and CONVENTIONS.md** — confirm each finding violates an actual written convention, not a personal preference
 5. **Read the test file(s)** — check whether new behavior has corresponding tests and whether tests are at the right tier (unit vs integration)
+6. **Determine origin of each issue** — before reporting, run `git blame <file>` or check the base branch to confirm whether the maintainability issue was introduced by this diff or already existed
 
 **You must output an exploration log before your findings:**
 
@@ -33,6 +34,7 @@ For each function, method, or class modified in the diff:
 - Searched codebase for similar "parse_X" patterns — found 3 similar methods in services/
 - Read AGENTS.md — confirms single-responsibility rule at line 12
 - Read `spec/services/user_service_spec.rb` — covers happy path, no edge case tests
+- git blame `app/services/user_service.rb:15` — dead code present since commit abc123 (pre-existing)
 - ...
 ```
 
@@ -78,6 +80,7 @@ Examples:
 - Frame feedback as questions, use "I" statements
 - Only report issues verified through exploration — never flag unused code without grepping for callers
 - For each finding: file path, line number, 2-5 word title, 1 sentence explanation
+- **Tag pre-existing issues** — if the maintainability problem exists on the base branch (not introduced by this diff), use severity `pre-existing`. Still report it, but it should not block the PR.
 - If you find nothing, return an empty `findings` array — do not invent issues
 
 ## Output Format
@@ -90,7 +93,7 @@ Return a JSON object (not just an array). Include both findings and escalations.
     {
       "file": "path/to/file.rb",
       "line": 42,
-      "severity": "blocker|suggestion|nit",
+      "severity": "blocker|suggestion|nit|pre-existing",
       "title": "Brief title",
       "body": "One sentence explanation.",
       "suggested_fix": "code snippet or null"

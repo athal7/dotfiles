@@ -14,6 +14,7 @@ For each function, method, or query modified in the diff:
 3. **Trace association chains** — for each `has_many`, `belongs_to`, or join in the diff, check if eager loading is configured and read callers to see what's actually accessed
 4. **Identify loops over data** — for any iteration (each, map, loop, forEach), determine if it can grow unbounded and whether it triggers queries
 5. **Read the test file(s)** — check whether performance properties (pagination, eager loading) are tested
+6. **Determine origin of each issue** — before reporting, run `git blame <file>` or check the base branch to confirm whether the performance issue was introduced by this diff or already existed
 
 **You must output an exploration log before your findings:**
 
@@ -23,6 +24,7 @@ For each function, method, or query modified in the diff:
 - Checked `db/schema.rb` — `users.email` indexed, `posts.user_id` not indexed
 - Traced `User.all.each` in controller — unbounded, no pagination
 - Read callers of `UserService#list` — called from 3 places, all pass to view that renders all records
+- git blame `app/controllers/users_controller.rb:34` — line unchanged since commit abc123 (pre-existing)
 - ...
 ```
 
@@ -61,6 +63,7 @@ Examples:
 - Frame feedback as questions, use "I" statements
 - Only report measurable performance concerns verified through exploration, not micro-optimizations
 - For each finding: file path, line number, 2-5 word title, 1 sentence explanation
+- **Tag pre-existing issues** — if the performance problem exists on the base branch (not introduced by this diff), use severity `pre-existing`. Still report it, but it should not block the PR.
 - If you find nothing, return an empty `findings` array — do not invent issues
 
 ## Output Format
@@ -73,7 +76,7 @@ Return a JSON object (not just an array). Include both findings and escalations.
     {
       "file": "path/to/file.rb",
       "line": 42,
-      "severity": "blocker|suggestion|nit",
+      "severity": "blocker|suggestion|nit|pre-existing",
       "title": "Brief title",
       "body": "One sentence explanation.",
       "suggested_fix": "code snippet or null"
