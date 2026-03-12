@@ -49,6 +49,12 @@ for repo in "$CODE_DIR"/*/; do
   # Already up to date
   [ "$local_ref" != "$remote_ref" ] || continue
 
+  # Skip if the main worktree has uncommitted changes (staged, unstaged, or untracked)
+  if [ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]; then
+    log "$name: $default_branch dirty, skipping fast-forward"
+    continue
+  fi
+
   # Only fast-forward (remote must be a descendant of local)
   if git -C "$repo" merge-base --is-ancestor "$local_ref" "$remote_ref" 2>/dev/null; then
     git -C "$repo" update-ref "refs/heads/$default_branch" "$remote_ref" "$local_ref"

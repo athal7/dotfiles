@@ -5,6 +5,7 @@ startup_delay: 0
 
 defaults:
   agent: plan
+  worktree: new
 
 # Auto-discover repos from ~/code via git remote origin
 # Worktree support auto-detected at runtime via OpenCode API
