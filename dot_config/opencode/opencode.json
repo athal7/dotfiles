@@ -7,7 +7,6 @@
   "permission": {
     "skill": "allow"
   },
-  "default_agent": "plan",
   "model": "anthropic/claude-haiku-4-5",
   "agent": {
     "plan": {
@@ -44,20 +43,32 @@
         }
       },
       "models": {
-        "gpt-4.1": { "name": "gpt-4.1" },
-        "gpt-5-mini": { "name": "gpt-5-mini" }
+        "gpt-4.1": {
+          "name": "gpt-4.1"
+        },
+        "gpt-5-mini": {
+          "name": "gpt-5-mini"
+        }
       }
     },
     "opencode": {
       "models": {
-        "big-pickle": { "name": "pickle" }
+        "big-pickle": {
+          "name": "pickle"
+        }
       }
     },
     "anthropic": {
       "models": {
-        "claude-opus-4-6": { "name": "opus" },
-        "claude-sonnet-4-6": { "name": "sonnet" },
-        "claude-haiku-4-5": { "name": "haiku" }
+        "claude-opus-4-6": {
+          "name": "opus"
+        },
+        "claude-sonnet-4-6": {
+          "name": "sonnet"
+        },
+        "claude-haiku-4-5": {
+          "name": "haiku"
+        }
       }
     }
   },
@@ -85,7 +96,12 @@
     },
     "firefox-devtools": {
       "type": "local",
-      "command": ["npx", "@padenot/firefox-devtools-mcp", "--firefox-path", "/Applications/Firefox Nightly.app/Contents/MacOS/firefox"]
+      "command": [
+        "npx",
+        "@padenot/firefox-devtools-mcp",
+        "--firefox-path",
+        "/Applications/Firefox Nightly.app/Contents/MacOS/firefox"
+      ]
     }
   }
 }
