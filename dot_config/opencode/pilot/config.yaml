@@ -37,4 +37,3 @@ tools:
     response_key: issues
     mappings:
       body: description
-      number: identifier
