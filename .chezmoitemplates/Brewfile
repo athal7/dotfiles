@@ -14,6 +14,7 @@ brew "docker-compose" # Multi-container Docker applications
 brew "ffmpeg" # Video/audio processing
 brew "gh" # GitHub CLI for issues, PRs, repos
 brew "git-spice" # Manage stacked Git branches
+brew "googleworkspace-cli" # Google Workspace CLI for Drive, Gmail, Calendar, Sheets, Docs, Chat (gws)
 brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying
 brew "k9s" # Terminal UI for Kubernetes clusters
