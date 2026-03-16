@@ -50,7 +50,7 @@ After the draft PR is created/confirmed, watch CI to completion. Do not hand bac
 
 1. Poll every 30s: `gh run list --branch <branch> --limit 1`
 2. Wait until status is no longer `queued` or `in_progress`
-3. If all checks pass: done
+3. If all checks pass: report success with a markdown link to the PR, e.g. `[PR #123](https://github.com/org/repo/pull/123) is ready to merge.` — never just the bare number
 4. If any check fails:
    - `gh run view <run-id> --log-failed` to get failure output
    - Fix the root cause, commit (following `commit` skill), and push
