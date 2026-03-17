@@ -13,18 +13,22 @@ For each function, method, or query modified in the diff:
 2. **Check the schema/migrations** — for any model or query touched, find the migration file and check which columns have indexes
 3. **Trace association chains** — for each `has_many`, `belongs_to`, or join in the diff, check if eager loading is configured and read callers to see what's actually accessed
 4. **Identify loops over data** — for any iteration (each, map, loop, forEach), determine if it can grow unbounded and whether it triggers queries
-5. **Read the test file(s)** — check whether performance properties (pagination, eager loading) are tested
-6. **Determine origin of each issue** — before reporting, run `git blame <file>` or check the base branch to confirm whether the performance issue was introduced by this diff or already existed
+5. **Trace callback multiplication** — when the diff creates or updates records in a loop and the model has `after_create`/`after_save`/`after_commit` callbacks that trigger additional work (jobs, queries, recomputations), calculate the total cost. N records × M callbacks = N×M operations. Flag if this can be batched (skip callbacks, then run one aggregate operation at the end).
+6. **Check UI element scalability** — when the diff populates a dropdown, select, autocomplete, list, or table from a database query or collection, estimate the cardinality. If the collection can grow unbounded (e.g., all users, all submissions, all tags), flag it — dropdowns with 100+ options need search/filter, tables with 1000+ rows need pagination or virtualization.
+7. **Read the test file(s)** — check whether performance properties (pagination, eager loading) are tested
+8. **Determine origin of each issue** — before reporting, run `git blame <file>` or check the base branch to confirm whether the performance issue was introduced by this diff or already existed
 
 **You must output an exploration log before your findings:**
 
 ```
 ## Exploration Log
-- Read `app/models/user.rb` (full file) — has_many :posts, no default eager loading
-- Checked `db/schema.rb` — `users.email` indexed, `posts.user_id` not indexed
-- Traced `User.all.each` in controller — unbounded, no pagination
-- Read callers of `UserService#list` — called from 3 places, all pass to view that renders all records
-- git blame `app/controllers/users_controller.rb:34` — line unchanged since commit abc123 (pre-existing)
+- Read `path/to/model.rb` (full file) — has_many :items, no default eager loading
+- Checked `db/schema.rb` — `table.email` indexed, `items.parent_id` not indexed
+- Traced `Model.all.each` in controller — unbounded, no pagination
+- Read callers of `Service#list` — called from 3 places, all pass to view that renders all records
+- Checked callback multiplication: loop creates N records, each triggers `after_save` job — O(N²) total
+- Checked `<select>` in view populated by unbounded query — collection grows without limit, no search/filter
+- git blame `path/to/controller.rb:34` — line unchanged since commit abc123 (pre-existing)
 - ...
 ```
 
@@ -41,8 +45,9 @@ Only report findings related to:
 - **N+1 queries** — database calls inside loops, missing eager loading/preloading
 - **Over-fetching** — eager-loading associations the action doesn't use, SELECT * when few columns needed
 - **Missing indexes** — queries filtering or sorting on unindexed columns
-- **Algorithmic complexity** — O(n²) or worse on unbounded data, nested iterations over large sets
+- **Algorithmic complexity** — O(n²) or worse on unbounded data, nested iterations over large sets; includes callback-triggered quadratic behavior (N records created in a loop, each triggering M callbacks)
 - **Pagination** — large lists rendered without pagination or virtualization
+- **UI scalability** — dropdowns, selects, or lists populated from unbounded collections without search, filtering, or virtualization
 - **Loading scope** — blanket per-controller eager loads vs per-action scoping
 - **Memory** — large objects held in memory unnecessarily, unbounded caches, string concatenation in loops
 - **Network** — redundant API calls, missing caching for repeated fetches, chatty protocols

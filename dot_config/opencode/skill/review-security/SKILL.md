@@ -47,6 +47,7 @@ Only report findings related to:
 - **Dependency risk** — known-vulnerable dependency patterns (not version auditing)
 - **Data exposure** — PII leaked in logs, verbose error responses, overly broad API responses
 - **Cryptography** — weak algorithms, hardcoded IVs/salts, insecure random
+- **Deployment-sensitive changes** — modifications to cookie domains, CORS configuration, session settings, authentication providers, or shared infrastructure settings that could affect service isolation; flag as requiring staged rollout verification
 
 ## Escalations
 

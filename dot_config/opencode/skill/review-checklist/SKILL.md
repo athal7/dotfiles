@@ -11,8 +11,14 @@ description: Code review checklist - coordinates specialist reviewers for thorou
 1. `git branch --show-current` — parse for `ENG-123`, `PROJ-456`, `#123`, `gh-123`
 2. For PRs: check PR body and linked issues via `gh pr view --json body,title`
 3. Fetch: Linear → `team-context_get_issue`, GitHub → `gh issue view`
+4. **Fetch project context** — if the Linear issue belongs to a project, also fetch:
+   - `team-context_get_project` — project metadata, goals, status
+   - `team-context_get_project_body` — full project description with scope, non-goals, and design decisions
+   - `team-context_get_milestone` — current milestone with target date and deliverables (if applicable)
 
-**Use context to verify:** requirements alignment, acceptance criteria, scope creep, project goals.
+   Project context reveals the *why* behind the issue — business goals, related features, constraints, and existing decisions that the diff should align with. Include it in the payload to correctness and maintainability agents.
+
+**Use context to verify:** requirements alignment, acceptance criteria, scope creep, project goals, and consistency with related issues in the same project.
 
 **After getting the diff:** read entire modified file(s) for full context.
 
@@ -24,31 +30,68 @@ description: Code review checklist - coordinates specialist reviewers for thorou
    - **Unresolved** — no author reply, or last reply disagrees/defers
 4. Attach the full prior review summary to the payload for all sub-agents.
 
-**Read project rules:** Check for and read `AGENTS.md`, `.opencode/AGENTS.md`, `CONVENTIONS.md`, `.github/copilot-instructions.md`, and `REVIEW.md` in the repo root. `REVIEW.md` contains review-specific guidance (paths to skip, things to always flag, team conventions) — treat it as the highest-priority override. Include relevant rules in the payload to **all** sub-agents (not just maintainability) — security rules go to security, testing expectations go to correctness, etc.
+**Read project rules:** Check for and read `AGENTS.md`, `.opencode/AGENTS.md`, `CONVENTIONS.md`, `.github/copilot-instructions.md`, `REVIEW.md`, and `CONTRIBUTING.md` in the repo root. Also check `docs/` for development guides (e.g., `docs/development.md`, `docs/writing-probes.md`) that may contain framework-specific conventions (minimum test counts, data file conventions, naming patterns) that generic review cannot infer. `REVIEW.md` contains review-specific guidance (paths to skip, things to always flag, team conventions) — treat it as the highest-priority override. Include relevant rules in the payload to **all** sub-agents (not just maintainability) — security rules go to security, testing expectations go to correctness, etc.
 
 ## Static Analysis Pass
 
-**Before any LLM analysis**, run available project linters/checkers on modified files. Detect which tools are available and run them:
+**Before any LLM analysis**, run available project linters/checkers on modified files. Detect which tools are available and run them. Run all applicable tools in parallel.
 
 1. Check project root for config files to detect tooling:
+
+   **Style & quality:**
    - `Gemfile` / `.rubocop.yml` → `bundle exec rubocop --format json <files>`
    - `package.json` → check for eslint/biome scripts → `npx eslint --format json <files>` or `npx biome check <files>`
-   - `tsconfig.json` → `npx tsc --noEmit --pretty 2>&1` (type errors only)
-   - `Brakeman` (Rails) → `bundle exec brakeman --only-files <files> --format json -q`
-   - `pyproject.toml` / `setup.cfg` → `ruff check <files> --output-format json` or `mypy <files>`
+   - `pyproject.toml` / `setup.cfg` → `ruff check <files> --output-format json`
    - `.golangci.yml` → `golangci-lint run <files>`
 
+   **Type checking:**
+   - `tsconfig.json` → `npx tsc --noEmit --pretty 2>&1` (type errors only)
+   - `pyproject.toml` with mypy config → `mypy <files>`
+   - `sorbet/` or `Gemfile` with sorbet → `bundle exec srb tc <files>`
+
+   **Security:**
+   - `Gemfile` with brakeman → `bundle exec brakeman --only-files <files> --format json -q`
+   - `Gemfile` with bundler-audit → `bundle exec bundler-audit check --update`
+   - `package.json` → `npm audit --json` or `yarn audit --json`
+   - `Gemfile` / `package.json` → check for `importmap` or `yarn.lock` changes and flag new dependencies for review
+
 2. Only run tools that are **already configured in the project** — never install new tools.
-3. Collect output. Include the raw linter findings in the payload to sub-agents under a `## Static Analysis Findings` section.
+3. Collect output. Include the raw linter findings in the payload to sub-agents under a `## Static Analysis Findings` section. Tag each finding with its source tool so specialists know what's already been caught mechanically.
 4. If no linters are configured or all pass clean, note "No static analysis findings" and move on.
 
-The LLM's job is to find **semantic issues that tools can't catch** — logic errors, missing edge cases, architectural problems. Let tools handle syntax, style, and known vulnerability patterns.
+The LLM's job is to find **semantic issues that tools can't catch** — logic errors, missing edge cases, architectural problems. Let tools handle syntax, style, and known vulnerability patterns. If a static analysis tool already flagged an issue, specialists should NOT re-report it (it's already in the output) — they should only add findings the tools missed.
 
 ## Dispatch Strategy
 
-**Always dispatch to specialists.** Do not review the diff yourself — your job is coordination: gather context, build the payload, dispatch, handle escalations, merge, verify, and format output.
+**Do not review the diff yourself** — your job is coordination: gather context, build the payload, dispatch, handle escalations, merge, verify, and format output.
 
-### Parallel specialists
+### Classify the diff
+
+Before dispatching, scan the diff to determine which specialists are relevant. Classify the changed files:
+
+| Signal | Triggers |
+|---|---|
+| **Models, services, controllers, jobs, lib** | Always: correctness + maintainability |
+| **DB queries, scopes, includes, joins, loops over collections, `each`/`map`/`find_each`** | Performance |
+| **Views, templates, JS, CSS, Turbo/Stimulus, frontend components** | Maintainability (UX patterns) + performance (UI scalability) |
+| **Auth, params, cookies, sessions, CORS, encryption, API keys, tokens** | Security |
+| **Migrations, schema changes** | Performance (indexes) + correctness (nullable, defaults) |
+| **Config files, routes, environment settings** | Security (deployment-sensitive) |
+| **Test files only** | Correctness (test validity) + maintainability |
+
+### Dispatch rules
+
+**Correctness is always dispatched** — it is the primary reviewer and catches the highest-value issues (logic bugs, incomplete propagation, nil safety, missing error handling).
+
+**Maintainability is always dispatched** — dead code, naming, unused definitions, and UI pattern drift apply to every diff.
+
+**Security and performance are conditional:**
+- **Security**: dispatch only if the diff touches auth, params handling, cookies/sessions, encryption, API endpoints, CORS, environment config, or dependency files. Skip if the diff is purely internal logic, views, or tests with no auth/input surface.
+- **Performance**: dispatch only if the diff touches DB queries, model scopes, associations, loops over collections, background jobs processing batches, views rendering collections, or migrations. Skip if the diff is purely config, documentation, or non-data-path code.
+
+If in doubt about whether to dispatch a conditional specialist, **dispatch it** — false negatives are worse than wasted tokens.
+
+### Build payloads
 
 Prepare a **base payload** containing:
 1. The full diff
@@ -58,24 +101,33 @@ Prepare a **base payload** containing:
 
 Prepare **extended context**:
 - **Project rules** (AGENTS.md, CONVENTIONS.md content) — for **all** agents
-- **Issue context** (requirements, acceptance criteria) — for correctness and maintainability agents
+- **Issue context** (requirements, acceptance criteria, project goals) — for correctness and maintainability agents
   - Use the **actual fetched text** from `team-context_get_issue` / `gh issue view` — not the placeholder.
+  - If the issue belongs to a Linear project, include the project body (`team-context_get_project_body`) and milestone context. This gives reviewers the broader product vision — business goals, related features, existing decisions, and constraints that should inform the review.
   - If no issue was found, write "No issue context available."
 - **Prior reviews** (PR only) — for **all** agents; include the full prior review summary
 
-Then spawn **four Task calls in parallel** (all in a single message), all with `subagent_type="expert"`. Each prompt instructs the expert to load a specific review skill. Tailor each prompt:
+### Spawn specialists
 
+Spawn all applicable specialists **in parallel** (all in a single message), all with `subagent_type="expert"`. Each prompt instructs the expert to load a specific review skill.
+
+**Always dispatch (every review):**
+```
+Task(subagent_type="expert", prompt="Load the `review-correctness` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria, project body>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
+
+Task(subagent_type="expert", prompt="Load the `review-maintainability` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria, project body>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
+```
+
+**Conditional (only when relevant signals detected):**
 ```
 Task(subagent_type="expert", prompt="Load the `review-security` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
 
-Task(subagent_type="expert", prompt="Load the `review-correctness` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
-
 Task(subagent_type="expert", prompt="Load the `review-performance` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
-
-Task(subagent_type="expert", prompt="Load the `review-maintainability` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
 ```
 
 Each specialist returns a JSON object containing a `findings` array and an `escalations` array.
+
+**Note:** If a specialist was skipped but an escalation from another specialist targets it (e.g., correctness escalates to performance), the escalation handler will dispatch it as a follow-up regardless.
 
 ### Handle Escalations
 
@@ -128,6 +180,14 @@ After all specialists and follow-up agents return:
 ## Side Effects Check
 
 The correctness specialist handles side effect tracing as part of Phase 1. When building the payload for the correctness agent, explicitly flag any callbacks, jobs, events, or webhooks visible in the diff so the specialist traces them. If the diff modifies an `after_*` callback, background job, or event emitter, include the full chain in the base payload.
+
+## Coordinator-Level Checks
+
+After merging specialist findings, the coordinator adds these checks directly (not delegated to specialists):
+
+1. **Missing acceptance criteria** — if no linked issue with acceptance criteria was found, add a suggestion: "No linked issue with acceptance criteria found — cannot fully verify feature completeness. Consider linking an issue with specific acceptance criteria."
+
+2. **Runtime verification required** — if the diff modifies views, templates, controllers, frontend code, or UI interactions, add a mandatory note at the end of the output: "⚠️ This diff modifies UI code. Static review cannot verify runtime behavior — run `/qa` for browser-based verification before merge."
 
 ## Output Format
 
