@@ -67,29 +67,30 @@ The LLM's job is to find **semantic issues that tools can't catch** — logic er
 
 ### Classify the diff
 
-Before dispatching, scan the diff to determine which specialists are relevant. Classify the changed files:
+Before dispatching, scan the diff to determine which specialists are relevant:
 
 | Signal | Triggers |
 |---|---|
-| **Models, services, controllers, jobs, lib** | Always: correctness + maintainability |
-| **DB queries, scopes, includes, joins, loops over collections, `each`/`map`/`find_each`** | Performance |
-| **Views, templates, JS, CSS, Turbo/Stimulus, frontend components** | Maintainability (UX patterns) + performance (UI scalability) |
-| **Auth, params, cookies, sessions, CORS, encryption, API keys, tokens** | Security |
-| **Migrations, schema changes** | Performance (indexes) + correctness (nullable, defaults) |
-| **Config files, routes, environment settings** | Security (deployment-sensitive) |
-| **Test files only** | Correctness (test validity) + maintainability |
+| **Models, services, controllers, jobs, lib** | correctness, completeness, maintainability |
+| **Removes/renames columns, enums, scopes, methods** | completeness (propagation) |
+| **ORM calls: `update_column`, `delete`, caching, type patterns** | conventions |
+| **DB queries, loops over collections, views rendering lists** | performance |
+| **Auth, params, cookies, sessions, CORS, encryption** | security |
+| **Migrations, schema changes** | performance + completeness |
+| **Views, templates, JS, CSS, frontend components** | maintainability (UX) + performance (UI scalability) |
+| **Config files, routes, environment settings** | security |
+| **Test files** | maintainability (test validity) |
 
 ### Dispatch rules
 
-**Correctness is always dispatched** — it is the primary reviewer and catches the highest-value issues (logic bugs, incomplete propagation, nil safety, missing error handling).
+**Always dispatch:** correctness, completeness, maintainability — these three cover the highest-value issues on every diff.
 
-**Maintainability is always dispatched** — dead code, naming, unused definitions, and UI pattern drift apply to every diff.
+**Conditional:**
+- **Conventions**: dispatch if the diff uses ORM persistence methods, caching, or introduces new data models/columns. Skip for pure view or config changes.
+- **Security**: dispatch if the diff touches auth, params, cookies/sessions, encryption, CORS, environment config, or dependencies. Skip for purely internal logic or views.
+- **Performance**: dispatch if the diff touches DB queries, associations, loops, jobs processing batches, views rendering collections, or migrations. Skip for config or documentation.
 
-**Security and performance are conditional:**
-- **Security**: dispatch only if the diff touches auth, params handling, cookies/sessions, encryption, API endpoints, CORS, environment config, or dependency files. Skip if the diff is purely internal logic, views, or tests with no auth/input surface.
-- **Performance**: dispatch only if the diff touches DB queries, model scopes, associations, loops over collections, background jobs processing batches, views rendering collections, or migrations. Skip if the diff is purely config, documentation, or non-data-path code.
-
-If in doubt about whether to dispatch a conditional specialist, **dispatch it** — false negatives are worse than wasted tokens.
+When in doubt, **dispatch** — false negatives are worse than wasted tokens.
 
 ### Build payloads
 
@@ -109,44 +110,70 @@ Prepare **extended context**:
 
 ### Spawn specialists
 
-Spawn all applicable specialists **in parallel** (all in a single message), all with `subagent_type="expert"`. Each prompt instructs the expert to load a specific review skill.
+Spawn all applicable specialists **in parallel** (all in a single message), all with `subagent_type="expert"`. Each prompt tells the expert to load a specific review skill.
 
 **Always dispatch (every review):**
 ```
-Task(subagent_type="expert", prompt="Load the `review-correctness` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria, project body>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
-
-Task(subagent_type="expert", prompt="Load the `review-maintainability` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria, project body>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
+Task("review-correctness", payload + Issue Context + Project Rules + Static Analysis + Prior Reviews)
+Task("review-completeness", payload + Issue Context + Project Rules + Static Analysis + Prior Reviews)
+Task("review-maintainability", payload + Issue Context + Project Rules + Static Analysis + Prior Reviews)
 ```
 
 **Conditional (only when relevant signals detected):**
 ```
-Task(subagent_type="expert", prompt="Load the `review-security` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
-
-Task(subagent_type="expert", prompt="Load the `review-performance` skill and follow its instructions.\n\n<base payload>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\n## Prior Reviews\n<prior review summary or 'N/A — not a PR review'>")
+Task("review-conventions", payload + Project Rules + Static Analysis + Prior Reviews)
+Task("review-security", payload + Project Rules + Static Analysis + Prior Reviews)
+Task("review-performance", payload + Project Rules + Static Analysis + Prior Reviews)
 ```
 
-Each specialist returns a JSON object containing a `findings` array and an `escalations` array.
+Each Task prompt follows this template:
+```
+Load the `review-<skill>` skill and follow its instructions.
 
-**Note:** If a specialist was skipped but an escalation from another specialist targets it (e.g., correctness escalates to performance), the escalation handler will dispatch it as a follow-up regardless.
+<base payload>
+
+## Project Rules
+<AGENTS.md / CONVENTIONS.md content>
+
+## Issue Context          ← only for correctness, completeness, maintainability
+<issue details, acceptance criteria, project body>
+
+## Static Analysis Findings
+<linter output>
+
+## Prior Reviews
+<prior review summary or 'N/A — not a PR review'>
+```
+
+Each specialist returns `{"findings": [...], "escalations": [...]}`.
+
+**Escalation routing:** If a specialist was skipped but another specialist escalates to it, the escalation handler dispatches it as a follow-up.
 
 ### Handle Escalations
 
 After all specialists return, collect all `escalations` from each specialist's output. For each escalation:
 
-1. Group escalations by `for_reviewer` (security / correctness / performance / maintainability)
+1. Group escalations by `for_reviewer` (correctness / completeness / conventions / maintainability / security / performance)
 2. If any group is non-empty, spawn **targeted follow-up Task calls** — one per group — with `subagent_type="expert"`.
 
-For **correctness or maintainability** follow-ups (include `## Issue Context`):
+Follow-up template:
 ```
-Task(subagent_type="expert", prompt="Load the `review-<domain>` skill. The following specific areas were flagged by other reviewers as needing your attention:\n\n<list of escalations with file:line and note>\n\nFull diff:\n<diff>\n\nFull file contents:\n<files>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Issue Context\n<issue details, requirements, acceptance criteria>\n\n## Static Analysis Findings\n<linter output>\n\nNote: This is a follow-up review pass. Put all issues you find in `findings`. Any `escalations` you output will be discarded by the coordinator — focus only on findings.")
+Load the `review-<domain>` skill. The following areas were flagged by other reviewers:
+
+<list of escalations with file:line and note>
+
+Full diff: <diff>
+Full file contents: <files>
+## Project Rules: <content>
+## Issue Context: <if applicable>
+## Static Analysis: <output>
+
+This is a follow-up pass. Put all issues in `findings`. Escalations will be discarded.
 ```
 
-For **security or performance** follow-ups (no `## Issue Context`):
-```
-Task(subagent_type="expert", prompt="Load the `review-<domain>` skill. The following specific areas were flagged by other reviewers as needing your attention:\n\n<list of escalations with file:line and note>\n\nFull diff:\n<diff>\n\nFull file contents:\n<files>\n\n## Project Rules\n<AGENTS.md / CONVENTIONS.md content>\n\n## Static Analysis Findings\n<linter output>\n\nNote: This is a follow-up review pass. Put all issues you find in `findings`. Any `escalations` you output will be discarded by the coordinator — focus only on findings.")
-```
+Include `## Issue Context` for correctness, completeness, and maintainability follow-ups. Omit for security, performance, and conventions.
 
-These follow-up agents return additional `findings`. The coordinator discards all `escalations` from follow-up agents to prevent infinite loops.
+Follow-up agents return additional `findings`. The coordinator discards all `escalations` from follow-ups to prevent infinite loops.
 
 ### Merge and Verify Results
 
@@ -179,7 +206,7 @@ After all specialists and follow-up agents return:
 
 ## Side Effects Check
 
-The correctness specialist handles side effect tracing as part of Phase 1. When building the payload for the correctness agent, explicitly flag any callbacks, jobs, events, or webhooks visible in the diff so the specialist traces them. If the diff modifies an `after_*` callback, background job, or event emitter, include the full chain in the base payload.
+The correctness specialist traces side effect chains in Phase 1. When building the payload, explicitly flag any callbacks, jobs, events, or webhooks visible in the diff so it traces them.
 
 ## Coordinator-Level Checks
 
