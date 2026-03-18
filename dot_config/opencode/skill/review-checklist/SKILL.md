@@ -214,7 +214,18 @@ After merging specialist findings, the coordinator adds these checks directly (n
 
 1. **Missing acceptance criteria** — if no linked issue with acceptance criteria was found, add a suggestion: "No linked issue with acceptance criteria found — cannot fully verify feature completeness. Consider linking an issue with specific acceptance criteria."
 
-2. **Runtime verification required** — if the diff modifies views, templates, controllers, frontend code, or UI interactions, add a mandatory note at the end of the output: "⚠️ This diff modifies UI code. Static review cannot verify runtime behavior — run `/qa` for browser-based verification before merge."
+2. **Runtime verification required** — if the diff modifies views, templates, controllers, frontend code, or UI interactions, **run QA automatically** after all findings are merged:
+
+   1. **Record the current branch:** `git branch --show-current` (save as `$ORIGINAL_BRANCH`)
+   2. **Check out the code under review:**
+      - PR: `gh pr checkout $PR_NUMBER`
+      - Branch: `git checkout $BRANCH_NAME`
+      - Commit/staged/uncommitted: already checked out — skip
+   3. **Run `/qa`** — pass relevant context about which flows were changed (e.g., "login form was modified")
+   4. **Restore the original branch:** `git checkout $ORIGINAL_BRANCH`
+   5. **Include QA results** in the review output under a `## QA Results` section after Pre-existing Issues.
+
+   Do not add a note suggesting QA — execute it and report the results.
 
 ## Output Format
 
