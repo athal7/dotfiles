@@ -9,16 +9,14 @@
 		<string>{{ .chezmoi.homeDir }}/.local/bin/clean-playwright-browsers</string>
 	</array>
 	<key>StartCalendarInterval</key>
-	<array>
-		<dict>
-			<key>Day</key>
-			<integer>1</integer>
-			<key>Hour</key>
-			<integer>2</integer>
-			<key>Minute</key>
-			<integer>0</integer>
-		</dict>
-	</array>
+	<dict>
+		<key>Weekday</key>
+		<integer>0</integer>
+		<key>Hour</key>
+		<integer>2</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
 	<key>StandardOutPath</key>
 	<string>{{ .chezmoi.homeDir }}/Library/Logs/clean-playwright-browsers.log</string>
 	<key>StandardErrorPath</key>

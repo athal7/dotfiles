@@ -20,17 +20,21 @@ for name in $MANAGED_PLISTS; do
 
   # Check if already loaded
   if launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
-    # Already loaded - check if plist changed (hash in comment above triggers script rerun)
-    # Reload by bootout then bootstrap
-    launchctl bootout "gui/$uid/$label" 2>/dev/null || true
-    sleep 0.5
+    # Already loaded — reload with kickstart (avoids bootout leaving agent unloaded on failure)
+    launchctl kickstart -k "gui/$uid/$label" 2>/dev/null && echo "Restarted $label" || true
+    continue
   fi
 
-  # Load the agent
+  # Not loaded — bootstrap it
   if launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null; then
     echo "Loaded $label"
   else
-    # Already bootstrapped is OK
-    launchctl kickstart -k "gui/$uid/$label" 2>/dev/null && echo "Restarted $label" || true
+    # bootstrap failed; try legacy load as fallback
+    launchctl load "$plist" 2>/dev/null && echo "Loaded $label (fallback)" || echo "WARNING: failed to load $label"
+  fi
+
+  # Verify it came up
+  if ! launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
+    echo "WARNING: $label still not running after load attempt"
   fi
 done
