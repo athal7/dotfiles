@@ -10,18 +10,16 @@ Clean up stale workspaces, PostgreSQL databases, and Docker resources to reclaim
 
 If a project name is given in `$ARGUMENTS`, find the matching repo path under `~/code/`. Otherwise ask the user which project to clean up before proceeding.
 
-Look up the project in the OpenCode database:
+Find the project's worktree directory ID:
 
 ```bash
 sqlite3 ~/.local/share/opencode/opencode.db \
-  "SELECT id, worktree, sandboxes FROM project WHERE worktree LIKE '%<name>%' ORDER BY time_updated DESC;"
+  "SELECT id, worktree, sandboxes FROM project WHERE worktree LIKE '%<name>%' LIMIT 1;"
 ```
 
-If there are **multiple rows for the same worktree path**, that is a duplicate project bug — note all IDs, keep only the newest, delete the rest later.
+Use the `id` from this row to locate worktrees at `~/.local/share/opencode/worktree/<id>/`.
 
 ## Step 2: Discover worktrees
-
-For each sandbox path in the project's `sandboxes` JSON, plus any directories under `~/.local/share/opencode/worktree/<project-id>/`:
 
 ```bash
 for dir in ~/.local/share/opencode/worktree/<project-id>/*/; do
@@ -45,37 +43,28 @@ done
 | **Safe to delete** | No uncommitted changes, no recent sessions |
 | **Orphaned** | Directory missing from filesystem but still in DB sandboxes |
 
-**IMPORTANT**: Dirty worktrees must NEVER be deleted. Show them clearly and ask the user if they want to keep them before proceeding with anything else.
+**IMPORTANT**: Dirty worktrees must NEVER be deleted. Show them clearly before proceeding.
 
 ## Step 4: Present findings and confirm
 
-Show a table before doing anything:
-
 ```
 === Worktrees for <project> ===
-  SKIP (dirty)   0din-877-brave-planet    1.1G    branch: 0DIN-877-triage-modals    12 uncommitted changes
-  SKIP (dirty)   0din-932                 20M     branch: feat/0din-932-heimdall     3 uncommitted changes
-  safe           jolly-river              660M    branch: feat/jolly-river           0 sessions, 5 days old
-  safe           happy-nebula             157M    branch: feat/happy-nebula          0 sessions, 3 days old
-  orphaned       brave-circuit            —       missing from filesystem
+  SKIP (dirty)   brave-planet    1.1G    branch: feat/brave-planet    12 uncommitted changes
+  safe           jolly-river     660M    branch: feat/jolly-river      0 sessions, 5 days old
+  orphaned       brave-circuit   —       missing from filesystem
 
 === PostgreSQL databases to drop ===
-  jolly-river_odin_development (+ _cable, _cache, _queue)    ~13MB
-  happy-nebula_odin_development (+ _cable, _cache, _queue)   ~13MB
+  jolly-river_<app>_development (+ _cable, _cache, _queue)    ~13MB
   ... (N total databases, ~XGB)
 
 === OpenCode DB cleanup ===
-  Delete stale project row: <id>
-  Delete N orphaned sessions for deleted project
-  Update sandboxes list
-  Update global.dat workspaceOrder + lastProjectSession + globalSync.project
+  Update sandboxes list (remove deleted paths)
+  Update global.dat workspaceOrder + lastProjectSession
 ```
 
 Ask: "Delete N safe worktrees and N databases? (dirty ones will be kept)" before proceeding.
 
 ## Step 5: Delete safe worktrees
-
-For each safe worktree, use `git worktree remove --force` from the main repo (not rm -rf):
 
 ```bash
 git -C ~/code/<repo> worktree remove <worktree-path> --force
@@ -83,9 +72,9 @@ git -C ~/code/<repo> worktree remove <worktree-path> --force
 git -C ~/code/<repo> worktree prune
 ```
 
-## Step 6: Drop PostgreSQL databases
+Orphaned tmp-only dirs (not registered git worktrees — contain only a `tmp/` subdir) can be `rm -rf`'d directly.
 
-For each deleted worktree name, drop all 4 database variants:
+## Step 6: Drop PostgreSQL databases
 
 ```bash
 for name in <deleted-worktree-names>; do
@@ -100,68 +89,47 @@ done
 - `<app>_test*` databases
 - Databases for worktrees that still exist
 
-## Step 7: Clean OpenCode database
+## Step 7: Update OpenCode database sandboxes
 
-Do all of these together:
+Update `sandboxes` on **all** project rows for this repo to remove the deleted paths (multiple rows are normal — web service and Desktop each have one, never delete them):
 
 ```bash
-# 1. Delete orphaned sessions for any stale project rows
 sqlite3 ~/.local/share/opencode/opencode.db \
-  "DELETE FROM session WHERE project_id IN ('<stale-id-1>', '<stale-id-2>');"
-
-# 2. Delete stale duplicate project rows (keep newest only)
-sqlite3 ~/.local/share/opencode/opencode.db \
-  "DELETE FROM project WHERE id IN ('<stale-id-1>', '<stale-id-2>');"
-
-# 3. Update sandboxes list on the good project row to remove deleted paths
-sqlite3 ~/.local/share/opencode/opencode.db \
-  "UPDATE project SET sandboxes = '<updated-json>' WHERE id = '<good-id>';"
+  "UPDATE project SET sandboxes = '<updated-json>' WHERE worktree = '/path/to/repo';"
 ```
 
 ## Step 8: Update global.dat
 
-The Desktop app caches project state in `~/Library/Application Support/ai.opencode.desktop/opencode.global.dat`. Must update all three locations while the Desktop app is **closed**:
+Must be done while the Desktop app is **closed**. Ask the user to quit it (Cmd+Q) and verify before writing.
 
 ```python
 import json, os
 
 path = os.path.expanduser('~/Library/Application Support/ai.opencode.desktop/opencode.global.dat')
 data = json.loads(open(path).read())
-
-# 1. globalSync.project - remove stale project entries
-projects = json.loads(data['globalSync.project'])['value']
-projects = [p for p in projects if p['id'] not in stale_ids]
-data['globalSync.project'] = json.dumps({'value': projects})
-
-# 2. layout.page - fix lastProjectSession and workspaceOrder
 layout = json.loads(data['layout.page'])
 
 # Remove lastProjectSession entries pointing to deleted worktrees
 for key in list(layout.get('lastProjectSession', {}).keys()):
     entry = layout['lastProjectSession'][key]
-    if any(deleted in entry.get('directory', '') for deleted in deleted_worktree_names):
+    directory = entry.get('directory', '') if isinstance(entry, dict) else str(entry)
+    if any(d in directory for d in deleted_worktree_names):
         del layout['lastProjectSession'][key]
 
-# Remove deleted worktrees from workspaceOrder
-worktree_path = '/path/to/repo'
-if worktree_path in layout.get('workspaceOrder', {}):
-    layout['workspaceOrder'][worktree_path] = [
-        w for w in layout['workspaceOrder'][worktree_path]
-        if not any(d in w for d in deleted_worktree_names)
-    ]
+# Purge deleted worktrees from workspaceOrder (filter to paths that exist on disk)
+for proj_path, workspaces in layout.get('workspaceOrder', {}).items():
+    layout['workspaceOrder'][proj_path] = [w for w in workspaces if os.path.exists(w)]
 
 data['layout.page'] = json.dumps(layout)
 open(path, 'w').write(json.dumps(data))
 ```
 
-**Ask the user to quit the Desktop app before this step. Verify it's closed before writing.**
+After writing, tell the user to reopen the Desktop app.
 
-After writing global.dat, tell the user to reopen the Desktop app.
+## Safety rules
 
-## Safety rules (never break these)
-
-1. **Never delete a worktree with uncommitted changes** — show it, warn, skip it
-2. **Always delete sessions before deleting project rows** — cascade may not fire
+1. **Never delete a worktree with uncommitted changes**
+2. **Never DELETE project rows** — breaks FK constraints on `session`, causing "Failed to create session" errors; only UPDATE sandboxes
 3. **Always update global.dat while Desktop is closed** — open app overwrites changes
-4. **Always use `git worktree remove` not `rm -rf`** — keeps git refs clean; use `worktree prune` after for any already-missing ones
+4. **Always use `git worktree remove` not `rm -rf`** for registered git worktrees
 5. **Confirm with the user before deleting anything**

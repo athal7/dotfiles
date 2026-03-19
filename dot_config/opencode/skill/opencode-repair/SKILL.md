@@ -46,18 +46,24 @@ The project row has `sandboxes = []` but sessions exist with `directory` pointin
 
 Fix requires three coordinated steps — DB `sandboxes`, disk worktrees, and `global.dat` `workspaceOrder` must all be consistent.
 
-**Fix A: Duplicate stale project rows**
+**Fix A: Multiple project rows — do NOT delete them**
 
-Keep only the most recently updated row; delete the rest:
+Multiple rows for the same `worktree` path is **expected** — the web service and Desktop app each maintain their own row. Deleting any row breaks the FK constraint on `session`, causing "Failed to create session: FOREIGN KEY constraint failed". Instead, update `sandboxes` on all rows:
 
 ```sh
-# Delete stale rows by ID (keep the newest time_updated)
+# Update sandboxes on ALL rows for this worktree
 sqlite3 ~/.local/share/opencode/opencode.db \
-  "DELETE FROM project WHERE id IN ('<stale-id-1>', '<stale-id-2>');"
+  "UPDATE project SET sandboxes = '[\"<path1>\",\"<path2>\"]' WHERE worktree = '/path/to/repo';"
+```
 
-# Verify only one row remains
+**Recovery if you accidentally deleted a project row** (FK errors on session create):
+
+```sh
+# Re-insert the deleted row — get time values from another project row for reference
+NOW=$(date +%s)000
 sqlite3 ~/.local/share/opencode/opencode.db \
-  "SELECT id, sandboxes FROM project WHERE worktree = '/path/to/repo';"
+  "INSERT INTO project (id, worktree, vcs, sandboxes, time_created, time_updated) \
+   VALUES ('<deleted-id>', '/path/to/repo', 'git', '[]', $NOW, $NOW);"
 ```
 
 **Fix B: Missing sandbox worktrees on disk**
@@ -98,7 +104,7 @@ open(path, 'w').write(json.dumps(data))
 After any fix: fully quit (Cmd+Q) and reopen Desktop.
 
 **Notes:**
-- Duplicate rows accumulate when Desktop creates new project entries instead of reusing existing ones — always check for duplicates first
+- Multiple rows per repo is normal (web + Desktop each own one) — never DELETE project rows, only UPDATE sandboxes
 - `lastProjectSession` pointing to a missing directory causes silent blank render — but clearing it alone is not enough if the underlying worktrees are missing
 - `mkdir` is not enough — the worktree must be a real git worktree or Desktop errors on file watching
 - Sessions use a `directory` column (not `sandboxes`) — query `session.directory` to find which worktree paths need to exist
