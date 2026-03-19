@@ -10,7 +10,7 @@
         <string>launch</string>
         <string>openclaw</string>
         <string>--model</string>
-        <string>glm-4.7-flash</string>
+        <string>minimax-m2.7:cloud</string>
         <string>--yes</string>
     </array>
     <key>RunAtLoad</key>
@@ -26,15 +26,7 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
-        <key>OLLAMA_FLASH_ATTENTION</key>
-        <string>1</string>
-        <key>OLLAMA_MAX_LOADED_MODELS</key>
-        <string>1</string>
-        <key>OLLAMA_NUM_PARALLEL</key>
-        <string>2</string>
-        <key>OLLAMA_KEEP_ALIVE</key>
-        <string>30m</string>
+        <string>{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
 </dict>
 </plist>
