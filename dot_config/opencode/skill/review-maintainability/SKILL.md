@@ -21,7 +21,8 @@ The coordinator may include issue details and project context. Use this to:
 5. **Compare UI patterns** — when the diff touches views/frontend, grep for similar pages. Flag if interactions differ from established patterns.
 6. **Read AGENTS.md and CONVENTIONS.md** — confirm findings violate written conventions, not preferences
 7. **Read test files** — check coverage for new behavior
-8. **Determine origin** — `git blame` to confirm issue is from this diff
+8. **Scan for gratuitous whitespace changes** — look at the diff for hunks that only add/remove blank lines, change indentation, or strip trailing whitespace on unrelated lines. Flag each hunk as a nit unless it was clearly required by a surrounding change.
+9. **Determine origin** — `git blame` to confirm issue is from this diff
 
 Output a brief exploration log before findings.
 
@@ -37,7 +38,7 @@ Output a brief exploration log before findings.
 - **Job granularity** — N individual jobs in a loop when one batch job would work, or vice versa
 - **Test coverage** — changed behavior without tests, tests at wrong tier
 - **Test validity** — stubs/mocks targeting methods not in the code path being tested
-- **Minimize diff** — unnecessary formatting changes, unrelated refactors, scope creep
+- **Minimize diff** — unnecessary whitespace changes (blank lines added/removed, trailing whitespace, re-indentation), unnecessary formatting changes, unrelated refactors, scope creep
 
 ## Escalations
 
