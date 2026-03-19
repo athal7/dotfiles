@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.{{ .chezmoi.username }}.openclaw</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/ollama</string>
+        <string>launch</string>
+        <string>openclaw</string>
+        <string>--model</string>
+        <string>glm-4.7-flash</string>
+        <string>--yes</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>WorkingDirectory</key>
+    <string>{{ .chezmoi.homeDir }}/code/assistant</string>
+    <key>StandardOutPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/openclaw.log</string>
+    <key>StandardErrorPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/openclaw.error.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>OLLAMA_FLASH_ATTENTION</key>
+        <string>1</string>
+        <key>OLLAMA_MAX_LOADED_MODELS</key>
+        <string>1</string>
+        <key>OLLAMA_NUM_PARALLEL</key>
+        <string>2</string>
+        <key>OLLAMA_KEEP_ALIVE</key>
+        <string>30m</string>
+    </dict>
+</dict>
+</plist>

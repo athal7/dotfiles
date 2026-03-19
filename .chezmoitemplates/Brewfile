@@ -22,6 +22,7 @@ brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
 brew "mise" # Polyglot version manager (ruby, node, python, rust, etc.)
 brew "neovim" # Modern Vim-based editor
+brew "ollama" # Local LLM runtime (OpenClaw personal assistant)
 brew "opencode" # AI coding assistant CLI
 brew "opencode-pilot" # Automation daemon for OpenCode - polls issues and spawns sessions
 brew "openssl" # TLS/SSL cryptography library
