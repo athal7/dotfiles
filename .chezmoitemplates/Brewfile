@@ -1,9 +1,7 @@
 tap "github/gh"
 tap "athal7/opencode-pilot"
-tap "steipete/tap"
 
 # CLI tools - descriptions after # are parsed into AGENTS.md
-brew "ast-grep" # AST-based code search and transformation (pattern: `console.log($$$)`)
 brew "autojump" # Directory jump based on frecency
 brew "bat" # Better cat with syntax highlighting
 brew "chezmoi" # Dotfiles manager
@@ -14,7 +12,6 @@ brew "docker-compose" # Multi-container Docker applications
 brew "ffmpeg" # Video/audio processing
 brew "gh" # GitHub CLI for issues, PRs, repos
 brew "git-spice" # Manage stacked Git branches
-brew "googleworkspace-cli" # Google Workspace CLI for Drive, Gmail, Calendar, Sheets, Docs, Chat (gws)
 brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying
 brew "k9s" # Terminal UI for Kubernetes clusters
@@ -31,7 +28,6 @@ brew "playwright-mcp" # Browser automation MCP server
 brew "ripgrep" # Fast recursive grep (rg) - required by OpenCode
 brew "starship" # Cross-shell prompt
 brew "talisman" # Git secrets scanner (pre-commit hook)
-brew "tmux" # Terminal multiplexer
 brew "wakatime-cli" # Time tracking for developers
 brew "watch" # Run commands periodically
 brew "worktrunk" # Git worktree switcher (wt switch, wt list)
@@ -44,4 +40,3 @@ cask "mac-mouse-fix" # Mouse customization utility
 cask "opencode-desktop" # AI coding assistant desktop app
 cask "stats" # Menu bar system monitor (CPU, memory, disk, network)
 cask "tailscale-app" # Mesh VPN for secure networking
-cask "visual-studio-code" # Code editor
