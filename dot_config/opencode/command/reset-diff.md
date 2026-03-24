@@ -2,7 +2,9 @@
 description: Reset "Modified Files" sidebar to match actual git state
 ---
 
-Reset the "Modified Files" panel so it reflects `git diff HEAD` instead of stale internal snapshots. Run this after committing when the sidebar still shows committed files.
+Reset the "Modified Files" panel so it reflects only this branch's changes against the default branch — not commits merged/rebased in from main. Run this after committing, rebasing, or merging when the sidebar shows stale or noisy diffs.
+
+The baseline is set to `git merge-base HEAD <default-branch>`, so the panel shows exactly what this branch contributed, regardless of how it was updated against the upstream.
 
 The session is always auto-detected from the current working directory (most recently updated session matching `pwd`).
 
@@ -88,6 +90,8 @@ rm -f "$UNCOMMITTED" "$TODELETE"
 
 ### 3. Create baseline snapshots
 
+The baseline (`FROM`) is the merge-base of HEAD with the default branch, so the panel shows only this branch's unique changes — not commits merged/rebased in from main.
+
 Run in one bash call, using `workdir` set to the session's directory:
 
 ```bash
@@ -104,11 +108,31 @@ mkdir -p "$SNAPSHOT_GIT/objects/info"
 grep -qxF "$REAL_GIT/objects" "$SNAPSHOT_GIT/objects/info/alternates" 2>/dev/null || \
   echo "$REAL_GIT/objects" >> "$SNAPSHOT_GIT/objects/info/alternates"
 
-# FROM = HEAD tree, TO = working tree
+# Detect default branch (prefer origin/HEAD, fall back to main, then master)
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+if [ -z "$DEFAULT_BRANCH" ]; then
+  for b in main master; do
+    if git rev-parse --verify "origin/$b" >/dev/null 2>&1; then
+      DEFAULT_BRANCH="$b"; break
+    fi
+  done
+fi
+[ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH="main"
+
+# FROM = merge-base of HEAD with default branch (shows only this branch's changes)
+# Falls back to HEAD tree if merge-base fails (e.g. no remote, initial branch)
 if git rev-parse --verify HEAD >/dev/null 2>&1; then
-  FROM=$(git rev-parse HEAD^{tree})
+  MERGE_BASE=$(git merge-base HEAD "origin/$DEFAULT_BRANCH" 2>/dev/null || git merge-base HEAD "$DEFAULT_BRANCH" 2>/dev/null)
+  if [ -n "$MERGE_BASE" ]; then
+    FROM=$(git rev-parse "${MERGE_BASE}^{tree}")
+    echo "baseline: merge-base with $DEFAULT_BRANCH (${MERGE_BASE:0:12})"
+  else
+    FROM=$(git rev-parse HEAD^{tree})
+    echo "baseline: HEAD (no merge-base found, default branch: $DEFAULT_BRANCH)"
+  fi
 else
   FROM=$(git hash-object -t tree /dev/null)
+  echo "baseline: empty tree (no commits)"
 fi
 git --git-dir "$SNAPSHOT_GIT" --work-tree "$WORKTREE" read-tree "$FROM"
 git --git-dir "$SNAPSHOT_GIT" --work-tree "$WORKTREE" add -A -- .
@@ -131,20 +155,35 @@ echo "baseline: ${FROM:0:12} -> ${TO:0:12}"
 
 ### 4. Write diff manifest and update summary
 
-Build the session_diff JSON from real git state and update the session row. All in one bash call (use `workdir` set to the session's directory):
+Build the session_diff JSON using the same merge-base as step 3. All in one bash call (use `workdir` set to the session's directory):
 
 ```bash
 DB=~/.local/share/opencode/opencode.db
 SESSION='<SESSION_ID>'
 STORAGE=~/.local/share/opencode/storage/session_diff/${SESSION}.json
 
+# Detect default branch (same logic as step 3)
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+if [ -z "$DEFAULT_BRANCH" ]; then
+  for b in main master; do
+    if git rev-parse --verify "origin/$b" >/dev/null 2>&1; then
+      DEFAULT_BRANCH="$b"; break
+    fi
+  done
+fi
+[ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH="main"
+
+# Use merge-base as diff base (same as step 3 baseline)
+MERGE_BASE=$(git merge-base HEAD "origin/$DEFAULT_BRANCH" 2>/dev/null || git merge-base HEAD "$DEFAULT_BRANCH" 2>/dev/null)
+DIFF_BASE=${MERGE_BASE:-HEAD}
+
 # Collect name-status upfront into a temp file for O(1) lookups
 STATFILE=$(mktemp)
-git -c core.quotepath=false diff --no-ext-diff --no-renames --name-status HEAD -- . 2>/dev/null > "$STATFILE"
+git -c core.quotepath=false diff --no-ext-diff --no-renames --name-status "$DIFF_BASE" -- . 2>/dev/null > "$STATFILE"
 
 {
-  # Tracked changes
-  git -c core.quotepath=false diff --no-ext-diff --no-renames --numstat HEAD -- . 2>/dev/null | \
+  # Tracked changes vs merge-base
+  git -c core.quotepath=false diff --no-ext-diff --no-renames --numstat "$DIFF_BASE" -- . 2>/dev/null | \
     awk -F'\t' 'NF>=3 { a=($1=="-"?0:$1); d=($2=="-"?0:$2); print $3"\t"a"\t"d }' | \
     while IFS=$'\t' read -r f a d; do
       st=$(awk -F'\t' -v file="$f" '$2==file { if ($1~/^A/) print "added"; else if ($1~/^D/) print "deleted"; else print "modified"; exit }' "$STATFILE")
