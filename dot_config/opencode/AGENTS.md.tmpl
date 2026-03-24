@@ -2,33 +2,9 @@
 
 ## Development Workflow
 
-**Plan before building.** For any non-trivial task (more than a single obvious change), create a plan before writing implementation code. A plan must include: (1) what files will be changed and why, (2) the approach and key decisions, (3) risks or open questions. After creating the plan, spawn the `expert` agent to review it. Only proceed to implementation after the expert confirms the plan is sound. Skip this for painfully simple tasks (typo fixes, single-line config changes, etc.).
-
-**Check in at natural breakpoints.** Complete a logical group of related todos before stopping. Only pause for approval when: (1) the next step is destructive or irreversible, (2) you are genuinely uncertain how to proceed, or (3) you have finished all todos. Do not stop after every single todo — maintain momentum unless a decision is needed. If stuck, ask for help.
-
-**Track progress with todos.** Before ending your response: ensure current work is saved, update todo status, and never abandon work silently — report status and next steps.
-
-**Research before asking.** Explore the codebase, read files, check git history, query team-context MCP. Only ask the user when information isn't discoverable.
-
-**Issue tracking.** When working in a repository that uses GitHub Issues or Linear, always find or create an issue for the work at hand before starting. Search first (`gh issue list --search "..."` or Linear MCP); create only if no suitable issue exists. Link your work to the issue (branch name, PR description, commit message).
-
-**Scope discipline.** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features. If you notice something worth fixing that is out of scope, mention it but do not change it.
-
-**Architecture decisions:** Load the `architecture` skill whenever a meaningful design decision is at stake — multiple valid approaches, hard to reverse, or crosses system boundaries.
-
-**TDD (Strict).** Load the `tdd` skill at the start of any implementation task and follow its red/green/refactor/commit loop without exception. Do not write implementation before a failing test exists — ever.
-
-**After completing all todos:** Load the `commit` skill — it runs stage → test → review → iterate → commit automatically. Then load the `push` skill for approval and CI watching. This is a single approval flow at push time, not two separate gates.
+**Load the `process` skill** at the start of any non-trivial implementation task. It defines the full phase graph (plan → expert review → implement → verify → commit) and survives context pressure by being re-loadable.
 
 **Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval. If no response is possible (background task, automation), do NOT proceed. Read-only operations don't require confirmation.
-
-**PR reviews vs implementation.** "Review this PR" means: analyze and draft a written review — do NOT submit to GitHub or implement fixes unless explicitly asked.
-
-**Conflict resolution on reviewed PRs.** When a PR has already received reviews and has conflicts with the base branch, use `git merge` (not `git rebase`) to resolve them. Rebasing rewrites history and invalidates existing review comments, causing reviewers to lose context. Merging preserves the commit history reviewers have already seen.
-
-**Worktree branch conflicts.** When working in a git worktree and the target branch is already checked out in another worktree, do NOT use the existing worktree. Instead: (1) remove the old worktree (`git worktree remove <path> --force`), then (2) check out the branch in the current worktree. This ensures work happens in the correct context without leaving stale worktrees behind.
-
-**Never commit globally-ignored files.** Files in `~/.config/git/ignore` are intentionally untracked. Before staging, verify with `git check-ignore <file>`. Key examples: `.talismanrc`, `.opencode/context-log.md`.
 
 ## Commands
 
@@ -42,9 +18,3 @@ The following tools are available on this machine:
 |------|---------|
 {{- template "tools" . }}
 **Prefer these tools** over alternatives when available. For example, use `bat` instead of `cat` for file preview, `jq` for JSON parsing, and `gh` for all GitHub operations.
-
-## Tool Tips
-
-**PTY** (when enabled): Load the `pty` skill when working with background processes.
-
-**GitHub PR Inline Comments**: Load the `gh-pr-inline` skill when posting inline comments on PRs or responding to review feedback. When addressing feedback: resolve threads you fixed (no reply needed), reply only to threads you're not addressing.

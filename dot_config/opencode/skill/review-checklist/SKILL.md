@@ -3,6 +3,37 @@ name: review-checklist
 description: Code review checklist - coordinates specialist reviewers for thorough analysis
 ---
 
+## PR Review Rules
+
+**"Review this PR" means:** analyze and draft a written review — do NOT submit to GitHub or implement fixes unless explicitly asked.
+
+**Conflict resolution on reviewed PRs:** When a PR has reviews and conflicts with the base branch, use `git merge` (not `git rebase`) to resolve them. Rebasing rewrites history and invalidates existing review comments.
+
+**Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting to GitHub — then STOP and wait for explicit approval. Load the `gh-pr-inline` skill when posting inline comments or responding to review feedback.
+
+---
+
+## PR Checkout
+
+**If reviewing a PR** (URL or number provided): check out the PR branch locally before doing anything else.
+
+```bash
+gh pr checkout <PR_NUMBER>
+```
+
+This ensures local files reflect the PR's code, enabling accurate diff panel display and local file reads. Save the original branch first so you can restore it if needed:
+
+```bash
+ORIGINAL_BRANCH=$(git branch --show-current)
+gh pr checkout <PR_NUMBER>
+# ... review ...
+git checkout $ORIGINAL_BRANCH  # restore when done
+```
+
+If `gh pr checkout` fails (e.g., the repo isn't local), fall back to `gh pr diff` for the diff and `gh pr view` for metadata.
+
+---
+
 ## Context Gathering
 
 **Read `.opencode/context-log.md`** first for issue context and build history.
@@ -216,9 +247,9 @@ After merging specialist findings, the coordinator adds these checks directly (n
 
 2. **Runtime verification required** — if the diff modifies views, templates, controllers, frontend code, or UI interactions, **run QA automatically** after all findings are merged:
 
-   1. **Record the current branch:** `git branch --show-current` (save as `$ORIGINAL_BRANCH`)
-   2. **Check out the code under review:**
-      - PR: `gh pr checkout $PR_NUMBER`
+   1. **Record the current branch** (save as `$ORIGINAL_BRANCH`) — already done if reviewing a PR (see PR Checkout section above)
+   2. **Check out the code under review** (if not already done):
+      - PR: already checked out via the PR Checkout step
       - Branch: `git checkout $BRANCH_NAME`
       - Commit/staged/uncommitted: already checked out — skip
    3. **Run `/qa`** — pass relevant context about which flows were changed (e.g., "login form was modified")

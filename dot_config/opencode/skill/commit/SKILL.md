@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Pre-commit review gate, semantic commit format, and squashing guidance
+description: Semantic commit format, branch naming, squashing guidance, and post-commit memory check
 ---
 
 ## Before Every Commit
@@ -8,8 +8,8 @@ description: Pre-commit review gate, semantic commit format, and squashing guida
 Run these steps automatically — do not ask the user before starting:
 
 1. **Stage all changes**: `git add -A`
-2. **Run the full test suite** — unit, integration, e2e, and system tests. Do not commit with failing tests.
-3. **Run `/review staged`** — if it returns blockers, fix them and re-run. Repeat until no blockers.
+2. **Check for globally-ignored files**: `git check-ignore <files>` — do NOT stage files in `~/.config/git/ignore`. Key examples: `.talismanrc`, `.opencode/context-log.md`.
+3. **Run the full test suite** — unit, integration, e2e, and system tests. Do not commit with failing tests.
 4. **Commit** — create the commit immediately. Do not ask for approval. (Pushing is where approval happens.)
 
 ## Format
