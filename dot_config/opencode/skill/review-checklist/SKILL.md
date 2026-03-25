@@ -41,11 +41,11 @@ If `gh pr checkout` fails (e.g., the repo isn't local), fall back to `gh pr diff
 **Extract issue IDs** from branch name or PR, then fetch details:
 1. `git branch --show-current` — parse for `ENG-123`, `PROJ-456`, `#123`, `gh-123`
 2. For PRs: check PR body and linked issues via `gh pr view --json body,title`
-3. Fetch: Linear → `team-context_get_issue`, GitHub → `gh issue view`
+3. Fetch: Linear → `linear_get_issue`, GitHub → `gh issue view`
 4. **Fetch project context** — if the Linear issue belongs to a project, also fetch:
-   - `team-context_get_project` — project metadata, goals, status
-   - `team-context_get_project_body` — full project description with scope, non-goals, and design decisions
-   - `team-context_get_milestone` — current milestone with target date and deliverables (if applicable)
+   - `linear_get_project` — project metadata, goals, status
+   - `linear_get_project_body` — full project description with scope, non-goals, and design decisions
+   - `linear_get_milestone` — current milestone with target date and deliverables (if applicable)
 
    Project context reveals the *why* behind the issue — business goals, related features, constraints, and existing decisions that the diff should align with. Include it in the payload to correctness and maintainability agents.
 
@@ -134,8 +134,8 @@ Prepare a **base payload** containing:
 Prepare **extended context**:
 - **Project rules** (AGENTS.md, CONVENTIONS.md content) — for **all** agents
 - **Issue context** (requirements, acceptance criteria, project goals) — for correctness and maintainability agents
-  - Use the **actual fetched text** from `team-context_get_issue` / `gh issue view` — not the placeholder.
-  - If the issue belongs to a Linear project, include the project body (`team-context_get_project_body`) and milestone context. This gives reviewers the broader product vision — business goals, related features, existing decisions, and constraints that should inform the review.
+  - Use the **actual fetched text** from `linear_get_issue` / `gh issue view` — not the placeholder.
+  - If the issue belongs to a Linear project, include the project body (`linear_get_project_body`) and milestone context. This gives reviewers the broader product vision — business goals, related features, existing decisions, and constraints that should inform the review.
   - If no issue was found, write "No issue context available."
 - **Prior reviews** (PR only) — for **all** agents; include the full prior review summary
 

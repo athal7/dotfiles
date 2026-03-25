@@ -12,15 +12,8 @@ defaults:
 repos_dir: ~/code
 
 sources:
-  # Linear tickets assigned to me in 0DIN-Devs team (via team-context MCP)
+  # Linear tickets assigned to me in 0DIN-Devs team
   - preset: linear/my-issues
-    tool:
-      mcp: team-context
-      name: list_issues
-    args:
-      team: "0DIN-Devs"
-      assignee: "me"
-      state: "in_progress"
     repos: [0din-ai/odin]
 
   # GitHub PRs where my review is requested
@@ -31,9 +24,3 @@ sources:
 
   # GitHub issues assigned to me
   - preset: github/my-issues
-
-tools:
-  team-context:
-    response_key: issues
-    mappings:
-      body: description

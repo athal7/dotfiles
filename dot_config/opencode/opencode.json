@@ -81,14 +81,20 @@
     "opencode-pty@^0.1",
     "opencode-wakatime@^1.2"
   ],
+  "tools": {
+    "linear_*": false,
+    "figma_*": false
+  },
   "mcp": {
-    "team-context": {
+    "linear": {
       "type": "remote",
-      "url": "http://localhost:8100/mcp"
+      "url": "https://mcp.linear.app/mcp",
+      "enabled": false
     },
-    "playwright": {
+    "figma": {
       "type": "remote",
-      "url": "http://localhost:8101/mcp"
+      "url": "https://mcp.figma.com/mcp",
+      "enabled": false
     },
     "context7": {
       "type": "remote",

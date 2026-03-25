@@ -2,7 +2,7 @@
 description: QA verification using browser automation
 ---
 
-Perform QA verification using Playwright browser automation.
+Perform QA verification using Firefox DevTools browser automation.
 
 **Request:** $ARGUMENTS
 
@@ -20,7 +20,7 @@ Perform QA verification using Playwright browser automation.
 3. **Visual check**: Screenshot key states
 4. **Accessibility**: Tab navigation, focus states
 
-Use Playwright MCP tools. Check project AGENTS.md for selectors/credentials.
+Use firefox-devtools MCP tools. Check project AGENTS.md for selectors/credentials.
 
 ## Resilience
 
