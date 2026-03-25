@@ -12,6 +12,11 @@
     "plan": {
       "textVerbosity": "low",
       "temperature": 0.3,
+      "tools": {
+        "linear_get_*": true,
+        "linear_list_*": true,
+        "figma_get_*": true
+      },
       "permission": {
         "bash": {
           "*": "deny",
