@@ -41,7 +41,10 @@ After every successful push, automatically create or update a draft PR (default 
    - Create a draft PR: `gh pr create --draft --title "..." --body "..."`
    - Use commits from the branch to populate title/body
 3. If a PR already exists (any state):
-   - Leave it as-is; do not update the PR state
+   - Compare the current branch commits against the PR's existing title/body
+   - If there is a material change (new feature scope, different fix, renamed component, changed API, etc.), update the PR: `gh pr edit <number> --title "..." --body "..."`
+   - Minor additions (tests, docs, formatting) do not warrant an update
+   - Do not update the PR state (draft → ready or vice versa)
 4. Once PR is created/confirmed, proceed to CI watching
 
 ## After Draft PR — Watch CI
