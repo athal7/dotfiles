@@ -15,6 +15,7 @@ brew "gh" # GitHub CLI for issues, PRs, repos
 brew "git-spice" # Manage stacked Git branches
 brew "jc" # Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
 brew "jq" # JSON processing and querying
+brew "graphqurl" # GraphQL CLI — query any GraphQL API with variables support (gq)
 brew "k9s" # Terminal UI for Kubernetes clusters
 brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI

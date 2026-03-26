@@ -3,27 +3,17 @@ name: project-update
 description: Compose and publish a Linear project status update by aggregating issue progress and meeting context
 ---
 
-Compose a project status update from Linear issues and Granola meeting context, then publish via the Linear MCP.
+Compose a project status update from Linear issues and Granola meeting context, then publish via the Linear API. Load the `linear` skill for auth and `gq` usage.
 
 ## Steps
 
 ### 1. Identify the project
 
-Get the project name or ID from the user or current context. Then fetch:
-
-```
-linear_get_project(query: "<project name>")
-linear_get_project_body(project: "<project name>")  # goals, scope, success metrics
-linear_list_milestones(project: "<project name>")   # current milestone + target date
-```
+Get the project name or ID from the user or current context. Then fetch project metadata, goals, scope, milestones, and current milestone target date using `gq`. Consult the Linear API docs for the `project` and `projectMilestones` queries.
 
 ### 2. Gather issues by state
 
-```
-linear_list_issues(project: "<project name>", state: "completed")   # done this period
-linear_list_issues(project: "<project name>", state: "in_progress") # in flight
-linear_list_issues(project: "<project name>", state: "blocked")     # blockers
-```
+Use `gq` to fetch issues filtered by project and state: completed (done this period), started (in flight), and any marked as blocked. Check `updatedAt` to identify aged blockers (5+ days in blocked state).
 
 Flag issues as "aged blockers" if they have been in a blocked state for more than 5 days (check `updatedAt`).
 
@@ -79,15 +69,7 @@ Keep it to 150–250 words. Focus on outcomes and blockers, not task lists.
 
 ### 6. Get approval and publish
 
-Show the draft to the user. After approval:
-
-```
-linear_create_project_update(
-  project: "<project name>",
-  health: "onTrack|atRisk|offTrack",
-  body: "<markdown body>"
-)
-```
+Show the draft to the user. After approval, use `gq` to call the `projectUpdateCreate` mutation with the project ID, health (`onTrack|atRisk|offTrack`), and body. Consult the Linear API docs for the exact mutation signature.
 
 ## Tips
 

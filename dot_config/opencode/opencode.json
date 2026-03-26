@@ -12,11 +12,6 @@
     "plan": {
       "textVerbosity": "low",
       "temperature": 0.3,
-      "tools": {
-        "linear_get_*": true,
-        "linear_list_*": true,
-        "figma_get_*": true
-      },
       "permission": {
         "bash": {
           "*": "deny",
@@ -86,21 +81,7 @@
     "opencode-pty@^0.1",
     "opencode-wakatime@^1.2"
   ],
-  "tools": {
-    "linear_*": false,
-    "figma_*": false
-  },
   "mcp": {
-    "linear": {
-      "type": "remote",
-      "url": "https://mcp.linear.app/mcp",
-      "enabled": false
-    },
-    "figma": {
-      "type": "remote",
-      "url": "https://mcp.figma.com/mcp",
-      "enabled": false
-    },
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp"
