@@ -1,10 +1,9 @@
 ---
+name: qa
 description: QA verification using browser automation
 ---
 
 Perform QA verification using Firefox DevTools browser automation.
-
-**Request:** $ARGUMENTS
 
 ## Setup
 

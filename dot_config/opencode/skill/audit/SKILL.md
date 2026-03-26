@@ -1,19 +1,18 @@
 ---
+name: audit
 description: Review and optimize agent instructions, skills, and commands
 ---
 
 Audit the OpenCode agent configuration for this dotfiles repo.
 
-$ARGUMENTS
-
 ## Instruction Hierarchy
 
 ```
-Base system prompt (upstream)  ← Built into OpenCode, auto-updated
-  + AGENTS.md (global)         ← Universal rules, always loaded
-  + opencode.json              ← Agent config (models, permissions, temperature)
-  + skill/*.md                 ← On-demand, loaded via skill tool
-  + command/*.md               ← Loaded on /command invocation
+Base system prompt (upstream)  <- Built into OpenCode, auto-updated
+  + AGENTS.md (global)         <- Universal rules, always loaded
+  + opencode.json              <- Agent config (models, permissions, temperature)
+  + skill/*.md                 <- On-demand, loaded via skill tool
+  + command/*.md               <- Loaded on /command invocation
 ```
 
 ## Where to Put Things
@@ -51,7 +50,7 @@ For each rule in AGENTS.md, ask:
 
 ### 2. Context Budget
 
-AGENTS.md should be lean — it's loaded on every conversation.
+AGENTS.md should be lean -- it's loaded on every conversation.
 - Count lines: `wc -l dot_config/opencode/AGENTS.md.tmpl`
 - Move reference content to skills if it's growing
 
@@ -59,7 +58,7 @@ AGENTS.md should be lean — it's loaded on every conversation.
 
 - Check for duplicate instructions across files
 - Skills shouldn't duplicate what's in AGENTS.md
-- Skills auto-appear in the skill tool listing — no need to reference them elsewhere
+- Skills auto-appear in the skill tool listing -- no need to reference them elsewhere
 
 ### 4. Effectiveness Test
 

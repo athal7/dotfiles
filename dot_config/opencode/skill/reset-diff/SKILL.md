@@ -1,4 +1,5 @@
 ---
+name: reset-diff
 description: Reset "Modified Files" sidebar to match actual git state
 ---
 

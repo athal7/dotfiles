@@ -40,8 +40,7 @@
 **Global config** (`~/.config/opencode/`):
 - `opencode.json` - models, MCPs, agent config (managed by chezmoi)
 - `AGENTS.md` - instructions for all agents
-- `command/` - slash commands (`/qa`, `/review`, `/todo`)
-- `skill/` - on-demand skills (loaded via skill tool)
+- `skill/` - on-demand skills (invokable via `/skill-name` or loaded by the agent)
 
 **Per-project config** (`.opencode/` in repo root):
 - `command/` - project-specific slash commands
@@ -52,13 +51,8 @@
 | Location | Purpose |
 |----------|---------|
 | `dot_config/opencode/opencode.json` | Agent config (models, permissions, temperature) |
-| `dot_config/opencode/AGENTS.md.tmpl` | Universal rules (safety, CLI tools, task completion) - auto-generates command list |
-| `dot_config/opencode/command/*.md` | Slash commands (thin orchestrators that load skills) |
-| `dot_config/opencode/skill/*/SKILL.md` | On-demand skills (loaded via skill tool when needed) |
-
-**Adding a new command**:
-1. Create `.md` file in `command/` with YAML frontmatter including `description:`
-2. Run `chezmoi apply` - command list auto-updates in AGENTS.md
+| `dot_config/opencode/AGENTS.md.tmpl` | Universal rules (safety, CLI tools, task completion) |
+| `dot_config/opencode/skill/*/SKILL.md` | On-demand skills (invokable via `/skill-name` or loaded by the agent) |
 
 **Adding a new skill**:
 1. Create `skill/<name>/SKILL.md` with `name:` and `description:` in frontmatter

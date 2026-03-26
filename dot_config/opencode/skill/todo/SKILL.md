@@ -1,10 +1,9 @@
 ---
+name: todo
 description: Add item(s) to the todo list without interrupting current work
 ---
 
 Add the specified item(s) to your todo list. Do NOT stop or change what you're currently working on.
-
-**Items to add:** $ARGUMENTS
 
 ## Instructions
 

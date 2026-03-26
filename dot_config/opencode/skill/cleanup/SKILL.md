@@ -1,14 +1,15 @@
 ---
+name: cleanup
 description: Clean up old worktrees, databases, and devcontainer resources
 ---
 
 Clean up stale workspaces, PostgreSQL databases, and Docker resources to reclaim disk space.
 
-`$ARGUMENTS` may include a project name (e.g. `odin`) and/or flags like `--dry-run`, `--force`, `--older-than=N`, `--db-only`, `--docker-only`.
+Arguments may include a project name (e.g. `odin`) and/or flags like `--dry-run`, `--force`, `--older-than=N`, `--db-only`, `--docker-only`.
 
 ## Step 1: Identify the target project
 
-If a project name is given in `$ARGUMENTS`, find the matching repo path under `~/code/`. Otherwise ask the user which project to clean up before proceeding.
+If a project name is given, find the matching repo path under `~/code/`. Otherwise ask the user which project to clean up before proceeding.
 
 Find the project's worktree directory ID:
 
