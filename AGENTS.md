@@ -76,6 +76,6 @@
 
 ## Minutes (Meeting Memory)
 
-**Granola history** (125 meetings, Dec 2025–Mar 2026) was imported via a custom conversion script that reads `~/Library/Application Support/Granola/cache-v6.json` (`.cache.state.documents`) and writes the `granola-archivist` markdown format that `minutes import granola` expects. The script is at `dot_config/opencode/scripts/granola-export.py` — re-run it if you ever need to re-import or migrate to a new machine.
+**Granola history** (125 meetings, Dec 2025–Mar 2026) was imported by reading `~/Library/Application Support/Granola/cache-v6.json` (`.cache.state.documents`) and converting to the `granola-archivist` markdown format that `minutes import granola` expects. To re-import on a new machine: read each doc's `title`, `created_at`, `notes_markdown`, and `people` fields and write markdown files with `# Meeting: <title>`, `Date: <YYYY-MM-DD @ HH:MM>`, `Attendees: <names>`, `## Your Notes`, and `## Transcript` sections into `~/.granola-archivist/output/`, then run `minutes import granola`.
 
 **Imported meetings have notes but no transcripts** — Granola only stores transcripts server-side, not in the local cache.
