@@ -27,17 +27,7 @@ minutes_search_meetings query="PROJECT_NAME"
 
 Read the top 2–3 most recent relevant meetings using `minutes_get_meeting` to extract decisions and blockers.
 
-### 4. Calculate health
-
-| Condition | Health |
-|-----------|--------|
-| Any aged blockers (5+ days) | `atRisk` |
-| Completion < 20% with < 2 weeks to milestone | `offTrack` |
-| No blockers, progress on track | `onTrack` |
-
-Default to `onTrack` if no clear signal.
-
-### 5. Draft and publish
+### 4. Draft and publish
 
 Use the **Project Status Update** document template in Linear for the body structure. Fill it with the aggregated data, keep it to 150–250 words, focus on outcomes and blockers not task lists. Show the draft to the user, then publish via `projectUpdateCreate` with the project ID, health (`onTrack|atRisk|offTrack`), and body.
 
