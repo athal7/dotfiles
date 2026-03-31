@@ -1,75 +1,52 @@
 ---
 name: meetings
-description: Search and read Granola meeting notes via REST API — auth, pagination, transcript and notes access
+description: Search and read Minutes meeting notes via MCP — list, search, transcript and notes access
 ---
 
-Query Granola meeting notes using the Granola REST API. Granola stores auth tokens locally — no separate credentials needed.
-
-## Auth
-
-Read the Bearer token from Granola's local Supabase file:
-
-```bash
-GRANOLA_TOKEN=$(jq -r '.workos_tokens | fromjson | .access_token' \
-  ~/Library/Application\ Support/Granola/supabase.json)
-```
-
-If this returns `null` or the request returns 401, the token has expired. Open the Granola app, wait ~10 seconds for it to refresh, then re-run.
+Query meeting notes using the Minutes MCP server (`mcp:minutes`). All tools are available as `minutes_*`.
 
 ## List recent meetings
 
-```bash
-curl -s -X POST "https://api.granola.ai/v2/get-documents" \
-  -H "Authorization: Bearer $GRANOLA_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"limit": 20, "offset": 0, "include_last_viewed_panel": false}' \
-  | jq '.docs[] | {id: .id, title: .title, date: .created_at}'
 ```
+minutes_list_meetings
+```
+
+Returns recent meetings with titles, dates, and slugs.
 
 ## Search meetings by keyword
 
-Filter client-side with `jq` — Granola's API has no server-side search:
-
-```bash
-curl -s -X POST "https://api.granola.ai/v2/get-documents" \
-  -H "Authorization: Bearer $GRANOLA_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"limit": 100, "offset": 0, "include_last_viewed_panel": false}' \
-  | jq --arg q "standup" '.docs[] | select(.title | test($q; "i")) | {id: .id, title: .title, date: .created_at}'
+```
+minutes_search_meetings query="pricing"
 ```
 
-For broader search (titles + attendees + notes), increase `limit` to 100 and chain multiple `select` conditions.
+Full-text search across all meetings, transcripts, and notes.
 
-## Get meeting panels (notes)
+## Get a specific meeting
 
-Each meeting has one or more panels. The `content` field is either a string or a ProseMirror JSON doc.
-
-```bash
-# First get the document ID from the list, then:
-curl -s "https://api.granola.ai/v1/get-document-panels?document_id=DOC_ID" \
-  -H "Authorization: Bearer $GRANOLA_TOKEN" \
-  | jq '.panels[] | {slug: .template_slug, content: .content}'
+```
+minutes_get_meeting slug="2026-03-25-standup"
 ```
 
-## Get meeting transcript
+Returns the full meeting markdown — summary, action items, decisions, and transcript.
 
-```bash
-curl -s "https://api.granola.ai/v1/get-transcript?document_id=DOC_ID" \
-  -H "Authorization: Bearer $GRANOLA_TOKEN" \
-  | jq '.segments[] | {speaker: (if .source == "microphone" then "Me" else "Them" end), text: .text}'
-```
+## Common queries
 
-## Response structure
+- **Open action items across all meetings:** `minutes_list_meetings` then check `minutes://actions/open` resource
+- **What did someone promise?** `minutes_search_meetings query="Alex pricing"`
+- **Meetings about a project:** `minutes_search_meetings query="PROJECT_NAME"`
+- **Cross-meeting research:** `minutes_research_topic topic="onboarding"`
+- **Person profile:** `minutes_get_person_profile name="Sarah"`
 
-Each document has:
-- `id` — UUID
-- `title` — meeting title
-- `created_at` — ISO timestamp
-- `people.attendees[]` — `{name, email}` (may also have `details.person.name.fullName`)
+## Resources
+
+| URI | Contents |
+|-----|----------|
+| `minutes://meetings/recent` | Recent meetings list |
+| `minutes://actions/open` | All open action items |
+| `minutes://meetings/{slug}` | Specific meeting by slug |
 
 ## Tips
 
-- Granola has no server-side full-text search — pull a large batch and filter with `jq`
-- For date filtering: `select(.created_at >= "2026-01-01")`
-- To find meetings about a project: search by project name in title AND attendee names
-- For Slack context around a meeting topic, load the `slack` skill and search alongside Granola
+- `search_meetings` supports full-text — no need to pull all meetings and filter client-side
+- For Slack context around a meeting topic, load the `slack` skill and search alongside Minutes
+- Action items have `assignee`, `task`, `due`, and `status` fields in YAML frontmatter

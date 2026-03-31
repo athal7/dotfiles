@@ -17,7 +17,6 @@ permission:
     "gh issue *": allow
     "gh api *": allow
     "curl *slack.com*": allow
-    "curl *granola.ai*": allow
     "curl *elastic*": allow
     "curl *linear.app/graphql*": allow
 ---

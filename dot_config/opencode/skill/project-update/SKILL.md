@@ -3,7 +3,7 @@ name: project-update
 description: Compose and publish a Linear project status update by aggregating issue progress and meeting context
 ---
 
-Compose a project status update from Linear issues and Granola meeting context, then publish via the Linear API. Load the `linear` skill for auth and `gq` usage.
+Compose a project status update from Linear issues and Minutes meeting context, then publish via the Linear API. Load the `linear` skill for auth and `gq` usage.
 
 ## Steps
 
@@ -21,19 +21,11 @@ Flag issues as "aged blockers" if they have been in a blocked state for more tha
 
 Load the `meetings` skill and search for recent meetings mentioning the project:
 
-```bash
-GRANOLA_TOKEN=$(jq -r '.workos_tokens | fromjson | .access_token' \
-  ~/Library/Application\ Support/Granola/supabase.json)
-
-curl -s -X POST "https://api.granola.ai/v2/get-documents" \
-  -H "Authorization: Bearer $GRANOLA_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"limit": 100, "offset": 0, "include_last_viewed_panel": false}' \
-  | jq --arg q "PROJECT_NAME" '.docs[] | select(.title | test($q; "i")) | {id, title, date: .created_at}' \
-  | head -20
+```
+minutes_search_meetings query="PROJECT_NAME"
 ```
 
-Read panels for the top 2–3 most recent relevant meetings to extract decisions and blockers.
+Read the top 2–3 most recent relevant meetings using `minutes_get_meeting` to extract decisions and blockers.
 
 ### 4. Calculate health
 
