@@ -73,3 +73,9 @@
 **Figma's `mcp.figma.com/mcp`** returns HTTP 405 on GET (not 404) — it is a live MCP endpoint. The 405 is expected; it requires POST per the MCP spec.
 
 **New credentials** from the team-context migration live in `~/.env` (not chezmoi-managed): `LINEAR_API_KEY`, `ES_URL`, `ES_API_KEY`, `FIGMA_ACCESS_TOKEN`, `SLACK_USER_TOKEN`.
+
+## Minutes (Meeting Memory)
+
+**Granola history** (125 meetings, Dec 2025–Mar 2026) was imported via a custom conversion script that reads `~/Library/Application Support/Granola/cache-v6.json` (`.cache.state.documents`) and writes the `granola-archivist` markdown format that `minutes import granola` expects. The script is at `dot_config/opencode/scripts/granola-export.py` — re-run it if you ever need to re-import or migrate to a new machine.
+
+**Imported meetings have notes but no transcripts** — Granola only stores transcripts server-side, not in the local cache.
