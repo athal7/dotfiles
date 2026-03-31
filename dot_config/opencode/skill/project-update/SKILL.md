@@ -37,31 +37,9 @@ Read the top 2–3 most recent relevant meetings using `minutes_get_meeting` to 
 
 Default to `onTrack` if no clear signal.
 
-### 5. Draft the update body
+### 5. Draft and publish
 
-Structure:
-
-```markdown
-## Progress
-
-- **Completed:** X issues — [key highlights]
-- **In progress:** Y issues — [notable work]
-- **Blocked:** Z issues — [blocker description and owner if known]
-
-## Decisions
-
-[Key decisions from meetings, if any]
-
-## Next
-
-[What's up next / milestone target]
-```
-
-Keep it to 150–250 words. Focus on outcomes and blockers, not task lists.
-
-### 6. Get approval and publish
-
-Show the draft to the user. After approval, use `gq` to call the `projectUpdateCreate` mutation with the project ID, health (`onTrack|atRisk|offTrack`), and body. Consult the Linear API docs for the exact mutation signature.
+Use the **Project Status Update** document template in Linear for the body structure. Fill it with the aggregated data, keep it to 150–250 words, focus on outcomes and blockers not task lists. Show the draft to the user, then publish via `projectUpdateCreate` with the project ID, health (`onTrack|atRisk|offTrack`), and body.
 
 ## Tips
 

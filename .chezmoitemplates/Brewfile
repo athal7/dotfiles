@@ -43,5 +43,6 @@ cask "mac-mouse-fix" # Mouse customization utility
 # cask "opencode-desktop" # AI coding assistant desktop app - disabled: 1.3.2 breaks worktree sandboxes (https://github.com/sst/opencode/issues/19085), install 1.3.0 manually
 brew "silverstein/tap/minutes" # Meeting recorder CLI (record, search, import, transcription)
 cask "silverstein/tap/minutes" # Minutes desktop app (menu bar, recording UI, AI assistant)
+cask "obsidian" # Knowledge base and note-taking app
 cask "stats" # Menu bar system monitor (CPU, memory, disk, network)
 cask "tailscale-app" # Mesh VPN for secure networking
