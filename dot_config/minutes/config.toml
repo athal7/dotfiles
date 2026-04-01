@@ -6,7 +6,7 @@ model_path = "/Users/athal/.minutes/models"
 min_words = 3
 
 [diarization]
-engine = "pyannote"
+engine = "none"
 
 [summarization]
 engine = "none"
