@@ -1,0 +1,18 @@
+output_dir = "/Users/athal/meetings"
+
+[transcription]
+model = "small"
+model_path = "/Users/athal/.minutes/models"
+min_words = 3
+
+[diarization]
+engine = "pyannote"
+
+[summarization]
+engine = "none"
+
+[search]
+engine = "builtin"
+
+[security]
+allowed_audio_dirs = []
