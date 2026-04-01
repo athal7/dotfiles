@@ -66,10 +66,10 @@
 
 **Work MCPs (linear, figma) are disabled globally** and enabled per work repo via `.opencode/opencode.json`. The plan agent has read-only `linear_get_*` / `linear_list_*` / `figma_get_*` overrides in `opencode.json` so it can research without write access, even in work repos.
 
-**opencode-pilot `linear/my-issues` preset** already expects `mcp: linear` with `response_key: nodes` and `body: title` by default — no `tools:` overrides needed in `pilot/config.yaml`. Overrides were only there to compensate for the old team-context response shape.
+**opencode-pilot `linear/my-issues` preset** expects `mcp: linear` with `response_key: nodes` and `body: title` by default — no `tools:` overrides needed in `pilot/config.yaml`.
 
 **Slack uses curl + `$SLACK_USER_TOKEN`** (xoxp-\*), not an MCP. The Slack MCP reference server lacks `search.messages`, making curl strictly better. Load the `slack` skill for patterns.
 
 **Figma's `mcp.figma.com/mcp`** returns HTTP 405 on GET (not 404) — it is a live MCP endpoint. The 405 is expected; it requires POST per the MCP spec.
 
-**New credentials** from the team-context migration live in `~/.env` (not chezmoi-managed): `LINEAR_API_KEY`, `ES_URL`, `ES_API_KEY`, `FIGMA_ACCESS_TOKEN`, `SLACK_USER_TOKEN`.
+**Credentials** live in `~/.env` (not chezmoi-managed): `LINEAR_API_KEY`, `ES_URL`, `ES_API_KEY`, `FIGMA_ACCESS_TOKEN`, `SLACK_USER_TOKEN`.
