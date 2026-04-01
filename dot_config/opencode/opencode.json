@@ -7,47 +7,23 @@
   "permission": {
     "skill": "allow"
   },
-  "model": "anthropic/claude-haiku-4-5",
+  "model": "anthropic/claude-sonnet-4-6",
   "agent": {
-    "plan": {
-      "textVerbosity": "low",
-      "temperature": 0.3,
-      "permission": {
-        "bash": {
-          "*": "deny",
-          "git *": "allow",
-          "gh pr *": "allow",
-          "gh issue *": "allow",
-          "gh api *": "allow",
-          "gh repo view *": "allow",
-          "gh search *": "allow"
-        },
-        "task": {
-          "*": "allow"
-        }
-      }
-    },
-    "build": {
-      "model": "anthropic/claude-sonnet-4-6"
-    },
     "expert": {
       "model": "anthropic/claude-opus-4-6",
       "temperature": 0
     }
   },
   "provider": {
-    "github-copilot": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
       "options": {
-        "headers": {
-          "Authorization": "Bearer {auth:github-copilot.access}"
-        }
+        "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "gpt-4.1": {
-          "name": "gpt-4.1"
-        },
-        "gpt-5-mini": {
-          "name": "gpt-5-mini"
+        "qwen3-coder": {
+          "name": "qwen3-coder"
         }
       }
     },
