@@ -62,10 +62,6 @@
       "type": "remote",
       "url": "https://mcp.context7.com/mcp"
     },
-    "minutes": {
-      "type": "local",
-      "command": ["npx", "minutes-mcp"]
-    },
     "firefox-devtools": {
       "type": "local",
       "command": [
