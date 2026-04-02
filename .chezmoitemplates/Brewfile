@@ -1,5 +1,4 @@
 tap "github/gh"
-tap "athal7/opencode-pilot"
 tap "open-cli-collective/tap"
 tap "silverstein/tap"
 
@@ -22,9 +21,8 @@ brew "kubernetes-cli" # Kubernetes CLI (kubectl)
 brew "mas" # Mac App Store CLI
 brew "mise" # Polyglot version manager (ruby, node, python, rust, etc.)
 brew "neovim" # Modern Vim-based editor
-brew "ollama" # Local LLM runtime (OpenClaw personal assistant)
+brew "ollama" # Local LLM runtime
 brew "opencode" # AI coding assistant CLI
-brew "opencode-pilot" # Automation daemon for OpenCode - polls issues and spawns sessions
 brew "openssl" # TLS/SSL cryptography library
 brew "opentofu" # Terraform-compatible infrastructure as code
 brew "ripgrep" # Fast recursive grep (rg) - required by OpenCode

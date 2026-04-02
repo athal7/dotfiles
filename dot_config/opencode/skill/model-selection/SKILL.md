@@ -98,9 +98,11 @@ apply everywhere. The top-level `model` (default session model) is set **per rep
 
 ```json
 {
-  "model": "opencode/big-pickle"
+  "model": "ollama/glm-4.7-flash"
 }
 ```
+
+Prefer local ollama models for personal repos — private and free. `glm-4.7-flash` and `qwen3-coder` are both ~30B Q4 on M4 Pro. Never use `anthropic` in personal repos — work pays for that.
 
 Only `expert` has a global model pin. `plan` inherits the repo `model` so it uses the
 same model as the default session — no redundant config needed.
