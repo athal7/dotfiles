@@ -45,3 +45,4 @@ gq $GQ_ENDPOINT -H "Authorization: $LINEAR_API_KEY" \
 - Always add `first: N` to connections to avoid high complexity cost
 - Rate limit: ~1,500 req/hr (complexity-based); check `X-RateLimit-*` response headers
 - Before any write, show the proposed change and get explicit user approval
+- **`gq` does not expand shell env vars inside `-q` strings** — use `--queryFile` for queries needing template values, and `-v key=value` for runtime variables

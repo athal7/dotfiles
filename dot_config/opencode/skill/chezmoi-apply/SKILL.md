@@ -83,3 +83,4 @@ If the server failed to start due to a bad config that slipped past schema valid
 - The LaunchAgent `KeepAlive: true` means the server will always restart; the only failure mode is a crash loop from bad config
 - `launchctl kickstart -k` is used (not `unload`/`load`) — this is intentional and correct for in-place restarts
 - Changes to files other than `opencode.json` and `dot_config/opencode/plugins/*` do **not** trigger a restart (e.g., editing skills, commands, AGENTS.md)
+- **Adding a new `[data]` key to `.chezmoi.toml.tmpl` requires `chezmoi init` before `chezmoi apply`** — `apply` alone does not regenerate `~/.config/chezmoi/chezmoi.toml`
