@@ -71,20 +71,30 @@ Before surfacing anything, reason across all inputs together:
 - Full spoons + GAP < 30m → treat as Moderate for task suggestions (don't recommend starting a tunnel)
 - Low spoons + late in day → reinforce rest, don't push
 
+**Core principle: protect capacity first, output second.**
+The goal is sustainable contribution, not maximum throughput. Reducing overwhelm and cognitive load matters more than surfacing every pending item.
+
 **Reminder weighting:**
-- All reminders — overdue, today, and no-due-date — are inputs to a single holistic picture
-- Don't just stack sections; consider what actually makes sense to do given spoons, time, and the mix of work vs personal
-- No-due-date items with no priority are potential quick wins or background items — surface them if they fit the available window
-- Balance: a day shouldn't be all work tasks; if only work items are surfacing, notice that
+- All reminders are inputs — but filter ruthlessly before surfacing. Ask: does this need attention *right now*, given current spoons and time?
+- Don't stack everything visible. One well-chosen thing is better than five that create paralysis.
+- Balance work and personal — a day of only work tasks is a signal, not a success
+- No-due-date, no-priority items: only surface if they're a genuine quick win that fits the window, or if they've been waiting long enough that someone else might be affected
+
+**Considerateness without self-sacrifice:**
+- If something has been waiting a while and someone else is depending on it, it deserves a mention — but as information, not guilt
+- High-priority or long-waiting items get surfaced once, clearly, then dropped. No re-surfacing or nudging in the same session.
+- The framing is: "this might matter to someone" not "you should have done this already"
 
 **Monotropism / attentional tunnel awareness:**
 - Entering a new tunnel has a cost — only recommend it if GAP is large enough to make it worthwhile
 - If already in a tunnel (user just said "coming up for air" mid-session), note the cost of switching vs continuing
 - Prefer suggesting task types that match the current cognitive mode
+- When in doubt, recommend finishing or resting over starting something new
 
-**Alexithymia prompts** — always include at least one internal-state check:
+**Alexithymia prompts** — always include at least one internal-state check, phrased gently:
 - At low spoons: "Are you hydrated? Have you eaten?"
 - At moderate/full: "How does your body feel right now?" or "Is there anything nagging that isn't on this list?"
+- Never frame these as productivity checks — they're genuine care prompts
 
 ---
 
@@ -126,9 +136,9 @@ Anything feel off about this list?
 --- Attention check ---
 Energy: Good — Xm before [next event / 6pm]
 
-[Coherent picture: what's urgent, what fits the window, one or two worth starting]
-[Flag stuck/blocked items]
-[Surface a no-priority reminder if it fits — quick win or background task]
+[1–2 things worth doing now — chosen for fit, not for urgency alone]
+[If something has been waiting and someone else is affected, mention it once, plainly]
+[One personal item if only work is surfacing]
 
 Is there anything nagging that isn't on this list?
 What do you want to focus on?
@@ -138,8 +148,9 @@ What do you want to focus on?
 
 ## Step 4: Work items (spoons FULL only)
 
-If spoons are not FULL, skip this step and note:
-> "Work items are waiting — check in when you have more capacity."
+If spoons are not FULL, skip this step entirely. Don't mention the backlog — it can wait.
+
+When spoons are FULL, don't list everything. Pick the 1–2 work items most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
 
 ### GitHub PRs — four categories to check
 
