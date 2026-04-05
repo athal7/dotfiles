@@ -1,11 +1,11 @@
-output_dir = "/Users/athal/meetings"
+output_dir = "{{ .chezmoi.homeDir }}/meetings"
 
 [identity]
-name = "Andrew Thal"
+name = "{{ .fullName }}"
 
 [transcription]
 model = "small"
-model_path = "/Users/athal/.minutes/models"
+model_path = "{{ .chezmoi.homeDir }}/.minutes/models"
 min_words = 3
 
 [diarization]
