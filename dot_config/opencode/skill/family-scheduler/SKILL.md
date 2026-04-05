@@ -49,7 +49,7 @@ wakatime-cli --today 2>/dev/null | head -5
 ### Step 2: Find open gaps in the next two weeks
 
 ```bash
-osascript "$(dirname $0)/calendar-gaps.applescript"
+osascript "~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript"
 ```
 
 This returns weekend and evening slots that have no existing events — these are the only windows to consider for suggestions.
@@ -57,7 +57,7 @@ This returns weekend and evening slots that have no existing events — these ar
 ### Step 3: Fetch candidate events
 
 ```bash
-python3 "$(dirname $0)/fetch-events.py"
+python3 "~/.config/opencode/skill/family-scheduler/fetch-events.py"
 ```
 
 For scraped pages, use `curl`. Then filter candidates to only those that fall within the gaps identified in Step 2. Discard anything on a busy day.
@@ -84,5 +84,5 @@ If nothing fits open gaps: say so briefly and stop.
 ### Step 5: Add approved events
 
 ```bash
-osascript "$(dirname $0)/add-event.applescript" "TITLE" "YYYY-MM-DD HH:MM" "YYYY-MM-DD HH:MM" "URL"
+osascript "~/.config/opencode/skill/family-scheduler/add-event.applescript" "TITLE" "YYYY-MM-DD HH:MM" "YYYY-MM-DD HH:MM" "URL"
 ```

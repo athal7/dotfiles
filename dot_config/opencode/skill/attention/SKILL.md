@@ -19,7 +19,7 @@ A calm, low-interruption attention check. Surfaces what matters *right now* with
 
 ```bash
 wakatime-cli --today 2>/dev/null | head -5
-osascript "$(dirname $0)/calendar-today.applescript"
+osascript "~/.config/opencode/skill/attention/calendar-today.applescript"
 ```
 
 The calendar script returns structured `GAP:`, `END_OF_DAY:`, and `EVENT:` lines. Use both outputs together to synthesize spoon level:
@@ -36,7 +36,7 @@ The calendar script returns structured `GAP:`, `END_OF_DAY:`, and `EVENT:` lines
 ## Step 2: Read Apple Reminders
 
 ```bash
-osascript "$(dirname $0)/reminders-due.applescript"
+osascript "~/.config/opencode/skill/attention/reminders-due.applescript"
 ```
 
 The script returns reminders grouped by urgency:

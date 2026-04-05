@@ -21,11 +21,11 @@ Flag issues as "aged blockers" if they have been in a blocked state for more tha
 
 Load the `meetings` skill and search for recent meetings mentioning the project:
 
-```
-minutes_search_meetings query="PROJECT_NAME"
+```bash
+minutes search "PROJECT_NAME"
 ```
 
-Read the top 2–3 most recent relevant meetings using `minutes_get_meeting` to extract decisions and blockers.
+Read the top 2–3 most recent relevant meetings using `minutes transcript <id>` to extract decisions and blockers.
 
 ### 4. Draft and publish
 
