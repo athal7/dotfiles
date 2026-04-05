@@ -1,8 +1,11 @@
--- Returns remaining events today and time windows
+-- Returns today's past and remaining calendar events, plus time windows
 -- Output includes:
+--   DAY_OF_WEEK: Monday
+--   PAST_EVENT: <title> @ <time>  (one per completed event today)
+--   PAST_COUNT: N events completed today
 --   NEXT_EVENT: <title> @ <time> (in Xm)
 --   GAP: Xm until next event  (or "rest of day free" if none)
---   END_OF_DAY: Xm until end of working day (6pm)
+--   END_OF_DAY: Xm until 6pm (or "past 6pm")
 --   EVENT: <title> @ <time>  (one line per remaining event)
 -- Usage: osascript calendar-today.applescript
 tell application "Calendar"
@@ -11,7 +14,21 @@ tell application "Calendar"
   set endOfDay to startOfDay + (23 * hours) + (59 * minutes)
   set workDayEnd to startOfDay + (18 * hours) -- 6pm
 
-  -- Collect all remaining events today, sorted by start time
+  -- Day of week
+  set dowNames to {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+  set dowIndex to (weekday of rightNow) as integer
+  set dayName to item dowIndex of dowNames
+
+  -- Collect past events today (already ended)
+  set pastEvents to {}
+  repeat with cal in every calendar
+    set evts to (every event of cal whose start date >= startOfDay and end date <= rightNow)
+    repeat with evt in evts
+      set end of pastEvents to {evtTitle:summary of evt, evtStart:start date of evt}
+    end repeat
+  end repeat
+
+  -- Collect remaining events today
   set allEvents to {}
   repeat with cal in every calendar
     set evts to (every event of cal whose start date >= rightNow and start date <= endOfDay)
@@ -20,7 +37,7 @@ tell application "Calendar"
     end repeat
   end repeat
 
-  -- Sort by start time (bubble sort — small lists)
+  -- Sort remaining by start time (bubble sort — small lists)
   set n to count of allEvents
   repeat with i from 1 to n - 1
     repeat with j from 1 to n - i
@@ -33,6 +50,16 @@ tell application "Calendar"
   end repeat
 
   set output to {}
+
+  -- Day of week
+  set end of output to "DAY_OF_WEEK: " & dayName
+
+  -- Past events
+  set pastCount to count of pastEvents
+  repeat with evt in pastEvents
+    set end of output to "PAST_EVENT: " & (evtTitle of evt) & " @ " & (evtStart of evt as string)
+  end repeat
+  set end of output to "PAST_COUNT: " & pastCount & " events completed today"
 
   -- Time until next event
   if n > 0 then
@@ -52,7 +79,7 @@ tell application "Calendar"
     set end of output to "END_OF_DAY: past 6pm"
   end if
 
-  -- All remaining events
+  -- Remaining events
   repeat with evt in allEvents
     set end of output to "EVENT: " & (evtTitle of evt) & " @ " & (evtStart of evt as string)
   end repeat

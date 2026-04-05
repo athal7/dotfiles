@@ -26,7 +26,7 @@ Run all of these before forming any view:
 # WakaTime — time coded today
 wakatime-cli --today 2>/dev/null
 
-# Calendar — next event and remaining day
+# Calendar — past and remaining events today, day of week, time windows
 # Note: osascript may hang from the OpenCode server process (TCC issue).
 # If it hangs after a few seconds, kill it and treat calendar as unknown.
 osascript ~/.config/opencode/skill/attention/calendar-today.applescript 2>/dev/null
@@ -42,6 +42,17 @@ remindctl show --json upcoming | jq -r '.[] |
   select(.isCompleted == false) |
   select(.dueDate == null) |
   "\(.priority // "none"): \(.title) [\(.listName)]"'
+
+# Meeting notes — today's processed meetings (for social/emotional load inference)
+TODAY=$(date +%Y-%m-%d)
+minutes list --limit 20 | jq -r ".[] | select(.date | startswith(\"$TODAY\")) | \"MEETING: \(.title) @ \(.date)\""
+
+# Slack — recent mentions waiting on you (last 8h)
+source ~/.env
+SINCE=$(date -v-8H +%s 2>/dev/null || date -d '8 hours ago' +%s)
+curl -s "https://slack.com/api/search.messages?query=<@U0A0EDLDC67>&count=10&sort=timestamp" \
+  -H "Authorization: Bearer $SLACK_USER_TOKEN" \
+  | jq -r ".messages.matches[] | select((.ts | split(\".\")[0] | tonumber) > $SINCE) | \"MENTION: \(.channel.name) — \(.username): \(.text | .[0:120])\""
 ```
 
 Note: `remindctl` priority strings are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
