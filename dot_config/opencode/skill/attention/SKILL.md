@@ -17,42 +17,19 @@ A calm, low-interruption attention check. Surfaces what matters *right now* with
 
 ## Step 1: Read energy level (spoon check)
 
-### WakaTime — coding load today
-
 ```bash
 wakatime-cli --today 2>/dev/null | head -5
-```
-
-This shows hours coded today. Also check the week:
-
-```bash
-# Duration this week from WakaTime (last 7 days)
-wakatime-cli --range "last 7 days" 2>/dev/null | head -5
-```
-
-Interpret:
-- **< 2h today** → spoons likely available
-- **2–4h today** → moderate load, be selective
-- **> 4h today** → significant cognitive use; prompt to rest before more
-
-### Calendar density today
-
-Run the bundled AppleScript to read today's remaining events:
-
-```bash
 osascript "$(dirname $0)/calendar-today.applescript"
 ```
 
-Count events and check for gaps. Dense calendar (3+ remaining events with little gap) = lower available spoons.
+The calendar script returns structured `GAP:`, `END_OF_DAY:`, and `EVENT:` lines. Use both outputs together to synthesize spoon level:
 
-### Synthesize spoon level
-
-| WakaTime today | Calendar remaining | Spoon level |
-|---------------|-------------------|-------------|
-| < 2h | 0–1 events | Full |
-| 2–4h | 1–2 events | Moderate |
-| > 4h | Any | Low |
-| Any | 3+ events | Low |
+| WakaTime today | Remaining events | Spoon level |
+|---------------|-----------------|-------------|
+| < 2h | 0–1 | Full |
+| 2–4h | 1–2 | Moderate |
+| > 4h | any | Low |
+| any | 3+ | Low |
 
 ---
 

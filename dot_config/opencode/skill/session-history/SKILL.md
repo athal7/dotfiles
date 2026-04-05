@@ -3,9 +3,13 @@ name: session-history
 description: Read and search OpenCode session history — list past sessions, read conversation content, find prior decisions and tool outputs
 ---
 
-OpenCode session history lives in a SQLite database. Use the `opencode db` command or `opencode session` subcommands to query it.
+OpenCode session history lives in a SQLite database. Use `opencode session list` for a quick human-readable list, or query the DB directly with `sqlite3` for anything more specific.
 
 **DB path:** `~/.local/share/opencode/opencode.db`
+
+```bash
+DB=~/.local/share/opencode/opencode.db
+```
 
 ## List recent sessions
 
@@ -13,13 +17,12 @@ OpenCode session history lives in a SQLite database. Use the `opencode db` comma
 # Human-readable list (title, id, date)
 opencode session list
 
-# Last 20 sessions for a specific directory, JSON
-opencode db --format json "
-  SELECT id, title, slug, directory, time_updated
+# Last 20 sessions for a specific directory
+sqlite3 -json "$DB" "
+  SELECT id, title, slug, directory, datetime(time_updated/1000,'unixepoch','localtime') AS updated
   FROM session
   WHERE directory = '$(pwd)'
-  ORDER BY time_updated DESC
-  LIMIT 20
+  ORDER BY time_updated DESC LIMIT 20
 "
 ```
 
@@ -27,19 +30,16 @@ opencode db --format json "
 
 ```bash
 # Sessions mentioning a keyword in title
-opencode db --format json "
-  SELECT id, title, directory, datetime(time_updated/1000, 'unixepoch', 'localtime') AS updated
-  FROM session
-  WHERE title LIKE '%auth%'
-  ORDER BY time_updated DESC
-  LIMIT 20
+sqlite3 -json "$DB" "
+  SELECT id, title, directory, datetime(time_updated/1000,'unixepoch','localtime') AS updated
+  FROM session WHERE title LIKE '%auth%'
+  ORDER BY time_updated DESC LIMIT 20
 "
 
 # All sessions in this repo
-opencode db --format json "
-  SELECT id, slug, title, datetime(time_updated/1000, 'unixepoch', 'localtime') AS updated
-  FROM session
-  WHERE directory LIKE '%$(basename $(pwd))%'
+sqlite3 -json "$DB" "
+  SELECT id, slug, title, datetime(time_updated/1000,'unixepoch','localtime') AS updated
+  FROM session WHERE directory LIKE '%$(basename $(pwd))%'
   ORDER BY time_updated DESC
 "
 ```
@@ -57,10 +57,8 @@ opencode export <sessionID> > session-dump.json
 ## Read conversation text from a session
 
 ```bash
-# All text parts (assistant prose) for a session
-opencode db --format json "
-  SELECT p.data
-  FROM part p
+sqlite3 -json "$DB" "
+  SELECT p.data FROM part p
   JOIN message m ON p.message_id = m.id
   WHERE m.session_id = '<sessionID>'
     AND json_extract(p.data, '$.type') = 'text'
@@ -71,29 +69,25 @@ opencode db --format json "
 ## Find tool calls in a session
 
 ```bash
-# List all tool calls with their inputs
-opencode db --format json "
-  SELECT
-    json_extract(p.data, '$.tool') AS tool,
-    json_extract(p.data, '$.state.input') AS input,
-    json_extract(p.data, '$.state.status') AS status
-  FROM part p
-  JOIN message m ON p.message_id = m.id
+# All tool calls
+sqlite3 -json "$DB" "
+  SELECT json_extract(p.data,'$.tool') AS tool,
+    json_extract(p.data,'$.state.input') AS input,
+    json_extract(p.data,'$.state.status') AS status
+  FROM part p JOIN message m ON p.message_id = m.id
   WHERE m.session_id = '<sessionID>'
-    AND json_extract(p.data, '$.type') = 'tool'
+    AND json_extract(p.data,'$.type') = 'tool'
   ORDER BY p.time_created
 "
 
-# Filter to bash commands only
-opencode db --format json "
-  SELECT
-    json_extract(p.data, '$.state.input.command') AS command,
-    json_extract(p.data, '$.state.input.description') AS description,
-    json_extract(p.data, '$.state.metadata.exit') AS exit_code
-  FROM part p
-  JOIN message m ON p.message_id = m.id
+# Bash commands only
+sqlite3 -json "$DB" "
+  SELECT json_extract(p.data,'$.state.input.command') AS command,
+    json_extract(p.data,'$.state.input.description') AS description,
+    json_extract(p.data,'$.state.metadata.exit') AS exit_code
+  FROM part p JOIN message m ON p.message_id = m.id
   WHERE m.session_id = '<sessionID>'
-    AND json_extract(p.data, '$.tool') = 'bash'
+    AND json_extract(p.data,'$.tool') = 'bash'
   ORDER BY p.time_created
 "
 ```
@@ -101,30 +95,26 @@ opencode db --format json "
 ## Search across all sessions for a topic
 
 ```bash
-# Find sessions where a specific file was read or edited
-opencode db --format json "
+# Sessions where a specific file was touched
+sqlite3 -json "$DB" "
   SELECT DISTINCT s.id, s.title, s.directory,
-    datetime(s.time_updated/1000, 'unixepoch', 'localtime') AS updated
-  FROM part p
-  JOIN message m ON p.message_id = m.id
+    datetime(s.time_updated/1000,'unixepoch','localtime') AS updated
+  FROM part p JOIN message m ON p.message_id = m.id
   JOIN session s ON m.session_id = s.id
-  WHERE json_extract(p.data, '$.type') = 'tool'
-    AND json_extract(p.data, '$.state.input') LIKE '%opencode.json%'
-  ORDER BY s.time_updated DESC
-  LIMIT 20
+  WHERE json_extract(p.data,'$.type') = 'tool'
+    AND json_extract(p.data,'$.state.input') LIKE '%opencode.json%'
+  ORDER BY s.time_updated DESC LIMIT 20
 "
 
-# Find sessions that mentioned a term in assistant text
-opencode db --format json "
+# Sessions that mentioned a term in assistant text
+sqlite3 -json "$DB" "
   SELECT DISTINCT s.id, s.title,
-    datetime(s.time_updated/1000, 'unixepoch', 'localtime') AS updated
-  FROM part p
-  JOIN message m ON p.message_id = m.id
+    datetime(s.time_updated/1000,'unixepoch','localtime') AS updated
+  FROM part p JOIN message m ON p.message_id = m.id
   JOIN session s ON m.session_id = s.id
-  WHERE json_extract(p.data, '$.type') = 'text'
-    AND json_extract(p.data, '$.text') LIKE '%<keyword>%'
-  ORDER BY s.time_updated DESC
-  LIMIT 20
+  WHERE json_extract(p.data,'$.type') = 'text'
+    AND json_extract(p.data,'$.text') LIKE '%<keyword>%'
+  ORDER BY s.time_updated DESC LIMIT 20
 "
 ```
 
@@ -154,8 +144,7 @@ opencode -s <sessionID> --fork
 
 ## Tips
 
-- `opencode db` without arguments opens an interactive `sqlite3` shell
-- `opencode db path` prints the DB path for use with external tools
-- `opencode db --format tsv "..."` for pipe-friendly output
-- Timestamps are Unix milliseconds — divide by 1000 and use `datetime(..., 'unixepoch')` in SQLite
+- `sqlite3 "$DB"` opens an interactive shell for ad-hoc queries
+- Timestamps are Unix milliseconds — divide by 1000 and use `datetime(...,'unixepoch')` in SQLite
 - The DB is in WAL mode; reads are safe while opencode is running
+- `sqlite3 -json` returns JSON arrays; pipe to `jq` for filtering
