@@ -38,18 +38,24 @@ Billed per token. Approximate relative costs:
 ## OpenCode Zen — Free Models Only
 
 Only use models with `cost.input == 0 && cost.output == 0`.
-Requires `OPENCODE_API_KEY` env var.
+Requires `OPENCODE_API_KEY` env var. Run `opencode models` to see current free options.
 
 | Model ID | Capabilities | Notes |
 |---|---|---|
-| `big-pickle` | tool_call ✓, reasoning ✓ | Strong reasoning, 200k context |
+| `opencode/big-pickle` | tool_call ✓, reasoning ✓ | Strong reasoning, 200k context |
+| `opencode/gpt-5-nano` | fast | Lightweight |
+| `opencode/minimax-m2.5-free` | general | Free tier |
+| `opencode/nemotron-3-super-free` | general | Free tier |
+| `opencode/qwen3.6-plus-free` | general | Free tier |
 
 ## Ollama — Local Models
 
-| Model ID | Best for |
-|---|---|
-| `ollama/qwen3-coder` | Coding tasks |
-| `ollama/glm-4.7-flash` | Fast, general use |
+Configured in global `opencode.json` under `provider.ollama.models`.
+
+| Config key | Ollama model | Best for |
+|---|---|---|
+| `ollama/gemma4` | `gemma4:31b` | Personal repo default — strong, local, private |
+| `ollama/minimax-m2.7:cloud` | `minimax-m2.7:cloud` | Cloud-routed via Ollama (larger than free tier) |
 
 ## Configuration Architecture
 
@@ -77,7 +83,7 @@ apply everywhere. The top-level `model` (default session model) is set **per rep
 
 ```json
 {
-  "model": "ollama/glm-4.7-flash"
+  "model": "ollama/gemma4"
 }
 ```
 
@@ -85,7 +91,7 @@ Prefer local ollama models for personal repos — private and free.
 
 ## Selection Rules
 
-1. **Agentic coding with tool calls?** → `anthropic/claude-sonnet-4-6` (best tool-calling; work-paid)
+1. **Agentic coding with tool calls?** → `anthropic/claude-sonnet-4-6` (work-paid)
 2. **Deep code review or architecture?** → `anthropic/claude-opus-4-6` (work-paid)
-3. **Personal project?** → `ollama/glm-4.7-flash` or `ollama/qwen3-coder` (free, local)
-4. **Personal, needs stronger reasoning?** → `opencode/big-pickle` (free tier)
+3. **Personal project?** → `ollama/gemma4` (local, private, free)
+4. **Personal, no local model or needs stronger reasoning?** → `opencode/big-pickle` (free tier)
