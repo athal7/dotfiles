@@ -12,8 +12,9 @@ min_words = 3
 engine = "none"
 
 [summarization]
-engine = "agent"
-agent_command = "claude"  # uses Claude Code subscription, no API key needed
+engine = "ollama"
+ollama_url = "http://localhost:11434"
+ollama_model = "gemma4:31b"
 
 [search]
 engine = "builtin"
