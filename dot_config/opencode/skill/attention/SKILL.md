@@ -50,27 +50,31 @@ The calendar script returns structured `GAP:`, `END_OF_DAY:`, and `EVENT:` lines
 ## Step 2: Read Apple Reminders
 
 ```bash
-remindctl show --json | jq -r '.[] | select(.completed == false) |
-  if .flagged then "BLOCKED: \(.title) [\(.list)]"
-  elif (.dueDate != null and .dueDate < now) then "OVERDUE: \(.title) [\(.list)]"
-  elif (.dueDate != null) then "TODAY: \(.title) [\(.list)]"
-  elif .priority == 1 then "HIGH: \(.title) [\(.list)]"
-  elif .priority == 2 then "MEDIUM: \(.title) [\(.list)]"
+# Overdue
+remindctl show --json overdue | jq -r '.[] | "OVERDUE: \(.title) [\(.listName)]"'
+
+# Due today
+remindctl show --json today | jq -r '.[] | select(.isCompleted == false) | "TODAY: \(.title) [\(.listName)]"'
+
+# High/medium priority (no due date) — from upcoming list, filter by priority
+remindctl show --json upcoming | jq -r '.[] |
+  select(.isCompleted == false) |
+  select(.dueDate == null) |
+  if .priority == "high" then "HIGH: \(.title) [\(.listName)]"
+  elif .priority == "medium" then "MEDIUM: \(.title) [\(.listName)]"
   else empty end'
 ```
 
-The script returns reminders grouped by urgency:
+Note: `remindctl` does not expose a `flagged` field in JSON output. Priority strings are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
 
 | Prefix | Meaning |
 |--------|---------|
-| `BLOCKED` | Flagged — waiting on something external, not actionable right now |
 | `OVERDUE` | Past due date |
 | `TODAY` | Due today |
 | `HIGH` | No due date, high priority |
 | `MEDIUM` | No due date, medium priority — only surface if spoons allow |
 
-BLOCKED items should be shown separately — they're not tasks to act on, just things to be aware of.
-Items with no due date and no priority set are not surfaced (no signal they matter now).
+Items with no due date and no priority are not surfaced.
 
 ---
 

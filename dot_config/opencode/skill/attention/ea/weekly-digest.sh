@@ -60,12 +60,13 @@ EOF
 
 # --- Personal reminders only (not work Linear) ---
 # Surface overdue or flagged items from personal lists
-PERSONAL_REMINDERS=$(remindctl show --json 2>/dev/null | \
-  jq -r '[.[] |
-    select(.completed == false) |
-    select(.list != "Work") |
-    select(.flagged == true or (.dueDate != null and .dueDate < (now | todate)))
-  ] | length' 2>/dev/null || echo "?")
+PERSONAL_REMINDERS=$(
+  { remindctl show --json overdue 2>/dev/null; remindctl show --json today 2>/dev/null; } | \
+  jq -rs '[.[] | .[] |
+    select(.isCompleted == false) |
+    select(.listName != "Work")
+  ] | unique_by(.id) | length' 2>/dev/null || echo "?"
+)
 
 # --- Open family time gaps next week ---
 GAPS=$(osascript ~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript 2>/dev/null | \
