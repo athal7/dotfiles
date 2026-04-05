@@ -18,107 +18,119 @@ Two modes in one skill:
 
 ---
 
-## Step 1: Read energy level (spoon check)
+## Step 1: Gather context
+
+Run all of these before forming any view:
 
 ```bash
-wakatime-cli --today 2>/dev/null | head -5
+# WakaTime — time coded today
+wakatime-cli --today 2>/dev/null
+
+# Calendar — next event and remaining day
+# Note: osascript may hang from the OpenCode server process (TCC issue).
+# If it hangs after a few seconds, kill it and treat calendar as unknown.
+osascript ~/.config/opencode/skill/attention/calendar-today.applescript 2>/dev/null
+
+# Reminders — overdue
+remindctl show --json overdue | jq -r '.[] | "OVERDUE: \(.title) [\(.listName)]"'
+
+# Reminders — due today (incomplete only)
+remindctl show --json today | jq -r '.[] | select(.isCompleted == false) | "TODAY: \(.title) [\(.listName)]"'
+
+# Reminders — no due date (all priorities, incomplete)
+remindctl show --json upcoming | jq -r '.[] |
+  select(.isCompleted == false) |
+  select(.dueDate == null) |
+  "\(.priority // "none"): \(.title) [\(.listName)]"'
 ```
 
-Note: Calendar time-until-next-event is deferred — Calendar.app AppleScript does not work reliably from the OpenCode server process (TCC context issue). Spoon level is based on WakaTime only for now.
+Note: `remindctl` priority strings are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
 
-| WakaTime today | Spoon level |
-|---------------|-------------|
+---
+
+## Step 2: Assess the situation holistically
+
+Before surfacing anything, reason across all inputs together:
+
+**Energy (spoons):**
+
+| WakaTime today | Spoon signal |
+|----------------|--------------|
 | < 2h | Full |
 | 2–4h | Moderate |
 | > 4h | Low |
 
----
+**Time available (from calendar):**
 
-## Step 2: Read Apple Reminders
+- `GAP` = minutes until next event (or rest of day free)
+- `END_OF_DAY` = minutes until 6pm
+- If GAP < 30m: not enough runway for deep work — suggest quick wins only
+- If past 6pm: wind-down mode regardless of WakaTime
 
-```bash
-# Overdue
-remindctl show --json overdue | jq -r '.[] | "OVERDUE: \(.title) [\(.listName)]"'
+**Combined spoon level** — adjust WakaTime signal with calendar context:
+- Full spoons + GAP < 30m → treat as Moderate for task suggestions (don't recommend starting a tunnel)
+- Low spoons + late in day → reinforce rest, don't push
 
-# Due today
-remindctl show --json today | jq -r '.[] | select(.isCompleted == false) | "TODAY: \(.title) [\(.listName)]"'
+**Reminder weighting:**
+- All reminders — overdue, today, and no-due-date — are inputs to a single holistic picture
+- Don't just stack sections; consider what actually makes sense to do given spoons, time, and the mix of work vs personal
+- No-due-date items with no priority are potential quick wins or background items — surface them if they fit the available window
+- Balance: a day shouldn't be all work tasks; if only work items are surfacing, notice that
 
-# High/medium priority (no due date) — from upcoming list, filter by priority
-remindctl show --json upcoming | jq -r '.[] |
-  select(.isCompleted == false) |
-  select(.dueDate == null) |
-  if .priority == "high" then "HIGH: \(.title) [\(.listName)]"
-  elif .priority == "medium" then "MEDIUM: \(.title) [\(.listName)]"
-  else empty end'
-```
+**Monotropism / attentional tunnel awareness:**
+- Entering a new tunnel has a cost — only recommend it if GAP is large enough to make it worthwhile
+- If already in a tunnel (user just said "coming up for air" mid-session), note the cost of switching vs continuing
+- Prefer suggesting task types that match the current cognitive mode
 
-Note: `remindctl` does not expose a `flagged` field in JSON output. Priority strings are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
-
-| Prefix | Meaning |
-|--------|---------|
-| `OVERDUE` | Past due date |
-| `TODAY` | Due today |
-| `HIGH` | No due date, high priority |
-| `MEDIUM` | No due date, medium priority — only surface if spoons allow |
-
-Items with no due date and no priority are not surfaced.
+**Alexithymia prompts** — always include at least one internal-state check:
+- At low spoons: "Are you hydrated? Have you eaten?"
+- At moderate/full: "How does your body feel right now?" or "Is there anything nagging that isn't on this list?"
 
 ---
 
 ## Step 3: Surface the view
 
-Present a **NOW / NEXT / LATER** view, scaled to spoon level. Use the GAP and END_OF_DAY values from `calendar-today.applescript` to frame how much time is available.
+One coherent snapshot — not a stack of sections. Tune depth and length to spoon level.
 
-### If spoons are LOW
+### If spoons are LOW (or past 6pm)
 
 ```
 --- Attention check ---
-Energy: Low (coded Xh today, Xm until next event / end of day)
+Energy: Low (Xh coded, Xm until [next event / end of day])
 
 Take care of yourself first.
-- Are you hydrated?
-- Have you eaten?
+- Are you hydrated? Have you eaten?
 - Is there anything with a hard deadline today?
 
-One thing if needed: [single OVERDUE or TODAY item, if any]
+[One actionable thing if truly needed, otherwise nothing]
 
-Everything else can wait. You've done enough.
+Everything else can wait.
 ```
 
-### If spoons are MODERATE
+### If spoons are MODERATE (or GAP < 30m)
 
 ```
 --- Attention check ---
-Energy: Moderate — Xm available before [next event / 6pm]
+Energy: Moderate — Xm before [next event / 6pm]
 
-NOW (needs action today):
-  • [BLOCKED items — visible but not actionable, max 2]
-  • [OVERDUE + TODAY reminders, max 2]
-  • [Next calendar event with time]
+[2–3 items that make sense given time and energy — mix of urgent and lightweight]
+[Note any blocked/stuck items briefly]
 
-NEXT (on your radar):
-  • [HIGH priority reminders, max 2]
-
+How does your body feel right now?
 Anything feel off about this list?
 ```
 
-### If spoons are FULL
+### If spoons are FULL and GAP ≥ 30m
 
 ```
 --- Attention check ---
-Energy: Good — Xm available before [next event / 6pm]
+Energy: Good — Xm before [next event / 6pm]
 
-NOW:
-  • [BLOCKED items]
-  • [OVERDUE + TODAY reminders, max 3]
-  • [Calendar items starting soon]
+[Coherent picture: what's urgent, what fits the window, one or two worth starting]
+[Flag stuck/blocked items]
+[Surface a no-priority reminder if it fits — quick win or background task]
 
-NEXT:
-  • [HIGH priority reminders, max 3]
-
-LATER (lower signal, just visible):
-  • [MEDIUM priority reminders, max 2]
-
+Is there anything nagging that isn't on this list?
 What do you want to focus on?
 ```
 
