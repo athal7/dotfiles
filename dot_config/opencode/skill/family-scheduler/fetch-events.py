@@ -18,7 +18,8 @@ def fetch_ics(name, url):
         return []
 
     try:
-        with urllib.request.urlopen(url, timeout=10) as r:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
             cal = Calendar.from_ical(r.read())
     except Exception as e:
         print(f"[{name}] fetch failed: {e}")

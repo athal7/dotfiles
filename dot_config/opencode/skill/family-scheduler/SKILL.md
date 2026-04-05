@@ -34,33 +34,44 @@ Edit this skill to add or remove feeds.
 
 ### Step 1: Check spoon level
 
-If the `attention` skill has already been run this session, reuse the spoon level from that check — don't re-run WakaTime. Otherwise:
+Use the same multidimensional framework as the `attention` skill — WakaTime is a proxy, not a direct reading. If `attention` has already run this session, reuse that assessment.
 
 ```bash
-wakatime-cli --today 2>/dev/null | head -5
+wakatime-cli --today 2>/dev/null
 ```
+
+Apply the same table from the attention skill (< 1h = likely available, 1–3h = moderate, 3–5h = caution, > 5h = low). Also factor in time of day and whether there are upcoming calendar events.
 
 | Spoons | What to do |
 |--------|-----------|
-| Low | Stop here. Not a good time to plan outings. |
-| Moderate | Find at most 1 suggestion — something low-effort, close by, no prep needed |
-| Full | Find up to 3 suggestions across open gaps |
+| Low | Stop here. Planning outings takes energy you don't have right now. |
+| Moderate | At most 1 suggestion — low-effort, close by, no prep needed |
+| Full | Up to 3 suggestions across open gaps |
 
 ### Step 2: Find open gaps in the next two weeks
 
 ```bash
-osascript "~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript"
+# Note: osascript calendar access hangs from the OpenCode server process (TCC issue).
+# This is a known limitation — fix is tracked in Work reminders.
+# If it hangs after ~5s, kill it and skip gap filtering; present events without calendar gating.
+timeout 5 osascript ~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript 2>/dev/null \
+  || echo "CALENDAR_UNAVAILABLE"
 ```
 
-This returns weekend and evening slots that have no existing events — these are the only windows to consider for suggestions.
+If `CALENDAR_UNAVAILABLE`: skip gap filtering, focus on weekend days in the next two weeks as default assumption, and note that calendar wasn't available.
 
 ### Step 3: Fetch candidate events
 
 ```bash
-python3 "~/.config/opencode/skill/family-scheduler/fetch-events.py"
+python3 ~/.config/opencode/skill/family-scheduler/fetch-events.py
 ```
 
-For scraped pages, use `curl`. Then filter candidates to only those that fall within the gaps identified in Step 2. Discard anything on a busy day.
+**Known issues:**
+- `icalendar` package required — install with `pip install icalendar` if missing
+- Libertyville Area Moms ICS returns HTTP 403 — blocked, skip silently
+- For scraped pages (Cook Library, Chicago North Shore Moms), use `curl` + WebFetch
+
+Filter candidates to those falling within open gaps from Step 2. If calendar unavailable, include all weekend events.
 
 ### Step 4: Present suggestions
 
