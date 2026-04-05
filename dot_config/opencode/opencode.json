@@ -22,34 +22,11 @@
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "qwen3-coder": {
-          "name": "qwen3-coder"
-        },
-        "glm-4.7-flash": {
-          "name": "glm-4.7-flash"
+        "gemma4": {
+          "name": "gemma4:31b"
         },
         "minimax-m2.7:cloud": {
           "name": "minimax-m2.7:cloud"
-        }
-      }
-    },
-    "opencode": {
-      "models": {
-        "big-pickle": {
-          "name": "pickle"
-        }
-      }
-    },
-    "anthropic": {
-      "models": {
-        "claude-opus-4-6": {
-          "name": "opus"
-        },
-        "claude-sonnet-4-6": {
-          "name": "sonnet"
-        },
-        "claude-haiku-4-5": {
-          "name": "haiku"
         }
       }
     }
