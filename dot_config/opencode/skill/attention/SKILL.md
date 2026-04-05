@@ -50,51 +50,54 @@ Note: `remindctl` priority strings are `"high"`, `"medium"`, `"low"`, `"none"` �
 
 ## Step 2: Assess the situation holistically
 
-Before surfacing anything, reason across all inputs together:
-
-**Energy (spoons):**
-
-| WakaTime today | Spoon signal |
-|----------------|--------------|
-| < 2h | Full |
-| 2–4h | Moderate |
-| > 4h | Low |
-
-**Time available (from calendar):**
-
-- `GAP` = minutes until next event (or rest of day free)
-- `END_OF_DAY` = minutes until 6pm
-- If GAP < 30m: not enough runway for deep work — suggest quick wins only
-- If past 6pm: wind-down mode regardless of WakaTime
-
-**Combined spoon level** — adjust WakaTime signal with calendar context:
-- Full spoons + GAP < 30m → treat as Moderate for task suggestions (don't recommend starting a tunnel)
-- Low spoons + late in day → reinforce rest, don't push
+Before surfacing anything, reason across all inputs together.
 
 **Core principle: protect capacity first, output second.**
-The goal is sustainable contribution, not maximum throughput. Reducing overwhelm and cognitive load matters more than surfacing every pending item.
+The goal is sustainable contribution. Reducing overwhelm matters more than surfacing every pending item.
+
+---
+
+**Spoon accounting (Dr. Megan Anna Neff's framework):**
+
+Spoons aren't just quantity — they're multidimensional. WakaTime measures cognitive output, but autistic/AuDHD energy depletion happens across multiple axes that aren't visible in coding hours:
+
+- **Cognitive load** — deep focus, problem-solving, context switching
+- **Social/masking load** — meetings, communication, being "on"
+- **Sensory load** — environment, noise, stimulation throughout the day
+- **Emotional/interoceptive load** — accumulated stress that may not have registered consciously
+
+**Interoceptive caveat:** With alexithymia, the body often doesn't signal depletion until it's too late. WakaTime hours are a proxy, not a direct reading. Treat high output as a *warning* signal, not a green light — boom-and-bust cycles start by overdoing it on good days.
+
+| WakaTime today | Spoon signal | Caveat |
+|----------------|--------------|--------|
+| < 1h | Likely available | May be early; check time of day |
+| 1–3h | Moderate | Consider other load types |
+| 3–5h | Caution | High cognitive output; hidden depletion likely |
+| > 5h | Low | Rest is the priority regardless of how it feels |
+
+**Time and pacing:**
+- `GAP` = minutes until next event (or rest of day free)
+- `END_OF_DAY` = minutes until 6pm
+- GAP < 30m → don't recommend starting a tunnel; suggest quick wins or rest
+- Past 6pm → wind-down mode regardless of WakaTime
+- Full spoons + GAP < 30m → treat as Moderate
 
 **Reminder weighting:**
-- All reminders are inputs — but filter ruthlessly before surfacing. Ask: does this need attention *right now*, given current spoons and time?
-- Don't stack everything visible. One well-chosen thing is better than five that create paralysis.
+- All reminders are inputs — filter before surfacing. Ask: does this need attention *right now*, given spoons, time, and energy type?
+- One well-chosen thing beats five that create paralysis
 - Balance work and personal — a day of only work tasks is a signal, not a success
-- No-due-date, no-priority items: only surface if they're a genuine quick win that fits the window, or if they've been waiting long enough that someone else might be affected
-
-**Considerateness without self-sacrifice:**
-- If something has been waiting a while and someone else is depending on it, it deserves a mention — but as information, not guilt
-- High-priority or long-waiting items get surfaced once, clearly, then dropped. No re-surfacing or nudging in the same session.
-- The framing is: "this might matter to someone" not "you should have done this already"
+- Considerateness without self-sacrifice: if something has been waiting and someone else is depending on it, mention it once, plainly, as information — not guilt
 
 **Monotropism / attentional tunnel awareness:**
-- Entering a new tunnel has a cost — only recommend it if GAP is large enough to make it worthwhile
-- If already in a tunnel (user just said "coming up for air" mid-session), note the cost of switching vs continuing
-- Prefer suggesting task types that match the current cognitive mode
-- When in doubt, recommend finishing or resting over starting something new
+- Entering a new tunnel has a real cost — only recommend it if GAP is large enough and spoons support it
+- Prefer finishing or resting over starting something new when in doubt
+- Suggest task types that match the current cognitive mode
 
-**Alexithymia prompts** — always include at least one internal-state check, phrased gently:
-- At low spoons: "Are you hydrated? Have you eaten?"
-- At moderate/full: "How does your body feel right now?" or "Is there anything nagging that isn't on this list?"
-- Never frame these as productivity checks — they're genuine care prompts
+**Alexithymia prompts** — always include at least one body/state check, phrased as genuine care:
+- "Are you hydrated? Have you eaten?"
+- "How does your body feel right now — not your to-do list, your body?"
+- "Is there anything you've been ignoring that your nervous system might be tracking?"
+- Never frame as productivity checks
 
 ---
 
