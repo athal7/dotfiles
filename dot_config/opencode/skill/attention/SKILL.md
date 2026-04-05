@@ -62,24 +62,37 @@ Count events and check for gaps. Dense calendar (3+ remaining events with little
 osascript "$(dirname $0)/reminders-due.applescript"
 ```
 
+The script returns reminders grouped by urgency:
+
+| Prefix | Meaning |
+|--------|---------|
+| `BLOCKED` | Flagged — waiting on something external, not actionable right now |
+| `OVERDUE` | Past due date |
+| `TODAY` | Due today |
+| `HIGH` | No due date, high priority |
+| `MEDIUM` | No due date, medium priority — only surface if spoons allow |
+
+BLOCKED items should be shown separately — they're not tasks to act on, just things to be aware of.
+Items with no due date and no priority set are not surfaced (no signal they matter now).
+
 ---
 
 ## Step 3: Surface the view
 
-Present a **NOW / NEXT / LATER** view, scaled to spoon level.
+Present a **NOW / NEXT / LATER** view, scaled to spoon level. Use the GAP and END_OF_DAY values from `calendar-today.applescript` to frame how much time is available.
 
 ### If spoons are LOW
 
 ```
 --- Attention check ---
-Energy: Low (coded Xh today, Y events still ahead)
+Energy: Low (coded Xh today, Xm until next event / end of day)
 
 Take care of yourself first.
 - Are you hydrated?
 - Have you eaten?
 - Is there anything with a hard deadline today?
 
-One thing if needed: [single most urgent item]
+One thing if needed: [single OVERDUE or TODAY item, if any]
 
 Everything else can wait. You've done enough.
 ```
@@ -88,15 +101,15 @@ Everything else can wait. You've done enough.
 
 ```
 --- Attention check ---
-Energy: Moderate
+Energy: Moderate — Xm available before [next event / 6pm]
 
 NOW (needs action today):
-  • [Overdue reminders, max 2]
-  • [Hard-deadline calendar items, max 1]
+  • [BLOCKED items — visible but not actionable, max 2]
+  • [OVERDUE + TODAY reminders, max 2]
+  • [Next calendar event with time]
 
 NEXT (on your radar):
-  • [Due-soon reminders, max 2]
-  • [Next calendar event with time]
+  • [HIGH priority reminders, max 2]
 
 Anything feel off about this list?
 ```
@@ -105,17 +118,18 @@ Anything feel off about this list?
 
 ```
 --- Attention check ---
-Energy: Good
+Energy: Good — Xm available before [next event / 6pm]
 
 NOW:
-  • [Overdue + today reminders, max 3]
-  • [Any calendar items starting soon]
+  • [BLOCKED items]
+  • [OVERDUE + TODAY reminders, max 3]
+  • [Calendar items starting soon]
 
 NEXT:
-  • [Due this week, max 3]
+  • [HIGH priority reminders, max 3]
 
-LATER (not urgent, just visible):
-  • [Anything else you want to name]
+LATER (lower signal, just visible):
+  • [MEDIUM priority reminders, max 2]
 
 What do you want to focus on?
 ```
@@ -187,6 +201,50 @@ Linear issues surface GitHub PR URLs in their attachments. After fetching both:
 - Flag if a PR is ready for review but has no linked Linear issue — may be untracked work
 
 Present as a unified list, grouped by work item (not by tool), with the most actionable status shown.
+
+### Starting work from here
+
+When you decide to act on a work item, offer to open or create an OpenCode session for it rather than leaving you to navigate there manually. The OpenCode web API runs at `http://localhost:4096`.
+
+**Find an existing idle session for a repo:**
+
+```bash
+# List sessions for a directory, prefer idle ones
+curl -s "http://localhost:4096/session?directory=/Users/athal/code/odin&roots=true" \
+  | jq '[.[] | select(.time.archived == null)] | sort_by(.time.updated) | reverse | .[0] | {id, title, directory}'
+
+# Check session statuses (idle = ready to use)
+curl -s "http://localhost:4096/session/status" | jq 'to_entries[] | select(.value.type == "idle")'
+```
+
+**Reuse an idle session (send a prompt):**
+
+```bash
+curl -s -X POST "http://localhost:4096/session/<id>/message?directory=<workingDir>" \
+  -H "Content-Type: application/json" \
+  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}'
+```
+
+**Create a new session (no worktree — use the repo directly):**
+
+```bash
+curl -s -X POST "http://localhost:4096/session?directory=/Users/athal/code/<repo>" \
+  -H "Content-Type: application/json" -d '{}'
+# Then send a message to the returned session id
+```
+
+**Create a new worktree sandbox for a PR or issue:**
+
+```bash
+# Create worktree (OpenCode picks a name)
+curl -s -X POST "http://localhost:4096/experimental/worktree?directory=/Users/athal/code/<repo>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "<branch-or-issue-slug>"}'
+# Returns: { "name": "...", "directory": "~/.local/share/opencode/worktree/<id>/<name>" }
+# Then create a session pointing at that directory
+```
+
+**Prefer reuse over creation** — check for an idle session in the target directory first. Only create a new session or worktree if none exists or all are busy.
 
 ---
 
