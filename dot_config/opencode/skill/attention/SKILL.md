@@ -122,9 +122,9 @@ What do you want to focus on?
 
 ---
 
-## Step 4: Items opencode-pilot would have surfaced
+## Step 4: Work items
 
-If the user asks about work items (Linear issues, GitHub PRs) that were previously surfaced by opencode-pilot, guide them here manually:
+If asked about work (Linear issues, GitHub PRs):
 
 ```bash
 # List your assigned Linear issues
