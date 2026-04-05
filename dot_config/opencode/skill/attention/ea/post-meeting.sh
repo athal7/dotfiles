@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # post-meeting.sh — surface action items after meetings end
 # Runs hourly via LaunchAgent
-# Uses minutes actions to find newly extracted action items since last run,
-# adds any assigned to you to Reminders, and sends a notification summary.
+# Scans meeting files modified since last run, parses action_items frontmatter,
+# adds items assigned to me to Work Reminders, sends a notification summary.
 # Requires minutes summarization engine = "agent" to produce structured action items.
 
 set -euo pipefail
@@ -14,59 +14,73 @@ MY_NAME="Andrew Thal"
 mkdir -p "$(dirname "$PROCESSED_LOG")"
 touch "$PROCESSED_LOG"
 
-# Find meeting files modified since the processed log was last updated (i.e. recently processed by minutes)
+# Find meeting files newer than the processed log
 while IFS= read -r meeting_file; do
   SLUG=$(basename "$meeting_file" .md)
-
-  # Skip if already processed
   grep -qF "$SLUG" "$PROCESSED_LOG" && continue
 
-  # Extract title from frontmatter
-  TITLE=$(grep "^title:" "$meeting_file" 2>/dev/null | sed 's/^title: *//' | head -1)
-  [ -z "$TITLE" ] && TITLE="$SLUG"
+  # Parse action_items from YAML frontmatter using Python
+  ITEMS=$(python3 - "$meeting_file" "$MY_NAME" << 'PYEOF'
+import sys, re
 
-  # Extract action items assigned to me from frontmatter
-  # minutes uses YAML array: - assignee: "Name"\n   task: "..."\n   status: open
+meeting_file = sys.argv[1]
+my_name = sys.argv[2]
+
+with open(meeting_file) as f:
+    content = f.read()
+
+fm_match = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+if not fm_match:
+    sys.exit(0)
+
+fm_text = fm_match.group(1)
+ai_match = re.search(r'^action_items:\n((?:  .*\n?)*)', fm_text, re.MULTILINE)
+if not ai_match:
+    sys.exit(0)
+
+items = []
+current = {}
+for line in ai_match.group(1).splitlines():
+    line = line.strip()
+    if line.startswith('- '):
+        if current:
+            items.append(current)
+        current = {}
+        line = line[2:]
+    if ': ' in line:
+        k, v = line.split(': ', 1)
+        current[k.strip()] = v.strip()
+if current:
+    items.append(current)
+
+for item in items:
+    assignee = item.get('assignee', '')
+    task = item.get('task', '')
+    due = item.get('due', '')
+    status = item.get('status', 'open')
+    if my_name.lower() in assignee.lower() and status == 'open' and task:
+        print(f"{task}\t{due}")
+PYEOF
+  )
+
+  TITLE=$(python3 -c "
+import re, sys
+m = re.search(r'^title: (.+)$', open('$meeting_file').read(), re.MULTILINE)
+print(m.group(1) if m else '$(basename "$meeting_file" .md)')
+  " 2>/dev/null || echo "$SLUG")
+
   COUNT=0
-  IN_ITEM=0
-  ASSIGNEE=""
-  TASK=""
-  DUE=""
+  while IFS=$'\t' read -r task due; do
+    [ -z "$task" ] && continue
+    if [ -n "$due" ] && [ "$due" != "null" ] && [ "$due" != "none" ]; then
+      remindctl add "$task" --list Work --due "$due" 2>/dev/null && COUNT=$((COUNT + 1))
+    else
+      remindctl add "$task" --list Work 2>/dev/null && COUNT=$((COUNT + 1))
+    fi
+  done <<< "$ITEMS"
 
-  while IFS= read -r line; do
-    if echo "$line" | grep -q "^action_items:"; then
-      IN_ITEM=1
-      continue
-    fi
-    # End of action_items section
-    if [ "$IN_ITEM" = "1" ] && echo "$line" | grep -qE "^[a-z]"; then
-      IN_ITEM=0
-    fi
-    if [ "$IN_ITEM" = "1" ]; then
-      if echo "$line" | grep -q "assignee:"; then
-        ASSIGNEE=$(echo "$line" | sed 's/.*assignee: *//' | tr -d '"')
-      elif echo "$line" | grep -q "task:"; then
-        TASK=$(echo "$line" | sed 's/.*task: *//' | tr -d '"')
-      elif echo "$line" | grep -q "due:"; then
-        DUE=$(echo "$line" | sed 's/.*due: *//' | tr -d '"')
-      elif echo "$line" | grep -q "status:"; then
-        STATUS=$(echo "$line" | sed 's/.*status: *//' | tr -d '"')
-        # Save item if assigned to me and open
-        if echo "$ASSIGNEE" | grep -qi "$MY_NAME" && [ "${STATUS:-open}" = "open" ] && [ -n "$TASK" ]; then
-          CMD="remindctl add \"Work\" --title \"$TASK\""
-          [ -n "$DUE" ] && CMD="$CMD --due-date \"$DUE\""
-          eval "$CMD" 2>/dev/null && COUNT=$((COUNT + 1))
-        fi
-        ASSIGNEE=""
-        TASK=""
-        DUE=""
-      fi
-    fi
-  done < "$meeting_file"
-
-  # Notify if action items were found
   if [ "$COUNT" -gt 0 ]; then
-    osascript -e "display notification \"${COUNT} action item$([ "$COUNT" -gt 1 ] && echo 's' || echo '') added to Reminders\" with title \"${TITLE}\"" 2>/dev/null || true
+    osascript -e "display notification \"${COUNT} action item$([ "$COUNT" -gt 1 ] && echo 's' || echo '') → Work Reminders\" with title \"${TITLE}\"" 2>/dev/null || true
   fi
 
   echo "$SLUG" >> "$PROCESSED_LOG"
