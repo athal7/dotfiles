@@ -123,34 +123,68 @@ tell application "Calendar"
       end if
     end repeat
 
-    -- Lunch hold: ensure a 45min free block exists on each weekday
-    -- Skips weekends and days that already have a Lunch event or EA lunch hold
-    repeat with offset from 0 to (weeksAhead * 7)
-      set checkDay to now + (offset * days)
+    -- Lunch hold: opportunistically find a gap in 11am-2pm window and protect it
+    -- Does NOT anchor to noon — floats to wherever there's natural breathing room
+    -- Skips weekends and days that already have a real Lunch event or EA lunch hold
+    repeat with dayOffset from 0 to (weeksAhead * 7)
+      set checkDay to now + (dayOffset * days)
       set dow to weekday of checkDay
       if dow is not Saturday and dow is not Sunday then
         set dayStart to checkDay - (time of checkDay)
 
-        -- Check if a lunch event or hold already exists (11am-2pm window)
         set lunchWindowStart to dayStart + (11 * hours)
         set lunchWindowEnd to dayStart + (14 * hours)
 
+        -- Check if a real lunch event or existing hold already covers the window
         set existingLunch to (every event of cal whose ¬
           start date >= lunchWindowStart and ¬
-          start date <= lunchWindowEnd and ¬
+          start date < lunchWindowEnd and ¬
           (summary contains "Lunch" or notes contains lunchMarker))
 
         if (count of existingLunch) is 0 then
-          -- Place lunch at noon
-          set lunchStart to dayStart + (12 * hours)
-          set lunchEnd to lunchStart + (lunchDurationMins * minutes)
+          -- Find the first gap of at least lunchDurationMins in the window
+          -- Collect all events in the window, sorted by start time
+          set windowEvents to (every event of cal whose ¬
+            start date >= lunchWindowStart and ¬
+            start date < lunchWindowEnd and ¬
+            allday event is false and ¬
+            status is not cancelled)
 
-          set lunchHold to make new event at end of events of cal
-          set summary of lunchHold to "🥗 lunch + 🐕 walk"
-          set start date of lunchHold to lunchStart
-          set end date of lunchHold to lunchEnd
-          set notes of lunchHold to lunchMarker
-          set availability of lunchHold to free
+          -- Find gap: try each 15-min slot from 11am to 2pm-(lunchDuration)
+          set foundGap to false
+          set slotStart to lunchWindowStart
+          set slotEnd to slotStart + (lunchDurationMins * minutes)
+
+          repeat while slotEnd <= lunchWindowEnd and not foundGap
+            -- Check if this slot is clear
+            set conflicts to (every event of cal whose ¬
+              start date < slotEnd and ¬
+              end date > slotStart and ¬
+              allday event is false and ¬
+              status is not cancelled and ¬
+              notes does not contain lunchMarker and ¬
+              notes does not contain transitionMarker)
+
+            if (count of conflicts) is 0 then
+              -- Found a clear slot — place lunch hold here
+              set lunchHold to make new event at end of events of cal
+              set summary of lunchHold to "🥗 lunch + 🐕 walk"
+              set start date of lunchHold to slotStart
+              set end date of lunchHold to slotEnd
+              set notes of lunchHold to lunchMarker
+              set availability of lunchHold to free
+              set foundGap to true
+            else
+              -- Advance by 15 minutes and try again
+              set slotStart to slotStart + (15 * minutes)
+              set slotEnd to slotStart + (lunchDurationMins * minutes)
+            end if
+          end repeat
+
+          -- If no gap found, don't create a hold — day is too packed, iMessage instead
+          if not foundGap then
+            do shell script "~/.config/opencode/skill/attention/ea/imessage.sh '⚠️ No lunch gap found on " & (dayStart as string) & " — consider declining something'"
+          end if
         end if
       end if
     end repeat
