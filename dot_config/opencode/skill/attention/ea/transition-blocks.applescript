@@ -6,7 +6,7 @@
 -- 10 min "↓ land" after the meeting
 --
 -- Applies to all meetings EXCEPT: Standup, Lunch
--- Runs on both personal (Me) and work (athal@mozilla.com) calendars
+-- Calendar names discovered from environment, not hardcoded
 
 set transitionMarker to "EA transition block"
 set beforeMins to 10
@@ -16,8 +16,23 @@ set weeksAhead to 2
 -- Lunch skipped (handled separately by lunch hold logic below)
 set skipTitles to {"Standup", "Lunch"}
 
--- Calendars to check for focus-intensive meetings
-set calendarNames to {"Me", "athal@mozilla.com"}
+-- Discover calendar names from environment or Calendar.app accounts
+set personalCal to (do shell script "echo ${EA_PERSONAL_CAL:-Me}")
+set workCal to (do shell script "echo ${EA_WORK_CAL:-}")
+if workCal is "" then
+  tell application "Calendar"
+    repeat with acct in every account
+      if kind of acct is CalDAV then
+        set calList to every calendar of acct
+        if (count of calList) > 0 then
+          set workCal to name of (item 1 of calList)
+          exit repeat
+        end if
+      end if
+    end repeat
+  end tell
+end if
+set calendarNames to {personalCal, workCal}
 
 -- Lunch window: if no lunch event exists on a weekday, create a 45min free hold at noon
 -- This ensures eating + dog walk happens even on busy days
