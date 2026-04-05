@@ -45,8 +45,18 @@ echo "$RECENT" | jq -c '.[]' | while read -r meeting; do
   TRANSCRIPT=$(minutes transcript "$MEETING_ID" 2>/dev/null || echo "")
   [ -z "$TRANSCRIPT" ] && continue
 
-  # Extract action items via OpenCode session
-  PROMPT="Extract action items from this meeting transcript. Return ONLY a JSON array of strings, each being a single actionable task assigned to me or agreed upon by me. If there are no clear action items, return []. Transcript:\n\n${TRANSCRIPT}"
+    # Extract action items via OpenCode session
+  # Ask for title, optional due date (ISO or null), and list (Work/Personal/Inbox)
+  PROMPT="Extract action items from this meeting transcript that are assigned to or agreed upon by me. Return ONLY a JSON array of objects with these fields:
+- title: string (the task)
+- due: string or null (ISO date if a deadline was mentioned, otherwise null)
+- list: string (\"Work\" for work tasks, \"Personal\" for personal tasks, \"Inbox\" if unclear)
+
+Do not assign priority — that is for the human to decide. If there are no clear action items, return [].
+
+Transcript:
+
+${TRANSCRIPT}"
 
   RESPONSE=$(curl -s -X POST "${OPENCODE_API}/session" \
     -H "Content-Type: application/json" \
@@ -54,31 +64,40 @@ echo "$RECENT" | jq -c '.[]' | while read -r meeting; do
   SESSION_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
 
   if [ -n "$SESSION_ID" ]; then
-    # Send prompt and wait for response
     curl -s -X POST "${OPENCODE_API}/session/${SESSION_ID}/message" \
       -H "Content-Type: application/json" \
       -d "{\"parts\": [{\"type\": \"text\", \"text\": $(echo "$PROMPT" | jq -Rs .)}]}" \
       >/dev/null 2>&1
 
-    # Poll for completion (simple wait)
-    sleep 10
+    # Poll for completion — check status instead of sleeping blindly
+    for _ in $(seq 1 24); do
+      sleep 5
+      STATUS=$(curl -s "${OPENCODE_API}/session/status" 2>/dev/null | \
+        jq -r --arg id "$SESSION_ID" '.[$id].type // "unknown"')
+      [ "$STATUS" = "idle" ] && break
+    done
 
     # Get the response text
     ACTION_ITEMS_JSON=$(curl -s "${OPENCODE_API}/session/${SESSION_ID}" 2>/dev/null | \
       jq -r '[.messages[-1].parts[] | select(.type=="text") | .text] | last // "[]"')
 
-    # Parse and add each action item as a Reminder
-    ACTION_ITEMS=$(echo "$ACTION_ITEMS_JSON" | jq -r '.[]' 2>/dev/null || echo "")
-
+    # Parse and add each action item as a Reminder — no priority set
     COUNT=0
-    while IFS= read -r item; do
-      [ -z "$item" ] && continue
-      remindctl add "Action items" --title "$item" --priority high 2>/dev/null && COUNT=$((COUNT + 1))
-    done <<< "$ACTION_ITEMS"
+    while IFS= read -r item_json; do
+      TITLE=$(echo "$item_json" | jq -r '.title // empty')
+      DUE=$(echo "$item_json" | jq -r '.due // empty')
+      LIST=$(echo "$item_json" | jq -r '.list // "Inbox"')
+
+      [ -z "$TITLE" ] && continue
+
+      CMD="remindctl add \"$LIST\" --title \"$TITLE\""
+      [ -n "$DUE" ] && CMD="$CMD --due-date \"$DUE\""
+      eval "$CMD" 2>/dev/null && COUNT=$((COUNT + 1))
+    done < <(echo "$ACTION_ITEMS_JSON" | jq -c '.[]' 2>/dev/null)
 
     # Send iMessage summary if there were action items
     if [ "$COUNT" -gt 0 ]; then
-      MSG="📋 ${MEETING_TITLE}: ${COUNT} action item$([ $COUNT -gt 1 ] && echo 's' || echo '') added to Reminders"
+      MSG="📋 ${MEETING_TITLE}: ${COUNT} action item$([ "$COUNT" -gt 1 ] && echo 's' || echo '') → Reminders (no priority set)"
       bash "${SCRIPT_DIR}/imessage.sh" "$MSG"
     fi
   fi

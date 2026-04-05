@@ -111,15 +111,15 @@ tell application "Calendar"
 
       -- Skip if in the skip list
       if not my titleContainsSkip(mtgTitle, skipTitles) then
-        -- "↑ surface" block: beforeMins before meeting
+        -- "wrap up" block: finish what you're doing before the meeting
         set beforeStart to mtgStart - (beforeMins * minutes)
         set beforeEnd to mtgStart
-        my ensureTransitionBlock(cal, beforeStart, beforeEnd, "↑ surface", transitionMarker)
+        my ensureTransitionBlock(cal, beforeStart, beforeEnd, "→ " & mtgTitle, transitionMarker)
 
-        -- "↓ land" block: afterMins after meeting
+        -- "decompress" block: settle before going back under
         set afterStart to mtgEnd
         set afterEnd to mtgEnd + (afterMins * minutes)
-        my ensureTransitionBlock(cal, afterStart, afterEnd, "↓ land", transitionMarker)
+        my ensureTransitionBlock(cal, afterStart, afterEnd, mtgTitle & " →", transitionMarker)
       end if
     end repeat
 

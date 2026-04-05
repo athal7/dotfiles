@@ -1,46 +1,44 @@
 #!/usr/bin/env bash
-# weekly-digest.sh — Sunday evening schedule awareness digest
-# Sends one iMessage with next week's picture:
-#   - Meeting density
-#   - Open HIGH/OVERDUE reminders
-#   - In Progress Linear issues
-#   - Open calendar gaps (for family-scheduler)
-# Soft suggestions only — nothing is auto-added
+# weekly-digest.sh — Sunday evening personal schedule digest
+# Light and personal only — no work context (that can wait until Monday)
+# Sends one iMessage with:
+#   - Next week's meeting density (just the shape of the week)
+#   - Open personal/family reminders
+#   - Open calendar gaps for family time
+# Soft awareness only — nothing is auto-added
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LINEAR_API="https://api.linear.app/graphql"
 
-# --- Calendar density (next week, Mon-Fri) ---
+# --- Calendar density (next week, Mon-Fri) — shape of the week only ---
 CALENDAR_SUMMARY=$(osascript - <<'EOF'
 tell application "Calendar"
   set monday to current date
-  -- Find next Monday
   repeat until weekday of monday is Monday
     set monday to monday + (1 * days)
   end repeat
   set startOfDay to monday - (time of monday)
-  set friday to startOfDay + (4 * days) + (23 * hours) + (59 * minutes)
 
   set totalMeetings to 0
-  set totalHours to 0
+  set totalMins to 0
   set denseDay to ""
   set maxDayCount to 0
 
-  repeat with offset from 0 to 4
-    set dayStart to startOfDay + (offset * days)
+  repeat with dayOffset from 0 to 4
+    set dayStart to startOfDay + (dayOffset * days)
     set dayEnd to dayStart + (23 * hours) + (59 * minutes)
     set dayCount to 0
-    set dayMins to 0
     repeat with cal in every calendar
-      set evts to (every event of cal whose start date >= dayStart and start date <= dayEnd and allday event is false and status is not cancelled)
+      set evts to (every event of cal whose ¬
+        start date >= dayStart and start date <= dayEnd and ¬
+        allday event is false and status is not cancelled)
       repeat with evt in evts
-        if notes of evt is missing value or notes of evt does not contain "EA transition block" then
+        set n to notes of evt
+        if n is missing value or (n does not contain "EA transition block" and n does not contain "EA lunch hold") then
           set totalMeetings to totalMeetings + 1
           set dayCount to dayCount + 1
-          set evtMins to round ((end date of evt) - (start date of evt)) / 60
-          set totalHours to totalHours + evtMins
+          set totalMins to totalMins + (round ((end date of evt) - (start date of evt)) / 60)
         end if
       end repeat
     end repeat
@@ -50,35 +48,39 @@ tell application "Calendar"
     end if
   end repeat
 
-  set totalHours to round (totalHours / 60)
-  return totalMeetings & " meetings, ~" & totalHours & "h — busiest: " & denseDay
+  set totalHours to round (totalMins / 60)
+  if denseDay is "" then
+    return "quiet week ahead (~" & totalHours & "h of meetings)"
+  else
+    return totalMeetings & " meetings (~" & totalHours & "h) — busiest: " & denseDay
+  end if
 end tell
 EOF
 )
 
-# --- Open HIGH + OVERDUE reminders ---
-REMINDERS=$(remindctl show --json 2>/dev/null | \
-  jq -r '[.[] | select(.completed == false) | select(.priority == 1 or (.dueDate != null and .dueDate < now))] | length' 2>/dev/null || echo "?")
+# --- Personal reminders only (not work Linear) ---
+# Surface overdue or flagged items from personal lists
+PERSONAL_REMINDERS=$(remindctl show --json 2>/dev/null | \
+  jq -r '[.[] |
+    select(.completed == false) |
+    select(.list != "Work") |
+    select(.flagged == true or (.dueDate != null and .dueDate < (now | todate)))
+  ] | length' 2>/dev/null || echo "?")
 
-# --- In Progress Linear issues ---
-LINEAR_COUNT="?"
-if [ -n "${LINEAR_API_KEY:-}" ]; then
-  LINEAR_RESPONSE=$(gq "$LINEAR_API" \
-    -H "Authorization: $LINEAR_API_KEY" \
-    -q '{ viewer { assignedIssues(filter: { state: { type: { eq: "started" } } }) { nodes { id } } } }' 2>/dev/null || echo "{}")
-  LINEAR_COUNT=$(echo "$LINEAR_RESPONSE" | jq '.data.viewer.assignedIssues.nodes | length' 2>/dev/null || echo "?")
+# --- Open family time gaps next week ---
+GAPS=$(osascript ~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript 2>/dev/null | \
+  grep -c "OPEN:" 2>/dev/null || echo "?")
+
+# --- Compose message — light touch ---
+PARTS=("📅 Next week: ${CALENDAR_SUMMARY}")
+
+if [ "$PERSONAL_REMINDERS" != "?" ] && [ "$PERSONAL_REMINDERS" -gt 0 ]; then
+  PARTS+=("⚠️ ${PERSONAL_REMINDERS} personal reminder$([ "$PERSONAL_REMINDERS" != "1" ] && echo 's') need attention")
 fi
 
-# --- Open gaps (evenings + weekends) ---
-GAPS=$(osascript ~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript 2>/dev/null | \
-  grep -c "OPEN:" || echo "?")
+if [ "$GAPS" != "?" ] && [ "$GAPS" -gt 0 ]; then
+  PARTS+=("🌿 ${GAPS} open slot$([ "$GAPS" != "1" ] && echo 's') for family time")
+fi
 
-# --- Compose message ---
-MSG="📅 Next week: ${CALENDAR_SUMMARY}
-⚡ ${REMINDERS} high/overdue reminders
-🔨 ${LINEAR_COUNT} in-progress Linear issues
-🌿 ${GAPS} open gap$([ "$GAPS" != "1" ] && echo 's') for family time
-
-Load attention skill to plan or just see how the week unfolds."
-
+MSG=$(printf '%s\n' "${PARTS[@]}")
 bash "${SCRIPT_DIR}/imessage.sh" "$MSG"
