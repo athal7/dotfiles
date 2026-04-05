@@ -149,25 +149,24 @@ Prepare **extended context**:
 
 ### Spawn specialists
 
-Spawn all applicable specialists **in parallel** (all in a single message), all with `subagent_type="expert"`. Each prompt tells the expert to load a specific review skill.
+Before dispatching, read the relevant specialist instruction files:
 
-**Always dispatch (every review):**
 ```
-Task("review-correctness", payload + Issue Context + Project Rules + Static Analysis + Prior Reviews)
-Task("review-completeness", payload + Issue Context + Project Rules + Static Analysis + Prior Reviews)
-Task("review-maintainability", payload + Issue Context + Project Rules + Static Analysis + Prior Reviews)
+~/.config/opencode/skill/review/specialists/correctness.md
+~/.config/opencode/skill/review/specialists/completeness.md
+~/.config/opencode/skill/review/specialists/maintainability.md
+~/.config/opencode/skill/review/specialists/conventions.md   ← if applicable
+~/.config/opencode/skill/review/specialists/security.md      ← if applicable
+~/.config/opencode/skill/review/specialists/performance.md   ← if applicable
 ```
 
-**Conditional (only when relevant signals detected):**
-```
-Task("review-conventions", payload + Project Rules + Static Analysis + Prior Reviews)
-Task("review-security", payload + Project Rules + Static Analysis + Prior Reviews)
-Task("review-performance", payload + Project Rules + Static Analysis + Prior Reviews)
-```
+Spawn all applicable specialists **in parallel** (all in a single message), all with `subagent_type="expert"`. Inline the specialist instructions directly into each Task prompt — do not tell the expert to load a skill.
 
 Each Task prompt follows this template:
 ```
-Load the `review-<skill>` skill and follow its instructions.
+You are a <domain> reviewer. Follow these instructions:
+
+<contents of specialists/<domain>.md>
 
 <base payload>
 
@@ -186,7 +185,7 @@ Load the `review-<skill>` skill and follow its instructions.
 
 Each specialist returns `{"findings": [...], "escalations": [...]}`.
 
-**Escalation routing:** If a specialist was skipped but another specialist escalates to it, the escalation handler dispatches it as a follow-up.
+**Escalation routing:** If a specialist was skipped but another specialist escalates to it, read that specialist file and dispatch a follow-up Task with its instructions inlined.
 
 ### Handle Escalations
 
@@ -197,8 +196,11 @@ After all specialists return, collect all `escalations` from each specialist's o
 
 Follow-up template:
 ```
-Load the `review-<domain>` skill. The following areas were flagged by other reviewers:
+You are a <domain> reviewer. Follow these instructions:
 
+<contents of specialists/<domain>.md>
+
+The following areas were flagged by other reviewers:
 <list of escalations with file:line and note>
 
 Full diff: <diff>

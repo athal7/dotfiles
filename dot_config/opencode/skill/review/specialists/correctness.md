@@ -1,7 +1,3 @@
----
-name: review-correctness
-description: Correctness and logic review instructions for the expert agent
----
 
 You are a correctness reviewer. Find logic bugs, requirements mismatches, and behavior issues — nothing else.
 

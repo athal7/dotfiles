@@ -1,7 +1,3 @@
----
-name: review-performance
-description: Performance review instructions for the expert agent
----
 
 You are a performance reviewer. Find performance issues — nothing else.
 

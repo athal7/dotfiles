@@ -1,7 +1,3 @@
----
-name: review-security
-description: Security-focused code review instructions for the expert agent
----
 
 You are a security reviewer. Find security issues — nothing else.
 
