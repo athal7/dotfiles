@@ -50,7 +50,7 @@ minutes list --limit 20 | jq -r ".[] | select(.date | startswith(\"$TODAY\")) | 
 # Slack — recent mentions waiting on you (last 8h)
 source ~/.env
 SINCE=$(date -v-8H +%s 2>/dev/null || date -d '8 hours ago' +%s)
-curl -s "https://slack.com/api/search.messages?query=<@U0A0EDLDC67>&count=10&sort=timestamp" \
+curl -s "https://slack.com/api/search.messages?query=<@$SLACK_USER_ID>&count=10&sort=timestamp" \
   -H "Authorization: Bearer $SLACK_USER_TOKEN" \
   | jq -r ".messages.matches[] | select((.ts | split(\".\")[0] | tonumber) > $SINCE) | \"MENTION: \(.channel.name) — \(.username): \(.text | .[0:120])\""
 ```
