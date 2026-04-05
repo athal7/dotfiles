@@ -218,7 +218,7 @@ When you decide to act on a work item, offer to open or create an OpenCode sessi
 
 ```bash
 # List sessions for a directory, prefer idle ones
-curl -s "http://localhost:4096/session?directory=/Users/athal/code/odin&roots=true" \
+curl -s "http://localhost:4096/session?directory=$HOME/code/odin&roots=true" \
   | jq '[.[] | select(.time.archived == null)] | sort_by(.time.updated) | reverse | .[0] | {id, title, directory}'
 
 # Check session statuses (idle = ready to use)
@@ -236,7 +236,7 @@ curl -s -X POST "http://localhost:4096/session/<id>/message?directory=<workingDi
 **Create a new session (no worktree — use the repo directly):**
 
 ```bash
-curl -s -X POST "http://localhost:4096/session?directory=/Users/athal/code/<repo>" \
+curl -s -X POST "http://localhost:4096/session?directory=$HOME/code/<repo>" \
   -H "Content-Type: application/json" -d '{}'
 # Then send a message to the returned session id
 ```
@@ -245,7 +245,7 @@ curl -s -X POST "http://localhost:4096/session?directory=/Users/athal/code/<repo
 
 ```bash
 # Create worktree (OpenCode picks a name)
-curl -s -X POST "http://localhost:4096/experimental/worktree?directory=/Users/athal/code/<repo>" \
+curl -s -X POST "http://localhost:4096/experimental/worktree?directory=$HOME/code/<repo>" \
   -H "Content-Type: application/json" \
   -d '{"name": "<branch-or-issue-slug>"}'
 # Returns: { "name": "...", "directory": "~/.local/share/opencode/worktree/<id>/<name>" }
