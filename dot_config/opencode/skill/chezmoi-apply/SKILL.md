@@ -5,9 +5,18 @@ description: Run chezmoi apply safely when editing opencode config — handles t
 
 ## The Problem
 
-`chezmoi apply` triggers `run_onchange_after_restart-opencode-web.sh.tmpl` whenever `opencode.json` or any plugin file changes. That script runs `launchctl kickstart -k com.athal.opencode-web`, which **kills the running opencode server** mid-request. The current session loses its WebSocket connection and appears to hang indefinitely.
+`chezmoi apply` can trigger a server restart from **two different onchange scripts**, either of which will kill the running opencode server mid-request. The current session loses its WebSocket connection and appears to hang indefinitely.
 
 **You are running inside that server.** When `chezmoi apply` restarts it, this session will go silent.
+
+### Triggers that cause a restart
+
+| Script | What it watches | Effect |
+|--------|----------------|--------|
+| `run_onchange_after_restart-opencode-web.sh` | `opencode.json`, `dot_config/opencode/plugins/*` | Restarts opencode-web directly |
+| `run_onchange_after_ensure-launchagents.sh` | `Library/LaunchAgents/*.plist.tmpl` (glob hash) | Reloads all managed LaunchAgents, including opencode-web |
+
+**Adding, removing, or changing any `.plist.tmpl` file triggers a restart** — not just `opencode.json`. Editing skills, commands, `AGENTS.md`, or other config files does *not* trigger a restart.
 
 ## Safe Workflow
 
