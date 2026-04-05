@@ -7,25 +7,14 @@ description: Energy and spoon check — come up for air, see what needs attentio
 
 Two modes in one skill:
 
-**Passive EA (background, always running):** Three LaunchAgents in `ea/` handle calendar sync, transition blocks, lunch holds, and post-meeting action item extraction silently. They send iMessages only when something actually needs surfacing. No interaction required.
-
-**Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view of what needs attention.
+**Passive EA (background):** One LaunchAgent (`ea-meetings`) runs hourly — extracts action items from newly processed meetings and adds them to Work Reminders with a notification. See `ea/` for scripts.
 
 **EA scripts** (`~/.config/opencode/skill/attention/ea/`):
-- `sync-calendars.applescript` — mirrors events between Me ↔ athal@mozilla.com as free holds (every 20min)
-- `transition-blocks.applescript` — creates 10min ↑surface/↓land blocks around focus-intensive meetings, and 45min lunch+dog walk holds on weekdays without a lunch event (every 20min)
-- `post-meeting.sh` — extracts action items from ended meetings → Reminders + iMessage (hourly)
-- `weekly-digest.sh` — Sunday 6pm iMessage with next week's calendar density, open reminders, Linear issues, and family time gaps
-- `imessage.sh` — shared helper for sending iMessages to self (finds Apple ID from system)
+- `post-meeting.sh` — extracts action items from minutes-processed meeting frontmatter → Work Reminders + notification (hourly, working ✅)
+- `sync-calendars.applescript` — bidirectional calendar hold sync; works interactively, deferred from LaunchAgent (Calendar TCC issue) 🔜
+- `imessage.sh` — notification helper (display notification primary)
 
-**First-time setup** (run once from Terminal, not from background process):
-```bash
-remindctl authorize        # grant Reminders access
-shortcuts run "Send iMessage to Self" --input-path /dev/null  # create Shortcut if needed
-osascript ~/.config/opencode/skill/attention/ea/sync-calendars.applescript  # grant Calendar access
-```
-
----
+**Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view.
 
 ---
 
@@ -33,17 +22,15 @@ osascript ~/.config/opencode/skill/attention/ea/sync-calendars.applescript  # gr
 
 ```bash
 wakatime-cli --today 2>/dev/null | head -5
-osascript "~/.config/opencode/skill/attention/calendar-today.applescript"
 ```
 
-The calendar script returns structured `GAP:`, `END_OF_DAY:`, and `EVENT:` lines. Use both outputs together to synthesize spoon level:
+Note: Calendar time-until-next-event is deferred — Calendar.app AppleScript does not work reliably from the OpenCode server process (TCC context issue). Spoon level is based on WakaTime only for now.
 
-| WakaTime today | Remaining events | Spoon level |
-|---------------|-----------------|-------------|
-| < 2h | 0–1 | Full |
-| 2–4h | 1–2 | Moderate |
-| > 4h | any | Low |
-| any | 3+ | Low |
+| WakaTime today | Spoon level |
+|---------------|-------------|
+| < 2h | Full |
+| 2–4h | Moderate |
+| > 4h | Low |
 
 ---
 
