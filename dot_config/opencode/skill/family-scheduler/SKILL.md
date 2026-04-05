@@ -34,7 +34,7 @@ Edit this skill to add or remove feeds.
 
 ### Step 1: Check spoon level
 
-Run the WakaTime check from the attention skill:
+If the `attention` skill has already been run this session, reuse the spoon level from that check — don't re-run WakaTime. Otherwise:
 
 ```bash
 wakatime-cli --today 2>/dev/null | head -5

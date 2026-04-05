@@ -1,6 +1,6 @@
 ---
 name: attention
-description: Come up for air — surface what needs attention now, filtered by energy and spoon budget
+description: Energy and spoon check — come up for air, see what needs attention without breaking focus
 ---
 
 # Skill: Attention
@@ -166,38 +166,14 @@ gh api "search/issues?q=is:pr+is:open+author:@me+review:required&per_page=10" \
 
 ### Linear — issues by state
 
-```bash
-# Requires LINEAR_API_KEY in env (loaded via direnv from ~/.env)
-gq https://api.linear.app/graphql \
-  -H "Authorization: $LINEAR_API_KEY" \
-  -q '{
-    viewer {
-      assignedIssues(filter: { state: { type: { in: ["started", "unstarted"] } } }, first: 20) {
-        nodes {
-          identifier title
-          state { name type }
-          priority
-          url
-          attachments(first: 5) { nodes { url title } }
-        }
-      }
-    }
-  }' | jq '.data.viewer.assignedIssues.nodes[] | {
-    id: .identifier,
-    title,
-    state: .state.name,
-    priority,
-    url,
-    prs: [.attachments.nodes[] | select(.url | contains("github.com")) | .url]
-  }'
-```
+Load the `linear` skill for auth setup and query patterns, then fetch assigned issues in `started` or `unstarted` states, including their attachments (which surface linked PR URLs).
 
 ### Cross-reference GitHub ↔ Linear
 
-Linear issues surface GitHub PR URLs in their attachments. After fetching both:
+After fetching both:
 
 - If a Linear issue has a linked PR that also appears in the GitHub categories above, **group them together** — don't show the same work twice
-- Flag if a Linear issue is "In Progress" but its PR has `CHANGES_REQUESTED` or `DIRTY` — that's a stuck item needing attention
+- Flag if a Linear issue is "In Progress" but its PR has `CHANGES_REQUESTED` or `DIRTY` — that's a stuck item
 - Flag if a PR is ready for review but has no linked Linear issue — may be untracked work
 
 Present as a unified list, grouped by work item (not by tool), with the most actionable status shown.
@@ -245,6 +221,8 @@ curl -s -X POST "http://localhost:4096/experimental/worktree?directory=/Users/at
 ```
 
 **Prefer reuse over creation** — check for an idle session in the target directory first. Only create a new session or worktree if none exists or all are busy.
+
+Once a session is created or identified, load the `process` skill to orchestrate the actual work (plan → implement → verify → commit).
 
 ---
 
