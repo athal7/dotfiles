@@ -72,4 +72,8 @@
 
 **Figma's `mcp.figma.com/mcp`** returns HTTP 405 on GET (not 404) — it is a live MCP endpoint. The 405 is expected; it requires POST per the MCP spec.
 
-**Credentials** live in `~/.env` (not chezmoi-managed): `LINEAR_API_KEY`, `ES_URL`, `ES_API_KEY`, `FIGMA_ACCESS_TOKEN`, `SLACK_USER_TOKEN`.
+**Credentials** live in `~/.env` (not chezmoi-managed): `LINEAR_API_KEY`, `LINEAR_TEAM_ID`, `ES_URL`, `ES_API_KEY`, `FIGMA_ACCESS_TOKEN`, `SLACK_USER_TOKEN`.
+
+**`gq` (graphqurl) does not support `$VARIABLE` interpolation in `-q` strings** — shell env vars are not expanded inside single-quoted GraphQL. Use `--queryFile` with a `.gql.tmpl` file for queries that need chezmoi template values (e.g., user name). Pass runtime vars via `-v key=value`.
+
+**chezmoi `[data]` in `.chezmoi.toml.tmpl` requires `chezmoi init` to take effect** — the generated config at `~/.config/chezmoi/chezmoi.toml` is not updated by `chezmoi apply` alone. After adding a new `[data]` key, run `chezmoi init` first, then `chezmoi apply`.
