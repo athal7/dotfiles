@@ -38,7 +38,8 @@ remindctl show --json overdue | jq -r '.[] | "OVERDUE: \(.title) [\(.listName)]"
 remindctl show --json today | jq -r '.[] | select(.isCompleted == false) | "TODAY: \(.title) [\(.listName)]"'
 
 # Reminders — no due date (all priorities, incomplete)
-remindctl show --json upcoming | jq -r '.[] |
+# Note: `upcoming` only returns items with future due dates — use `all` for no-due-date items
+remindctl show --json all | jq -r '.[] |
   select(.isCompleted == false) |
   select(.dueDate == null) |
   "\(.priority // "none"): \(.title) [\(.listName)]"'
