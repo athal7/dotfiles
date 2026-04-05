@@ -1,0 +1,20 @@
+query TeamIssues($teamId: String!) {
+  team(id: $teamId) {
+    issues(
+      filter: { assignee: { name: { eq: {{ .fullName | quote }} } } }
+      first: 10
+      orderBy: updatedAt
+    ) {
+      nodes {
+        identifier
+        title
+        state {
+          name
+        }
+        assignee {
+          name
+        }
+      }
+    }
+  }
+}

@@ -154,7 +154,13 @@ gh api "search/issues?q=is:pr+is:open+author:@me+review:required&per_page=10" \
 
 ### Linear — issues by state
 
-Load the `linear` skill for auth setup and query patterns, then fetch assigned issues in `started` or `unstarted` states, including their attachments (which surface linked PR URLs).
+```bash
+source ~/.env
+SKILL_DIR=~/.config/opencode/skill/attention
+gq https://api.linear.app/graphql -H "Authorization: $LINEAR_API_KEY" \
+  --queryFile $SKILL_DIR/team-issues.gql -v teamId="$LINEAR_TEAM_ID" \
+  | jq '.data.team.issues.nodes'
+```
 
 ### Cross-reference GitHub ↔ Linear
 
