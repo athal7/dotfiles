@@ -122,20 +122,71 @@ What do you want to focus on?
 
 ---
 
-## Step 4: Work items
+## Step 4: Work items (spoons FULL only)
 
-If asked about work (Linear issues, GitHub PRs):
+If spoons are not FULL, skip this step and note:
+> "Work items are waiting — check in when you have more capacity."
+
+### GitHub PRs — four categories to check
 
 ```bash
-# List your assigned Linear issues
-gh issue list --assignee @me --state open --limit 5 2>/dev/null
+# 1. Review requested from you
+gh api "search/issues?q=is:pr+is:open+review-requested:@me&per_page=10" \
+  --jq '.items[] | "  REVIEW: \(.title) \(.html_url)"'
 
-# Or use Linear skill for richer context
-# /linear
+# 2. Your PRs with changes requested
+gh api "search/issues?q=is:pr+is:open+author:@me+review:changes-requested&per_page=10" \
+  --jq '.items[] | "  CHANGES: \(.title) \(.html_url)"'
+
+# 3. Your PRs with merge conflicts (check mergeStateStatus per repo)
+# mergeStateStatus=DIRTY means conflicts; requires per-repo query
+gh pr list -R 0din-ai/odin --author @me \
+  --json number,title,mergeStateStatus,headRefName \
+  --jq '.[] | select(.mergeStateStatus == "DIRTY") | "  CONFLICT: \(.title) (#\(.number))"'
+# Repeat for other active repos as needed
+
+# 4. Your PRs awaiting review (no decision yet, not draft)
+gh api "search/issues?q=is:pr+is:open+author:@me+review:required&per_page=10" \
+  --jq '.items[] | "  WAITING: \(.title) \(.html_url)"'
 ```
 
-Only surface work items if spoons are FULL. Otherwise note:
-> "Work items are waiting — check in when you have more capacity."
+### Linear — issues by state
+
+```bash
+# Requires LINEAR_API_KEY in env (loaded via direnv from ~/.env)
+gq https://api.linear.app/graphql \
+  -H "Authorization: $LINEAR_API_KEY" \
+  -q '{
+    viewer {
+      assignedIssues(filter: { state: { type: { in: ["started", "unstarted"] } } }, first: 20) {
+        nodes {
+          identifier title
+          state { name type }
+          priority
+          url
+          attachments(first: 5) { nodes { url title } }
+        }
+      }
+    }
+  }' | jq '.data.viewer.assignedIssues.nodes[] | {
+    id: .identifier,
+    title,
+    state: .state.name,
+    priority,
+    url,
+    prs: [.attachments.nodes[] | select(.url | contains("github.com")) | .url]
+  }'
+```
+
+### Cross-reference GitHub ↔ Linear
+
+Linear issues surface GitHub PR URLs in their attachments. After fetching both:
+
+- If a Linear issue has a linked PR that also appears in the GitHub categories above, **group them together** — don't show the same work twice
+- Flag if a Linear issue is "In Progress" but its PR has `CHANGES_REQUESTED` or `DIRTY` — that's a stuck item needing attention
+- Flag if a PR is ready for review but has no linked Linear issue — may be untracked work
+
+Present as a unified list, grouped by work item (not by tool), with the most actionable status shown.
 
 ---
 
