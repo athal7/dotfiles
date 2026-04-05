@@ -9,7 +9,7 @@ set -euo pipefail
 
 PROCESSED_LOG="${HOME}/.local/share/ea/processed-meetings.txt"
 MEETINGS_DIR="${HOME}/meetings"
-MY_NAME="Andrew Thal"
+MY_NAME="{{ .fullName }}"
 
 mkdir -p "$(dirname "$PROCESSED_LOG")"
 touch "$PROCESSED_LOG"
