@@ -71,16 +71,25 @@ PERSONAL_REMINDERS=$(remindctl show --json 2>/dev/null | \
 GAPS=$(osascript ~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript 2>/dev/null | \
   grep -c "OPEN:" 2>/dev/null || echo "?")
 
-# --- Compose message — light touch ---
-PARTS=("📅 Next week: ${CALENDAR_SUMMARY}")
+# --- Compose notification — title = week shape, body = personal items ---
+TITLE="📅 Next week: ${CALENDAR_SUMMARY}"
+BODY_PARTS=()
 
 if [ "$PERSONAL_REMINDERS" != "?" ] && [ "$PERSONAL_REMINDERS" -gt 0 ]; then
-  PARTS+=("⚠️ ${PERSONAL_REMINDERS} personal reminder$([ "$PERSONAL_REMINDERS" != "1" ] && echo 's') need attention")
+  BODY_PARTS+=("⚠️ ${PERSONAL_REMINDERS} personal reminder$([ "$PERSONAL_REMINDERS" != "1" ] && echo 's')")
 fi
 
 if [ "$GAPS" != "?" ] && [ "$GAPS" -gt 0 ]; then
-  PARTS+=("🌿 ${GAPS} open slot$([ "$GAPS" != "1" ] && echo 's') for family time")
+  BODY_PARTS+=("🌿 ${GAPS} open slot$([ "$GAPS" != "1" ] && echo 's') for family time")
 fi
 
-MSG=$(printf '%s\n' "${PARTS[@]}")
-bash "${SCRIPT_DIR}/imessage.sh" "$MSG"
+# Send as a notification — only send if there's something worth noting
+if [ "${#BODY_PARTS[@]}" -gt 0 ]; then
+  BODY=$(printf ' · %s' "${BODY_PARTS[@]}")
+  BODY="${BODY:3}"  # strip leading ' · '
+  osascript -e "display notification \"${BODY}\" with title \"EA\" subtitle \"${TITLE}\"" 2>/dev/null || \
+    bash "${SCRIPT_DIR}/imessage.sh" "${TITLE} — ${BODY}"
+else
+  # Just the calendar shape, no noise
+  osascript -e "display notification \"${TITLE}\" with title \"EA\"" 2>/dev/null || true
+fi

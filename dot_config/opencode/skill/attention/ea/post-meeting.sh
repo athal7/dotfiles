@@ -1,107 +1,74 @@
 #!/usr/bin/env bash
-# post-meeting.sh — extract action items from recently ended meetings
+# post-meeting.sh — surface action items after meetings end
 # Runs hourly via LaunchAgent
-# For each meeting that ended in the last 2 hours with no processed marker:
-#   1. Get transcript via minutes CLI
-#   2. Extract action items via OpenCode session
-#   3. Add each as a HIGH priority Reminder
-#   4. Send iMessage summary to self
+# Uses minutes actions to find newly extracted action items since last run,
+# adds any assigned to you to Reminders, and sends a notification summary.
+# Requires minutes summarization engine = "agent" to produce structured action items.
 
 set -euo pipefail
 
 PROCESSED_LOG="${HOME}/.local/share/ea/processed-meetings.txt"
-OPENCODE_API="http://localhost:4096"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MEETINGS_DIR="${HOME}/meetings"
+MY_NAME="Andrew Thal"
 
 mkdir -p "$(dirname "$PROCESSED_LOG")"
 touch "$PROCESSED_LOG"
 
-# Find meetings that ended in the last 2 hours
-NOW=$(date +%s)
-TWO_HOURS_AGO=$((NOW - 7200))
+# Find meeting files modified since the processed log was last updated (i.e. recently processed by minutes)
+while IFS= read -r meeting_file; do
+  SLUG=$(basename "$meeting_file" .md)
 
-# Get recent meetings from minutes
-RECENT=$(minutes list --json 2>/dev/null || echo "[]")
-if [ "$RECENT" = "[]" ] || [ -z "$RECENT" ]; then
-  exit 0
-fi
+  # Skip if already processed
+  grep -qF "$SLUG" "$PROCESSED_LOG" && continue
 
-# Filter to meetings that ended in the window and haven't been processed
-echo "$RECENT" | jq -c '.[]' | while read -r meeting; do
-  MEETING_ID=$(echo "$meeting" | jq -r '.id')
-  MEETING_TITLE=$(echo "$meeting" | jq -r '.title // "Meeting"')
-  MEETING_END=$(echo "$meeting" | jq -r '.endTime // empty')
+  # Extract title from frontmatter
+  TITLE=$(grep "^title:" "$meeting_file" 2>/dev/null | sed 's/^title: *//' | head -1)
+  [ -z "$TITLE" ] && TITLE="$SLUG"
 
-  # Skip if no end time or already processed
-  [ -z "$MEETING_END" ] && continue
-  grep -qF "$MEETING_ID" "$PROCESSED_LOG" && continue
+  # Extract action items assigned to me from frontmatter
+  # minutes uses YAML array: - assignee: "Name"\n   task: "..."\n   status: open
+  COUNT=0
+  IN_ITEM=0
+  ASSIGNEE=""
+  TASK=""
+  DUE=""
 
-  # Check if meeting ended in the last 2 hours
-  END_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${MEETING_END%.*}" "+%s" 2>/dev/null || echo 0)
-  [ "$END_EPOCH" -lt "$TWO_HOURS_AGO" ] && continue
-  [ "$END_EPOCH" -gt "$NOW" ] && continue
-
-  # Get transcript
-  TRANSCRIPT=$(minutes transcript "$MEETING_ID" 2>/dev/null || echo "")
-  [ -z "$TRANSCRIPT" ] && continue
-
-    # Extract action items via OpenCode session
-  # Ask for title, optional due date (ISO or null), and list (Work/Personal/Inbox)
-  PROMPT="Extract action items from this meeting transcript that are assigned to or agreed upon by me. Return ONLY a JSON array of objects with these fields:
-- title: string (the task)
-- due: string or null (ISO date if a deadline was mentioned, otherwise null)
-- list: string (\"Work\" for work tasks, \"Personal\" for personal tasks, \"Inbox\" if unclear)
-
-Do not assign priority — that is for the human to decide. If there are no clear action items, return [].
-
-Transcript:
-
-${TRANSCRIPT}"
-
-  RESPONSE=$(curl -s -X POST "${OPENCODE_API}/session" \
-    -H "Content-Type: application/json" \
-    -d '{}' 2>/dev/null)
-  SESSION_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
-
-  if [ -n "$SESSION_ID" ]; then
-    curl -s -X POST "${OPENCODE_API}/session/${SESSION_ID}/message" \
-      -H "Content-Type: application/json" \
-      -d "{\"parts\": [{\"type\": \"text\", \"text\": $(echo "$PROMPT" | jq -Rs .)}]}" \
-      >/dev/null 2>&1
-
-    # Poll for completion — check status instead of sleeping blindly
-    for _ in $(seq 1 24); do
-      sleep 5
-      STATUS=$(curl -s "${OPENCODE_API}/session/status" 2>/dev/null | \
-        jq -r --arg id "$SESSION_ID" '.[$id].type // "unknown"')
-      [ "$STATUS" = "idle" ] && break
-    done
-
-    # Get the response text
-    ACTION_ITEMS_JSON=$(curl -s "${OPENCODE_API}/session/${SESSION_ID}" 2>/dev/null | \
-      jq -r '[.messages[-1].parts[] | select(.type=="text") | .text] | last // "[]"')
-
-    # Parse and add each action item as a Reminder — no priority set
-    COUNT=0
-    while IFS= read -r item_json; do
-      TITLE=$(echo "$item_json" | jq -r '.title // empty')
-      DUE=$(echo "$item_json" | jq -r '.due // empty')
-      LIST=$(echo "$item_json" | jq -r '.list // "Inbox"')
-
-      [ -z "$TITLE" ] && continue
-
-      CMD="remindctl add \"$LIST\" --title \"$TITLE\""
-      [ -n "$DUE" ] && CMD="$CMD --due-date \"$DUE\""
-      eval "$CMD" 2>/dev/null && COUNT=$((COUNT + 1))
-    done < <(echo "$ACTION_ITEMS_JSON" | jq -c '.[]' 2>/dev/null)
-
-    # Send iMessage summary if there were action items
-    if [ "$COUNT" -gt 0 ]; then
-      MSG="📋 ${MEETING_TITLE}: ${COUNT} action item$([ "$COUNT" -gt 1 ] && echo 's' || echo '') → Reminders (no priority set)"
-      bash "${SCRIPT_DIR}/imessage.sh" "$MSG"
+  while IFS= read -r line; do
+    if echo "$line" | grep -q "^action_items:"; then
+      IN_ITEM=1
+      continue
     fi
+    # End of action_items section
+    if [ "$IN_ITEM" = "1" ] && echo "$line" | grep -qE "^[a-z]"; then
+      IN_ITEM=0
+    fi
+    if [ "$IN_ITEM" = "1" ]; then
+      if echo "$line" | grep -q "assignee:"; then
+        ASSIGNEE=$(echo "$line" | sed 's/.*assignee: *//' | tr -d '"')
+      elif echo "$line" | grep -q "task:"; then
+        TASK=$(echo "$line" | sed 's/.*task: *//' | tr -d '"')
+      elif echo "$line" | grep -q "due:"; then
+        DUE=$(echo "$line" | sed 's/.*due: *//' | tr -d '"')
+      elif echo "$line" | grep -q "status:"; then
+        STATUS=$(echo "$line" | sed 's/.*status: *//' | tr -d '"')
+        # Save item if assigned to me and open
+        if echo "$ASSIGNEE" | grep -qi "$MY_NAME" && [ "${STATUS:-open}" = "open" ] && [ -n "$TASK" ]; then
+          CMD="remindctl add \"Work\" --title \"$TASK\""
+          [ -n "$DUE" ] && CMD="$CMD --due-date \"$DUE\""
+          eval "$CMD" 2>/dev/null && COUNT=$((COUNT + 1))
+        fi
+        ASSIGNEE=""
+        TASK=""
+        DUE=""
+      fi
+    fi
+  done < "$meeting_file"
+
+  # Notify if action items were found
+  if [ "$COUNT" -gt 0 ]; then
+    osascript -e "display notification \"${COUNT} action item$([ "$COUNT" -gt 1 ] && echo 's' || echo '') added to Reminders\" with title \"${TITLE}\"" 2>/dev/null || true
   fi
 
-  # Mark as processed
-  echo "$MEETING_ID" >> "$PROCESSED_LOG"
-done
+  echo "$SLUG" >> "$PROCESSED_LOG"
+
+done < <(find "$MEETINGS_DIR" -name "*.md" -newer "$PROCESSED_LOG" -not -path "*/memos/*" 2>/dev/null)

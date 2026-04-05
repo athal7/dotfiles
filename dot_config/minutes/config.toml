@@ -1,5 +1,8 @@
 output_dir = "/Users/athal/meetings"
 
+[identity]
+name = "Andrew Thal"
+
 [transcription]
 model = "small"
 model_path = "/Users/athal/.minutes/models"
@@ -9,7 +12,8 @@ min_words = 3
 engine = "none"
 
 [summarization]
-engine = "none"
+engine = "agent"
+agent_command = "claude"  # uses Claude Code subscription, no API key needed
 
 [search]
 engine = "builtin"
