@@ -5,13 +5,27 @@ description: Energy and spoon check — come up for air, see what needs attentio
 
 # Skill: Attention
 
-A calm, low-interruption attention check. Surfaces what matters *right now* without overwhelming — designed for a monotropic brain that needs to transition out of deep focus gently.
+Two modes in one skill:
 
-**Design principles:**
-- Reduce, don't aggregate. Show the minimum useful signal.
-- Respect energy. If spoons are low, say so clearly and show less.
-- Don't decide for you. Offer options, not directives.
-- Silent during work. This skill is for when *you* choose to check in.
+**Passive EA (background, always running):** Three LaunchAgents in `ea/` handle calendar sync, transition blocks, lunch holds, and post-meeting action item extraction silently. They send iMessages only when something actually needs surfacing. No interaction required.
+
+**Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view of what needs attention.
+
+**EA scripts** (`~/.config/opencode/skill/attention/ea/`):
+- `sync-calendars.applescript` — mirrors events between Me ↔ athal@mozilla.com as free holds (every 20min)
+- `transition-blocks.applescript` — creates 10min ↑surface/↓land blocks around focus-intensive meetings, and 45min lunch+dog walk holds on weekdays without a lunch event (every 20min)
+- `post-meeting.sh` — extracts action items from ended meetings → Reminders + iMessage (hourly)
+- `weekly-digest.sh` — Sunday 6pm iMessage with next week's calendar density, open reminders, Linear issues, and family time gaps
+- `imessage.sh` — shared helper for sending iMessages to self (finds Apple ID from system)
+
+**First-time setup** (run once from Terminal, not from background process):
+```bash
+remindctl authorize        # grant Reminders access
+shortcuts run "Send iMessage to Self" --input-path /dev/null  # create Shortcut if needed
+osascript ~/.config/opencode/skill/attention/ea/sync-calendars.applescript  # grant Calendar access
+```
+
+---
 
 ---
 
@@ -36,7 +50,13 @@ The calendar script returns structured `GAP:`, `END_OF_DAY:`, and `EVENT:` lines
 ## Step 2: Read Apple Reminders
 
 ```bash
-osascript "~/.config/opencode/skill/attention/reminders-due.applescript"
+remindctl show --json | jq -r '.[] | select(.completed == false) |
+  if .flagged then "BLOCKED: \(.title) [\(.list)]"
+  elif (.dueDate != null and .dueDate < now) then "OVERDUE: \(.title) [\(.list)]"
+  elif (.dueDate != null) then "TODAY: \(.title) [\(.list)]"
+  elif .priority == 1 then "HIGH: \(.title) [\(.list)]"
+  elif .priority == 2 then "MEDIUM: \(.title) [\(.list)]"
+  else empty end'
 ```
 
 The script returns reminders grouped by urgency:
