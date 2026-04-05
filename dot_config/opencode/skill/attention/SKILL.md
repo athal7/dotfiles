@@ -37,23 +37,10 @@ Interpret:
 
 ### Calendar density today
 
-Use AppleScript to read today's remaining calendar events:
+Run the bundled AppleScript to read today's remaining events:
 
-```applescript
-tell application "Calendar"
-  set today to current date
-  set startOfDay to today - (time of today)
-  set endOfDay to startOfDay + (23 * hours) + (59 * minutes)
-  set allCalendars to every calendar
-  set todayEvents to {}
-  repeat with cal in allCalendars
-    set evts to (every event of cal whose start date >= (current date) and start date <= endOfDay)
-    repeat with evt in evts
-      set end of todayEvents to (summary of evt & " @ " & (start date of evt as string))
-    end repeat
-  end repeat
-  return todayEvents
-end tell
+```bash
+osascript "$(dirname $0)/calendar-today.applescript"
 ```
 
 Count events and check for gaps. Dense calendar (3+ remaining events with little gap) = lower available spoons.
@@ -71,21 +58,8 @@ Count events and check for gaps. Dense calendar (3+ remaining events with little
 
 ## Step 2: Read Apple Reminders
 
-```applescript
-tell application "Reminders"
-  set dueItems to {}
-  repeat with lst in every list
-    set overdueItems to (every reminder of lst whose completed is false and due date < (current date))
-    set todayItems to (every reminder of lst whose completed is false and due date >= (current date) and due date < (current date) + (24 * hours))
-    repeat with r in overdueItems
-      set end of dueItems to {name of r, "OVERDUE", name of lst}
-    end repeat
-    repeat with r in todayItems
-      set end of dueItems to {name of r, "today", name of lst}
-    end repeat
-  end repeat
-  return dueItems
-end tell
+```bash
+osascript "$(dirname $0)/reminders-due.applescript"
 ```
 
 ---
