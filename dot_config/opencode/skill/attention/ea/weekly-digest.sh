@@ -14,11 +14,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # --- Calendar density (next week, Mon-Fri) — shape of the week only ---
 CALENDAR_SUMMARY=$(osascript - <<'EOF'
 tell application "Calendar"
-  set monday to current date
-  repeat until weekday of monday is Monday
-    set monday to monday + (1 * days)
+  set nextMonday to current date
+  repeat until weekday of nextMonday is Monday
+    set nextMonday to nextMonday + (1 * days)
   end repeat
-  set startOfDay to monday - (time of monday)
+  set startOfDay to nextMonday - (time of nextMonday)
 
   set totalMeetings to 0
   set totalMins to 0
@@ -38,7 +38,7 @@ tell application "Calendar"
         if n is missing value or (n does not contain "EA transition block" and n does not contain "EA lunch hold") then
           set totalMeetings to totalMeetings + 1
           set dayCount to dayCount + 1
-          set totalMins to totalMins + (round ((end date of evt) - (start date of evt)) / 60)
+          set totalMins to totalMins + (round (((end date of evt) - (start date of evt)) / 60))
         end if
       end repeat
     end repeat
@@ -48,7 +48,7 @@ tell application "Calendar"
     end if
   end repeat
 
-  set totalHours to round (totalMins / 60)
+  set totalHours to round (totalMins / 60 as real)
   if denseDay is "" then
     return "quiet week ahead (~" & totalHours & "h of meetings)"
   else
@@ -69,8 +69,10 @@ PERSONAL_REMINDERS=$(
 )
 
 # --- Open family time gaps next week ---
+# Note: calendar-gaps.applescript requires Calendar.app access which works
+# interactively but not from LaunchAgent. Skip gracefully if it fails.
 GAPS=$(osascript ~/.config/opencode/skill/family-scheduler/calendar-gaps.applescript 2>/dev/null | \
-  grep -c "OPEN:" 2>/dev/null || echo "?")
+  grep -c "OPEN:" 2>/dev/null || echo "0")
 
 # --- Compose notification — title = week shape, body = personal items ---
 TITLE="📅 Next week: ${CALENDAR_SUMMARY}"
