@@ -22,8 +22,11 @@
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "gemma4:31b": {
-          "name": "gemma4:31b"
+        "gemma4:e4b": {
+          "name": "gemma4:e4b"
+        },
+        "gemma4:e2b": {
+          "name": "gemma4:e2b"
         },
         "minimax-m2.7:cloud": {
           "name": "minimax-m2.7:cloud"
