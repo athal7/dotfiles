@@ -31,6 +31,17 @@ EOF
 - `APPROVE` - Approve the PR
 - `REQUEST_CHANGES` - Block merge until addressed
 
+## Approving with Nits
+
+When approving with non-blocking feedback (nits), disable auto-merge so the author has a chance to address them before the PR lands:
+
+```bash
+# Disable auto-merge on the PR
+gh pr merge --disable-auto {pr_number}
+```
+
+Do this **before** posting the review. If auto-merge wasn't enabled, the command is a no-op that exits cleanly.
+
 ## Multi-line Comments
 
 For comments spanning lines, add `start_line`:
