@@ -12,9 +12,10 @@ min_words = 3
 engine = "none"
 
 [summarization]
-engine = "ollama"
-ollama_url = "http://localhost:11434"
-ollama_model = "gemma4:e4b"
+engine = "agent"
+
+[hooks]
+post_record = "{{ .chezmoi.homeDir }}/.config/opencode/skill/attention/post-meeting.sh"
 
 [search]
 engine = "builtin"

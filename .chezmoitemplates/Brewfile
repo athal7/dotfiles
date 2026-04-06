@@ -42,6 +42,7 @@ cask "gcloud-cli" # Google Cloud CLI (gcloud, gsutil, bq)
 cask "font-monaspace" # Monospace font family
 cask "ghostty" # GPU-accelerated terminal emulator
 cask "mac-mouse-fix" # Mouse customization utility
+cask "claude-code" # Claude Code CLI for AI-powered coding and summarization
 cask "opencode-desktop" # AI coding assistant desktop app
 brew "silverstein/tap/minutes" # Meeting recorder CLI (record, search, import, transcription)
 cask "silverstein/tap/minutes" # Minutes desktop app (menu bar, recording UI, AI assistant)

@@ -9,8 +9,6 @@ description: Energy and spoon check — come up for air, see what needs attentio
 
 **Calendar access:** `icalbuddy` — fast, reads directly from the local calendar cache.
 
-**Meeting action items:** Minutes handles this natively — Ollama extracts structured `action_items` frontmatter during transcription. Use `minutes actions` to query open items across all meetings.
-
 ---
 
 ## Step 1: Gather context
