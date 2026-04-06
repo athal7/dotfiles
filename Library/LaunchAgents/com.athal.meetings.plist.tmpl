@@ -3,20 +3,22 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.athal.ea-meetings</string>
+  <string>com.athal.meetings</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>{{ .chezmoi.homeDir }}/.config/opencode/skill/attention/ea/post-meeting.sh</string>
+    <string>{{ .chezmoi.homeDir }}/.config/opencode/skill/attention/post-meeting.sh</string>
   </array>
-  <key>StartInterval</key>
-  <integer>3600</integer><!-- every hour -->
+  <key>WatchPaths</key>
+  <array>
+    <string>{{ .chezmoi.homeDir }}/meetings</string>
+  </array>
   <key>RunAtLoad</key>
   <false/>
   <key>StandardOutPath</key>
-  <string>{{ .chezmoi.homeDir }}/Library/Logs/ea-meetings.log</string>
+  <string>{{ .chezmoi.homeDir }}/Library/Logs/meetings.log</string>
   <key>StandardErrorPath</key>
-  <string>{{ .chezmoi.homeDir }}/Library/Logs/ea-meetings.error.log</string>
+  <string>{{ .chezmoi.homeDir }}/Library/Logs/meetings.error.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>HOME</key>

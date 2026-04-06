@@ -5,18 +5,11 @@ description: Energy and spoon check — come up for air, see what needs attentio
 
 # Skill: Attention
 
-Two modes in one skill:
-
-**Passive EA (background):** One LaunchAgent (`ea-meetings`) runs hourly — extracts action items from newly processed meetings and adds them to Work Reminders with a notification. See `ea/` for scripts.
-
-**EA scripts** (`~/.config/opencode/skill/attention/ea/`):
-- `post-meeting.sh` — extracts action items from minutes-processed meeting frontmatter → Work Reminders + notification (hourly, working ✅)
-- `sync-calendars.applescript` — bidirectional calendar hold sync; works interactively, deferred from LaunchAgent (Calendar TCC issue) 🔜
-- `imessage.sh` — notification helper (display notification primary)
+**Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view.
 
 **Calendar access:** `icalbuddy` — fast, reads directly from the local calendar cache.
 
-**Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view.
+**Meeting action items:** Minutes handles this natively — Ollama extracts structured `action_items` frontmatter during transcription. Use `minutes actions` to query open items across all meetings.
 
 ---
 
