@@ -208,49 +208,7 @@ Present as a unified list, grouped by work item (not by tool), with the most act
 
 ### Starting work from here
 
-When you decide to act on a work item, offer to open or create an OpenCode session for it rather than leaving you to navigate there manually. The OpenCode web API runs at `http://localhost:4096`.
-
-**Find an existing idle session for a repo:**
-
-```bash
-# List sessions for a directory, prefer idle ones
-curl -s "http://localhost:4096/session?directory=$HOME/code/odin&roots=true" \
-  | jq '[.[] | select(.time.archived == null)] | sort_by(.time.updated) | reverse | .[0] | {id, title, directory}'
-
-# Check session statuses (idle = ready to use)
-curl -s "http://localhost:4096/session/status" | jq 'to_entries[] | select(.value.type == "idle")'
-```
-
-**Reuse an idle session (send a prompt):**
-
-```bash
-curl -s -X POST "http://localhost:4096/session/<id>/message?directory=<workingDir>" \
-  -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}'
-```
-
-**Create a new session (no worktree — use the repo directly):**
-
-```bash
-curl -s -X POST "http://localhost:4096/session?directory=$HOME/code/<repo>" \
-  -H "Content-Type: application/json" -d '{}'
-# Then send a message to the returned session id
-```
-
-**Create a new worktree sandbox for a PR or issue:**
-
-```bash
-# Create worktree (OpenCode picks a name)
-curl -s -X POST "http://localhost:4096/experimental/worktree?directory=$HOME/code/<repo>" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "<branch-or-issue-slug>"}'
-# Returns: { "name": "...", "directory": "~/.local/share/opencode/worktree/<id>/<name>" }
-# Then create a session pointing at that directory
-```
-
-**Prefer reuse over creation** — check for an idle session in the target directory first. Only create a new session or worktree if none exists or all are busy.
-
-Once a session is created or identified, load the `process` skill to orchestrate the actual work (plan → implement → verify → commit).
+When you decide to act on a work item, load the `dispatch` skill to open or reuse an OpenCode session in the target repo.
 
 ---
 
