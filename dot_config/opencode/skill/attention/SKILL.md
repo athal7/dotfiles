@@ -14,6 +14,8 @@ Two modes in one skill:
 - `sync-calendars.applescript` — bidirectional calendar hold sync; works interactively, deferred from LaunchAgent (Calendar TCC issue) 🔜
 - `imessage.sh` — notification helper (display notification primary)
 
+**Calendar access:** `icalbuddy` — fast, reads directly from the local calendar cache.
+
 **Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view.
 
 ---
@@ -26,10 +28,11 @@ Run all of these before forming any view:
 # WakaTime — time coded today
 wakatime-cli --today 2>/dev/null
 
-# Calendar — past and remaining events today, day of week, time windows
-# Note: osascript may hang from the OpenCode server process (TCC issue).
-# If it hangs after a few seconds, kill it and treat calendar as unknown.
-osascript ~/.config/opencode/skill/attention/calendar-today.applescript 2>/dev/null
+# Calendar — today's events, personal calendars only (work events come from gws)
+# -ic: limit to personal calendars  -nrd: no relative dates  -iep: title+datetime only
+PERSONAL_CALS="Me,105,Rebecca,Birthdays,US Holidays,Jewish Holidays"
+echo "DAY_OF_WEEK: $(date +%A) TIME: $(date +%H:%M)"
+icalbuddy -ic "$PERSONAL_CALS" -nrd -b "" -iep "title,datetime" eventsToday 2>/dev/null
 
 # Reminders — overdue
 remindctl show --json overdue | jq -r '.[] | "OVERDUE: \(.title) [\(.listName)]"'
