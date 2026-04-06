@@ -22,6 +22,9 @@
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
+        "qwen2.5-coder:14b": {
+          "name": "qwen2.5-coder:14b"
+        },
         "gemma4:e4b": {
           "name": "gemma4:e4b"
         },
