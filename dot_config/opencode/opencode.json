@@ -28,6 +28,9 @@
         "gemma4:e4b": {
           "name": "gemma4:e4b"
         },
+        "gemma4:31b-cloud": {
+          "name": "gemma4:31b-cloud"
+        },
         "minimax-m2.7:cloud": {
           "name": "minimax-m2.7:cloud"
         }
