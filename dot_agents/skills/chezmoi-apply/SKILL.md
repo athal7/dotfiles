@@ -15,12 +15,13 @@ metadata:
 
 ### Triggers that cause a restart
 
-| Script | What it watches | Effect |
-|--------|----------------|--------|
-| `run_onchange_after_restart-opencode-web.sh` | `opencode.json`, `dot_config/opencode/plugins/*` | Restarts opencode-web directly |
-| `run_onchange_after_ensure-launchagents.sh` | `Library/LaunchAgents/*.plist.tmpl` (glob hash) | Reloads all managed LaunchAgents, including opencode-web |
+| Trigger | What causes it | Effect |
+|---------|---------------|--------|
+| `run_onchange_after_restart-opencode-web.sh` | `opencode.json` or `dot_config/opencode/plugins/*` changed | Restarts opencode-web directly |
+| `run_onchange_after_ensure-launchagents.sh` | `Library/LaunchAgents/*.plist.tmpl` content changed | Reloads all managed LaunchAgents, including opencode-web |
+| opencode file watcher | Any file written under `~/.config/opencode/` or `~/.agents/` | opencode restarts itself |
 
-**Adding, removing, or changing any `.plist.tmpl` file triggers a restart** — not just `opencode.json`. Editing skills, commands, `AGENTS.md`, or other config files does *not* trigger a restart.
+**Editing skills, AGENTS.md, or any dotfile that deploys into `~/.config/opencode/` or `~/.agents/` will trigger a restart** — opencode watches those directories and restarts when files change. This is the most common cause.
 
 ## Safe Workflow
 
@@ -86,5 +87,5 @@ If the server failed to start due to a bad config that slipped past schema valid
 - Session transcript data is persisted in `~/.local/share/opencode/opencode.db` — the session is not lost, just disconnected
 - The LaunchAgent `KeepAlive: true` means the server will always restart; the only failure mode is a crash loop from bad config
 - `launchctl kickstart -k` is used (not `unload`/`load`) — this is intentional and correct for in-place restarts
-- Changes to files other than `opencode.json` and `dot_config/opencode/plugins/*` do **not** trigger a restart (e.g., editing skills, commands, AGENTS.md)
+- **Any** `chezmoi apply` that deploys files into `~/.config/opencode/` or `~/.agents/` will restart the server — opencode watches those directories
 - **Adding a new `[data]` key to `.chezmoi.toml.tmpl` requires `chezmoi init` before `chezmoi apply`** — `apply` alone does not regenerate `~/.config/chezmoi/chezmoi.toml`
