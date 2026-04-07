@@ -1,5 +1,8 @@
 # Allow favicon (overrides global gitignore)
 !favicon.svg
 
+# Allow .sql files (skill query scripts)
+!*.sql
+
 # gws CLI download artifacts
 download.html
