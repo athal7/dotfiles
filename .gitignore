@@ -1,2 +1,5 @@
 # Allow favicon (overrides global gitignore)
 !favicon.svg
+
+# gws CLI download artifacts
+download.html
