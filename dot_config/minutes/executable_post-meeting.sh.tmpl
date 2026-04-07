@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# post-meeting.sh — add my action items from new meetings to Work Reminders
+# post-meeting.sh — add my action items from new meetings to Work Reminders,
+# and remind me to confirm any unidentified speakers.
 # Triggered by [hooks] post_record in ~/.config/minutes/config.toml
 
 set -euo pipefail
@@ -8,6 +9,7 @@ PROCESSED="${HOME}/.local/share/minutes/processed-meetings.txt"
 mkdir -p "$(dirname "$PROCESSED")"
 touch "$PROCESSED"
 
+# ── Action items → Reminders ───────────────────────────────────────────────
 minutes actions --assignee "{{ .fullName }}" 2>/dev/null | \
   jq -r '.[] | [.meeting_path, .task, (.due // ""), .meeting_title] | @tsv' | \
 while IFS=$'\t' read -r path task due title; do
@@ -18,3 +20,22 @@ while IFS=$'\t' read -r path task due title; do
   [[ -n "$due" && "$due" != "null" ]] && args+=(--due "$due")
   "${args[@]}" 2>/dev/null && echo "$slug:$task" >> "$PROCESSED" || true
 done
+
+# ── Unconfirmed speakers → Reminder ───────────────────────────────────────
+# Find the most recent meeting and check for unconfirmed speakers
+LATEST=$(minutes list 2>/dev/null | jq -r '.[0].path // ""')
+[[ -z "$LATEST" ]] && exit 0
+
+TITLE=$(minutes list 2>/dev/null | jq -r '.[0].title // ""')
+UNCONFIRMED=$(grep -oE 'SPEAKER_[0-9]+' "$LATEST" 2>/dev/null | sort -u | tr '\n' ', ' | sed 's/,$//')
+
+if [[ -n "$UNCONFIRMED" ]]; then
+  slug=$(basename "$LATEST" .md)
+  key="$slug:confirm-speakers"
+  grep -qF "$key" "$PROCESSED" && exit 0
+
+  remindctl add "Confirm speakers in: $TITLE" \
+    --list Work \
+    --notes "$(printf 'Unidentified: %s\nRun: minutes confirm --meeting %s' "$UNCONFIRMED" "$LATEST")" \
+    --quiet 2>/dev/null && echo "$key" >> "$PROCESSED" || true
+fi
