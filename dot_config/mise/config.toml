@@ -14,3 +14,4 @@ argocd = "latest"                   # ArgoCD CLI for GitOps deployments
 
 [settings]
 idiomatic_version_file_enable_tools = ["ruby"]
+python.default_packages_file = "~/.config/mise/default-python-packages"

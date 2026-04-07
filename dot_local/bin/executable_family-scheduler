@@ -1,0 +1,197 @@
+#!/usr/bin/env python3
+"""
+family-scheduler - Fetch local family events and add to family calendar.
+
+Pulls from ICS feeds configured in chezmoi [data.feeds], filters to
+evenings/weekends with no conflicts across all configured calendars,
+and adds to the family calendar.
+
+Requires: ical, chezmoi, icalendar (pip install icalendar)
+"""
+
+import json
+import os
+import subprocess
+import urllib.request
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+MARKER = "Managed by family-scheduler"
+LOOKAHEAD_DAYS = 14
+EVENING_START = 17  # 5pm weekday evenings
+
+_ICAL_BIN = None
+
+
+def ical_bin():
+    global _ICAL_BIN
+    if not _ICAL_BIN:
+        _ICAL_BIN = subprocess.run(
+            ["which", "ical"], capture_output=True, text=True
+        ).stdout.strip() or str(Path.home() / ".local/bin/ical")
+    return _ICAL_BIN
+
+
+def ical(*args):
+    result = subprocess.run([ical_bin(), *args], capture_output=True, text=True)
+    return json.loads(result.stdout or "[]")
+
+
+def ical_write(*args):
+    subprocess.run([ical_bin(), *args], capture_output=True, text=True)
+
+
+def chezmoi_data():
+    result = subprocess.run(
+        ["chezmoi", "data", "--format", "json"],
+        capture_output=True, text=True
+    )
+    return json.loads(result.stdout)
+
+
+def local_tz():
+    return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
+
+
+def log(msg):
+    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
+    subprocess.run(["logger", "-t", "family-scheduler", msg], capture_output=True)
+
+
+def is_eligible(dt):
+    """Weekends all day, weekday evenings from EVENING_START."""
+    if dt.weekday() >= 5:
+        return True
+    return dt.hour >= EVENING_START
+
+
+def fetch_ics(name, url, tz):
+    try:
+        from icalendar import Calendar
+    except ImportError:
+        log(f"[{name}] icalendar not installed — run: pip install icalendar")
+        return []
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            cal = Calendar.from_ical(r.read())
+    except Exception as e:
+        log(f"[{name}] fetch failed: {e}")
+        return []
+
+    today = date.today()
+    lookahead = today + timedelta(days=LOOKAHEAD_DAYS)
+    events = []
+    for component in cal.walk():
+        if component.name != "VEVENT":
+            continue
+        dtstart = component.get("DTSTART")
+        if not dtstart:
+            continue
+        d = dtstart.dt
+        if hasattr(d, "date"):
+            start_dt = d.astimezone(tz) if d.tzinfo else d.replace(tzinfo=tz)
+            d = start_dt.date()
+        else:
+            start_dt = datetime.combine(d, datetime.min.time(), tzinfo=tz)
+
+        if not (today <= d <= lookahead):
+            continue
+        if not is_eligible(start_dt):
+            continue
+
+        dtend = component.get("DTEND")
+        if dtend:
+            end_dt = dtend.dt
+            if hasattr(end_dt, "date"):
+                end_dt = end_dt.astimezone(tz) if end_dt.tzinfo else end_dt.replace(tzinfo=tz)
+            else:
+                end_dt = datetime.combine(end_dt, datetime.min.time(), tzinfo=tz)
+        else:
+            end_dt = start_dt + timedelta(hours=1)
+
+        events.append({
+            "source": name,
+            "title": str(component.get("SUMMARY", "")).strip(),
+            "start": start_dt,
+            "end": end_dt,
+            "url": str(component.get("URL", "")),
+        })
+    return events
+
+
+def occupied_slots(calendars, from_date, to_date):
+    """Return set of start_date strings for busy events across all calendars."""
+    occupied = set()
+    for name in calendars.values():
+        events = ical("list", "-c", name, "--from", from_date, "--to", to_date, "-o", "json")
+        for e in events:
+            if not e.get("all_day") and e.get("availability") != "free":
+                occupied.add(e["start_date"][:16])  # YYYY-MM-DDTHH:MM
+    return occupied
+
+
+def already_added(family_cal, from_date, to_date):
+    """Titles of events already managed by this script."""
+    events = ical("list", "-c", family_cal, "--from", from_date, "--to", to_date, "-o", "json")
+    return {e["title"] for e in events if e.get("notes", "").strip() == MARKER}
+
+
+def main():
+    data = chezmoi_data()
+    calendars = data.get("calendars", {})
+    feeds = data.get("feeds", {})
+    family_cal = calendars.get("family")
+
+    if not family_cal:
+        log("No family calendar configured, skipping")
+        return
+    if not feeds:
+        log("No feeds configured in chezmoi [data.feeds], skipping")
+        return
+
+    tz = local_tz()
+    from_date = str(date.today())
+    to_date = str(date.today() + timedelta(days=LOOKAHEAD_DAYS))
+
+    # Fetch candidates from all configured feeds
+    candidates = []
+    for name, url in feeds.items():
+        candidates.extend(fetch_ics(name.replace("_", " ").title(), url, tz))
+
+    if not candidates:
+        log("No candidate events found")
+        return
+
+    occupied = occupied_slots(calendars, from_date, to_date)
+    added = already_added(family_cal, from_date, to_date)
+
+    added_count = 0
+    for e in sorted(candidates, key=lambda x: x["start"]):
+        if e["title"] in added:
+            continue
+
+        start_str = e["start"].strftime("%Y-%m-%dT%H:%M")
+        if start_str[:16] in occupied:
+            log(f"Skipping '{e['title']}' — conflict at {start_str[:16]}")
+            continue
+
+        start_iso = e["start"].strftime("%Y-%m-%d %H:%M")
+        end_iso = e["end"].strftime("%Y-%m-%d %H:%M")
+
+        log(f"Adding '{e['title']}' to {family_cal} ({start_iso})")
+        args = ["add", e["title"], "-c", family_cal,
+                "-s", start_iso, "-e", end_iso, "--notes", MARKER]
+        if e["url"] and e["url"] != "None":
+            args += ["--url", e["url"]]
+        ical_write(*args)
+        added.add(e["title"])
+        added_count += 1
+
+    log(f"Done — added {added_count} events")
+
+
+if __name__ == "__main__":
+    main()

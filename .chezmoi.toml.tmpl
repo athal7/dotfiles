@@ -6,11 +6,14 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
     exclude = ["scripts"]
 
 [data]
-    fullName = {{ promptString "Full name" | quote }}
-    email = {{ promptString "Work email" | quote }}
+    fullName = {{ promptStringOnce . "fullName" "Full name" | quote }}
+    email = {{ promptStringOnce . "email" "Work email" | quote }}
     codeDir = {{ promptStringOnce . "codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
 
 [data.calendars]
-    personal = {{ promptString "Personal calendar name" | quote }}
-    work = {{ promptString "Work calendar name" | quote }}
-    family = {{ promptString "Family calendar name" | quote }}
+    personal = {{ promptStringOnce . "calendars.personal" "Personal calendar name" | quote }}
+    work = {{ promptStringOnce . "calendars.work" "Work calendar name" | quote }}
+    family = {{ promptStringOnce . "calendars.family" "Family calendar name" | quote }}
+
+[data.feeds]
+    libertyville_rec = {{ promptStringOnce . "feeds.libertyville_rec" "Libertyville Recreation ICS URL" | quote }}
