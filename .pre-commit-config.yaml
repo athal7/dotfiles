@@ -37,6 +37,7 @@ repos:
         entry: bash -c 'for f in "$@"; do chezmoi execute-template < "$f" > /dev/null || exit 1; done' --
         language: system
         files: \.tmpl$
+        exclude: ^\.chezmoi\.toml\.tmpl$
 
   # Agent Skills validation
   - repo: local

@@ -1,6 +1,6 @@
 SELECT
   s.title,
-  replace(s.directory, '/Users/athal/code/', '') AS repo,
+  replace(s.directory, '{{ .codeDir }}/', '') AS repo,
   (s.time_updated - s.time_created) / 60000 AS duration_min,
   COUNT(CASE WHEN json_extract(m.data, '$.role') = 'user' THEN 1 END) AS user_messages,
   datetime(s.time_created/1000,'unixepoch','localtime') AS started

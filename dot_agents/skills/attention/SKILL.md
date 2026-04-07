@@ -11,7 +11,7 @@ metadata:
 
 **Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view.
 
-**Calendar access:** `icalbuddy` — fast, reads directly from the local calendar cache.
+**Calendar access:** `ical` — fast native EventKit CLI, supports reads and writes.
 
 ---
 
@@ -33,11 +33,9 @@ sqlite3 -json "$DB" < $SKILL_DIR/sessions-today.sql \
 sqlite3 "$DB" < $SKILL_DIR/sessions-summary.sql
 sqlite3 "$DB" < $SKILL_DIR/sessions-concurrent.sql
 
-# Calendar — today's events, personal calendars only (work events come from gws)
-# -ic: limit to personal calendars  -nrd: no relative dates  -iep: title+datetime only
-PERSONAL_CALS="Me,105,Rebecca,Birthdays,US Holidays,Jewish Holidays"
+# Calendar — today's events across all configured calendars
 echo "DAY_OF_WEEK: $(date +%A) TIME: $(date +%H:%M)"
-icalbuddy -ic "$PERSONAL_CALS" -nrd -b "" -iep "title,datetime" eventsToday 2>/dev/null
+calendar-today
 
 # Reminders — overdue
 remindctl show --json overdue | jq -r '.[] | "OVERDUE: \(.title) [\(.listName)]"'

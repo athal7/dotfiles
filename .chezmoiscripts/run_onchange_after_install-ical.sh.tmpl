@@ -1,0 +1,11 @@
+#!/bin/bash
+# Install ical CLI — fast native macOS Calendar CLI (EventKit-based, supports writes)
+# https://github.com/BRO3886/ical
+# run_onchange_: re-runs if this script changes (e.g. to bump version)
+
+set -e
+
+curl -sSL https://github.com/BRO3886/ical/releases/latest/download/ical-darwin-arm64.tar.gz \
+    | tar xzf - -C "$HOME/.local/bin"
+
+echo "ical installed: $("$HOME/.local/bin/ical" version)"

@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-lunch-guard - Block lunch on Google Calendar when it's at risk.
+lunch-guard - Block lunch on calendar when it's at risk.
 
 For each weekday in the next 2 weeks, sums busy minutes in the 11am-1pm
 window. If 60+ minutes are consumed, places a 45-min Lunch block in the
 first free slot in the window (or 11:00 if fully packed).
 
-Requires: gws, available on PATH
+Requires: ical, chezmoi
 """
 
 import json
 import subprocess
-import sys
-from datetime import date, timedelta, timezone
+from datetime import date, datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 TAG = "Managed by lunch-guard"
@@ -21,45 +21,47 @@ RISK_THRESHOLD = 60           # busy minutes that trigger a block
 DURATION = 45                 # lunch block length
 
 
-def gws(*args):
+def ical(*args):
+    ical_bin = subprocess.run(["which", "ical"], capture_output=True, text=True).stdout.strip() \
+               or str(Path.home() / ".local/bin/ical")
+    result = subprocess.run([ical_bin, *args], capture_output=True, text=True)
+    return json.loads(result.stdout or "[]")
+
+
+def chezmoi_data():
     result = subprocess.run(
-        ["gws", *args],
+        ["chezmoi", "data", "--format", "json"],
         capture_output=True, text=True
     )
-    # Skip the "Using keyring backend" line on stderr
     return json.loads(result.stdout)
 
 
-def tz():
+def local_tz():
     import os
     return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
 
 
-def to_min(dt_str):
-    """Extract HH:MM from ISO datetime string as minutes since midnight."""
-    t = dt_str.split("T")[1][:5]
-    h, m = t.split(":")
-    return int(h) * 60 + int(m)
+def to_min(dt_str, tz):
+    """Convert ISO datetime string to minutes since midnight in local tz."""
+    dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00")).astimezone(tz)
+    return dt.hour * 60 + dt.minute
 
 
 def from_min(m):
     return f"{m // 60:02d}:{m % 60:02d}"
 
 
-def busy_intervals(events):
+def busy_intervals(events, tz):
     """Return sorted list of (start_min, end_min) for blocking events."""
     intervals = []
-    for e in events.get("items", []):
-        if not e.get("start", {}).get("dateTime"):
+    for e in events:
+        if e.get("all_day"):
             continue
-        if e.get("summary") == "Lunch":
+        if e.get("title") == "Lunch":
             continue
-        if e.get("transparency") == "transparent":
+        if e.get("availability") == "free":
             continue
-        if any(a.get("self") and a.get("responseStatus") == "declined"
-               for a in e.get("attendees", [])):
-            continue
-        intervals.append((to_min(e["start"]["dateTime"]), to_min(e["end"]["dateTime"])))
+        intervals.append((to_min(e["start_date"], tz), to_min(e["end_date"], tz)))
     return sorted(intervals)
 
 
@@ -84,74 +86,53 @@ def first_free_slot(intervals, ws, we, duration):
     return cursor if we - cursor >= duration else ws
 
 
-def process_day(day, local_tz):
+def process_day(day, cal, tz):
     if day.weekday() >= 5:
         return
 
-    offset = datetime_offset(local_tz)
-    events = gws("calendar", "events", "list", "--params", json.dumps({
-        "calendarId": "primary",
-        "timeMin": f"{day}T00:00:00{offset}",
-        "timeMax": f"{day}T23:59:59{offset}",
-        "singleEvents": True,
-        "orderBy": "startTime",
-        "timeZone": str(local_tz),
-    }))
+    events = ical("list", "-c", cal, "--from", str(day), "--to", str(day), "-o", "json")
 
-    guard = next(
-        (e for e in events.get("items", []) if e.get("description") == TAG),
-        None
-    )
-    guard_id = guard["id"] if guard else None
+    guard = next((e for e in events if e.get("notes", "").strip() == TAG), None)
 
-    intervals = busy_intervals(events)
+    intervals = busy_intervals(events, tz)
     busy_mins = busy_in_window(intervals, *WINDOW)
 
     if busy_mins < RISK_THRESHOLD:
-        if guard_id:
+        if guard:
             log(f"{day}: OK ({busy_mins}min busy), removing guard event")
-            gws("calendar", "events", "delete", "--params",
-                json.dumps({"calendarId": "primary", "eventId": guard_id}))
+            ical("delete", guard["id"], "--force")
         else:
             log(f"{day}: OK ({busy_mins}min busy)")
         return
 
-    if guard_id:
+    if guard:
         log(f"{day}: AT RISK ({busy_mins}min busy), guard exists")
         return
 
     slot = first_free_slot(intervals, *WINDOW, DURATION)
     st, et = from_min(slot), from_min(slot + DURATION)
     log(f"{day}: AT RISK ({busy_mins}min busy), creating Lunch {st}-{et}")
-    gws("calendar", "+insert",
-        "--summary", "Lunch",
-        "--description", TAG,
-        "--start", f"{day}T{st}:00{offset}",
-        "--end", f"{day}T{et}:00{offset}")
-
-
-def datetime_offset(local_tz):
-    """Return current UTC offset string for the timezone, e.g. -05:00."""
-    from datetime import datetime
-    offset = datetime.now(local_tz).utcoffset()
-    total = int(offset.total_seconds())
-    sign = "+" if total >= 0 else "-"
-    total = abs(total)
-    return f"{sign}{total // 3600:02d}:{(total % 3600) // 60:02d}"
+    ical("add", "Lunch",
+         "-c", cal,
+         "-s", f"{day} {st}",
+         "-e", f"{day} {et}",
+         "--notes", TAG)
 
 
 def log(msg):
-    from datetime import datetime
     print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
     subprocess.run(["logger", "-t", "lunch-guard", msg], capture_output=True)
 
 
 if __name__ == "__main__":
-    local_tz = tz()
+    tz = local_tz()
+    data = chezmoi_data()
+    cal = data.get("calendars", {}).get("work", "Work")
     today = date.today()
     for i in range(14):
+        day = today + timedelta(days=i)
         try:
-            process_day(today + timedelta(days=i), local_tz)
+            process_day(day, cal, tz)
         except Exception as e:
-            log(f"ERROR {today + timedelta(days=i)}: {e}")
+            log(f"ERROR {day}: {e}")
     log("done")

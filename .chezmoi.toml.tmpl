@@ -1,10 +1,16 @@
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
 [edit]
-    command = "code"
-    args = ["--wait"]
+    command = "nvim"
 [diff]
     exclude = ["scripts"]
 
 [data]
-    fullName = "Andrew Thal"
+    fullName = {{ promptString "Full name" | quote }}
+    email = {{ promptString "Work email" | quote }}
+    codeDir = {{ promptStringOnce . "codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
+
+[data.calendars]
+    personal = {{ promptString "Personal calendar name" | quote }}
+    work = {{ promptString "Work calendar name" | quote }}
+    family = {{ promptString "Family calendar name" | quote }}
