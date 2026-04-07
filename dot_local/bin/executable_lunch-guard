@@ -1,18 +1,20 @@
 #!/bin/bash
 # lunch-guard - Block lunch on Google Calendar when it's at risk
 #
-# For each weekday in the next 2 weeks, checks if there's a 45-min gap
-# in the 11am-2pm window on the primary Google Calendar. If not, finds
-# the best alternative slot and creates/moves a "Lunch" event.
+# For each weekday in the next 2 weeks, sums busy minutes in the 11am-1pm
+# window on the primary Google Calendar. If 60+ minutes are consumed by
+# meetings, finds the best 45-min slot in the wider day and creates/moves
+# a "Lunch" event.
 #
 # Requires: gws, jq
 
 set -euo pipefail
 
-DURATION=45  # minutes
+DURATION=45       # length of lunch block in minutes
+RISK_THRESHOLD=60 # busy minutes in 11-1 window that triggers a block
 WINDOW_START=660  # 11:00
 WINDOW_END=780    # 13:00
-SEARCH_START=480  # 08:00
+SEARCH_START=480  # 08:00 (fallback search range)
 SEARCH_END=1080   # 18:00
 TAG="Managed by lunch-guard"
 TZ=$(readlink /etc/localtime | sed 's|.*/zoneinfo/||')
@@ -23,8 +25,20 @@ log() { logger -t lunch-guard "$@" 2>/dev/null; printf '%s %s\n' "$(date +%H:%M:
 to_min() { echo $(( 10#${1%%:*} * 60 + 10#${1##*:} )); }
 from_min() { printf '%02d:%02d' $(($1/60)) $(($1%60)); }
 
+# Sum busy minutes within a window from a list of start|end intervals
+busy_in_window() {
+  local ws=$1 we=$2; shift 2
+  local total=0
+  for iv in "$@"; do
+    local s=$(to_min "${iv%%|*}") e=$(to_min "${iv##*|}")
+    [ "$s" -lt "$ws" ] && s=$ws
+    [ "$e" -gt "$we" ] && e=$we
+    [ "$e" -gt "$s" ] && total=$((total + e - s))
+  done
+  echo "$total"
+}
+
 # Find largest gap in sorted busy intervals within a window
-# Usage: best_gap window_start window_end [start|end ...]
 best_gap() {
   local ws=$1 we=$2 cursor=$1 bs=0 bl=0; shift 2
   for iv in "$@"; do
@@ -43,7 +57,6 @@ best_gap() {
 
 process_day() {
   local day=$1
-  # Skip weekends
   [ "$(date -j -f '%Y-%m-%d' "$day" '+%u')" -ge 6 ] && return 0
 
   local events
@@ -54,7 +67,6 @@ process_day() {
     \"singleEvents\": true, \"orderBy\": \"startTime\", \"timeZone\": \"$TZ\"
   }" 2>/dev/null)
 
-  # Existing guard event
   local gid gstart gend
   gid=$(echo "$events" | jq -r '[.items//[]|.[]|select(.description?=="'"$TAG"'")]|.[0].id//"empty"')
   gstart=$(echo "$events" | jq -r '[.items//[]|.[]|select(.description?=="'"$TAG"'")]|.[0].start.dateTime//""')
@@ -72,31 +84,29 @@ process_day() {
     | sort_by(.s)[]
     | "\(.s|split("T")[1]|capture("^(?<t>[0-9]{2}:[0-9]{2})").t)|\(.e|split("T")[1]|capture("^(?<t>[0-9]{2}:[0-9]{2})").t)"')
 
-  local r; r=$(best_gap $WINDOW_START $WINDOW_END "${busy[@]+"${busy[@]}"}")
-  local gap_start=${r% *} gap_len=${r#* }
+  local busy_mins
+  busy_mins=$(busy_in_window $WINDOW_START $WINDOW_END "${busy[@]+"${busy[@]}"}")
 
-  # Lunch fits in preferred window
-  if [ "$gap_len" -ge "$DURATION" ]; then
+  if [ "$busy_mins" -lt "$RISK_THRESHOLD" ]; then
     if [ "$gid" != "empty" ]; then
-      log "$day: lunch OK, removing guard event"
+      log "$day: OK (${busy_mins}min busy), removing guard event"
       gws calendar events delete --params "{\"calendarId\":\"primary\",\"eventId\":\"$gid\"}" >/dev/null 2>&1
     else
-      log "$day: OK"
+      log "$day: OK (${busy_mins}min busy)"
     fi
     return 0
   fi
 
-  # At risk - find best slot in wider window
-  log "$day: AT RISK (${gap_len}min best gap)"
-  r=$(best_gap $SEARCH_START $SEARCH_END "${busy[@]+"${busy[@]}"}")
-  gap_start=${r% *}; gap_len=${r#* }
+  log "$day: AT RISK (${busy_mins}min busy in 11-1)"
+
+  local r; r=$(best_gap $SEARCH_START $SEARCH_END "${busy[@]+"${busy[@]}"}")
+  local gap_start=${r% *} gap_len=${r#* }
 
   if [ "$gap_len" -lt "$DURATION" ]; then
-    log "$day: WARNING - no ${DURATION}min slot in entire day"
+    log "$day: WARNING - no ${DURATION}min slot found"
     return 0
   fi
 
-  # Center lunch in gap, snap to 5min
   local ls=$(( gap_start + (gap_len - DURATION) / 2 ))
   ls=$(( (ls + 4) / 5 * 5 ))
   local le=$((ls + DURATION))
