@@ -2,6 +2,9 @@ output_dir = "{{ .chezmoi.homeDir }}/meetings"
 
 [identity]
 name = "{{ .fullName }}"
+{{- if .email }}
+email = "{{ .email }}"
+{{- end }}
 
 [transcription]
 model = "small"
@@ -9,10 +12,51 @@ model_path = "{{ .chezmoi.homeDir }}/.minutes/models"
 min_words = 3
 
 [diarization]
-engine = "none"
+# "auto" uses pyannote-rs if models are downloaded, otherwise skips gracefully.
+# Run `minutes setup --diarization` to download the ~34MB ONNX models.
+engine = "auto"
+embedding_model = "cam++"
+# threshold = 0.5  # Speaker similarity threshold (0.0–1.0). Lower = fewer speakers.
+
+[voice]
+# Enabled automatically when voice profiles are enrolled via `minutes enroll`.
+enabled = true
+match_threshold = 0.65  # Cosine similarity for cam++ embeddings
 
 [summarization]
-engine = "agent"
+engine = "ollama"
+ollama_url = "http://localhost:11434"
+ollama_model = "llama3.2"
+# engine = "agent"
+# agent_command = "claude"
+
+[knowledge]
+enabled = true
+path = "{{ .chezmoi.homeDir }}/meetings/knowledge"
+adapter = "wiki"        # people/{slug}.md with facts grouped by category
+engine = "none"         # Structured YAML only — LLM transcript extraction not yet implemented upstream
+min_confidence = "strong"
+
+[call_detection]
+# macOS-only. Watches for active calls in the listed apps and prompts to record.
+enabled = true
+poll_interval_secs = 1
+cooldown_minutes = 5
+apps = ["zoom.us"]
+
+[assistant]
+agent = "opencode"
+agent_args = ["--dangerously-skip-permissions"]
+
+[screen_context]
+enabled = true
+interval_secs = 30
+keep_after_summary = false
+
+[watch]
+paths = ["{{ .chezmoi.homeDir }}/.minutes/inbox"]
+settle_delay_ms = 2000          # Wait for cloud-synced files to finish writing
+dictation_threshold_secs = 120  # Files shorter than this → fast memo pipeline (no diarization)
 
 [hooks]
 post_record = "{{ .chezmoi.homeDir }}/.config/minutes/post-meeting.sh"
