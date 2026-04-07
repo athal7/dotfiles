@@ -11,7 +11,7 @@ set -euo pipefail
 
 DURATION=45  # minutes
 WINDOW_START=660  # 11:00
-WINDOW_END=840    # 14:00
+WINDOW_END=780    # 13:00
 SEARCH_START=480  # 08:00
 SEARCH_END=1080   # 18:00
 TAG="Managed by lunch-guard"
