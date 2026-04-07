@@ -1,70 +1,157 @@
-#!/bin/bash
-# lunch-guard - Block lunch on Google Calendar when it's at risk
-#
-# For each weekday in the next 2 weeks, sums busy minutes in the 11am-1pm
-# window. If 60+ minutes are consumed, creates a Lunch block at 11:00.
-#
-# Requires: gws, jq
+#!/usr/bin/env python3
+"""
+lunch-guard - Block lunch on Google Calendar when it's at risk.
 
-set -euo pipefail
+For each weekday in the next 2 weeks, sums busy minutes in the 11am-1pm
+window. If 60+ minutes are consumed, places a 45-min Lunch block in the
+first free slot in the window (or 11:00 if fully packed).
 
-TAG="Managed by lunch-guard"
-TZ=$(readlink /etc/localtime | sed 's|.*/zoneinfo/||')
-TZ_OFFSET=$(date "+%z" | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)/\1:\2/')
+Requires: gws, available on PATH
+"""
 
-log() { logger -t lunch-guard "$@" 2>/dev/null; printf '%s %s\n' "$(date +%H:%M:%S)" "$*"; }
+import json
+import subprocess
+import sys
+from datetime import date, timedelta, timezone
+from zoneinfo import ZoneInfo
 
-process_day() {
-  local day=$1
-  [ "$(date -j -f '%Y-%m-%d' "$day" '+%u')" -ge 6 ] && return 0
+TAG = "Managed by lunch-guard"
+WINDOW = (11 * 60, 13 * 60)  # 11:00-13:00 in minutes
+RISK_THRESHOLD = 60           # busy minutes that trigger a block
+DURATION = 45                 # lunch block length
 
-  local events
-  events=$(gws calendar events list --params "{
-    \"calendarId\": \"primary\",
-    \"timeMin\": \"${day}T00:00:00${TZ_OFFSET}\",
-    \"timeMax\": \"${day}T23:59:59${TZ_OFFSET}\",
-    \"singleEvents\": true, \"orderBy\": \"startTime\", \"timeZone\": \"$TZ\"
-  }" 2>/dev/null)
 
-  local gid
-  gid=$(echo "$events" | jq -r '[.items//[]|.[]|select(.description?=="'"$TAG"'")]|.[0].id//"empty"')
+def gws(*args):
+    result = subprocess.run(
+        ["gws", *args],
+        capture_output=True, text=True
+    )
+    # Skip the "Using keyring backend" line on stderr
+    return json.loads(result.stdout)
 
-  # Sum busy minutes in 11:00-13:00 (660-780), excluding Lunch, transparent, declined
-  local busy_mins
-  busy_mins=$(echo "$events" | jq '
-    [.items//[]|.[]
-     | select(.start.dateTime!=null)
-     | select(.summary!="Lunch")
-     | select(.transparency!="transparent")
-     | select((.attendees//[]|map(select(.self==true and .responseStatus=="declined"))|length)==0)
-     | (.start.dateTime | split("T")[1] | capture("^(?<h>[0-9]{2}):(?<m>[0-9]{2})") | (.h|tonumber)*60 + (.m|tonumber)) as $s
-     | (.end.dateTime   | split("T")[1] | capture("^(?<h>[0-9]{2}):(?<m>[0-9]{2})") | (.h|tonumber)*60 + (.m|tonumber)) as $e
-     | [[$s, 660] | max] as [$cs] | [[$e, 780] | min] as [$ce]
-     | select($ce > $cs)
-     | $ce - $cs]
-    | add // 0')
 
-  if [ "$busy_mins" -lt 60 ]; then
-    if [ "$gid" != "empty" ]; then
-      log "$day: OK (${busy_mins}min busy), removing guard event"
-      gws calendar events delete --params "{\"calendarId\":\"primary\",\"eventId\":\"$gid\"}" >/dev/null 2>&1
-    else
-      log "$day: OK (${busy_mins}min busy)"
-    fi
-    return 0
-  fi
+def tz():
+    import os
+    return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
 
-  if [ "$gid" != "empty" ]; then
-    log "$day: AT RISK (${busy_mins}min busy), guard exists"
-    return 0
-  fi
 
-  log "$day: AT RISK (${busy_mins}min busy), creating Lunch 11:00-11:45"
-  gws calendar +insert --summary "Lunch" --description "$TAG" \
-    --start "${day}T11:00:00${TZ_OFFSET}" --end "${day}T11:45:00${TZ_OFFSET}" >/dev/null 2>&1
-}
+def to_min(dt_str):
+    """Extract HH:MM from ISO datetime string as minutes since midnight."""
+    t = dt_str.split("T")[1][:5]
+    h, m = t.split(":")
+    return int(h) * 60 + int(m)
 
-for i in $(seq 0 13); do
-  process_day "$(date -j -v+${i}d '+%Y-%m-%d')" || true
-done
-log "done"
+
+def from_min(m):
+    return f"{m // 60:02d}:{m % 60:02d}"
+
+
+def busy_intervals(events):
+    """Return sorted list of (start_min, end_min) for blocking events."""
+    intervals = []
+    for e in events.get("items", []):
+        if not e.get("start", {}).get("dateTime"):
+            continue
+        if e.get("summary") == "Lunch":
+            continue
+        if e.get("transparency") == "transparent":
+            continue
+        if any(a.get("self") and a.get("responseStatus") == "declined"
+               for a in e.get("attendees", [])):
+            continue
+        intervals.append((to_min(e["start"]["dateTime"]), to_min(e["end"]["dateTime"])))
+    return sorted(intervals)
+
+
+def busy_in_window(intervals, ws, we):
+    total = 0
+    for s, e in intervals:
+        cs, ce = max(s, ws), min(e, we)
+        if ce > cs:
+            total += ce - cs
+    return total
+
+
+def first_free_slot(intervals, ws, we, duration):
+    """Return start of first free slot of `duration` mins in [ws, we], or ws if none."""
+    cursor = ws
+    for s, e in intervals:
+        s, e = max(s, ws), min(e, we)
+        if s > cursor and s - cursor >= duration:
+            return cursor
+        if e > cursor:
+            cursor = e
+    return cursor if we - cursor >= duration else ws
+
+
+def process_day(day, local_tz):
+    if day.weekday() >= 5:
+        return
+
+    offset = datetime_offset(local_tz)
+    events = gws("calendar", "events", "list", "--params", json.dumps({
+        "calendarId": "primary",
+        "timeMin": f"{day}T00:00:00{offset}",
+        "timeMax": f"{day}T23:59:59{offset}",
+        "singleEvents": True,
+        "orderBy": "startTime",
+        "timeZone": str(local_tz),
+    }))
+
+    guard = next(
+        (e for e in events.get("items", []) if e.get("description") == TAG),
+        None
+    )
+    guard_id = guard["id"] if guard else None
+
+    intervals = busy_intervals(events)
+    busy_mins = busy_in_window(intervals, *WINDOW)
+
+    if busy_mins < RISK_THRESHOLD:
+        if guard_id:
+            log(f"{day}: OK ({busy_mins}min busy), removing guard event")
+            gws("calendar", "events", "delete", "--params",
+                json.dumps({"calendarId": "primary", "eventId": guard_id}))
+        else:
+            log(f"{day}: OK ({busy_mins}min busy)")
+        return
+
+    if guard_id:
+        log(f"{day}: AT RISK ({busy_mins}min busy), guard exists")
+        return
+
+    slot = first_free_slot(intervals, *WINDOW, DURATION)
+    st, et = from_min(slot), from_min(slot + DURATION)
+    log(f"{day}: AT RISK ({busy_mins}min busy), creating Lunch {st}-{et}")
+    gws("calendar", "+insert",
+        "--summary", "Lunch",
+        "--description", TAG,
+        "--start", f"{day}T{st}:00{offset}",
+        "--end", f"{day}T{et}:00{offset}")
+
+
+def datetime_offset(local_tz):
+    """Return current UTC offset string for the timezone, e.g. -05:00."""
+    from datetime import datetime
+    offset = datetime.now(local_tz).utcoffset()
+    total = int(offset.total_seconds())
+    sign = "+" if total >= 0 else "-"
+    total = abs(total)
+    return f"{sign}{total // 3600:02d}:{(total % 3600) // 60:02d}"
+
+
+def log(msg):
+    from datetime import datetime
+    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
+    subprocess.run(["logger", "-t", "lunch-guard", msg], capture_output=True)
+
+
+if __name__ == "__main__":
+    local_tz = tz()
+    today = date.today()
+    for i in range(14):
+        try:
+            process_day(today + timedelta(days=i), local_tz)
+        except Exception as e:
+            log(f"ERROR {today + timedelta(days=i)}: {e}")
+    log("done")
