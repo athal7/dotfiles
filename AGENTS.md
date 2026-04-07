@@ -40,7 +40,8 @@
 **Global config** (`~/.config/opencode/`):
 - `opencode.json` - models, MCPs, agent config (managed by chezmoi)
 - `AGENTS.md` - instructions for all agents
-- `skill/` - on-demand skills (invokable via `/skill-name` or loaded by the agent)
+
+**Skills** (`~/.agents/skills/`) — tool-agnostic standard location, read by OpenCode, Claude Code, and other agents:
 
 **Per-project config** (`.opencode/` in repo root):
 - `command/` - project-specific slash commands
@@ -52,13 +53,13 @@
 |----------|---------|
 | `dot_config/opencode/opencode.json` | Agent config (models, permissions, temperature) |
 | `dot_config/opencode/AGENTS.md.tmpl` | Universal rules (safety, CLI tools, task completion) |
-| `dot_config/opencode/skill/*/SKILL.md` | On-demand skills (invokable via `/skill-name` or loaded by the agent) |
+| `dot_agents/skills/*/SKILL.md` | On-demand skills (invokable via `/skill-name` or loaded by the agent) |
 
 **Adding a new skill**:
-1. Create `skill/<name>/SKILL.md` with `name:` and `description:` in frontmatter
+1. Create `dot_agents/skills/<name>/SKILL.md` with `name:` and `description:` in frontmatter
 2. Run `chezmoi apply` - skill appears in skill tool listing
 
-**Editing skills/commands**: Always edit in `dot_config/opencode/` here, then `chezmoi apply`. Edits made directly to `~/.config/opencode/` will be overwritten on the next `chezmoi apply`. If a skill was already edited at the target path, copy it back here first.
+**Editing skills**: Always edit in `dot_agents/skills/` here, then `chezmoi apply`. Edits made directly to `~/.agents/skills/` will be overwritten on the next `chezmoi apply`.
 
 ## OpenCode MCP Configuration
 

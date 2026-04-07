@@ -38,6 +38,15 @@ repos:
         language: system
         files: \.tmpl$
 
+  # Agent Skills validation
+  - repo: local
+    hooks:
+      - id: validate-skills
+        name: validate skill frontmatter
+        entry: scripts/validate-skills.sh
+        language: script
+        files: dot_agents/skills/.*/SKILL\.md$
+
   # Talisman (secrets scanning) - already configured, keep it
   - repo: https://github.com/thoughtworks/talisman
     rev: v1.32.0
