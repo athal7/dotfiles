@@ -1,0 +1,124 @@
+#!/bin/bash
+# lunch-guard - Block lunch on Google Calendar when it's at risk
+#
+# For each weekday in the next 2 weeks, checks if there's a 45-min gap
+# in the 11am-2pm window on the primary Google Calendar. If not, finds
+# the best alternative slot and creates/moves a "Lunch" event.
+#
+# Requires: gws, jq
+
+set -euo pipefail
+
+DURATION=45  # minutes
+WINDOW_START=660  # 11:00
+WINDOW_END=840    # 14:00
+SEARCH_START=480  # 08:00
+SEARCH_END=1080   # 18:00
+TAG="Managed by lunch-guard"
+TZ=$(readlink /etc/localtime | sed 's|.*/zoneinfo/||')
+TZ_OFFSET=$(date "+%z" | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)/\1:\2/')
+
+log() { logger -t lunch-guard "$@" 2>/dev/null; printf '%s %s\n' "$(date +%H:%M:%S)" "$*"; }
+
+to_min() { echo $(( 10#${1%%:*} * 60 + 10#${1##*:} )); }
+from_min() { printf '%02d:%02d' $(($1/60)) $(($1%60)); }
+
+# Find largest gap in sorted busy intervals within a window
+# Usage: best_gap window_start window_end [start|end ...]
+best_gap() {
+  local ws=$1 we=$2 cursor=$1 bs=0 bl=0; shift 2
+  for iv in "$@"; do
+    local s=$(to_min "${iv%%|*}") e=$(to_min "${iv##*|}")
+    [ "$s" -lt "$ws" ] && s=$ws; [ "$e" -gt "$we" ] && e=$we
+    if [ "$s" -gt "$cursor" ]; then
+      local g=$((s - cursor))
+      [ "$g" -gt "$bl" ] && bs=$cursor && bl=$g
+    fi
+    [ "$e" -gt "$cursor" ] && cursor=$e
+  done
+  local g=$((we - cursor))
+  [ "$g" -gt "$bl" ] && bs=$cursor && bl=$g
+  echo "$bs $bl"
+}
+
+process_day() {
+  local day=$1
+  # Skip weekends
+  [ "$(date -j -f '%Y-%m-%d' "$day" '+%u')" -ge 6 ] && return 0
+
+  local events
+  events=$(gws calendar events list --params "{
+    \"calendarId\": \"primary\",
+    \"timeMin\": \"${day}T00:00:00${TZ_OFFSET}\",
+    \"timeMax\": \"${day}T23:59:59${TZ_OFFSET}\",
+    \"singleEvents\": true, \"orderBy\": \"startTime\", \"timeZone\": \"$TZ\"
+  }" 2>/dev/null)
+
+  # Existing guard event
+  local gid gstart gend
+  gid=$(echo "$events" | jq -r '[.items//[]|.[]|select(.description?=="'"$TAG"'")]|.[0].id//"empty"')
+  gstart=$(echo "$events" | jq -r '[.items//[]|.[]|select(.description?=="'"$TAG"'")]|.[0].start.dateTime//""')
+  gend=$(echo "$events" | jq -r '[.items//[]|.[]|select(.description?=="'"$TAG"'")]|.[0].end.dateTime//""')
+
+  # Busy intervals: timed, non-Lunch, opaque, not declined
+  local busy=()
+  while IFS= read -r l; do [ -n "$l" ] && busy+=("$l"); done < <(echo "$events" | jq -r '
+    [.items//[]|.[]
+     | select(.start.dateTime!=null)
+     | select(.summary!="Lunch")
+     | select(.transparency!="transparent")
+     | select((.attendees//[]|map(select(.self==true and .responseStatus=="declined"))|length)==0)
+     | {s:.start.dateTime,e:.end.dateTime}]
+    | sort_by(.s)[]
+    | "\(.s|split("T")[1]|capture("^(?<t>[0-9]{2}:[0-9]{2})").t)|\(.e|split("T")[1]|capture("^(?<t>[0-9]{2}:[0-9]{2})").t)"')
+
+  local r; r=$(best_gap $WINDOW_START $WINDOW_END "${busy[@]+"${busy[@]}"}")
+  local gap_start=${r% *} gap_len=${r#* }
+
+  # Lunch fits in preferred window
+  if [ "$gap_len" -ge "$DURATION" ]; then
+    if [ "$gid" != "empty" ]; then
+      log "$day: lunch OK, removing guard event"
+      gws calendar events delete --params "{\"calendarId\":\"primary\",\"eventId\":\"$gid\"}" >/dev/null 2>&1
+    else
+      log "$day: OK"
+    fi
+    return 0
+  fi
+
+  # At risk - find best slot in wider window
+  log "$day: AT RISK (${gap_len}min best gap)"
+  r=$(best_gap $SEARCH_START $SEARCH_END "${busy[@]+"${busy[@]}"}")
+  gap_start=${r% *}; gap_len=${r#* }
+
+  if [ "$gap_len" -lt "$DURATION" ]; then
+    log "$day: WARNING - no ${DURATION}min slot in entire day"
+    return 0
+  fi
+
+  # Center lunch in gap, snap to 5min
+  local ls=$(( gap_start + (gap_len - DURATION) / 2 ))
+  ls=$(( (ls + 4) / 5 * 5 ))
+  local le=$((ls + DURATION))
+  local st=$(from_min $ls) et=$(from_min $le)
+
+  if [ "$gid" != "empty" ]; then
+    local es; es=$(echo "$gstart" | sed -E 's/.*T([0-9]{2}:[0-9]{2}).*/\1/')
+    local ee; ee=$(echo "$gend" | sed -E 's/.*T([0-9]{2}:[0-9]{2}).*/\1/')
+    [ "$es" = "$st" ] && [ "$ee" = "$et" ] && log "$day: guard at $st-$et, unchanged" && return 0
+    log "$day: moving $es-$ee -> $st-$et"
+    gws calendar events patch \
+      --params "{\"calendarId\":\"primary\",\"eventId\":\"$gid\"}" \
+      --json "{\"start\":{\"dateTime\":\"${day}T${st}:00${TZ_OFFSET}\",\"timeZone\":\"$TZ\"},\"end\":{\"dateTime\":\"${day}T${et}:00${TZ_OFFSET}\",\"timeZone\":\"$TZ\"}}" \
+      >/dev/null 2>&1
+  else
+    log "$day: creating Lunch $st-$et"
+    gws calendar +insert --summary "Lunch" --description "$TAG" \
+      --start "${day}T${st}:00${TZ_OFFSET}" --end "${day}T${et}:00${TZ_OFFSET}" >/dev/null 2>&1
+  fi
+}
+
+for i in $(seq 0 13); do
+  process_day "$(date -j -v+${i}d '+%Y-%m-%d')" || true
+done
+log "done"
