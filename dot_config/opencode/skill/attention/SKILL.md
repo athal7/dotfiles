@@ -16,8 +16,18 @@ description: Energy and spoon check — come up for air, see what needs attentio
 Run all of these before forming any view:
 
 ```bash
-# WakaTime — time coded today
-wakatime-cli --today 2>/dev/null
+# OpenCode sessions today — cognitive load metrics
+# Filters out subagent noise (worktree paths + "@... subagent" titles)
+DB=~/.local/share/opencode/opencode.db
+SKILL_DIR=~/.config/opencode/skill/attention
+
+# Per-session breakdown: user messages (= your active engagement) + duration
+sqlite3 -json "$DB" < $SKILL_DIR/sessions-today.sql \
+  | jq -r '.[] | "SESSION [\(.repo)] \(.user_messages) msgs \(.duration_min)m — \(.title)"'
+
+# Summary totals + peak concurrent
+sqlite3 "$DB" < $SKILL_DIR/sessions-summary.sql
+sqlite3 "$DB" < $SKILL_DIR/sessions-concurrent.sql
 
 # Calendar — today's events, personal calendars only (work events come from gws)
 # -ic: limit to personal calendars  -nrd: no relative dates  -iep: title+datetime only
@@ -65,27 +75,46 @@ The goal is sustainable contribution. Reducing overwhelm matters more than surfa
 
 **Spoon accounting (Dr. Megan Anna Neff's framework):**
 
-Spoons aren't just quantity — they're multidimensional. WakaTime measures cognitive output, but autistic/AuDHD energy depletion happens across multiple axes that aren't visible in coding hours:
+Spoons aren't just quantity — they're multidimensional. Autistic/AuDHD energy depletion happens across multiple axes:
 
 - **Cognitive load** — deep focus, problem-solving, context switching
 - **Social/masking load** — meetings, communication, being "on"
 - **Sensory load** — environment, noise, stimulation throughout the day
 - **Emotional/interoceptive load** — accumulated stress that may not have registered consciously
 
-**Interoceptive caveat:** With alexithymia, the body often doesn't signal depletion until it's too late. WakaTime hours are a proxy, not a direct reading. Treat high output as a *warning* signal, not a green light — boom-and-bust cycles start by overdoing it on good days.
+**What drains most:** The two biggest cognitive load signals from sessions are:
+1. **User message count** — each message you sent required you to engage, evaluate, redirect, or decide. High counts mean you were actively steering work, not just delegating.
+2. **Concurrent sessions** — running multiple sessions at once fragments attention even if each one felt short. Peak concurrent > 2 is meaningful switching cost.
 
-| WakaTime today | Spoon signal | Caveat |
-|----------------|--------------|--------|
-| < 1h | Likely available | May be early; check time of day |
-| 1–3h | Moderate | Consider other load types |
-| 3–5h | Caution | High cognitive output; hidden depletion likely |
-| > 5h | Low | Rest is the priority regardless of how it feels |
+Session duration alone is a weak signal — a long autonomous session burns few spoons; a short highly-interactive one burns many.
+
+**Reading session data:**
+- Scan session titles for topic variety — many different subjects = high context-switch load
+- Cross-repo jumps (dotfiles → odin → dotfiles) compound the switching cost
+- Check earliest session start — a long elapsed day is tiring even at low intensity
+
+**Interoceptive caveat:** With alexithymia, the body often doesn't signal depletion until it's too late. These metrics are proxies. Treat high output as a *warning* signal, not a green light — boom-and-bust cycles start by overdoing it on good days.
+
+**Spoon table — use the worse of the two signals:**
+
+| User messages today | Spoon signal |
+|---------------------|--------------|
+| < 20 | Likely available |
+| 20–60 | Moderate |
+| 60–120 | Caution |
+| > 120 | Low |
+
+| Peak concurrent sessions | Modifier |
+|--------------------------|----------|
+| 1 | No change |
+| 2–3 | +1 level toward Low |
+| 4+ | +2 levels toward Low (cap at Low) |
 
 **Time and pacing:**
 - `GAP` = minutes until next event (or rest of day free)
 - `END_OF_DAY` = minutes until 6pm
 - GAP < 30m → don't recommend starting a tunnel; suggest quick wins or rest
-- Past 6pm → wind-down mode regardless of WakaTime
+- Past 6pm → wind-down mode regardless of session count
 - Full spoons + GAP < 30m → treat as Moderate
 
 **Reminder weighting:**
@@ -115,7 +144,7 @@ One coherent snapshot — not a stack of sections. Tune depth and length to spoo
 
 ```
 --- Attention check ---
-Energy: Low (Xh coded, Xm until [next event / end of day])
+Energy: Low (Xm in sessions, Xm until [next event / end of day])
 
 Take care of yourself first.
 - Are you hydrated? Have you eaten?
@@ -130,7 +159,7 @@ Everything else can wait.
 
 ```
 --- Attention check ---
-Energy: Moderate — Xm before [next event / 6pm]
+Energy: Moderate (Xm in sessions) — Xm before [next event / 6pm]
 
 [2–3 items that make sense given time and energy — mix of urgent and lightweight]
 [Note any blocked/stuck items briefly]
@@ -143,7 +172,7 @@ Anything feel off about this list?
 
 ```
 --- Attention check ---
-Energy: Good — Xm before [next event / 6pm]
+Energy: Good (Xm in sessions) — Xm before [next event / 6pm]
 
 [1–2 things worth doing now — chosen for fit, not for urgency alone]
 [If something has been waiting and someone else is affected, mention it once, plainly]
