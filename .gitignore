@@ -1,6 +1,9 @@
 # Allow favicon (overrides global gitignore)
 !favicon.svg
 
+# Allow repo-level opencode config
+!.opencode/opencode.json
+
 # Allow .sql files (skill query scripts)
 !*.sql
 
