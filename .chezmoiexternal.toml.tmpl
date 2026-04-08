@@ -1,0 +1,14 @@
+{{ range .packages.github_releases -}}
+# {{ .name }} — {{ .description }}
+[{{ .target | quote }}]
+    type = {{ .type | quote }}
+    url = {{ gitHubLatestReleaseAssetURL .repo .asset | quote }}
+    {{- if eq .type "archive-file" }}
+    path = {{ .path | quote }}
+    {{- end }}
+    {{- if index . "executable" }}
+    executable = true
+    {{- end }}
+    refreshPeriod = {{ .refresh_period | quote }}
+
+{{ end -}}

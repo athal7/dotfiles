@@ -6,7 +6,7 @@
     <string>com.{{ .chezmoi.username }}.opencode-web</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/homebrew/opt/opencode/libexec/lib/node_modules/opencode-ai/node_modules/opencode-darwin-arm64/bin/opencode</string>
+        <string>{{ .chezmoi.homeDir }}/.local/bin/opencode</string>
         <string>web</string>
         <string>--port</string>
         <string>4096</string>
@@ -24,7 +24,7 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <string>{{ .chezmoi.homeDir }}/.local/bin:{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
 </dict>
 </plist>

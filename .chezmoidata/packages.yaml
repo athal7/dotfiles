@@ -1,0 +1,155 @@
+packages:
+  taps:
+    - github/gh
+    - open-cli-collective/tap
+    - silverstein/tap
+    - steipete/tap
+
+  brews:
+    - name: autojump
+      description: Directory jump based on frecency
+    - name: bat
+      description: Better cat with syntax highlighting
+    - name: chezmoi
+      description: Dotfiles manager
+    - name: colima
+      description: Docker runtime for macOS
+    - name: direnv
+      description: Per-directory environment variables
+    - name: docker
+      description: Container runtime
+    - name: docker-compose
+      description: Multi-container Docker applications
+    - name: ffmpeg
+      description: Video/audio processing
+    - name: gh
+      description: GitHub CLI for issues, PRs, repos
+    - name: git-spice
+      description: Manage stacked Git branches
+    - name: jc
+      description: Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
+    - name: jq
+      description: JSON processing and querying
+    - name: graphqurl
+      description: GraphQL CLI — query any GraphQL API with variables support (gq)
+    - name: k9s
+      description: Terminal UI for Kubernetes clusters
+    - name: kubernetes-cli
+      description: Kubernetes CLI (kubectl)
+    - name: mas
+      description: Mac App Store CLI
+    - name: mise
+      description: Polyglot version manager (ruby, node, python, rust, etc.)
+    - name: neovim
+      description: Modern Vim-based editor
+    - name: ollama
+      description: Local LLM runtime
+    - name: openssl
+      description: TLS/SSL cryptography library
+    - name: opentofu
+      description: Terraform-compatible infrastructure as code
+    - name: ripgrep
+      description: Fast recursive grep (rg) - required by OpenCode
+    - name: starship
+      description: Cross-shell prompt
+    - name: talisman
+      description: Git secrets scanner (pre-commit hook)
+    - name: wakatime-cli
+      description: Time tracking for developers
+    - name: watch
+      description: Run commands periodically
+    - name: worktrunk
+      description: Git worktree switcher (wt switch, wt list)
+    - name: googleworkspace-cli
+      description: Google Workspace CLI (gws) for Drive, Gmail, Calendar, Sheets, Docs, Chat
+    - name: steipete/tap/remindctl
+      description: Apple Reminders CLI — headless read/write without TCC issues
+    - name: silverstein/tap/minutes
+      description: Meeting recorder CLI (record, search, import, transcription)
+
+  casks:
+    - name: gcloud-cli
+      description: Google Cloud CLI (gcloud, gsutil, bq)
+    - name: font-monaspace
+      description: Monospace font family
+    - name: ghostty
+      description: GPU-accelerated terminal emulator
+    - name: claude-code
+      description: Claude Code CLI for AI-powered coding and summarization
+    - name: silverstein/tap/minutes
+      description: Minutes desktop app (menu bar, recording UI, AI assistant)
+    - name: open-cli-collective/tap/cfl
+      description: Confluence CLI for searching and reading pages
+    - name: stats
+      description: Menu bar system monitor (CPU, memory, disk, network)
+    - name: tailscale-app
+      description: Mesh VPN for secure networking
+
+  # GitHub releases — installed via .chezmoiexternal.toml.tmpl
+  github_releases:
+    - name: opencode
+      repo: sst/opencode
+      target: .local/bin/opencode
+      asset: opencode-darwin-arm64.zip
+      type: archive-file
+      path: opencode
+      executable: true
+      refresh_period: 24h
+      description: AI coding assistant CLI
+
+    - name: opencode-desktop
+      repo: sst/opencode
+      target: Applications
+      asset: opencode-desktop-darwin-aarch64.app.tar.gz
+      type: archive
+      refresh_period: 24h
+      description: AI coding assistant desktop app
+
+    - name: ical
+      repo: BRO3886/ical
+      target: .local/bin/ical
+      asset: ical-darwin-arm64.tar.gz
+      type: archive-file
+      path: ical
+      executable: true
+      refresh_period: 168h
+      description: iCal CLI for managing calendars (EventKit-based, supports writes)
+
+  # mise-managed runtimes and tools
+  mise:
+    - name: ruby
+      version: "3.4"
+      description: Ruby runtime
+    - name: node
+      version: lts
+      description: Node.js runtime (LTS)
+    - name: python
+      version: "3"
+      description: Python runtime
+    - name: rust
+      version: stable
+      description: Rust toolchain via rustup
+    - name: ruff
+      version: latest
+      description: Python linter and formatter
+    - name: uv
+      version: latest
+      description: Fast Python package installer and resolver
+    - name: pre-commit
+      version: latest
+      description: Git hook manager
+    - name: terraform
+      version: latest
+      description: Infrastructure as code
+    - name: helm
+      version: latest
+      description: Kubernetes package manager
+    - name: argocd
+      version: latest
+      description: ArgoCD CLI for GitOps deployments
+    - name: pipx:check-jsonschema
+      version: latest
+      description: JSON Schema validation CLI
+    - name: pipx:grip
+      version: latest
+      description: GitHub-flavored markdown preview in browser

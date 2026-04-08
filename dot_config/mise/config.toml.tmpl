@@ -1,0 +1,8 @@
+[tools]
+{{- range .packages.mise }}
+{{ if contains ":" .name }}"{{ .name }}"{{ else }}{{ .name }}{{ end }} = {{ .version | quote }}  # {{ .description }}
+{{- end }}
+
+[settings]
+idiomatic_version_file_enable_tools = ["ruby"]
+python.default_packages_file = "~/.config/mise/default-python-packages"

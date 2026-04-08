@@ -1,6 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 {{ template "brewenv" . }}
 
-brew bundle --file=-<<'EOF'
-{{ template "Brewfile" . }}
+brew bundle --file=/dev/stdin <<'EOF'
+{{ range .packages.taps -}}
+tap {{ . | quote }}
+{{ end -}}
+
+cask_args appdir: "/Applications"
+
+{{ range .packages.brews -}}
+brew {{ .name | quote }}
+{{ end -}}
+
+{{ range .packages.casks -}}
+cask {{ .name | quote }}
+{{ end -}}
 EOF

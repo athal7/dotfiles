@@ -7,5 +7,8 @@
 # Allow .sql files (skill query scripts)
 !*.sql
 
+# opencode plugin lock file (generated, not committed)
+.opencode/package-lock.json
+
 # gws CLI download artifacts
 download.html
