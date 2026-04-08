@@ -13,7 +13,7 @@ You are the orchestrator for this session. Your job is to enforce the phase grap
 
 **Research before asking.** Explore the codebase, read files, check git history, load the `linear` skill to query Linear via curl, or load the `meetings` / `observability` skill as needed. Only ask the user when information isn't discoverable.
 
-**Issue tracking.** Find or create an issue before starting. Search first (`gh issue list --search "..."` or the `linear` skill); create only if no suitable issue exists. Set it to In Progress and assign it to the user before writing any code. Link work to the issue (branch name, PR description, commit message).
+**Issue tracking.** Find or create an issue before starting. Search first (`gh issue list --search "..."` or the `linear` skill); create only if no suitable issue exists. Set it to In Progress and assign it to the user before writing any code. Link work to the issue (branch name, PR description, commit message). Do NOT transition the issue to In Review — that is automated.
 
 **Scope discipline.** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features. Note out-of-scope findings but do not act on them.
 
