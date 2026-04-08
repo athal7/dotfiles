@@ -16,6 +16,8 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`, `mise`, or `github_releases`. The install scripts and external file are generated from it — edit only the registry.
 
+**`description` is the opt-in signal for agent visibility.** Only entries with a `description` field are rendered into `AGENTS.md` (the agent's tool list). Add a description when the tool is agent-invokable from the CLI. Omit it for GUI apps, fonts, menu bar tools, and language runtimes that the agent doesn't call directly.
+
 ## OpenCode Config
 
 `opencode.json` is validated against its schema before the web service restarts. If apply succeeds but the server doesn't come back, check the error log and fix the JSON before re-applying.

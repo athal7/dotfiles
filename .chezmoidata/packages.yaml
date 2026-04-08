@@ -71,19 +71,14 @@ packages:
     - name: gcloud-cli
       description: Google Cloud CLI (gcloud, gsutil, bq)
     - name: font-monaspace
-      description: Monospace font family
     - name: ghostty
-      description: GPU-accelerated terminal emulator
     - name: claude-code
       description: Claude Code CLI for AI-powered coding and summarization
     - name: silverstein/tap/minutes
-      description: Minutes desktop app (menu bar, recording UI, AI assistant)
     - name: open-cli-collective/tap/cfl
       description: Confluence CLI for searching and reading pages
     - name: stats
-      description: Menu bar system monitor (CPU, memory, disk, network)
     - name: tailscale-app
-      description: Mesh VPN for secure networking
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
@@ -103,7 +98,6 @@ packages:
       asset: opencode-desktop-darwin-aarch64.app.tar.gz
       type: archive
       refresh_period: 24h
-      description: AI coding assistant desktop app
 
     - name: ical
       repo: BRO3886/ical
@@ -119,16 +113,12 @@ packages:
   mise:
     - name: ruby
       version: "3.4"
-      description: Ruby runtime
     - name: node
       version: lts
-      description: Node.js runtime (LTS)
     - name: python
       version: "3"
-      description: Python runtime
     - name: rust
       version: stable
-      description: Rust toolchain via rustup
     - name: ruff
       version: latest
       description: Python linter and formatter

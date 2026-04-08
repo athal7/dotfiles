@@ -1,6 +1,6 @@
 ---
 name: conversations
-description: Research people, decisions, and context across meetings, Slack, and the knowledge base
+description: Research people, decisions, and context across meetings, Slack, the knowledge base, and Gmail
 license: MIT
 metadata:
   author: athal7
@@ -65,6 +65,30 @@ curl -s "https://slack.com/api/conversations.replies?channel=CHANNEL_ID&ts=THREA
 
 Use when: looking for something from today or yesterday, or a specific thread not in a digest.
 
+## 4. Gmail — email threads and formal correspondence
+
+Sent/received email, support tickets, procurement threads, and anything via `@mozilla.com`.
+
+```bash
+# Search by query (same syntax as Gmail search box)
+gws gmail users messages list --params '{"userId": "me", "q": "QUERY", "maxResults": 20}'
+
+# Get message metadata
+gws gmail users messages get --params '{"userId": "me", "id": "MESSAGE_ID", "format": "metadata", "metadataHeaders": ["Subject","From","To","Date"]}'
+
+# Get full message body
+gws gmail users messages get --params '{"userId": "me", "id": "MESSAGE_ID", "format": "full"}' > /tmp/msg.json
+# then decode: base64 -d the payload.body.data (or parts[].body.data for multipart)
+
+# Get full thread
+gws gmail users threads get --params '{"userId": "me", "id": "THREAD_ID", "format": "metadata", "metadataHeaders": ["Subject","From","To","Date"]}'
+
+# Send / reply
+gws gmail users messages send --params '{"userId": "me"}' --json '{"raw": "BASE64_RFC2822", "threadId": "THREAD_ID"}'
+```
+
+Use when: looking for email correspondence, JSM/Jira notifications, procurement tickets, or any thread not in Slack/meetings.
+
 ## Decision guide
 
 | Question | Source |
@@ -74,3 +98,4 @@ Use when: looking for something from today or yesterday, or a specific thread no
 | What did someone say in Slack this morning? | Slack search |
 | Who was in a specific meeting? | meeting file or KB |
 | What's the latest on a Slack thread? | Slack search |
+| Email thread, support ticket, JSM notification? | Gmail (gws) |

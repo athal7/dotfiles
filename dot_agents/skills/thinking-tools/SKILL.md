@@ -1,6 +1,6 @@
 ---
 name: thinking-tools
-description: Apply structured thinking frameworks — problem solving, decisions, systems thinking, communication
+description: Use when facing a decision, unclear or recurring problem, system behavior question, communication challenge, or when generating novel solutions — loads structured thinking frameworks
 license: MIT
 metadata:
   author: athal7

@@ -7,6 +7,7 @@ Reads calendar names from chezmoi data [data.calendars].
 import json
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -43,7 +44,11 @@ def main():
         if e.get("calendar") not in allowed:
             continue
         start = e.get("start_date", "")
-        time = start[11:16] if not e.get("all_day") else "all-day"
+        if not e.get("all_day") and start:
+            dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+            time = dt.astimezone().strftime("%H:%M")
+        else:
+            time = "all-day"
         print(f"{time} {e['title']} [{e['calendar']}]")
 
 

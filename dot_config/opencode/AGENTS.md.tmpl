@@ -8,6 +8,25 @@
 
 ## CLI Tools
 
-The full tool registry with install sources is at `~/.local/share/chezmoi/.chezmoidata/packages.yaml`.
+Prefer installed tools over alternatives when available. The following tools are installed:
 
-**Prefer installed tools** over alternatives when available. For example, use `bat` instead of `cat` for file preview, `jq` for JSON parsing, and `gh` for all GitHub operations.
+{{ range .packages.brews -}}
+{{ if hasKey . "description" -}}
+- **{{ .name }}** — {{ .description }}
+{{ end -}}
+{{ end -}}
+{{ range .packages.casks -}}
+{{ if hasKey . "description" -}}
+- **{{ .name }}** — {{ .description }}
+{{ end -}}
+{{ end -}}
+{{ range .packages.github_releases -}}
+{{ if hasKey . "description" -}}
+- **{{ .name }}** — {{ .description }}
+{{ end -}}
+{{ end -}}
+{{ range .packages.mise -}}
+{{ if hasKey . "description" -}}
+- **{{ .name }}** — {{ .description }}
+{{ end -}}
+{{ end }}

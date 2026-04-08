@@ -1,6 +1,6 @@
 [tools]
 {{- range .packages.mise }}
-{{ if contains ":" .name }}"{{ .name }}"{{ else }}{{ .name }}{{ end }} = {{ .version | quote }}  # {{ .description }}
+{{ if contains ":" .name }}"{{ .name }}"{{ else }}{{ .name }}{{ end }} = {{ .version | quote }}
 {{- end }}
 
 [settings]
