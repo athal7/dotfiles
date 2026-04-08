@@ -2,7 +2,21 @@
 
 ## Development Workflow
 
-**Load the `process` skill** at the start of any non-trivial implementation task. It defines the full phase graph (plan → expert review → implement → verify → commit) and survives context pressure by being re-loadable.
+**Load the `process` skill** at the start of any non-trivial implementation task. This is not optional — do it before writing any code, creating any branch, or touching any file. It defines the full phase graph and enforces gates that must not be skipped:
+
+- Written plan before any implementation
+- Expert review of the plan
+- User approval before writing code
+- TDD loop (load `tdd` skill) for every code change
+- Full test suite green before committing
+- Self-review (load `review` skill) before committing
+- User approval before committing
+
+**Never start implementing without loading `process` first.** If you find yourself editing files, creating branches, or running tests without having loaded `process`, stop and load it immediately.
+
+**Branch discipline:** Always create a new branch off `origin/main` before any code change. Never implement directly on `main`.
+
+**Issue discipline:** When picking up a tracked issue (Linear, GitHub, etc.), set it to In Progress and assign it to the user immediately — before writing any code.
 
 **Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval. If no response is possible (background task, automation), do NOT proceed. Read-only operations don't require confirmation.
 
