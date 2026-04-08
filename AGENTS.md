@@ -22,6 +22,12 @@ All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`
 
 MCPs, plugins, and permissions are all in `opencode.json`. Skills live in `dot_agents/skills/` — edit here, not in `~/.agents/skills/`.
 
+## Chezmoi Gotchas
+
+- **`.chezmoidata` values are plain data** — template expressions like `{{ .chezmoi.arch }}` inside YAML string values are not evaluated. Arch/OS logic must live in the `.tmpl` file itself.
+- **`.app` bundles via `chezmoiexternal`** — use `type = "archive"` with the target pointing to the *parent directory* (e.g., `Applications`), not the bundle path. The bundle name comes from the archive root.
+- **LaunchAgent binary path changes** — after moving a binary (e.g., brew → `~/.local/bin`), `launchctl bootout` + `bootstrap` is required to pick up the new plist; `kickstart` alone is not sufficient if the service is crash-looping.
+
 ## Host-Specific Files (NOT managed by chezmoi)
 
 - `~/.env` — API keys and secrets (loaded by direnv)
