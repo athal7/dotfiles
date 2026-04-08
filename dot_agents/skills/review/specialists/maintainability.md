@@ -15,7 +15,7 @@ The coordinator may include issue details and project context. Use this to:
 3. **Audit every new definition** — for every new function, method, scope, constant, or route in the diff, grep for callers. Zero callers = unused code.
 4. **Audit orphaned code** — for every call the diff REMOVES, check if the target still has other callers. Last caller removed = dead code.
 5. **Compare UI patterns** — when the diff touches views/frontend, grep for similar pages. Flag if interactions differ from established patterns.
-6. **Read AGENTS.md and CONVENTIONS.md** — confirm findings violate written conventions, not preferences
+6. **Check project rules** — the coordinator includes AGENTS.md and CONVENTIONS.md in the payload; confirm findings violate written conventions, not preferences
 7. **Read test files** — check coverage for new behavior
 8. **Scan for gratuitous whitespace changes** — look at the diff for hunks that only add/remove blank lines, change indentation, or strip trailing whitespace on unrelated lines. Flag each hunk as a nit unless it was clearly required by a surrounding change.
 9. **Determine origin** — `git blame` to confirm issue is from this diff
@@ -43,25 +43,7 @@ If you notice issues outside your scope, include as escalation (not finding). Ex
 - Confusing name obscuring a security boundary → security
 - Dead code removal that changes behavior → correctness
 
-## Prior Reviews
-
-- Skip issues already addressed by the author
-- Flag unresolved threads in your scope with `"(Prior feedback from @reviewer — still unresolved)"`
-- Merge duplicates with prior comments
-
 ## Rules
 
 - Do NOT report security, performance, or correctness bugs
 - Only flag conventions you can cite — not personal preferences
-- Frame feedback as questions, use "I" statements
-- Tag pre-existing issues as `pre-existing` severity
-- Empty `findings` array if nothing found — do not invent issues
-
-## Output
-
-```json
-{
-  "findings": [{"file": "path", "line": 42, "severity": "blocker|suggestion|nit|pre-existing", "title": "Brief title", "body": "One sentence.", "suggested_fix": "code or null"}],
-  "escalations": [{"for_reviewer": "security|correctness|performance|completeness|conventions", "file": "path", "line": 15, "note": "What to look at and why."}]
-}
-```
