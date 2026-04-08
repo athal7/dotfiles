@@ -1,0 +1,141 @@
+#!/bin/sh
+# check-error-logs — daily scan of LaunchAgent error logs
+# Creates a reminder in the Work list if any services have new errors.
+#
+# State file tracks byte offsets per log file so only new content is read.
+# First run establishes a baseline and exits silently.
+
+LOG_DIR="$HOME/Library/Logs"
+STATE_FILE="$LOG_DIR/.check-error-logs-state"
+SELF_LOG="check-error-logs.error.log"
+
+# Logs to skip (known-noisy daemons that write informational content to stderr)
+NOISY_LOGS="opencode-web ollama"
+
+is_noisy() {
+  name=$(basename "$1" .error.log)
+  for noisy in $NOISY_LOGS; do
+    [ "$name" = "$noisy" ] && return 0
+  done
+  return 1
+}
+
+# Read saved byte offset for a log file (default 0)
+saved_offset() {
+  grep -F "$1:" "$STATE_FILE" 2>/dev/null | tail -1 | cut -d: -f2
+}
+
+# Write/update offset for a log file in state file
+update_offset() {
+  logfile="$1"
+  offset="$2"
+  tmpfile="$STATE_FILE.tmp"
+  # Remove existing entry for this file, append new one
+  grep -vF "$logfile:" "$STATE_FILE" 2>/dev/null > "$tmpfile" || true
+  printf '%s:%s\n' "$logfile" "$offset" >> "$tmpfile"
+  mv "$tmpfile" "$STATE_FILE"
+}
+
+# ── First run: establish baseline ────────────────────────────────────────────
+if [ ! -f "$STATE_FILE" ]; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') First run — establishing baseline offsets"
+  for logfile in "$LOG_DIR"/*.error.log; do
+    [ -f "$logfile" ] || continue
+    [ "$(basename "$logfile")" = "$SELF_LOG" ] && continue
+    size=$(stat -f%z "$logfile" 2>/dev/null || echo 0)
+    update_offset "$logfile" "$size"
+    echo "  baseline: $(basename "$logfile") @ $size bytes"
+  done
+  echo "$(date '+%Y-%m-%d %H:%M:%S') Baseline complete. New errors will be reported on next run."
+  exit 0
+fi
+
+# ── Daily scan ────────────────────────────────────────────────────────────────
+echo "$(date '+%Y-%m-%d %H:%M:%S') Scanning error logs..."
+
+services_with_errors=""
+total_new_lines=0
+
+for logfile in "$LOG_DIR"/*.error.log; do
+  [ -f "$logfile" ] || continue
+  [ "$(basename "$logfile")" = "$SELF_LOG" ] && continue
+  is_noisy "$logfile" && continue
+
+  name=$(basename "$logfile" .error.log)
+  current_size=$(stat -f%z "$logfile" 2>/dev/null || echo 0)
+  offset=$(saved_offset "$logfile")
+  offset=${offset:-0}
+
+  # File was truncated (rotated) — reset to beginning
+  if [ "$current_size" -lt "$offset" ]; then
+    echo "  $name: file truncated, resetting offset"
+    offset=0
+  fi
+
+  # Nothing new
+  if [ "$current_size" -eq "$offset" ]; then
+    update_offset "$logfile" "$current_size"
+    continue
+  fi
+
+  # Read new bytes (cap at 50KB to avoid huge reads)
+  new_bytes=$((current_size - offset))
+  if [ "$new_bytes" -gt 51200 ]; then
+    # Too much new content — read last 50KB
+    read_offset=$((current_size - 51200))
+  else
+    read_offset=$offset
+  fi
+
+  # Extract new content and filter for error-like keywords
+  new_content=$(tail -c "+$((read_offset + 1))" "$logfile" 2>/dev/null \
+    | grep -iE 'error|fatal|panic|exception|failed|crash' \
+    | head -20)
+
+  new_line_count=$(printf '%s' "$new_content" | grep -c . || true)
+
+  if [ "$new_line_count" -gt 0 ]; then
+    echo "  $name: $new_line_count new error line(s)"
+    printf '%s\n' "$new_content" | while IFS= read -r line; do printf '    [%s] %s\n' "$name" "$line"; done
+    services_with_errors="$services_with_errors $name"
+    total_new_lines=$((total_new_lines + new_line_count))
+  else
+    echo "  $name: $(( new_bytes )) new bytes, no error-keyword lines"
+  fi
+
+  update_offset "$logfile" "$current_size"
+done
+
+# Also baseline any new log files that appeared since last run
+for logfile in "$LOG_DIR"/*.error.log; do
+  [ -f "$logfile" ] || continue
+  [ "$(basename "$logfile")" = "$SELF_LOG" ] && continue
+  if ! grep -qF "$logfile:" "$STATE_FILE" 2>/dev/null; then
+    size=$(stat -f%z "$logfile" 2>/dev/null || echo 0)
+    update_offset "$logfile" "$size"
+    echo "  new log detected, baselined: $(basename "$logfile") @ $size bytes"
+  fi
+done
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') Scan complete."
+
+# ── Create reminder if errors found ──────────────────────────────────────────
+if [ -n "$services_with_errors" ]; then
+  # Build a compact service list for the title (max ~80 chars)
+  service_list=$(printf '%s' "$services_with_errors" | tr ' ' ',' | sed 's/^,//')
+  title="LaunchAgent errors: $service_list"
+  # Truncate title if too long
+  if [ ${#title} -gt 100 ]; then
+    title=$(printf '%.97s...' "$title")
+  fi
+  notes="$total_new_lines error-keyword line(s) across:$services_with_errors
+Check ~/Library/Logs/*.error.log for details."
+
+  if remindctl add "$title" --list Work --notes "$notes" --priority medium -q; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Reminder created: $title"
+  else
+    echo "$(date '+%Y-%m-%d %H:%M:%S') WARNING: failed to create reminder (remindctl exited non-zero)"
+  fi
+else
+  echo "$(date '+%Y-%m-%d %H:%M:%S') No new errors found."
+fi
