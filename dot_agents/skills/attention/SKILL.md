@@ -68,7 +68,7 @@ Note: `remindctl` priority strings are `"high"`, `"medium"`, `"low"`, `"none"` �
 
 ## Step 2: Assess the situation holistically
 
-Before surfacing anything, reason across all inputs together.
+Before surfacing anything, reason across all inputs together **internally**. Do not output the intermediate spoon accounting or reasoning steps — only output the final check in Step 3.
 
 **Core principle: protect capacity first, output second.**
 The goal is sustainable contribution. Reducing overwhelm matters more than surfacing every pending item.
@@ -101,16 +101,18 @@ Session duration alone is a weak signal — a long autonomous session burns few 
 
 | User messages today | Spoon signal |
 |---------------------|--------------|
-| < 20 | Likely available |
-| 20–60 | Moderate |
-| 60–120 | Caution |
-| > 120 | Low |
+| < 30 | Likely available |
+| 30–80 | Moderate |
+| 80–150 | Caution |
+| > 150 | Low |
 
 | Peak concurrent sessions | Modifier |
 |--------------------------|----------|
-| 1 | No change |
-| 2–3 | +1 level toward Low |
-| 4+ | +2 levels toward Low (cap at Low) |
+| 1–2 | No change |
+| 3–4 | +1 level toward Low |
+| 5+ | +2 levels toward Low (cap at Low) |
+
+The table is a starting point, not a formula. Use contextual judgment — a day heavy on meetings should shift the estimate lower independent of session counts. A low message count with many meetings can still be depleting.
 
 **Time and pacing:**
 - `GAP` = minutes until next event (or rest of day free)
@@ -144,9 +146,9 @@ One coherent snapshot — not a stack of sections. Tune depth and length to spoo
 
 ### If spoons are LOW (or past 6pm)
 
-```
---- Attention check ---
-Energy: Low (Xm in sessions, Xm until [next event / end of day])
+---
+**Attention check**
+Energy: Low (X msgs, Xm until [next event / end of day])
 
 Take care of yourself first.
 - Are you hydrated? Have you eaten?
@@ -155,26 +157,27 @@ Take care of yourself first.
 [One actionable thing if truly needed, otherwise nothing]
 
 Everything else can wait.
-```
+
+---
 
 ### If spoons are MODERATE (or GAP < 30m)
 
-```
---- Attention check ---
-Energy: Moderate (Xm in sessions) — Xm before [next event / 6pm]
+---
+**Attention check**
+Energy: Moderate — Xm before [next event / 6pm]
 
 [2–3 items that make sense given time and energy — mix of urgent and lightweight]
 [Note any blocked/stuck items briefly]
 
 How does your body feel right now?
-Anything feel off about this list?
-```
+
+---
 
 ### If spoons are FULL and GAP ≥ 30m
 
-```
---- Attention check ---
-Energy: Good (Xm in sessions) — Xm before [next event / 6pm]
+---
+**Attention check**
+Energy: Good — Xm before [next event / 6pm]
 
 [1–2 things worth doing now — chosen for fit, not for urgency alone]
 [If something has been waiting and someone else is affected, mention it once, plainly]
@@ -182,7 +185,6 @@ Energy: Good (Xm in sessions) — Xm before [next event / 6pm]
 
 Is there anything nagging that isn't on this list?
 What do you want to focus on?
-```
 
 ---
 
