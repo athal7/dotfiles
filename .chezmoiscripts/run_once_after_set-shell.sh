@@ -1,3 +1,3 @@
 #!/bin/bash
 sudo sh -c "echo $(which zsh) >> /etc/shells"
-chsh -s $(which zsh) $(whoami)
+chsh -s "$(which zsh)" "$(whoami)"
