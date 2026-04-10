@@ -1,0 +1,19 @@
+#!/bin/sh
+# Sync NayaFlow profile DB between main and beta apps, then re-add to chezmoi.
+# Triggered by launchd WatchPaths on both DB files.
+
+MAIN="$HOME/Library/Application Support/NayaFlow/user-data.db"
+BETA="$HOME/Library/Application Support/NayaFlow-Beta/user-data-beta.db"
+
+[ -f "$MAIN" ] || [ -f "$BETA" ] || exit 0
+
+if [ -f "$BETA" ] && [ "$BETA" -nt "$MAIN" ]; then
+  cp "$BETA" "$MAIN"
+  echo "$(date): Copied beta → main"
+elif [ -f "$MAIN" ] && [ "$MAIN" -nt "$BETA" ]; then
+  cp "$MAIN" "$BETA"
+  echo "$(date): Copied main → beta"
+fi
+
+chezmoi re-add "$MAIN"
+echo "$(date): chezmoi re-add done"
