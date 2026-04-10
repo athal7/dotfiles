@@ -9,15 +9,25 @@ LOG_DIR="$HOME/Library/Logs"
 STATE_FILE="$LOG_DIR/.check-error-logs-state"
 SELF_LOG="check-error-logs.error.log"
 
-# Logs to skip (known-noisy daemons that write informational content to stderr)
-NOISY_LOGS="opencode-web ollama"
+# Per-service line exclusion patterns (grep -E extended regex).
+# Lines matching the pattern are stripped before error-keyword scanning.
+# Add an entry here instead of fully suppressing a noisy service.
+#
+# Format: one entry per line, "service_name|pattern"
+# The service_name matches the basename of the .error.log file (without extension).
+EXCLUDE_PATTERNS="
+ollama|address already in use
+opencode-web|Could not find 'bundler'
+homebridge|\[NestAccfactory\]
+"
 
-is_noisy() {
-  name=$(basename "$1" .error.log)
-  for noisy in $NOISY_LOGS; do
-    [ "$name" = "$noisy" ] && return 0
-  done
-  return 1
+# Return the exclusion pattern for a service name, or empty string if none.
+exclude_pattern_for() {
+  svc="$1"
+  printf '%s\n' "$EXCLUDE_PATTERNS" \
+    | grep -E "^${svc}\|" \
+    | cut -d'|' -f2- \
+    | paste -sd'|' -
 }
 
 # Read saved byte offset for a log file (default 0)
@@ -33,7 +43,7 @@ update_offset() {
   # Remove existing entry for this file, append new one
   grep -vF "$logfile:" "$STATE_FILE" 2>/dev/null > "$tmpfile" || true
   printf '%s:%s\n' "$logfile" "$offset" >> "$tmpfile"
-  mv "$tmpfile" "$STATE_FILE"
+  mv "$tmpfile" "$tmpfile.done" && mv "$tmpfile.done" "$STATE_FILE"
 }
 
 # ── First run: establish baseline ────────────────────────────────────────────
@@ -59,7 +69,6 @@ total_new_lines=0
 for logfile in "$LOG_DIR"/*.error.log; do
   [ -f "$logfile" ] || continue
   [ "$(basename "$logfile")" = "$SELF_LOG" ] && continue
-  is_noisy "$logfile" && continue
 
   name=$(basename "$logfile" .error.log)
   current_size=$(stat -f%z "$logfile" 2>/dev/null || echo 0)
@@ -87,8 +96,17 @@ for logfile in "$LOG_DIR"/*.error.log; do
     read_offset=$offset
   fi
 
-  # Extract new content and filter for error-like keywords
-  new_content=$(tail -c "+$((read_offset + 1))" "$logfile" 2>/dev/null \
+  # Get per-service exclusion pattern (may be empty)
+  excl=$(exclude_pattern_for "$name")
+
+  # Extract new content, strip known-noisy lines, then filter for error keywords
+  new_raw=$(tail -c "+$((read_offset + 1))" "$logfile" 2>/dev/null)
+  if [ -n "$excl" ]; then
+    new_filtered=$(printf '%s\n' "$new_raw" | grep -vE "$excl")
+  else
+    new_filtered=$(printf '%s\n' "$new_raw")
+  fi
+  new_content=$(printf '%s\n' "$new_filtered" \
     | grep -iE 'error|fatal|panic|exception|failed|crash' \
     | head -20)
 
@@ -100,7 +118,7 @@ for logfile in "$LOG_DIR"/*.error.log; do
     services_with_errors="$services_with_errors $name"
     total_new_lines=$((total_new_lines + new_line_count))
   else
-    echo "  $name: $(( new_bytes )) new bytes, no error-keyword lines"
+    echo "  $name: $new_bytes new bytes, no error-keyword lines"
   fi
 
   update_offset "$logfile" "$current_size"
