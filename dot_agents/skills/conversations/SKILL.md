@@ -47,21 +47,7 @@ Note: `~/meetings/*-slack-digest.md` files are also here — daily Slack digests
 
 Real-time search for things too recent to be ingested, or threads not captured in digests.
 
-```bash
-# Full-text search
-curl -s "https://slack.com/api/search.messages?query=QUERY&count=20&sort=timestamp" \
-  -H "Authorization: Bearer $SLACK_USER_TOKEN" \
-  | jq '.messages.matches[] | {channel: .channel.name, user: .username, text: .text}'
-
-# Scope to a channel or person
-# in:#channel-name QUERY
-# from:@handle QUERY
-
-# Read a thread
-curl -s "https://slack.com/api/conversations.replies?channel=CHANNEL_ID&ts=THREAD_TS" \
-  -H "Authorization: Bearer $SLACK_USER_TOKEN" \
-  | jq '.messages[] | {user: .user, text: .text}'
-```
+Load the `slack` skill for full API reference (search, post, reply, find channel IDs).
 
 Use when: looking for something from today or yesterday, or a specific thread not in a digest.
 
@@ -95,7 +81,7 @@ Use when: looking for email correspondence, JSM/Jira notifications, procurement 
 |---|---|
 | What has someone committed to? | KB → meetings |
 | What was decided about X last week? | KB → meetings search |
-| What did someone say in Slack this morning? | Slack search |
+| What did someone say in Slack this morning? | Slack search (load `slack` skill) |
 | Who was in a specific meeting? | meeting file or KB |
-| What's the latest on a Slack thread? | Slack search |
+| What's the latest on a Slack thread? | Slack search (load `slack` skill) |
 | Email thread, support ticket, JSM notification? | Gmail (gws) |
