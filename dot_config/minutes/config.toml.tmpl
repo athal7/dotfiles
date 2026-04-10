@@ -39,7 +39,9 @@ engine = "none"         # Structured YAML only — LLM transcript extraction not
 min_confidence = "strong"
 
 [recording]
-sources = ["ZoomAudioDevice"]
+# Default mic captures your voice; ZoomAudioDevice captures remote participants.
+# The default mic tracks whatever macOS system default input is set.
+sources = ["default", "ZoomAudioDevice"]
 
 [call_detection]
 # macOS-only. Watches for active calls in the listed apps and prompts to record.
@@ -50,7 +52,7 @@ apps = ["zoom.us"]
 
 [assistant]
 agent = "opencode"
-agent_args = ["--dangerously-skip-permissions"]
+agent_args = ["-m", "ollama/gemma4:e4b"]
 
 [screen_context]
 enabled = true
@@ -70,3 +72,7 @@ engine = "builtin"
 
 [security]
 allowed_audio_dirs = []
+
+[palette]
+shortcut_enabled = true
+shortcut = "CmdOrCtrl+Shift+K"
