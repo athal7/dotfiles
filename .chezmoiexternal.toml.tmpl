@@ -2,22 +2,14 @@
 {{ if eq .target "Applications" -}}
 [{{ printf "Applications/%s" .app | quote }}]
     type = {{ .type | quote }}
-    {{- if index . "version" }}
-    url = {{ printf "https://github.com/%s/releases/download/%s/%s" .repo .version .asset | quote }}
-    {{- else }}
     url = {{ gitHubLatestReleaseAssetURL .repo .asset | quote }}
-    {{- end }}
     stripComponents = 1
     refreshPeriod = {{ .refresh_period | quote }}
 
 {{ else -}}
 [{{ .target | quote }}]
     type = {{ .type | quote }}
-    {{- if index . "version" }}
-    url = {{ printf "https://github.com/%s/releases/download/%s/%s" .repo .version .asset | quote }}
-    {{- else }}
     url = {{ gitHubLatestReleaseAssetURL .repo .asset | quote }}
-    {{- end }}
     {{- if eq .type "archive-file" }}
     path = {{ .path | quote }}
     {{- end }}

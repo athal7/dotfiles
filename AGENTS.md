@@ -28,5 +28,5 @@ MCPs, plugins, and permissions are all in `opencode.json`. Skills live in `dot_a
 
 - **`.chezmoidata` values are plain data** — template expressions like `{{ .chezmoi.arch }}` inside YAML string values are not evaluated. Arch/OS logic must live in the `.tmpl` file itself.
 - **`.app` bundles via `chezmoiexternal`** — use `type = "archive"` with target `"Applications/<AppName>.app"` (unique TOML key per app) and `stripComponents = 1` to strip the archive's root directory. The zip contains e.g. `NayaFlow-Beta.app/Contents/...` — without `stripComponents = 1` the app ends up double-nested. TOML does not allow duplicate keys, so each app needs its own unique target path.
-- **`github_releases` with pinned versions** — add a `version` field (e.g. `v1.20.0`) and use the exact `asset` filename. The template constructs the URL directly instead of using `gitHubLatestReleaseAssetURL`. Update both fields manually on upgrade.
+
 - **LaunchAgent binary path changes** — after moving a binary (e.g., brew → `~/.local/bin`), `launchctl bootout` + `bootstrap` is required to pick up the new plist; `kickstart` alone is not sufficient if the service is crash-looping.
