@@ -7,22 +7,23 @@ email = "{{ .email }}"
 {{- end }}
 
 [transcription]
-model = "small"
+model = "medium"
 model_path = "{{ .chezmoi.homeDir }}/.minutes/models"
 min_words = 3
 language = "en"
+noise_reduction = true
 
 [diarization]
 # "auto" uses pyannote-rs if models are downloaded, otherwise skips gracefully.
 # Run `minutes setup --diarization` to download the ~34MB ONNX models.
 engine = "auto"
-embedding_model = "cam++"
-# threshold = 0.5  # Speaker similarity threshold (0.0–1.0). Lower = fewer speakers.
+embedding_model = "cam++-lm"  # Higher accuracy (~12% lower EER) than cam++
+threshold = 0.4               # Slightly less aggressive speaker splitting
 
 [voice]
 # Enabled automatically when voice profiles are enrolled via `minutes enroll`.
 enabled = true
-match_threshold = 0.65  # Cosine similarity for cam++ embeddings
+match_threshold = 0.45  # cam++-lm produces lower cosine similarities than cam++
 
 [summarization]
 engine = "ollama"
@@ -38,10 +39,13 @@ adapter = "wiki"        # people/{slug}.md with facts grouped by category
 engine = "none"         # Structured YAML only — LLM transcript extraction not yet implemented upstream
 min_confidence = "strong"
 
-[recording]
-# Default mic captures your voice; ZoomAudioDevice captures remote participants.
-# The default mic tracks whatever macOS system default input is set.
-sources = ["default", "ZoomAudioDevice"]
+[recording.sources]
+# voice = "default" tracks whatever macOS system default input is set
+# (AirPods, Studio Display, MacBook Pro mic — switches automatically)
+# call = "auto" detects ZoomAudioDevice/BlackHole/etc automatically
+# Separate stems enable much better diarization (each speaker isolated)
+voice = "default"
+call = "auto"
 
 [call_detection]
 # macOS-only. Watches for active calls in the listed apps and prompts to record.
