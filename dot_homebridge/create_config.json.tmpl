@@ -1,0 +1,28 @@
+{
+  "bridge": {
+    "name": "Homebridge",
+    "username": "{{ printf "%02X:%02X:%02X:%02X:%02X:%02X" (randInt 0 256) (randInt 0 256) (randInt 0 256) (randInt 0 256) (randInt 0 256) (randInt 0 256) }}",
+    "port": 51826,
+    "pin": "{{ printf "%03d-%02d-%03d" (randInt 100 1000) (randInt 10 100) (randInt 100 1000) }}"
+  },
+  "accessories": [],
+  "platforms": [
+    {
+      "platform": "NestAccfactory",
+      "google": {
+        "issuetoken": "",
+        "cookie": "",
+        "fieldTest": false
+      },
+      "options": {
+        "eveHistory": true,
+        "debug": false
+      }
+    },
+    {
+      "name": "Config",
+      "port": 8581,
+      "platform": "config"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+#!/bin/bash
+# Install/update homebridge and Nest plugin (re-runs when versions change)
+# homebridge: {{ .packages.npm.homebridge_version }}
+# homebridge-config-ui-x: {{ .packages.npm.ui_version }}
+# homebridge-nest-accfactory: {{ .packages.npm.nest_plugin_version }}
+
+set -euo pipefail
+
+# Use mise-managed node (user-scoped, no sudo needed)
+export PATH="{{ .chezmoi.homeDir }}/.local/share/mise/shims:$PATH"
+
+NODE_BIN=$(which node 2>/dev/null || true)
+if [ -z "$NODE_BIN" ]; then
+  echo "ERROR: node not found in mise shims. Run 'mise install' first." >&2
+  exit 1
+fi
+
+echo "Using node: $NODE_BIN ($(node --version))"
+
+npm install -g \
+  "homebridge@{{ .packages.npm.homebridge_version }}" \
+  "homebridge-config-ui-x@{{ .packages.npm.ui_version }}" \
+  "homebridge-nest-accfactory@{{ .packages.npm.nest_plugin_version }}"
+
+# Ensure the homebridge shim exists in mise's shims directory
+mise reshim
+
+echo "Homebridge packages installed successfully."
+echo "UI available at http://localhost:8581 once the service is running."
