@@ -92,9 +92,19 @@ packages:
     - name: opencode-desktop
       repo: sst/opencode
       target: Applications
+      app: OpenCode.app
       asset: opencode-desktop-darwin-aarch64.app.tar.gz
       type: archive
       refresh_period: 24h
+
+    - name: naya-flow-beta
+      repo: NayaTech/NayaFlow-beta-releases
+      version: v1.20.0
+      target: Applications
+      app: NayaFlow-Beta.app
+      asset: NayaFlow-Beta-1.20.0-arm64-mac.zip
+      type: archive
+      refresh_period: 168h
 
     - name: ical
       repo: BRO3886/ical
