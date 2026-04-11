@@ -2,6 +2,7 @@
 name: dispatch
 description: Spawn or reuse an OpenCode session in another workspace to perform a task
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

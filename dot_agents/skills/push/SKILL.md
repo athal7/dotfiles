@@ -5,6 +5,9 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+prerequisite-skills:
+  - slug: commit
+    reason: "Commit must precede push"
 ---
 
 # Skill: Push

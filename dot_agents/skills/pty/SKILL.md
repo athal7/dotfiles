@@ -1,7 +1,8 @@
 ---
 name: pty
-description: Working with PTY sessions for background and interactive processes
+description: PTY sessions for long-running processes, interactive input, signal sending (Ctrl+C), and live output tailing — use instead of bash when the process can't be run to completion synchronously
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

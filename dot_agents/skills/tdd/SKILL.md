@@ -2,6 +2,7 @@
 name: tdd
 description: Strict TDD loop — red/green/refactor must be followed for every code change, no exceptions
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

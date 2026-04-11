@@ -22,6 +22,10 @@ The coordinator may include issue details and project context. Use this to:
 
 Output a brief exploration log before findings.
 
+## Phase 2: Design Smell Scan (REQUIRED)
+
+After the exploration pass, apply Section 2 (Code-Level Design Smells) from the `architecture` skill — the coordinator will have inlined it into this prompt. Scan the diff for every category listed there and follow the Pre-Existing Pattern Rule.
+
 ## Scope
 
 - **Single responsibility** — functions/classes doing too many things
@@ -35,6 +39,7 @@ Output a brief exploration log before findings.
 - **Test coverage** — changed behavior without tests, tests at wrong tier
 - **Test validity** — stubs/mocks targeting methods not in the code path being tested
 - **Minimize diff** — unnecessary whitespace changes (blank lines added/removed, trailing whitespace, re-indentation), unnecessary formatting changes, unrelated refactors, scope creep
+- **Design smells** — per the `architecture` skill Section 2 catalog (Tell Don't Ask, Feature Envy, Scattered Enforcement, Shotgun Surgery, Layering Violations, Anemic Domain Model, Anti-Extensibility Conditionals)
 
 ## Escalations
 
@@ -42,8 +47,10 @@ If you notice issues outside your scope, include as escalation (not finding). Ex
 - Duplicated function with different error handling → correctness
 - Confusing name obscuring a security boundary → security
 - Dead code removal that changes behavior → correctness
+- Scattered enforcement that has a security implication (different callsites enforcing different rules) → security
 
 ## Rules
 
 - Do NOT report security, performance, or correctness bugs
 - Only flag conventions you can cite — not personal preferences
+- For design smells: follow the naming and severity rules in the `architecture` skill Section 2

@@ -155,3 +155,6 @@ packages:
     - name: pipx:grip
       version: latest
       description: GitHub-flavored markdown preview in browser
+    - name: pipx:skills-ref
+      version: latest
+      description: "Agent Skills linter — validates SKILL.md frontmatter (binary: agentskills)"

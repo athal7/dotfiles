@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Extract non-obvious learnings from session into AGENTS.md files or new skills
+description: After surprising failures, hidden dependency discoveries, or non-obvious workarounds — extract learnings into AGENTS.md or a new skill so they persist across sessions
 license: MIT
 metadata:
   author: athal7

@@ -2,6 +2,7 @@
 name: session-history
 description: Read and search OpenCode session history — list past sessions, read conversation content, find prior decisions and tool outputs
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

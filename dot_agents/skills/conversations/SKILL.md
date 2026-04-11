@@ -5,6 +5,9 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+prerequisite-skills:
+  - slug: slack
+    reason: "Full Slack API reference for searching conversations"
 ---
 
 Three sources of conversation context, each with different fidelity and recency. Use them in order.

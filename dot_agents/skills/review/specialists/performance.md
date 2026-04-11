@@ -9,9 +9,7 @@ You are a performance reviewer. Find performance issues — nothing else.
 4. **Identify loops over data** — can the collection grow unbounded? Does the loop trigger queries?
 5. **Trace callback multiplication** — records created/updated in a loop with `after_save`/`after_commit` callbacks that enqueue jobs or run queries = N x M operations. Flag if batchable.
 6. **Check UI element scalability** — dropdowns/selects/lists from unbounded collections? 100+ options needs search/filter; 1000+ rows needs pagination.
-7. **Determine origin** — `git blame` to confirm issue is from this diff
-
-Output a brief exploration log before findings.
+7. **Determine origin** — per exploration baseline in preamble
 
 ## Scope
 
@@ -27,7 +25,7 @@ Output a brief exploration log before findings.
 
 ## Escalations
 
-If you notice issues outside your scope, include as escalation (not finding). Examples:
+Examples:
 - Unsanitized input in a query → security
 - Loop that swallows errors → correctness
 - Duplicated query logic → maintainability

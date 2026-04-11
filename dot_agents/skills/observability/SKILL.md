@@ -1,75 +1,73 @@
 ---
 name: observability
-description: Query Elasticsearch logs, APM traces, and errors via curl — index patterns, field names, and time-range syntax
+description: Investigate production issues using logs, traces, and errors — how to triage, correlate signals, and know when to escalate. Load the elasticsearch skill for query syntax.
 license: MIT
 metadata:
   author: athal7
   version: "1.0"
+prerequisite-skills:
+  - slug: elasticsearch
+    reason: "Query syntax, index patterns, and curl commands for ES backend"
 ---
 
-Query application logs, APM traces, and errors using the Elasticsearch REST API directly.
+Use this skill to investigate production problems. For Elasticsearch query syntax, index patterns, and curl commands, load the `elasticsearch` skill.
 
-Auth is via environment variables loaded by direnv:
-- `ES_URL` — base URL (e.g. `https://elasticsearch.example.com`)
-- `ES_API_KEY` — API key for the `Authorization: ApiKey` header
+## Triage process
 
-## Time range syntax
+Start with the symptom, not the tool. Before querying anything:
 
-Pass `time_range` as a string like `15m`, `1h`, `24h`, `7d`. Translates to `now-{value}{unit}` in ES range filters.
+1. **State the hypothesis** — what do you think is wrong and why?
+2. **Bound the time window** — when did it start? Is it ongoing or resolved?
+3. **Identify the scope** — one service, one endpoint, one user, or system-wide?
 
-## Query logs
+This prevents aimless log-scrolling and makes findings interpretable.
 
-Search application logs. Index: `logs-*`. Sorted by `@timestamp` desc.
+## Signal hierarchy
 
-```bash
-ES_QUERY='{"query":{"bool":{"must":[{"query_string":{"query":"YOUR LUCENE QUERY HERE"}},{"range":{"@timestamp":{"gte":"now-1h"}}}]}},"_source":["@timestamp","message","log.level","service.name","trace.id"],"sort":[{"@timestamp":"desc"}],"size":100}'
+Work top-down — coarser signals first, drill into finer ones only when needed:
 
-curl -s -X POST "$ES_URL/logs-*/_search" \
-  -H "Authorization: ApiKey $ES_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$ES_QUERY" \
-  | jq '.hits.hits[]._source | {ts: .["@timestamp"], level: .["log.level"], svc: .["service.name"], msg: .message}'
-```
+| Signal | What it tells you | When to use |
+|---|---|---|
+| **Error rate / rate spike** | Something broke at scale | First check — confirms the problem is real |
+| **APM traces** | Which transaction is slow or failing, full call chain | Once you know the scope |
+| **APM errors** | Exception type, stack trace, grouping key | When you need the root cause code path |
+| **Logs** | Raw context around a specific event | When traces don't have enough detail |
 
-Add a service filter by inserting a `term` clause into the `must` array:
+Don't start with logs. Start with traces or error groups, then use `trace.id` to pull the surrounding log context.
+
+## Correlating signals
+
+The `trace.id` field links all three indices (`logs-*`, `traces-apm*`, `logs-apm.error-*`). Once you have a `trace.id` from an error or slow trace, use it to pull all logs from that same request:
+
 ```json
-{"term": {"service.name": "my-service"}}
+{"term": {"trace.id": "<trace-id-here>"}}
 ```
 
-## Query APM traces
+## Asking the right questions
 
-Find slow transactions. Index: `traces-apm*`. Sorted by duration desc.
+Before querying, write down what a "confirmed" answer looks like. Examples:
 
-```bash
-# min_duration_ms converts to microseconds: 500ms → 500000us
-MIN_US=500000
+- "If query returns 0 errors for service X in the last 1h, the issue has resolved"
+- "If the slow trace shows N+1 queries on endpoint Y, the cause is clear"
+- "If errors spike at exactly :15 and :45 of every hour, it's likely a cron job"
 
-ES_QUERY="{\"query\":{\"bool\":{\"must\":[{\"range\":{\"@timestamp\":{\"gte\":\"now-1h\"}}},{\"range\":{\"transaction.duration.us\":{\"gte\":$MIN_US}}}]}},\"_source\":[\"@timestamp\",\"service.name\",\"transaction.name\",\"transaction.duration.us\",\"transaction.result\",\"trace.id\"],\"sort\":[{\"transaction.duration.us\":\"desc\"}],\"size\":50}"
+This prevents misreading absence of evidence as evidence of absence.
 
-curl -s -X POST "$ES_URL/traces-apm*/_search" \
-  -H "Authorization: ApiKey $ES_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$ES_QUERY" \
-  | jq '.hits.hits[]._source | {ts: .["@timestamp"], svc: .["service.name"], tx: .["transaction.name"], ms: (.["transaction.duration.us"] / 1000 | round), result: .["transaction.result"]}'
-```
+## When to escalate
 
-## Query APM errors
+Stop investigating and escalate to the team when:
 
-Find exceptions and error groups. Index: `logs-apm.error-*`. Sorted by `@timestamp` desc.
+- Error rate is sustained above baseline for > 15 minutes and cause is not identified
+- A trace shows calls to an external dependency timing out (not your code)
+- Errors reference a data migration or schema change (potential data integrity issue)
+- You've ruled out the obvious causes and need production access or context you don't have
 
-```bash
-ES_QUERY='{"query":{"bool":{"must":[{"exists":{"field":"error.exception"}},{"range":{"@timestamp":{"gte":"now-1h"}}}]}},"_source":["@timestamp","error.exception.type","error.exception.message","error.grouping_key","service.name","transaction.name"],"sort":[{"@timestamp":"desc"}],"size":50}'
+## Common patterns
 
-curl -s -X POST "$ES_URL/logs-apm.error-*/_search" \
-  -H "Authorization: ApiKey $ES_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$ES_QUERY" \
-  | jq '.hits.hits[]._source | {ts: .["@timestamp"], svc: .["service.name"], type: .["error.exception.type"], msg: .["error.exception.message"]}'
-```
-
-## Tips
-
-- `query_string` uses Lucene syntax: `error AND timeout`, `level:ERROR`, `message:"connection refused"`
-- To count by service: append `,"aggs":{"by_svc":{"terms":{"field":"service.name","size":10}}}` and read `.aggregations.by_svc.buckets`
-- `trace.id` links logs ↔ traces ↔ errors across indices
-- If `$ES_API_KEY` is missing, check `~/.env` is loaded (`direnv allow`)
+| Symptom | Where to look first |
+|---|---|
+| Slow page loads | APM traces — sort by `transaction.duration.us` desc |
+| 500 errors spiking | APM errors — group by `error.grouping_key` |
+| One user affected | Logs — filter by user ID or session ID |
+| Periodic issue | Logs — look for time pattern in `@timestamp` |
+| After a deploy | APM errors — filter by `@timestamp` after deploy time |

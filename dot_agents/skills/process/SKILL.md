@@ -1,10 +1,22 @@
 ---
 name: process
-description: Development workflow orchestrator — phase graph, delegation rules, and checkpoint gates
+description: Development workflow orchestrator for non-trivial implementation tasks — enforces plan → expert review → user approval → implement → verify → commit phase graph with delegation and checkpoint gates
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+prerequisite-skills:
+  - slug: architecture
+    reason: "Design prerequisite check and architecture decisions before planning"
+  - slug: tdd
+    reason: "Red/green/refactor loop required for all implementation tasks"
+  - slug: review
+    reason: "Self-review of changes before committing"
+  - slug: commit
+    reason: "Semantic commit format and branch naming at commit phase"
+  - slug: push
+    reason: "Push approval protocol and CI watching after commit"
 ---
 
 ## Overview
@@ -41,7 +53,10 @@ Create a written plan before any implementation. The plan must include:
 2. The approach and key decisions
 3. Risks or open questions
 
-For architecture decisions (multiple valid approaches, hard to reverse, crosses system boundaries), load the `architecture` skill first.
+Load the `architecture` skill before writing the plan:
+
+- For **architecture decisions** (multiple valid approaches, hard to reverse, crosses system boundaries): use Section 1 to evaluate options with the expert agent.
+- For **all changes** that touch domain logic, authorization, state machines, or anything enforced in more than one layer: follow Section 3 (Design Prerequisite Check). Answer every question by reading the relevant code. Surface any prerequisite refactors before planning the feature.
 
 **Gate:** Do not proceed until the plan is written.
 

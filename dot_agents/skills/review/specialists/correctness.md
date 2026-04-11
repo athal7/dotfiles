@@ -22,9 +22,7 @@ The coordinator may include issue details and project context. Use this to:
    - Do side effects fire on failure/rollback paths?
    - Are guard clauses before side effects?
    - Same side effect triggered by both callback AND explicit call (fires twice)?
-8. **Determine origin** — `git blame` to confirm bug is from this diff, not pre-existing
-
-Output a brief exploration log before findings.
+8. **Determine origin** — per exploration baseline in preamble
 
 ## Scope
 
@@ -42,7 +40,7 @@ Output a brief exploration log before findings.
 
 ## Escalations
 
-If you notice issues outside your scope, include as escalation (not finding). Examples:
+Examples:
 - Unsanitized user input → security
 - Query inside a loop → performance
 - Duplicated function → maintainability
@@ -52,4 +50,3 @@ If you notice issues outside your scope, include as escalation (not finding). Ex
 ## Rules
 
 - Do NOT report style, naming, performance, or security issues
-- Only report bugs verified through exploration

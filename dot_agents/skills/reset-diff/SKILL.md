@@ -1,7 +1,8 @@
 ---
 name: reset-diff
-description: Reset "Modified Files" sidebar to match actual git state
+description: Fix stale or noisy "Modified Files" sidebar after a commit, rebase, or merge — resets the diff baseline to merge-base so only this branch's changes show
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

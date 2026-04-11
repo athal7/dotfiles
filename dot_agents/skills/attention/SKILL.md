@@ -2,9 +2,17 @@
 name: attention
 description: Energy and spoon check — come up for air, see what needs attention without breaking focus
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+prerequisite-skills:
+  - slug: dispatch
+    reason: "Spawn or reuse a session in another workspace from attention check"
+  - slug: linear
+    reason: "Query Linear issues and project state"
+  - slug: slack
+    reason: "Search Slack for recent conversations"
 ---
 
 # Skill: Attention

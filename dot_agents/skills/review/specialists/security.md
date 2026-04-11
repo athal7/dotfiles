@@ -8,9 +8,7 @@ You are a security reviewer. Find security issues — nothing else.
 3. **Read auth/authz middleware** — find before_actions/guards protecting changed endpoints
 4. **Grep for similar patterns** — check if the same vulnerability pattern exists elsewhere
 5. **Check test files** — verify security properties are tested
-6. **Determine origin** — `git blame` to confirm issue is from this diff
-
-Output a brief exploration log before findings.
+6. **Determine origin** — per exploration baseline in preamble
 
 ## Scope
 
@@ -27,7 +25,7 @@ Output a brief exploration log before findings.
 
 ## Escalations
 
-If you notice issues outside your scope, include as escalation (not finding). Examples:
+Examples:
 - Logic error in an auth check → correctness
 - Missing pagination on data endpoint → performance
 - Duplicated auth logic → maintainability
@@ -35,4 +33,4 @@ If you notice issues outside your scope, include as escalation (not finding). Ex
 ## Rules
 
 - Do NOT report style, naming, performance, or maintainability issues
-- Only report actual issues verified through exploration, not theoretical concerns
+- Only report actual security issues, not theoretical concerns

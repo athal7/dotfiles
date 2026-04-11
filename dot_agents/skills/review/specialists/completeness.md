@@ -16,9 +16,7 @@ The coordinator may include issue details and project context. Use this to:
 2. **Trace the happy path end-to-end** — for each new controller action, service, or job, mentally execute the primary code path. At each method call, verify the receiver cannot be nil. At each attribute access, verify the object has that attribute.
 3. **Verify failure paths exist** — for every external call (HTTP, job enqueue, file I/O, API, email, DB write), check: what happens on failure? Is there rescue/catch, user feedback, or retry?
 4. **Verify test stubs match reality** — check that every stub/mock targets a method actually called in the code path being tested. Stubs on methods not in the execution path mean the test asserts nothing.
-5. **Determine origin** — `git blame` to confirm issue is from this diff
-
-Output a brief exploration log before findings.
+5. **Determine origin** — per exploration baseline in preamble
 
 ## Scope
 
@@ -29,7 +27,7 @@ Output a brief exploration log before findings.
 
 ## Escalations
 
-If you notice issues outside your scope, include as escalation (not finding). Examples:
+Examples:
 - Logic error in the code path you're tracing → correctness
 - `update_column` bypassing validations → conventions
 - Unbounded collection in a dropdown → performance
@@ -37,4 +35,3 @@ If you notice issues outside your scope, include as escalation (not finding). Ex
 ## Rules
 
 - Do NOT report style, naming, performance, or security issues
-- Only report issues verified through exploration

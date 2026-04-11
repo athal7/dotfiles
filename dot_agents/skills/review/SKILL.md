@@ -2,9 +2,17 @@
 name: review
 description: Review changes [commit|branch|pr|staged], defaults to uncommitted
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+prerequisite-skills:
+  - slug: architecture
+    reason: "Code-level design smell catalog for maintainability specialist"
+  - slug: qa
+    reason: "Browser verification when diff touches UI or views"
+  - slug: gh-pr-inline
+    reason: "Posting inline comments when reviewing a PR"
 ---
 
 Fetch the diff based on input, then follow all instructions below.

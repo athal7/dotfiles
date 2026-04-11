@@ -1,7 +1,8 @@
 ---
 name: cleanup
-description: Clean up old worktrees, databases, and devcontainer resources
+description: Reclaim disk space by removing stale git worktrees, dropping PostgreSQL databases, and updating the OpenCode DB and global.dat to remove deleted workspace entries
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

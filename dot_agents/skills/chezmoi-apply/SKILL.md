@@ -2,6 +2,7 @@
 name: chezmoi-apply
 description: Run chezmoi apply safely when editing opencode config — handles the mid-session server restart that causes apparent hangs
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

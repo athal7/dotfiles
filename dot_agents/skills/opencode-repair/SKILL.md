@@ -2,6 +2,7 @@
 name: opencode-repair
 description: Fix OpenCode issues - blank sessions, missing worktrees, duplicate project rows, DB repair
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"

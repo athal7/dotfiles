@@ -1,0 +1,39 @@
+#!/bin/sh
+# Validate agent skills when skill files change
+# Hashes for change detection:
+{{- range (glob (joinPath .chezmoi.sourceDir "dot_agents/skills/*/SKILL.md")) }}
+# skill: {{ . | include | sha256sum }}
+{{- end }}
+
+if ! command -v agentskills >/dev/null 2>&1; then
+  echo "agentskills not found — skipping skill validation (install: uv tool install skills-ref)" >&2
+  exit 0
+fi
+
+failed=0
+warned=0
+
+for skill_dir in "$HOME/.agents/skills"/*/; do
+  result=$(agentskills validate "$skill_dir" 2>&1)
+  if echo "$result" | grep -q "Validation failed"; then
+    # Unexpected fields from open proposals (prerequisite-skills) are warnings, not errors
+    if echo "$result" | grep -q "Unexpected fields"; then
+      echo "WARN: $(basename $skill_dir): $result" >&2
+      warned=$((warned + 1))
+    else
+      echo "ERROR: $(basename $skill_dir): $result" >&2
+      failed=$((failed + 1))
+    fi
+  fi
+done
+
+if [ $failed -gt 0 ]; then
+  echo "skill validation: $failed error(s) — fix before using skills" >&2
+  exit 1
+fi
+
+if [ $warned -gt 0 ]; then
+  echo "skill validation: $warned warning(s) from open spec proposals (non-blocking)"
+fi
+
+echo "skill validation: ok"

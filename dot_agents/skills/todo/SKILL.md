@@ -2,6 +2,7 @@
 name: todo
 description: Add item(s) to the todo list without interrupting current work
 license: MIT
+compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
