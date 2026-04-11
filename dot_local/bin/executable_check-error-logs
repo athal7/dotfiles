@@ -149,7 +149,14 @@ if [ -n "$services_with_errors" ]; then
   notes="$total_new_lines error-keyword line(s) across:$services_with_errors
 Check ~/Library/Logs/*.error.log for details."
 
-  if remindctl add "$title" --list Work --notes "$notes" --priority medium -q; then
+  # Check if an incomplete reminder with the same title already exists
+  existing=$(remindctl show all --list Work --json 2>/dev/null \
+    | jq -r --arg t "$title" '.[] | select(.title == $t and .isCompleted == false) | .id' 2>/dev/null \
+    | head -1)
+
+  if [ -n "$existing" ]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Reminder already exists (incomplete): $title"
+  elif remindctl add "$title" --list Work --notes "$notes" --priority medium -q; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') Reminder created: $title"
   else
     echo "$(date '+%Y-%m-%d %H:%M:%S') WARNING: failed to create reminder (remindctl exited non-zero)"
