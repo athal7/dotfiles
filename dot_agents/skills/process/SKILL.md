@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  requires: search-issues:linear qa-verify:qa
 prerequisite-skills:
   - slug: architecture
     reason: "Design prerequisite check and architecture decisions before planning"

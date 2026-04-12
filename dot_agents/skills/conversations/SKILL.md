@@ -5,6 +5,7 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  requires: search-messages:slack read-thread:slack
 prerequisite-skills:
   - slug: slack
     reason: "Full Slack API reference for searching conversations"

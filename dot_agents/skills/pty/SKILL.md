@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  provides: spawn-pty send-input tail-output
 ---
 
 ## When to Use PTY

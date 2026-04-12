@@ -5,6 +5,7 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  provides: read-figma-file read-components read-variables
 ---
 
 # Figma API Skill
@@ -16,7 +17,7 @@ Fetch the docs above when you need endpoint details. Use `jq` to process respons
 ## Auth
 
 ```bash
-# Variable: FIGMA_ACCESS_TOKEN (from ~/.env via direnv)
+# Requires: $FIGMA_ACCESS_TOKEN
 # Header: X-Figma-Token: $FIGMA_ACCESS_TOKEN  (NOT "Authorization: Bearer")
 curl -s "https://api.figma.com/v1/me" -H "X-Figma-Token: $FIGMA_ACCESS_TOKEN" | jq .
 ```

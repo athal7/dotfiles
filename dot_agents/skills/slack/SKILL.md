@@ -5,9 +5,10 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  provides: post-message search-messages read-thread
 ---
 
-Auth: `$SLACK_USER_TOKEN` from `~/.env` via direnv.
+Requires: `$SLACK_USER_TOKEN`, `$SLACK_USER_ID`.
 
 ## Search messages
 

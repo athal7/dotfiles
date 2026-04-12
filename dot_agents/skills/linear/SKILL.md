@@ -5,6 +5,7 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  provides: search-issues read-issue create-issue update-issue
 ---
 
 # Linear API Skill
@@ -17,7 +18,7 @@ Fetch the docs above when you need query/mutation syntax. Use `jq` to process re
 ## Auth
 
 ```bash
-# Variable: LINEAR_API_KEY (from ~/.env via direnv)
+# Requires: $LINEAR_API_KEY, $LINEAR_TEAM_ID
 export GQ_ENDPOINT=https://api.linear.app/graphql
 export GQ_HEADER_Authorization="$LINEAR_API_KEY"  # no "Bearer" prefix
 ```

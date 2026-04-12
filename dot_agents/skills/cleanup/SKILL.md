@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  requires: read-sessions:session-history
 ---
 
 Clean up stale workspaces, PostgreSQL databases, and Docker resources to reclaim disk space.

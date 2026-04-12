@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  provides: repair-opencode-db fix-blank-sessions
 ---
 
 ## Blank Session List for a Project

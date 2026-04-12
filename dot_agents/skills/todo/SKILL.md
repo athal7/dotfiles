@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  provides: add-todo
 ---
 
 Add the specified item(s) to your todo list. Do NOT stop or change what you're currently working on.

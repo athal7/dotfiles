@@ -5,6 +5,7 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  requires: query-logs:elasticsearch
 prerequisite-skills:
   - slug: elasticsearch
     reason: "Query syntax, index patterns, and curl commands for ES backend"

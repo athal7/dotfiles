@@ -5,11 +5,12 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  provides: query-logs query-apm-traces query-errors
 ---
 
 Query application logs, APM traces, and errors using the Elasticsearch REST API directly.
 
-Auth is via environment variables loaded by direnv:
+Requires environment variables:
 - `ES_URL` — base URL (e.g. `https://elasticsearch.example.com`)
 - `ES_API_KEY` — API key for the `Authorization: ApiKey` header
 
@@ -72,4 +73,4 @@ curl -s -X POST "$ES_URL/logs-apm.error-*/_search" \
 - `query_string` uses Lucene syntax: `error AND timeout`, `level:ERROR`, `message:"connection refused"`
 - To count by service: append `,"aggs":{"by_svc":{"terms":{"field":"service.name","size":10}}}` and read `.aggregations.by_svc.buckets`
 - `trace.id` links logs ↔ traces ↔ errors across indices
-- If `$ES_API_KEY` is missing, check `~/.env` is loaded (`direnv allow`)
+- If `$ES_API_KEY` is missing, ensure the variable is set in your environment (open a new shell)

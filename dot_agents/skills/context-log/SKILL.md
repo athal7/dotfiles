@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  requires: read-sessions:session-history
 ---
 
 ## Purpose

@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  requires: read-calendar:ical read-sessions:session-history search-issues:linear
 prerequisite-skills:
   - slug: dispatch
     reason: "Spawn or reuse a session in another workspace from attention check"

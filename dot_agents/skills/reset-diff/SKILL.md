@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  provides: reset-diff-baseline
 ---
 
 Reset the "Modified Files" panel so it reflects only this branch's changes against the default branch — not commits merged/rebased in from main. Run this after committing, rebasing, or merging when the sidebar shows stale or noisy diffs.

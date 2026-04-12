@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  provides: read-sessions list-sessions search-sessions
 ---
 
 OpenCode session history lives in a SQLite database. Use `opencode session list` for a quick human-readable list, or query the DB directly with `sqlite3` for anything more specific.

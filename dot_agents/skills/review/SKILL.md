@@ -6,6 +6,7 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  requires: post-inline-comments:gh-pr-inline qa-verify:qa
 prerequisite-skills:
   - slug: architecture
     reason: "Code-level design smell catalog for maintainability specialist"
