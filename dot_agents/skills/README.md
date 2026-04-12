@@ -1,6 +1,8 @@
 # Agent Skills
 
-[agentskills.io](https://agentskills.io)-compatible skills for AI agents. Works with OpenCode.
+[agentskills.io](https://agentskills.io)-compatible skills for AI agents. Works with [OpenCode](https://opencode.ai) and any compatible agent.
+
+See the [dotfiles README](../../README.md) for install instructions, the capability composition system, and the [proposed spec extension](https://github.com/agentskills/agentskills/discussions/311) that powers it.
 
 ## Skills
 
@@ -26,19 +28,3 @@
 | | **thinking-tools** — Structured frameworks for decisions and problem framing |
 | | **todo** — Add to todo list without interrupting current work |
 | | **writing** — Write tickets, PRDs, project updates, and ADRs |
-
-## Install via chezmoi external
-
-Add to your `.chezmoiexternal.toml`:
-
-```toml
-[".agents/skills"]
-  type = "archive"
-  url = "https://github.com/athal7/dotfiles/archive/refs/heads/main.tar.gz"
-  stripComponents = 3
-  include = ["*/dot_agents/skills/**"]
-```
-
-## Roadmap
-
-A dedicated public skills repo is planned. This directory will become a subset of that registry.
