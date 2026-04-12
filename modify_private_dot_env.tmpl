@@ -1,0 +1,8 @@
+#!/bin/bash
+# Pass through lines not managed by chezmoi (user-added vars are preserved)
+grep -vE "^export ({{ range $k, $v := .env }}{{ $k | replaceAllRegex "([A-Z])" "_${1}" | upper }}|{{ end }}__PLACEHOLDER__)=" || true
+
+# Render managed vars from chezmoi data (camelCase → SCREAMING_SNAKE_CASE)
+{{ range $k, $v := .env -}}
+echo 'export {{ $k | replaceAllRegex "([A-Z])" "_${1}" | upper }}={{ $v | quote }}'
+{{ end -}}

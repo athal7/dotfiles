@@ -8,7 +8,22 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 [data]
     fullName = {{ promptStringOnce . "fullName" "Full name" | quote }}
     email = {{ promptStringOnce . "email" "Work email" | quote }}
-    codeDir = {{ promptStringOnce . "codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
+
+# [data.env] — all entries are rendered into ~/.env as SCREAMING_SNAKE_CASE vars.
+# Keys must be camelCase with no consecutive capitals (e.g. esUrl not esURL).
+# Non-secret config values (like codeDir) are included here when skills reference
+# them as environment variables.
+[data.env]
+    codeDir = {{ promptStringOnce . "env.codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
+    wakatimeApiKey = {{ promptStringOnce . "env.wakatimeApiKey" "Wakatime API key" | quote }}
+    githubToken = {{ promptStringOnce . "env.githubToken" "GitHub token" | quote }}
+    linearApiKey = {{ promptStringOnce . "env.linearApiKey" "Linear API key" | quote }}
+    linearTeamId = {{ promptStringOnce . "env.linearTeamId" "Linear team ID" | quote }}
+    slackUserToken = {{ promptStringOnce . "env.slackUserToken" "Slack user token" | quote }}
+    slackUserId = {{ promptStringOnce . "env.slackUserId" "Slack user ID" | quote }}
+    figmaAccessToken = {{ promptStringOnce . "env.figmaAccessToken" "Figma access token" | quote }}
+    esUrl = {{ promptStringOnce . "env.esUrl" "Elasticsearch URL" | quote }}
+    esApiKey = {{ promptStringOnce . "env.esApiKey" "Elasticsearch API key" | quote }}
 
 [data.calendars]
     personal = {{ promptStringOnce . "calendars.personal" "Personal calendar name" | quote }}

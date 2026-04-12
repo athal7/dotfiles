@@ -10,5 +10,5 @@ export PATH="/usr/sbin:/sbin:$PATH"
 # mise shims (available in all shells, including non-interactive)
 export PATH="$HOME/.local/share/mise/shims:$PATH"
 
-# Load secrets from ~/.env if it exists (fallback for non-direnv contexts)
+# Load global secrets and config
 [[ -f ~/.env ]] && set -a && source ~/.env && set +a

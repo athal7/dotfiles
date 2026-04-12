@@ -1,5 +1,2 @@
-# Always load ~/.env for all directories
-# This ensures all directories get access to secrets
-if [[ -f "$HOME/.env" ]]; then
-  dotenv "$HOME/.env"
-fi
+# Global secrets are sourced in ~/.zshrc directly.
+# This file is for per-project direnv helpers only.
