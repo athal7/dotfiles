@@ -33,6 +33,9 @@
         },
         "minimax-m2.7:cloud": {
           "name": "minimax-m2.7:cloud"
+        },
+        "glm-5.1:cloud": {
+          "name": "glm-5.1:cloud"
         }
       }
     }
