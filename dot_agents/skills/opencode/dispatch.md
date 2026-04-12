@@ -1,16 +1,3 @@
----
-name: dispatch
-description: Spawn or reuse an OpenCode session in another workspace to perform a task
-license: MIT
-compatibility: opencode
-metadata:
-  author: athal7
-  version: "1.0"
-  provides: spawn-session dispatch-task
----
-
-# Skill: Dispatch
-
 Send a task to an OpenCode session running in a different workspace. Prefer reusing an idle session over creating a new one.
 
 **API base:** `http://localhost:4096`

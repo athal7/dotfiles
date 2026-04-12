@@ -1,14 +1,3 @@
----
-name: reset-diff
-description: Fix stale or noisy "Modified Files" sidebar after a commit, rebase, or merge — resets the diff baseline to merge-base so only this branch's changes show
-license: MIT
-compatibility: opencode
-metadata:
-  author: athal7
-  version: "1.0"
-  provides: reset-diff-baseline
----
-
 Reset the "Modified Files" panel so it reflects only this branch's changes against the default branch — not commits merged/rebased in from main. Run this after committing, rebasing, or merging when the sidebar shows stale or noisy diffs.
 
 The baseline is set to `git merge-base HEAD <default-branch>`, so the panel shows exactly what this branch contributed, regardless of how it was updated against the upstream.

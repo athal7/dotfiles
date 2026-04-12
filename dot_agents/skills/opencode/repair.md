@@ -1,14 +1,3 @@
----
-name: opencode-repair
-description: Fix OpenCode issues - blank sessions, missing worktrees, duplicate project rows, DB repair
-license: MIT
-compatibility: opencode
-metadata:
-  author: athal7
-  version: "1.0"
-  provides: repair-opencode-db fix-blank-sessions
----
-
 ## Blank Session List for a Project
 
 **Root cause:** Multiple causes are possible. Diagnose in order:

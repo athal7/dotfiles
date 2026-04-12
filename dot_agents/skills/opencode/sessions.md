@@ -1,14 +1,3 @@
----
-name: session-history
-description: Read and search OpenCode session history — list past sessions, read conversation content, find prior decisions and tool outputs
-license: MIT
-compatibility: opencode
-metadata:
-  author: athal7
-  version: "1.0"
-  provides: read-sessions list-sessions search-sessions
----
-
 OpenCode session history lives in a SQLite database. Use `opencode session list` for a quick human-readable list, or query the DB directly with `sqlite3` for anything more specific.
 
 **DB path:** `~/.local/share/opencode/opencode.db`
