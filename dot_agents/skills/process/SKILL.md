@@ -6,27 +6,22 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
-  requires: search-issues:linear qa-verify:qa
-prerequisite-skills:
-  - slug: architecture
-    reason: "Design prerequisite check and architecture decisions before planning"
-  - slug: tdd
-    reason: "Red/green/refactor loop required for all implementation tasks"
-  - slug: review
-    reason: "Self-review of changes before committing"
-  - slug: commit
-    reason: "Semantic commit format and branch naming at commit phase"
-  - slug: push
-    reason: "Push approval protocol and CI watching after commit"
+  requires:
+    - issues
+    - qa
+    - architecture
+    - tdd
+    - commit
+    - push
 ---
 
 ## Overview
 
 You are the orchestrator for this session. Your job is to enforce the phase graph and delegate implementation work to subagents. You do not implement directly — you plan, review, delegate, and verify.
 
-**Research before asking.** Explore the codebase, read files, check git history, load the `linear` skill to query Linear via curl, or load the `meetings` / `observability` skill as needed. Only ask the user when information isn't discoverable.
+**Research before asking.** Explore the codebase, read files, check git history, use your `issues` capability to query Linear, or use your `meetings` or `logs` capability as needed. Only ask the user when information isn't discoverable.
 
-**Issue tracking.** Find or create an issue before starting. Search first (`gh issue list --search "..."` or the `linear` skill); create only if no suitable issue exists. Set it to In Progress and assign it to the user before writing any code. Link work to the issue (branch name, PR description, commit message). Do NOT transition the issue to In Review — that is automated.
+**Issue tracking.** Find or create an issue before starting. Search first (`gh issue list --search "..."` or your `issues` capability); create only if no suitable issue exists. Set it to In Progress and assign it to the user before writing any code. Link work to the issue (branch name, PR description, commit message). Do NOT transition the issue to In Review — that is automated.
 
 **Scope discipline.** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features. Note out-of-scope findings but do not act on them.
 
@@ -54,7 +49,7 @@ Create a written plan before any implementation. The plan must include:
 2. The approach and key decisions
 3. Risks or open questions
 
-Load the `architecture` skill before writing the plan:
+Use your `architecture` capability before writing the plan:
 
 - For **architecture decisions** (multiple valid approaches, hard to reverse, crosses system boundaries): use Section 1 to evaluate options with the expert agent.
 - For **all changes** that touch domain logic, authorization, state machines, or anything enforced in more than one layer: follow Section 3 (Design Prerequisite Check). Answer every question by reading the relevant code. Surface any prerequisite refactors before planning the feature.
@@ -90,7 +85,7 @@ Present the final plan to the user and STOP. Wait for explicit approval before i
 **Never implement directly.** Spawn a `general` subagent for each implementation unit:
 
 ```
-Task("Implement <specific task>. Load the `tdd` skill and follow its red/green/refactor loop. <relevant context>", subagent_type="general")
+    Task("Implement <specific task>. Use your `tdd` capability and follow its red/green/refactor loop. <relevant context>", subagent_type="general")
 ```
 
 Key rules for implementation tasks:
@@ -109,7 +104,7 @@ After implementation, run all of the following. Fix any failures before proceedi
 
 1. **Tests** — run the full test suite. If tests fail, spawn a `general` task to fix and re-run until green.
 2. **Review** — run `/review` on the changes. If it returns blockers, spawn a `general` task to fix and re-run until clean.
-3. **QA** — if the diff touches UI, views, or user-facing flows, run `/qa`. If it fails, spawn a `general` task to fix and re-run.
+3. **QA** — if the diff touches UI, views, or user-facing flows, use your `qa` capability. If it fails, spawn a `general` task to fix and re-run.
 4. **Acceptance criteria** — verify each criterion from the original issue is met.
 
 Fix all issues before proceeding. Do not surface findings to the user — resolve them first.
@@ -128,9 +123,9 @@ Present a summary of what was implemented, confirming tests, review, and QA are 
 
 ## Phase 7: Commit
 
-Load the `commit` skill. It handles stage → test → commit automatically.
+Use your `commit` capability. It handles stage → test → commit automatically.
 
-After committing, load the `push` skill for the push approval flow and CI watching.
+After committing, use your `push` capability for the push approval flow and CI watching.
 
 ---
 
@@ -138,4 +133,4 @@ After committing, load the `push` skill for the push approval flow and CI watchi
 
 Skip Phases 1-3 for painfully simple tasks: typo fixes, single-line config changes, trivial one-file edits with no logic involved.
 
-Even for simple tasks: always use Phases 6-7 (user approval + commit skill).
+Even for simple tasks: always use Phases 6-7 (user approval + commit capability).

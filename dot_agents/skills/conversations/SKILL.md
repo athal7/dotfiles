@@ -5,10 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
-  requires: search-messages:slack read-thread:slack
-prerequisite-skills:
-  - slug: slack
-    reason: "Full Slack API reference for searching conversations"
+  requires:
+    - chat
 ---
 
 Three sources of conversation context, each with different fidelity and recency. Use them in order.
@@ -51,7 +49,7 @@ Note: `~/meetings/*-slack-digest.md` files are also here — daily Slack digests
 
 Real-time search for things too recent to be ingested, or threads not captured in digests.
 
-Load the `slack` skill for full API reference (search, post, reply, find channel IDs).
+Use your `chat` capability for full API reference (search, post, reply, find channel IDs).
 
 Use when: looking for something from today or yesterday, or a specific thread not in a digest.
 
@@ -85,7 +83,7 @@ Use when: looking for email correspondence, JSM/Jira notifications, procurement 
 |---|---|
 | What has someone committed to? | KB → meetings |
 | What was decided about X last week? | KB → meetings search |
-| What did someone say in Slack this morning? | Slack search (load `slack` skill) |
+| What did someone say in Slack this morning? | `chat` capability |
 | Who was in a specific meeting? | meeting file or KB |
-| What's the latest on a Slack thread? | Slack search (load `slack` skill) |
+| What's the latest on a Slack thread? | `chat` capability |
 | Email thread, support ticket, JSM notification? | Gmail (gws) |

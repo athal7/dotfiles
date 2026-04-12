@@ -6,21 +6,21 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
-  requires: read-calendar:ical read-sessions:session-history search-issues:linear
-prerequisite-skills:
-  - slug: dispatch
-    reason: "Spawn or reuse a session in another workspace from attention check"
-  - slug: linear
-    reason: "Query Linear issues and project state"
-  - slug: slack
-    reason: "Search Slack for recent conversations"
+  requires:
+    - agent
+    - calendar
+    - reminders
+    - meetings
+    - chat
+    - pull-requests
+    - issues
 ---
 
 # Skill: Attention
 
 **Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view.
 
-**Calendar access:** `ical` — fast native EventKit CLI, supports reads and writes.
+**Calendar access:** use your `calendar` capability — fast native EventKit CLI, supports reads and writes.
 
 ---
 
@@ -28,50 +28,20 @@ prerequisite-skills:
 
 Run all of these before forming any view:
 
-```bash
-# OpenCode sessions today — cognitive load metrics
-# Filters out subagent noise (worktree paths + "@... subagent" titles)
-DB=~/.local/share/opencode/opencode.db
-SKILL_DIR=~/.agents/skills/attention
+- Use your `agent` capability to fetch today's OpenCode sessions. Retrieve per-session breakdown (user messages = active engagement, duration) and summary totals including peak concurrent sessions. Filter out subagent noise (worktree paths + "@... subagent" titles). The SQL files `sessions-today.sql`, `sessions-summary.sql`, and `sessions-concurrent.sql` in the skill directory can be passed to the capability.
 
-# Per-session breakdown: user messages (= your active engagement) + duration
-sqlite3 -json "$DB" < $SKILL_DIR/sessions-today.sql \
-  | jq -r '.[] | "SESSION [\(.repo)] \(.user_messages) msgs \(.duration_min)m — \(.title)"'
+- Use your `calendar` capability to get today's events across all configured calendars. Also output the current day of week and time.
 
-# Summary totals + peak concurrent
-sqlite3 "$DB" < $SKILL_DIR/sessions-summary.sql
-sqlite3 "$DB" < $SKILL_DIR/sessions-concurrent.sql
+- Use your `reminders` capability to fetch:
+  - Overdue items
+  - Items due today (incomplete only)
+  - Items with no due date (all priorities, incomplete) — note: use the `all` scope, not `upcoming`, since `upcoming` only returns future-dated items
 
-# Calendar — today's events across all configured calendars
-echo "DAY_OF_WEEK: $(date +%A) TIME: $(date +%H:%M)"
-calendar-today
+- Use your `meetings` capability to list today's processed meetings (for social/emotional load inference). Filter to items whose date starts with today's date, limit 20.
 
-# Reminders — overdue
-remindctl show --json overdue | jq -r '.[] | "OVERDUE: \(.title) [\(.listName)]"'
+- Use your `chat` capability to find recent Slack mentions waiting on you in the last 8 hours. Search for mentions of your user ID in the last 8h.
 
-# Reminders — due today (incomplete only)
-remindctl show --json today | jq -r '.[] | select(.isCompleted == false) | "TODAY: \(.title) [\(.listName)]"'
-
-# Reminders — no due date (all priorities, incomplete)
-# Note: `upcoming` only returns items with future due dates — use `all` for no-due-date items
-remindctl show --json all | jq -r '.[] |
-  select(.isCompleted == false) |
-  select(.dueDate == null) |
-  "\(.priority // "none"): \(.title) [\(.listName)]"'
-
-# Meeting notes — today's processed meetings (for social/emotional load inference)
-TODAY=$(date +%Y-%m-%d)
-minutes list --limit 20 | jq -r ".[] | select(.date | startswith(\"$TODAY\")) | \"MEETING: \(.title) @ \(.date)\""
-
-# Slack — recent mentions waiting on you (last 8h)
-source ~/.env
-SINCE=$(date -v-8H +%s 2>/dev/null || date -d '8 hours ago' +%s)
-curl -s "https://slack.com/api/search.messages?query=<@$SLACK_USER_ID>&count=10&sort=timestamp" \
-  -H "Authorization: Bearer $SLACK_USER_TOKEN" \
-  | jq -r ".messages.matches[] | select((.ts | split(\".\")[0] | tonumber) > $SINCE) | \"MENTION: \(.channel.name) — \(.username): \(.text | .[0:120])\""
-```
-
-Note: `remindctl` priority strings are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
+- Note: `remindctl` priority strings are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
 
 ---
 
@@ -205,36 +175,16 @@ When spoons are FULL, don't list everything. Pick the 1–2 work items most wort
 
 ### GitHub PRs — four categories to check
 
-```bash
-# 1. Review requested from you
-gh api "search/issues?q=is:pr+is:open+review-requested:@me&per_page=10" \
-  --jq '.items[] | "  REVIEW: \(.title) \(.html_url)"'
+Use your `pull-requests` capability to fetch:
 
-# 2. Your PRs with changes requested
-gh api "search/issues?q=is:pr+is:open+author:@me+review:changes-requested&per_page=10" \
-  --jq '.items[] | "  CHANGES: \(.title) \(.html_url)"'
-
-# 3. Your PRs with merge conflicts (check mergeStateStatus per repo)
-# mergeStateStatus=DIRTY means conflicts; requires per-repo query
-gh pr list -R 0din-ai/odin --author @me \
-  --json number,title,mergeStateStatus,headRefName \
-  --jq '.[] | select(.mergeStateStatus == "DIRTY") | "  CONFLICT: \(.title) (#\(.number))"'
-# Repeat for other active repos as needed
-
-# 4. Your PRs awaiting review (no decision yet, not draft)
-gh api "search/issues?q=is:pr+is:open+author:@me+review:required&per_page=10" \
-  --jq '.items[] | "  WAITING: \(.title) \(.html_url)"'
-```
+1. Review requested from you
+2. Your PRs with changes requested
+3. Your PRs with merge conflicts (`mergeStateStatus == "DIRTY"`)
+4. Your PRs awaiting review (no decision yet, not draft)
 
 ### Linear — issues by state
 
-```bash
-source ~/.env
-SKILL_DIR=~/.agents/skills/attention
-gq https://api.linear.app/graphql -H "Authorization: $LINEAR_API_KEY" \
-  --queryFile $SKILL_DIR/team-issues.gql -v teamId="$LINEAR_TEAM_ID" \
-  | jq '.data.team.issues.nodes'
-```
+Use your `issues` capability to fetch team issues. The `team-issues.gql.tmpl` file in the skill directory contains the query template; pass `teamId` as a variable.
 
 ### Cross-reference GitHub ↔ Linear
 
@@ -248,7 +198,7 @@ Present as a unified list, grouped by work item (not by tool), with the most act
 
 ### Starting work from here
 
-When you decide to act on a work item, load the `dispatch` skill to open or reuse an OpenCode session in the target repo.
+When you decide to act on a work item, use your `agent` capability to open or reuse an OpenCode session in the target repo.
 
 ---
 
