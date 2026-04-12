@@ -1,7 +1,7 @@
-query TeamIssues($teamId: String!) {
+query TeamIssues($teamId: String!, $assignee: String!) {
   team(id: $teamId) {
     issues(
-      filter: { assignee: { name: { eq: {{ .fullName | quote }} } } }
+      filter: { assignee: { name: { eq: $assignee } } }
       first: 10
       orderBy: updatedAt
     ) {

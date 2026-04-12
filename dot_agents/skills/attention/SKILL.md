@@ -28,7 +28,7 @@ metadata:
 
 Run all of these before forming any view:
 
-- Use your `agent` capability to fetch today's OpenCode sessions. Retrieve per-session breakdown (user messages = active engagement, duration) and summary totals including peak concurrent sessions. Filter out subagent noise (worktree paths + "@... subagent" titles). The SQL files `sessions-today.sql`, `sessions-summary.sql`, and `sessions-concurrent.sql` in the skill directory can be passed to the capability.
+- Use your `agent` capability to fetch today's OpenCode sessions. Retrieve per-session breakdown (user messages = active engagement, duration) and summary totals including peak concurrent sessions. Filter out subagent noise (worktree paths + "@... subagent" titles). The SQL files `sessions-today.sql`, `sessions-summary.sql`, and `sessions-concurrent.sql` in the skill directory can be passed to the capability. Strip `$CODE_DIR/` prefix from the `repo` column for readability.
 
 - Use your `calendar` capability to get today's events across all configured calendars. Also output the current day of week and time.
 
@@ -184,7 +184,7 @@ Use your `pull-requests` capability to fetch:
 
 ### Linear — issues by state
 
-Use your `issues` capability to fetch team issues. The `team-issues.gql.tmpl` file in the skill directory contains the query template; pass `teamId` as a variable.
+Use your `issues` capability to fetch team issues. The `team-issues.gql` file in the skill directory contains the query template; pass `teamId` from `$LINEAR_TEAM_ID` and `assignee` from your name (use `gh api user --jq .name` if unknown).
 
 ### Cross-reference GitHub ↔ Linear
 
