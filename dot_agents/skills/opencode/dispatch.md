@@ -79,8 +79,8 @@ curl -s -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$WO
 
 Load this skill when you need to delegate work to another repo. Examples:
 
-- "Review PR #123 in odin" → find/create session in `~/code/odin`, send `/review pr 123`
-- "Fix the failing test in garak" → create session in `~/code/garak`, send the fix prompt
+- "Review PR #123 in myapp" → find/create session in `~/code/myapp`, send `/review pr 123`
+- "Fix the failing test in mylib" → create session in `~/code/mylib`, send the fix prompt
 - "Start work on 0DIN-1216" → create worktree sandbox, send `process` kickoff prompt
 
 ## Design principles

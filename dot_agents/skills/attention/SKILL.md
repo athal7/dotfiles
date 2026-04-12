@@ -71,7 +71,7 @@ Session duration alone is a weak signal — a long autonomous session burns few 
 
 **Reading session data:**
 - Scan session titles for topic variety — many different subjects = high context-switch load
-- Cross-repo jumps (dotfiles → odin → dotfiles) compound the switching cost
+- Cross-repo jumps (dotfiles → app → dotfiles) compound the switching cost
 - Check earliest session start — a long elapsed day is tiring even at low intensity
 
 **Interoceptive caveat:** With alexithymia, the body often doesn't signal depletion until it's too late. These metrics are proxies. Treat high output as a *warning* signal, not a green light — boom-and-bust cycles start by overdoing it on good days.

@@ -12,7 +12,7 @@ metadata:
 
 Clean up stale workspaces, PostgreSQL databases, and Docker resources to reclaim disk space.
 
-Arguments may include a project name (e.g. `odin`) and/or flags like `--dry-run`, `--force`, `--older-than=N`, `--db-only`, `--docker-only`.
+Arguments may include a project name (e.g. `myapp`) and/or flags like `--dry-run`, `--force`, `--older-than=N`, `--db-only`, `--docker-only`.
 
 ## Step 1: Identify the target project
 

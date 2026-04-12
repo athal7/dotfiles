@@ -55,7 +55,7 @@ Use when: looking for something from today or yesterday, or a specific thread no
 
 ## 4. Gmail — email threads and formal correspondence
 
-Sent/received email, support tickets, procurement threads, and anything via `@mozilla.com`.
+Sent/received email, support tickets, procurement threads, and anything via your work email domain.
 
 ```bash
 # Search by query (same syntax as Gmail search box)
