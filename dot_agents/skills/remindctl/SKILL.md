@@ -122,3 +122,5 @@ remindctl delete 4A83
 - `id` is a short hex prefix (e.g. `4A83`) — use it for edits; it's stable across sessions
 - Indexes from `show` output are positional and may shift — prefer ID prefixes for edits
 - `--no-input` suppresses confirmation prompts in scripts; omit it when running interactively
+- **Time gotcha:** `--due YYYY-MM-DD` defaults to midnight UTC, which displays as "12:00 AM" locally but is wrong for CT users (should be `05:00 UTC` = midnight CT). The local display masks the error. Always pass a full ISO datetime when matching existing reminders: `--due 2026-04-26T05:00:00`
+- **Recurrence:** The JSON output does not expose recurrence fields — `remindctl` can create reminders but recurrence must be set manually in the Reminders app afterward
