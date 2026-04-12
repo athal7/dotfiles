@@ -46,5 +46,5 @@ Prefer installed tools over alternatives when available. The following tools are
 {{ end }}
 ## Host-Specific Files (NOT managed by chezmoi)
 
-- `~/.env` — API keys and secrets (loaded by direnv)
+- `~/.env` — API keys and secrets (managed by chezmoi, sourced in `.zshenv`)
 - `~/.config/zsh/private.zsh` — work-specific shell config (internal hostnames, project IDs). Sourced at the end of `.zshrc`. Provides a SOCKS5 proxy for Mozilla GKE access via IAP bastion (`socks5://127.0.0.1:5001`). Wraps `kubectl` and `k9s` to auto-start the tunnel. Key functions: `_moz-proxy-ensure` (start tunnel if not running), `moz-proxy-stop` (kill tunnel). Contexts: `odin-dev`, `odin-stage` (nonprod cluster), `odin-prod` (prod cluster).
