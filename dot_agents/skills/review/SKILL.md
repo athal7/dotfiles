@@ -158,7 +158,7 @@ After merging specialist findings, add these directly:
 
 2. **Runtime verification** — if the diff modifies views, templates, controllers, frontend code, or UI interactions, run QA automatically:
    1. Ensure the code under review is checked out (PR: already done; branch: `git checkout $BRANCH_NAME`; staged/uncommitted: skip)
-   2. Load the `qa` skill and run QA — pass context about which flows changed
+    2. Use the `qa-verify` capability — pass context about which flows changed
    3. Restore original branch if needed: `git checkout $ORIGINAL_BRANCH`
    4. If QA cannot run (no server, no browser available), note "QA skipped — no running app detected" instead
    5. Include results under `## QA Results` in the output

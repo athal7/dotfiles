@@ -6,8 +6,8 @@
 **Extract issue IDs** from branch name or PR, then fetch details:
 1. `git branch --show-current` — parse for `ENG-123`, `PROJ-456`, `#123`, `gh-123`
 2. For PRs: check PR body and linked issues via `gh pr view --json body,title`
-3. Fetch: Linear → load the `linear` skill and query via `gq`, GitHub → `gh issue view`
-4. **Fetch project context** — if the Linear issue belongs to a project, also fetch via the `linear` skill:
+3. Fetch: Linear → use your `search-issues` capability to query via `gq`, GitHub → `gh issue view`
+4. **Fetch project context** — if the Linear issue belongs to a project, also fetch via your `search-issues` capability:
    - project metadata, goals, status
    - full project description with scope, non-goals, and design decisions
    - current milestone with target date and deliverables (if applicable)

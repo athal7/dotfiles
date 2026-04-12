@@ -5,9 +5,9 @@
 
 **Conflict resolution on reviewed PRs:** When a PR has reviews and conflicts with the base branch, use `git merge` (not `git rebase`) to resolve them. Rebasing rewrites history and invalidates existing review comments.
 
-**Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting to GitHub — then STOP and wait for explicit approval. Load the `gh-pr-inline` skill when posting inline comments or responding to review feedback.
+**Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting to GitHub — then STOP and wait for explicit approval. Use your `post-inline-comments` capability when posting inline comments or responding to review feedback.
 
-**Inline-first policy:** When submitting to GitHub, post findings as inline comments only — load the `gh-pr-inline` skill. Do NOT post a top-level review body with verdict, TL;DR, summaries, or per-line findings. The verdict, TL;DR, Requirements Check, and all other summary sections are for the session output only — never submitted to GitHub. The only exception is a PR-wide observation that genuinely cannot be attributed to any line; in that case, one brief sentence in the body is acceptable.
+**Inline-first policy:** When submitting to GitHub, post findings as inline comments only — use your `post-inline-comments` capability. Do NOT post a top-level review body with verdict, TL;DR, summaries, or per-line findings. The verdict, TL;DR, Requirements Check, and all other summary sections are for the session output only — never submitted to GitHub. The only exception is a PR-wide observation that genuinely cannot be attributed to any line; in that case, one brief sentence in the body is acceptable.
 
 ---
 
