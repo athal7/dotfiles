@@ -73,3 +73,13 @@ To use workflow skills that have `requires`, also install [`dot_agents/capabilit
 ```
 
 Then edit `~/.agents/capabilities.yaml` to bind capabilities to your preferred skills.
+
+Your agent also needs to know how to resolve capabilities. Add this to your global agent instructions (e.g. `~/.config/opencode/AGENTS.md`):
+
+```markdown
+## Skill Capabilities
+
+When you load a skill that has `requires` in its metadata, read `~/.agents/capabilities.yaml`
+to resolve each capability to a skill name, then load that skill before proceeding.
+If a capability has no mapping, ask the user which skill to use.
+```
