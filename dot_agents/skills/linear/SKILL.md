@@ -5,7 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
-  provides: search-issues read-issue create-issue update-issue
+  provides:
+    - issues
 ---
 
 # Linear API Skill

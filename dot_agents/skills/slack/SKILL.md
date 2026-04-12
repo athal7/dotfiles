@@ -5,7 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
-  provides: post-message search-messages read-thread
+  provides:
+    - chat
 ---
 
 Requires: `$SLACK_USER_TOKEN`, `$SLACK_USER_ID`.

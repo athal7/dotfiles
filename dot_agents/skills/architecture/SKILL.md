@@ -5,6 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  provides:
+    - architecture
 ---
 
 Load this skill whenever a software design question arises at any level — system architecture, module structure, or code-level patterns. The description is the selection signal; the sections below are the three modes of use.

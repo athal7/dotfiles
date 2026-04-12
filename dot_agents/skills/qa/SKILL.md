@@ -6,7 +6,8 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
-  provides: qa-verify
+  provides:
+    - qa
 ---
 
 Perform QA verification using Firefox DevTools browser automation.

@@ -1,24 +1,24 @@
 # Agent Instructions
 
+## Skill Capabilities
+
+When you load a skill that has `requires` in its metadata, resolve each capability by loading the mapped skill below before proceeding:
+
+{{ $caps := fromYaml (include "dot_agents/capabilities.yaml") -}}
+{{ range $cap, $skill := $caps -}}
+- `{{ $cap }}` → `{{ $skill }}` skill
+{{ end }}
+If a capability has no mapping above, ask the user which skill to use.
+
 ## Development Workflow
 
-**Load the `process` skill** at the start of any non-trivial implementation task. This is not optional — do it before writing any code, creating any branch, or touching any file. It defines the full phase graph and enforces gates that must not be skipped:
-
-- Written plan before any implementation
-- Expert review of the plan
-- User approval before writing code
-- TDD loop (load `tdd` skill) for every code change
-- Full test suite green before committing
-- Self-review (load `review` skill) before committing
-- User approval before committing
-
-**Never start implementing without loading `process` first.** If you find yourself editing files, creating branches, or running tests without having loaded `process`, stop and load it immediately.
+**Load the `process` skill** at the start of any non-trivial implementation task.
 
 **Branch discipline:** Always create a new branch off `origin/main` before any code change. Never implement directly on `main`.
 
-**Issue discipline:** When picking up a tracked issue (Linear, GitHub, etc.), set it to In Progress and assign it to the user immediately — before writing any code.
+**Issue discipline:** When picking up a tracked issue, set it to In Progress and assign it to the user before writing any code.
 
-**Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval. If no response is possible (background task, automation), do NOT proceed. Read-only operations don't require confirmation.
+**Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval.
 
 ## CLI Tools
 
@@ -47,4 +47,4 @@ Prefer installed tools over alternatives when available. The following tools are
 ## Host-Specific Files (NOT managed by chezmoi)
 
 - `~/.env` — API keys and secrets (managed by chezmoi, sourced in `.zshenv`)
-- `~/.config/zsh/private.zsh` — work-specific shell config (internal hostnames, project IDs). Sourced at the end of `.zshrc`. Provides a SOCKS5 proxy for Mozilla GKE access via IAP bastion (`socks5://127.0.0.1:5001`). Wraps `kubectl` and `k9s` to auto-start the tunnel. Key functions: `_moz-proxy-ensure` (start tunnel if not running), `moz-proxy-stop` (kill tunnel). Contexts: `odin-dev`, `odin-stage` (nonprod cluster), `odin-prod` (prod cluster).
+- `~/.config/zsh/private.zsh` — work-specific shell config (sourced at end of `.zshrc`)

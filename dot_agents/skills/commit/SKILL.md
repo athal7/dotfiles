@@ -5,9 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
-prerequisite-skills:
-  - slug: learn
-    reason: "Post-commit memory check for non-obvious discoveries"
+  provides:
+    - commit
 ---
 
 ## Before Every Commit

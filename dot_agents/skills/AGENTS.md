@@ -11,14 +11,19 @@
 ```yaml
 # Integration skill
 metadata:
-  provides: post-message search-messages
+  provides:
+    - post-message
+    - search-messages
 
 # Workflow skill
 metadata:
-  requires: post-inline-comments:gh-pr-inline search-issues:linear
+  requires:
+    - pull-requests
+    - qa
+    - issues
 ```
 
-Format: `capability:default-skill-name`. The agent resolves `requires` by scanning loaded skills' `provides` fields and falls back to the default skill name if none is found.
+`requires` is a YAML list of capability names — **no colons, no defaults**. Defaults for capability resolution live in `~/.agents/capabilities.yaml`, not in skill frontmatter.
 
 ## Adding a skill
 

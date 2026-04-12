@@ -5,7 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
-  provides: post-inline-comments respond-to-review
+  provides:
+    - pull-requests
 ---
 
 ## Why Not `gh pr review`

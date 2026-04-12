@@ -5,7 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
-  provides: read-figma-file read-components read-variables
+  provides:
+    - figma
 ---
 
 # Figma API Skill

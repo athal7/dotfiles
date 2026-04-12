@@ -5,7 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
-  provides: query-logs query-apm-traces query-errors
+  provides:
+    - logs
 ---
 
 Query application logs, APM traces, and errors using the Elasticsearch REST API directly.

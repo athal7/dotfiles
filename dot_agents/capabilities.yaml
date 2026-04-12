@@ -1,0 +1,34 @@
+# Capability → skill bindings
+# The agent resolves requires entries against this manifest.
+# Override per-workspace by placing a capabilities.yaml in .agents/ or the workspace root.
+
+issues: linear
+
+chat: slack
+
+figma: figma
+
+logs: elasticsearch
+
+pull-requests: gh-pr-inline
+
+calendar: ical
+
+reminders: remindctl
+
+meetings: minutes
+
+agent: opencode
+
+pty: pty
+
+todo: todo
+
+qa: qa
+
+chezmoi: chezmoi-apply
+
+architecture: architecture
+tdd: tdd
+commit: commit
+push: push
