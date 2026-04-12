@@ -12,3 +12,6 @@
 
 # gws CLI download artifacts
 download.html
+
+# talisman scan reports
+talisman_report/
