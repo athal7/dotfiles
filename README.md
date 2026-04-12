@@ -44,6 +44,8 @@ See the [chezmoi source state reference](https://www.chezmoi.io/reference/source
 
 30+ [Agent Skills](https://agentskills.io)-compatible skills deployed to `~/.agents/skills/`. Works with [OpenCode](https://opencode.ai) and any compatible agent. See [`dot_agents/skills/README.md`](dot_agents/skills/README.md) for the full list and install instructions.
 
+Skills are designed around a capability-based composition system — integration skills declare what they `provides`, workflow skills declare what they `requires`, and a [`capabilities.yaml`](dot_agents/capabilities.yaml) manifest binds them together. This lets workflow skills stay tool-agnostic: swap Linear for Jira by changing one line. The design is proposed as a spec extension at [agentskills/agentskills#311](https://github.com/agentskills/agentskills/discussions/311).
+
 ### Using skills without these dotfiles
 
 Install individual skills via [chezmoi external](https://www.chezmoi.io/reference/special-files/chezmoiexternal-format/) by adding entries to your `.chezmoiexternal.toml`:
@@ -59,3 +61,15 @@ Install individual skills via [chezmoi external](https://www.chezmoi.io/referenc
 ```
 
 `stripComponents = 3` strips the `athal7-dotfiles-<sha>/dot_agents/skills/` prefix so the skill lands directly at the `targetPath`.
+
+To use workflow skills that have `requires`, also install [`dot_agents/capabilities.yaml`](dot_agents/capabilities.yaml) and update it to point at your preferred tools:
+
+```toml
+["capabilities"]
+    type = "file"
+    url = "https://github.com/athal7/dotfiles/raw/main/dot_agents/capabilities.yaml"
+    targetPath = ".agents/capabilities.yaml"
+    refreshPeriod = "168h"
+```
+
+Then edit `~/.agents/capabilities.yaml` to bind capabilities to your preferred skills.
