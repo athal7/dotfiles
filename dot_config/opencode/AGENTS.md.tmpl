@@ -2,7 +2,13 @@
 
 ## Skill Capabilities
 
-When you load a skill that has `requires` in its metadata, resolve each capability using the mapping below:
+When you load a skill that has `requires` in its metadata, resolve each capability:
+
+1. Check `~/.agents/capabilities.yaml` for an explicit mapping (wins over auto-discovery)
+2. Otherwise, find a skill in `~/.agents/skills/` whose `provides` list includes the capability and load it
+3. If no mapping or skill found, ask the user which provider to use
+
+Explicit mappings (overrides and CLI providers that can't be auto-discovered):
 
 {{ $caps := fromYaml (include "dot_agents/capabilities.yaml") -}}
 {{ range $cap, $provider := $caps -}}
@@ -12,7 +18,6 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 - `{{ $cap }}` → `{{ $provider }}` skill
 {{ end -}}
 {{ end }}
-If a capability has no mapping above, ask the user which skill to use.
 
 ## Development Workflow
 
