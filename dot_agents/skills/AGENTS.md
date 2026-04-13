@@ -2,9 +2,11 @@
 
 ## Integration vs Workflow
 
-**Integration skills** expose how to use a specific external tool or API. They declare `provides` in metadata, listing the capabilities they offer.
+**Integration skills** expose how to use a specific external tool or API when `--help` isn't enough — non-obvious flags, auth gotchas, silent failure modes. They declare `provides` in metadata.
 
-**Workflow skills** describe how to carry out a process. They declare `requires` in metadata when they depend on capabilities from integration (or other) skills. They reference capabilities by name in their body — never hardcode specific skill names.
+**Workflow skills** describe how to carry out a process. They declare `requires` in metadata when they depend on capabilities. They reference capabilities by name in their body — never hardcode specific skill names, CLI binary names, or tool references.
+
+**CLI providers** — when a tool has comprehensive `--help`, map the capability to `cli://<binary>` in `capabilities.yaml` instead of writing a wrapper skill. The agent reads `--help` on demand. Only write a skill when there are genuine gotchas that help text won't surface.
 
 ## provides/requires convention
 

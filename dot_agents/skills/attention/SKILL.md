@@ -182,9 +182,9 @@ Use your `pull-requests` capability to fetch:
 3. Your PRs with merge conflicts (`mergeStateStatus == "DIRTY"`)
 4. Your PRs awaiting review (no decision yet, not draft)
 
-### Linear — issues by state
+### Issues — by state
 
-Use your `issues` capability to fetch team issues. The `team-issues.gql` file in the skill directory contains the query template; pass `teamId` from `$LINEAR_TEAM_ID` and `assignee` from your name (use `gh api user --jq .name` if unknown).
+Use your `issues` capability to fetch issues assigned to you, grouped by state (in progress, unstarted, backlog).
 
 ### Cross-reference GitHub ↔ Linear
 

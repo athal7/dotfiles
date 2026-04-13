@@ -3,6 +3,7 @@ packages:
     - github/gh
     - silverstein/tap
     - steipete/tap
+    - schpet/tap
 
   brews:
     - name: autojump
@@ -65,6 +66,8 @@ packages:
       description: Apple Reminders CLI — headless read/write without TCC issues
     - name: silverstein/tap/minutes
       description: Meeting recorder CLI (record, search, import, transcription)
+    - name: schpet/tap/linear
+      description: Linear CLI — list, query, create, and update issues from the command line (agent-friendly, LINEAR_API_KEY auth)
 
   casks:
     - name: gcloud-cli

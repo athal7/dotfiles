@@ -7,6 +7,8 @@ metadata:
   version: "1.0"
   provides:
     - architecture
+  requires:
+    - issues
 ---
 
 Load this skill whenever a software design question arises at any level — system architecture, module structure, or code-level patterns. The description is the selection signal; the sections below are the three modes of use.
@@ -60,7 +62,7 @@ Prefer reversibility and simplicity when criteria conflict. Complexity must earn
 
 ## Research
 
-Use webfetch or context7 to look up patterns, prior art, or library docs relevant to the decision. Load the `linear` skill and query the project via `gq` to understand project history and prior decisions if relevant.
+Use webfetch or context7 to look up patterns, prior art, or library docs relevant to the decision. Use your `issues` capability to query the project and understand history and prior decisions if relevant.
 
 ## Anti-Patterns to Call Out
 

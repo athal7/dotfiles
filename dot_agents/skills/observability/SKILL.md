@@ -1,6 +1,6 @@
 ---
 name: observability
-description: Investigate production issues using logs, traces, and errors — how to triage, correlate signals, and know when to escalate. Load the elasticsearch skill for query syntax.
+description: Investigate production issues using logs, traces, and errors — how to triage, correlate signals, and know when to escalate. Load your logs capability for query syntax.
 license: MIT
 metadata:
   author: athal7
@@ -9,7 +9,7 @@ metadata:
     - logs
 ---
 
-Use this skill to investigate production problems. For Elasticsearch query syntax, index patterns, and curl commands, load the `elasticsearch` skill.
+Use this skill to investigate production problems. For query syntax, index patterns, and curl commands, use your `logs` capability.
 
 ## Triage process
 

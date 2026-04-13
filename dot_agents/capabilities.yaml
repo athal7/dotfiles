@@ -1,8 +1,9 @@
-# Capability → skill bindings
+# Capability → provider bindings
+# Values can be a skill name, cli://<binary>, or mcp://<server>.
 # The agent resolves requires entries against this manifest.
 # Override per-workspace by placing a capabilities.yaml in .agents/ or the workspace root.
 
-issues: linear
+issues: cli://linear
 
 chat: slack
 
@@ -12,11 +13,11 @@ logs: elasticsearch
 
 pull-requests: gh-pr-inline
 
-calendar: ical
+calendar: cli://ical
 
 reminders: remindctl
 
-meetings: minutes
+meetings: cli://minutes
 
 agent: opencode
 

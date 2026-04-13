@@ -2,11 +2,15 @@
 
 ## Skill Capabilities
 
-When you load a skill that has `requires` in its metadata, resolve each capability by loading the mapped skill below before proceeding:
+When you load a skill that has `requires` in its metadata, resolve each capability using the mapping below:
 
 {{ $caps := fromYaml (include "dot_agents/capabilities.yaml") -}}
-{{ range $cap, $skill := $caps -}}
-- `{{ $cap }}` → `{{ $skill }}` skill
+{{ range $cap, $provider := $caps -}}
+{{ if hasPrefix "cli://" $provider -}}
+- `{{ $cap }}` → `{{ trimPrefix "cli://" $provider }}` CLI — call the binary directly via Bash; read `{{ trimPrefix "cli://" $provider }} --help` on demand
+{{ else -}}
+- `{{ $cap }}` → `{{ $provider }}` skill
+{{ end -}}
 {{ end }}
 If a capability has no mapping above, ask the user which skill to use.
 
