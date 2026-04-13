@@ -8,5 +8,4 @@
 issues: cli://linear
 meetings: cli://minutes
 email: cli://gws
-code-review: cli://gh
-ci: cli://gh
+# code-review and ci provided by gh skill (auto-discovered)

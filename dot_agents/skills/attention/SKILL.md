@@ -176,12 +176,12 @@ Tune what you surface to the energy level: at LOW, identify only the single most
 
 ### Code review — four categories to check
 
-Use your `code-review` capability to fetch:
+Use your `code-review` capability to fetch and categorize. Classify each of your open merge requests by what action is needed — your capability has the details on how to read per-reviewer state correctly:
 
-1. Review requests waiting on you
-2. Your open merge requests with changes requested
-3. **Your open merge requests with merge conflicts — surface these first and dispatch conflict resolution immediately**
-4. Your open merge requests with failed CI checks
+1. **Review requests waiting on you** — someone requested your review
+2. **Needs your action** — a reviewer requested changes or left comments; use per-reviewer state, not the aggregate decision
+3. **Merge conflicts** — surface these first, dispatch conflict resolution immediately
+4. **CI failing** — needs investigation or a fix
 
 ### Issues — by state
 

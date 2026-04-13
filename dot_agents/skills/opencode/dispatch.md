@@ -32,10 +32,10 @@ git -C "$WORKTREE" checkout "$BRANCH"
 SESSION_ID=$(curl -s -X POST "http://localhost:4096/session?directory=$WORKTREE" \
   -H "Content-Type: application/json" -d '{}' | jq -r '.id')
 
-# Send task
-curl -s -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$WORKTREE" \
+# Send task — use --max-time 10 so curl doesn't block waiting for the session to finish
+curl -s --max-time 10 -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$WORKTREE" \
   -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}'
+  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}' || true
 ```
 
 ---
@@ -72,12 +72,13 @@ echo "Session: $SESSION_ID"
 ## Send the task
 
 ```bash
-curl -s -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$REPO_DIR" \
+# --max-time 10 prevents blocking — the session keeps running server-side after curl exits
+curl -s --max-time 10 -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$REPO_DIR" \
   -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}'
+  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}' || true
 ```
 
-The POST streams and may timeout from curl's perspective — that's expected. The session is working.
+The POST streams and will hit the timeout — that's expected and correct. The session keeps running server-side.
 
 ## Check on it (optional)
 
