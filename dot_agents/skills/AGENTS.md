@@ -10,6 +10,20 @@
 
 **When using any CLI capability, read `--help` first.** Run `<binary> --help` and `<binary> <subcommand> --help` before issuing commands. Integration skills document only what help text won't tell you — silent failures, wrong-output traps, and non-obvious cross-command dependencies. Everything else is in `--help`.
 
+**For short gotchas (1-3 sentences), use the `notes` field in `capabilities.yaml` instead of a skill file.** The manifest supports an extended map form:
+
+```yaml
+# flat form — no gotchas
+issues: cli://linear
+
+# extended form — with notes
+calendar:
+  provider: cli://ical
+  notes: "Timestamps in JSON output are UTC — always convert to local before displaying."
+```
+
+Use a skill file when the guidance needs examples, command references, or spans more than a few sentences. Use `notes` for single silent-failure facts.
+
 ## The mechanism: `requires` + manifest
 
 The manifest (`~/.agents/capabilities.yaml`) is the registry. It maps capability names to providers — a skill name, `cli://<binary>`, or `mcp://<server>`.

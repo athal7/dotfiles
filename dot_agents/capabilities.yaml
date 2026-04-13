@@ -1,11 +1,32 @@
 # Capability → provider bindings
-# Values can be a skill name, cli://<binary>, or mcp://<server>.
+# Values can be a flat string (cli://<binary>, mcp://<server>, or skill name)
+# or a map with `provider` + optional `notes` for gotchas --help won't surface.
 # Skills with matching `provides` are auto-discovered — only cli:// and mcp:// entries
 # (and explicit overrides) need to be listed here.
 # Override per-workspace by placing a capabilities.yaml in .agents/ or the workspace root.
 
-# CLI providers — no SKILL.md to auto-discover from, so must be explicit
 issues: cli://linear
 meetings: cli://minutes
-# email and docs provided by gws skill (auto-discovered)
-# code-review and ci provided by gh skill (auto-discovered)
+
+calendar:
+  provider: cli://ical
+  notes: >-
+    Timestamps in JSON output are UTC — always convert to local before displaying.
+    When all_day is true, skip conversion entirely and display as "all-day".
+
+reminders:
+  provider: cli://remindctl
+  notes: >-
+    --due YYYY-MM-DD defaults to midnight UTC, which shows the wrong time in non-UTC
+    timezones. Pass a full ISO datetime instead (e.g. 2026-04-26T05:00:00 for CT midnight).
+    `show upcoming` excludes undated items — use `show all` and filter by dueDate == null.
+
+docs:
+  provider: cli://gws
+  notes: >-
+    To read a doc's content, export via `gws drive files export --params '{"fileId":"ID","mimeType":"text/plain"}' -o /tmp/doc.txt` —
+    `gws docs documents get` returns raw structural JSON, not readable text.
+    To find a doc by name, search via `gws drive files list` — the Docs API has no search.
+
+# code-review provided by gh skill (auto-discovered) — notes live in the skill
+# email provided by gws skill (auto-discovered)

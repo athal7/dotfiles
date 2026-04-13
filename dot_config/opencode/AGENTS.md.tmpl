@@ -11,9 +11,17 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 Explicit mappings (overrides and CLI providers that can't be auto-discovered):
 
 {{ $caps := fromYaml (include "dot_agents/capabilities.yaml") -}}
-{{ range $cap, $provider := $caps -}}
+{{ range $cap, $entry := $caps -}}
+{{ $provider := "" -}}
+{{ $notes := "" -}}
+{{ if kindIs "string" $entry -}}
+  {{ $provider = $entry -}}
+{{ else -}}
+  {{ $provider = $entry.provider -}}
+  {{ $notes = $entry.notes -}}
+{{ end -}}
 {{ if hasPrefix "cli://" $provider -}}
-- `{{ $cap }}` → `{{ trimPrefix "cli://" $provider }}` CLI — call the binary directly via Bash; read `{{ trimPrefix "cli://" $provider }} --help` on demand
+- `{{ $cap }}` → `{{ trimPrefix "cli://" $provider }}` CLI — call the binary directly via Bash; read `{{ trimPrefix "cli://" $provider }} --help` on demand{{ if $notes }}. Note: {{ $notes }}{{ end }}
 {{ else -}}
 - `{{ $cap }}` → `{{ $provider }}` skill
 {{ end -}}
