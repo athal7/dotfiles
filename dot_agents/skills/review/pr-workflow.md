@@ -40,11 +40,13 @@ Fetch prior review history before dispatching specialists:
 2. `gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments` — all inline review comments; note `path`, `line`, `body`, `in_reply_to_id` (a non-null `in_reply_to_id` means it's a reply in a thread)
 3. Build a **prior review summary**: group inline comments by thread (using `in_reply_to_id`), identify the last message per thread, and mark threads as:
    - **Resolved** — author replied acknowledging the fix, or the thread was explicitly resolved
+   - **Awaiting reviewer** — author has replied (most recent message is from the PR author) but no reviewer response yet
    - **Unresolved** — no author reply, or last reply disagrees/defers
 4. Attach the full prior review summary to the payload for all sub-agents.
 
 **Prior review rules (output):**
 - Do NOT re-raise issues that were already raised in a prior review and have been addressed (author replied with a fix, or the code changed to resolve it). Mark them as handled.
 - DO surface unresolved threads in the "Unresolved Prior Feedback" section — these are higher priority than new findings since they represent reviewer expectations not yet met.
+- DO surface **awaiting-reviewer** threads in an "Awaiting Your Response" section — the author has replied and is blocked waiting on the reviewer.
 - Unresolved prior feedback counts toward the verdict the same as blockers if they were originally `CHANGES REQUESTED` items.
 - If a new finding duplicates an unresolved prior comment, merge them: cite the prior comment and note it remains unresolved rather than presenting it as a fresh finding.

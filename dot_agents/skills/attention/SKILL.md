@@ -180,7 +180,7 @@ Use `gh` to fetch:
 1. Review requested from you
 2. Your PRs with changes requested
 3. Your PRs with merge conflicts (`mergeStateStatus == "DIRTY"`)
-4. Your PRs awaiting review (no decision yet, not draft)
+4. Your PRs with failed CI checks (`statusCheckRollupState == "FAILURE"` or `"ERROR"`)
 
 ### Issues — by state
 
@@ -192,7 +192,6 @@ After fetching both:
 
 - If an issue has a linked PR that also appears in the PR categories above, **group them together** — don't show the same work twice
 - Flag if an issue is "In Progress" but its PR has `CHANGES_REQUESTED` or `DIRTY` — that's a stuck item
-- Flag if a PR is ready for review but has no linked issue — may be untracked work
 
 Present as a unified list, grouped by work item (not by tool), with the most actionable status shown.
 
