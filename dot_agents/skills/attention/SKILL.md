@@ -12,7 +12,7 @@ metadata:
     - reminders
     - meetings
     - chat
-    - source-control
+
     - issues
 ---
 
@@ -175,7 +175,7 @@ When spoons are MODERATE or better, surface work items. Tune the depth to the en
 
 ### Pull requests — four categories to check
 
-Use your `source-control` capability to fetch:
+Use `gh` to fetch:
 
 1. Review requested from you
 2. Your PRs with changes requested

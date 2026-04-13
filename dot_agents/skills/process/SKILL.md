@@ -13,6 +13,8 @@ metadata:
     - tdd
     - commit
     - push
+    - verify
+    - branching
     - meetings
     - logs
     - context
@@ -106,7 +108,7 @@ Key rules for implementation tasks:
 After implementation, run all of the following. Fix any failures before proceeding.
 
 1. **Tests** — run the full test suite. If tests fail, spawn a `general` task to fix and re-run until green.
-2. **Review** — run `/review` on the changes. If it returns blockers, spawn a `general` task to fix and re-run until clean.
+2. **Verify** — use your `verify` capability on the changes. If it returns blockers, spawn a `general` task to fix and re-run until clean.
 3. **QA** — if the diff touches UI, views, or user-facing flows, use your `qa` capability. If it fails, spawn a `general` task to fix and re-run.
 4. **Acceptance criteria** — verify each criterion from the original issue is met.
 

@@ -1,13 +1,15 @@
 ---
 name: review
-description: Review changes [commit|branch|pr|staged], defaults to uncommitted
+description: Review changes [commit|branch|pr|staged] — verifies your own work before shipping, or reviews someone else's PR with inline comments and approval
 license: MIT
 compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
+  provides:
+    - verify
+    - code-review
   requires:
-    - source-control
     - qa
 ---
 
