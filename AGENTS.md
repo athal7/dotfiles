@@ -2,6 +2,8 @@
 
 This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` to deploy.
 
+**After every commit in this repo: run `chezmoi apply`.** Changes are not live until applied — deployed files under `~/.agents/`, `~/.config/`, etc. will be out of sync otherwise. Do this before handing back to the user.
+
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
