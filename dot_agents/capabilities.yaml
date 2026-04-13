@@ -7,5 +7,5 @@
 # CLI providers — no SKILL.md to auto-discover from, so must be explicit
 issues: cli://linear
 meetings: cli://minutes
-email: cli://gws
+# email and docs provided by gws skill (auto-discovered)
 # code-review and ci provided by gh skill (auto-discovered)

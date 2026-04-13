@@ -56,7 +56,8 @@ A PR with `COMMENTED` reviews is **not** safely "waiting on reviewer" — the re
 
 ## Fetching your open PRs with full review state
 
-`gh pr list --author=@me` silently returns nothing outside a repo. Use GraphQL instead:
+> **CRITICAL:** `gh pr list --author=@me` and `gh pr list --search "..."` both **silently return empty results** when run outside a repo directory. This is a common silent failure — always use GraphQL for cross-repo queries:
+
 
 ```bash
 gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { nodes {
@@ -89,6 +90,19 @@ gh api graphql -f query='{ search(query: "is:open is:pr review-requested:@me", t
   } }
 } }'
 ```
+
+## `mergeStateStatus` values
+
+| Value | Means |
+|---|---|
+| `CLEAN` | No conflicts, branch protection satisfied |
+| `DIRTY` | Has merge conflicts — surface first, fix immediately |
+| `UNSTABLE` | CI is failing |
+| `BLOCKED` | Branch protection rules not satisfied (e.g. required review not yet approved) — **does not mean conflict** |
+| `BEHIND` | Branch is behind the base branch |
+| `UNKNOWN` | GraphQL returned ambiguous state — follow up with per-repo `gh pr list` for accurate status |
+
+`BLOCKED` + `mergeable: MERGEABLE` = branch protection (missing required approval), not a conflict. Do not file as a merge conflict.
 
 ## Checking repo visibility
 
