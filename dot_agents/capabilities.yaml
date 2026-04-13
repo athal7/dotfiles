@@ -9,3 +9,5 @@ issues: cli://linear
 calendar: cli://ical
 meetings: cli://minutes
 email: cli://gws
+pull-requests: cli://gh
+ci: cli://gh

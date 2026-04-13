@@ -9,6 +9,8 @@ metadata:
     - push
   requires:
     - commit
+    - pull-requests
+    - ci
 ---
 
 # Skill: Push
@@ -42,30 +44,27 @@ You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
 
 ## After Push — Create/Update Draft PR
 
-After every successful push, automatically create or update a draft PR (default behavior).
+After every successful push, automatically create or update a draft PR using your `pull-requests` capability.
 
-1. Check if a PR already exists for this branch: `gh pr list --head <branch> --state all`
-2. If no PR exists:
-   - Create a draft PR: `gh pr create --draft --title "..." --body "..."`
-   - Use commits from the branch to populate title/body
+1. Check if a PR already exists for this branch
+2. If no PR exists: create a draft PR using commits from the branch to populate title/body
 3. If a PR already exists (any state):
    - Compare the current branch commits against the PR's existing title/body
-   - If there is a material change (new feature scope, different fix, renamed component, changed API, etc.), update the PR: `gh pr edit <number> --title "..." --body "..."`
+   - If there is a material change (new feature scope, different fix, renamed component, changed API, etc.), update the PR title/body
    - Minor additions (tests, docs, formatting) do not warrant an update
    - Do not update the PR state (draft → ready or vice versa)
 4. Once PR is created/confirmed, proceed to CI watching
 
 ## After Draft PR — Watch CI
 
-After the draft PR is created/confirmed, watch CI to completion. Do not hand back to the user and consider the task done.
+After the draft PR is created/confirmed, watch CI to completion using your `ci` capability. Do not hand back to the user and consider the task done.
 
-1. Poll every 30s: `gh run list --branch <branch> --limit 1`
-2. Wait until status is no longer `queued` or `in_progress`
-3. If all checks pass: report success with a markdown link to the PR, e.g. `[PR #123](https://github.com/org/repo/pull/123) is ready to merge.` — never just the bare number
-4. If any check fails:
-   - `gh run view <run-id> --log-failed` to get failure output
+1. Poll every 30s until the run is no longer queued or in progress
+2. If all checks pass: report success with a markdown link to the PR — never just the bare number
+3. If any check fails:
+   - Get the failure output from the failed run
    - Fix the root cause
    - **Run the full test suite locally** to verify the fix before pushing — do not push blind
    - Commit (using your `commit` capability) and push
    - Return to step 1
-5. Keep iterating until CI is green. Do not give up after one fix attempt.
+4. Keep iterating until CI is green. Do not give up after one fix attempt.
