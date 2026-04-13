@@ -4,6 +4,8 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 **After every commit in this repo: run `chezmoi apply`.** Changes are not live until applied — deployed files under `~/.agents/`, `~/.config/`, etc. will be out of sync otherwise. Do this before handing back to the user.
 
+**`chezmoi apply` restarts the opencode server** — any file deployed into `~/.agents/` or `~/.config/opencode/` triggers a restart, which kills the current session. Always use the PTY approach: load the `chezmoi` skill and follow the safe apply workflow so the session survives the restart.
+
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
