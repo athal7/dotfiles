@@ -17,11 +17,11 @@ You'll be prompted for secrets and machine-specific values during init. See [che
 - **Git** — config, aliases, hooks (`dot_config/git/`)
 - **Terminal** — Ghostty (`dot_config/ghostty/`)
 - **AI tooling** — OpenCode config, MCPs, plugins, agent instructions (`dot_config/opencode/`)
-- **Packages** — brew, cask, mise, GitHub releases (`dot_chezmoidata/packages.yaml`)
+- **Packages** — brew, cask, mise, GitHub releases (`.chezmoidata/packages.yaml`)
 - **Calendar automation** — sync, lunch guard, family scheduler (`dot_local/bin/`, `Library/LaunchAgents/`)
 - **Homebridge** — Google Nest via HomeKit (`dot_homebridge/`)
 - **macOS services** — LaunchAgents for background processes (`Library/LaunchAgents/`)
-- **Agent skills** — 30+ skills for OpenCode and compatible agents (`dot_agents/skills/`)
+- **Agent skills** — 26 skills for OpenCode and compatible agents (`dot_agents/skills/`)
 
 ## chezmoi source file conventions
 
@@ -42,9 +42,9 @@ See the [chezmoi source state reference](https://www.chezmoi.io/reference/source
 
 ## Agent Skills
 
-30+ [Agent Skills](https://agentskills.io)-compatible skills deployed to `~/.agents/skills/`. Works with [OpenCode](https://opencode.ai) and any compatible agent. See [`dot_agents/skills/README.md`](dot_agents/skills/README.md) for the full list and install instructions.
+26 [Agent Skills](https://agentskills.io)-compatible skills deployed to `~/.agents/skills/`. Works with [OpenCode](https://opencode.ai) and any compatible agent. See [`dot_agents/skills/README.md`](dot_agents/skills/README.md) for the full list and install instructions.
 
-Skills are designed around a capability-based composition system — integration skills declare what they `provides`, workflow skills declare what they `requires`, and a [`capabilities.yaml`](dot_agents/capabilities.yaml) manifest binds them together. This lets workflow skills stay tool-agnostic: swap Linear for Jira by changing one line.
+Skills use a capability-based composition system — workflow skills declare what they `requires`, and a [`capabilities.yaml`](dot_agents/capabilities.yaml) manifest binds capabilities to providers (a skill, `cli://<binary>`, or `mcp://<server>`). This lets workflow skills stay tool-agnostic: swap Linear for Jira by changing one line.
 
 > **Spec proposal:** This composition model is proposed as an extension to the agentskills format at [agentskills/agentskills#311](https://github.com/agentskills/agentskills/discussions/311).
 
@@ -64,12 +64,26 @@ Install individual skills via [chezmoi external](https://www.chezmoi.io/referenc
 
 `stripComponents = 3` strips the `athal7-dotfiles-<sha>/dot_agents/skills/` prefix so the skill lands directly at the `targetPath`.
 
-To use workflow skills that have `requires`, create `~/.agents/capabilities.yaml` mapping each capability to your preferred skill. Your agent also needs to know how to resolve capabilities. Add this to your global agent instructions (e.g. `~/.config/opencode/AGENTS.md`):
+To use workflow skills that have `requires`, create `~/.agents/capabilities.yaml` mapping each capability to a provider:
+
+```yaml
+# Skill — loads SKILL.md instructions
+logs: elasticsearch
+
+# CLI — agent calls the binary directly via Bash
+calendar: cli://ical
+
+# MCP tool — activates tool calls on demand
+pull-requests: mcp://github
+```
+
+Your agent also needs to know how to resolve capabilities. Add this to your global agent instructions (e.g. `~/.config/opencode/AGENTS.md`):
 
 ```markdown
 ## Skill Capabilities
 
 When you load a skill that has `requires` in its metadata, read `~/.agents/capabilities.yaml`
-to resolve each capability to a skill name, then load that skill before proceeding.
-If a capability has no mapping, ask the user which skill to use.
+to resolve each capability. If the value is a skill name, load that skill. If it starts with
+`cli://`, call that binary via Bash and read its `--help` on demand. If it starts with `mcp://`,
+activate that tool. If a capability has no mapping, ask the user which provider to use.
 ```
