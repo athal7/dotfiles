@@ -1,6 +1,6 @@
 ---
 name: process
-description: Development workflow orchestrator for non-trivial implementation tasks — enforces plan → expert review → user approval → implement → verify → commit phase graph with delegation and checkpoint gates
+description: Development workflow orchestrator for non-trivial implementation tasks — enforces plan → expert review → user approval → implement → verify → commit phase graph with delegation, checkpoint gates, and session context logging
 license: MIT
 compatibility: opencode
 metadata:
@@ -8,7 +8,6 @@ metadata:
   version: "1.0"
   requires:
     - issues
-    - qa
     - architecture
     - tdd
     - commit
@@ -17,7 +16,7 @@ metadata:
     - branching
     - meetings
     - logs
-    - context
+    - agent
 ---
 
 ## Overview

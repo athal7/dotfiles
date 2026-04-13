@@ -39,7 +39,7 @@ Run all of these before forming any view:
 
 - Use your `meetings` capability to list today's processed meetings (for social/emotional load inference). Filter to items whose date starts with today's date, limit 20.
 
-- Use your `chat` capability to find recent Slack mentions waiting on you in the last 8 hours. Search for mentions of your user ID in the last 8h.
+- Use your `chat` capability to find recent mentions waiting on you in the last 8 hours. Search for mentions of your user ID in the last 8h.
 
 - Note: priority strings for your `reminders` capability are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
 

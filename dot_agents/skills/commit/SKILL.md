@@ -103,7 +103,7 @@ Check repo visibility with: `gh repo view --json visibility -q '.visibility'`
 
 ## After Committing — Memory Check
 
-After a successful commit, briefly consider whether this session produced non-obvious learnings worth preserving. If any of these apply, use your `agent` capability's learning capture to extract and persist them:
+After a successful commit, briefly consider whether this session produced non-obvious learnings worth preserving. If any of these apply, load the `process` skill's learning capture (`~/.agents/skills/process/learn.md`) and follow it:
 
 - Debugging took multiple attempts or the error was misleading
 - You discovered a hidden dependency between files or modules

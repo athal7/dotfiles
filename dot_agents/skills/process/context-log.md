@@ -1,16 +1,6 @@
----
-name: context-log
-description: Maintain .opencode/context-log.md for session continuity — update at session start, after each commit, and on compaction so context survives history summarization and handoffs
-license: MIT
-compatibility: opencode
-metadata:
-  author: athal7
-  version: "1.0"
-  provides:
-    - context
-  requires:
-    - agent
----
+# Context Log
+
+Maintain `.opencode/context-log.md` for session continuity — update at session start, after each commit, and on compaction so context survives history summarization and handoffs.
 
 ## Purpose
 
