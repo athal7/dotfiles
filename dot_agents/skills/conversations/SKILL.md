@@ -1,10 +1,10 @@
 ---
 name: conversations
-description: Research people, decisions, and context across meetings, Slack, the knowledge base, Gmail, and Discord
+description: Research people, decisions, and context across meetings, chat, email, and the knowledge base
 license: MIT
 metadata:
   author: athal7
-  version: "1.2"
+  version: "1.3"
   requires:
     - chat
     - discord
@@ -32,9 +32,9 @@ Use your `meetings` capability for full command reference (list, search, get, pe
 
 Use when: KB doesn't have enough detail, or you need the surrounding conversation.
 
-Note: daily Slack digests are also ingested as meetings — check there for recent Slack summaries.
+Note: daily internal chat digests are also ingested as meetings — check there for recent summaries.
 
-## 3. Slack — live and undigested
+## 3. Internal chat — live and undigested
 
 Real-time search for things too recent to be ingested, or threads not captured in digests.
 
@@ -42,21 +42,21 @@ Use your `chat` capability for full API reference (search, post, reply, find cha
 
 Use when: looking for something from today or yesterday, or a specific thread not in a digest.
 
-## 4. Discord — customer support and community
+## 4. Customer support and community chat
 
-Real-time customer support conversations, community reports, and user feedback. Distinct from Slack (internal).
+Real-time customer support conversations, community reports, and user feedback.
 
 Use your `discord` capability for full command reference (search, messages, members, mentions).
 
 Use when: looking for customer-reported issues, support requests, user feedback, or community discussions.
 
-## 5. Gmail — email threads and formal correspondence
+## 5. Email — formal correspondence
 
 Sent/received email, support tickets, procurement threads, and anything via your work email domain.
 
 Use your `email` capability for full command reference (search messages, get threads, send/reply).
 
-Use when: looking for email correspondence, JSM/Jira notifications, procurement tickets, or any thread not in Slack/meetings.
+Use when: looking for email correspondence, ticketing notifications, procurement threads, or any thread not in chat or meetings.
 
 ## Decision guide
 
@@ -64,9 +64,9 @@ Use when: looking for email correspondence, JSM/Jira notifications, procurement 
 |---|---|
 | What has someone committed to? | KB → `meetings` capability |
 | What was decided about X last week? | KB → `meetings` capability |
-| What did someone say in Slack this morning? | `chat` capability |
 | Who was in a specific meeting? | `meetings` capability or KB |
-| What's the latest on a Slack thread? | `chat` capability |
+| What did someone say in internal chat today? | `chat` capability |
+| What's the latest on an internal thread? | `chat` capability |
 | Customer complaint or support request? | `discord` capability |
 | Community feedback or bug report from users? | `discord` capability |
-| Email thread, support ticket, JSM notification? | `email` capability |
+| Email thread, ticket notification, procurement? | `email` capability |
