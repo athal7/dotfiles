@@ -47,39 +47,39 @@ Run all of these before forming any view:
 
 ## Step 2: Assess the situation holistically
 
-Before surfacing anything, reason across all inputs together **internally**. Do not output the intermediate spoon accounting or reasoning steps — only output the final check in Step 3.
+Before surfacing anything, reason across all inputs together **internally**. Do not output the intermediate energy accounting or reasoning steps — only output the final check in Step 3.
 
 **Core principle: protect capacity first, output second.**
 The goal is sustainable contribution. Reducing overwhelm matters more than surfacing every pending item.
 
 ---
 
-**Spoon accounting (Dr. Megan Anna Neff's framework):**
+**Energy accounting:**
 
-Spoons aren't just quantity — they're multidimensional. Autistic/AuDHD energy depletion happens across multiple axes:
+Energy isn't just quantity — it's multidimensional. Depletion happens across multiple axes:
 
 - **Cognitive load** — deep focus, problem-solving, context switching
-- **Social/masking load** — meetings, communication, being "on"
+- **Social load** — meetings, communication, being "on"
 - **Sensory load** — environment, noise, stimulation throughout the day
-- **Emotional/interoceptive load** — accumulated stress that may not have registered consciously
+- **Emotional load** — accumulated stress that may not have registered consciously
 
 **What drains most:** The two biggest cognitive load signals from sessions are:
-1. **User message count** — each message you sent required you to engage, evaluate, redirect, or decide. High counts mean you were actively steering work, not just delegating.
+1. **User message count** — each message sent required active engagement, evaluation, and decisions. High counts mean actively steering work, not just delegating.
 2. **Concurrent sessions** — running multiple sessions at once fragments attention even if each one felt short. Peak concurrent > 2 is meaningful switching cost.
 
-Session duration alone is a weak signal — a long autonomous session burns few spoons; a short highly-interactive one burns many.
+Session duration alone is a weak signal — a long autonomous session is low load; a short highly-interactive one is high load.
 
 **Reading session data:**
 - Scan session titles for topic variety — many different subjects = high context-switch load
 - Cross-repo jumps (dotfiles → app → dotfiles) compound the switching cost
 - Check earliest session start — a long elapsed day is tiring even at low intensity
 
-**Interoceptive caveat:** With alexithymia, the body often doesn't signal depletion until it's too late. These metrics are proxies. Treat high output as a *warning* signal, not a green light — boom-and-bust cycles start by overdoing it on good days.
+**Important caveat:** These metrics are proxies for energy state, not a direct readout. Treat high output as a *warning* signal, not a green light — the body doesn't always signal depletion until it's too late.
 
-**Spoon table — use the worse of the two signals:**
+**Energy table — use the worse of the two signals:**
 
-| User messages today | Spoon signal |
-|---------------------|--------------|
+| User messages today | Energy signal |
+|---------------------|---------------|
 | < 30 | Likely available |
 | 30–80 | Moderate |
 | 80–150 | Caution |
@@ -96,25 +96,25 @@ The table is a starting point, not a formula. Use contextual judgment — a day 
 **Time and pacing:**
 - `GAP` = minutes until next event (or rest of day free)
 - `END_OF_DAY` = minutes until 6pm
-- GAP < 30m → don't recommend starting a tunnel; suggest quick wins or rest
+- GAP < 30m → don't recommend starting a deep-focus task; suggest quick wins or rest
 - Past 6pm → wind-down mode regardless of session count
-- Full spoons + GAP < 30m → treat as Moderate
+- Full energy + GAP < 30m → treat as Moderate
 
 **Reminder weighting:**
-- All reminders are inputs — filter before surfacing. Ask: does this need attention *right now*, given spoons, time, and energy type?
+- All reminders are inputs — filter before surfacing. Ask: does this need attention *right now*, given energy, time, and cognitive mode?
 - One well-chosen thing beats five that create paralysis
 - Balance work and personal — a day of only work tasks is a signal, not a success
 - Considerateness without self-sacrifice: if something has been waiting and someone else is depending on it, mention it once, plainly, as information — not guilt
 
-**Monotropism / attentional tunnel awareness:**
-- Entering a new tunnel has a real cost — only recommend it if GAP is large enough and spoons support it
+**Attentional focus awareness:**
+- Entering a new deep-focus task has a real cost — only recommend it if GAP is large enough and energy supports it
 - Prefer finishing or resting over starting something new when in doubt
 - Suggest task types that match the current cognitive mode
 
-**Alexithymia prompts** — always include at least one body/state check, phrased as genuine care:
+**Self-care check** — always include at least one body/state check, phrased as genuine care:
 - "Are you hydrated? Have you eaten?"
 - "How does your body feel right now — not your to-do list, your body?"
-- "Is there anything you've been ignoring that your nervous system might be tracking?"
+- "Is there anything you've been putting off that's been nagging at you?"
 - Never frame as productivity checks
 
 ---
@@ -175,12 +175,28 @@ When spoons are MODERATE or better, surface work items. Tune the depth to the en
 
 ### Pull requests — four categories to check
 
-Use `gh` to fetch:
+**Fetching review requests:** Use the GitHub search API — it matches what GitHub's UI shows:
 
-1. Review requested from you
+```bash
+gh api graphql -f query='{ search(query: "is:open is:pr review-requested:@me", type: ISSUE, first: 20) { nodes { ... on PullRequest { number title url repository { nameWithOwner } mergeStateStatus updatedAt } } } }'
+```
+
+Do **not** filter by `reviewDecision` to exclude PRs — `reviewDecision` is the aggregate across all reviewers, not whether *you* have reviewed. A PR where someone else left changes-requested but you haven't reviewed yet will show `CHANGES_REQUESTED` even though you still need to review it. Trust the search query, not the field.
+
+**Your own PRs:** Use the GraphQL viewer query for the other three categories:
+
+```bash
+gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { nodes { number title url repository { nameWithOwner } reviewDecision mergeStateStatus } } } }'
+```
+
+Follow up with per-repo `gh pr list` for accurate `mergeStateStatus` (GraphQL often returns `UNKNOWN`).
+
+**Four categories:**
+
+1. Review requested from you (use search query above — don't filter by `reviewDecision`)
 2. Your PRs with changes requested
-3. Your PRs with merge conflicts (`mergeStateStatus == "DIRTY"`)
-4. Your PRs with failed CI checks (`statusCheckRollupState == "FAILURE"` or `"ERROR"`)
+3. **Your PRs with merge conflicts (`mergeStateStatus == "DIRTY"`) — surface these first and dispatch conflict resolution immediately**
+4. Your PRs with failed CI checks
 
 ### Issues — by state
 
