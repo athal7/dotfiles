@@ -59,7 +59,7 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
 |---|---|
 | `` `gh pr view`, `gh pr diff` `` | `use your \`code-review\` capability` |
 | `gh api graphql -f query='...'` | `use your \`code-review\` capability` |
-| `load the \`process\` skill` | `use your \`learn\` capability` |
+| `load the \`process\` skill` | `use your \`process\` capability` |
 | `the \`architecture\` skill Section 2` | `the \`architecture\` capability Section 2` |
 | `via \`gq\`` | remove — capability reference is sufficient |
 | `` `gh repo view --json visibility` `` | `use your \`code-review\` capability` |

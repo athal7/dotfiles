@@ -47,12 +47,14 @@ For comments spanning lines, add `start_line`:
 {"path":"file.rb","start_line":5,"line":10,"body":"This block..."}
 ```
 
-## Responding to PR Feedback
+## Responding to Review Feedback
 
 When addressing reviewer comments after making fixes, **don't reply to every comment**. Use this workflow:
 
 1. **Fixed it?** Resolve the conversation thread (no reply needed).
 2. **Not addressing it?** Reply explaining why (disagreement, out of scope, etc.).
+
+**Push before resolving.** You cannot resolve threads until the fix is pushed — GitHub ties thread resolution to the commit that addressed it. Always push first, then resolve.
 
 ### Listing Review Threads
 
