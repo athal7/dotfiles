@@ -18,7 +18,7 @@ Workflow skills declare what they need:
 # Workflow skill
 metadata:
   requires:
-    - pull-requests
+    - code-review
     - qa
     - issues
 ```

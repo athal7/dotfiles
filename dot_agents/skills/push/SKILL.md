@@ -9,7 +9,7 @@ metadata:
     - push
   requires:
     - commit
-    - pull-requests
+    - code-review
     - ci
 ---
 
@@ -44,7 +44,7 @@ You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
 
 ## After Push — Create/Update Draft PR
 
-After every successful push, automatically create or update a draft PR using your `pull-requests` capability.
+After every successful push, automatically create or update a draft merge request using your `code-review` capability.
 
 1. Check if a PR already exists for this branch
 2. If no PR exists: create a draft PR using commits from the branch to populate title/body

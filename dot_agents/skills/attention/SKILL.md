@@ -12,13 +12,13 @@ metadata:
     - reminders
     - meetings
     - chat
-
     - issues
+    - code-review
 ---
 
 # Skill: Attention
 
-**Check-in (on demand):** When you choose to come up for air, this skill surfaces a spoon-aware NOW/NEXT/LATER view.
+**Check-in (on demand):** When you choose to come up for air, this skill surfaces an energy-aware view of what matters most right now.
 
 **Calendar access:** use your `calendar` capability — fast native EventKit CLI, supports reads and writes.
 
@@ -121,9 +121,11 @@ The table is a starting point, not a formula. Use contextual judgment — a day 
 
 ## Step 3: Surface the view
 
-One coherent snapshot — not a stack of sections. Tune depth and length to spoon level.
+One coherent snapshot — not a stack of sections. Tune depth and length to energy level.
 
-### If spoons are LOW (or past 6pm)
+**Always surface the top 1 work priority and top 1 personal/reminder priority** regardless of energy level — even when LOW. The goal is never to hide what matters most, just to limit how much is presented and how much action is recommended.
+
+### If energy is LOW (or past 6pm)
 
 ---
 **Attention check**
@@ -131,83 +133,66 @@ Energy: Low (X msgs, Xm until [next event / end of day])
 
 Take care of yourself first.
 - Are you hydrated? Have you eaten?
-- Is there anything with a hard deadline today?
 
-[One actionable thing if truly needed, otherwise nothing]
+Top work priority: [single most important/urgent work item — no action recommended unless truly time-sensitive]
+Top personal: [single most important personal/reminder item]
 
 Everything else can wait.
 
 ---
 
-### If spoons are MODERATE (or GAP < 30m)
+### If energy is MODERATE (or GAP < 30m)
 
 ---
 **Attention check**
 Energy: Moderate — Xm before [next event / 6pm]
 
-[2–3 items that make sense given time and energy — mix of urgent and lightweight]
+[2–3 items that make sense given time and energy — mix of work and personal, urgent and lightweight]
 [Note any blocked/stuck items briefly]
 
 How does your body feel right now?
 
 ---
 
-### If spoons are FULL and GAP ≥ 30m
+### If energy is FULL and GAP ≥ 30m
 
 ---
 **Attention check**
 Energy: Good — Xm before [next event / 6pm]
 
-[1–2 things worth doing now — chosen for fit, not for urgency alone]
+[3–4 things worth doing now — mix of work and personal, chosen for fit not urgency alone]
 [If something has been waiting and someone else is affected, mention it once, plainly]
-[One personal item if only work is surfacing]
 
 Is there anything nagging that isn't on this list?
 What do you want to focus on?
 
 ---
 
-## Step 4: Work items (skip only when LOW)
+## Step 4: Work items (always fetch, tune depth to energy)
 
-If spoons are LOW, skip this step entirely. Don't mention the backlog — it can wait.
+Always fetch work items regardless of energy level — you need them to identify the top priority shown in Step 3.
 
-When spoons are MODERATE or better, surface work items. Tune the depth to the energy level: at MODERATE, show 1–2 items max and prefer quick wins; at FULL, show up to 3–4 and include longer-horizon items worth starting. Don't list everything — pick the most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
+Tune what you surface to the energy level: at LOW, identify only the single most important/urgent item (show it in Step 3, don't recommend action unless time-sensitive); at MODERATE, show 1–2 items max and prefer quick wins; at FULL, show up to 3–4 and include longer-horizon items worth starting. Don't list everything — pick the most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
 
-### Pull requests — four categories to check
+### Code review — four categories to check
 
-**Fetching review requests:** Use the GitHub search API — it matches what GitHub's UI shows:
+Use your `code-review` capability to fetch:
 
-```bash
-gh api graphql -f query='{ search(query: "is:open is:pr review-requested:@me", type: ISSUE, first: 20) { nodes { ... on PullRequest { number title url repository { nameWithOwner } mergeStateStatus updatedAt } } } }'
-```
-
-Do **not** filter by `reviewDecision` to exclude PRs — `reviewDecision` is the aggregate across all reviewers, not whether *you* have reviewed. A PR where someone else left changes-requested but you haven't reviewed yet will show `CHANGES_REQUESTED` even though you still need to review it. Trust the search query, not the field.
-
-**Your own PRs:** Use the GraphQL viewer query for the other three categories:
-
-```bash
-gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { nodes { number title url repository { nameWithOwner } reviewDecision mergeStateStatus } } } }'
-```
-
-Follow up with per-repo `gh pr list` for accurate `mergeStateStatus` (GraphQL often returns `UNKNOWN`).
-
-**Four categories:**
-
-1. Review requested from you (use search query above — don't filter by `reviewDecision`)
-2. Your PRs with changes requested
-3. **Your PRs with merge conflicts (`mergeStateStatus == "DIRTY"`) — surface these first and dispatch conflict resolution immediately**
-4. Your PRs with failed CI checks
+1. Review requests waiting on you
+2. Your open merge requests with changes requested
+3. **Your open merge requests with merge conflicts — surface these first and dispatch conflict resolution immediately**
+4. Your open merge requests with failed CI checks
 
 ### Issues — by state
 
 Use your `issues` capability to fetch issues assigned to you, grouped by state (in progress, unstarted, backlog).
 
-### Cross-reference PRs ↔ issues
+### Cross-reference merge requests ↔ issues
 
 After fetching both:
 
-- If an issue has a linked PR that also appears in the PR categories above, **group them together** — don't show the same work twice
-- Flag if an issue is "In Progress" but its PR has `CHANGES_REQUESTED` or `DIRTY` — that's a stuck item
+- If an issue has a linked merge request that also appears in the categories above, **group them together** — don't show the same work twice
+- Flag if an issue is "In Progress" but its merge request has changes requested or a merge conflict — that's a stuck item
 
 Present as a unified list, grouped by work item (not by tool), with the most actionable status shown.
 
@@ -227,7 +212,7 @@ The `agent` capability's dispatch instructions specify exactly how to create wor
 
 Load this skill and say:
 - "Come up for air" — runs the full attention check
-- "How are my spoons?" — just the energy check, no task list
+- "How's my energy?" — just the energy check, no task list
 - "What's on my reminders?" — just the reminders step
 - "Attention check" — alias for full check
 

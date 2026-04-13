@@ -6,8 +6,7 @@
 
 # CLI providers — no SKILL.md to auto-discover from, so must be explicit
 issues: cli://linear
-calendar: cli://ical
 meetings: cli://minutes
 email: cli://gws
-pull-requests: cli://gh
+code-review: cli://gh
 ci: cli://gh
