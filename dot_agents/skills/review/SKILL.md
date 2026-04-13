@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review changes [commit|branch|pr|staged] — verifies your own work before shipping, or reviews someone else's PR with inline comments and approval
+description: Review changes [commit|branch|merge-request|staged] — verifies your own work before shipping, or reviews someone else's code with inline comments and approval
 license: MIT
 compatibility: opencode
 metadata:
@@ -66,12 +66,12 @@ When in doubt, dispatch — false negatives are worse than wasted tokens.
 1. The full diff
 2. Full contents of modified files (skip generated files, lock files, vendored code)
 3. Static analysis findings
-4. Prior review summary (PR only; omit if not a PR)
+4. Prior review summary (merge request only; omit if not a merge request review)
 
 **Extended context (add to each specialist's prompt):**
 - **Project rules** — full text of AGENTS.md, CONVENTIONS.md, etc. — for **all** agents
 - **Issue context** — requirements, acceptance criteria, project goals — for correctness, completeness, maintainability only; write "No issue context available" if none found
-- **Prior reviews** — full prior review summary — for **all** agents (PR only)
+- **Prior reviews** — full prior review summary — for **all** agents (merge request only)
 
 ### Spawn specialists
 
@@ -109,7 +109,7 @@ You are a <domain> reviewer. Follow these instructions:
 <linter output>
 
 ## Prior Reviews
-<prior review summary or 'N/A — not a PR review'>
+<prior review summary or 'N/A — not a merge request review'>
 ```
 
 Each specialist returns `{"findings": [...], "escalations": [...]}`.
