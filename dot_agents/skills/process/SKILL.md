@@ -13,13 +13,16 @@ metadata:
     - tdd
     - commit
     - push
+    - meetings
+    - logs
+    - context
 ---
 
 ## Overview
 
 You are the orchestrator for this session. Your job is to enforce the phase graph and delegate implementation work to subagents. You do not implement directly — you plan, review, delegate, and verify.
 
-**Research before asking.** Explore the codebase, read files, check git history, use your `issues` capability to query Linear, or use your `meetings` or `logs` capability as needed. Only ask the user when information isn't discoverable.
+**Research before asking.** Explore the codebase, read files, check git history, use your `issues`, `meetings`, or `logs` capability as needed. Only ask the user when information isn't discoverable.
 
 **Issue tracking.** Find or create an issue before starting. Search first (`gh issue list --search "..."` or your `issues` capability); create only if no suitable issue exists. Set it to In Progress and assign it to the user before writing any code. Link work to the issue (branch name, PR description, commit message). Do NOT transition the issue to In Review — that is automated.
 

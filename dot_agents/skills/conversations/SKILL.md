@@ -7,12 +7,11 @@ metadata:
   version: "1.3"
   requires:
     - chat
-    - discord
     - meetings
     - email
 ---
 
-Five sources of conversation context, each with different fidelity and recency. Use them in order.
+Four sources of conversation context, each with different fidelity and recency. Use them in order.
 
 ## 1. Knowledge Base — distilled profiles (start here)
 
@@ -34,23 +33,15 @@ Use when: KB doesn't have enough detail, or you need the surrounding conversatio
 
 Note: daily internal chat digests are also ingested as meetings — check there for recent summaries.
 
-## 3. Internal chat — live and undigested
+## 3. Chat — live and undigested
 
-Real-time search for things too recent to be ingested, or threads not captured in digests.
+Real-time search for things too recent to be ingested, or threads not captured in digests. Covers both internal team messaging and customer support/community channels.
 
-Use your `chat` capability for full API reference (search, post, reply, find channel IDs).
+Use your `chat` capability for full API reference (search, post, reply, find channel IDs). Your `chat` capability may support multiple channels — specify context (internal vs. support/community) when searching if the provider supports it.
 
-Use when: looking for something from today or yesterday, or a specific thread not in a digest.
+Use when: looking for something from today or yesterday, a specific thread not in a digest, or customer-reported issues and community feedback.
 
-## 4. Customer support and community chat
-
-Real-time customer support conversations, community reports, and user feedback.
-
-Use your `discord` capability for full command reference (search, messages, members, mentions).
-
-Use when: looking for customer-reported issues, support requests, user feedback, or community discussions.
-
-## 5. Email — formal correspondence
+## 4. Email — formal correspondence
 
 Sent/received email, support tickets, procurement threads, and anything via your work email domain.
 
@@ -65,8 +56,8 @@ Use when: looking for email correspondence, ticketing notifications, procurement
 | What has someone committed to? | KB → `meetings` capability |
 | What was decided about X last week? | KB → `meetings` capability |
 | Who was in a specific meeting? | `meetings` capability or KB |
-| What did someone say in internal chat today? | `chat` capability |
-| What's the latest on an internal thread? | `chat` capability |
-| Customer complaint or support request? | `discord` capability |
-| Community feedback or bug report from users? | `discord` capability |
+| What did someone say in chat today? | `chat` capability |
+| What's the latest on a thread? | `chat` capability |
+| Customer complaint or support request? | `chat` capability |
+| Community feedback or bug report from users? | `chat` capability |
 | Email thread, ticket notification, procurement? | `email` capability |

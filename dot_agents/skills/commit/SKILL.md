@@ -1,12 +1,14 @@
 ---
 name: commit
-description: Semantic commit format, branch naming, squashing guidance, and post-commit memory check
+description: Semantic commit format, branch naming, squashing guidance, and post-commit learning capture
 license: MIT
 metadata:
   author: athal7
   version: "1.0"
   provides:
     - commit
+  requires:
+    - agent
 ---
 
 ## Before Every Commit
@@ -95,13 +97,13 @@ Skip: bullet lists, `## Summary` headers, implementation details obvious from th
 
 ## Issue Traceability
 
-When the issue tracker is internal (e.g., Linear) and the repo is public, don't reference issues in commits or PRs. Instead, update the Linear issue with a link to the PR.
+When the issue tracker is internal and the repo is public, don't reference issues in commits or PRs. Instead, update the issue with a link to the PR via your `issues` capability.
 
 Check repo visibility with: `gh repo view --json visibility -q '.visibility'`
 
 ## After Committing — Memory Check
 
-After a successful commit, briefly consider whether this session produced non-obvious learnings worth preserving. If any of these apply, load the `learn` skill and extract learnings:
+After a successful commit, briefly consider whether this session produced non-obvious learnings worth preserving. If any of these apply, use your `agent` capability's learning capture to extract and persist them:
 
 - Debugging took multiple attempts or the error was misleading
 - You discovered a hidden dependency between files or modules

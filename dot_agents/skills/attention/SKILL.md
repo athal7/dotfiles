@@ -12,7 +12,7 @@ metadata:
     - reminders
     - meetings
     - chat
-    - pull-requests
+    - source-control
     - issues
 ---
 
@@ -41,7 +41,7 @@ Run all of these before forming any view:
 
 - Use your `chat` capability to find recent Slack mentions waiting on you in the last 8 hours. Search for mentions of your user ID in the last 8h.
 
-- Note: `remindctl` priority strings are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
+- Note: priority strings for your `reminders` capability are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
 
 ---
 
@@ -167,15 +167,15 @@ What do you want to focus on?
 
 ---
 
-## Step 4: Work items (spoons FULL only)
+## Step 4: Work items (skip only when LOW)
 
-If spoons are not FULL, skip this step entirely. Don't mention the backlog — it can wait.
+If spoons are LOW, skip this step entirely. Don't mention the backlog — it can wait.
 
-When spoons are FULL, don't list everything. Pick the 1–2 work items most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
+When spoons are MODERATE or better, surface work items. Tune the depth to the energy level: at MODERATE, show 1–2 items max and prefer quick wins; at FULL, show up to 3–4 and include longer-horizon items worth starting. Don't list everything — pick the most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
 
-### GitHub PRs — four categories to check
+### Pull requests — four categories to check
 
-Use your `pull-requests` capability to fetch:
+Use your `source-control` capability to fetch:
 
 1. Review requested from you
 2. Your PRs with changes requested
@@ -186,19 +186,25 @@ Use your `pull-requests` capability to fetch:
 
 Use your `issues` capability to fetch issues assigned to you, grouped by state (in progress, unstarted, backlog).
 
-### Cross-reference GitHub ↔ Linear
+### Cross-reference PRs ↔ issues
 
 After fetching both:
 
-- If a Linear issue has a linked PR that also appears in the GitHub categories above, **group them together** — don't show the same work twice
-- Flag if a Linear issue is "In Progress" but its PR has `CHANGES_REQUESTED` or `DIRTY` — that's a stuck item
-- Flag if a PR is ready for review but has no linked Linear issue — may be untracked work
+- If an issue has a linked PR that also appears in the PR categories above, **group them together** — don't show the same work twice
+- Flag if an issue is "In Progress" but its PR has `CHANGES_REQUESTED` or `DIRTY` — that's a stuck item
+- Flag if a PR is ready for review but has no linked issue — may be untracked work
 
 Present as a unified list, grouped by work item (not by tool), with the most actionable status shown.
 
 ### Starting work from here
 
-When you decide to act on a work item, use your `agent` capability to open or reuse an OpenCode session in the target repo.
+When you decide to act on a work item, use your `agent` capability to dispatch a session. **Do not use `opencode run` or any CLI directly** — go through the capability's API so that:
+
+- PR reviews always get a worktree sandbox (isolated branch, no risk of clobbering the live repo)
+- Sessions are reused when idle rather than spawned fresh every time
+- The dispatch is visible in OpenCode Desktop / web UI
+
+The `agent` capability's dispatch instructions specify exactly how to create worktrees and route sessions.
 
 ---
 

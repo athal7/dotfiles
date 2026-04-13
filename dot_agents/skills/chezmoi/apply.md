@@ -1,22 +1,10 @@
----
-name: chezmoi-apply
-description: Run chezmoi apply safely when editing opencode config — handles the mid-session server restart that causes apparent hangs
-license: MIT
-compatibility: opencode
-metadata:
-  author: athal7
-  version: "1.0"
-  provides:
-    - chezmoi
----
-
-## The Problem
+# chezmoi apply
 
 `chezmoi apply` can trigger a server restart from **two different onchange scripts**, either of which will kill the running opencode server mid-request. The current session loses its WebSocket connection and appears to hang indefinitely.
 
 **You are running inside that server.** When `chezmoi apply` restarts it, this session will go silent.
 
-### Triggers that cause a restart
+## Triggers that cause a restart
 
 | Trigger | What causes it | Effect |
 |---------|---------------|--------|

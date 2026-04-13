@@ -1,11 +1,6 @@
----
-name: learn
-description: After surprising failures, hidden dependency discoveries, or non-obvious workarounds — extract learnings into AGENTS.md or a new skill so they persist across sessions
-license: MIT
-metadata:
-  author: athal7
-  version: "1.0"
----
+# Learning Capture
+
+After surprising failures, hidden dependency discoveries, or non-obvious workarounds — extract learnings so they persist across sessions.
 
 ## What to Capture
 
@@ -46,7 +41,7 @@ When in doubt: if you'd only reach for it when something goes wrong or a specifi
 
 ## Input
 
-If the agent loading this skill was given specific context about what to capture (e.g., "capture the retry logic discovery" or "focus on the auth module"), prioritize that over general session introspection.
+If given specific context about what to capture (e.g., "capture the retry logic discovery" or "focus on the auth module"), prioritize that over general session introspection.
 
 ## Process
 

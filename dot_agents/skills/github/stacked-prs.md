@@ -1,24 +1,24 @@
----
-name: pr-stack
-description: Managing stacked/dependent pull requests with GitHub
-license: MIT
-metadata:
-  author: athal7
-  version: "1.0"
----
+# Stacked Pull Requests
 
-## Tools
+**git-spice** (`gs`) is the primary tool for stacked PRs.
 
-**git-spice** (`gs`) is the primary tool for stacked PRs:
+## Setup
 
 ```bash
 gs repo init                   # Initialize git-spice in a repo
+```
+
+## Branch Management
+
+```bash
 gs branch create <name>        # Create new branch in stack
 gs commit create -m "msg"      # Commit with tracking
 gs log short                   # List tracked branches (alias: gs ls)
 gs log long                    # List branches with commits
+```
 
-# Navigation
+**Navigation:**
+```bash
 gs up / gs down                # Move between stack layers
 gs top / gs bottom             # Jump to top/bottom of stack
 gs trunk                       # Switch to trunk branch
@@ -35,9 +35,9 @@ gs branch checkout <name>      # Switch to a tracked branch
 **Submit** — create/update PRs for the stack:
 ```bash
 gs branch submit               # Submit current branch as PR
-gs stack submit                 # Submit all branches in stack
-gs downstack submit             # Submit current + below
-gs upstack submit               # Submit current + above
+gs stack submit                # Submit all branches in stack
+gs downstack submit            # Submit current + below
+gs upstack submit              # Submit current + above
 ```
 
 Navigation comments are auto-synced on downstack PRs (configured via `spice.submit.navigationCommentSync`).
@@ -68,7 +68,7 @@ gh pr merge <pr> --squash --delete-branch
 gs repo sync                   # Restacks remaining branches
 ```
 
-## Manual stack detection
+## Manual Stack Detection
 
 When git-spice isn't initialized:
 ```bash

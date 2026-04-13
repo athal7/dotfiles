@@ -1,13 +1,4 @@
----
-name: gh-pr-inline
-description: Post inline comments on GitHub PRs and respond to review feedback via gh api
-license: MIT
-metadata:
-  author: athal7
-  version: "1.0"
-  provides:
-    - pull-requests
----
+# Inline PR Comments
 
 ## Why Not `gh pr review`
 

@@ -1,11 +1,4 @@
----
-name: audit
-description: Review and optimize agent instructions, skills, and commands
-license: MIT
-metadata:
-  author: athal7
-  version: "1.0"
----
+# Agent Configuration Audit
 
 Audit the OpenCode agent configuration for this dotfiles repo.
 
@@ -54,7 +47,7 @@ For each rule in AGENTS.md, ask:
 
 ### 2. Context Budget
 
-AGENTS.md should be lean -- it's loaded on every conversation.
+AGENTS.md should be lean — it's loaded on every conversation.
 - Count lines: `wc -l dot_config/opencode/AGENTS.md.tmpl`
 - Move reference content to skills if it's growing
 
@@ -62,7 +55,7 @@ AGENTS.md should be lean -- it's loaded on every conversation.
 
 - Check for duplicate instructions across files
 - Skills shouldn't duplicate what's in AGENTS.md
-- Skills auto-appear in the skill tool listing -- no need to reference them elsewhere
+- Skills auto-appear in the skill tool listing — no need to reference them elsewhere
 
 ### 4. Effectiveness Test
 
@@ -77,10 +70,10 @@ Run a few representative tasks and note:
 |--------|--------|
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md.tmpl` |
 | `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json` |
-| `~/.agents/skills/*` | `dot_config/opencode/skill/*` |
+| `~/.agents/skills/*` | `dot_agents/skills/*` |
 | `~/.config/opencode/command/*` | `dot_config/opencode/command/*` |
 
-After changes: `chezmoi apply`
+After changes: apply via your `machine-config` capability.
 
 ## Common Issues
 

@@ -7,7 +7,7 @@ metadata:
   author: athal7
   version: "1.0"
   provides:
-    - pty
+    - shell
 ---
 
 ## When to Use PTY

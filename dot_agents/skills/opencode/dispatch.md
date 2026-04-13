@@ -4,7 +4,45 @@ Send a task to an OpenCode session running in a different workspace. Prefer reus
 
 ---
 
-## Step 1: Find or create a session
+## Worktree sandboxes — mandatory for PR reviews
+
+**Any task that involves reviewing or modifying a PR branch MUST use a worktree sandbox.** Never point a review session at the live repo directory — concurrent sessions on the same directory clobber each other's branch state (checkouts, stashes, index).
+
+Use a worktree whenever:
+- Reviewing a PR (always)
+- Running experimental or speculative work on a branch
+- Multiple sessions need to operate on the same repo simultaneously
+
+```bash
+REPO_DIR="$HOME/code/<repo>"
+
+# Fetch the PR branch name first
+BRANCH=$(gh pr view <number> --repo <owner>/<repo> --json headRefName -q .headRefName)
+
+# Create a worktree via the API (OpenCode manages the path)
+WORKTREE=$(curl -s -X POST "http://localhost:4096/experimental/worktree?directory=$REPO_DIR" \
+  -H "Content-Type: application/json" \
+  -d "{\"name\": \"$BRANCH\"}" | jq -r '.directory')
+
+# Check out the PR branch inside the worktree
+git -C "$WORKTREE" fetch origin "$BRANCH"
+git -C "$WORKTREE" checkout "$BRANCH"
+
+# Create session in the worktree
+SESSION_ID=$(curl -s -X POST "http://localhost:4096/session?directory=$WORKTREE" \
+  -H "Content-Type: application/json" -d '{}' | jq -r '.id')
+
+# Send task
+curl -s -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$WORKTREE" \
+  -H "Content-Type: application/json" \
+  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}'
+```
+
+---
+
+## Standard dispatch (no branch isolation needed)
+
+For tasks that don't need branch isolation (e.g. reading logs, answering questions, running tests on main):
 
 ```bash
 REPO_DIR="$HOME/code/<repo>"
@@ -31,7 +69,7 @@ fi
 echo "Session: $SESSION_ID"
 ```
 
-## Step 2: Send the task
+## Send the task
 
 ```bash
 curl -s -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$REPO_DIR" \
@@ -41,10 +79,9 @@ curl -s -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$RE
 
 The POST streams and may timeout from curl's perspective — that's expected. The session is working.
 
-## Step 3: Check on it (optional)
+## Check on it (optional)
 
 ```bash
-# Session status
 curl -s "http://localhost:4096/session/status" \
   | jq --arg id "$SESSION_ID" '.[$id]'
 ```
@@ -53,39 +90,16 @@ The session is also visible in the OpenCode web UI at `http://localhost:4096` or
 
 ---
 
-## Worktree sandbox (for PRs or experimental work)
-
-When the task needs an isolated branch:
-
-```bash
-# Create worktree
-WORKTREE=$(curl -s -X POST "http://localhost:4096/experimental/worktree?directory=$REPO_DIR" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "<branch-or-slug>"}' | jq -r '.directory')
-
-# Create session in the worktree
-SESSION_ID=$(curl -s -X POST "http://localhost:4096/session?directory=$WORKTREE" \
-  -H "Content-Type: application/json" -d '{}' | jq -r '.id')
-
-# Send task
-curl -s -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$WORKTREE" \
-  -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}'
-```
-
----
-
 ## Usage
 
-Load this skill when you need to delegate work to another repo. Examples:
-
-- "Review PR #123 in myapp" → find/create session in `~/code/myapp`, send `/review pr 123`
-- "Fix the failing test in mylib" → create session in `~/code/mylib`, send the fix prompt
-- "Start work on 0DIN-1216" → create worktree sandbox, send `process` kickoff prompt
+- "Review PR #123 in myapp" → **worktree sandbox** in `~/code/myapp` on the PR branch, send review prompt
+- "Fix the failing test in mylib" → **worktree sandbox**, send the fix prompt
+- "What's the last deploy status in myapp?" → standard dispatch, no branch isolation needed
 
 ## Design principles
 
-- **Reuse over creation** — check for idle sessions first
+- **Worktree for anything branch-specific** — PRs, experiments, multi-session work on same repo
+- **Reuse over creation** — check for idle sessions first (standard dispatch only)
 - **Fire and forget** — the POST may timeout; the session is still working
 - **One task per session** — don't queue multiple prompts into a busy session
-- **Process skill for orchestration** — once a session is running, it loads `process` internally to manage plan → implement → verify → commit
+- **Never use `opencode run` for dispatch** — it bypasses the API, can't be reused, and runs synchronously in your shell

@@ -7,7 +7,7 @@ metadata:
   author: athal7
   version: "1.0"
   requires:
-    - pull-requests
+    - source-control
     - qa
 ---
 
