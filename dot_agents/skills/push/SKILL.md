@@ -64,6 +64,8 @@ After the draft PR is created/confirmed, watch CI to completion. Do not hand bac
 3. If all checks pass: report success with a markdown link to the PR, e.g. `[PR #123](https://github.com/org/repo/pull/123) is ready to merge.` — never just the bare number
 4. If any check fails:
    - `gh run view <run-id> --log-failed` to get failure output
-   - Fix the root cause, commit (using your `commit` capability), and push
+   - Fix the root cause
+   - **Run the full test suite locally** to verify the fix before pushing — do not push blind
+   - Commit (using your `commit` capability) and push
    - Return to step 1
 5. Keep iterating until CI is green. Do not give up after one fix attempt.
