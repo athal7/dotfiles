@@ -19,9 +19,9 @@ Fetch the diff based on input, then follow all instructions below.
 - **`staged`** (or **`pre-commit`**): `git diff --cached` only
 - **Commit hash**: `git show <hash>`
 - **Branch name**: `git diff <branch>...HEAD`
-- **PR URL/number**: `gh pr view`, `gh pr diff`
+- **Merge request URL/number**: use your `code-review` capability to fetch the diff and metadata
 
-**If reviewing a PR:** read `~/.agents/skills/review/pr-workflow.md` now — it covers PR checkout, review rules, submission policy, and prior review history. Follow all instructions there before proceeding.
+**If reviewing a merge request:** read `~/.agents/skills/review/pr-workflow.md` now — it covers checkout, review rules, submission policy, and prior review history. Follow all instructions there before proceeding.
 
 ---
 

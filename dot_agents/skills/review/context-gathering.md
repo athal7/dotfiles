@@ -3,10 +3,10 @@
 
 **Read `.opencode/context-log.md`** first for issue context and build history.
 
-**Extract issue IDs** from branch name or PR, then fetch details:
-1. `git branch --show-current` — parse for `ENG-123`, `PROJ-456`, `#123`, `gh-123`
-2. For PRs: check PR body and linked issues via `gh pr view --json body,title`
-3. Fetch: Linear → use your `search-issues` capability to query via `gq`, GitHub → `gh issue view`
+**Extract issue IDs** from branch name or merge request, then fetch details:
+1. Parse the current branch name for issue IDs (e.g. `ENG-123`, `PROJ-456`, `#123`)
+2. For merge requests: fetch body and linked issues via your `code-review` capability
+3. Fetch issue details via your `issues` capability
 4. **Fetch project context** — if the Linear issue belongs to a project, also fetch via your `search-issues` capability:
    - project metadata, goals, status
    - full project description with scope, non-goals, and design decisions

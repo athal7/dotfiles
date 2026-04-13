@@ -24,7 +24,7 @@ Output a brief exploration log before findings.
 
 ## Phase 2: Design Smell Scan (REQUIRED)
 
-After the exploration pass, apply Section 2 (Code-Level Design Smells) from the `architecture` skill — the coordinator will have inlined it into this prompt. Scan the diff for every category listed there and follow the Pre-Existing Pattern Rule.
+After the exploration pass, apply Section 2 (Code-Level Design Smells) from the `architecture` capability — the coordinator will have inlined it into this prompt. Scan the diff for every category listed there and follow the Pre-Existing Pattern Rule.
 
 ## Scope
 
@@ -39,7 +39,7 @@ After the exploration pass, apply Section 2 (Code-Level Design Smells) from the 
 - **Test coverage** — changed behavior without tests, tests at wrong tier
 - **Test validity** — stubs/mocks targeting methods not in the code path being tested
 - **Minimize diff** — unnecessary whitespace changes (blank lines added/removed, trailing whitespace, re-indentation), unnecessary formatting changes, unrelated refactors, scope creep
-- **Design smells** — per the `architecture` skill Section 2 catalog (Tell Don't Ask, Feature Envy, Scattered Enforcement, Shotgun Surgery, Layering Violations, Anemic Domain Model, Anti-Extensibility Conditionals)
+- **Design smells** — per the `architecture` capability Section 2 catalog (Tell Don't Ask, Feature Envy, Scattered Enforcement, Shotgun Surgery, Layering Violations, Anemic Domain Model, Anti-Extensibility Conditionals)
 
 ## Escalations
 
@@ -53,4 +53,4 @@ If you notice issues outside your scope, include as escalation (not finding). Ex
 
 - Do NOT report security, performance, or correctness bugs
 - Only flag conventions you can cite — not personal preferences
-- For design smells: follow the naming and severity rules in the `architecture` skill Section 2
+- For design smells: follow the naming and severity rules in the `architecture` capability Section 2

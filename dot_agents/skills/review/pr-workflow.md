@@ -1,44 +1,33 @@
 
-## PR Review Rules
+## Merge Request Review Rules
 
-**"Review this PR" means:** analyze and draft a written review — do NOT submit to GitHub or implement fixes unless explicitly asked.
+**"Review this merge request" means:** analyze and draft a written review — do NOT submit or implement fixes unless explicitly asked.
 
-**Conflict resolution on reviewed PRs:** When a PR has reviews and conflicts with the base branch, use `git merge` (not `git rebase`) to resolve them. Rebasing rewrites history and invalidates existing review comments.
+**Conflict resolution on reviewed merge requests:** When a merge request has reviews and conflicts with the base branch, use `git merge` (not `git rebase`) to resolve them. Rebasing rewrites history and invalidates existing review comments.
 
-**Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting to GitHub — then STOP and wait for explicit approval. Use your `post-inline-comments` capability when posting inline comments or responding to review feedback.
+**Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting — then STOP and wait for explicit approval. Use your `post-inline-comments` capability when posting inline comments or responding to review feedback.
 
-**Inline-first policy:** When submitting to GitHub, post findings as inline comments only — use your `post-inline-comments` capability. Do NOT post a top-level review body with verdict, TL;DR, summaries, or per-line findings. The verdict, TL;DR, Requirements Check, and all other summary sections are for the session output only — never submitted to GitHub. The only exception is a PR-wide observation that genuinely cannot be attributed to any line; in that case, one brief sentence in the body is acceptable.
-
----
-
-## PR Checkout
-
-**If reviewing a PR** (URL or number provided): check out the PR branch locally before doing anything else.
-
-```bash
-gh pr checkout <PR_NUMBER>
-```
-
-This ensures local files reflect the PR's code, enabling accurate diff panel display and local file reads. Save the original branch first so you can restore it if needed:
-
-```bash
-ORIGINAL_BRANCH=$(git branch --show-current)
-gh pr checkout <PR_NUMBER>
-# ... review ...
-git checkout $ORIGINAL_BRANCH  # restore when done
-```
-
-If `gh pr checkout` fails (e.g., the repo isn't local), fall back to `gh pr diff` for the diff and `gh pr view` for metadata.
+**Inline-first policy:** When submitting, post findings as inline comments only — use your `post-inline-comments` capability. Do NOT post a top-level review body with verdict, TL;DR, summaries, or per-line findings. The verdict, TL;DR, Requirements Check, and all other summary sections are for the session output only — never submitted. The only exception is a review-wide observation that genuinely cannot be attributed to any line; in that case, one brief sentence in the body is acceptable.
 
 ---
 
-## PR Prior Review History
+## Merge Request Checkout
 
-Fetch prior review history before dispatching specialists:
+**If reviewing a merge request** (URL or number provided): check out the branch locally before doing anything else using your `code-review` capability.
 
-1. `gh pr reviews <PR> --json author,state,submittedAt,body` — all submitted reviews with their verdict and top-level body
-2. `gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments` — all inline review comments; note `path`, `line`, `body`, `in_reply_to_id` (a non-null `in_reply_to_id` means it's a reply in a thread)
-3. Build a **prior review summary**: group inline comments by thread (using `in_reply_to_id`), identify the last message per thread, and mark threads as:
+This ensures local files reflect the code under review, enabling accurate diff panel display and local file reads. Save the original branch first so you can restore it after review.
+
+If the capability cannot check out the branch locally (e.g., the repo isn't available locally), fall back to fetching the diff and metadata via your `code-review` capability.
+
+---
+
+## Prior Review History
+
+Fetch prior review history before dispatching specialists using your `code-review` capability:
+
+1. All submitted reviews with their verdict and top-level body
+2. All inline review comments, including `path`, `line`, `body`, and reply thread relationships
+3. Build a **prior review summary**: group inline comments by thread, identify the last message per thread, and mark threads as:
    - **Resolved** — author replied acknowledging the fix, or the thread was explicitly resolved
    - **Awaiting reviewer** — author has replied (most recent message is from the PR author) but no reviewer response yet
    - **Unresolved** — no author reply, or last reply disagrees/defers

@@ -198,11 +198,11 @@ Present as a unified list, grouped by work item (not by tool), with the most act
 
 ### Starting work from here
 
-When you decide to act on a work item, use your `agent` capability to dispatch a session. **Do not use `opencode run` or any CLI directly** — go through the capability's API so that:
+When you decide to act on a work item, use your `agent` capability to dispatch a session — go through the capability's API so that:
 
-- PR reviews always get a worktree sandbox (isolated branch, no risk of clobbering the live repo)
+- Code reviews always get a worktree sandbox (isolated branch, no risk of clobbering the live repo)
 - Sessions are reused when idle rather than spawned fresh every time
-- The dispatch is visible in OpenCode Desktop / web UI
+- The dispatch is visible in the agent UI
 
 The `agent` capability's dispatch instructions specify exactly how to create worktrees and route sessions.
 

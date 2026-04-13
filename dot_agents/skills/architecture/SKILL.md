@@ -62,7 +62,7 @@ Prefer reversibility and simplicity when criteria conflict. Complexity must earn
 
 ## Research
 
-Use webfetch or context7 to look up patterns, prior art, or library docs relevant to the decision. Use your `issues` capability to query the project and understand history and prior decisions if relevant.
+Look up patterns, prior art, or library docs relevant to the decision using available research tools. Use your `issues` capability to query the project and understand history and prior decisions if relevant.
 
 ## Anti-Patterns to Call Out
 
