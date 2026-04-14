@@ -21,6 +21,22 @@ If the capability cannot check out the branch locally (e.g., the repo isn't avai
 
 ---
 
+## Server Startup
+
+**After checking out the branch**, auto-detect and start the dev server using your `pty` capability:
+
+1. Inspect the repo root for a dev server command in this priority order:
+   - `package.json` → `scripts.dev`, then `scripts.start`
+   - `Procfile` → the `web:` entry
+   - `Makefile` → a `dev`, `serve`, or `start` target
+   - `README.md` → look for a "Getting started" / "Running locally" code block
+2. If a command is found, spawn the server in the background via your `pty` capability. Wait up to 15 seconds for the server to be ready (look for a "listening on" / "ready" / port-bound log line).
+3. Record the session ID and the local URL (e.g. `http://localhost:3000`) for use in QA.
+4. If no command can be determined, note "Server auto-start skipped — could not detect dev server command" and continue with review (QA will be skipped).
+5. After the full review is complete and QA has run, kill the PTY session and restore the original branch.
+
+---
+
 ## Prior Review History
 
 Fetch prior review history before dispatching specialists using your `code-review` capability:

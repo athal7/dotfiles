@@ -153,11 +153,13 @@ After merging specialist findings, add these directly:
 
 1. **Missing acceptance criteria** — if no linked issue with acceptance criteria was found, add a suggestion: "No linked issue with acceptance criteria found — cannot fully verify feature completeness."
 
-2. **Runtime verification** — if the diff modifies views, templates, controllers, frontend code, or UI interactions, run QA automatically:
-   1. Ensure the code under review is checked out (PR: already done; branch: `git checkout $BRANCH_NAME`; staged/uncommitted: skip)
-    2. Use the `qa` capability — pass context about which flows changed
-   3. Restore original branch if needed: `git checkout $ORIGINAL_BRANCH`
-   4. If QA cannot run (no server, no browser available), note "QA skipped — no running app detected" instead
-   5. Include results under `## QA Results` in the output
+2. **Runtime verification**:
+   - **Merge request reviews**: always run QA — the server was started during checkout (see `pr-workflow.md`). If server auto-start was skipped, note "QA skipped — could not detect dev server command" instead.
+   - **Branch / staged / commit reviews**: run QA only if the diff modifies views, templates, controllers, frontend code, or UI interactions. Ensure the code is checked out, then start the server using the same auto-detect logic in `pr-workflow.md`. If no server can be detected or started, note "QA skipped — no running app detected" instead.
+
+   Steps:
+   1. Use the `qa` capability — pass context about which flows changed and the local URL from the background server session
+   2. Restore original branch if needed and kill the background server session
+   3. Include results under `## QA Results` in the output
 
 Read `~/.agents/skills/review/output-format.md` and format the final output.
