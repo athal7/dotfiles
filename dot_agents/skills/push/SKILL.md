@@ -25,17 +25,19 @@ metadata:
 
 The user says "push", "shipit", "ship it", "commit and push", or any clear push command.
 
-1. Show a summary of unpushed commits using your `branching` capability.
-2. Push immediately. The command is the approval.
+1. Run the full local test suite for the project. If tests fail, stop and report — do not push.
+2. Show a summary of unpushed commits using your `branching` capability.
+3. Push immediately. The command is the approval.
 
 ### Agent-initiated push
 
 You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
 
-1. Show a summary of unpushed commits using your `branching` capability.
-2. **End your response. Do not push.**
-3. Wait for the user's next message.
-4. Only push if the next message is an explicit confirmation: "yes", "approve", "go ahead", "lgtm", "do it".
+1. Run the full local test suite for the project. If tests fail, fix them first.
+2. Show a summary of unpushed commits using your `branching` capability.
+3. **End your response. Do not push.**
+4. Wait for the user's next message.
+5. Only push if the next message is an explicit confirmation: "yes", "approve", "go ahead", "lgtm", "do it".
 
 ## What Does NOT Count as Approval for Agent-initiated Push
 
