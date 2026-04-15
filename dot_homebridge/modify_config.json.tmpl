@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+# chezmoi modify script — merges desired config into existing ~/.homebridge/config.json
+# Reads current file from stdin, writes merged result to stdout.
+
+import json
+import subprocess
+import sys
+
+config = json.load(sys.stdin)
+
+# Resolve ffmpeg path: prefer ffmpeg-for-homebridge npm package, fall back to system ffmpeg
+def find_ffmpeg():
+    try:
+        result = subprocess.run(
+            ["node", "-e", "process.stdout.write(require('ffmpeg-for-homebridge') || '')"],
+            capture_output=True, text=True, timeout=5
+        )
+        path = result.stdout.strip()
+        if path:
+            return path
+    except Exception:
+        pass
+    return "/opt/homebrew/bin/ffmpeg"
+
+ffmpeg_path = find_ffmpeg()
+
+# Ensure platforms list exists
+config.setdefault("platforms", [])
+
+# Find or create the NestAccfactory platform entry
+nest = next((p for p in config["platforms"] if p.get("platform") == "NestAccfactory"), None)
+if nest is None:
+    nest = {"platform": "NestAccfactory", "google": {"issuetoken": "", "cookie": "", "fieldTest": False}}
+    config["platforms"].insert(0, nest)
+
+# Apply desired options (non-secret fields only)
+nest.setdefault("options", {})
+nest["options"]["eveHistory"] = True
+nest["options"]["ffmpegPath"] = ffmpeg_path
+
+# Ensure homebridge-config-ui-x is present
+config_ui = next((p for p in config["platforms"] if p.get("platform") == "config"), None)
+if config_ui is None:
+    config["platforms"].append({"name": "Config", "port": 8581, "platform": "config"})
+
+print(json.dumps(config, indent=2))

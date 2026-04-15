@@ -3,6 +3,7 @@
 # homebridge: {{ .packages.npm.homebridge_version }}
 # homebridge-config-ui-x: {{ .packages.npm.ui_version }}
 # homebridge-nest-accfactory: {{ .packages.npm.nest_plugin_version }}
+# ffmpeg-for-homebridge: {{ .packages.npm.ffmpeg_for_homebridge_version }}
 
 set -euo pipefail
 
@@ -20,7 +21,8 @@ echo "Using node: $NODE_BIN ($(node --version))"
 npm install -g \
   "homebridge@{{ .packages.npm.homebridge_version }}" \
   "homebridge-config-ui-x@{{ .packages.npm.ui_version }}" \
-  "homebridge-nest-accfactory@{{ .packages.npm.nest_plugin_version }}"
+  "homebridge-nest-accfactory@{{ .packages.npm.nest_plugin_version }}" \
+  "ffmpeg-for-homebridge@{{ .packages.npm.ffmpeg_for_homebridge_version }}"
 
 # Ensure the homebridge shim exists in mise's shims directory
 mise reshim

@@ -64,8 +64,6 @@ packages:
       description: Google Workspace CLI (gws) for Drive, Gmail, Calendar, Sheets, Docs, Chat
     - name: steipete/tap/remindctl
       description: Apple Reminders CLI — headless read/write without TCC issues
-    - name: silverstein/tap/minutes
-      description: Meeting recorder CLI (record, search, import, transcription)
     - name: schpet/tap/linear
       description: Linear CLI — list, query, create, and update issues from the command line (agent-friendly, LINEAR_API_KEY auth)
     - name: pnpm
@@ -120,11 +118,21 @@ packages:
       refresh_period: 168h
       description: iCal CLI for managing calendars (EventKit-based, supports writes)
 
+    - name: minutes
+      repo: silverstein/minutes
+      target: .local/bin/minutes
+      asset: minutes-macos-arm64
+      type: file
+      executable: true
+      refresh_period: 24h
+      description: Meeting recorder CLI (record, search, import, transcription)
+
   # npm-managed global packages
   npm:
     homebridge_version: "1.11.4"
     ui_version: "5.21.0"
     nest_plugin_version: "0.3.9"
+    ffmpeg_for_homebridge_version: "2.2.2"
 
   # mise-managed runtimes and tools
   mise:
