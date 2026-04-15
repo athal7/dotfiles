@@ -1,0 +1,16 @@
+#!/bin/bash
+# Download minutes speech and diarization models (re-runs when minutes version changes)
+# minutes: {{ output "brew" "list" "--versions" "silverstein/tap/minutes" | trim }}
+
+set -euo pipefail
+
+{{ template "brewenv" . }}
+
+if ! command -v minutes &>/dev/null; then
+  echo "minutes not found — skipping model setup" >&2
+  exit 0
+fi
+
+minutes setup --diarization
+
+echo "minutes models ready."
