@@ -9,7 +9,7 @@ After all specialists and follow-up agents return:
 
    | Claim type | How to disprove |
    |---|---|
-   | "Unused variable/function" | `rg` for all usages including dynamic calls, string interpolation, metaprogramming; discard only if zero real usages found |
+   | "Unused variable/function" | Search for all usages including dynamic calls, string interpolation, metaprogramming; discard only if zero real usages found |
    | "Missing null check" | Read the full call chain upstream — is there a guard, `presence` validation, or DB constraint that guarantees non-null? Discard only if protection is confirmed |
    | "N+1 query" | Check `default_scope`, `after_find`, controller `includes`, and any concern that wraps the association; discard only if eager loading is confirmed for this access path |
    | "Unsanitized input" | Trace the full input path — does a framework layer (Rack, Rails strong params, ORM) sanitize it before use? Discard only if sanitization is confirmed end-to-end |

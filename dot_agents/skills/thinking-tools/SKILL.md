@@ -5,6 +5,8 @@ license: MIT
 metadata:
   author: athal7
   version: "1.0"
+  provides:
+    - thinking
 ---
 
 # Thinking Tools

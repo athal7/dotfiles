@@ -18,7 +18,11 @@ Run these steps automatically — do not ask the user before starting:
 1. **Stage all changes**: `git add -A`
 2. **Check for globally-ignored files**: `git check-ignore <files>` — do NOT stage files in `~/.config/git/ignore`. Key examples: `.talismanrc`, `.opencode/context-log.md`.
 3. **Run the full test suite** — unit, integration, e2e, and system tests. Do not commit with failing tests.
-4. **Commit** — create the commit immediately. Do not ask for approval. (Pushing is where approval happens.)
+4. **Add AI attribution** — append a `Co-Authored-By` trailer to the commit message identifying the specific model used in this session. Use the model ID from your session context (e.g. `anthropic/claude-sonnet-4-6`):
+   ```
+   Co-Authored-By: anthropic/claude-sonnet-4-6 <noreply@opencode.ai>
+   ```
+5. **Commit** — create the commit immediately. Do not ask for approval. (Pushing is where approval happens.)
 
 ## Format
 
@@ -73,20 +77,17 @@ chore(deps): bump lodash to 4.17.21
 
 ## Branch Names
 
-**Before pushing**, check if the branch name is meaningful. Auto-generated worktree branches (e.g., `opencode/cosmic-wizard`) should be renamed to reflect the change:
-```bash
-[[ "$(git branch --show-current)" =~ ^opencode/ ]] && git branch -m "$(git branch --show-current)" <new-name>
-```
+**Before pushing**, check if the branch name is meaningful. Auto-generated worktree branches (e.g., `opencode/cosmic-wizard`) should be renamed to reflect the change. Use your `branching` capability to rename if needed.
 
 **Naming convention**: `<type>/<short-description>` — type matches the commit type, description is 2-4 kebab-case words (e.g., `feat/add-auth-middleware`, `fix/token-refresh-race`).
 
-## PR Descriptions
+## Merge Request Descriptions
 
-Keep minimal—no headers, just the essentials:
+Keep minimal — no headers, just the essentials:
 - 1-2 sentence summary of the change
 - Only add detail if something is non-obvious
-- Link to the issue when the issue tracker is visible to the repo's audience (e.g., `Closes #123` for GitHub issues, `Closes PROJ-123` for private repos)
-- **Never reference internal/private issue keys** (e.g., Linear) in public repos
+- Link to the issue when the issue tracker is visible to the repo's audience (e.g., `Closes #123`)
+- **Never reference internal/private issue keys** in public repos
 
 Example:
 ```

@@ -68,6 +68,8 @@ packages:
       description: Meeting recorder CLI (record, search, import, transcription)
     - name: schpet/tap/linear
       description: Linear CLI — list, query, create, and update issues from the command line (agent-friendly, LINEAR_API_KEY auth)
+    - name: pnpm
+      description: Fast, disk-efficient Node.js package manager
 
   casks:
     - name: gcloud-cli

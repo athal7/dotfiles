@@ -39,18 +39,18 @@
 - **Always include a `suggestion` code block** with the concrete fix, unless the fix requires architectural changes that can't be expressed as a snippet
 - Use "I" statements, frame as questions not directives
 - Pre-existing Issues never influence the verdict — they are informational only
-- **When submitting to GitHub:** inline comments only — no top-level body. Verdict, TL;DR, Requirements Check, and all summaries stay in the session; never submit them to GitHub.
+- **When submitting:** inline comments only — no top-level body. Verdict, TL;DR, Requirements Check, and all summaries stay in the session; never submit them to the code review platform.
 
 ---
 
-**For PRs, extend the session output as follows:**
+**For merge requests, extend the session output as follows:**
 
 ```markdown
-[PR URL as clickable link]
+[Merge request URL as clickable link]
 
 ## TL;DR
 
-[One sentence summary of what this PR does]
+[One sentence summary of what this merge request does]
 
 ## Verdict: [APPROVE | CHANGES REQUESTED | COMMENT]
 
@@ -74,7 +74,7 @@
 
 ## Pre-existing Issues
 
-> These bugs exist in the codebase but were not introduced by this PR. They do not affect the verdict.
+> These bugs exist in the codebase but were not introduced by this merge request. They do not affect the verdict.
 
 - **file.rb:55** - [issue title]. [1 sentence explanation]
 ```

@@ -3,7 +3,7 @@
 
 **"Review this merge request" means:** analyze and draft a written review — do NOT submit or implement fixes unless explicitly asked.
 
-**Conflict resolution on reviewed merge requests:** When a merge request has reviews and conflicts with the base branch, use `git merge` (not `git rebase`) to resolve them. Rebasing rewrites history and invalidates existing review comments.
+**Conflict resolution on reviewed merge requests:** When a merge request has reviews and conflicts with the base branch, use merge (not rebase) to resolve them. Rebasing rewrites history and invalidates existing review comments.
 
 **Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting — then STOP and wait for explicit approval. Use your `post-inline-comments` capability when posting inline comments or responding to review feedback.
 
@@ -23,17 +23,17 @@ If the capability cannot check out the branch locally (e.g., the repo isn't avai
 
 ## Server Startup
 
-**After checking out the branch**, auto-detect and start the dev server using your `pty` capability:
+**After checking out the branch**, auto-detect and start the dev server using your `shell` capability:
 
 1. Inspect the repo root for a dev server command in this priority order:
    - `package.json` → `scripts.dev`, then `scripts.start`
    - `Procfile` → the `web:` entry
    - `Makefile` → a `dev`, `serve`, or `start` target
    - `README.md` → look for a "Getting started" / "Running locally" code block
-2. If a command is found, spawn the server in the background via your `pty` capability. Wait up to 15 seconds for the server to be ready (look for a "listening on" / "ready" / port-bound log line).
+2. If a command is found, spawn the server in the background via your `shell` capability. Wait up to 15 seconds for the server to be ready (look for a "listening on" / "ready" / port-bound log line).
 3. Record the session ID and the local URL (e.g. `http://localhost:3000`) for use in QA.
 4. If no command can be determined, note "Server auto-start skipped — could not detect dev server command" and continue with review (QA will be skipped).
-5. After the full review is complete and QA has run, kill the PTY session and restore the original branch.
+5. After the full review is complete and QA has run, kill the background session and restore the original branch.
 
 ---
 
@@ -44,8 +44,8 @@ Fetch prior review history before dispatching specialists using your `code-revie
 1. All submitted reviews with their verdict and top-level body
 2. All inline review comments, including `path`, `line`, `body`, and reply thread relationships
 3. Build a **prior review summary**: group inline comments by thread, identify the last message per thread, and mark threads as:
-   - **Resolved** — author replied acknowledging the fix, or the thread was explicitly resolved
-   - **Awaiting reviewer** — author has replied (most recent message is from the PR author) but no reviewer response yet
+    - **Resolved** — author replied acknowledging the fix, or the thread was explicitly resolved
+   - **Awaiting reviewer** — author has replied (most recent message is from the merge request author) but no reviewer response yet
    - **Unresolved** — no author reply, or last reply disagrees/defers
 4. Attach the full prior review summary to the payload for all sub-agents.
 

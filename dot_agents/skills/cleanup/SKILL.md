@@ -6,8 +6,8 @@ compatibility: opencode
 metadata:
   author: athal7
   version: "1.0"
-  requires:
-    - agent
+  provides:
+    - cleanup
 ---
 
 Clean up stale workspaces, PostgreSQL databases, and Docker resources to reclaim disk space.

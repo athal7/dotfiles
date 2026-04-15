@@ -25,14 +25,14 @@ metadata:
 
 The user says "push", "shipit", "ship it", "commit and push", or any clear push command.
 
-1. Run `git log origin/<branch>..HEAD --oneline` and show the summary.
+1. Show a summary of unpushed commits using your `branching` capability.
 2. Push immediately. The command is the approval.
 
 ### Agent-initiated push
 
 You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
 
-1. Run `git log origin/<branch>..HEAD --oneline` and show the summary.
+1. Show a summary of unpushed commits using your `branching` capability.
 2. **End your response. Do not push.**
 3. Wait for the user's next message.
 4. Only push if the next message is an explicit confirmation: "yes", "approve", "go ahead", "lgtm", "do it".
@@ -42,18 +42,18 @@ You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
 - "keep going" or other general continuation
 - Any approval from earlier in the conversation
 
-## After Push — Create/Update Draft PR
+## After Push — Create/Update Draft Merge Request
 
 After every successful push, automatically create or update a draft merge request using your `code-review` capability.
 
-1. Check if a PR already exists for this branch
-2. If no PR exists: create a draft PR using commits from the branch to populate title/body
-3. If a PR already exists (any state):
-   - Compare the current branch commits against the PR's existing title/body
-   - If there is a material change (new feature scope, different fix, renamed component, changed API, etc.), update the PR title/body
+1. Check if a merge request already exists for this branch
+2. If none exists: create a draft merge request using commits from the branch to populate title/body
+3. If one already exists (any state):
+   - Compare the current branch commits against the existing title/body
+   - If there is a material change (new feature scope, different fix, renamed component, changed API, etc.), update the title/body
    - Minor additions (tests, docs, formatting) do not warrant an update
-   - Do not update the PR state (draft → ready or vice versa)
-4. Once PR is created/confirmed, proceed to CI watching
+   - Do not update the state (draft → ready or vice versa)
+4. Once created/confirmed, proceed to CI watching
 
 ## After Draft PR — Watch CI
 
