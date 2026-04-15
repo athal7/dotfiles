@@ -39,6 +39,16 @@ Explicit mappings (overrides and CLI providers that can't be auto-discovered):
 
 **Keep AGENTS.md lean.** Resist adding DO/DO NOT lists here. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
 
+## TDD
+
+**Every code change follows the full red/green/refactor loop. No exceptions.**
+
+1. **Red** — write a failing test first, run it, confirm it fails with a meaningful error
+2. **Green** — write the minimum implementation to make it pass, run and confirm green
+3. **Refactor** — clean up structure and naming while keeping tests green
+
+Never write implementation before a test exists. Never skip the red phase. If in doubt, load the `tdd` skill for the full protocol.
+
 ## Feedback Sensors
 
 When working in a project codebase, run linters and tests in-session as backpressure — not only as a pre-commit gate. Concretely:
