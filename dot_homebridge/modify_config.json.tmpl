@@ -11,13 +11,19 @@ config = json.load(sys.stdin)
 # Resolve ffmpeg path: prefer ffmpeg-for-homebridge npm package, fall back to system ffmpeg
 def find_ffmpeg():
     try:
-        result = subprocess.run(
-            ["node", "-e", "process.stdout.write(require('ffmpeg-for-homebridge') || '')"],
+        # npm root -g gives the global node_modules path; use it to find the package
+        npm_root = subprocess.run(
+            ["npm", "root", "-g"],
             capture_output=True, text=True, timeout=5
-        )
-        path = result.stdout.strip()
-        if path:
-            return path
+        ).stdout.strip()
+        if npm_root:
+            result = subprocess.run(
+                ["node", "-e", f"process.stdout.write(require('{npm_root}/ffmpeg-for-homebridge') || '')"],
+                capture_output=True, text=True, timeout=5
+            )
+            path = result.stdout.strip()
+            if path:
+                return path
     except Exception:
         pass
     return "/opt/homebrew/bin/ffmpeg"
