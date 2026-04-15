@@ -22,6 +22,7 @@ if [ -z "$SESSION_ID" ]; then
 fi
 
 # Fire and forget — session keeps running server-side after curl exits
+# Send the full task so the agent runs cleanup automatically without user approval.
 curl -s --max-time 10 -X POST "$API/session/$SESSION_ID/message?directory=$DIR" \
   -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "load the post-meeting skill"}]}' || true
+  -d '{"parts": [{"type": "text", "text": "Load the post-meeting skill and run post-meeting cleanup on the most recent meeting. Do not ask for confirmation — run all steps automatically and report results when done."}]}' || true
