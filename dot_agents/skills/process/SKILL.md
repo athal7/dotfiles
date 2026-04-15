@@ -39,8 +39,9 @@ Set up todos immediately:
 [ ] Phase 3: User approval → implement
 [ ] Phase 4: Implement (via task tool)
 [ ] Phase 5: Verify
-[ ] Phase 6: User approval → commit
-[ ] Phase 7: Commit
+[ ] Phase 6: Learn
+[ ] Phase 7: User approval → commit
+[ ] Phase 8: Commit
 ```
 
 ---
@@ -117,15 +118,23 @@ Fix all issues before proceeding. Do not surface findings to the user — resolv
 
 ---
 
-## Phase 6: User Approval → Commit
+## Phase 6: Learn
 
-Present a summary of what was implemented, confirming tests, review, and QA are all clean. STOP and wait for explicit approval before committing.
+Follow the instructions in `learn.md` (bundled with this skill). Capture any non-obvious discoveries, hidden dependencies, or workarounds from this session.
+
+**Gate:** Learning capture complete.
+
+---
+
+## Phase 7: User Approval → Commit
+
+Present a summary of what was implemented, confirming tests, review, QA, and learn are all complete. STOP and wait for explicit approval before committing.
 
 **Gate:** Wait for a clear "yes", "approved", "lgtm", or equivalent.
 
 ---
 
-## Phase 7: Commit
+## Phase 8: Commit
 
 Use your `commit` capability. It handles stage → test → commit automatically.
 
@@ -137,4 +146,4 @@ After committing, use your `push` capability for the push approval flow and CI w
 
 Skip Phases 1-3 for painfully simple tasks: typo fixes, single-line config changes, trivial one-file edits with no logic involved.
 
-Even for simple tasks: always use Phases 6-7 (user approval + commit capability).
+Even for simple tasks: always use Phases 7-8 (user approval + commit capability).
