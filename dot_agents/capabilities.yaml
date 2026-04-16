@@ -21,12 +21,6 @@ reminders:
     timezones. Pass a full ISO datetime instead (e.g. 2026-04-26T05:00:00 for CT midnight).
     `show upcoming` excludes undated items — use `show all` and filter by dueDate == null.
 
-docs:
-  provider: cli://gws
-  notes: >-
-    To read a doc's content, export via `gws drive files export --params '{"fileId":"ID","mimeType":"text/plain"}' -o /tmp/doc.txt` —
-    `gws docs documents get` returns raw structural JSON, not readable text.
-    To find a doc by name, search via `gws drive files list` — the Docs API has no search.
-
+# docs provided by docs skill (auto-discovered via provides: [docs])
 # code-review provided by gh skill (auto-discovered) — notes live in the skill
 # email provided by gws skill (auto-discovered)
