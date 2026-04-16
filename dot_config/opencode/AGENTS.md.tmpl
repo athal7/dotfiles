@@ -29,11 +29,13 @@ Explicit mappings (overrides and CLI providers that can't be auto-discovered):
 
 ## Development Workflow
 
-**Load the `process` skill** at the start of any non-trivial implementation task.
+**Plan before implementing.** For any change spanning multiple files or involving design decisions, load the `plan` skill and follow it. Present the plan and wait for approval before writing code.
 
-**Branch discipline:** Always create a new branch off `origin/main` before any code change. Never implement directly on `main`.
+**Branch discipline:** Always create a new branch off `origin/main` before any code change. Never implement directly on `main`. If the target branch is already checked out in another worktree, remove that worktree first (`git worktree remove <path> --force`), then check out the branch in the current worktree.
 
 **Issue discipline:** When picking up a tracked issue, set it to In Progress and assign it to the user before writing any code.
+
+**Scope discipline:** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features.
 
 **Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval.
 

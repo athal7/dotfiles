@@ -1,17 +1,25 @@
-# Context Log
-
-Maintain `.opencode/context-log.md` for session continuity — update at session start, after each commit, and on compaction so context survives history summarization and handoffs.
+---
+name: context-log
+description: Maintain a session context log for continuity across compaction and handoffs in long implementation sessions
+license: MIT
+compatibility: opencode
+metadata:
+  author: athal7
+  version: "1.0"
+  provides:
+    - context-log
+---
 
 ## Purpose
 
-The context log preserves incremental context across:
-- Long sessions (Review/QA need to understand what changed)
+Preserve incremental context across:
+- Long sessions (review/QA need to understand what changed)
 - Compaction (history gets summarized, log persists)
 - Handoffs (another agent can pick up where you left off)
 
 ## Location
 
-`.opencode/context-log.md` in project root (created if missing)
+`.opencode/context-log.md` in project root (created if missing).
 
 ## When to Update
 
@@ -44,15 +52,6 @@ The context log preserves incremental context across:
 - **Intent**: What this commit accomplishes
 - **Tests**: green/red, which ones
 - **Next**: What to do next
-```
-
-## Example Checkpoint
-
-```markdown
-### 2024-01-15 14:30 abc1234
-- **Intent**: Add token generation and email service
-- **Tests**: green (token_test.rb), red (rate_limit_test.rb - not implemented yet)
-- **Next**: Implement rate limiting middleware
 ```
 
 ## On Compaction

@@ -21,7 +21,7 @@ Capabilities backed by a CLI (`cli://`) don't have a skill — the agent reads `
 | | **learn** — Extract non-obvious learnings into AGENTS.md or new skills |
 | | **observability** — Investigate production issues using logs and traces |
 | | **pr-stack** — Manage stacked/dependent PRs with git-spice |
-| | **process** — Enforced plan → review → implement → verify → commit workflow |
+| | **plan** — Present a plan and wait for approval before implementing |
 | | **pty** — PTY sessions for long-running or interactive processes |
 | | **push** — Push approval protocol and CI watching |
 | | **qa** — Browser QA verification via Firefox DevTools |

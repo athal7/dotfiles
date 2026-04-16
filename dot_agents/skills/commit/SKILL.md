@@ -22,7 +22,7 @@ Run these steps automatically — do not ask the user before starting:
    ```
    Co-Authored-By: anthropic/claude-sonnet-4-6 <noreply@opencode.ai>
    ```
-5. **Commit** — create the commit immediately. Do not ask for approval. (Pushing is where approval happens.)
+5. **Commit** — create the commit with the formatted message
 
 ## Format
 
