@@ -5,7 +5,11 @@
 # (and explicit overrides) need to be listed here.
 # Override per-workspace by placing a capabilities.yaml in .agents/ or the workspace root.
 
-issues: cli://linear
+issues:
+  provider: cli://linear
+  notes: >-
+    Uses keyring auth via `linear auth login`. Team set per-project via .linear.toml
+    or --team flag.
 meetings: cli://minutes
 
 calendar:
