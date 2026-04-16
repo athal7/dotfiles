@@ -7,75 +7,42 @@ packages:
 
   brews:
     - name: autojump
-      description: Directory jump based on frecency
     - name: bat
-      description: Better cat with syntax highlighting
     - name: chezmoi
-      description: Dotfiles manager
     - name: colima
-      description: Docker runtime for macOS
     - name: direnv
-      description: Per-directory environment variables
     - name: docker
-      description: Container runtime
     - name: docker-compose
-      description: Multi-container Docker applications
     - name: ffmpeg
-      description: Video/audio processing
     - name: gh
-      description: GitHub CLI for issues, PRs, repos
     - name: git-spice
-      description: Manage stacked Git branches
     - name: jc
-      description: Convert CLI output to JSON (e.g., `ls -l | jc --ls`)
     - name: jq
-      description: JSON processing and querying
     - name: graphqurl
-      description: GraphQL CLI — query any GraphQL API with variables support (gq)
     - name: k9s
-      description: Terminal UI for Kubernetes clusters
     - name: kubernetes-cli
-      description: Kubernetes CLI (kubectl)
     - name: mas
-      description: Mac App Store CLI
     - name: mise
-      description: Polyglot version manager (ruby, node, python, rust, etc.)
     - name: neovim
-      description: Modern Vim-based editor
     - name: ollama
-      description: Local LLM runtime
     - name: openssl
-      description: TLS/SSL cryptography library
     - name: opentofu
-      description: Terraform-compatible infrastructure as code
     - name: ripgrep
-      description: Fast recursive grep (rg) - required by OpenCode
     - name: starship
-      description: Cross-shell prompt
     - name: talisman
-      description: Git secrets scanner (pre-commit hook)
     - name: wakatime-cli
-      description: Time tracking for developers
     - name: watch
-      description: Run commands periodically
     - name: worktrunk
-      description: Git worktree switcher (wt switch, wt list)
     - name: googleworkspace-cli
-      description: Google Workspace CLI (gws) for Drive, Gmail, Calendar, Sheets, Docs, Chat
     - name: steipete/tap/remindctl
-      description: Apple Reminders CLI — headless read/write without TCC issues
     - name: schpet/tap/linear
-      description: Linear CLI — list, query, create, and update issues from the command line (agent-friendly, LINEAR_API_KEY auth)
     - name: pnpm
-      description: Fast, disk-efficient Node.js package manager
 
   casks:
     - name: gcloud-cli
-      description: Google Cloud CLI (gcloud, gsutil, bq)
     - name: font-monaspace
     - name: ghostty
     - name: claude-code
-      description: Claude Code CLI for AI-powered coding and summarization
     - name: silverstein/tap/minutes
     - name: stats
     - name: tailscale-app
@@ -90,7 +57,6 @@ packages:
       path: opencode
       executable: true
       refresh_period: 24h
-      description: AI coding assistant CLI
 
     - name: opencode-desktop
       repo: sst/opencode
@@ -116,7 +82,6 @@ packages:
       path: ical
       executable: true
       refresh_period: 168h
-      description: iCal CLI for managing calendars (EventKit-based, supports writes)
 
     - name: minutes
       repo: silverstein/minutes
@@ -125,7 +90,6 @@ packages:
       type: file
       executable: true
       refresh_period: 24h
-      description: Meeting recorder CLI (record, search, import, transcription)
 
   # npm-managed global packages
   npm:
@@ -146,28 +110,19 @@ packages:
       version: stable
     - name: ruff
       version: latest
-      description: Python linter and formatter
     - name: uv
       version: latest
-      description: Fast Python package installer and resolver
     - name: pre-commit
       version: latest
-      description: Git hook manager
     - name: terraform
       version: latest
-      description: Infrastructure as code
     - name: helm
       version: latest
-      description: Kubernetes package manager
     - name: argocd
       version: latest
-      description: ArgoCD CLI for GitOps deployments
     - name: pipx:check-jsonschema
       version: latest
-      description: JSON Schema validation CLI
     - name: pipx:grip
       version: latest
-      description: GitHub-flavored markdown preview in browser
     - name: pipx:skills-ref
       version: latest
-      description: "Agent Skills linter — validates SKILL.md frontmatter (binary: agentskills)"
