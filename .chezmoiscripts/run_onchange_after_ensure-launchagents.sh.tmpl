@@ -1,40 +1,21 @@
 #!/bin/sh
-# Ensure LaunchAgents are loaded (runs when plist files change)
-# Hashes for change detection (reload on plist change):
+# Bootstrap any managed LaunchAgents that aren't loaded yet.
+# Runs when plist files change. Does not force-restart running agents —
+# launchd will pick up plist changes on its own, and check-error-logs watches for failures.
+# Hashes for change detection:
 {{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
-# {{ . | include | sha256sum }}
+# {{ base . | trimSuffix ".tmpl" }}: {{ . | include | sha256sum }}
 {{- end }}
-
-MANAGED_PLISTS="
-{{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
-{{ base . | trimSuffix ".tmpl" }}
-{{- end }}
-"
 
 uid=$(id -u)
 
-for name in $MANAGED_PLISTS; do
-  plist="{{ .chezmoi.homeDir }}/Library/LaunchAgents/$name"
-  [ -f "$plist" ] || continue
-  label=$(defaults read "$plist" Label 2>/dev/null) || continue
-
-  # Check if already loaded
-  if launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
-    # Already loaded — reload with kickstart (avoids bootout leaving agent unloaded on failure)
-    launchctl kickstart -k "gui/$uid/$label" 2>/dev/null && echo "Restarted $label" || true
-    continue
+{{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
+{{ $name := base . | trimSuffix ".tmpl" -}}
+plist="{{ $.chezmoi.homeDir }}/Library/LaunchAgents/{{ $name }}"
+if [ -f "$plist" ]; then
+  label=$(defaults read "$plist" Label 2>/dev/null)
+  if [ -n "$label" ] && ! launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
+    launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null && echo "Loaded $label" || echo "WARNING: failed to load $label"
   fi
-
-  # Not loaded — bootstrap it
-  if launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null; then
-    echo "Loaded $label"
-  else
-    # bootstrap failed; try legacy load as fallback
-    launchctl load "$plist" 2>/dev/null && echo "Loaded $label (fallback)" || echo "WARNING: failed to load $label"
-  fi
-
-  # Verify it came up
-  if ! launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
-    echo "WARNING: $label still not running after load attempt"
-  fi
-done
+fi
+{{- end }}

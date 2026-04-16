@@ -1,6 +1,6 @@
 #!/bin/bash
 # Download minutes speech and diarization models (re-runs when minutes version changes)
-# minutes: {{ output "brew" "list" "--versions" "silverstein/tap/minutes" | trim }}
+# minutes: {{ output "sh" "-c" "minutes --version 2>/dev/null || echo unknown" | trim }}
 
 set -euo pipefail
 
