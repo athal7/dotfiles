@@ -8,7 +8,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io). Covers shell, editor, AI
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 ```
 
-You'll be prompted for secrets and machine-specific values during init. See [chezmoi's password manager docs](https://www.chezmoi.io/user-guide/password-managers/) for how to integrate with your preferred secret store.
+You'll be prompted for a few required values (name, email, code directory, GitHub token, calendar names). Optional integrations — Slack, Figma, Elasticsearch, Linear, ICS feeds, etc. — can be added by editing `~/.config/chezmoi/chezmoi.toml` after init. See the commented sections in [`.chezmoi.toml.tmpl`](.chezmoi.toml.tmpl) for the full list.
 
 ## What's configured
 
@@ -88,9 +88,9 @@ to resolve each capability. If the value is a skill name, load that skill. If it
 activate that tool. If a capability has no mapping, ask the user which provider to use.
 ```
 
-#### Leverage chezmoidata to maintain skills
+#### Leverage chezmoidata to manage multiple skills
 
-To make managing the skills simpler, add this template to your `.chezmoiexternal.toml.tmpl`:
+If you want to install many skills from the same repo without repeating the archive entry for each, you can drive the external config from chezmoi data. Add this to your `.chezmoiexternal.toml.tmpl`:
 
 ```gotmpl
 {{ range $url, $data := .agentSkills }}
@@ -107,7 +107,7 @@ To make managing the skills simpler, add this template to your `.chezmoiexternal
 {{ end }}
 ```
 
-Now, be sure you have an `agentSkill` key somewhere in you `.chezmoidata`:
+Then declare the skills you want in your `.chezmoidata/skills.yaml` (or any chezmoidata file). The full list of available skills is in [`dot_agents/skills/`](dot_agents/skills/):
 
 ```yaml
 agentSkills:
@@ -117,9 +117,15 @@ agentSkills:
     skills:
       - attention
       - commit
+      - context-log
       - gh
+      - git-spice
       - google-docs
+      - learn
+      - plan
+      - review
       - slack
+      - tdd
+      - thinking-tools
+      - writing
 ```
-
-This gives you the capability to leverage several of these skills with limited duplication.

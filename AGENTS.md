@@ -4,7 +4,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 **After every commit in this repo: run `chezmoi apply`.** Changes are not live until applied — deployed files under `~/.agents/`, `~/.config/`, etc. will be out of sync otherwise. Do this before handing back to the user.
 
-**`chezmoi apply` restarts the opencode server** — any file deployed into `~/.agents/` or `~/.config/opencode/` triggers a restart, which kills the current session. Always use the PTY approach: load the `chezmoi` skill and follow the safe apply workflow so the session survives the restart.
+**`chezmoi apply` may restart the opencode server** if LaunchAgent plists change. Skills, capabilities, and AGENTS.md do not trigger a restart — opencode reads those fresh per-session. When in doubt, use the PTY approach: load the `chezmoi` skill and follow the safe apply workflow.
 
 ## Structure
 
@@ -14,17 +14,13 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 - **`Library/LaunchAgents/`** — macOS services (opencode web on port 4096)
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
-- **`.chezmoiscripts/`** — run on apply: brew bundle, launchagent reload, opencode restart
+- **`.chezmoiscripts/`** — run on apply: brew bundle, launchagent bootstrap
 
 ## Packages
 
 All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`, `mise`, or `github_releases`. The install scripts and external file are generated from it — edit only the registry.
 
-**`description` is the opt-in signal for agent visibility.** Only entries with a `description` field are rendered into `AGENTS.md` (the agent's tool list). Add a description when the tool is agent-invokable from the CLI. Omit it for GUI apps, fonts, menu bar tools, and language runtimes that the agent doesn't call directly.
-
 ## OpenCode Config
-
-`opencode.json` is validated against its schema before the web service restarts. If apply succeeds but the server doesn't come back, check the error log and fix the JSON before re-applying.
 
 MCPs, plugins, and permissions are all in `opencode.json`. Skills live in `dot_agents/skills/` — edit here, not in `~/.agents/skills/`.
 
@@ -49,3 +45,5 @@ Keep `README.md` up to date when making structural changes: adding or removing s
 - **`.app` bundles via `chezmoiexternal`** — use `type = "archive"` with target `"Applications/<AppName>.app"` (unique TOML key per app) and `stripComponents = 1` to strip the archive's root directory. The zip contains e.g. `NayaFlow-Beta.app/Contents/...` — without `stripComponents = 1` the app ends up double-nested. TOML does not allow duplicate keys, so each app needs its own unique target path.
 
 - **LaunchAgent binary path changes** — after moving a binary (e.g., brew → `~/.local/bin`), `launchctl bootout` + `bootstrap` is required to pick up the new plist; `kickstart` alone is not sufficient if the service is crash-looping.
+
+- **Updating a plist** — `chezmoi apply` only bootstraps agents that aren't loaded. To pick up plist changes on a running agent: `launchctl kickstart -k gui/$(id -u)/<label>`
