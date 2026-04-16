@@ -30,7 +30,7 @@ Run all of these before forming any view:
 
 - Use your `agent` capability to fetch today's OpenCode sessions. Retrieve per-session breakdown (user messages = active engagement, duration) and summary totals including peak concurrent sessions. Filter out subagent noise (worktree paths + "@... subagent" titles). The SQL files `sessions-today.sql`, `sessions-summary.sql`, and `sessions-concurrent.sql` in the skill directory can be passed to the capability. Strip `$CODE_DIR/` prefix from the `repo` column for readability.
 
-- Use your `calendar` capability to get today's events across all configured calendars. Also output the current day of week and time.
+- Use your `calendar` capability to get today's events. Query **only the calendars configured in chezmoi data** — run `chezmoi data` and read all keys under `.calendars` to get the list of calendar names. Run a separate query per calendar name and combine the results. Do not pull from other calendars. Also output the current day of week and time.
 
 - Use your `reminders` capability to fetch:
   - Overdue items
