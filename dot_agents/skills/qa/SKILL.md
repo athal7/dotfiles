@@ -21,12 +21,9 @@ Perform QA verification using Firefox DevTools browser automation.
 
 ## Verification
 
-1. **Happy path first**: Verify the main flow works
-2. **Edge cases**: Empty states, errors, boundaries
-3. **Visual check**: Screenshot key states
-4. **Accessibility**: Tab navigation, focus states
-
 Use firefox-devtools MCP tools. Check project AGENTS.md for selectors/credentials.
+
+Verify the main flow, then edge cases (empty states, errors, boundaries). Screenshot key states. Check tab navigation and focus for accessibility.
 
 ## Resilience
 

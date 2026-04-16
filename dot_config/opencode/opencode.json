@@ -36,6 +36,9 @@
         },
         "glm-5.1:cloud": {
           "name": "glm-5.1:cloud"
+        },
+        "qwen3:30b": {
+          "name": "qwen3:30b"
         }
       }
     }

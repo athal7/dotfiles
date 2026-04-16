@@ -1,6 +1,6 @@
 ---
 name: context-log
-description: Maintain a session context log for continuity across compaction and handoffs in long implementation sessions
+description: Create and update .opencode/context-log.md to preserve issue context and checkpoint history across compaction and session handoffs
 license: MIT
 compatibility: opencode
 metadata:

@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Present a plan and wait for user approval before implementing non-trivial changes
+description: Present a plan and wait for user approval before implementing — load when a change spans multiple files or involves design decisions
 license: MIT
 compatibility: opencode
 metadata:

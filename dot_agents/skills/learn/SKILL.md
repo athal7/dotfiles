@@ -59,12 +59,27 @@ If the knowledge is needed every session regardless of task, use AGENTS.md. If y
 
 If given specific context about what to capture (e.g., "capture the retry logic discovery" or "focus on the auth module"), prioritize that over general session introspection.
 
+## Quality Gate — Before You Write
+
+Every line you add should clear this bar: **does the agent genuinely not know this, or would it figure it out from docs?**
+
+| Type | Definition | Treatment |
+|------|------------|-----------|
+| **Expert** | Agent won't know this without being told | Keep — this is the value |
+| **Activation** | Agent knows but might not think of it | Keep only if brief (1 line max) |
+| **Redundant** | Standard behavior, in docs, or obvious | Delete — wastes context |
+
+Target: >70% Expert content. If most lines are Activation or Redundant, the learning isn't worth capturing.
+
+**The description is the trigger.** For new skills, the description is the only thing the agent sees before deciding whether to load it. A vague description means the skill never activates. Make it specific: what situation, what problem, what the agent gains.
+
 ## Process
 
 1. Review session for discoveries, errors that took multiple attempts, unexpected connections
 2. For each learning, decide: AGENTS.md or skill?
 3. Read existing files at the target location (AGENTS.md at relevant directory level, or existing skill)
 4. Update the existing file, or create a new one if nothing fits
-5. Keep entries to 1-3 lines per insight
+5. Apply the quality gate — strip Redundant content, keep Expert tight
+6. Keep entries to 1-3 lines per insight
 
 After updating, summarize which files were created/updated and how many learnings per file.
