@@ -15,20 +15,23 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 # them as environment variables.
 [data.env]
     codeDir = {{ promptStringOnce . "env.codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
-    wakatimeApiKey = {{ promptStringOnce . "env.wakatimeApiKey" "Wakatime API key" | quote }}
     githubToken = {{ promptStringOnce . "env.githubToken" "GitHub token" | quote }}
-    linearApiKey = {{ promptStringOnce . "env.linearApiKey" "Linear API key" | quote }}
-    linearTeamId = {{ promptStringOnce . "env.linearTeamId" "Linear team ID" | quote }}
-    slackUserToken = {{ promptStringOnce . "env.slackUserToken" "Slack user token" | quote }}
-    slackUserId = {{ promptStringOnce . "env.slackUserId" "Slack user ID" | quote }}
-    figmaAccessToken = {{ promptStringOnce . "env.figmaAccessToken" "Figma access token" | quote }}
-    esUrl = {{ promptStringOnce . "env.esUrl" "Elasticsearch URL" | quote }}
-    esApiKey = {{ promptStringOnce . "env.esApiKey" "Elasticsearch API key" | quote }}
+
+# Optional — uncomment as needed:
+#
+# [data.env] additions:
+#     wakatimeApiKey = "..."     — Wakatime time tracking
+#     slackUserToken = "..."     — Slack skill (user token)
+#     slackUserId = "..."        — Slack skill (your user ID)
+#     figmaAccessToken = "..."   — Figma skill
+#     esUrl = "..."              — Elasticsearch skill (cluster URL)
+#     esApiKey = "..."           — Elasticsearch skill (API key)
 
 [data.calendars]
     personal = {{ promptStringOnce . "calendars.personal" "Personal calendar name" | quote }}
     work = {{ promptStringOnce . "calendars.work" "Work calendar name" | quote }}
     family = {{ promptStringOnce . "calendars.family" "Family calendar name" | quote }}
 
-[data.feeds]
-    libertyville_rec = {{ promptStringOnce . "feeds.libertyville_rec" "Libertyville Recreation ICS URL" | quote }}
+# [data.feeds] — optional, ICS feeds for family-scheduler; key becomes display name
+# [data.feeds]
+#     my_rec_center = "https://example.com/feed.ics"
