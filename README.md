@@ -53,7 +53,7 @@ Skills use a capability-based composition system — workflow skills declare wha
 Install individual skills via [chezmoi external](https://www.chezmoi.io/reference/special-files/chezmoiexternal-format/) by adding entries to your `.chezmoiexternal.toml`:
 
 ```toml
-["commit-skill"]
+[".agents/skills/commit"]
     type = "archive"
     url = "https://github.com/athal7/dotfiles/archive/refs/heads/main.tar.gz"
     stripComponents = 3
@@ -87,3 +87,39 @@ to resolve each capability. If the value is a skill name, load that skill. If it
 `cli://`, call that binary via Bash and read its `--help` on demand. If it starts with `mcp://`,
 activate that tool. If a capability has no mapping, ask the user which provider to use.
 ```
+
+#### Leverage chezmoidata to maintain skills
+
+To make managing the skills simpler, add this template to your `.chezmoiexternal.toml.tmpl`:
+
+```gotmpl
+{{ range $url, $data := .agentSkills }}
+{{ range $skill := $data.skills }}
+[".agents/skills/{{ $skill }}"]
+    type = "{{ with index $data "type" }}{{ $data.type }}{{ else }}archive{{ end }}"
+    url = "{{ $url }}"
+    stripComponents = {{ with index $data "stripComponents" }}{{ $data.stripComponents }}{{ else }}3{{ end }}
+    include = ["*/dot_agents/skills/{{ $skill }}/**"]
+    targetPath = ".agents/skills/{{ $skill }}"
+    refreshPeriod = "{{ with index $data "refreshPeriod" }}{{ $data.refreshPeriod }}{{ else }}168h{{ end }}"
+
+{{ end }}
+{{ end }}
+```
+
+Now, be sure you have an `agentSkill` key somewhere in you `.chezmoidata`:
+
+```yaml
+agentSkills:
+  "https://github.com/athal7/dotfiles/archive/refs/heads/main.tar.gz":
+    type: archive
+    stripComponents: 3
+    skills:
+      - attention
+      - commit
+      - gh
+      - google-docs
+      - slack
+```
+
+This gives you the capability to leverage several of these skills with limited duplication.
