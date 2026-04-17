@@ -12,9 +12,10 @@ metadata:
 
 # Skill: Post-Meeting Cleanup
 
-**Tightly coupled to the `minutes` CLI.** Assumes minutes markdown frontmatter (`speaker_map`,
-`recorded_by`, `speaker_label`, `confidence`) and uses `minutes list`, `minutes actions`, and
-`minutes confirm` directly.
+Assumes minutes markdown frontmatter (`speaker_map`, `recorded_by`, `speaker_label`,
+`confidence`). Most steps work directly on the markdown file. The `minutes` CLI is used only
+where it provides unique value: polling for job completion (Step 1), re-ingesting into the
+knowledge base (Step 5), and optionally saving voice profiles (Step 3).
 
 Accepts an optional meeting path or slug; if not provided, operates on the most recently
 processed meeting.
@@ -64,32 +65,45 @@ If there are unidentified speakers and a calendar event was matched in Step 2:
   `docs` capability to look up group membership if needed.
 - Cross-reference against already-identified names/emails in `speaker_map`.
 
-**Auto-confirm** when unambiguous (1 unidentified + 1 unmatched attendee):
-```
-minutes confirm --meeting <path> --speaker SPEAKER_N --name "<name>"
-```
+For each unidentified speaker, sample 3–5 representative quotes from across the transcript (not
+just the first few lines — spread them out to capture different parts of the conversation).
+Present them to the user along with the candidate names.
 
-**When ambiguous**, sample a few transcript lines per unidentified speaker and reason from
-conversational cues. Confirm if >80% confident and explain why. Otherwise present the samples and
-candidate names for the user to decide — do not guess.
+**Auto-confirm** when unambiguous (1 unidentified + 1 unmatched attendee) — but still show the
+sample quotes so the user can catch a misidentification.
+
+**When ambiguous**, reason from the quotes and conversational cues. Confirm if >80% confident and
+explain why. Otherwise present the samples and candidate names for the user to decide — do not
+guess.
+
+**Merged speakers**: the diarizer sometimes assigns two distinct voices to the same `SPEAKER_N`
+label. Watch for this in the samples — if quotes for a single label show clearly different
+speaking styles, vocabularies, or refer to themselves inconsistently, flag it as a possible merge
+and ask the user whether to split. A split means renaming some `SPEAKER_N:` lines in the
+transcript to a new label (e.g. `SPEAKER_N_B:`) and adding a separate `speaker_map` entry.
+
+To confirm a speaker, write directly to the markdown file:
+1. Add or update the `speaker_map` entry: set `name`, `confidence: high`, `source: manual`
+2. Replace all `SPEAKER_N:` labels in the transcript body with the resolved name
+3. Optionally run `minutes confirm --meeting <path> --speaker SPEAKER_N --name "<name>" --save-voice`
+   if you want to save a voice profile for future auto-identification — but this is not required
+   for the file to be correct
 
 **`UNKNOWN` segments**: the diarizer uses `UNKNOWN` for speech it could not confidently assign to
-any speaker cluster. `minutes confirm` cannot assign names to `UNKNOWN` — note the count in the
-report but do not attempt to resolve them. If the meeting has many `UNKNOWN` lines relative to
-total lines, flag it as a diarization quality issue.
+any speaker cluster. These cannot be resolved — note the count in the report but do not attempt
+to assign them. If the meeting has many `UNKNOWN` lines relative to total lines, flag it as a
+diarization quality issue.
 
 ---
 
 ## Step 4: Add action items to reminders
 
-Run `minutes actions --assignee <recorded_by name>` to get open action items assigned to the
-recorded_by person. **Note**: this lookup matches by name, so if speakers were confirmed in Step 3
-during this run, re-read the frontmatter `action_items` directly as a fallback — `minutes actions`
-may not reflect freshly confirmed names yet. For each item assigned to recorded_by (by name or
-by the speaker label that maps to them) not already in reminders, add it via your `reminders`
-capability with the meeting title as a note and any due date from the action item.
+Read `action_items` from the meeting frontmatter. For any entry whose `assignee` is a `SPEAKER_N`
+label, look it up in `speaker_map` and rewrite the assignee to the resolved name in the file. Do
+the same for any `entities.action_items` block if present. Write the file when done.
 
-Check the reminders list first to avoid duplicates.
+For each item assigned to `recorded_by` that is not already in reminders, add it via your
+`reminders` capability with the meeting title as a note and any due date from the action item.
 
 ---
 
