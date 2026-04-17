@@ -104,3 +104,42 @@ After editing, re-read the full body of the skill and ask: "If this skill were u
 ## Sub-files
 
 Sub-files (`.md` files referenced from a SKILL.md) inherit the type of their parent skill. A sub-file of a workflow skill is also a workflow skill and must follow the same rules. A sub-file of an integration skill may contain tool-specific content.
+
+## Skill shape — lessons from the orchestrator failure
+
+A previous "process" skill declared ten required capabilities and an eight-phase workflow. Measured across 69 sessions: TDD compliance fell from 34% to 9%, and architecture capability loading fell from 26% to 7%, **when the orchestrator was loaded vs. not**. The orchestrator actively suppressed the capabilities it wrapped.
+
+The rules below are the generalized lessons — follow them when creating or editing any skill.
+
+### One skill = one trigger = one moment of action
+
+A skill should fire at a specific, concrete moment. If you find yourself writing "Phase 1… Phase 2… Phase 3…" or "After step N, also do X," you are building an orchestrator. Split instead.
+
+Signs a skill is becoming an orchestrator:
+- A single skill covers multiple distinct moments in a workflow (e.g., "plan" that also governs commit-time behavior)
+- `provides` lists more than one capability whose triggers fire at different times
+- Step N of the skill says "do this other thing from a different capability"
+
+Split rule: **split by when the skill fires, not by what topic it covers.** Two skills that both cover "git stuff" but fire at different moments (commit-time vs. push-time) are correctly separate. One skill that covers "commit and format conventions" is correctly one skill because both fire at commit-time.
+
+### Agents read long phase graphs as menus
+
+A long workflow skill is not read as imperatives — it is read as a list the agent skim-selects from. The action phases (implement, commit, push) get executed; the deliberative phases (plan, verify, capture) get skipped. This is why the process skill suppressed TDD — TDD was mentioned inside a phase list, not as a standing imperative.
+
+Corollary: short, standalone skills with concrete triggers outperform long skills with phase graphs, even when the long skill formally `requires` the same capabilities.
+
+### Indirection beyond one hop is not followed
+
+Measured: sub-files referenced from a parent skill were loaded in 4% of sessions that loaded the parent. A skill body that says "read this other file and follow the instructions there" or "load your X capability and then load your Y capability" will lose ~90% of the intended behavior at each hop. Keep the concrete action in the skill that fires, not one hop away.
+
+### Skills that work share a shape
+
+Skills measured with high adoption (commit 57%, push similar) all have:
+- A clear, concrete trigger (a specific moment, not a general topic)
+- Imperative steps, not descriptive phases
+- <80 lines in the main body
+- No chained `requires` that the agent must load additional skills to satisfy the described behavior
+
+### Measure before refactoring a skill
+
+If a skill feels wrong, query the session DB at `~/.local/share/opencode/opencode.db` for actual loading and capability-use patterns before redesigning. Designing skill ontologies in the abstract reproduces the orchestrator failure.

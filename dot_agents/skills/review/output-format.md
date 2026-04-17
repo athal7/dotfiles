@@ -3,6 +3,33 @@
 
 **Be terse.** Developers can read code — don't explain what the diff does.
 
+### Reviewing your own uncommitted work
+
+No audience to triage for — apply every finding, no categorization.
+
+```markdown
+## Verdict: [APPROVE | CHANGES REQUESTED]
+
+[One sentence why, if not obvious]
+
+## Findings
+
+- **file.rb:10** - [issue]. [concrete fix]
+- **file.rb:25** - [issue]. [concrete fix]
+
+## Pre-existing Issues
+
+> These bugs exist in the codebase but were not introduced by this diff. They do not affect the verdict.
+
+- **file.rb:55** - [issue]. [1 sentence explanation]
+```
+
+**Behavior:** If the verdict is CHANGES REQUESTED, apply every item in Findings, re-run the review, and iterate until the verdict is APPROVE. Do not wait for user input between iterations. Present only the final verdict.
+
+### Reviewing someone else's code
+
+Triage for the author — Blockers are required, Suggestions are optional, Nits are tiny.
+
 ```markdown
 ## Verdict: [APPROVE | CHANGES REQUESTED | COMMENT]
 

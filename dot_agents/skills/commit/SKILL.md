@@ -9,20 +9,24 @@ metadata:
     - commit
   requires:
     - agent
+    - verify
 ---
 
 ## Before Every Commit
 
-Run these steps automatically — do not ask the user before starting:
+Run steps 1–5 automatically — do not ask the user before starting:
 
 1. **Stage all changes**: `git add -A`
 2. **Check for globally-ignored files**: `git check-ignore <files>` — do NOT stage files in `~/.config/git/ignore`. Key examples: `.talismanrc`, `.opencode/context-log.md`.
 3. **Run the full test suite** — unit, integration, e2e, and system tests. Do not commit with failing tests.
-4. **Add AI attribution** — append a `Co-Authored-By` trailer to the commit message identifying the specific model used in this session. Use the model ID from your session context (e.g. `anthropic/claude-sonnet-4-6`):
+4. **Verify the diff** — use your `verify` capability. If the verdict is anything other than approve, apply the findings and re-verify until the verdict is clean. Do not wait for user input between iterations.
+5. **Draft the commit message** — format below, including a `Co-Authored-By` trailer identifying the specific model used in this session (e.g. `anthropic/claude-sonnet-4-6`):
    ```
    Co-Authored-By: anthropic/claude-sonnet-4-6 <noreply@opencode.ai>
    ```
-5. **Commit** — create the commit with the formatted message
+6. **Present and STOP** — show a summary of what was implemented, the final verify verdict, and the drafted commit message. **End your response.** Wait for explicit approval before creating the commit.
+   - **Exception:** if this commit is part of a user-initiated ship/push flow (user said "ship it", "push", "commit and push", etc.), that command is the approval for both the commit and the push. Skip step 6 and proceed directly to step 7.
+7. **Commit** — after approval (or under the ship-flow exception), create the commit with the drafted message.
 
 ## Format
 

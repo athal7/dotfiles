@@ -33,13 +33,3 @@ The plan must include:
 Present the plan to the user. **End your response. Do not implement.**
 
 Wait for explicit approval: "yes", "approved", "lgtm", "go ahead", or equivalent.
-
-### 4. After Implementation
-
-Before committing:
-
-1. Run the full test suite and fix any failures
-2. Self-review the diff — read it as a reviewer would, looking for bugs, missing edge cases, and incomplete changes
-3. Present a summary of what was implemented and any findings from self-review
-
-**End your response. Do not commit.** Wait for explicit approval before committing.
