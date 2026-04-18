@@ -218,7 +218,8 @@ def main():
                            "-c", write_labels[dst_label],
                            "-s", start,
                            "-e", end,
-                           "--notes", MARKER)
+                           "--notes", MARKER,
+                           "--no-alert")
                 created.add(key)
 
     log("done")
