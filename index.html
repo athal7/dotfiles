@@ -1109,8 +1109,13 @@ tailscale serve --bg \
   function go(dir) { show(current + dir); }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'ArrowDown') { e.preventDefault(); go(1); }
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); go(-1); }
+    const nav = ['ArrowRight', ' ', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'];
+    if (nav.includes(e.key)) {
+      e.preventDefault();
+      if (document.activeElement) document.activeElement.blur();
+    }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
     if (e.key === 'Home') show(0);
     if (e.key === 'End') show(total - 1);
   });
