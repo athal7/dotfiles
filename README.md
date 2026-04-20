@@ -40,6 +40,10 @@ chezmoi uses filename prefixes to encode behavior. Key ones used here:
 
 See the [chezmoi source state reference](https://www.chezmoi.io/reference/source-state-attributes/) for the full list.
 
+## Workflow Demo
+
+**[athal7.github.io/dotfiles](https://athal7.github.io/dotfiles/)** — a slide deck walking through how the skills fit together into a daily workflow. Updated alongside the skills.
+
 ## Agent Skills
 
 26 [Agent Skills](https://agentskills.io)-compatible skills deployed to `~/.agents/skills/`. Works with [OpenCode](https://opencode.ai) and any compatible agent. See [`dot_agents/skills/README.md`](dot_agents/skills/README.md) for the full list and install instructions.
