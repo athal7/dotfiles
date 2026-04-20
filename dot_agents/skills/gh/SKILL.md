@@ -57,8 +57,18 @@ A PR with `COMMENTED` reviews is **not** safely "waiting on reviewer" — the re
 
 ## Fetching your open PRs with full review state
 
-> **CRITICAL:** `gh pr list --author=@me` and `gh pr list --search "..."` both **silently return empty results** when run outside a repo directory. This is a common silent failure — always use GraphQL for cross-repo queries:
+`gh pr list --author=@me` requires git repository context and errors without it. For cross-repo queries, use `gh search prs` — it works anywhere but lacks `mergeStateStatus` and `reviewDecision` in `--json` output (tracked in cli/cli#13239):
 
+```bash
+# Cross-repo: works outside a git directory, but no merge/review state
+gh search prs --author=@me --state=open --json number,title,repository,url
+
+# Per-repo: full state available
+gh pr list --author=@me --state=open --repo <owner>/<repo> \
+  --json number,title,mergeStateStatus,reviewDecision,latestReviews
+```
+
+When you need cross-repo results with review/merge state, use GraphQL:
 
 ```bash
 gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { nodes {
@@ -68,13 +78,6 @@ gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { node
   mergeStateStatus
   latestReviews(first: 10) { nodes { state author { login } } }
 } } } }'
-```
-
-Follow up with per-repo `gh pr list` for accurate `mergeStateStatus` — GraphQL often returns `UNKNOWN`:
-
-```bash
-gh pr list --author=@me --state=open --repo <owner>/<repo> \
-  --json number,title,mergeStateStatus,reviewDecision,latestReviews
 ```
 
 ## Fetching review requests
@@ -101,7 +104,8 @@ gh api graphql -f query='{ search(query: "is:open is:pr review-requested:@me", t
 | `UNSTABLE` | CI is failing |
 | `BLOCKED` | Branch protection rules not satisfied (e.g. required review not yet approved) — **does not mean conflict** |
 | `BEHIND` | Branch is behind the base branch |
-| `UNKNOWN` | GraphQL returned ambiguous state — follow up with per-repo `gh pr list` for accurate status |
+| `HAS_HOOKS` | Mergeable with passing commit status and pre-receive hooks |
+| `UNKNOWN` | State cannot currently be determined — retry or use per-repo `gh pr list` |
 
 `BLOCKED` + `mergeable: MERGEABLE` = branch protection (missing required approval), not a conflict. Do not file as a merge conflict.
 

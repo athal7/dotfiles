@@ -5,25 +5,16 @@
 # (and explicit overrides) need to be listed here.
 # Override per-workspace by placing a capabilities.yaml in .agents/ or the workspace root.
 
-issues:
-  provider: cli://linear
-  notes: >-
-    Uses keyring auth via `linear auth login`. Team set per-project via .linear.toml
-    or --team flag.
+issues: cli://linear
 meetings: cli://minutes
-
-calendar:
-  provider: cli://ical
-  notes: >-
-    Timestamps in JSON output are UTC — always convert to local before displaying.
-    When all_day is true, skip conversion entirely and display as "all-day".
+calendar: cli://ical
 
 reminders:
   provider: cli://remindctl
   notes: >-
-    --due YYYY-MM-DD defaults to midnight UTC, which shows the wrong time in non-UTC
-    timezones. Pass a full ISO datetime instead (e.g. 2026-04-26T05:00:00 for CT midnight).
-    `show upcoming` excludes undated items — use `show all` and filter by dueDate == null.
+    `show upcoming` only returns reminders with a due date — use `show all` to include
+    undated items. ISO 8601 without Z (e.g. 2026-04-25T09:00:00) is rejected; use
+    `YYYY-MM-DD HH:mm` for local time or `...Z` for explicit UTC.
 
 # docs provided by docs skill (auto-discovered via provides: [docs])
 # code-review provided by gh skill (auto-discovered) — notes live in the skill
