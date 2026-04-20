@@ -213,11 +213,27 @@
   /* ─── Pipeline diagram ─── */
   .pipeline {
     display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 8px 0;
+  }
+
+  .pipeline-row {
+    display: flex;
     align-items: center;
     gap: 0;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    padding: 8px 0;
+  }
+
+  .pipeline-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-dim);
+    min-width: 80px;
+    flex-shrink: 0;
+    padding-right: 12px;
   }
 
   .pipe-step {
@@ -225,27 +241,36 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    min-width: 96px;
+    min-width: 88px;
+  }
+
+  .pipe-step.support .pipe-icon {
+    background: transparent !important;
+    border: 1px dashed var(--border);
+  }
+
+  .pipe-step.support .pipe-label {
+    color: var(--text-dim);
   }
 
   .pipe-icon {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 20px;
     flex-shrink: 0;
   }
 
   .pipe-arrow {
-    width: 32px;
+    width: 28px;
     height: 2px;
     background: var(--border);
     position: relative;
     flex-shrink: 0;
-    top: -20px;
+    top: -18px;
   }
 
   .pipe-arrow::after {
@@ -257,8 +282,14 @@
     border-left-color: var(--border);
   }
 
+  .pipe-spacer {
+    width: 28px;
+    flex-shrink: 0;
+    top: -18px;
+  }
+
   .pipe-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     color: var(--text-muted);
     text-align: center;
@@ -505,51 +536,72 @@
   <div class="slide" id="s2">
     <div class="eyebrow">The Workflow</div>
     <h2>One session, many skills</h2>
-    <p style="margin-bottom:32px;">Instead of curating MCP servers, each workflow step is a skill — a markdown file the agent reads on demand. No servers, no wrappers. Just focused instructions and direct API calls.</p>
+    <p style="margin-bottom:28px;">Each workflow step is a skill — a markdown file the agent reads on demand. Some fire every session; others are reached for as needed.</p>
 
     <div class="pipeline">
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🧠</div>
-        <div class="pipe-label" style="color:var(--accent);">attention</div>
+      <div class="pipeline-row">
+        <div class="pipeline-label">every session</div>
+        <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🧠</div>
+          <div class="pipe-label" style="color:var(--accent);">attention</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">💬</div>
+          <div class="pipe-label" style="color:var(--accent4);">conversations</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">📋</div>
+          <div class="pipe-label" style="color:var(--accent3);">plan</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">🔴🟢</div>
+          <div class="pipe-label" style="color:var(--accent3);">tdd</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🔍</div>
+          <div class="pipe-label" style="color:var(--accent);">review</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">🚀</div>
+          <div class="pipe-label" style="color:var(--accent4);">commit + push</div>
+        </div>
       </div>
-      <div class="pipe-arrow"></div>
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">💬</div>
-        <div class="pipe-label" style="color:var(--accent4);">conversations</div>
-      </div>
-      <div class="pipe-arrow"></div>
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(255,166,87,0.12);">🗺️</div>
-        <div class="pipe-label" style="color:var(--highlight);">thinking-tools</div>
-      </div>
-      <div class="pipe-arrow"></div>
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(188,140,255,0.12);">📐</div>
-        <div class="pipe-label" style="color:var(--accent2);">writing</div>
-      </div>
-      <div class="pipe-arrow"></div>
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">📋</div>
-        <div class="pipe-label" style="color:var(--accent3);">plan</div>
-      </div>
-      <div class="pipe-arrow"></div>
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">🔴🟢</div>
-        <div class="pipe-label" style="color:var(--accent3);">tdd</div>
-      </div>
-      <div class="pipe-arrow"></div>
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🔍</div>
-        <div class="pipe-label" style="color:var(--accent);">review</div>
-      </div>
-      <div class="pipe-arrow"></div>
-      <div class="pipe-step">
-        <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">🚀</div>
-        <div class="pipe-label" style="color:var(--accent4);">commit + push</div>
+
+      <div class="pipeline-row">
+        <div class="pipeline-label">reach for when needed</div>
+        <div class="pipe-step support">
+          <div class="pipe-icon">🗺️</div>
+          <div class="pipe-label">thinking-tools</div>
+        </div>
+        <div class="pipe-spacer"></div>
+        <div class="pipe-step support">
+          <div class="pipe-icon">📐</div>
+          <div class="pipe-label">writing</div>
+        </div>
+        <div class="pipe-spacer"></div>
+        <div class="pipe-step support">
+          <div class="pipe-icon">🏛️</div>
+          <div class="pipe-label">architecture</div>
+        </div>
+        <div class="pipe-spacer"></div>
+        <div class="pipe-step support">
+          <div class="pipe-icon">🧑‍🔬</div>
+          <div class="pipe-label">expert agent</div>
+        </div>
+        <div class="pipe-spacer"></div>
+        <div class="pipe-step support">
+          <div class="pipe-icon">📚</div>
+          <div class="pipe-label">learn</div>
+        </div>
       </div>
     </div>
 
-    <p style="margin-top:24px; font-size:14px;">Each skill is a markdown file. The agent reads it only when needed.</p>
+    <p style="margin-top:16px; font-size:13px; color:var(--text-dim);">Skills are plain markdown. The agent reads one only when the task calls for it.</p>
   </div>
 
   <!-- ══════════════════════════════════════════
@@ -654,7 +706,7 @@
        SLIDE 5 — Thinking Tools
   ══════════════════════════════════════════ -->
   <div class="slide" id="s4b">
-    <div class="eyebrow">Step 2 — Clarity before action</div>
+    <div class="eyebrow">When needed — Clarity</div>
     <h2>Frame the problem with <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/thinking-tools/SKILL.md" style="color:var(--highlight);">thinking-tools</a></h2>
     <div class="cols cols-2" style="margin-top:8px;">
       <div class="stack">
@@ -698,7 +750,7 @@
        SLIDE 5 — Writing
   ══════════════════════════════════════════ -->
   <div class="slide" id="s5">
-    <div class="eyebrow">Step 3 — Before implementing</div>
+    <div class="eyebrow">When needed — Intent</div>
     <h2>Capture intent with <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/writing/SKILL.md" style="color:var(--accent2);">writing</a></h2>
     <div class="cols cols-2" style="margin-top:8px;">
       <div class="stack">
@@ -735,8 +787,8 @@
        SLIDE 6 — Plan / Learn / Context-log
   ══════════════════════════════════════════ -->
   <div class="slide" id="s6">
-    <div class="eyebrow">Step 4 — Before implementing</div>
-    <h2>Three focused skills replaced <span class="accent5">process</span></h2>
+    <div class="eyebrow">Before implementing</div>
+    <h2>Three skills for three moments</h2>
     <div class="cols cols-3" style="margin-top:16px; gap:24px;">
       <div class="stack">
         <div class="card" style="border-color:var(--accent3); height:100%;">
@@ -779,7 +831,7 @@
       </div>
     </div>
     <div class="pull-quote" style="font-size:13px;margin-top:16px;">
-      The monolithic <code>process</code> orchestrator was dissolved — session data showed it suppressed TDD compliance from 34% to 9% by consuming context while agents shortcut deliberative phases.
+      Each skill triggers at a specific moment — keeping instructions focused means the agent actually follows them.
     </div>
   </div>
 
@@ -787,7 +839,7 @@
        SLIDE 7 — Review
   ══════════════════════════════════════════ -->
   <div class="slide" id="s7">
-    <div class="eyebrow">Step 5 — Quality gate</div>
+    <div class="eyebrow">Quality gate</div>
     <h2>Multi-specialist <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/review/SKILL.md" style="color:var(--accent);">review</a></h2>
     <div class="cols cols-2" style="margin-top:8px;">
       <div class="stack">
@@ -1065,14 +1117,18 @@ tailscale serve --bg \
       Skills tell it when, in what order, and with what guardrails.
       chezmoi keeps the whole thing in git — reproducible, auditable, portable.
     </p>
-    <div style="margin-top:48px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+    <div style="margin-top:32px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
       <span class="chip blue">attention → orientation</span>
       <span class="chip orange">conversations → context</span>
-      <span class="chip orange">thinking-tools → clarity</span>
-      <span class="chip purple">writing → intent</span>
       <span class="chip green">plan → execution</span>
-      <span class="chip purple">learn → improvement</span>
       <span class="chip blue">review → quality</span>
+    </div>
+    <div style="margin-top:10px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; opacity:0.6;">
+      <span class="chip orange">thinking-tools</span>
+      <span class="chip purple">writing</span>
+      <span class="chip purple">architecture</span>
+      <span class="chip purple">learn</span>
+      <span style="font-size:12px; color:var(--text-dim); align-self:center;">— reach for when needed</span>
     </div>
     <div class="byline" style="margin-top:40px; text-align:center;">
       <a href="https://github.com/athal7/dotfiles/tree/main/dot_agents/skills" style="color:var(--text-muted);"><code>athal7/dotfiles</code></a> · managed by chezmoi · shipped with <code>chezmoi apply</code>
