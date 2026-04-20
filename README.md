@@ -2,6 +2,10 @@
 
 Manages `~` on macOS via [chezmoi](https://chezmoi.io). Covers shell, editor, AI tooling, calendar automation, and a library of AI agent skills.
 
+## Workflow Demo
+
+**[athal7.github.io/dotfiles](https://athal7.github.io/dotfiles/)** — a slide deck walking through how the agent skills fit together into a daily development workflow. Updated alongside the skills.
+
 ## Quick start
 
 ```bash
@@ -39,10 +43,6 @@ chezmoi uses filename prefixes to encode behavior. Key ones used here:
 | `run_onchange_*.sh` | Script run when its contents change |
 
 See the [chezmoi source state reference](https://www.chezmoi.io/reference/source-state-attributes/) for the full list.
-
-## Workflow Demo
-
-**[athal7.github.io/dotfiles](https://athal7.github.io/dotfiles/)** — a slide deck walking through how the skills fit together into a daily workflow. Updated alongside the skills.
 
 ## Agent Skills
 
