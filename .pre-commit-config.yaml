@@ -18,7 +18,7 @@ repos:
       - id: check-jsonschema
         name: validate opencode.json schema
         files: dot_config/opencode/opencode\.json$
-        args: ["--schemafile", "https://opencode.ai/config.json"]
+        args: ["--schemafile", "https://opencode.ai/config.json", "--no-cache"]
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
