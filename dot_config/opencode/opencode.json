@@ -65,10 +65,6 @@
         "--firefox-path",
         "/Applications/Firefox Nightly.app/Contents/MacOS/firefox"
       ]
-    },
-    "mcp-scan": {
-      "type": "local",
-      "command": ["uvx", "mcp-scan@latest", "proxy", "--stdio"]
     }
   }
 }
