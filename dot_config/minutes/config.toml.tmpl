@@ -18,7 +18,7 @@ noise_reduction = true
 # Run `minutes setup --diarization` to download the ~34MB ONNX models.
 engine = "auto"
 embedding_model = "cam++-lm"  # Higher accuracy (~12% lower EER) than cam++
-threshold = 0.4               # Slightly less aggressive speaker splitting
+threshold = 0.25              # Aggressive speaker splitting (lowered from 0.4 due to heavy under-splitting)
 
 [voice]
 # Enabled automatically when voice profiles are enrolled via `minutes enroll`.
