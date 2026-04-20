@@ -5,9 +5,9 @@
 # (and explicit overrides) need to be listed here.
 # Override per-workspace by placing a capabilities.yaml in .agents/ or the workspace root.
 
-issues: cli://linear
+issues: linear-cli
 meetings: cli://minutes
-calendar: cli://ical
+calendar: ical-cli
 
 reminders:
   provider: cli://remindctl
