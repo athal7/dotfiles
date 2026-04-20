@@ -39,6 +39,14 @@ When writing skills, examples, or documentation: use generic placeholder names (
 
 Keep `README.md` up to date when making structural changes: adding or removing skills, new LaunchAgents, new config sections, changes to the package registry design, or anything that affects how someone would use or contribute to this repo. The README is the primary entry point for external readers.
 
+## Presentation
+
+`index.html` at the repo root is a slide deck describing this workflow, served via GitHub Pages at `https://athal7.github.io/dotfiles/`. Keep it in sync with the skills:
+
+- **Skill added or removed** — update the inventory slide and the pipeline slide
+- **Skill behavior changes significantly** — update the slide that covers that skill
+- **Workflow structure changes** (e.g. new phase, skill dissolved) — update the relevant step slides and the closing summary
+
 ## Chezmoi Gotchas
 
 - **`.chezmoidata` values are plain data** — template expressions like `{{ .chezmoi.arch }}` inside YAML string values are not evaluated. Arch/OS logic must live in the `.tmpl` file itself.
