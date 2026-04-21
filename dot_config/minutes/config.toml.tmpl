@@ -19,6 +19,7 @@ noise_reduction = true
 engine = "auto"
 embedding_model = "cam++-lm"  # Higher accuracy (~12% lower EER) than cam++
 threshold = 0.25              # Aggressive speaker splitting (lowered from 0.4 due to heavy under-splitting)
+stem_correlation_threshold = 1.0  # Disable stem collapse for open-speaker setups (Studio Display mic)
 
 [voice]
 # Enabled automatically when voice profiles are enrolled via `minutes enroll`.
