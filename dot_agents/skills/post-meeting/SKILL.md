@@ -59,11 +59,50 @@ Read `speaker_map` from the frontmatter and scan the transcript body for all `SP
 A speaker is **unidentified** if they have no `speaker_map` entry, or their entry has confidence
 `low`, or their name is a placeholder (`Unknown`, `Speaker_1`, `Le Speaker_N`, etc.).
 
-If there are unidentified speakers and a calendar event was matched in Step 2:
+If a calendar event was matched in Step 2:
 - Use your `calendar` capability (`show` with the event ID) to get the full attendee list.
 - Include **all** attendees, including distribution lists — expand group addresses using your
   `docs` capability to look up group membership if needed.
 - Cross-reference against already-identified names/emails in `speaker_map`.
+
+### 3a: Resolve short and garbled names in frontmatter
+
+The LLM summarizer writes attendee names as it hears them — often first-name-only (`Ole`, `Lisa`),
+phonetic mishearings (`Olleh`, `Asandra`, `Omey`), or placeholder labels (`The Speaker`,
+`[speaker_2]`). These produce garbage KB profiles on every ingest.
+
+**Always run this step** when a calendar event was matched, regardless of whether any `SPEAKER_N`
+labels need resolving.
+
+1. Build a canonical name map from the calendar attendee list. For each attendee email, derive the
+   full name (from the `name` field, or by looking up the person in the KB or past meetings).
+
+2. Scan every name-bearing field in the frontmatter: `attendees`, `people`, `entities.people`
+   (slugs, labels, aliases), `action_items[].assignee`, `intents[].who`,
+   `commitments[].who` / `decisions[].who`. Collect all distinct name values.
+
+3. For each name value that does not exactly match a canonical full name:
+   - If it is a clear short form, phonetic variant, or role-decorated form
+     (e.g. first name only, phonetic mishearing, or `Name: Role description`) of a calendar
+     attendee → replace with the canonical full name.
+   - If it is a placeholder (`The Speaker`, `[speaker_2]`, `[the Team]`, `unassigned`) → replace
+     with the resolved person if determinable from context, otherwise `Unknown`.
+   - If it is a verbose composite (e.g. `Person A and @Person B`) → replace with the primary
+     assignee's canonical name.
+   - If it contains a colon-separated role suffix (`Name: Role description`) → strip to just the
+     canonical name.
+
+4. In `entities.people`: update each entry's `slug`, `label`, and `aliases` to match the canonical
+   name. Remove duplicate entries that resolve to the same person. Remove entries for non-person
+   entities (`[the Team]`, `Attendees`, etc.).
+
+5. Deduplicate `attendees` and `people` lists after substitution.
+
+6. Write the updated frontmatter back to the file.
+
+After this step, every name in the frontmatter should be a full canonical name that matches an
+existing KB profile slug — so re-ingest in Step 5 writes to the right files and creates no new
+short-name duplicates.
 
 For each unidentified speaker, sample 3–5 representative quotes from across the transcript (not
 just the first few lines — spread them out to capture different parts of the conversation).
