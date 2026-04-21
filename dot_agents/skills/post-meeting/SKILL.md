@@ -51,40 +51,33 @@ the markdown frontmatter. Report what changed. If no match, note it and move on.
 
 ---
 
-## Step 3: Identify speakers
+## Step 3: Resolve attendee names and identify speakers
 
-Read `speaker_map` from the frontmatter and scan the transcript body for all `SPEAKER_N` and
-`UNKNOWN` labels.
-
-A speaker is **unidentified** if they have no `speaker_map` entry, or their entry has confidence
-`low`, or their name is a placeholder (`Unknown`, `Speaker_1`, `Le Speaker_N`, etc.).
-
-If a calendar event was matched in Step 2:
-- Use your `calendar` capability (`show` with the event ID) to get the full attendee list.
+If a calendar event was matched in Step 2, fetch the full attendee list now — it is needed for
+both name resolution and speaker identification:
+- Use your `calendar` capability (`show` with the event ID).
 - Include **all** attendees, including distribution lists — expand group addresses using your
   `docs` capability to look up group membership if needed.
-- Cross-reference against already-identified names/emails in `speaker_map`.
 
 ### 3a: Resolve short and garbled names in frontmatter
 
-The LLM summarizer writes attendee names as it hears them — often first-name-only (`Ole`, `Lisa`),
-phonetic mishearings (`Olleh`, `Asandra`, `Omey`), or placeholder labels (`The Speaker`,
-`[speaker_2]`). These produce garbage KB profiles on every ingest.
-
-**Always run this step** when a calendar event was matched, regardless of whether any `SPEAKER_N`
-labels need resolving.
+The LLM summarizer writes attendee names as it hears them — often first-name-only, phonetic
+mishearings, or placeholder labels. These produce garbage KB profiles on every ingest. **Run this
+step before speaker identification and before Steps 4–5**, so all subsequent work uses canonical
+names.
 
 1. Build a canonical name map from the calendar attendee list. For each attendee email, derive the
-   full name (from the `name` field, or by looking up the person in the KB or past meetings).
+   full name from the `name` field; if absent or just an email address, look up the person in the
+   KB or past meetings.
 
 2. Scan every name-bearing field in the frontmatter: `attendees`, `people`, `entities.people`
-   (slugs, labels, aliases), `action_items[].assignee`, `intents[].who`,
-   `commitments[].who` / `decisions[].who`. Collect all distinct name values.
+   (slugs, labels, aliases), `action_items[].assignee`, `intents[].who` (all kinds: action-item,
+   commitment, decision). Collect all distinct name values.
 
 3. For each name value that does not exactly match a canonical full name:
-   - If it is a clear short form, phonetic variant, or role-decorated form
-     (e.g. first name only, phonetic mishearing, or `Name: Role description`) of a calendar
-     attendee → replace with the canonical full name.
+   - If it is a clear short form, phonetic variant, or role-decorated form (e.g. first name only,
+     phonetic mishearing, or `Name: Role description`) of a calendar attendee → replace with the
+     canonical full name.
    - If it is a placeholder (`The Speaker`, `[speaker_2]`, `[the Team]`, `unassigned`) → replace
      with the resolved person if determinable from context, otherwise `Unknown`.
    - If it is a verbose composite (e.g. `Person A and @Person B`) → replace with the primary
@@ -103,6 +96,17 @@ labels need resolving.
 After this step, every name in the frontmatter should be a full canonical name that matches an
 existing KB profile slug — so re-ingest in Step 5 writes to the right files and creates no new
 short-name duplicates.
+
+### 3b: Identify unresolved diarizer speakers
+
+Read `speaker_map` from the frontmatter and scan the transcript body for all `SPEAKER_N` and
+`UNKNOWN` labels.
+
+A speaker is **unidentified** if they have no `speaker_map` entry, or their entry has confidence
+`low`, or their name is a placeholder (`Unknown`, `Speaker_1`, `Le Speaker_N`, etc.).
+
+Cross-reference unidentified speakers against the canonical attendee list from Step 3 (minus
+anyone already identified in `speaker_map`).
 
 For each unidentified speaker, sample 3–5 representative quotes from across the transcript (not
 just the first few lines — spread them out to capture different parts of the conversation).
@@ -137,9 +141,12 @@ diarization quality issue.
 
 ## Step 4: Add action items to reminders
 
-Read `action_items` from the meeting frontmatter. For any entry whose `assignee` is a `SPEAKER_N`
-label, look it up in `speaker_map` and rewrite the assignee to the resolved name in the file. Do
-the same for any `entities.action_items` block if present. Write the file when done.
+Collect all items assigned to `recorded_by` from **both** `action_items` and `intents` (all
+entries with `kind: action-item` or `kind: commitment`). These are parallel structures the
+pipeline writes — treat them equivalently.
+
+For any entry whose `assignee` / `who` is still a `SPEAKER_N` label, look it up in `speaker_map`
+and rewrite it to the resolved name in the file. Write the file when done.
 
 For each item assigned to `recorded_by` that is not already in reminders, add it via your
 `reminders` capability with the meeting title as a note and any due date from the action item.
@@ -148,9 +155,10 @@ For each item assigned to `recorded_by` that is not already in reminders, add it
 
 ## Step 5: Re-ingest into knowledge base
 
-The processing pipeline auto-ingests into the knowledge base **before** speaker confirmation,
-so person profiles contain stale labels (`Speaker_0`, `Le Speaker_1`, etc.). Re-ingest now
-that speakers are resolved:
+The processing pipeline auto-ingests into the knowledge base **before** any cleanup, so profiles
+may contain stale labels. Re-ingest now that names and speakers are resolved.
+
+Skip this step only if Steps 3a, 3b, and 4 made **no changes** to the file whatsoever.
 
 1. **Delete stale profiles** generated by the auto-ingest. In the knowledge base `people/`
    directory, remove any files matching these patterns (case-insensitive):
@@ -159,12 +167,21 @@ that speakers are resolved:
    - Any file whose `# Title` is clearly not a person name (e.g. `Team`, `Attendees`,
      `Respectfully`, email-address slugs like `jdoe-example-com.md`)
 
-2. **Re-ingest** with corrected speaker names:
+2. **Re-ingest** with corrected names:
    ```
    minutes ingest <meeting-path>
    ```
 
-3. **Check for duplicates.** The LLM summarizer sometimes uses first-name-only variants
+3. **Check for new stale profiles.** After re-ingest, scan the `people/` directory for any
+   profiles whose slug does not match a canonical attendee name — these indicate name-bearing
+   fields that were missed in Step 3a. For each:
+   - If it maps to a known person (short name, variant), merge its facts into the canonical
+     profile and delete it.
+   - If it is a non-person entity or unresolvable placeholder, delete it.
+   - If it keeps regenerating, trace it back to the frontmatter field that is still producing it
+     and fix that field.
+
+4. **Check for duplicates.** The LLM summarizer sometimes uses first-name-only variants
    (e.g. `alex.md` alongside `alex-chen.md`). After re-ingest, scan for pairs where the
    short-name file's facts all come from the same meetings as the full-name file. Merge by
    appending unique fact lines from the short-name profile into the full-name profile under
@@ -172,9 +189,6 @@ that speakers are resolved:
 
 Record the counts (facts written, skipped, people updated, stale profiles removed, merges
 performed) for the report.
-
-If no speakers were confirmed in Step 3 (all were already identified or none could be resolved),
-skip this step — the auto-ingest data is already correct.
 
 ---
 
