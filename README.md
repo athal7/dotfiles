@@ -123,7 +123,6 @@ agentSkills:
       - commit
       - context-log
       - gh
-      - git-spice
       - google-docs
       - learn
       - plan

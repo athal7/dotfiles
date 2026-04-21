@@ -16,6 +16,14 @@ reminders:
     undated items. ISO 8601 without Z (e.g. 2026-04-25T09:00:00) is rejected; use
     `YYYY-MM-DD HH:mm` for local time or `...Z` for explicit UTC.
 
+branching:
+  provider: cli://git-spice
+  notes: >-
+    Always merge stacked branches bottom-up — merge the lowest, then `git-spice repo sync`
+    to restack remaining branches before merging the next. Custom git aliases available:
+    `git stack-log` (graph), `git stack-diff <base>` (diff from merge-base), `git stack-range <base>`
+    (commit range for current layer).
+
 # docs provided by docs skill (auto-discovered via provides: [docs])
 # code-review provided by gh skill (auto-discovered) — notes live in the skill
 # email provided by gws skill (auto-discovered)

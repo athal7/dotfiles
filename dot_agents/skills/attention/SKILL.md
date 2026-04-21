@@ -14,6 +14,7 @@ metadata:
     - chat
     - issues
     - code-review
+    - branching
 ---
 
 # Skill: Attention
@@ -180,7 +181,7 @@ Use your `code-review` capability to fetch and categorize. Classify each of your
 
 1. **Review requests waiting on you** — someone requested your review
 2. **Needs your action** — a reviewer requested changes or left comments; use per-reviewer state, not the aggregate decision
-3. **Merge conflicts** — surface these first, dispatch conflict resolution immediately
+3. **Merge conflicts** — surface these first, dispatch conflict resolution immediately. For stacked branches, also use your `branching` capability to check whether any tracked branches are out of date with their base.
 4. **CI failing** — needs investigation or a fix
 
 ### Issues — by state

@@ -45,7 +45,6 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   eval "$(direnv hook zsh)"
   [[ -s "$_brew_prefix/etc/profile.d/autojump.sh" ]] && source "$_brew_prefix/etc/profile.d/autojump.sh"
   command -v wt >/dev/null 2>&1 && eval "$(wt config shell init zsh)"
-  alias gs=git-spice
   command -v git-spice >/dev/null 2>&1 && eval "$(git-spice shell completion zsh)"
 
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
