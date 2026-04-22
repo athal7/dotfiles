@@ -95,11 +95,7 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
    - Tool-specific content is expected and correct here
 4. Run `agentskills validate` on the skill directory
 
-## Deleting a skill or sub-file
 
-Some skills in `~/.agents/skills/` are **externally managed** via `.chezmoiexternal.toml.tmpl` (e.g. `ical-cli`, `linear-cli`). Do not delete or modify those — chezmoi owns them; remove the external entry instead.
-
-For source-managed skills, use `chezmoi destroy` — see the repo-level `AGENTS.md` for the general deletion pattern.
 
 ## Editing an existing skill
 
