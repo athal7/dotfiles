@@ -1,0 +1,34 @@
+#!/bin/sh
+# Check for files under ~/.agents/ that chezmoi no longer manages.
+# chezmoi does not remove files when their source entry is deleted — they
+# silently persist. ~/.agents/ is exclusively managed by chezmoi (source or
+# external), so any file absent from 'chezmoi managed' is an orphan.
+#
+# Hashes for change detection — re-runs when any source file changes:
+{{- range (glob (joinPath .chezmoi.sourceDir "dot_agents/**/*.*")) }}
+# {{ . | include | sha256sum }}
+{{- end }}
+
+set -eu
+
+tmpfile=$(mktemp)
+trap 'rm -f "$tmpfile"' EXIT
+
+# Write all currently managed absolute paths to temp file
+chezmoi managed --include=files --path-style=absolute 2>/dev/null > "$tmpfile"
+
+orphans=""
+
+for deployed_file in $(find "$HOME/.agents" -type f); do
+  if ! grep -qF "$deployed_file" "$tmpfile"; then
+    echo "ORPHAN: $deployed_file — not managed by chezmoi (remove manually or 'chezmoi add')" >&2
+    orphans="$orphans $deployed_file"
+  fi
+done
+
+if [ -n "$orphans" ]; then
+  echo "orphaned ~/.agents/ files found — chezmoi will not remove these automatically" >&2
+  exit 1
+fi
+
+echo "orphaned ~/.agents/ files: ok"

@@ -95,15 +95,23 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
    - Tool-specific content is expected and correct here
 4. Run `agentskills validate` on the skill directory
 
-## Deleting a skill
+## Deleting a skill or sub-file
 
-`chezmoi apply` does not remove files it no longer manages. When a skill directory is deleted from source, the deployed copy at `~/.agents/skills/<name>` becomes an orphan and must be removed manually:
+Some skills in `~/.agents/skills/` are **externally managed** via `.chezmoiexternal.toml.tmpl` (e.g. `ical-cli`, `linear-cli`). Do not manually delete or modify those — chezmoi owns them.
 
+Skills in `dot_agents/skills/` are **source-managed**. `chezmoi apply` does not remove files it no longer manages, so orphans must be removed manually after any deletion — this applies both to top-level skill directories and sub-files within a skill.
+
+**Deleted a skill directory:**
 ```bash
 rm -rf ~/.agents/skills/<name>
 ```
 
-Check for orphans by diffing source vs deployed: `diff <(ls ~/.agents/skills/ | sort) <(ls dot_agents/skills/ | sort)`.
+**Deleted a sub-file within a skill:**
+```bash
+rm ~/.agents/skills/<skill>/<file>.md
+```
+
+The `run_onchange_after_check-orphaned-skill-files.sh.tmpl` chezmoi script checks `~/.agents/` for orphans on every `chezmoi apply` when source files change. Other directories (e.g. `~/.config/`, `~/.local/`) are shared with other tools and cannot be checked this way.
 
 ## Editing an existing skill
 
