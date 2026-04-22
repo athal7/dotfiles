@@ -57,3 +57,5 @@ Keep `README.md` up to date when making structural changes: adding or removing s
 - **LaunchAgent binary path changes** — after moving a binary (e.g., brew → `~/.local/bin`), `launchctl bootout` + `bootstrap` is required to pick up the new plist; `kickstart` alone is not sufficient if the service is crash-looping.
 
 - **Updating a plist** — `chezmoi apply` only bootstraps agents that aren't loaded. To pick up plist changes on a running agent: `launchctl kickstart -k gui/$(id -u)/<label>`
+
+- **Deleting a managed file** — `chezmoi apply` does not remove files whose source entry was deleted. Use `chezmoi destroy <target>` to remove both the source entry and the deployed file in one step. Do not use `rm` directly — the file will reappear on the next apply. Note: files managed via `.chezmoiexternal.toml.tmpl` (e.g. `~/.agents/skills/ical-cli`) cannot be destroyed this way — chezmoi owns them; remove the external entry instead.
