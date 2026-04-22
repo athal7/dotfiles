@@ -22,13 +22,19 @@ Fetch the diff based on input, then follow all instructions below.
 - **Branch name**: `git diff <branch>...HEAD`
 - **Merge request URL/number**: use your `source-control` capability to fetch the diff and metadata
 
-**If reviewing a merge request:** read `~/.agents/skills/review/pr-workflow.md` now — it covers checkout, review rules, submission policy, and prior review history. Follow all instructions there before proceeding.
+**Merge request rules:**
+- "Review this merge request" means analyze and draft a written review — do NOT submit or implement fixes unless explicitly asked.
+- When a merge request has reviews and conflicts, use merge (not rebase) to resolve them — rebasing invalidates existing review comments.
+- Show the full proposed review and ask "Do you approve?" before submitting. Then STOP and wait for explicit approval.
+- **Inline-first:** post findings as inline comments only via your `source-control` capability. Do NOT include verdict, TL;DR, or summaries in the submitted body — those are session output only. The only exception is a review-wide observation that genuinely cannot be attributed to any line.
+
+**If reviewing a merge request** (URL or number provided): check out the branch locally before proceeding using your `source-control` capability. Save the original branch so you can restore it after. If local checkout is not possible, fall back to fetching diff and metadata via your `source-control` capability.
 
 ---
 
 ## Phase 1: Context & Static Analysis
 
-Read `~/.agents/skills/review/context-gathering.md` and follow all steps (issue context, project rules, static analysis pass).
+Read `~/.agents/skills/review/context-gathering.md` and follow all steps (issue context, prior review history, project rules, static analysis pass).
 
 ---
 
@@ -155,12 +161,21 @@ After merging specialist findings, add these directly:
 1. **Missing acceptance criteria** — if no linked issue with acceptance criteria was found, add a suggestion: "No linked issue with acceptance criteria found — cannot fully verify feature completeness."
 
 2. **Runtime verification**:
-   - **Merge request reviews**: always run QA — the server was started during checkout (see `pr-workflow.md`). If server auto-start was skipped, note "QA skipped — could not detect dev server command" instead.
-   - **Branch / staged / commit reviews**: run QA only if the diff modifies views, templates, controllers, frontend code, or UI interactions. Ensure the code is checked out, then start the server using the same auto-detect logic in `pr-workflow.md`. If no server can be detected or started, note "QA skipped — no running app detected" instead.
+
+   **Start the dev server** — auto-detect the command in this priority order:
+   - `package.json` → `scripts.dev`, then `scripts.start`
+   - `Procfile` → the `web:` entry
+   - `Makefile` → a `dev`, `serve`, or `start` target
+   - `README.md` → look for a "Getting started" / "Running locally" code block
+
+   Spawn in the background via your `shell` capability. Wait up to 15 seconds for a "listening on" / "ready" / port-bound log line. Record the session ID and local URL for QA.
+
+   - **Merge request reviews**: always attempt server start. If no command found, note "QA skipped — could not detect dev server command".
+   - **Branch / staged / commit reviews**: only if the diff modifies views, templates, controllers, frontend code, or UI interactions. If no server can be started, note "QA skipped — no running app detected".
 
    Steps:
-   1. Use the `qa` capability — pass context about which flows changed and the local URL from the background server session
-   2. Restore original branch if needed and kill the background server session
+   1. Use the `qa` capability — pass context about which flows changed and the local URL
+   2. Kill the background server session and restore the original branch
    3. Include results under `## QA Results` in the output
 
 Read `~/.agents/skills/review/output-format.md` and format the final output.

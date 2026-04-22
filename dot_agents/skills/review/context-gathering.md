@@ -3,6 +3,25 @@
 
 **Read `.opencode/context-log.md`** first for issue context and build history.
 
+**For merge requests — fetch prior review history** using your `source-control` capability before doing anything else:
+
+1. All submitted reviews with their verdict and top-level body
+2. All inline review comments, including `path`, `line`, `body`, and reply thread relationships
+3. Build a **prior review summary**: group inline comments by thread, identify the last message per thread, and mark each thread as:
+   - **Resolved** — author replied acknowledging the fix, or the thread was explicitly resolved
+   - **Awaiting reviewer** — author has replied (most recent message is from the merge request author) but no reviewer response yet
+   - **Unresolved** — no author reply, or last reply disagrees/defers
+4. Attach the full prior review summary to the payload for all sub-agents.
+
+**Prior review output rules:**
+- Do NOT re-raise issues already raised and addressed (author replied with a fix, or code changed to resolve it).
+- DO surface unresolved threads in "Unresolved Prior Feedback" — higher priority than new findings.
+- DO surface awaiting-reviewer threads in "Awaiting Your Response" — the author is blocked waiting on the reviewer.
+- Unresolved prior feedback counts toward the verdict the same as blockers if originally `CHANGES REQUESTED`.
+- If a new finding duplicates an unresolved prior comment, merge them: cite the prior comment and note it remains unresolved.
+
+---
+
 **Extract issue IDs** from branch name or merge request, then fetch details:
 1. Parse the current branch name for issue IDs (e.g. `ENG-123`, `PROJ-456`, `#123`)
 2. For merge requests: fetch body and linked issues via your `source-control` capability
