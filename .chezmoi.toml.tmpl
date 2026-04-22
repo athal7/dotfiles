@@ -32,6 +32,12 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
     work = {{ promptStringOnce . "calendars.work" "Work calendar name" | quote }}
     family = {{ promptStringOnce . "calendars.family" "Family calendar name" | quote }}
 
+# Exclude specific events from syncing. Key is event title (case-insensitive),
+# value is the source calendar label to match ("*" matches any source).
+# Example:
+# [data.calendars.syncExclude]
+#     "CSA Delivery" = "family"
+
 # [data.feeds] — optional, ICS feeds for family-scheduler; key becomes display name
 # [data.feeds]
 #     my_rec_center = "https://example.com/feed.ics"

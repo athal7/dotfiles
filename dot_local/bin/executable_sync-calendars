@@ -90,7 +90,17 @@ def in_working_hours(event, tz):
     return start.weekday() < 5 and WORK_START <= start.hour < WORK_END
 
 
-def events_for(calendar, from_date, to_date, tz):
+def is_excluded(event, src_label, sync_exclude):
+    """Return True if this event should be skipped based on syncExclude config."""
+    title = event.get("title", "").strip().lower()
+    for pattern, cal_label in sync_exclude.items():
+        if pattern.lower() == title:
+            if cal_label == "*" or cal_label == src_label:
+                return True
+    return False
+
+
+def events_for(calendar, src_label, from_date, to_date, tz, sync_exclude):
     """Fetch real (non-mirror) events for a calendar."""
     events = ical("list", "-c", calendar, "--from", from_date, "--to", to_date, "-o", "json")
     return [
@@ -101,6 +111,7 @@ def events_for(calendar, from_date, to_date, tz):
         and e.get("availability") != "free"
         and e.get("status") != "cancelled"
         and in_working_hours(e, tz)
+        and not is_excluded(e, src_label, sync_exclude)
     ]
 
 
@@ -135,6 +146,7 @@ def main():
     data = chezmoi_data()
     calendars = data.get("calendars", {})  # {label: name}
     first_name = data.get("fullName", "").split()[0]
+    sync_exclude = calendars.get("syncExclude", {})
     from_date = str(date.today())
     to_date = str(date.today() + timedelta(weeks=WEEKS))
     tz = local_tz()
@@ -156,7 +168,7 @@ def main():
 
     # Fetch real events from all source calendars
     all_events = {
-        label: events_for(name, from_date, to_date, tz)
+        label: events_for(name, label, from_date, to_date, tz, sync_exclude)
         for label, name in calendars.items()
         if label in SYNC_RULES
     }
