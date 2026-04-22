@@ -24,6 +24,8 @@ All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`
 
 MCPs, plugins, and permissions are all in `opencode.json`. Skills live in `dot_agents/skills/` — edit here, not in `~/.agents/skills/`.
 
+**Keep the global `AGENTS.md.tmpl` lean.** Resist adding DO/DO NOT lists to `dot_config/opencode/AGENTS.md.tmpl`. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
+
 ## Public Repo — Privacy Guidelines
 
 This is a **public repository**. Before committing any content, check for:
