@@ -124,7 +124,6 @@ agentSkills:
       - context-log
       - gh
       - google-docs
-      - learn
       - plan
       - review
       - slack

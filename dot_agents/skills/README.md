@@ -12,20 +12,27 @@ Capabilities backed by a CLI (`cli://`) don't have a skill — the agent reads `
 |---------------------|----------|
 | **elasticsearch** — Query ES logs, APM traces, and errors via curl | **architecture** — Architecture decisions and code-level design smell analysis |
 | **figma** — Read Figma files, components, variables, and projects | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
-| **gh-pr-inline** — Post inline comments on GitHub PRs via `gh api` | **audit** — Review and optimize agent instructions, skills, and commands |
-| **remindctl** — Read and write Apple Reminders (timezone gotcha, recurrence gap) | **chezmoi-apply** — Run `chezmoi apply` safely from inside OpenCode |
-| **slack** — Send messages, search conversations, read threads | **cleanup** — Reclaim disk space: worktrees, databases, Docker |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **commit** — Semantic commit format, branch naming, squashing |
-| | **context-log** — Maintain `.opencode/context-log.md` across sessions |
-| | **conversations** — Research people and decisions across Slack, meetings, Gmail |
-| | **learn** — Extract non-obvious learnings into AGENTS.md or new skills |
-| | **observability** — Investigate production issues using logs and traces |
+| **gh** — GitHub CLI integration: merge requests, CI, inline comments | **chezmoi-apply** — Run `chezmoi apply` safely from inside OpenCode |
+| **google-docs** — Read and write Google Docs via the gws CLI | **commit** — Semantic commit format, branch naming, squashing |
+| **slack** — Send messages, search conversations, read threads | **context-log** — Maintain `.opencode/context-log.md` across sessions |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **conversations** — Research people and decisions across chat, meetings, email |
+| **pty** — PTY sessions for long-running or interactive processes | **observability** — Investigate production issues using logs and traces |
 | | **plan** — Present a plan and wait for approval before implementing |
-| | **pty** — PTY sessions for long-running or interactive processes |
+| | **post-meeting** — Post-recording meeting processing |
 | | **push** — Push approval protocol and CI watching |
 | | **qa** — Browser QA verification via Firefox DevTools |
-| | **review** — Review changes: commit, branch, PR, or staged |
+| | **review** — Review changes: commit, branch, merge request, or staged |
 | | **tdd** — Strict red/green/refactor TDD loop |
 | | **thinking-tools** — Structured frameworks for decisions and problem framing |
-| | **todo** — Add to todo list without interrupting current work |
 | | **writing** — Write tickets, PRDs, project updates, and ADRs |
+
+## Commands
+
+User-triggered slash commands that package self-contained workflows. Invoke with `/name`.
+
+| Command | Description |
+|---------|-------------|
+| **/learn** | Capture non-obvious discoveries from this session into AGENTS.md or a new skill |
+| **/audit** | Evaluate agent config — instruction hierarchy, context budget, redundancy, effectiveness |
+| **/cleanup** | Reclaim disk space — stale worktrees, PostgreSQL databases, OpenCode DB entries |
+| **/todo** | Add to todo list without interrupting current work |
