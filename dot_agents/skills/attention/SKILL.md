@@ -42,6 +42,8 @@ Run all of these before forming any view:
 
 - Use your `chat` capability to find recent mentions waiting on you in the last 8 hours. Search for mentions of your user ID in the last 8h.
 
+- Use your `source-control` capability to fetch a cross-repo activity summary — mentions, review requests, and assigned work.
+
 - Note: priority strings for your `reminders` capability are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
 
 ---
@@ -175,27 +177,24 @@ Always fetch work items regardless of energy level — you need them to identify
 
 Tune what you surface to the energy level: at LOW, identify only the single most important/urgent item (show it in Step 3, don't recommend action unless time-sensitive); at MODERATE, show 1–2 items max and prefer quick wins; at FULL, show up to 3–4 and include longer-horizon items worth starting. Don't list everything — pick the most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
 
-### Code review — four categories to check
+### Source control — two things to check
 
-Use your `source-control` capability to fetch and categorize. Classify each of your open merge requests by what action is needed — your capability has the details on how to read per-reviewer state correctly:
+**Activity summary** — use your `source-control` capability to surface the cross-repo activity summary fetched in Step 1: mentions, review requests, assigned work, and any issues or discussions tracked in source control where a response from you is needed.
 
-1. **Review requests waiting on you** — someone requested your review
-2. **Needs your action** — a reviewer requested changes or left comments; use per-reviewer state, not the aggregate decision
-3. **Merge conflicts** — surface these first, dispatch conflict resolution immediately. For stacked branches, also use your `branching` capability to check whether any tracked branches are out of date with their base.
-4. **CI failing** — needs investigation or a fix
+**Your open merge requests** — use your `source-control` capability to find merge requests needing your attention. Your capability has the full detection logic for each actionable state (conflicts, CI failures, received reviews needing re-review request, and more). For stacked branches, also use your `branching` capability to check whether any tracked branches are out of date with their base.
 
 ### Issues — by state
 
-Use your `issues` capability to fetch issues assigned to you, grouped by state (in progress, unstarted, backlog).
+Fetch issues assigned to you from all configured issues sources. Issues may be tracked in multiple places — check each available `issues` capability as well as your `source-control` capability for repo-level issues and discussions needing a response. Group by state (in progress, unstarted, backlog).
 
 ### Cross-reference merge requests ↔ issues
 
 After fetching both:
 
-- If an issue has a linked merge request that also appears in the categories above, **group them together** — don't show the same work twice
+- If an issue has a linked merge request that also appears above, **group them together** — don't show the same work twice
 - Flag if an issue is "In Progress" but its merge request has changes requested or a merge conflict — that's a stuck item
 
-Present as a unified list, grouped by work item (not by tool), with the most actionable status shown.
+Present as a unified list, grouped by work item (not by source), with the most actionable status shown.
 
 ### Starting work from here
 
