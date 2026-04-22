@@ -37,6 +37,8 @@ Explicit mappings (overrides and CLI providers that can't be auto-discovered):
 
 **Scope discipline:** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features.
 
+**Delegation discipline:** Implementation runs in sub-agents dispatched via your `agent` capability. The orchestrator's job is to ensure the other disciplines (plan, TDD, scope, branch, issue) are followed — nudge sub-agents back on track when they drift, prune and restart with a fresh context when they can't recover. Trivial edits (typo, single-line config) can happen inline.
+
 **Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval.
 
 **Keep AGENTS.md lean.** Resist adding DO/DO NOT lists here. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
