@@ -192,7 +192,22 @@ performed) for the report.
 
 ---
 
-## Step 6: Report
+## Step 6: Delete audio files
+
+After re-ingest is complete, delete all audio files for the meeting. minutes never auto-prunes audio — without explicit deletion, .wav, .voice.wav, and .system.wav files accumulate indefinitely. There is no need to keep audio after post-meeting cleanup is done.
+
+For each of the three stems, delete if present:
+- `<meeting-slug>.wav`
+- `<meeting-slug>.voice.wav`
+- `<meeting-slug>.system.wav`
+
+Use `rm` directly — `minutes delete --with-audio` only targets the merged .wav and may miss stems.
+
+Record which files were deleted (and which were absent) for the report.
+
+---
+
+## Step 7: Report
 
 ```
 Meeting: <title>
@@ -203,4 +218,5 @@ Speakers: <N> confirmed, <N> still unidentified [samples + candidates if any]
           UNKNOWN segments: <N> (flag if high relative to total lines)
 Knowledge base: re-ingested (<N> facts, <N> stale profiles removed, <N> merges) / skipped (no speaker changes)
 Reminders: <N> action items added / already tracked
+Audio: <N> files deleted (<total MB>)
 ```
