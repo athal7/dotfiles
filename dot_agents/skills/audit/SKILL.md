@@ -1,3 +1,15 @@
+---
+name: audit
+description: Audit agent configuration — instruction hierarchy, context budget, redundancy, and effectiveness of AGENTS.md, skills, and commands
+license: MIT
+compatibility: opencode
+metadata:
+  author: athal7
+  version: "1.0"
+  provides:
+    - audit
+---
+
 # Agent Configuration Audit
 
 Audit the OpenCode agent configuration for this dotfiles repo.
@@ -9,7 +21,7 @@ Base system prompt (upstream)  <- Built into OpenCode, auto-updated
   + AGENTS.md (global)         <- Universal rules, always loaded
   + opencode.json              <- Agent config (models, permissions, temperature)
   + skill/*.md                 <- On-demand, loaded via skill tool
-  + command/*.md               <- Loaded on /command invocation
+  + commands/*.md              <- Loaded on /command invocation
 ```
 
 ## Where to Put Things
@@ -19,7 +31,7 @@ Base system prompt (upstream)  <- Built into OpenCode, auto-updated
 | Safety rules, tool tips | `AGENTS.md` | Always |
 | Agent config (model, permissions, temperature) | `opencode.json` | Always |
 | Workflows, methodologies, checklists | `skill/*.md` | On demand via skill tool |
-| User-triggered workflows | `command/*.md` | On `/command` invocation |
+| User-triggered workflows | `commands/*.md` | On `/command` invocation |
 
 ## Decision: Skill vs Command
 
@@ -33,7 +45,7 @@ Base system prompt (upstream)  <- Built into OpenCode, auto-updated
 - Longer content that would bloat always-on context
 
 **Put in command if:**
-- Triggered by explicit user action (`/qa`, `/todo`)
+- Triggered by explicit user action (`/learn`, `/audit`)
 - Self-contained workflow with `$ARGUMENTS`
 
 ## Evaluation Checklist
@@ -71,7 +83,7 @@ Run a few representative tasks and note:
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md.tmpl` |
 | `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json` |
 | `~/.agents/skills/*` | `dot_agents/skills/*` |
-| `~/.config/opencode/command/*` | `dot_config/opencode/command/*` |
+| `~/.config/opencode/commands/*` | `dot_config/opencode/commands/*` |
 
 After changes: apply via your `machine-config` capability.
 
