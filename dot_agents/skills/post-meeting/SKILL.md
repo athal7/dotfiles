@@ -196,12 +196,13 @@ performed) for the report.
 
 After re-ingest is complete, delete all audio files for the meeting. minutes never auto-prunes audio — without explicit deletion, .wav, .voice.wav, and .system.wav files accumulate indefinitely. There is no need to keep audio after post-meeting cleanup is done.
 
-For each of the three stems, delete if present:
+For each of the four files, delete if present:
 - `<meeting-slug>.wav`
 - `<meeting-slug>.voice.wav`
 - `<meeting-slug>.system.wav`
+- `./<meeting-slug>.embeddings` — hidden file storing diarizer voice vectors; safe to delete once processing is done
 
-Use `rm` directly — `minutes delete --with-audio` only targets the merged .wav and may miss stems.
+Use `rm -f` for all four patterns since not all will exist for every recording (e.g. voice-only recordings have no .system.wav). `minutes delete --with-audio` only targets the merged .wav and may miss stems and the embeddings file.
 
 Record which files were deleted (and which were absent) for the report.
 
