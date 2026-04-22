@@ -10,8 +10,12 @@
   "model": "anthropic/claude-sonnet-4-6",
   "agent": {
     "expert": {
-      "model": "anthropic/claude-opus-4-6",
-      "temperature": 0
+      "model": "anthropic/claude-opus-4-7",
+      "temperature": 0,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 32000
+      }
     }
   },
   "provider": {
