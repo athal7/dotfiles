@@ -57,12 +57,12 @@ After every successful push, automatically create or update a draft merge reques
    - Do not update the state (draft → ready or vice versa)
 4. Once created/confirmed, proceed to CI watching
 
-## After Draft PR — Watch CI
+## After Draft Merge Request — Watch CI
 
-After the draft PR is created/confirmed, watch CI to completion using your `ci` capability. Do not hand back to the user and consider the task done.
+After the draft merge request is created/confirmed, watch CI to completion using your `ci` capability. Do not hand back to the user and consider the task done.
 
 1. Poll every 30s until the run is no longer queued or in progress
-2. If all checks pass: report success with a markdown link to the PR — never just the bare number
+2. If all checks pass: report success with a markdown link to the merge request — never just the bare number
 3. If any check fails:
    - Get the failure output from the failed run
    - Fix the root cause
