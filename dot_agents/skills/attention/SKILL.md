@@ -13,7 +13,7 @@ metadata:
     - meetings
     - chat
     - issues
-    - code-review
+    - source-control
     - branching
 ---
 
@@ -177,7 +177,7 @@ Tune what you surface to the energy level: at LOW, identify only the single most
 
 ### Code review — four categories to check
 
-Use your `code-review` capability to fetch and categorize. Classify each of your open merge requests by what action is needed — your capability has the details on how to read per-reviewer state correctly:
+Use your `source-control` capability to fetch and categorize. Classify each of your open merge requests by what action is needed — your capability has the details on how to read per-reviewer state correctly:
 
 1. **Review requests waiting on you** — someone requested your review
 2. **Needs your action** — a reviewer requested changes or left comments; use per-reviewer state, not the aggregate decision

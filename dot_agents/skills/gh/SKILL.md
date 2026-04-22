@@ -7,9 +7,8 @@ metadata:
   author: athal7
   version: "1.0"
   provides:
-    - code-review
+    - source-control
     - ci
-    - post-inline-comments
 ---
 
 # Skill: gh

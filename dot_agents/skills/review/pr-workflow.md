@@ -5,19 +5,19 @@
 
 **Conflict resolution on reviewed merge requests:** When a merge request has reviews and conflicts with the base branch, use merge (not rebase) to resolve them. Rebasing rewrites history and invalidates existing review comments.
 
-**Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting — then STOP and wait for explicit approval. Use your `post-inline-comments` capability when posting inline comments or responding to review feedback.
+**Submitting reviews:** Show the full proposed review content and ask "Do you approve?" before submitting — then STOP and wait for explicit approval. Use your `source-control` capability when posting inline comments or responding to review feedback.
 
-**Inline-first policy:** When submitting, post findings as inline comments only — use your `post-inline-comments` capability. Do NOT post a top-level review body with verdict, TL;DR, summaries, or per-line findings. The verdict, TL;DR, Requirements Check, and all other summary sections are for the session output only — never submitted. The only exception is a review-wide observation that genuinely cannot be attributed to any line; in that case, one brief sentence in the body is acceptable.
+**Inline-first policy:** When submitting, post findings as inline comments only — use your `source-control` capability. Do NOT post a top-level review body with verdict, TL;DR, summaries, or per-line findings. The verdict, TL;DR, Requirements Check, and all other summary sections are for the session output only — never submitted. The only exception is a review-wide observation that genuinely cannot be attributed to any line; in that case, one brief sentence in the body is acceptable.
 
 ---
 
 ## Merge Request Checkout
 
-**If reviewing a merge request** (URL or number provided): check out the branch locally before doing anything else using your `code-review` capability.
+**If reviewing a merge request** (URL or number provided): check out the branch locally before doing anything else using your `source-control` capability.
 
 This ensures local files reflect the code under review, enabling accurate diff panel display and local file reads. Save the original branch first so you can restore it after review.
 
-If the capability cannot check out the branch locally (e.g., the repo isn't available locally), fall back to fetching the diff and metadata via your `code-review` capability.
+If the capability cannot check out the branch locally (e.g., the repo isn't available locally), fall back to fetching the diff and metadata via your `source-control` capability.
 
 ---
 
@@ -39,7 +39,7 @@ If the capability cannot check out the branch locally (e.g., the repo isn't avai
 
 ## Prior Review History
 
-Fetch prior review history before dispatching specialists using your `code-review` capability:
+Fetch prior review history before dispatching specialists using your `source-control` capability:
 
 1. All submitted reviews with their verdict and top-level body
 2. All inline review comments, including `path`, `line`, `body`, and reply thread relationships

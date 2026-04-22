@@ -9,7 +9,7 @@ metadata:
     - push
   requires:
     - commit
-    - code-review
+    - source-control
     - ci
 ---
 
@@ -46,7 +46,7 @@ You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
 
 ## After Push — Create/Update Draft Merge Request
 
-After every successful push, automatically create or update a draft merge request using your `code-review` capability.
+After every successful push, automatically create or update a draft merge request using your `source-control` capability.
 
 1. Check if a merge request already exists for this branch
 2. If none exists: create a draft merge request using commits from the branch to populate title/body

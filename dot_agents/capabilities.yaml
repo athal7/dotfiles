@@ -25,5 +25,5 @@ branching:
     (commit range for current layer).
 
 # docs provided by docs skill (auto-discovered via provides: [docs])
-# code-review provided by gh skill (auto-discovered) — notes live in the skill
-# email provided by gws skill (auto-discovered)
+# source-control and ci provided by gh skill (auto-discovered) — notes live in the skill
+# code-review provided by review skill (auto-discovered) — workflow that consumes source-control

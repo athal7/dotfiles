@@ -104,4 +104,4 @@ Skip: bullet lists, `## Summary` headers, implementation details obvious from th
 
 When the issue tracker is internal and the repo is public, don't reference issues in commits or merge requests. Instead, update the issue with a link to the merge request via your `issues` capability.
 
-Check repo visibility via your `code-review` capability.
+Check repo visibility via your `source-control` capability.

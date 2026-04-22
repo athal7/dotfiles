@@ -5,9 +5,9 @@
 
 **Extract issue IDs** from branch name or merge request, then fetch details:
 1. Parse the current branch name for issue IDs (e.g. `ENG-123`, `PROJ-456`, `#123`)
-2. For merge requests: fetch body and linked issues via your `code-review` capability
+2. For merge requests: fetch body and linked issues via your `source-control` capability
 3. Fetch issue details via your `issues` capability
-4. **Fetch project context** — if the Linear issue belongs to a project, also fetch via your `search-issues` capability:
+4. **Fetch project context** — if the issue belongs to a project, also fetch via your `issues` capability:
    - project metadata, goals, status
    - full project description with scope, non-goals, and design decisions
    - current milestone with target date and deliverables (if applicable)

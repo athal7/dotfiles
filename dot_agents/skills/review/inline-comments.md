@@ -1,2 +1,2 @@
 
-Inline comment posting is handled via your `post-inline-comments` capability.
+Inline comment posting is handled via your `source-control` capability.
