@@ -95,6 +95,16 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
    - Tool-specific content is expected and correct here
 4. Run `agentskills validate` on the skill directory
 
+## Deleting a skill
+
+`chezmoi apply` does not remove files it no longer manages. When a skill directory is deleted from source, the deployed copy at `~/.agents/skills/<name>` becomes an orphan and must be removed manually:
+
+```bash
+rm -rf ~/.agents/skills/<name>
+```
+
+Check for orphans by diffing source vs deployed: `diff <(ls ~/.agents/skills/ | sort) <(ls dot_agents/skills/ | sort)`.
+
 ## Editing an existing skill
 
 **Before adding any content to a workflow skill**, scan the section you're editing for existing violations and fix them. Do not add new content that would introduce a violation.
