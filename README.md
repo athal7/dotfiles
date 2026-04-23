@@ -42,15 +42,30 @@ gh skill install athal7/dotfiles commit
 gh skill install athal7/dotfiles review
 ```
 
-**With chezmoi external** — add to your `.chezmoiexternal.toml`:
+**With chezmoi external** — declare skills in `.chezmoidata/skills.yaml`:
 
-```toml
-[".agents/skills/commit"]
+```yaml
+agentSkills:
+  "https://github.com/athal7/dotfiles/archive/refs/heads/main.tar.gz":
+    skills:
+      - commit
+      - review
+      - tdd
+```
+
+Then add this to `.chezmoiexternal.toml.tmpl` to generate the entries:
+
+```gotmpl
+{{ range $url, $data := .agentSkills }}
+{{ range $skill := $data.skills }}
+[".agents/skills/{{ $skill }}"]
     type = "archive"
-    url = "https://github.com/athal7/dotfiles/archive/refs/heads/main.tar.gz"
+    url = "{{ $url }}"
     stripComponents = 2
-    include = ["*/skills/commit/**"]
+    include = ["*/skills/{{ $skill }}/**"]
     refreshPeriod = "168h"
+{{ end }}
+{{ end }}
 ```
 
 `gh skill update` works with skills installed via either method.
