@@ -1,0 +1,16 @@
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+
+name: validate
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate skills
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh skill publish --dry-run

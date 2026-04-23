@@ -4,8 +4,6 @@ description: Present a plan and wait for user approval before implementing — l
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - plan
 ---

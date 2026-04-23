@@ -4,8 +4,6 @@ description: Review changes [commit|branch|merge-request|staged] — verifies yo
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - verify
     - code-review

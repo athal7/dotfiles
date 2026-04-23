@@ -3,8 +3,6 @@ name: slack
 description: Send messages, search conversations, and read threads in Slack via the API
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - chat
 ---

@@ -3,8 +3,6 @@ name: architecture
 description: Software design reasoning — architecture decisions with tradeoff tables, code-level design smells (Feature Envy, Scattered Enforcement, Shotgun Surgery, Primitive Obsession, Layering Violations), refactoring direction, and pre-implementation design prerequisite checks
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - architecture
   requires:

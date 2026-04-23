@@ -4,8 +4,6 @@ description: OpenCode agent runtime — manage sessions, dispatch tasks, repair 
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - agent
 ---

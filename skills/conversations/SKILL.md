@@ -3,8 +3,6 @@ name: conversations
 description: Research people, decisions, and context across meetings, chat, email, and the knowledge base
 license: MIT
 metadata:
-  author: athal7
-  version: "1.3"
   requires:
     - chat
     - meetings

@@ -3,8 +3,6 @@ name: google-docs
 description: Read and write Google Docs via gws CLI — search, export, format, and insert real tables
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - docs
 ---

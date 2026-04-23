@@ -4,8 +4,6 @@ description: Address review feedback on your own merge request — resolve threa
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - respond-to-review
   requires:

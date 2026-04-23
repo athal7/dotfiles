@@ -3,8 +3,6 @@ name: post-meeting
 description: Post-recording cleanup for minutes — wait for processing, update title from calendar, identify speakers, re-ingest knowledge base, add action items to reminders. Privacy-sensitive — use a local model only.
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   requires:
     - calendar
     - reminders

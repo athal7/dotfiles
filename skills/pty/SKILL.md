@@ -4,8 +4,6 @@ description: PTY sessions for long-running processes, interactive input, signal 
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - shell
 ---

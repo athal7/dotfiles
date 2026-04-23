@@ -3,8 +3,6 @@ name: commit
 description: Semantic commit format, branch naming, squashing guidance, and post-commit learning capture
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - commit
   requires:

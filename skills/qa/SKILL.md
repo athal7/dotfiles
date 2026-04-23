@@ -4,8 +4,6 @@ description: QA verification with Firefox DevTools browser automation — load w
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - qa
 ---

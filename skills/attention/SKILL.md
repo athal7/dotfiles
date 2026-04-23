@@ -4,8 +4,6 @@ description: Energy and spoon check — come up for air, see what needs attentio
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   requires:
     - agent
     - calendar

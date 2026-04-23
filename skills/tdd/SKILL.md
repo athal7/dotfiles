@@ -4,8 +4,6 @@ description: Strict TDD loop — red/green/refactor must be followed for every c
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - tdd
 ---

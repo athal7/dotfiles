@@ -4,8 +4,6 @@ description: Create and update .opencode/context-log.md to preserve issue contex
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - context-log
 ---

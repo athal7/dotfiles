@@ -4,8 +4,6 @@ description: GitHub CLI integration — non-obvious behavior for PRs, reviews, C
 license: MIT
 compatibility: opencode
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - source-control
     - ci

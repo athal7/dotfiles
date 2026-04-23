@@ -3,8 +3,6 @@ name: writing
 description: Write product artifacts clearly — tickets, PRDs, project updates, and architecture decision records
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   requires:
     - docs
 ---

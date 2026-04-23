@@ -3,8 +3,6 @@ name: elasticsearch
 description: Query Elasticsearch logs, APM traces, and errors via curl — index patterns, field names, auth setup, and time-range syntax
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - logs
 ---

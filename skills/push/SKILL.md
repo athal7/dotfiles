@@ -3,8 +3,6 @@ name: push
 description: Push approval protocol and post-push CI watching
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - push
   requires:

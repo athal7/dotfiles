@@ -3,8 +3,6 @@ name: figma
 description: Read Figma files, components, variables, and projects via curl and the REST API
 license: MIT
 metadata:
-  author: athal7
-  version: "1.0"
   provides:
     - design
 ---
