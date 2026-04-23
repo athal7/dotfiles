@@ -37,9 +37,7 @@ packages:
     - name: googleworkspace-cli
     - name: steipete/tap/remindctl
     - name: schpet/tap/linear
-    - name: silverstein/tap/minutes
     - name: pchuri/tap/confluence-cli
-    - name: pnpm
 
   casks:
     - name: gcloud-cli
@@ -48,7 +46,6 @@ packages:
     - name: claude-code
     - name: stats
     - name: tailscale-app
-    - name: silverstein/tap/minutes
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
@@ -84,6 +81,22 @@ packages:
       type: archive-file
       path: ical
       executable: true
+      refresh_period: 24h
+
+    - name: minutes
+      repo: silverstein/minutes
+      target: .local/bin/minutes
+      asset: minutes-macos-arm64
+      type: file
+      executable: true
+      refresh_period: 24h
+
+    - name: minutes-desktop
+      repo: silverstein/minutes
+      target: Applications
+      app: Minutes.app
+      asset: Minutes.app.tar.gz
+      type: archive
       refresh_period: 24h
 
   # agent skills installed via gh skill install
