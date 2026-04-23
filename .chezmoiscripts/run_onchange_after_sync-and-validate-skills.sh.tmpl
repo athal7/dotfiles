@@ -29,7 +29,7 @@ fi
 failed=0
 warned=0
 
-for skill_dir in "$SKILLS_DEST"/*/; do
+for skill_dir in "$SKILLS_SRC"/*/; do
   result=$(agentskills validate "$skill_dir" 2>&1)
   if echo "$result" | grep -q "Validation failed"; then
     # Unexpected fields from open proposals (prerequisite-skills) are warnings, not errors
