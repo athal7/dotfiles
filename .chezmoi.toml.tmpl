@@ -35,6 +35,7 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 #   default_title           — mirror title fallback when no title_mappings match (default: "Busy")
 #   lunch_guard             — if true, lunch-guard protects this calendar
 #   family_scheduler_target — if true, family-scheduler writes new events here
+#   babysitter_check        — if true, babysitter-check looks for events needing coverage here
 # Target attributes (on the calendar mirrors are written to):
 #   inbound_start           — only accept mirrors starting at or after this hour (optional)
 #   inbound_end             — only accept mirrors starting before this hour (optional)
@@ -77,3 +78,15 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 # [data.feeds] — optional, ICS feeds for family-scheduler; key becomes display name
 # [data.feeds]
 #     my_rec_center = "https://example.com/feed.ics"
+
+# Reminders list configuration. Each key is an arbitrary label.
+# Attributes:
+#   name                  — Apple Reminders list name (required)
+#   babysitter_reminders  — if true, babysitter-check writes reminders here
+#
+# [data.reminders.personal]
+#     name = "Personal"
+#     babysitter_reminders = true
+#
+# [data.reminders.work]
+#     name = "Work"

@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+"""
+babysitter-check - Remind about events that may need babysitter coverage.
+
+For each non-recurring evening/weekend event in calendars marked
+babysitter_check=true, checks if any overlapping event containing
+"babysit" exists across all configured calendars. If not, and no
+reminder already exists, adds one to the babysitter_reminders list.
+
+Requires: ical, remindctl, chezmoi
+"""
+
+import json
+import os
+import subprocess
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+LOOKAHEAD_DAYS = 28
+EVENING_START = 17  # 5pm
+MARKER = "Managed by babysitter-check"
+
+_ICAL_BIN = None
+
+
+def ical_bin():
+    global _ICAL_BIN
+    if not _ICAL_BIN:
+        _ICAL_BIN = subprocess.run(
+            ["which", "ical"], capture_output=True, text=True
+        ).stdout.strip() or str(Path.home() / ".local/bin/ical")
+    return _ICAL_BIN
+
+
+def ical(*args):
+    result = subprocess.run([ical_bin(), *args], capture_output=True, text=True)
+    return json.loads(result.stdout or "[]")
+
+
+def remindctl(*args):
+    result = subprocess.run(["remindctl", *args], capture_output=True, text=True)
+    return result
+
+
+def chezmoi_data():
+    result = subprocess.run(
+        ["chezmoi", "data", "--format", "json"],
+        capture_output=True, text=True
+    )
+    return json.loads(result.stdout)
+
+
+def local_tz():
+    return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
+
+
+def to_local(dt_str, tz):
+    return datetime.fromisoformat(dt_str.replace("Z", "+00:00")).astimezone(tz)
+
+
+def log(msg):
+    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
+    subprocess.run(["logger", "-t", "babysitter-check", msg], capture_output=True)
+
+
+def is_eligible(dt):
+    """Evenings (5pm+) on weekdays, or any time on weekends."""
+    if dt.weekday() >= 5:
+        return True
+    return dt.hour >= EVENING_START
+
+
+def events_overlap(a_start, a_end, b_start, b_end):
+    """Return True if two time intervals overlap."""
+    return a_start < b_end and b_start < a_end
+
+
+def managed_reminder_titles():
+    """Return set of titles ever created by this script (complete or not)."""
+    result = remindctl("show", "all", "--json")
+    if result.returncode != 0:
+        return set()
+    data = json.loads(result.stdout or "[]")
+    return {r["title"] for r in data if r["title"].startswith("Book babysitter for ")}
+
+
+def main():
+    data = chezmoi_data()
+    calendars = data.get("calendars", {})
+    reminders_config = data.get("reminders", {})
+    cal_entries = {k: v for k, v in calendars.items() if isinstance(v, dict)}
+
+    # Find calendars to check for events needing babysitter coverage
+    check_cals = {k: v for k, v in cal_entries.items() if v.get("babysitter_check")}
+    if not check_cals:
+        log("No calendars with babysitter_check=true configured, skipping")
+        return
+
+    # Find the reminders list to write to
+    reminder_list = next(
+        (v["name"] for v in reminders_config.values()
+         if isinstance(v, dict) and v.get("babysitter_reminders")),
+        None
+    )
+    if not reminder_list:
+        log("No reminders list with babysitter_reminders=true configured, skipping")
+        return
+
+    tz = local_tz()
+    from_date = str(date.today())
+    to_date = str(date.today() + timedelta(days=LOOKAHEAD_DAYS))
+
+    # Fetch all events across all configured calendars for overlap checking
+    all_events = []
+    for cal in cal_entries.values():
+        events = ical("list", "-c", cal["name"], "--from", from_date, "--to", to_date, "-o", "json")
+        all_events.extend(events)
+
+    # Fetch all reminders ever created by this script (inc. completed/deleted)
+    existing = managed_reminder_titles()
+
+    added = 0
+    for label, cal in check_cals.items():
+        events = ical("list", "-c", cal["name"], "--from", from_date, "--to", to_date, "-o", "json")
+        for e in events:
+            if e.get("all_day") or e.get("recurring"):
+                continue
+            start = to_local(e["start_date"], tz)
+            if not is_eligible(start):
+                continue
+
+            title = e.get("title", "").strip()
+            end = to_local(e["end_date"], tz)
+            event_date = start.strftime("%A, %B %-d")
+            reminder_title = f"Book babysitter for {title} on {event_date}"
+
+            if reminder_title in existing:
+                log(f"Reminder already exists for '{title}' on {event_date}")
+                continue
+
+            # Check if any event containing "babysit" overlaps
+            covered = any(
+                "babysit" in other.get("title", "").lower()
+                and events_overlap(
+                    to_local(other["start_date"], tz),
+                    to_local(other["end_date"], tz),
+                    start, end
+                )
+                for other in all_events
+                if not other.get("all_day")
+            )
+
+            if covered:
+                log(f"'{title}' on {event_date} already has babysitter coverage")
+                continue
+
+            log(f"Adding reminder: {reminder_title}")
+            remindctl("add", reminder_title, "--list", reminder_list, "--notes", MARKER, "--quiet")
+            existing.add(reminder_title)
+            added += 1
+
+    log(f"Done — added {added} reminder(s)")
+
+
+if __name__ == "__main__":
+    main()
