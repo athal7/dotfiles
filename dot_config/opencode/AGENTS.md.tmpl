@@ -43,7 +43,7 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 2. **Green** — write the minimum implementation to make it pass, run and confirm green
 3. **Refactor** — clean up structure and naming while keeping tests green
 
-Never write implementation before a test exists. Never skip the red phase. If in doubt, load the `tdd` skill for the full protocol.
+Never write implementation before a test exists. Never skip the red phase. Load the `tdd` skill for the full protocol.
 
 ## Feedback Sensors
 
@@ -55,7 +55,10 @@ When working in a project codebase, run linters and tests in-session as backpres
 
 Which tools to use is determined by the project (check AGENTS.md, Makefile, or package.json in the repo). Don't guess — read the project's own instructions first.
 
+**Before committing:** load the `commit` skill and follow it.
+
+**Before pushing:** load the `push` skill and follow it.
+
 ## Host-Specific Files (NOT managed by chezmoi)
 
-- `~/.env` — API keys and secrets (managed by chezmoi, sourced in `.zshenv`)
 - `~/.config/zsh/private.zsh` — work-specific shell config (sourced at end of `.zshrc`)
