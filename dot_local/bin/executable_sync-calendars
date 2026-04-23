@@ -180,8 +180,15 @@ def main():
             continue
         for event in all_events.get(src_label, []):
             for dst_label in dst_labels:
-                if dst_label in write_labels:
-                    expected.add((dst_label, event["start_date"], event["end_date"]))
+                if dst_label not in write_labels:
+                    continue
+                dst_cal = cal_entries.get(dst_label, {})
+                if not in_inbound_window(event, tz,
+                                         dst_cal.get("inbound_start"),
+                                         dst_cal.get("inbound_end"),
+                                         dst_cal.get("inbound_days")):
+                    continue
+                expected.add((dst_label, event["start_date"], event["end_date"]))
 
     for dst_label, mirrors in all_mirrors.items():
         for mirror in mirrors:
