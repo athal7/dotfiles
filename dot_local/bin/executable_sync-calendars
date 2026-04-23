@@ -94,7 +94,15 @@ def is_excluded(event, src_label, sync_exclude):
     return False
 
 
-def events_for(calendar, src_label, from_date, to_date, tz, sync_exclude):
+def is_locally_ignored(event, ignore_patterns):
+    """Return True if the event title matches any per-calendar ignore pattern (substring, case-insensitive)."""
+    if not ignore_patterns:
+        return False
+    title = event.get("title", "").strip().lower()
+    return any(pattern.lower() in title for pattern in ignore_patterns)
+
+
+def events_for(calendar, src_label, from_date, to_date, tz, sync_exclude, ignore_patterns=None):
     """Fetch real (non-mirror) events for a calendar."""
     events = ical("list", "-c", calendar, "--from", from_date, "--to", to_date, "-o", "json")
     return [
@@ -105,6 +113,7 @@ def events_for(calendar, src_label, from_date, to_date, tz, sync_exclude):
         and e.get("availability") != "free"
         and e.get("status") != "cancelled"
         and not is_excluded(e, src_label, sync_exclude)
+        and not is_locally_ignored(e, ignore_patterns)
     ]
 
 
@@ -161,7 +170,8 @@ def main():
 
     # Fetch real events from all source calendars
     all_events = {
-        label: events_for(cal["name"], label, from_date, to_date, tz, sync_exclude)
+        label: events_for(cal["name"], label, from_date, to_date, tz, sync_exclude,
+                          cal.get("ignore_patterns"))
         for label, cal in cal_entries.items()
         if label in sync_rules
     }

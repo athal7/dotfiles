@@ -52,6 +52,8 @@ calendars:
     name: "Personal"
     sync_to:
       - work
+    ignore_patterns:
+      - CSA Delivery
   work:
     name: "Work"
     sync_to:
