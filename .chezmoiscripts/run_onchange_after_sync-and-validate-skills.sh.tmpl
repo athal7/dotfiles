@@ -1,9 +1,19 @@
 #!/bin/sh
-# Validate agent skills when skill files change
+# Sync and validate agent skills when skill files change
 # Hashes for change detection:
-{{- range (glob (joinPath .chezmoi.sourceDir "dot_agents/skills/*/SKILL.md")) }}
+{{- range (glob (joinPath .chezmoi.sourceDir "skills/*/SKILL.md")) }}
 # skill: {{ . | include | sha256sum }}
 {{- end }}
+
+SKILLS_SRC="{{ .chezmoi.sourceDir }}/skills"
+SKILLS_DEST="$HOME/.agents/skills"
+
+# Sync skills from repo to destination, replacing it wholesale to remove orphans.
+# External skills (ical-cli, linear-cli) are fetched by chezmoi before this script runs.
+echo "syncing skills from $SKILLS_SRC..."
+rm -rf "$SKILLS_DEST"
+mkdir -p "$SKILLS_DEST"
+cp -r "$SKILLS_SRC"/. "$SKILLS_DEST/"
 
 if ! command -v agentskills >/dev/null 2>&1; then
   echo "agentskills not found — skipping skill validation (install: uv tool install skills-ref)" >&2
@@ -13,7 +23,7 @@ fi
 failed=0
 warned=0
 
-for skill_dir in "$HOME/.agents/skills"/*/; do
+for skill_dir in "$SKILLS_DEST"/*/; do
   result=$(agentskills validate "$skill_dir" 2>&1)
   if echo "$result" | grep -q "Validation failed"; then
     # Unexpected fields from open proposals (prerequisite-skills) are warnings, not errors
