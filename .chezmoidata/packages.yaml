@@ -43,7 +43,6 @@ packages:
     - name: font-monaspace
     - name: ghostty
     - name: claude-code
-    - name: silverstein/tap/minutes
     - name: stats
     - name: tailscale-app
 
@@ -89,6 +88,14 @@ packages:
       asset: minutes-macos-arm64
       type: file
       executable: true
+      refresh_period: 24h
+
+    - name: minutes-desktop
+      repo: silverstein/minutes
+      target: Applications
+      app: Minutes.app
+      asset: Minutes.app.tar.gz
+      type: archive
       refresh_period: 24h
 
   # agent skills installed via gh skill install
