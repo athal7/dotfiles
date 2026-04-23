@@ -1,17 +1,3 @@
-[".agents/skills/ical-cli"]
-    type = "archive"
-    url = "https://github.com/BRO3886/ical/archive/refs/heads/main.tar.gz"
-    stripComponents = 3
-    include = ["*/skills/ical-cli/**"]
-    refreshPeriod = "168h"
-
-[".agents/skills/linear-cli"]
-    type = "archive"
-    url = "https://github.com/schpet/linear-cli/archive/refs/heads/main.tar.gz"
-    stripComponents = 3
-    include = ["*/skills/linear-cli/SKILL.md", "*/skills/linear-cli/references/**"]
-    refreshPeriod = "168h"
-
 {{ range .packages.github_releases -}}
 {{ if eq .target "Applications" -}}
 [{{ printf "Applications/%s" .app | quote }}]

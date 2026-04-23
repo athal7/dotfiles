@@ -91,6 +91,13 @@ packages:
       executable: true
       refresh_period: 24h
 
+  # agent skills installed via gh skill install
+  skills:
+    - repo: BRO3886/ical
+      skill: ical-cli
+    - repo: schpet/linear-cli
+      skill: linear-cli
+
   # npm-managed global packages
   npm:
     homebridge_version: "1.11.4"

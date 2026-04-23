@@ -4,16 +4,22 @@
 {{- range (glob (joinPath .chezmoi.sourceDir "skills/*/SKILL.md")) }}
 # skill: {{ . | include | sha256sum }}
 {{- end }}
+# gh_skills: {{ .packages.skills | toJson | sha256sum }}
 
 SKILLS_SRC="{{ .chezmoi.sourceDir }}/skills"
 SKILLS_DEST="$HOME/.agents/skills"
 
 # Sync skills from repo to destination, replacing it wholesale to remove orphans.
-# External skills (ical-cli, linear-cli) are fetched by chezmoi before this script runs.
 echo "syncing skills from $SKILLS_SRC..."
 rm -rf "$SKILLS_DEST"
 mkdir -p "$SKILLS_DEST"
 cp -r "$SKILLS_SRC"/. "$SKILLS_DEST/"
+
+# Install external skills via gh skill install
+{{ range .packages.skills -}}
+echo "installing {{ .skill }} from {{ .repo }}..."
+gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --force
+{{ end -}}
 
 if ! command -v agentskills >/dev/null 2>&1; then
   echo "agentskills not found — skipping skill validation (install: uv tool install skills-ref)" >&2
