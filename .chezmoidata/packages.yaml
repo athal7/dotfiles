@@ -71,7 +71,7 @@ packages:
       app: NayaFlow-Beta.app
       asset: NayaFlow-Beta-*-arm64-mac.zip
       type: archive
-      refresh_period: 168h
+      refresh_period: 24h
 
     - name: ical
       repo: BRO3886/ical
@@ -80,7 +80,7 @@ packages:
       type: archive-file
       path: ical
       executable: true
-      refresh_period: 168h
+      refresh_period: 24h
 
     - name: minutes
       repo: silverstein/minutes
