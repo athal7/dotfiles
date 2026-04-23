@@ -47,6 +47,7 @@ packages:
     - name: claude-code
     - name: stats
     - name: tailscale-app
+    - name: silverstein/tap/minutes
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
@@ -90,14 +91,6 @@ packages:
       asset: minutes-macos-arm64
       type: file
       executable: true
-      refresh_period: 24h
-
-    - name: minutes-desktop
-      repo: silverstein/minutes
-      target: Applications
-      app: Minutes.app
-      asset: Minutes.app.tar.gz
-      type: archive
       refresh_period: 24h
 
   # agent skills installed via gh skill install
