@@ -2,6 +2,10 @@
 # Copy to ~/.local/share/chezmoi/.chezmoidata/local.yaml and fill in your values.
 # This file is never committed — it lives only on the machine.
 
+# GitHub orgs that use Linear for issue tracking (everything else uses GitHub Issues)
+linear_orgs:
+  - your-work-org
+
 # Secrets manifest — each entry maps a name to its provider.
 # provider: op   — fetched via 1Password CLI
 # provider: keychain — fetched via macOS Keychain (service: chezmoi)
