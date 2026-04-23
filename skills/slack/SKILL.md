@@ -5,9 +5,11 @@ license: MIT
 metadata:
   provides:
     - chat
+  requires:
+    - secrets
 ---
 
-Requires: `$SLACK_USER_TOKEN`, `$SLACK_USER_ID`.
+Use your `secrets` capability to fetch `SLACK_USER_TOKEN` and `SLACK_USER_ID` before making requests.
 
 ## Search messages
 

@@ -1,5 +1,8 @@
 {{ template "brewenv" . }}
 
+# GitHub token — always fresh from gh auth, available in all shells including PTY
+command -v gh >/dev/null 2>&1 && export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+
 # Silence direnv load messages (must be set before direnv hook fires)
 export DIRENV_LOG_FORMAT=
 
@@ -9,6 +12,3 @@ export PATH="/usr/sbin:/sbin:$PATH"
 
 # mise shims (available in all shells, including non-interactive)
 export PATH="$HOME/.local/share/mise/shims:$PATH"
-
-# Load global secrets and config
-[[ -f ~/.env ]] && set -a && source ~/.env && set +a

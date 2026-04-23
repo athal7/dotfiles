@@ -21,3 +21,7 @@
 AGENTS.md
 README.md
 opencode.json
+index.html
+
+# Skills are synced to ~/.agents/skills/ by the sync-and-validate script, not chezmoi directly
+skills

@@ -18,7 +18,7 @@ cp -r "$SKILLS_SRC"/. "$SKILLS_DEST/"
 # Install external skills via gh skill install
 {{ range .packages.skills -}}
 echo "installing {{ .skill }} from {{ .repo }}..."
-gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --force
+GH_NO_TTY=1 gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --force
 {{ end -}}
 
 # agentskills validate — checks spec compliance for local skills

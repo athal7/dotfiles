@@ -5,13 +5,13 @@ license: MIT
 metadata:
   provides:
     - logs
+  requires:
+    - secrets
 ---
 
 Query application logs, APM traces, and errors using the Elasticsearch REST API directly.
 
-Requires environment variables:
-- `ES_URL` — base URL (e.g. `https://elasticsearch.example.com`)
-- `ES_API_KEY` — API key for the `Authorization: ApiKey` header
+Use your `secrets` capability to fetch `ES_URL` and `ES_API_KEY` before making requests.
 
 ## Time range syntax
 

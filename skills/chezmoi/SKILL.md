@@ -61,7 +61,8 @@ tail -50 ~/Library/Logs/opencode-web.error.log
 - Session transcript data is persisted in `~/.local/share/opencode/opencode.db` — the session is not lost, just disconnected
 - The LaunchAgent `KeepAlive: true` means the server will always restart; the only failure mode is a crash loop from bad config
 - **Adding a new `[data]` key to `.chezmoi.toml.tmpl` requires `chezmoi init` before `chezmoi apply`** — `apply` alone does not regenerate `~/.config/chezmoi/chezmoi.toml`
-- **`chezmoi init` is destructive to the live config** — it re-renders the template from scratch, dropping any keys in `~/.config/chezmoi/chezmoi.toml` that aren't produced by the template. The "config file template has changed" warning from `chezmoi apply` is cosmetic when scripts are already deployed; do not run `chezmoi init` to silence it.
+- **`chezmoi init` is destructive to the live config** — it re-renders the template from scratch. The "config file template has changed" warning from `chezmoi apply` is cosmetic when scripts are already deployed; do not run `chezmoi init` to silence it.
+- **Machine-specific config lives in `.chezmoidata/local.yaml`** in the source directory — secrets manifest, calendar config, reminders. This file is gitignored. Copy `~/.config/chezmoi/local.yaml.example` to `~/.local/share/chezmoi/.chezmoidata/local.yaml` to get started.
 
 ## Gotchas
 

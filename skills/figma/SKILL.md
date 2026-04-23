@@ -5,6 +5,8 @@ license: MIT
 metadata:
   provides:
     - design
+  requires:
+    - secrets
 ---
 
 # Figma API Skill
@@ -15,8 +17,9 @@ Fetch the docs above when you need endpoint details. Use `jq` to process respons
 
 ## Auth
 
+Use your `secrets` capability to fetch `FIGMA_ACCESS_TOKEN` before making requests.
+
 ```bash
-# Requires: $FIGMA_ACCESS_TOKEN
 # Header: X-Figma-Token: $FIGMA_ACCESS_TOKEN  (NOT "Authorization: Bearer")
 curl -s "https://api.figma.com/v1/me" -H "X-Figma-Token: $FIGMA_ACCESS_TOKEN" | jq .
 ```

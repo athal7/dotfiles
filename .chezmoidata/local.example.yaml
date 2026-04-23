@@ -1,0 +1,70 @@
+# Machine-specific config for chezmoi.
+# Copy to ~/.local/share/chezmoi/.chezmoidata/local.yaml and fill in your values.
+# This file is never committed — it lives only on the machine.
+
+# Secrets manifest — each entry maps a name to its provider.
+# provider: op   — fetched via 1Password CLI
+# provider: keychain — fetched via macOS Keychain (service: chezmoi)
+secrets:
+  slack_user_token:
+    provider: op
+    account: your-1password-account
+    vault: your-vault
+    item: your-item-id
+    field: user_token
+  slack_token:
+    provider: op
+    account: your-1password-account
+    vault: your-vault
+    item: your-item-id
+    field: token
+  slack_user_id:
+    provider: op
+    account: your-1password-account
+    vault: your-vault
+    item: your-item-id
+    field: user_id
+  figma_access_token:
+    provider: op
+    account: your-1password-account
+    vault: your-vault
+    item: your-item-id
+    field: access_token
+  es_api_key:
+    provider: op
+    account: your-1password-account
+    vault: your-vault
+    item: your-item-id
+    field: api_key
+  es_url:
+    provider: op
+    account: your-1password-account
+    vault: your-vault
+    item: your-item-id
+    field: url
+  wakatime_api_key:
+    provider: keychain
+    account: wakatime_api_key
+
+# Calendar configuration
+calendars:
+  personal:
+    name: "Personal"
+    sync_to:
+      - work
+  work:
+    name: "Work"
+    sync_to:
+      - personal
+    lunch_guard: true
+    inbound_start: 9
+    inbound_end: 17
+    inbound_days: [mon, tue, wed, thu, fri]
+    title_mappings:
+      lunch: Lunch
+      standup: Standup
+
+# Reminders lists
+reminders:
+  personal:
+    name: "Personal"

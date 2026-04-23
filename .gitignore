@@ -15,3 +15,6 @@ download.html
 
 # talisman scan reports
 talisman_report/
+
+# Machine-specific local config — lives only on the machine, never committed
+.chezmoidata/local.yaml
