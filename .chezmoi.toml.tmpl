@@ -39,6 +39,7 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 # Target attributes (on the calendar mirrors are written to):
 #   inbound_start           — only accept mirrors starting at or after this hour (optional)
 #   inbound_end             — only accept mirrors starting before this hour (optional)
+#   inbound_days            — only accept mirrors on these days, e.g. ["mon","tue","wed","thu","fri"] (optional)
 #
 # [data.calendars.personal]
 #     name = "Personal"
@@ -50,6 +51,7 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 #     lunch_guard = true
 #     inbound_start = 9
 #     inbound_end = 17
+#     inbound_days = ["mon","tue","wed","thu","fri"]
 #
 #     [data.calendars.work.title_mappings]
 #         "lunch" = "Lunch"

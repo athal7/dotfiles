@@ -67,11 +67,16 @@ def mirror_title(event, title_mappings, default_title="Busy"):
     return default_title
 
 
-def in_inbound_window(event, tz, inbound_start=None, inbound_end=None):
-    """Return True if event falls within the target calendar's inbound hour window."""
-    if inbound_start is None and inbound_end is None:
-        return True
+DAY_MAP = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+
+
+def in_inbound_window(event, tz, inbound_start=None, inbound_end=None, inbound_days=None):
+    """Return True if event falls within the target calendar's inbound window."""
     start = to_local(event["start_date"], tz)
+    if inbound_days is not None:
+        allowed = {DAY_MAP[d.lower()] for d in inbound_days if d.lower() in DAY_MAP}
+        if start.weekday() not in allowed:
+            return False
     if inbound_start is not None and start.hour < inbound_start:
         return False
     if inbound_end is not None and start.hour >= inbound_end:
@@ -211,7 +216,8 @@ def main():
                 dst_cal = cal_entries.get(dst_label, {})
                 inbound_start = dst_cal.get("inbound_start")
                 inbound_end = dst_cal.get("inbound_end")
-                if not in_inbound_window(event, tz, inbound_start, inbound_end):
+                inbound_days = dst_cal.get("inbound_days")
+                if not in_inbound_window(event, tz, inbound_start, inbound_end, inbound_days):
                     continue
                 key = (dst_label, start, end)
                 if key in mirrored or key in created:
