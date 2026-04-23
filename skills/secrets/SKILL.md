@@ -14,7 +14,18 @@ Secrets are split across two providers based on whether they are personal or wor
 
 The mapping of secret names to provider, vault, item, and field is in `~/.local/share/chezmoi/.chezmoidata/local.yaml` under the `secrets` key. Read it to know which provider and lookup details to use for a given secret.
 
-## Fetching a secret
+## Fetching secrets — fetch once, reuse
+
+**Fetch all secrets you need at the start of a task in a single block, then reuse the variables.** Each `op` call may trigger a biometric prompt — batching avoids repeated interruptions.
+
+```bash
+# Fetch everything needed upfront
+MY_TOKEN=$(op item get <item-id> --fields label=<field> --account <account>)
+MY_OTHER=$(security find-generic-password -s "chezmoi" -a "<account>" -w)
+
+# Reuse in subsequent commands — never call op/security again for the same secret
+curl -H "Authorization: Bearer $MY_TOKEN" ...
+```
 
 **From Keychain:**
 ```bash
