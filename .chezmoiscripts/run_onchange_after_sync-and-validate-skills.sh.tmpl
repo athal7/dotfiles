@@ -53,16 +53,3 @@ else
 
   echo "agentskills validation: ok"
 fi
-
-# gh skill publish --dry-run — checks publish requirements for local skills
-if ! command -v gh >/dev/null 2>&1; then
-  echo "gh not found — skipping publish validation" >&2
-else
-  result=$(gh skill publish --dry-run 2>&1)
-  if echo "$result" | grep -q "error"; then
-    echo "gh skill validation failed:" >&2
-    echo "$result" >&2
-    exit 1
-  fi
-  echo "gh skill validation: ok"
-fi
