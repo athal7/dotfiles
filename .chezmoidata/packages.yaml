@@ -37,6 +37,7 @@ packages:
     - name: googleworkspace-cli
     - name: steipete/tap/remindctl
     - name: schpet/tap/linear
+    - name: silverstein/tap/minutes
     - name: pchuri/tap/confluence-cli
     - name: pnpm
 
@@ -82,14 +83,6 @@ packages:
       asset: ical-darwin-arm64.tar.gz
       type: archive-file
       path: ical
-      executable: true
-      refresh_period: 24h
-
-    - name: minutes
-      repo: silverstein/minutes
-      target: .local/bin/minutes
-      asset: minutes-macos-arm64
-      type: file
       executable: true
       refresh_period: 24h
 
