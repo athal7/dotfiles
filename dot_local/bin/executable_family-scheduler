@@ -125,8 +125,10 @@ def fetch_ics(name, url, tz):
 def occupied_slots(calendars, from_date, to_date):
     """Return set of start_date strings for busy events across all calendars."""
     occupied = set()
-    for name in calendars.values():
-        events = ical("list", "-c", name, "--from", from_date, "--to", to_date, "-o", "json")
+    for cal in calendars.values():
+        if not isinstance(cal, dict):
+            continue
+        events = ical("list", "-c", cal["name"], "--from", from_date, "--to", to_date, "-o", "json")
         for e in events:
             if not e.get("all_day") and e.get("availability") != "free":
                 occupied.add(e["start_date"][:16])  # YYYY-MM-DDTHH:MM
@@ -143,10 +145,12 @@ def main():
     data = chezmoi_data()
     calendars = data.get("calendars", {})
     feeds = data.get("feeds", {})
-    family_cal = calendars.get("family")
+    cal_entries = {k: v for k, v in calendars.items() if isinstance(v, dict)}
+    target_entry = next((v for v in cal_entries.values() if v.get("family_scheduler_target")), None)
+    family_cal = target_entry["name"] if target_entry else None
 
     if not family_cal:
-        log("No family calendar configured, skipping")
+        log("No calendar with family_scheduler_target=true configured, skipping")
         return
     if not feeds:
         log("No feeds configured in chezmoi [data.feeds], skipping")

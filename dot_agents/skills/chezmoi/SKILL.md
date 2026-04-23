@@ -1,6 +1,6 @@
 ---
 name: chezmoi
-description: Apply dotfiles and machine configuration via chezmoi — handles the mid-session server restart that causes apparent hangs when editing opencode config or skills
+description: Manage dotfiles via chezmoi — apply safely, destroy files, manage LaunchAgents and externals, config and template gotchas
 license: MIT
 compatibility: opencode
 metadata:

@@ -27,10 +27,28 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 #     esUrl = "..."              — Elasticsearch skill (cluster URL)
 #     esApiKey = "..."           — Elasticsearch skill (API key)
 
-[data.calendars]
-    personal = {{ promptStringOnce . "calendars.personal" "Personal calendar name" | quote }}
-    work = {{ promptStringOnce . "calendars.work" "Work calendar name" | quote }}
-    family = {{ promptStringOnce . "calendars.family" "Family calendar name" | quote }}
+# Calendar configuration. Each key is an arbitrary label used by scripts.
+# Attributes:
+#   name                    — Apple Calendar display name (required)
+#   readonly                — if true, never write mirror events to this calendar (default: false)
+#   sync_to                 — list of calendar keys to mirror events into
+#   lunch_guard             — if true, lunch-guard protects this calendar
+#   family_scheduler_target — if true, family-scheduler writes new events here
+#
+# [data.calendars.personal]
+#     name = "Personal"
+#     sync_to = ["work"]
+#
+# [data.calendars.work]
+#     name = "Work"
+#     sync_to = ["personal"]
+#     lunch_guard = true
+#
+# [data.calendars.family]
+#     name = "Family"
+#     readonly = true
+#     sync_to = ["work"]
+#     family_scheduler_target = true
 
 # Exclude specific events from syncing. Key is event title (case-insensitive),
 # value is the source calendar label to match ("*" matches any source).

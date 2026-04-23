@@ -127,7 +127,13 @@ def log(msg):
 if __name__ == "__main__":
     tz = local_tz()
     data = chezmoi_data()
-    cal = data.get("calendars", {}).get("work", "Work")
+    calendars = data.get("calendars", {})
+    cal_entries = {k: v for k, v in calendars.items() if isinstance(v, dict)}
+    guard_entry = next((v for v in cal_entries.values() if v.get("lunch_guard")), None)
+    if not guard_entry:
+        log("No calendar with lunch_guard=true configured, skipping")
+        exit(0)
+    cal = guard_entry["name"]
     today = date.today()
     for i in range(14):
         day = today + timedelta(days=i)

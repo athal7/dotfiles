@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-sync-calendars - Mirror busy blocks between personal and work calendars.
+sync-calendars - Mirror busy blocks between configured calendars.
 
-For each configured calendar, finds real events and ensures matching
-"Busy" blocks exist on all other configured calendars. Cleans up stale
-mirrors when the source event is gone.
+For each calendar with sync_to set, finds real events and ensures matching
+"Busy" blocks exist on destination calendars. Cleans up stale mirrors when
+the source event is gone. Calendars with readonly=true are never written to.
 
 Requires: ical, chezmoi
 """
@@ -130,7 +130,8 @@ def find_mirror(mirrors, start, end):
 
 def delete_all_markers(calendars, from_date, to_date, markers):
     """Remove all events with given marker notes across all calendars."""
-    for label, name in calendars.items():
+    for label, cal in calendars.items():
+        name = cal["name"]
         events = mirrors_for(name, from_date, to_date, markers=markers)
         for e in events:
             log(f"Removing old marker event from {name} ({e['start_date'][:16]}): {e['title']}")
@@ -144,33 +145,33 @@ def log(msg):
 
 def main():
     data = chezmoi_data()
-    calendars = data.get("calendars", {})  # {label: name}
+    calendars = data.get("calendars", {})  # {label: {name, readonly, sync_to, ...}}
     first_name = data.get("fullName", "").split()[0]
     sync_exclude = calendars.get("syncExclude", {})
     from_date = str(date.today())
     to_date = str(date.today() + timedelta(weeks=WEEKS))
     tz = local_tz()
 
-    if len(calendars) < 2:
+    # Filter to real calendar entries (exclude syncExclude sub-key)
+    cal_entries = {k: v for k, v in calendars.items() if isinstance(v, dict)}
+
+    if len(cal_entries) < 2:
         log("Need at least 2 calendars configured, skipping")
         return
 
-    # Sync rules: source label → list of destination labels
-    # family is read-only: its events mirror to work only, nothing mirrors to family
-    SYNC_RULES = {
-        "personal": ["work"],
-        "work":     ["personal"],
-        "family":   ["work"],
+    # Derive sync rules and writable calendars from attributes
+    sync_rules = {
+        label: cal.get("sync_to", [])
+        for label, cal in cal_entries.items()
+        if cal.get("sync_to")
     }
-
-    # Calendars we write mirrors to (never write to family)
-    write_labels = {k: v for k, v in calendars.items() if k in ("personal", "work")}
+    write_labels = {k: v["name"] for k, v in cal_entries.items() if not v.get("readonly", False)}
 
     # Fetch real events from all source calendars
     all_events = {
-        label: events_for(name, label, from_date, to_date, tz, sync_exclude)
-        for label, name in calendars.items()
-        if label in SYNC_RULES
+        label: events_for(cal["name"], label, from_date, to_date, tz, sync_exclude)
+        for label, cal in cal_entries.items()
+        if label in sync_rules
     }
 
     # Fetch existing mirrors from writable calendars
@@ -182,8 +183,8 @@ def main():
     # Phase 1: remove stale mirrors (no matching source event)
     # Build set of expected (dst_label, start, end) from current source events
     expected = set()
-    for src_label, dst_labels in SYNC_RULES.items():
-        if src_label not in calendars:
+    for src_label, dst_labels in sync_rules.items():
+        if src_label not in cal_entries:
             continue
         for event in all_events.get(src_label, []):
             for dst_label in dst_labels:
@@ -207,8 +208,8 @@ def main():
     # Also track what we create this run to avoid duplicates
     created = set()
 
-    for src_label, dst_labels in SYNC_RULES.items():
-        if src_label not in calendars:
+    for src_label, dst_labels in sync_rules.items():
+        if src_label not in cal_entries:
             continue
         for event in all_events.get(src_label, []):
             start, end = event["start_date"], event["end_date"]
