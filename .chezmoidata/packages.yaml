@@ -4,6 +4,7 @@ packages:
     - silverstein/tap
     - steipete/tap
     - schpet/tap
+    - pchuri/tap
 
   brews:
     - name: autojump
@@ -36,6 +37,7 @@ packages:
     - name: googleworkspace-cli
     - name: steipete/tap/remindctl
     - name: schpet/tap/linear
+    - name: pchuri/tap/confluence-cli
     - name: pnpm
 
   casks:
