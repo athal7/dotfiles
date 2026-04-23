@@ -11,7 +11,7 @@ metadata:
 
 Query application logs, APM traces, and errors using the Elasticsearch REST API directly.
 
-Use your `secrets` capability to fetch `ES_URL` and `ES_API_KEY` before making requests.
+**Before making any requests, load your `secrets` capability to fetch `ES_URL` and `ES_API_KEY`.**
 
 ## Time range syntax
 

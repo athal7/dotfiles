@@ -9,7 +9,7 @@ metadata:
     - secrets
 ---
 
-Use your `secrets` capability to fetch `SLACK_USER_TOKEN` and `SLACK_USER_ID` before making requests.
+**Before making any requests, load your `secrets` capability to fetch `SLACK_USER_TOKEN` and `SLACK_USER_ID`.**
 
 ## Search messages
 

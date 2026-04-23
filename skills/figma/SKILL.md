@@ -17,7 +17,7 @@ Fetch the docs above when you need endpoint details. Use `jq` to process respons
 
 ## Auth
 
-Use your `secrets` capability to fetch `FIGMA_ACCESS_TOKEN` before making requests.
+**Before making any requests, load your `secrets` capability to fetch `FIGMA_ACCESS_TOKEN`.**
 
 ```bash
 # Header: X-Figma-Token: $FIGMA_ACCESS_TOKEN  (NOT "Authorization: Bearer")
