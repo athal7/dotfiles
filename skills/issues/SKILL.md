@@ -1,8 +1,11 @@
 ---
 name: issues
 description: Route issue management to the right tracker based on GitHub org — Linear for work, GitHub Issues for OSS and personal repos
-provides:
-  - issues
+license: MIT
+compatibility: opencode
+metadata:
+  provides:
+    - issues
 ---
 
 # Issues
