@@ -16,9 +16,11 @@ mkdir -p "$SKILLS_DEST"
 cp -r "$SKILLS_SRC"/. "$SKILLS_DEST/"
 
 # Install external skills via gh skill install
+# stdin redirected from /dev/null so gh detects non-interactive mode;
+# --agent opencode prevents the "select target agent" prompt.
 {{ range .packages.skills -}}
 echo "installing {{ .skill }} from {{ .repo }}..."
-NO_TTY=1 gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --force
+gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode --force < /dev/null
 {{ end -}}
 
 # agentskills validate — checks spec compliance for local skills
