@@ -24,8 +24,8 @@
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "qwen2.5-coder-opencode": {
-          "name": "qwen2.5-coder-opencode"
+        "qwen3:8b": {
+          "name": "qwen3:8b"
         },
         "gemma4:e4b": {
           "name": "gemma4:e4b"
@@ -39,7 +39,7 @@
         "glm-5.1:cloud": {
           "name": "glm-5.1:cloud"
         },
-        "kimi:k2.6": {
+        "kimi:k2.6-cloud": {
           "name": "kimi:k2.6"
         }
       }
