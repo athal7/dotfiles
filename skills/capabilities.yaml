@@ -5,13 +5,7 @@
 # (and explicit overrides) need to be listed here.
 # Override per-workspace by placing a capabilities.yaml in .agents/ or the workspace root.
 
-issues:
-  provider: issues
-  notes: >-
-    Routes by GitHub org: 0din-ai → linear-cli, everything else → gh issues.
-    Override per-repo with .agents/capabilities.yaml (globally gitignored).
 meetings: cli://minutes
-calendar: ical-cli
 email: cli://gws
 
 reminders:
