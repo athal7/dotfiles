@@ -40,18 +40,10 @@ Explicitly state what this does *not* address. This prevents scope creep and cla
 - Migrating existing users to SSO automatically
 ```
 
-### User stories *(optional)*
-Use sparingly. Only include if they add clarity beyond the goals. Format:
-
-```
-As a [role], I want to [action], so that [outcome].
-```
-
 ### Proposed solution
 High-level approach. Not implementation detail — think "what changes from the user's perspective." Include:
 - Key user flows (can reference Figma or a rough description)
 - Key decisions already made and why
-- Open questions that need resolution before or during implementation
 
 If multiple solution approaches were seriously considered, use a decision matrix to make the tradeoffs legible:
 
@@ -66,6 +58,14 @@ If multiple solution approaches were seriously considered, use a decision matrix
 
 Use this when the "why this approach" question is likely to come up in review. Skip it if the solution is obvious or already agreed.
 
+### Open questions
+What do we not know yet that needs resolution before or during implementation?
+
+```
+- Open: Does "Enterprise plan" need a UI gate or is it config-only?
+- Open: Which IdPs to support in v1? (SAML-only vs OIDC too)
+```
+
 ### Success metrics
 How will we know this worked after shipping? Name specific metrics and targets.
 
@@ -75,23 +75,11 @@ How will we know this worked after shipping? Name specific metrics and targets.
 - Support tickets: no increase in auth-related tickets post-launch
 ```
 
-### Risks & open questions
-What could go wrong? What do we not know yet?
+### Risks
+What could go wrong?
 
 ```
 - Risk: SAML library has known CVE — need security review before launch
-- Open: Does "Enterprise plan" need a UI gate or is it config-only?
-- Open: Which IdPs to support in v1? (SAML-only vs OIDC too)
-```
-
-### Milestones *(optional)*
-High-level phases if the work spans multiple sprints.
-
-```
-1. Auth infrastructure (SAML/OIDC library, identity provider model) — Week 1-2
-2. Admin setup flow (IdP configuration UI) — Week 3-4
-3. User login flow + existing login coexistence — Week 5-6
-4. QA, security review, documentation — Week 7
 ```
 
 ---
@@ -144,3 +132,5 @@ High-level phases if the work spans multiple sprints.
 **No success metrics**: If you can't measure it, you can't declare victory.
 
 **Too long**: A PRD that takes 30 minutes to read won't get read. Aim for a 5-minute read. Link to supporting docs rather than embedding them.
+
+**Milestones in the doc body**: Most issue trackers have native milestone or roadmap features — use those instead of embedding a phase list in the PRD. Keep the doc focused on problem and solution; let the tracker own the schedule.
