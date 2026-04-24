@@ -1,7 +1,6 @@
 packages:
   taps:
     - github/gh
-    - silverstein/tap
     - steipete/tap
     - schpet/tap
     - pchuri/tap
