@@ -8,197 +8,78 @@ metadata:
     - agent
     - calendar
     - reminders
-    - meetings
-    - chat
     - issues
     - source-control
-    - branching
 ---
 
 # Skill: Attention
 
-**Check-in (on demand):** When you choose to come up for air, this skill surfaces an energy-aware view of what matters most right now.
-
-**Calendar access:** use your `calendar` capability — fast native EventKit CLI, supports reads and writes.
+**Trigger:** "Come up for air", "Attention check", "How's my energy?", "What's on my reminders?"
 
 ---
 
-## Step 1: Gather context
+## Step 1: Gather context (all in parallel)
 
-Run all of these before forming any view:
-
-- Use your `agent` capability to fetch today's sessions — per-session breakdown (user messages, duration) and summary totals including peak concurrent sessions. Filter out subagent noise. The SQL files `sessions-today.sql`, `sessions-summary.sql`, and `sessions-concurrent.sql` in this skill directory can be passed to the capability.
-
-- Use your `calendar` capability to get today's events, plus the current day of week and time.
-
-- Use your `reminders` capability to fetch overdue items, items due today, and items with no due date.
-
-- Use your `meetings` capability to list today's processed meetings (for social/emotional load inference).
-
-- Use your `chat` capability to find recent mentions waiting on you in the last 8 hours.
-
-- Use your `source-control` capability to check for things needing action across repos — code review requests received, received reviews on your own merge requests, assigned work, and mentions.
+- **Sessions:** use your `agent` capability with `sessions-today.sql`, `sessions-summary.sql`, `sessions-concurrent.sql` from this skill directory
+- **Calendar:** use your `calendar` capability for today's events and current time, then compute `RUNWAY` = minutes until the earlier of (next event, 4pm). 4pm is the wind-down boundary — buffer for gradual transition out of focus, not end of work (monotropic transitions need runway).
+- **Reminders:** use your `reminders` capability — overdue, due today, no due date
+- **Work:** use your `source-control` and `issues` capabilities for review requests, received reviews, and assigned work. Prioritize closest-to-done: approved merge request ready to merge → received review to address → incoming review request → new work. Group linked merge requests and issues together. Flag any "In Progress" issue whose merge request has changes requested or a conflict.
 
 ---
 
-## Step 2: Assess the situation holistically
+## Step 2: Score energy (internally — don't output this)
 
-Before surfacing anything, reason across all inputs together **internally**. Do not output the intermediate energy accounting or reasoning steps — only output the final check in Step 3.
+Score on a single scale combining message load, concurrency, and runway. Use the worst of the three.
 
-**Core principle: protect capacity first, output second.**
-The goal is sustainable contribution. Reducing overwhelm matters more than surfacing every pending item.
+| Signal | High | Medium | Low |
+|---|---|---|---|
+| User messages today | < 30 | 30–80 | > 80 |
+| Peak concurrent sessions | 1–2 | 3–4 | 5+ |
+| `RUNWAY` (minutes) | ≥ 90 | 30–90 | < 30 |
 
----
-
-**Energy accounting:**
-
-Energy isn't just quantity — it's multidimensional. Depletion happens across multiple axes:
-
-- **Cognitive load** — deep focus, problem-solving, context switching
-- **Social load** — meetings, communication, being "on"
-- **Sensory load** — environment, noise, stimulation throughout the day
-- **Emotional load** — accumulated stress that may not have registered consciously
-
-**What drains most:** The two biggest cognitive load signals from sessions are:
-1. **User message count** — each message sent required active engagement, evaluation, and decisions. High counts mean actively steering work, not just delegating.
-2. **Concurrent sessions** — running multiple sessions at once fragments attention even if each one felt short. Peak concurrent > 2 is meaningful switching cost.
-
-Session duration alone is a weak signal — a long autonomous session is low load; a short highly-interactive one is high load.
-
-**Reading session data:**
-- Scan session titles for topic variety — many different subjects = high context-switch load
-- Cross-repo jumps (dotfiles → app → dotfiles) compound the switching cost
-- Check earliest session start — a long elapsed day is tiring even at low intensity
-
-**Important caveat:** These metrics are proxies for energy state, not a direct readout. Treat high output as a *warning* signal, not a green light — the body doesn't always signal depletion until it's too late.
-
-**Energy table — use the worse of the two signals:**
-
-| User messages today | Energy signal |
-|---------------------|---------------|
-| < 30 | Likely available |
-| 30–80 | Moderate |
-| 80–150 | Caution |
-| > 150 | Low |
-
-| Peak concurrent sessions | Modifier |
-|--------------------------|----------|
-| 1–2 | No change |
-| 3–4 | +1 level toward Low |
-| 5+ | +2 levels toward Low (cap at Low) |
-
-The table is a starting point, not a formula. Use contextual judgment — a day heavy on meetings should shift the estimate lower independent of session counts. A low message count with many meetings can still be depleting.
-
-**Time and pacing:**
-- `GAP` = minutes until next event (or rest of day free)
-- `END_OF_DAY` = minutes until 6pm
-- GAP < 30m → don't recommend starting a deep-focus task; suggest quick wins or rest
-- Past 6pm → wind-down mode regardless of session count
-- Full energy + GAP < 30m → treat as Moderate
-
-**Reminder weighting:**
-- All reminders are inputs — filter before surfacing. Ask: does this need attention *right now*, given energy, time, and cognitive mode?
-- One well-chosen thing beats five that create paralysis
-- Balance work and personal — a day of only work tasks is a signal, not a success
-- Considerateness without self-sacrifice: if something has been waiting and someone else is depending on it, mention it once, plainly, as information — not guilt
-
-**Attentional focus awareness:**
-- Entering a new deep-focus task has a real cost — only recommend it if GAP is large enough and energy supports it
-- Prefer finishing or resting over starting something new when in doubt
-- Suggest task types that match the current cognitive mode
-
-**Self-care check** — always include at least one body/state check, phrased as genuine care:
-- "Are you hydrated? Have you eaten?"
-- "How does your body feel right now — not your to-do list, your body?"
-- "Is there anything you've been putting off that's been nagging at you?"
-- Never frame as productivity checks
+Session titles with high topic variety or cross-repo jumps compound switching cost — nudge down one level.
 
 ---
 
 ## Step 3: Surface the view
 
-One coherent snapshot — not a stack of sections. Tune depth and length to energy level.
+One snapshot. If something has been waiting and someone else is affected, mention it once, plainly.
 
-**Always surface the top 1 work priority and top 1 personal/reminder priority** regardless of energy level — even when LOW. The goal is never to hide what matters most, just to limit how much is presented and how much action is recommended.
+Every output starts with the same signal block so the score is legible:
 
-### If energy is LOW (or past 6pm)
+```
+Energy: <Low|Medium|High>
+  msgs steered: X   concurrent: X   runway: Xm
+```
 
----
-**Attention check**
-Energy: Low (X msgs, Xm until [next event / end of day])
+**LOW**
+```
+[signal block]
 
-Take care of yourself first.
-- Are you hydrated? Have you eaten?
+Take care of yourself first. Are you hydrated? Have you eaten?
 
-Top work priority: [single most important/urgent work item — no action recommended unless truly time-sensitive]
-Top personal: [single most important personal/reminder item]
+Top work: [single most urgent item — no action unless truly time-sensitive]
+Top personal: [single most important personal item]
 
 Everything else can wait.
+```
 
----
+**MEDIUM**
+```
+[signal block]
 
-### If energy is MODERATE (or GAP < 30m)
-
----
-**Attention check**
-Energy: Moderate — Xm before [next event / 6pm]
-
-[2–3 items that make sense given time and energy — mix of work and personal, urgent and lightweight]
-[Note any blocked/stuck items briefly]
+[1–2 quick wins — mix of work and personal]
+[Flag any stuck/blocked items briefly]
 
 How does your body feel right now?
+```
 
----
+**HIGH**
+```
+[signal block]
 
-### If energy is FULL and GAP ≥ 30m
-
----
-**Attention check**
-Energy: Good — Xm before [next event / 6pm]
-
-[3–4 things worth doing now — mix of work and personal, chosen for fit not urgency alone]
-[If something has been waiting and someone else is affected, mention it once, plainly]
+[3–4 items — mix of work and personal]
 
 Is there anything nagging that isn't on this list?
 What do you want to focus on?
-
----
-
-## Step 4: Work items (always fetch, tune depth to energy)
-
-Always fetch work items regardless of energy level — you need them to identify the top priority shown in Step 3.
-
-Tune what you surface to the energy level: at LOW, identify only the single most important/urgent item (show it in Step 3, don't recommend action unless time-sensitive); at MODERATE, show 1–2 items max and prefer quick wins; at FULL, show up to 3–4 and include longer-horizon items worth starting. Don't list everything — pick the most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
-
-### Source control
-
-Use your `source-control` capability to surface what needs action. Prioritize items closest to being done — a merge request with approvals just needing merge beats one with a received review to address, which beats a fresh review request on someone else's work, which beats starting something new. When an item cross-references to your `issues` capability, use the issue's priority as a tiebreaker. For stacked branches, also use your `branching` capability to check whether tracked branches are out of date with their base.
-
-### Issues
-
-Use your `issues` capability — and your `source-control` capability for repo-level issues and discussions — to fetch assigned work needing a response. Group by state.
-
-### Cross-reference merge requests ↔ issues
-
-After fetching both:
-
-- If an issue has a linked merge request that also appears above, **group them together** — don't show the same work twice
-- Flag if an issue is "In Progress" but its merge request has changes requested or a merge conflict — that's a stuck item
-
-Present as a unified list, grouped by work item (not by source), with the most actionable status shown.
-
-### Starting work from here
-
-When you decide to act on a work item, use your `agent` capability to dispatch a session.
-
----
-
-## Usage
-
-Load this skill and say:
-- "Come up for air" — runs the full attention check
-- "How's my energy?" — just the energy check, no task list
-- "What's on my reminders?" — just the reminders step
-- "Attention check" — alias for full check
-
-The goal is a gentle, honest picture of where you are — not a to-do list to feel guilty about.
+```
