@@ -46,10 +46,6 @@ secrets:
     vault: your-vault
     item: your-item-id
     field: url
-  wakatime_api_key:
-    provider: keychain
-    account: wakatime_api_key
-
 # Calendar configuration
 calendars:
   personal:

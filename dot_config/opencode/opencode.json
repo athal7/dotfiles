@@ -51,8 +51,7 @@
     }
   },
   "plugin": [
-    "opencode-pty@^0.1",
-    "opencode-wakatime@^1.2"
+    "opencode-pty@^0.1"
   ],
   "mcp": {
     "context7": {

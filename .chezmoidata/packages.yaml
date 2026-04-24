@@ -30,7 +30,6 @@ packages:
     - name: ripgrep
     - name: starship
     - name: talisman
-    - name: wakatime-cli
     - name: watch
     - name: worktrunk
     - name: googleworkspace-cli
