@@ -27,22 +27,17 @@ metadata:
 
 Run all of these before forming any view:
 
-- Use your `agent` capability to fetch today's OpenCode sessions. Retrieve per-session breakdown (user messages = active engagement, duration) and summary totals including peak concurrent sessions. Filter out subagent noise (worktree paths + "@... subagent" titles). The SQL files `sessions-today.sql`, `sessions-summary.sql`, and `sessions-concurrent.sql` in the skill directory can be passed to the capability. Strip `$CODE_DIR/` prefix from the `repo` column for readability.
+- Use your `agent` capability to fetch today's sessions — per-session breakdown (user messages, duration) and summary totals including peak concurrent sessions. Filter out subagent noise. The SQL files `sessions-today.sql`, `sessions-summary.sql`, and `sessions-concurrent.sql` in this skill directory can be passed to the capability.
 
-- Use your `calendar` capability to get today's events. Query **only the calendars configured in chezmoi data** — run `chezmoi data` and read all keys under `.calendars` to get the list of calendar names. Run a separate query per calendar name and combine the results. Do not pull from other calendars. Also output the current day of week and time.
+- Use your `calendar` capability to get today's events, plus the current day of week and time.
 
-- Use your `reminders` capability to fetch:
-  - Overdue items
-  - Items due today (incomplete only)
-  - Items with no due date (all priorities, incomplete) — note: use the `all` scope, not `upcoming`, since `upcoming` only returns future-dated items
+- Use your `reminders` capability to fetch overdue items, items due today, and items with no due date.
 
-- Use your `meetings` capability to list today's processed meetings (for social/emotional load inference). Filter to items whose date starts with today's date, limit 20.
+- Use your `meetings` capability to list today's processed meetings (for social/emotional load inference).
 
-- Use your `chat` capability to find recent mentions waiting on you in the last 8 hours. Search for mentions of your user ID in the last 8h.
+- Use your `chat` capability to find recent mentions waiting on you in the last 8 hours.
 
-- Use your `source-control` capability to fetch a cross-repo activity summary — mentions, review requests, and assigned work.
-
-- Note: priority strings for your `reminders` capability are `"high"`, `"medium"`, `"low"`, `"none"` — not integers.
+- Use your `source-control` capability to check for things needing action across repos — code review requests received, received reviews on your own merge requests, assigned work, and mentions.
 
 ---
 
@@ -175,15 +170,13 @@ Always fetch work items regardless of energy level — you need them to identify
 
 Tune what you surface to the energy level: at LOW, identify only the single most important/urgent item (show it in Step 3, don't recommend action unless time-sensitive); at MODERATE, show 1–2 items max and prefer quick wins; at FULL, show up to 3–4 and include longer-horizon items worth starting. Don't list everything — pick the most worth attention given the available gap, and surface them as part of the unified picture in Step 3 — not as a separate dump. Flag a long-waiting or high-impact item if it genuinely deserves a mention, once, without guilt-framing.
 
-### Source control — two things to check
+### Source control
 
-**Activity summary** — use your `source-control` capability to surface the cross-repo activity summary fetched in Step 1: mentions, review requests, assigned work, and any issues or discussions tracked in source control where a response from you is needed.
+Use your `source-control` capability to surface what needs action. Prioritize items closest to being done — a merge request with approvals just needing merge beats one with a received review to address, which beats a fresh review request on someone else's work, which beats starting something new. When an item cross-references to your `issues` capability, use the issue's priority as a tiebreaker. For stacked branches, also use your `branching` capability to check whether tracked branches are out of date with their base.
 
-**Your open merge requests** — use your `source-control` capability to find merge requests needing your attention. Your capability has the full detection logic for each actionable state (conflicts, CI failures, received reviews needing re-review request, and more). For stacked branches, also use your `branching` capability to check whether any tracked branches are out of date with their base.
+### Issues
 
-### Issues — by state
-
-Fetch issues assigned to you from all configured issues sources. Issues may be tracked in multiple places — check each available `issues` capability as well as your `source-control` capability for repo-level issues and discussions needing a response. Group by state (in progress, unstarted, backlog).
+Use your `issues` capability — and your `source-control` capability for repo-level issues and discussions — to fetch assigned work needing a response. Group by state.
 
 ### Cross-reference merge requests ↔ issues
 
@@ -196,13 +189,7 @@ Present as a unified list, grouped by work item (not by source), with the most a
 
 ### Starting work from here
 
-When you decide to act on a work item, use your `agent` capability to dispatch a session — go through the capability's API so that:
-
-- Code reviews always get a worktree sandbox (isolated branch, no risk of clobbering the live repo)
-- Sessions are reused when idle rather than spawned fresh every time
-- The dispatch is visible in the agent UI
-
-The `agent` capability's dispatch instructions specify exactly how to create worktrees and route sessions.
+When you decide to act on a work item, use your `agent` capability to dispatch a session.
 
 ---
 

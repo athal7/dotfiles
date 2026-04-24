@@ -13,26 +13,29 @@ metadata:
 
 GitHub CLI (`gh`) gotchas that `--help` won't tell you.
 
-## Review state — what the fields actually mean
+## What needs action across repos
 
-`reviewDecision` is an aggregate and loses per-reviewer signal — do not use it to determine if a merge request is waiting on the reviewer vs the author. Use `latestReviews[].state` instead:
-
-| State | Action needed by |
-|---|---|
-| `CHANGES_REQUESTED` | **Author** — reviewer wants changes addressed |
-| `APPROVED` | Nobody — this reviewer is satisfied |
-| `COMMENTED` | Ambiguous — reviewer left comments but no formal verdict |
-
-## Detecting merge requests that need your attention
-
-Use this query to find your open merge requests needing action in a single call:
+Bucket your cross-repo PR work by action required with `gh search prs`, ordered closest-to-done first:
 
 ```bash
-gh pr list --author=@me --state=open --repo <owner>/<repo> \
-  --json number,title,url,mergeStateStatus,latestReviews,commits,reviewRequests
+echo "=== ready-to-merge ==="     && gh search prs --author=@me --review=approved --checks=success --state=open --json number,title,url,repository
+echo "=== review-to-address ===" && gh search prs --author=@me --review=changes_requested --state=open --json number,title,url,repository
+echo "=== waiting-for-review ===" && gh search prs --author=@me --review=required --state=open --json number,title,url,repository
+echo "=== review-requested ==="   && gh search prs --review-requested=@me --state=open --json number,title,url,repository
 ```
 
-Or cross-repo via GraphQL:
+Priority order:
+
+1. **ready-to-merge** — approved + green, just needs merging
+2. **review-to-address** — your PR has a review to respond to
+3. **waiting-for-review** — your PR waiting on reviewers (nothing you can do, but track it)
+4. **review-requested** — someone else's PR waiting on you
+
+For mentions and assigned work (issues without PRs, @-mentions in discussions), use `gh status`. `--org <org>` scopes to an org; `-e <owner/repo>` excludes noisy repos.
+
+## Per-PR health — `mergeStateStatus`
+
+The bucket queries above tell you *where* the work is. To check the *health* of a specific PR (merge conflicts, CI failures, hidden blocks), query `mergeStateStatus` and `latestReviews`:
 
 ```bash
 gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { nodes {
@@ -45,17 +48,13 @@ gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { node
 } } } }'
 ```
 
-### What needs action
+Flag anything matching:
 
-Check each open merge request for these conditions — surface any that match:
-
-1. **Merge conflict** — `mergeStateStatus == "DIRTY"` — highest priority, surface first
-2. **CI failing** — `mergeStateStatus == "UNSTABLE"`
+1. **Merge conflict** — `mergeStateStatus == "DIRTY"` — highest priority
+2. **CI failing** — `mergeStateStatus == "UNSTABLE"` (not caught by the `ready-to-merge` bucket query; failing PRs are dropped silently there)
 3. **Re-review not requested** — a reviewer has `COMMENTED` or `CHANGES_REQUESTED` in `latestReviews`, their `authorAssociation != "NONE"` (excludes bots), their `submittedAt` is before your last commit (`commits[-1].committedDate`), and they are not already in `reviewRequests` — you pushed a response but haven't asked them to look again
 
-
-
-## `mergeStateStatus` values
+### `mergeStateStatus` values
 
 | Value | Means |
 |---|---|
@@ -69,19 +68,15 @@ Check each open merge request for these conditions — surface any that match:
 
 `BLOCKED` + `mergeable: MERGEABLE` = branch protection (missing required approval), not a conflict. Do not file as a merge conflict.
 
-## Cross-repo activity summary (`gh status`)
+### Review state fields
 
-`gh status` returns a formatted summary across all repositories you're subscribed to:
+`reviewDecision` is an aggregate and loses per-reviewer signal — do not use it to determine if a merge request is waiting on the reviewer vs the author. Use `latestReviews[].state` instead:
 
-- **Assigned Issues** — issues assigned to you
-- **Assigned Pull Requests** — merge requests assigned to you
-- **Review Requests** — merge requests where your review is requested
-- **Mentions** — threads where you were @-mentioned (issues, PRs, discussions)
-- **Repository Activity** — recent comments and new issues/PRs in repos you watch
-
-Use `--org <org>` to scope to a specific organization. Use `-e <owner/repo>` to exclude noisy repos.
-
-This is the right command for surfacing mentions and review requests — it maps directly to what GitHub's notification bell shows.
+| State | Action needed by |
+|---|---|
+| `CHANGES_REQUESTED` | **Author** — reviewer wants changes addressed |
+| `APPROVED` | Nobody — this reviewer is satisfied |
+| `COMMENTED` | **Author** — reviewer wants changes addressed |
 
 ## Checking repo visibility
 
