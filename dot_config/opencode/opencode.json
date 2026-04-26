@@ -8,14 +8,6 @@
     "skill": "allow"
   },
   "model": "anthropic/claude-sonnet-4-6",
-  "agent": {
-    "expert": {
-      "model": "anthropic/claude-opus-4-7",
-      "thinking": {
-        "type": "adaptive"
-      }
-    }
-  },
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",

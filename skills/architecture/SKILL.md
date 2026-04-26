@@ -18,11 +18,11 @@ Use this section when facing a decision with multiple valid approaches, hard-to-
 ### How to Use
 
 1. Gather context: the problem, constraints, and options already being considered
-2. Spawn the `expert` agent with the prompt below, passing the decision description
-3. Present its output to the user
-4. If the agent flags escalation, stop and ask the user before proceeding
+2. Apply the analysis prompt below to the decision — either in this session, or by spawning a subagent if a fresh context window helps
+3. Present the output to the user
+4. If escalation is flagged, stop and ask the user before proceeding
 
-### Expert Agent Prompt Template
+### Analysis Prompt Template
 
 ```
 You are an architecture advisor. Analyze the following design decision and provide a clear recommendation.
