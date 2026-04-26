@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo
 LOOKAHEAD_DAYS = 28
 EVENING_START = 17  # 5pm
 MARKER = "Managed by babysitter-check"
+SEEN_FILE = Path.home() / ".local/share/babysitter-check/seen.json"
 
 _ICAL_BIN = None
 
@@ -76,13 +77,37 @@ def events_overlap(a_start, a_end, b_start, b_end):
     return a_start < b_end and b_start < a_end
 
 
-def managed_reminder_titles():
-    """Return set of titles ever created by this script (complete or not)."""
-    result = remindctl("show", "all", "--json")
-    if result.returncode != 0:
+def load_seen() -> set:
+    """Return set of reminder titles ever created by this script, pruning past dates."""
+    if not SEEN_FILE.exists():
         return set()
-    data = json.loads(result.stdout or "[]")
-    return {r["title"] for r in data if r["title"].startswith("Book babysitter for ")}
+    try:
+        titles = set(json.loads(SEEN_FILE.read_text()))
+    except (json.JSONDecodeError, OSError):
+        return set()
+    today = date.today()
+    pruned = set()
+    for title in titles:
+        # Title format: "Book babysitter for {event} on {Weekday, Month D}"
+        # Parse the trailing date to decide whether to keep it.
+        try:
+            date_part = title.rsplit(" on ", 1)[-1]  # e.g. "Friday, May 2"
+            # strptime needs a year; assume current year then roll to next if needed
+            parsed = datetime.strptime(date_part, "%A, %B %d").date().replace(year=today.year)
+            if parsed < today:
+                parsed = parsed.replace(year=today.year + 1)
+            if parsed >= today:
+                pruned.add(title)
+        except (ValueError, IndexError):
+            pruned.add(title)  # keep titles we can't parse
+    save_seen(pruned)
+    return pruned
+
+
+def save_seen(titles: set) -> None:
+    """Persist the seen set to disk."""
+    SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    SEEN_FILE.write_text(json.dumps(sorted(titles), indent=2))
 
 
 def main():
@@ -117,8 +142,10 @@ def main():
         events = ical("list", "-c", cal["name"], "--from", from_date, "--to", to_date, "-o", "json")
         all_events.extend(events)
 
-    # Fetch all reminders ever created by this script (inc. completed/deleted)
-    existing = managed_reminder_titles()
+    # Load locally-persisted set of titles ever created by this script.
+    # Reminders can be deleted from the app without a trace, so we can't rely
+    # on remindctl to detect them — hence the local file.
+    existing = load_seen()
 
     added = 0
     for label, cal in check_cals.items():
@@ -158,6 +185,7 @@ def main():
             log(f"Adding reminder: {reminder_title}")
             remindctl("add", reminder_title, "--list", reminder_list, "--notes", MARKER, "--quiet")
             existing.add(reminder_title)
+            save_seen(existing)
             added += 1
 
     log(f"Done — added {added} reminder(s)")
