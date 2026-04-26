@@ -2,9 +2,24 @@
 # Copy to ~/.local/share/chezmoi/.chezmoidata/local.yaml and fill in your values.
 # This file is never committed — it lives only on the machine.
 
-# GitHub orgs that use Linear for issue tracking (everything else uses GitHub Issues)
-linear_orgs:
-  - your-work-org
+# Per-org config keyed by GitHub org login. Orgs not listed fall back to defaults
+# (GitHub Issues for issue tracking; no automated code review).
+#
+# Per-org keys:
+#   issues           : "linear" if the org uses Linear (anything else → default GitHub Issues)
+#   automated_review : config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
+#     bot_login : the GitHub user.login the bot posts as (used to filter PR review comments)
+#     auto_runs : true if the bot reviews automatically on PR open; false if it must be triggered
+#     trigger   : how to invoke the bot. Supported forms:
+#                   "add_reviewer @handle"      — add as PR reviewer (Copilot)
+#                   "comment @handle <text>"    — post a top-level comment to mention the bot
+orgs:
+  your-work-org:
+    issues: linear
+    automated_review:
+      bot_login: copilot-pull-request-reviewer
+      auto_runs: true
+      trigger: add_reviewer @copilot
 
 # Secrets manifest — each entry maps a name to its provider.
 # provider: op   — fetched via 1Password CLI

@@ -10,170 +10,124 @@ metadata:
   requires:
     - qa
     - source-control
+    - automated-review
+    - issues
 ---
 
-Fetch the diff based on input, then follow all instructions below.
+Fetch the diff based on input:
 
 - **No arguments**: `git diff` + `git diff --cached` + `git status --short`, then `git diff origin/<default>...HEAD`
 - **`staged`** (or **`pre-commit`**): `git diff --cached` only
 - **Commit hash**: `git show <hash>`
 - **Branch name**: `git diff <branch>...HEAD`
-- **Merge request URL/number**: use your `source-control` capability to fetch the diff and metadata
+- **Code review request URL/number**: use your `source-control` capability to fetch the diff and metadata; check out the branch locally (save and restore the original branch)
 
-**Merge request rules:**
-- "Review this merge request" means analyze and draft a written review — do NOT submit or implement fixes unless explicitly asked.
-- When a merge request has reviews and conflicts, use merge (not rebase) to resolve them — rebasing invalidates existing review comments.
-- Show the full proposed review and ask "Do you approve?" before submitting. Then STOP and wait for explicit approval.
-- **Inline-first:** post findings as inline comments only via your `source-control` capability. Do NOT include verdict, TL;DR, or summaries in the submitted body — those are session output only. The only exception is a review-wide observation that genuinely cannot be attributed to any line.
+Read the modified files for full context. Skip generated files, lock files, vendored code.
 
-**If reviewing a merge request** (URL or number provided): check out the branch locally before proceeding using your `source-control` capability. Save the original branch so you can restore it after. If local checkout is not possible, fall back to fetching diff and metadata via your `source-control` capability.
+Read project rules: `AGENTS.md` (root + nested), `CONVENTIONS.md`, `REVIEW.md`, `CONTRIBUTING.md`, plus `docs/` development guides. `REVIEW.md` overrides everything else.
+
+Fetch issue context via your `issues` capability — parse branch name and code review request body for issue IDs, fetch acceptance criteria.
 
 ---
 
-## Phase 1: Context & Static Analysis
+## Pick a pipeline
 
-Read `~/.agents/skills/review/context-gathering.md` and follow all steps (issue context, prior review history, project rules, static analysis pass).
+| Whose code | Code review request exists | Automated review | Pipeline |
+|---|---|---|---|
+| Mine | No | — | **A. Local specialists** |
+| Mine | Yes | Available + has run | **B. Self-review over automation** |
+| Mine | Yes | Available, not yet run | Trigger via `automated-review`, wait, then **B** |
+| Mine | Yes | Not available | **A** |
+| Theirs | Yes | Available + has run | **C. Reviewer over automation** |
+| Theirs | Yes | Available, not yet run | Announce, trigger via `automated-review`, wait, then **C** |
+| Theirs | Yes | Not available | **D. Read the diff in this session, post your own judgments.** |
 
----
-
-## Phase 2: Dispatch Specialists
-
-**Do not review the diff yourself** — coordinate: gather context, dispatch, handle escalations, merge, verify, format.
-
-### Classify the diff
-
-| Signal | Triggers |
-|---|---|
-| **Models, services, controllers, jobs, lib** | correctness, completeness, maintainability |
-| **Removes/renames columns, enums, scopes, methods** | completeness (propagation) |
-| **ORM calls: `update_column`, `delete`, caching, type patterns** | conventions |
-| **DB queries, loops over collections, views rendering lists** | performance |
-| **Auth, params, cookies, sessions, CORS, encryption** | security |
-| **Migrations, schema changes** | performance + completeness |
-| **Views, templates, JS, CSS, frontend components** | maintainability (UX) + performance (UI scalability) |
-| **Config files, routes, environment settings** | security |
-| **Test files** | maintainability (test validity) |
-
-### Dispatch rules
-
-**Always dispatch:** correctness, completeness, maintainability.
-
-**Conditional:**
-- **Conventions**: dispatch if the diff uses ORM persistence methods, caching, or introduces new data models/columns.
-- **Security**: dispatch if the diff touches auth, params, cookies/sessions, encryption, CORS, environment config, or dependencies.
-- **Performance**: dispatch if the diff touches DB queries, associations, loops, jobs processing batches, views rendering collections, or migrations.
-
-When in doubt, dispatch — false negatives are worse than wasted tokens.
-
-### Build payloads
-
-**Base payload:**
-1. The full diff
-2. Full contents of modified files (skip generated files, lock files, vendored code)
-3. Static analysis findings
-4. Prior review summary (merge request only; omit if not a merge request review)
-
-**Extended context (add to each specialist's prompt):**
-- **Project rules** — full text of AGENTS.md, CONVENTIONS.md, etc. — for **all** agents
-- **Issue context** — requirements, acceptance criteria, project goals — for correctness, completeness, maintainability only; write "No issue context available" if none found
-- **Prior reviews** — full prior review summary — for **all** agents (merge request only)
-
-### Spawn specialists
-
-Read these files before dispatching:
-
-```
-~/.agents/skills/review/specialists/_preamble.md     ← always
-~/.agents/skills/review/specialists/correctness.md
-~/.agents/skills/review/specialists/completeness.md
-~/.agents/skills/review/specialists/maintainability.md
-~/.agents/skills/review/specialists/conventions.md   ← if applicable
-~/.agents/skills/review/specialists/security.md      ← if applicable
-~/.agents/skills/review/specialists/performance.md   ← if applicable
-```
-
-Spawn all applicable specialists **in parallel** (single message), all with `subagent_type="expert"`. Inline the specialist instructions directly — do not tell the expert to load a skill.
-
-Each Task prompt:
-```
-You are a <domain> reviewer. Follow these instructions:
-
-<contents of specialists/<domain>.md>
-
-<contents of specialists/_preamble.md>
-
-<base payload>
-
-## Project Rules
-<full project rules text>
-
-## Issue Context          ← only for correctness, completeness, maintainability
-<issue details, acceptance criteria, project body>
-
-## Static Analysis Findings
-<linter output>
-
-## Prior Reviews
-<prior review summary or 'N/A — not a merge request review'>
-```
-
-Each specialist returns `{"findings": [...], "escalations": [...]}`.
-
-### Handle Escalations
-
-After all specialists return, collect all `escalations`. Group by `for_reviewer`. For each non-empty group, spawn a follow-up Task (one per group):
-
-```
-You are a <domain> reviewer. Follow these instructions:
-
-<contents of specialists/<domain>.md>
-
-<contents of specialists/_preamble.md>
-
-The following areas were flagged by other reviewers:
-<list of escalations with file:line and note>
-
-Full diff: <diff>
-Full file contents: <files>
-## Project Rules: <content>
-## Issue Context: <if applicable — correctness/completeness/maintainability only>
-## Static Analysis: <output>
-
-This is a follow-up pass. Put all issues in `findings`. Escalations will be discarded.
-```
-
-Follow-up agents return additional `findings`. Discard all `escalations` from follow-ups to prevent loops.
+Check availability and fetch any prior review via your `automated-review` capability.
 
 ---
 
-## Phase 3: Merge, Verify & Output
+## A. Local review
 
-**Side effects note:** when building the payload, explicitly flag any callbacks, jobs, events, or webhooks visible in the diff — the correctness specialist traces these in Phase 1.
+Review the diff yourself in this session. The diff, modified files, and project rules are already loaded.
 
-Read `~/.agents/skills/review/verify-findings.md` and follow the merge and verification steps.
+Run these passes against the diff in order, treating each as a distinct lens. After each, write a short list of findings before moving on so you don't blur the lenses together.
 
-### Coordinator-Level Checks
+**Always run:**
 
-After merging specialist findings, add these directly:
+1. **Correctness** — logic errors, missing edge cases, off-by-one, wrong API signatures, callback/event/job side effects, error handling. Trace data flow across files.
+2. **Completeness** — column/enum/scope/method renames or removals propagated everywhere; fixtures, tests, views, serializers, callers, docs all updated; new code paths covered by tests.
+3. **Maintainability** — naming, duplication, dead code, test validity, comprehensibility for the next reader.
 
-1. **Missing acceptance criteria** — if no linked issue with acceptance criteria was found, add a suggestion: "No linked issue with acceptance criteria found — cannot fully verify feature completeness."
+**Conditional (run if the diff touches the trigger):**
 
-2. **Runtime verification**:
+4. **Conventions** — when ORM persistence methods, caching, or new data models/columns appear. Check project rules.
+5. **Security** — when auth, params, cookies/sessions, encryption, CORS, env config, or dependencies appear. Trace input paths end-to-end.
+6. **Performance** — when DB queries, associations, loops, batch jobs, views rendering collections, or migrations appear. Check N+1, missing indexes, unbounded collections.
 
-   **Start the dev server** — auto-detect the command in this priority order:
+When in doubt, run the conditional pass.
+
+For deeper per-pass guidance and the verification protocol, see `~/.agents/skills/review/specialists/` and `~/.agents/skills/review/verify-findings.md` — but only consult them if you're stuck on what a pass should cover, not as a routine step.
+
+After all passes: deduplicate findings, verify each by attempting to disprove it (read the surrounding code; check `git blame` for pre-existing issues; confirm `file:line` is in the diff). Default is keep — discard only on positive disproof.
+
+---
+
+## B. Self-review over automation (your code, automation has reviewed)
+
+Reconcile the prior review against current state. Apply this protocol to **both** the automated review (via `automated-review`) **and** any human reviews already on the code review request (via `source-control`):
+
+1. Fetch the prior review (`commit_id` / submitted_at, inline comments with `path/line/body` and reply thread relationships).
+2. **Staleness judgment**: read `git diff <commit_id>..HEAD`. Subjective call: is the delta substantial enough that a fresh review is warranted? New logic surfaces, structural refactors, new files/dependencies → stale. Typo fixes, comments, formatting → not stale.
+3. **Per-finding status**: for each prior comment, read the diff slice around `file:line` and any reply thread. Classify as `addressed | dismissed-with-reasoning | pending | moved-but-still-true`.
+4. If automated review is stale → re-trigger via `automated-review`, wait, restart from step 1. (Do not re-trigger if previously dismissed without action and the diff has not materially changed.)
+5. **Pending or moved-but-still-true findings → fix them via TDD.**
+
+Then run the always-on layer (below).
+
+---
+
+## C. Reviewer over automation (their code, automation has reviewed)
+
+Same reconciliation as B (steps 1–4 above), applied to both automated and prior human reviews.
+
+Then read the diff in this session and form your own judgments. Posting AI findings as your own is dishonest when an embedded reviewer is already on the code review request — your contribution here is reviewer judgment, not a duplicate AI pass.
+
+What you contribute:
+- Agreement, disagreement, or expansion on bot findings (post as inline replies on those threads, not new comments)
+- Issues the bot missed that you genuinely caught yourself
+- `moved-but-still-true` cases — the bot's original comment is gone but the concern remains; surface explicitly
+- Reviewer judgment: verdict, AC coverage, QA observations
+
+Then run the always-on layer (below).
+
+---
+
+## Always-on layer (every pipeline)
+
+**Acceptance criteria check**: if issue context was found, evaluate each AC against the diff. If no linked issue, note "No linked issue with acceptance criteria found."
+
+**Conditional QA**: if the diff modifies views, templates, controllers, frontend code, or UI interactions:
+
+1. Auto-detect the dev server command in this priority order:
    - `package.json` → `scripts.dev`, then `scripts.start`
    - `Procfile` → the `web:` entry
    - `Makefile` → a `dev`, `serve`, or `start` target
-   - `README.md` → look for a "Getting started" / "Running locally" code block
+   - `README.md` → "Getting started" / "Running locally" code block
+2. Spawn in the background. Wait up to 15 s for "listening on" / "ready" / port-bound log line.
+3. Use your `qa` capability with the changed flows and local URL.
+4. Kill the server when done. Restore the original branch.
+5. Include results under `## QA Results` in the output.
 
-   Spawn in the background via your `shell` capability. Wait up to 15 seconds for a "listening on" / "ready" / port-bound log line. Record the session ID and local URL for QA.
+For code review requests, always attempt server start. For commit/branch/staged reviews, only if UI is touched. If no command found, note "QA skipped — could not detect dev server command."
 
-   - **Merge request reviews**: always attempt server start. If no command found, note "QA skipped — could not detect dev server command".
-   - **Branch / staged / commit reviews**: only if the diff modifies views, templates, controllers, frontend code, or UI interactions. If no server can be started, note "QA skipped — no running app detected".
+---
 
-   Steps:
-   1. Use the `qa` capability — pass context about which flows changed and the local URL
-   2. Kill the background server session and restore the original branch
-   3. Include results under `## QA Results` in the output
+## Submit and output
 
-Read `~/.agents/skills/review/output-format.md` and format the final output.
+Read `~/.agents/skills/review/output-format.md` for the output template.
+
+**Inline-first when posting**: post findings as inline comments via your `source-control` capability. Do not include verdict, TL;DR, or summaries in the submitted body — those are session output only. Exception: a review-wide observation that genuinely cannot be attributed to any line.
+
+**Show the full proposed review and ask "Do you approve?"** before submitting to a code review request. Then STOP and wait for explicit approval.
+
+When a code review request has reviews and merge conflicts, use merge (not rebase) to resolve — rebasing invalidates existing inline comments.

@@ -62,7 +62,7 @@ tail -50 ~/Library/Logs/opencode-web.error.log
 - The LaunchAgent `KeepAlive: true` means the server will always restart; the only failure mode is a crash loop from bad config
 - **Adding a new `[data]` key to `.chezmoi.toml.tmpl` requires `chezmoi init` before `chezmoi apply`** — `apply` alone does not regenerate `~/.config/chezmoi/chezmoi.toml`
 - **`chezmoi init` is destructive to the live config** — it re-renders the template from scratch. The "config file template has changed" warning from `chezmoi apply` is cosmetic when scripts are already deployed; do not run `chezmoi init` to silence it.
-- **Machine-specific config lives in `.chezmoidata/local.yaml`** in the source directory — secrets manifest, calendar config, reminders. This file is gitignored. Copy `~/.config/chezmoi/local.yaml.example` to `~/.local/share/chezmoi/.chezmoidata/local.yaml` to get started.
+- **Machine-specific config lives in `.chezmoidata/local.yaml`** in the source directory — secrets manifest, calendar config, reminders, per-org config. This file is gitignored. Copy `local.yaml.example` from the repo root to `~/.local/share/chezmoi/.chezmoidata/local.yaml` to get started. The example must NOT live under `.chezmoidata/` itself — files there get merged into `chezmoi data` and would leak placeholder values into runtime.
 
 ## Gotchas
 

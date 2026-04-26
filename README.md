@@ -14,6 +14,17 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 
 You'll be prompted for a few required values (name, email, code directory, GitHub token, calendar names). Optional integrations — Slack, Figma, Elasticsearch, Linear, ICS feeds, etc. — can be added by editing `~/.config/chezmoi/chezmoi.toml` after init. See the commented sections in [`.chezmoi.toml.tmpl`](.chezmoi.toml.tmpl) for the full list.
 
+## Machine-specific config
+
+Per-machine values that don't belong in version control (secrets manifest, calendar configuration, per-org overrides) live in `~/.local/share/chezmoi/.chezmoidata/local.yaml`. Copy [`local.yaml.example`](local.yaml.example) from this repo's root and fill in your values.
+
+`orgs.<org>` keys cover per-GitHub-org behaviors used by the agent skills:
+
+- `issues: linear` routes issue management to Linear instead of GitHub Issues
+- `automated_review` declares an embedded code reviewer (e.g. GitHub Copilot review) — the [`review`](skills/review/) skill consumes prior automated findings instead of duplicating them locally
+
+Note: the example file lives at the repo root rather than under `.chezmoidata/`. Files inside `.chezmoidata/` are merged into `chezmoi data` at runtime, which would leak placeholder values into the live config.
+
 ## What's configured
 
 - **Shell** — zsh (`dot_zshrc.tmpl`, `dot_zshenv.tmpl`, `dot_zprofile.tmpl`)

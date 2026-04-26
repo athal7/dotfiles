@@ -7,6 +7,7 @@ metadata:
   provides:
     - source-control
     - ci
+    - automated-review
 ---
 
 # Skill: gh
@@ -77,6 +78,79 @@ Flag anything matching:
 | `CHANGES_REQUESTED` | **Author** — reviewer wants changes addressed |
 | `APPROVED` | Nobody — this reviewer is satisfied |
 | `COMMENTED` | **Author** — reviewer wants changes addressed |
+
+## Automated review (Copilot, Codex, etc.)
+
+`gh` is the transport for GitHub-hosted automated reviewers. Per-org config lives in `~/.local/share/chezmoi/.chezmoidata/local.yaml` under `orgs.<org>.automated_review` (see `local.yaml.example` in the dotfiles repo root for schema). Orgs without that block have no automated review available.
+
+### Is automated review available for this repo?
+
+```bash
+ORG=$(gh repo view --json owner -q '.owner.login')
+chezmoi data --format json | jq -r ".orgs[\"$ORG\"].automated_review // empty"
+```
+
+Non-empty output = available. The returned object has `bot_login`, `auto_runs`, and `trigger`.
+
+### Fetch the latest automated review for a PR
+
+Pull all reviews authored by the configured `bot_login`. Most recent first; take `[0]` for the latest:
+
+```bash
+gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" --paginate \
+  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | sort_by(.submitted_at) | reverse"
+```
+
+Each review has `commit_id` (the head SHA at review time — needed for staleness checks) and `submitted_at`. Inline comments live separately:
+
+```bash
+gh api "repos/$OWNER/$REPO/pulls/$PR/comments" --paginate \
+  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\") | {path, line, body, id, in_reply_to_id, commit_id}]"
+```
+
+Reply threads on a comment use `in_reply_to_id` chains.
+
+### Trigger automated review
+
+The `trigger` field in config tells you how:
+
+- `add_reviewer @handle` → `gh pr edit $PR --add-reviewer @handle` (e.g. `@copilot`)
+- `comment @handle <text>` → post a top-level comment via `gh pr comment $PR --body "@handle <text>"`
+
+```bash
+# add_reviewer form
+gh pr edit "$PR" --add-reviewer @copilot
+
+# comment form
+gh pr comment "$PR" --body "@codex review"
+```
+
+Triggering is a public action — it appears in the timeline. Announce it before doing it.
+
+### Wait for a fresh review
+
+After triggering (or to wait for an auto-running bot), poll until a review exists with a `commit_id` matching the current HEAD (or just newer than `since_sha`). Reasonable cadence: every 5s, timeout 120s.
+
+```bash
+TARGET_SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
+for i in {1..24}; do
+  LATEST=$(gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" --paginate \
+    --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | sort_by(.submitted_at) | reverse | .[0].commit_id")
+  [[ "$LATEST" == "$TARGET_SHA" ]] && break
+  sleep 5
+done
+```
+
+### Was a prior review already requested-and-dismissed?
+
+Don't re-trigger if the human author dismissed the bot without a fix and the diff hasn't materially changed. Check review timeline events:
+
+```bash
+gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" --paginate \
+  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\") | {state, dismissed: .state == \"DISMISSED\", submitted_at, commit_id}]"
+```
+
+`state == "DISMISSED"` with no follow-up review means the author chose not to act on it.
 
 ## Checking repo visibility
 
