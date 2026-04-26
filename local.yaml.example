@@ -67,8 +67,18 @@ calendars:
     name: "Personal"
     sync_to:
       - work
+  family:
+    name: "Family"
+    babysitter_check: true
+    # Patterns for sync-calendars (events not copied to other calendars)
     ignore_patterns:
       - CSA Delivery
+    # Events whose titles match any of these strings (case-insensitive) are
+    # skipped by babysitter-check — use for events where you're with the kids
+    # and don't need a sitter (e.g. activities you're attending together).
+    babysitter_ignore_patterns:
+      - Soccer
+      - School Play
   work:
     name: "Work"
     attention_check: true

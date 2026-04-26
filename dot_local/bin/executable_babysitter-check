@@ -153,11 +153,17 @@ def main():
         for e in events:
             if e.get("all_day") or e.get("recurring"):
                 continue
+
+            title = e.get("title", "").strip()
+            ignore = cal.get("babysitter_ignore_patterns", [])
+            if any(p.lower() in title.lower() for p in ignore):
+                log(f"Ignoring '{title}' — matches babysitter_ignore_patterns")
+                continue
+
             start = to_local(e["start_date"], tz)
             if not is_eligible(start):
                 continue
 
-            title = e.get("title", "").strip()
             end = to_local(e["end_date"], tz)
             event_date = start.strftime("%A, %B %-d")
             reminder_title = f"Book babysitter for {title} on {event_date}"
