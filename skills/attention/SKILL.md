@@ -21,8 +21,8 @@ metadata:
 ## Step 1: Gather context (all in parallel)
 
 - **Sessions:** use your `agent` capability with `sessions-today.sql`, `sessions-summary.sql`, `sessions-concurrent.sql` from this skill directory
-- **Calendar:** use your `calendar` capability for today's events and current time, then compute `RUNWAY` = minutes until the earlier of (next event, 4pm). 4pm is the wind-down boundary — buffer for gradual transition out of focus, not end of work (monotropic transitions need runway).
-- **Reminders:** use your `reminders` capability — overdue, due today, no due date
+- **Calendar:** use your `calendar` capability for today's events and current time, scoped to calendars flagged `attention_check: true` in `$(chezmoi source-path)/.chezmoidata/local.yaml` (under `calendars`). Then compute `RUNWAY` = minutes until the earlier of (next event, 4pm). 4pm is the wind-down boundary — buffer for gradual transition out of focus, not end of work (monotropic transitions need runway).
+- **Reminders:** use your `reminders` capability — overdue, due today, no due date — scoped to lists flagged `attention_check: true` in `$(chezmoi source-path)/.chezmoidata/local.yaml` (under `reminders`)
 - **Work:** use your `source-control` and `issues` capabilities for review requests, received reviews, and assigned work. Prioritize closest-to-done: approved merge request ready to merge → received review to address → incoming review request → new work. Group linked merge requests and issues together. Flag any "In Progress" issue whose merge request has changes requested or a conflict.
 
 ---

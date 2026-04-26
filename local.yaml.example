@@ -71,6 +71,7 @@ calendars:
       - CSA Delivery
   work:
     name: "Work"
+    attention_check: true
     sync_to:
       - personal
     lunch_guard: true
@@ -85,3 +86,6 @@ calendars:
 reminders:
   personal:
     name: "Personal"
+  work:
+    name: "Work"
+    attention_check: true
