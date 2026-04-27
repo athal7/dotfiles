@@ -1,61 +1,32 @@
 ---
 name: secrets
-description: Fetch credentials and API keys. Use when a skill needs an API token, password, or other secret. Covers both personal (macOS Keychain) and work (1Password) secrets.
+description: Fetch credentials and API keys. Use when a skill needs an API token, password, or other secret.
 license: MIT
 metadata:
   provides:
     - secrets
 ---
 
-Secrets are split across two providers based on whether they are personal or work-related:
+All secrets are stored in the macOS Keychain under service `chezmoi`. The account name matches the secret name declared in `$(chezmoi source-path)/.chezmoidata/local.yaml` under the `secrets` key.
 
-- **Personal secrets** — macOS Keychain, service `chezmoi`
-- **Work secrets** — 1Password CLI (`op`)
+This works non-interactively from any agent context (including remote sessions) — no Touch ID, no biometric prompts.
 
-The mapping of secret names to provider, vault, item, and field is in `~/.local/share/chezmoi/.chezmoidata/local.yaml` under the `secrets` key. Read it to know which provider and lookup details to use for a given secret.
-
-## Fetching secrets — fetch once, reuse
-
-**Fetch all secrets you need at the start of a task in a single block, then reuse the variables.** Each `op` call may trigger a biometric prompt — batching avoids repeated interruptions.
+## Fetch a secret
 
 ```bash
-# Fetch everything needed upfront
-MY_TOKEN=$(op item get <item-id> --fields label=<field> --account <account>)
-MY_OTHER=$(security find-generic-password -s "chezmoi" -a "<account>" -w)
-
-# Reuse in subsequent commands — never call op/security again for the same secret
-curl -H "Authorization: Bearer $MY_TOKEN" ...
+MY_TOKEN=$(security find-generic-password -s "chezmoi" -a "<secret-name>" -w)
 ```
 
-**From Keychain:**
-```bash
-security find-generic-password -s "chezmoi" -a "<account>" -w
-```
-
-**From 1Password:**
-```bash
-op item get <item-id> --fields label=<field> --account <account>
-```
-
-If `op` returns an authorization error, the session has expired — re-authenticate via the 1Password desktop app or `op signin`.
+If the command fails with `The specified item could not be found in the keychain`, the secret hasn't been populated yet. Tell the user: "The Keychain entry for `<secret-name>` is missing. Please add it via `security add-generic-password -U -s chezmoi -a <secret-name> -w <value>` and let me know when done."
 
 ## Adding a new secret
 
-Add an entry to `~/.local/share/chezmoi/.chezmoidata/local.yaml`:
-
-```yaml
-secrets:
-  my_token:
-    provider: keychain   # or: op
-    account: my_token    # keychain account name
-    # for op:
-    # account: your-1password-account
-    # vault: your-vault
-    # item: item-id
-    # field: field-label
-```
-
-For Keychain, also add the value:
-```bash
-security add-generic-password -s "chezmoi" -a "my_token" -w "value"
-```
+1. Add an entry to `$(chezmoi source-path)/.chezmoidata/local.yaml` under `secrets` (the entry can be empty: `my_secret: {}`).
+2. Add the value to Keychain:
+   ```bash
+   security add-generic-password -U -s "chezmoi" -a "<name>" -w "<value>"
+   ```
+3. Verify the fetch works:
+   ```bash
+   security find-generic-password -s "chezmoi" -a "<name>" -w
+   ```

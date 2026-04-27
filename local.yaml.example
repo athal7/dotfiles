@@ -21,46 +21,18 @@ orgs:
       auto_runs: true
       trigger: add_reviewer @copilot
 
-# Secrets manifest — each entry maps a name to its provider.
-# provider: op   — fetched via 1Password CLI
-# provider: keychain — fetched via macOS Keychain (service: chezmoi)
+# Secrets manifest — each entry declares a name. Values are stored in the macOS
+# Keychain under service "chezmoi" with account = the name. Populate them via:
+#   security add-generic-password -U -s "chezmoi" -a "<name>" -w "<value>"
+# Agents read values via `security find-generic-password -s chezmoi -a <name> -w` —
+# this works non-interactively, including from remote sessions, with no biometric prompts.
 secrets:
-  slack_user_token:
-    provider: op
-    account: your-1password-account
-    vault: your-vault
-    item: your-item-id
-    field: user_token
-  slack_token:
-    provider: op
-    account: your-1password-account
-    vault: your-vault
-    item: your-item-id
-    field: token
-  slack_user_id:
-    provider: op
-    account: your-1password-account
-    vault: your-vault
-    item: your-item-id
-    field: user_id
-  figma_access_token:
-    provider: op
-    account: your-1password-account
-    vault: your-vault
-    item: your-item-id
-    field: access_token
-  es_api_key:
-    provider: op
-    account: your-1password-account
-    vault: your-vault
-    item: your-item-id
-    field: api_key
-  es_url:
-    provider: op
-    account: your-1password-account
-    vault: your-vault
-    item: your-item-id
-    field: url
+  slack_user_token: {}
+  slack_token: {}
+  slack_user_id: {}
+  figma_access_token: {}
+  es_api_key: {}
+  es_url: {}
 # Calendar configuration
 calendars:
   personal:
