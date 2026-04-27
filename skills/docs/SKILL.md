@@ -21,7 +21,7 @@ Run `--help` on each tool and subcommand first. This skill covers only what help
 ## Google Docs
 
 - `gws docs documents get` returns raw structural JSON, not readable text — use `gws drive files export --mimeType text/plain` to get readable content
-- `--output` paths must be within the current directory — `gws` rejects absolute paths outside it
+- `--output` paths must be within the current directory — `gws` rejects absolute paths outside it. Use `.scratch/` as the download target: `mkdir -p .scratch && gws ... --output .scratch/filename.txt`. `.scratch/` is globally gitignored.
 - The Docs API has no search — use `gws drive files list` with a CQL `q` param instead
 - `gws docs documents get` output begins with a "Using keyring backend" line — strip non-JSON prefix lines before parsing
 - Inserting real tables requires a multi-phase approach; see `tables.md`
