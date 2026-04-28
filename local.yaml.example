@@ -71,3 +71,4 @@ reminders:
   work:
     name: "Work"
     attention_check: true
+    post_meeting: true

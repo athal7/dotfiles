@@ -97,7 +97,7 @@ Collect items assigned to `recorded_by` from **both** of these structures — th
 
 For any entry whose `assignee`/`who` is still a `SPEAKER_N` label, look it up in `speaker_map` and rewrite it in the file before adding the reminder.
 
-Add each item not already in reminders via your `reminders` capability, with the meeting title as a note and any due date from the entry.
+Add each item not already in reminders via your `reminders` capability, targeting the configured post-meeting list, with the meeting title as a note and any due date from the entry.
 
 ---
 

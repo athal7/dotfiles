@@ -19,7 +19,7 @@ Route to the correct issue tracker based on the GitHub remote org.
    git remote get-url origin
    ```
 2. Parse the org from the URL (works for both HTTPS and SSH remotes).
-3. Run `chezmoi data --format json` and read `.orgs.<org>.issues`.
+3. Look up the org in agent config (`orgs.<org>.issues`).
 4. If the value is `"linear"` → use the `linear-cli` skill.
 5. Otherwise → use `gh issue` commands.
 6. If there is no git remote, ask the user which tracker to use.
