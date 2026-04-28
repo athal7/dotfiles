@@ -85,12 +85,20 @@ Flag anything matching:
 
 ### Is automated review available for this repo?
 
+**Run this exact command. Do not infer availability from collaborator lists, repo settings, prior PRs, or anything else.**
+
 ```bash
 ORG=$(gh repo view --json owner -q '.owner.login')
 chezmoi data --format json | jq -r ".orgs[\"$ORG\"].automated_review // empty"
 ```
 
-Non-empty output = available. The returned object has `bot_login`, `auto_runs`, and `trigger`.
+- **Non-empty output** = available. The returned object has `bot_login`, `auto_runs`, and `trigger`. Proceed with the trigger/wait/fetch flow below.
+- **Empty output** = not configured for this org. Only then fall back to the no-automation pipeline.
+
+Common wrong checks that will give you a false negative:
+- Listing repo collaborators and looking for the bot login — the bot is not added as a collaborator
+- Checking org-level installed apps via `gh api` — the bot may be installed at GitHub-account level rather than per-org
+- Looking at prior PRs for bot reviews — a repo with no prior bot reviews may still be configured
 
 ### Fetch the latest automated review for a PR
 
@@ -112,20 +120,30 @@ Reply threads on a comment use `in_reply_to_id` chains.
 
 ### Trigger automated review
 
-The `trigger` field in config tells you how:
+**Use only the commands below. Do not invent alternatives.** The REST endpoint `POST /repos/{o}/{r}/pulls/{n}/requested_reviewers` returns 422 *"Reviews may only be requested from collaborators"* when given `copilot-pull-request-reviewer` — the bot is not a collaborator. Only `gh pr edit --add-reviewer "@copilot"` works, because `@copilot` is a special handle that `gh` resolves client-side (see `gh pr edit --help`).
 
-- `add_reviewer @handle` → `gh pr edit $PR --add-reviewer @handle` (e.g. `@copilot`)
-- `comment @handle <text>` → post a top-level comment via `gh pr comment $PR --body "@handle <text>"`
+The `trigger` field returned by the availability check tells you which form:
+
+- `add_reviewer @handle` → `gh pr edit $PR --add-reviewer "@handle"` (e.g. `"@copilot"`)
+- `comment @handle <text>` → `gh pr comment $PR --body "@handle <text>"`
 
 ```bash
 # add_reviewer form
-gh pr edit "$PR" --add-reviewer @copilot
+gh pr edit "$PR" --add-reviewer "@copilot"
 
 # comment form
 gh pr comment "$PR" --body "@codex review"
 ```
 
 Triggering is a public action — it appears in the timeline. Announce it before doing it.
+
+After triggering, verify the bot was actually added as a reviewer before waiting:
+
+```bash
+gh api "repos/$OWNER/$REPO/pulls/$PR/requested_reviewers" --jq '.users[].login, (.users[] | select(.type=="Bot") | .login)'
+```
+
+Note: Copilot appears in `requested_reviewers` as login `Copilot` (a Bot user, app slug `copilot-pull-request-reviewer`), but its review submissions use login `copilot-pull-request-reviewer[bot]` — the `bot_login` from the availability check matches the *review author*, not the requested-reviewer login.
 
 ### Wait for a fresh review
 
