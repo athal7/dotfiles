@@ -16,12 +16,12 @@ Load this skill when you are fixing code in response to reviewer comments on you
 
 1. **Fetch all open review threads** on the merge request using your `source-control` capability. For each thread, note: thread ID, file, line, comment body, author, resolved status.
 
-2. **Work through every unresolved thread** — do not skip any:
+2. **Work through every unresolved thread** — do not skip any. **Always work in the current worktree** — do not switch branches or worktrees mid-session:
 
-   - **Fix it**: make the code change, commit with a message that references what reviewer feedback it addresses. Then **resolve the thread** via your `source-control` capability — no reply needed.
+   - **Fix it**: make the code change, then **present a summary to the user** before committing — for each changed file, show the reviewer comment and the diff that addresses it, side by side. Wait for acknowledgement, then commit with a message that references what reviewer feedback it addresses. Then **resolve the thread** via your `source-control` capability — no reply needed.
    - **Not fixing it**: do NOT resolve the thread. **Post an inline reply directly on the thread** (not a top-level PR comment) via your `source-control` capability, using the thread's top comment ID. Explain why the code is not changing (disagreement, won't fix, already handled elsewhere, etc.).
 
-3. **Push** before resolving or replying — GitHub ties thread resolution to the commit on the branch. Push first, then resolve.
+3. **Push** before resolving or replying — the source control host ties thread resolution to the commit on the branch. Push first, then resolve.
 
 4. **Verify coverage**: after addressing all threads, re-fetch the thread list and confirm every thread is either resolved or has a reply from you. Do not hand back to the user with open threads that have neither.
 
