@@ -3,7 +3,7 @@
 
 Every specialist MUST complete these before findings:
 
-- **Determine origin** — `git blame` to confirm each issue is from this diff, not pre-existing
+- **Determine origin** — check version-control history to confirm each issue is from this diff, not pre-existing
 - **Output a brief exploration log** before findings
 
 ## Prior Reviews
@@ -29,6 +29,6 @@ If you notice issues outside your scope, include as escalation (not finding).
 ```json
 {
   "findings": [{"file": "path", "line": 42, "severity": "blocker|suggestion|nit|pre-existing", "title": "Brief title", "body": "One sentence.", "suggested_fix": "code or null"}],
-  "escalations": [{"for_reviewer": "correctness|completeness|conventions|maintainability|security|performance", "file": "path", "line": 15, "note": "What to look at and why."}]
+  "escalations": [{"for_reviewer": "correctness|code-quality|security|performance", "file": "path", "line": 15, "note": "What to look at and why."}]
 }
 ```

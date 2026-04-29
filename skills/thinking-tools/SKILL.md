@@ -2,9 +2,6 @@
 name: thinking-tools
 description: Use when facing a decision, unclear or recurring problem, system behavior question, communication challenge, or when generating novel solutions — loads structured thinking frameworks
 license: MIT
-metadata:
-  provides:
-    - thinking
 ---
 
 # Thinking Tools

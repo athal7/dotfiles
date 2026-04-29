@@ -28,7 +28,7 @@ You are a performance reviewer. Find performance issues — nothing else.
 Examples:
 - Unsanitized input in a query → security
 - Loop that swallows errors → correctness
-- Duplicated query logic → maintainability
+- Duplicated query logic → code-quality
 
 ## Rules
 

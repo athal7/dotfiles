@@ -3,9 +3,6 @@ name: context-log
 description: Create and update .opencode/context-log.md to preserve issue context and checkpoint history across compaction and session handoffs
 license: MIT
 compatibility: opencode
-metadata:
-  provides:
-    - context-log
 ---
 
 ## Purpose
