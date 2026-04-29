@@ -893,20 +893,16 @@
     <h2>Multi-specialist <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/review/SKILL.md" style="color:var(--accent);">review</a></h2>
     <div class="cols cols-2" style="margin-top:8px;">
       <div class="stack">
-        <p>The skill routes to a pipeline based on whose code it is and whether automated review (e.g. Copilot) has already run.</p>
+        <p>The skill routes to one of two paths based on whose code it is. Each reconciles against automated review (e.g. Copilot) when it has already run.</p>
         <div class="compare" style="margin-top:12px; font-size:13px;">
-          <div class="compare-header">Situation</div>
-          <div class="compare-header">Pipeline</div>
-          <div class="compare-cell">My code, no automation</div>
-          <div class="compare-cell">Local passes in-session</div>
-          <div class="compare-cell">My code, Copilot reviewed</div>
-          <div class="compare-cell">Reconcile against automation, fix pending</div>
-          <div class="compare-cell">Their code, Copilot reviewed</div>
-          <div class="compare-cell">Reviewer judgment over automation</div>
-          <div class="compare-cell">Their code, no automation</div>
-          <div class="compare-cell">Read diff, post own findings</div>
+          <div class="compare-header">Path</div>
+          <div class="compare-header">What it does</div>
+          <div class="compare-cell">Reviewing your code</div>
+          <div class="compare-cell">Reconcile prior automation, fix pending findings, then run local passes</div>
+          <div class="compare-cell">Reviewing theirs</div>
+          <div class="compare-cell">Reconcile, then add reviewer judgment — never post AI findings as your own</div>
         </div>
-        <p style="font-size:13px; margin-top:12px;">Three passes always run: correctness, completeness, maintainability. Three are conditional: conventions, security, performance.</p>
+        <p style="font-size:13px; margin-top:12px;">Two passes always run: <strong>correctness</strong> (behavior + acceptance criteria) and <strong>code quality</strong> (smells, hygiene, propagation, testing pyramid). Two are conditional: security and performance.</p>
       </div>
       <div class="stack">
         <div class="card green">
