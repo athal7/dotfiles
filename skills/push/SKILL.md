@@ -1,6 +1,6 @@
 ---
 name: push
-description: Push approval protocol and post-push CI watching
+description: Push approval protocol, branch naming, merge request descriptions, and post-push CI watching
 license: MIT
 metadata:
   provides:
@@ -8,63 +8,40 @@ metadata:
   requires:
     - commit
     - source-control
+    - branching
+    - issues
     - ci
 ---
 
-# Skill: Push
+**Never push on your own initiative.** A push requires either an explicit user command ("push", "ship it", "commit and push") or explicit approval after you show a push summary.
 
-## Rule
+## Before pushing
 
-**Never push on your own initiative.** A push requires either an explicit user command or explicit user approval after you have shown a push summary.
+1. **Check the branch name** via your `branching` capability. Rename auto-generated worktree branches (e.g., `opencode/cosmic-wizard`) to `<type>/<short-description>` matching the commit type, 2-4 kebab-case words.
+2. **Run the full local test suite.** If tests fail: fix them first, or stop and report on a user-initiated push.
+3. **Show a summary of unpushed commits** via your `branching` capability.
 
-## Two flows
+If the user issued a push command, push immediately — the command is the approval.
 
-### User-initiated push
+If you decided a push is needed, **end your response and wait.** Only push on explicit confirmation in the next message: "yes", "approve", "go ahead", "lgtm", "do it". General continuations like "keep going" and earlier-in-conversation approvals do NOT count.
 
-The user says "push", "shipit", "ship it", "commit and push", or any clear push command.
+## After push — draft merge request
 
-1. Run the full local test suite for the project. If tests fail, stop and report — do not push.
-2. Show a summary of unpushed commits using your `branching` capability.
-3. Push immediately. The command is the approval.
+Create or update a draft merge request via your `source-control` capability. If none exists, create one from the branch commits. If one exists, update title/body only when the change is material (new feature scope, different fix, renamed component, changed API) — skip minor additions like tests/docs/formatting. Never change draft↔ready state.
 
-### Agent-initiated push
+**Description format:** 1-2 sentence summary, only add detail if non-obvious. Link the issue when the tracker is visible to the repo's audience (e.g., `Closes #123`). Skip headers, bullet lists, and implementation details obvious from the diff. **Never reference internal/private issue keys in public repos** — instead, update the issue with a link to the merge request via your `issues` capability. Check repo visibility via your `source-control` capability.
 
-You decide a push is needed (e.g. as part of a workflow, after fixing CI, etc.).
+Example:
+```
+Adds retry logic for flaky external API calls. Closes #123
+```
 
-1. Run the full local test suite for the project. If tests fail, fix them first.
-2. Show a summary of unpushed commits using your `branching` capability.
-3. **End your response. Do not push.**
-4. Wait for the user's next message.
-5. Only push if the next message is an explicit confirmation: "yes", "approve", "go ahead", "lgtm", "do it".
+## After draft merge request — watch CI
 
-## What Does NOT Count as Approval for Agent-initiated Push
+Watch CI to completion via your `ci` capability. Do not hand back to the user before this finishes.
 
-- "keep going" or other general continuation
-- Any approval from earlier in the conversation
+1. Poll every 30s until checks are no longer queued or in progress.
+2. On all-pass, report success with a markdown link to the merge request — never the bare number.
+3. On failure: get the failure output, fix the root cause, run the full test suite locally before pushing the fix, then commit (via `commit`) and push. Return to step 1.
 
-## After Push — Create/Update Draft Merge Request
-
-After every successful push, automatically create or update a draft merge request using your `source-control` capability.
-
-1. Check if a merge request already exists for this branch
-2. If none exists: create a draft merge request using commits from the branch to populate title/body
-3. If one already exists (any state):
-   - Compare the current branch commits against the existing title/body
-   - If there is a material change (new feature scope, different fix, renamed component, changed API, etc.), update the title/body
-   - Minor additions (tests, docs, formatting) do not warrant an update
-   - Do not update the state (draft → ready or vice versa)
-4. Once created/confirmed, proceed to CI watching
-
-## After Draft Merge Request — Watch CI
-
-After the draft merge request is created/confirmed, watch CI to completion using your `ci` capability. Do not hand back to the user and consider the task done.
-
-1. Poll every 30s until the run is no longer queued or in progress
-2. If all checks pass: report success with a markdown link to the merge request — never just the bare number
-3. If any check fails:
-   - Get the failure output from the failed run
-   - Fix the root cause
-   - **Run the full test suite locally** to verify the fix before pushing — do not push blind
-   - Commit (using your `commit` capability) and push
-   - Return to step 1
-4. Keep iterating until CI is green. Do not give up after one fix attempt.
+Keep iterating until CI is green. Do not give up after one fix attempt.

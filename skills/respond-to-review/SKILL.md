@@ -10,28 +10,28 @@ metadata:
     - source-control
     - tdd
     - push
+    - verify
 ---
 
-Load this skill when you are fixing code in response to reviewer comments on your own merge request.
+1. **Fetch all open review threads** via your `source-control` capability. Note thread ID, file, line, comment body, author, resolved status.
 
-## Steps
+2. **Plan a stance per thread** as a list — `fix`, `decline-with-reason`, or `defer-with-issue` — before any code changes.
 
-1. **Fetch all open review threads** on the merge request using your `source-control` capability. For each thread, note: thread ID, file, line, comment body, author, resolved status.
+3. **Verify the plan** via your `verify` capability: every thread has a stance, fix-stance has a test-first approach, decline-stance has a substantive reason. Apply findings.
 
-2. **Work through every unresolved thread** — do not skip any. **Always work in the current worktree** — do not switch branches or worktrees mid-session:
+4. **Work through every thread:**
+   - **Fix:** follow strict red/green/refactor via `tdd`. Present a per-file summary (reviewer comment beside addressing diff) and wait for acknowledgement, then commit with a message referencing the feedback. Resolve the thread via `source-control` — no reply needed.
+   - **Decline:** do NOT resolve. Post an inline reply on the thread (not a top-level comment) via `source-control` using the thread's top comment ID, explaining why the code isn't changing.
 
-   - **Fix it**: follow the full red/green/refactor loop from your `tdd` capability before touching implementation. Then **present a summary to the user** before committing — for each changed file, show the reviewer comment and the diff that addresses it, side by side. Wait for acknowledgement, then commit with a message that references what reviewer feedback it addresses. Then **resolve the thread** via your `source-control` capability — no reply needed.
-   - **Not fixing it**: do NOT resolve the thread. **Post an inline reply directly on the thread** (not a top-level PR comment) via your `source-control` capability, using the thread's top comment ID. Explain why the code is not changing (disagreement, won't fix, already handled elsewhere, etc.).
+5. **Push** via your `push` capability. The source control host ties thread resolution to the commit, so push before resolving or replying.
 
-3. **Push** using your `push` capability — this handles the push approval protocol and watches CI to completion. The source control host ties thread resolution to the commit on the branch, so push before resolving or replying.
+6. **Verify coverage.** Re-fetch threads; every one must be either resolved or have a reply from you. Never hand back with threads that have neither.
 
-4. **Verify coverage**: after addressing all threads, re-fetch the thread list and confirm every thread is either resolved or has a reply from you. Do not hand back to the user with open threads that have neither.
+7. **Re-request review** from every reviewer who previously reviewed, via `source-control`.
 
-5. **Request re-review** via your `source-control` capability — re-request review from every reviewer who previously reviewed the merge request.
+**Rules:**
 
-## Rules
-
-- Resolve without comment when a commit fixes the issue — do not add a "fixed" reply.
-- Reply without resolving when you are not changing the code — do not silently resolve disagreements.
-- Never resolve a thread that you did not fix. Never leave a thread with neither a resolve nor a reply.
-- Show proposed replies to the user and wait for approval before posting — same as the approval gate for any write to a remote service.
+- Resolve silently when a commit fixes — no "fixed" reply.
+- Reply without resolving when declining — never silently resolve a disagreement.
+- Never resolve a thread you didn't fix.
+- Show proposed replies to the user and wait for approval before posting.

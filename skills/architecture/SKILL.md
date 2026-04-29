@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: Software design reasoning — architecture decisions with tradeoff tables, code-level design smells (Feature Envy, Scattered Enforcement, Shotgun Surgery, Primitive Obsession, Layering Violations), refactoring direction, and pre-implementation design prerequisite checks
+description: Software design reasoning — architecture decisions with tradeoff tables and code-level design smells (Feature Envy, Scattered Enforcement, Shotgun Surgery, Primitive Obsession, Layering Violations) with refactoring direction
 license: MIT
 metadata:
   provides:
@@ -9,7 +9,7 @@ metadata:
     - issues
 ---
 
-Load this skill whenever a software design question arises at any level — system architecture, module structure, or code-level patterns. The description is the selection signal; the sections below are the three modes of use.
+For pre-implementation design prerequisite checks, use your `plan` capability — those checks fire at plan-time, not at architecture-decision-time.
 
 ## Section 1: Architecture Decisions
 
@@ -172,15 +172,3 @@ Never flag ambient smell the code doesn't interact with.
 For each smell found: name the pattern (e.g. "Feature Envy", "Scattered Enforcement"), cite Fowler or Evans, and propose a concrete refactoring direction (e.g. "Move Method to X", "Replace Conditional with Polymorphism", "Extract Policy object").
 
 Severity: `blocker` if the change entrenches a pre-existing scattered pattern by adding another callsite; `suggestion` if it introduces a new smell; `suggestion` if a prerequisite refactor would simplify the work.
-
-## Section 3: Design Prerequisite Check
-
-Use this section before planning any implementation that touches domain logic, authorization, state machines, or anything enforced in more than one layer. Answer each question by reading the relevant code before writing a single line of implementation.
-
-**Scattered enforcement:** Does the feature touch any concept (lock state, authorization, validation, pricing rule, etc.) that is currently checked or enforced in multiple places independently? List every callsite you find. If yes: is centralizing that concept first a prerequisite that would make the implementation simpler and avoid rework?
-
-**Coupling:** Will this change add a new dependency between modules that had no prior relationship? Is there a cleaner seam?
-
-**Extensibility:** Is the design choice being made the 2nd or 3rd instance of a pattern that will need to exist in N places? If so, is there a single abstraction that serves all of them?
-
-**"Make the change easy, then make the easy change."** If a prerequisite refactor would simplify the work, surface it explicitly: propose a separate issue/PR for the refactor, get user confirmation on whether to do it first, and only then plan the feature. This is how to avoid the rework loop of building on a cracked foundation.

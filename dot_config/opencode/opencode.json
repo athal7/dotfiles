@@ -7,7 +7,7 @@
   "permission": {
     "skill": "allow"
   },
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "anthropic/claude-opus-4-7",
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",

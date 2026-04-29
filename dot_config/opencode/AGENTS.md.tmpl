@@ -23,43 +23,19 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 ## Development Workflow
 
-**Plan before implementing.** For any change spanning multiple files or involving design decisions, load the `plan` skill and follow it. Present the plan and wait for approval before writing code.
+**The pipeline is plan → tdd → review → commit → push.** Each phase has its own skill. Load them in sequence as you advance — earlier phases do not auto-load later ones.
 
-**Branch discipline:** Always create a new branch off `origin/main` before any code change. Never implement directly on `main`. If the target branch is already checked out in another worktree, remove that worktree first (`git worktree remove <path> --force`), then check out the branch in the current worktree.
+**Branch discipline:** Create a new branch off `origin/main` before any code change. Never implement directly on `main`. If the target branch is already checked out in another worktree, remove that worktree first (`git worktree remove <path> --force`).
 
-**Issue discipline:** When picking up a tracked issue, set it to In Progress and assign it to the user before writing any code.
+**Issue discipline:** When picking up a tracked issue, set it to In Progress and assign it to the user before any code.
 
-**Scope discipline:** Only change what was asked. Do not refactor adjacent code, update unrelated deps, or add unrequested features.
+**Scope discipline:** Only change what was asked. No adjacent refactors, dep bumps, or unrequested features.
 
-**Delegation discipline:** You are the process enforcer, not the worker. All work — planning, implementation, research — runs in sub-agents dispatched via your `agent` capability. Load it and dispatch before doing anything yourself. Nudge sub-agents back on track when they drift; prune and restart with a fresh context when they can't recover.
+**Delegation discipline:** You are the enforcer, not the worker. Dispatch via your `agent` capability. Nudge sub-agents back when they drift; prune and restart with fresh context when they can't recover.
 
-**Before modifying remote services** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc` ignore rules): show the full proposed content and ask "Do you approve?" — then STOP and wait. Only proceed after receiving explicit approval.
+**Remote-service writes** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc`): show the full proposed content, ask "Do you approve?", STOP and wait.
 
-## TDD
-
-**Every code change follows the full red/green/refactor loop. No exceptions.**
-
-1. **Red** — write a failing test first, run it, confirm it fails with a meaningful error
-2. **Green** — write the minimum implementation to make it pass, run and confirm green
-3. **Refactor** — clean up structure and naming while keeping tests green
-
-Never write implementation before a test exists. Never skip the red phase. Load the `tdd` skill for the full protocol.
-
-## Feedback Sensors
-
-When working in a project codebase, run linters and tests in-session as backpressure — not only as a pre-commit gate. Concretely:
-
-- After editing code, run the project's linter(s) and surface output before moving on
-- After a logical unit of work, run the relevant test suite and confirm green before proceeding
-- Surface failures immediately rather than deferring to CI
-
-Which tools to use is determined by the project (check AGENTS.md, Makefile, or package.json in the repo). Don't guess — read the project's own instructions first.
-
-**Before committing:** load the `commit` skill and follow it.
-
-**Before pushing:** load the `push` skill and follow it.
-
-**Code review:** load the `review` skill. It routes based on whose code it is and whether automated review (e.g. Copilot) has already run — reconciling against automation rather than duplicating it.
+**Feedback sensors during implementation:** run the project's linter after edits, run the relevant test suite after a logical unit of work, surface failures immediately. Tool choices are project-determined — read the project's own AGENTS.md/Makefile/package.json first.
 
 ## Host-Specific Files (NOT managed by chezmoi)
 
