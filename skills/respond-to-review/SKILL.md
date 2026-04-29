@@ -8,6 +8,7 @@ metadata:
     - respond-to-review
   requires:
     - source-control
+    - tdd
 ---
 
 Load this skill when you are fixing code in response to reviewer comments on your own merge request.
@@ -18,7 +19,7 @@ Load this skill when you are fixing code in response to reviewer comments on you
 
 2. **Work through every unresolved thread** — do not skip any. **Always work in the current worktree** — do not switch branches or worktrees mid-session:
 
-   - **Fix it**: make the code change, then **present a summary to the user** before committing — for each changed file, show the reviewer comment and the diff that addresses it, side by side. Wait for acknowledgement, then commit with a message that references what reviewer feedback it addresses. Then **resolve the thread** via your `source-control` capability — no reply needed.
+   - **Fix it**: follow the full red/green/refactor loop from your `tdd` capability before touching implementation. Then **present a summary to the user** before committing — for each changed file, show the reviewer comment and the diff that addresses it, side by side. Wait for acknowledgement, then commit with a message that references what reviewer feedback it addresses. Then **resolve the thread** via your `source-control` capability — no reply needed.
    - **Not fixing it**: do NOT resolve the thread. **Post an inline reply directly on the thread** (not a top-level PR comment) via your `source-control` capability, using the thread's top comment ID. Explain why the code is not changing (disagreement, won't fix, already handled elsewhere, etc.).
 
 3. **Push** before resolving or replying — the source control host ties thread resolution to the commit on the branch. Push first, then resolve.
