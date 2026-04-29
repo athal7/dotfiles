@@ -92,8 +92,8 @@ def load_seen() -> set:
         # Parse the trailing date to decide whether to keep it.
         try:
             date_part = title.rsplit(" on ", 1)[-1]  # e.g. "Friday, May 2"
-            # strptime needs a year; assume current year then roll to next if needed
-            parsed = datetime.strptime(date_part, "%A, %B %d").date().replace(year=today.year)
+            # Include year in format to avoid DeprecationWarning in Python 3.15+
+            parsed = datetime.strptime(f"{date_part} {today.year}", "%A, %B %d %Y").date()
             if parsed < today:
                 parsed = parsed.replace(year=today.year + 1)
             if parsed >= today:
