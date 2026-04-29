@@ -23,20 +23,26 @@ Read project rules: `AGENTS.md` (root + nested), `CONVENTIONS.md`, `REVIEW.md`, 
 
 Fetch issue context via your `issues` capability — parse branch name and code review request body for issue IDs, fetch acceptance criteria.
 
-Check whether automated review (e.g. embedded AI reviewer) is available and has run via your `automated-review` capability. If available but not yet run, trigger it and wait before proceeding.
+## Trigger and reconcile automated review (when a code review request exists)
+
+When reviewing a code review request, check your `automated-review` capability:
+
+- **Available, not yet run** → trigger it and wait for completion before proceeding.
+- **Available, has run** → fetch prior comments. Per-finding, classify as `addressed | dismissed-with-reasoning | pending | moved-but-still-true`. Treat pending and moved-but-still-true findings as required input to the next path.
+- **Not available** → skip this section.
 
 ## Two paths
 
-### Reviewing your code (no code-review-request, OR your own merge request)
+### Reviewing your code (your own commits, branch, or your own merge request)
 
-1. **If automation has reviewed**, reconcile first: fetch prior comments and per-finding classify as `addressed | dismissed-with-reasoning | pending | moved-but-still-true`. Pending and moved-but-still-true findings → fix via TDD before proceeding.
+1. If automated review surfaced findings, fix pending and moved-but-still-true findings via TDD before proceeding.
 2. **Run the local pass** (below).
 
 ### Reviewing theirs (someone else's code review request)
 
 Your contribution is reviewer judgment, not a duplicate AI pass. **Posting AI-generated findings as your own is dishonest** when an embedded automated reviewer is already on the request.
 
-1. **If automation has reviewed**, reconcile first as above. Add inline replies that agree, disagree, or expand on bot findings — don't open new threads duplicating them.
+1. If automated review ran, add inline replies that agree, disagree, or expand on bot findings — don't open new threads duplicating them.
 2. **Run the local pass** (below) but only post issues genuinely caught yourself, plus `moved-but-still-true` cases where the bot's original comment is gone but the concern remains.
 3. **Add reviewer judgment**: verdict, acceptance-criteria coverage, QA observations.
 
