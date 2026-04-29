@@ -122,17 +122,21 @@ Reply threads on a comment use `in_reply_to_id` chains.
 
 **Use only the commands below. Do not invent alternatives.** The REST endpoint `POST /repos/{o}/{r}/pulls/{n}/requested_reviewers` returns 422 *"Reviews may only be requested from collaborators"* when given `copilot-pull-request-reviewer` — the bot is not a collaborator. Only `gh pr edit --add-reviewer "@copilot"` works, because `@copilot` is a special handle that `gh` resolves client-side (see `gh pr edit --help`).
 
-The `trigger` field returned by the availability check tells you which form:
+The `trigger` field returned by the availability check tells you which form. Parse it and run the corresponding command — do not hardcode the handle or text:
 
-- `add_reviewer @handle` → `gh pr edit $PR --add-reviewer "@handle"` (e.g. `"@copilot"`)
+- `add_reviewer @handle` → `gh pr edit $PR --add-reviewer "@handle"`
 - `comment @handle <text>` → `gh pr comment $PR --body "@handle <text>"`
 
 ```bash
-# add_reviewer form
-gh pr edit "$PR" --add-reviewer "@copilot"
+TRIGGER=$(chezmoi data --format json | jq -r ".orgs[\"$ORG\"].automated_review.trigger")
+FORM="${TRIGGER%% *}"          # "add_reviewer" or "comment"
+ARGS="${TRIGGER#* }"           # everything after the first word
 
-# comment form
-gh pr comment "$PR" --body "@codex review"
+if [[ "$FORM" == "add_reviewer" ]]; then
+  gh pr edit "$PR" --add-reviewer "$ARGS"
+else
+  gh pr comment "$PR" --body "$ARGS"
+fi
 ```
 
 Triggering is a public action — it appears in the timeline. Announce it before doing it.
