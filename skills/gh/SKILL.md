@@ -25,6 +25,8 @@ echo "=== waiting-for-review ===" && gh search prs --author=@me --review=require
 echo "=== review-requested ==="   && gh search prs --review-requested=@me --state=open --json number,title,url,repository
 ```
 
+**Silent failures:** `gh pr list --reviewer @me` silently returns empty results even when review requests exist — always use `gh search prs --review-requested=@me`. Similarly, `gh search prs --reviewed-by @me` silently returns empty; to find PRs you've already reviewed, query per-repo with `gh pr list --json author,reviews` and filter `reviews[].author.login == @me AND author.login != @me` client-side — without the author filter you'll get your own PRs where you commented back.
+
 Priority order:
 
 1. **ready-to-merge** — approved + green, just needs merging
@@ -78,6 +80,8 @@ Flag anything matching:
 | `CHANGES_REQUESTED` | **Author** — reviewer wants changes addressed |
 | `APPROVED` | Nobody — this reviewer is satisfied |
 | `COMMENTED` | **Author** — reviewer wants changes addressed |
+
+A PR with only `COMMENTED` reviews is **not ready to merge** — it belongs in "review-to-address," not "ready-to-merge." Only `APPROVED` in `latestReviews[].state` combined with `mergeStateStatus == CLEAN` qualifies as ready to merge.
 
 ## Automated review (Copilot, Codex, etc.)
 
