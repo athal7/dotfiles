@@ -17,7 +17,7 @@
     --accent5: #ff7b72;
     --text: #e6edf3;
     --text-muted: #8b949e;
-    --text-dim: #484f58;
+    --text-dim: #7d8590;
     --highlight: #ffa657;
   }
 
@@ -265,7 +265,7 @@
   }
 
   .pipe-step.support .pipe-label {
-    color: var(--text-dim);
+    color: var(--text-muted);
   }
 
   .pipe-icon {
@@ -304,10 +304,42 @@
   }
 
   .pipe-label {
-    font-size: 11px;
+    font-size: 16px;
     font-weight: 500;
     color: var(--text-muted);
     text-align: center;
+  }
+
+  .pipe-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 60px;
+    flex-shrink: 0;
+    padding: 0 8px;
+  }
+
+  .pipe-gate-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 123, 114, 0.12);
+    border: 1.5px solid rgba(255, 123, 114, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+
+  .pipe-gate-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   /* ─── Code block ─── */
@@ -572,12 +604,10 @@
   <div class="slide slide-title active" id="s1">
     <div class="hero-gradient"></div>
     <div class="slide-content">
-      <div class="eyebrow">April 2026</div>
+      <div class="eyebrow">May 2026</div>
       <h1>My AI Workflow</h1>
       <p class="subtitle">
-        One <a href="https://opencode.ai" style="color:var(--accent2);">OpenCode</a> session.
-        Many <span class="accent2">skills</span>.
-        Every step from orientation to commit — documented, composable, and in git.
+        opencode, skills, gates, chezmoi.
       </p>
       <div class="byline">← → to navigate &nbsp;·&nbsp; <kbd>Space</kbd> to advance</div>
     </div>
@@ -588,13 +618,10 @@
   ══════════════════════════════════════════ -->
   <div class="slide" id="s2">
     <div class="slide-content">
-    <div class="eyebrow">The Workflow</div>
-    <h2>One session, many skills</h2>
-    <p style="margin-bottom:28px;">Each workflow step is a skill — a markdown file the agent reads on demand. Some fire every session; others are reached for as needed.</p>
-
-    <div class="pipeline">
-      <div class="pipeline-row">
-        <div class="pipeline-label">every session</div>
+    <div class="eyebrow">Workflow</div>
+    <h2>Pipeline</h2>
+    <div class="pipeline" style="margin-top:32px;">
+      <div class="pipeline-row" style="justify-content:flex-start; gap:0;">
         <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🧠</div>
           <div class="pipe-label" style="color:var(--accent);">attention</div>
@@ -604,7 +631,10 @@
           <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">📋</div>
           <div class="pipe-label" style="color:var(--accent3);">plan</div>
         </div>
-        <div class="pipe-arrow"></div>
+        <div class="pipe-gate">
+          <div class="pipe-gate-icon">🔒</div>
+          <div class="pipe-gate-label">gate</div>
+        </div>
         <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">🔴🟢</div>
           <div class="pipe-label" style="color:var(--accent3);">tdd</div>
@@ -616,566 +646,288 @@
         </div>
         <div class="pipe-arrow"></div>
         <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🧪</div>
+          <div class="pipe-label" style="color:var(--accent);">qa</div>
+        </div>
+        <div class="pipe-gate">
+          <div class="pipe-gate-icon">🔒</div>
+          <div class="pipe-gate-label">gate</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">💾</div>
+          <div class="pipe-label" style="color:var(--accent4);">commit</div>
+        </div>
+        <div class="pipe-gate">
+          <div class="pipe-gate-icon">🔒</div>
+          <div class="pipe-gate-label">gate</div>
+        </div>
+        <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">🚀</div>
-          <div class="pipe-label" style="color:var(--accent4);">commit + push</div>
-        </div>
-      </div>
-
-      <div class="pipeline-row">
-        <div class="pipeline-label">reach for when needed</div>
-        <div class="pipe-step support">
-          <div class="pipe-icon">💬</div>
-          <div class="pipe-label">conversations</div>
-        </div>
-        <div class="pipe-spacer"></div>
-        <div class="pipe-step support">
-          <div class="pipe-icon">🗺️</div>
-          <div class="pipe-label">thinking-tools</div>
-        </div>
-        <div class="pipe-spacer"></div>
-        <div class="pipe-step support">
-          <div class="pipe-icon">📐</div>
-          <div class="pipe-label">writing</div>
-        </div>
-        <div class="pipe-spacer"></div>
-        <div class="pipe-step support">
-          <div class="pipe-icon">🏛️</div>
-          <div class="pipe-label">architecture</div>
+          <div class="pipe-label" style="color:var(--accent4);">push</div>
         </div>
       </div>
     </div>
-
-    <p style="margin-top:16px; font-size:13px; color:var(--text-dim);">Skills are plain markdown. The agent reads one only when the task calls for it.</p>
+    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Three approval gates — the agent can't skip them. A <a href="https://github.com/athal7/dotfiles/blob/main/dot_config/opencode/plugins/gates.ts" style="color:var(--accent2);">plugin</a> blocks edits, commits, and pushes until the user answers an approval question.</p>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 3 — Attention
+       Highlight: MCP → skills
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s3">
+  <div class="slide" id="s-mcp">
     <div class="slide-content">
-    <div class="eyebrow">Step 1 — Orientation</div>
-    <h2>Start with <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/attention/SKILL.md" style="color:var(--accent);">attention</a></h2>
-    <div class="cols cols-2" style="margin-top:4px;">
-      <div class="stack" style="gap:10px;">
-        <p>Before touching any code, I ask: <em>what actually needs my focus right now?</em></p>
-        <p>Queries run in parallel before forming any view:</p>
-        <ul class="clean" style="margin-top:4px;">
-          <li>OpenCode session DB — message count, peak concurrent sessions</li>
-          <li>Calendar — what's coming up, runway until next event</li>
-          <li>Reminders — overdue, today, undated</li>
-          <li>Merge requests — review requests, received reviews, conflicts; closest-to-done first</li>
-          <li>Issues — assigned work, cross-referenced so the same item isn't shown twice</li>
-        </ul>
+    <div class="eyebrow">Highlight</div>
+    <h1>MCP <span class="text-muted" style="color:var(--text-muted); font-weight:600;">→</span> <span class="accent2">skills</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">My earlier setup wrapped every data source in a persistent MCP server. Curating, maintaining, keeping wrappers in sync with APIs that keep changing.</p>
+    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--accent5);">
+        <div class="eyebrow" style="color:var(--accent5); margin-bottom:6px;">The MCP tax</div>
+        <p style="font-size:14px;">A server process per source. Wrappers go stale on API drift — two surfaces to maintain. Tool descriptions sit in context every session, whether the task uses them or not.</p>
       </div>
-      <div class="stack">
-        <div class="card">
-          <div class="eyebrow" style="margin-bottom:8px;">Energy accounting</div>
-          <p style="font-size:13px;">Energy is multidimensional — cognitive, social, sensory, emotional. The two biggest session signals are:</p>
-          <ul class="clean" style="margin-top:8px;">
-            <li style="font-size:13px;"><strong>User message count</strong> — &lt;30 high, 30–80 medium, &gt;80 low</li>
-            <li style="font-size:13px;"><strong>Peak concurrent sessions</strong> — 1–2 high, 3–4 medium, 5+ low</li>
-          </ul>
-        </div>
-        <div class="card" style="border-color:var(--accent2);">
-          <div class="eyebrow" style="color:var(--accent2);margin-bottom:8px;">Output tuned to energy</div>
-          <p style="font-size:13px;"><strong>Low</strong> — top 1 work + top 1 personal, no action unless time-sensitive</p>
-          <p style="font-size:13px; margin-top:6px;"><strong>Medium</strong> — 2–3 items, prefer quick wins</p>
-          <p style="font-size:13px; margin-top:6px;"><strong>High</strong> — 3–4 items, include longer-horizon work</p>
-        </div>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Skills point at APIs directly</div>
+        <p style="font-size:14px;">Plain markdown. The agent calls documented CLIs and REST/GraphQL endpoints. When an API changes, update two lines — no wrapper to redeploy, no schema to keep in sync. Less context per call, no server to babysit.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">MCPs that stayed</div>
+        <p style="font-size:14px;"><code>context7</code> for live library docs, <code>firefox-devtools</code> for QA. Both expose capabilities a CLI call can't replicate. That's the bar.</p>
       </div>
     </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 4 — Conversations
+       Highlight: thinking-tools
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s4">
+  <div class="slide" id="s-thinking">
     <div class="slide-content">
-    <div class="eyebrow">Step 1b — Context before acting</div>
-    <h2>Gather signal with <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/conversations/SKILL.md" style="color:var(--accent4);">conversations</a></h2>
-    <div class="cols cols-2" style="margin-top:4px; gap:40px;">
-      <div class="stack" style="gap:0;">
-        <p>Before making a decision or writing a ticket, I need to know what's already been decided, by whom, and when. The <code>conversations</code> skill searches four sources in order of fidelity.</p>
-        <div class="stack" style="margin-top:6px; gap:6px;">
-          <div class="card" style="padding:10px 16px;">
-            <div class="row" style="align-items:center;gap:10px;margin-bottom:2px;">
-              <span class="chip orange">1st</span>
-              <strong>Knowledge Base</strong>
-            </div>
-            <p style="font-size:13px;">People profiles and distilled decisions — synthesized by <a href="https://github.com/athal7/minutes" style="color:var(--accent4);">minutes</a>. Fast, structured, low noise.</p>
-          </div>
-          <div class="card" style="padding:10px 16px;">
-            <div class="row" style="align-items:center;gap:10px;margin-bottom:2px;">
-              <span class="chip">2nd</span>
-              <strong>Meeting transcripts</strong>
-            </div>
-            <p style="font-size:13px;"><code>minutes search</code> — full-text across recordings and Slack digests.</p>
-          </div>
-          <div class="card" style="padding:10px 16px;">
-            <div class="row" style="align-items:center;gap:10px;margin-bottom:2px;">
-              <span class="chip">3rd</span>
-              <strong>Slack — live search</strong>
-            </div>
-            <p style="font-size:13px;">Real-time for things too recent to be ingested — today's threads, DMs, channel messages.</p>
-          </div>
-          <div class="card" style="padding:10px 16px;">
-            <div class="row" style="align-items:center;gap:10px;margin-bottom:2px;">
-              <span class="chip">4th</span>
-              <strong>Gmail — <code>gws</code></strong>
-            </div>
-            <p style="font-size:13px;">Email threads, tickets, procurement — anything not in Slack or meetings.</p>
-          </div>
-        </div>
+    <div class="eyebrow">Highlight</div>
+    <h1><span class="highlight">thinking-tools</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Structured frameworks, applied to the actual situation. Inspired by <a href="https://untools.co" style="color:var(--highlight);">untools.co</a>.</p>
+    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--highlight);">
+        <strong>Problem framing</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Five Whys, First Principles, Inversion</span>
       </div>
-      <div class="stack" style="justify-content:center;">
-        <div class="card" style="border-color:var(--accent4);">
-          <div class="eyebrow" style="color:var(--accent4);margin-bottom:10px;">Decision guide</div>
-          <div class="compare" style="margin-top:4px;font-size:13px;">
-            <div class="compare-cell" style="font-weight:500;">What has someone committed to?</div>
-            <div class="compare-cell">KB → meetings</div>
-            <div class="compare-cell" style="font-weight:500;">What was decided last week?</div>
-            <div class="compare-cell">KB → minutes search</div>
-            <div class="compare-cell" style="font-weight:500;">What did someone say this morning?</div>
-            <div class="compare-cell">Slack search</div>
-            <div class="compare-cell" style="font-weight:500;">Support ticket or email thread?</div>
-            <div class="compare-cell">Gmail (gws)</div>
-          </div>
-        </div>
-        <p style="font-size:13px; margin-top:8px;">The KB and transcripts are both <a href="https://github.com/athal7/minutes" style="color:var(--accent4);">minutes</a> output — the same pipeline, different fidelity levels. Search before you plan.</p>
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <strong>Decision making</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Decision Matrix, Cynefin, Eisenhower</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <strong>Systems thinking</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Causal loops, feedback, leverage points</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <strong>Communication</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Minto Pyramid, SBI, conflict resolution</span>
       </div>
     </div>
+    <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Say <em style="color:var(--highlight);">"use inversion"</em> to jump to a framework, or describe the problem and let the skill route. Each framework is applied to <em>your</em> situation — not recited as a definition.</p>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 5 — Thinking Tools
+       Highlight: attention
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s4b">
+  <div class="slide" id="s-attention">
     <div class="slide-content">
-    <div class="eyebrow">When needed — Clarity</div>
-    <h2>Frame the problem with <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/thinking-tools/SKILL.md" style="color:var(--highlight);">thinking-tools</a></h2>
-    <div class="cols cols-2" style="margin-top:4px;">
-      <div class="stack" style="gap:6px;">
-        <p style="font-size:14px;">Before writing a plan or ticket, I use structured frameworks to make sure I'm solving the <em>right</em> problem.</p>
-        <p style="font-size:14px;">The skill routes automatically based on the situation:</p>
-        <div class="stack" style="margin-top:2px; gap:4px;">
-          <div class="card orange" style="padding:9px 14px;">
-            <h3 style="font-size:13px;">Problem framing</h3>
-            <p style="font-size:12px;">Root cause unclear, recurring issue, or needs reframing</p>
-          </div>
-          <div class="card" style="padding:9px 14px;">
-            <h3 style="font-size:13px;">Decision making</h3>
-            <p style="font-size:12px;">Multiple valid options, calibrating effort, prioritising</p>
-          </div>
-          <div class="card" style="padding:9px 14px;">
-            <h3 style="font-size:13px;">Systems thinking</h3>
-            <p style="font-size:12px;">Why does this system behave this way?</p>
-          </div>
-          <div class="card purple" style="padding:9px 14px;">
-            <h3 style="font-size:13px;">Creative problem solving</h3>
-            <p style="font-size:12px;">When obvious approaches are exhausted</p>
-          </div>
-        </div>
+    <div class="eyebrow">Highlight</div>
+    <h1><span class="accent">attention</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">What needs my focus right now? Pulled from across my work and life, calibrated to my energy.</p>
+    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <strong>Pulled in parallel</strong>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">Calendar runway, reminders (overdue / today / undated), merge requests, issues — assigned and cross-referenced.</p>
       </div>
-      <div class="stack" style="justify-content:center;">
-        <div class="card" style="border-color:var(--highlight);">
-          <div class="eyebrow" style="color:var(--highlight);margin-bottom:10px;">How it works</div>
-          <p style="font-size:14px;margin-bottom:12px;">Say <em>"use inversion"</em> or <em>"cynefin"</em> to go straight to a framework. Otherwise describe the situation and the skill picks the right category.</p>
-          <p style="font-size:14px;">Each framework file has multiple models — it picks the most relevant and applies it to your actual context, not just a generic description.</p>
-        </div>
-        <div class="code-block" style="font-size:12px;"># Example invocation
-<span class="comment"># "I keep solving the same bug in different places"</span>
-→ routes to <span class="val">problem.md</span>
-→ applies <span class="fn">Five Whys</span> to find root cause
-→ recommends a systemic fix, not a patch</div>
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <strong>Output tuned to energy</strong>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">Cognitive, social, sensory — multidimensional. <strong style="color:var(--text);">Low</strong> → 1 work + 1 personal. <strong style="color:var(--text);">Medium</strong> → 2–3 quick wins. <strong style="color:var(--text);">High</strong> → longer-horizon work.</p>
       </div>
     </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 5 — Writing
+       Highlight: conversations
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s5">
+  <div class="slide" id="s-conversations">
     <div class="slide-content">
-    <div class="eyebrow">When needed — Intent</div>
-    <h2>Capture intent with <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/writing/SKILL.md" style="color:var(--accent2);">writing</a></h2>
-    <div class="cols cols-2" style="margin-top:6px;">
-      <div class="stack">
-        <p style="font-size:14px;">Implementation without a written artifact is a gamble. The <code>writing</code> skill routes to the right template for what's needed:</p>
-        <div class="compare" style="margin-top:8px; font-size:13px;">
-          <div class="compare-header" style="padding:8px 12px;">Document type</div>
-          <div class="compare-header" style="padding:8px 12px;">When to use</div>
-          <div class="compare-cell" style="padding:9px 12px;"><strong>Ticket / Issue</strong></div>
-          <div class="compare-cell" style="padding:9px 12px;">Scoped unit of work — bug, feature, task</div>
-          <div class="compare-cell" style="padding:9px 12px;"><strong>PRD</strong></div>
-          <div class="compare-cell" style="padding:9px 12px;">Defining a feature before implementation</div>
-          <div class="compare-cell" style="padding:9px 12px;"><strong>ADR</strong></div>
-          <div class="compare-cell" style="padding:9px 12px;">Architecture decision + rejected alternatives</div>
-          <div class="compare-cell" style="padding:9px 12px;"><strong>Project update</strong></div>
-          <div class="compare-cell" style="padding:9px 12px;">Status comms to stakeholders</div>
-        </div>
+    <div class="eyebrow">Highlight</div>
+    <h1><span class="accent3">conversations</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Research people, decisions, and context across four sources. Each has different fidelity and recency — the skill picks in order.</p>
+    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--highlight);">
+        <strong>Knowledge base</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">distilled profiles — start here, fast and structured</span>
       </div>
-      <div class="stack">
-        <div class="card green">
-          <div class="eyebrow" style="color:var(--accent3);margin-bottom:8px;">Core principles</div>
-          <ul class="clean">
-            <li style="font-size:14px;"><strong>Lead with outcomes</strong>, not tasks — why before what</li>
-            <li style="font-size:14px;"><strong>Specific scope</strong> — ambiguity becomes scope creep</li>
-            <li style="font-size:14px;"><strong>Compress ruthlessly</strong> — every word earns its place</li>
-            <li style="font-size:14px;"><strong>One artifact, one audience</strong> — never mix them</li>
-          </ul>
-        </div>
-        <p style="font-size:14px;">A ticket is for the implementer. A PRD is for alignment. A project update is for stakeholders. The writing skill enforces that separation.</p>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <strong>Meetings</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">transcripts when KB doesn't have enough detail</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <strong>Chat</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">live and undigested — today, yesterday, threads not yet ingested</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <strong>Email</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">formal correspondence, tickets, procurement</span>
       </div>
     </div>
+    <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Skill is <em>provider-agnostic</em>: KB path, meetings CLI, chat API, email CLI all swap independently. Same skill, different stacks.</p>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 6 — Plan / Learn / Context-log
+       Highlight: context-log
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s6">
+  <div class="slide" id="s-context-log">
     <div class="slide-content">
-    <div class="eyebrow">Before implementing</div>
-    <h2>Skills for each moment</h2>
-    <div class="cols cols-3" style="margin-top:16px; gap:24px;">
-      <div class="stack">
-        <div class="card" style="border-color:var(--accent3); height:100%;">
-          <div class="eyebrow" style="color:var(--accent3);margin-bottom:10px;"><a href="https://github.com/athal7/dotfiles/blob/main/skills/plan/SKILL.md" style="color:var(--accent3);">plan</a></div>
-          <p style="font-size:14px;margin-bottom:12px;">Load before any change spanning multiple files or involving design decisions.</p>
-          <ol class="clean" style="counter-reset:steps; padding-left:0;">
-            <li style="font-size:13px; margin-bottom:6px;"><strong>Research</strong> — explore codebase, git history, issues</li>
-            <li style="font-size:13px; margin-bottom:6px;"><strong>Write plan</strong> — files changing, approach, risks</li>
-            <li style="font-size:13px; margin-bottom:6px;"><strong>Present &amp; STOP</strong> — wait for explicit approval before implementing</li>
-          </ol>
-          <p style="font-size:13px; color:var(--text-dim); margin-top:8px;">Commit approval gate lives in <a href="https://github.com/athal7/dotfiles/blob/main/skills/commit/SKILL.md" style="color:var(--accent3);">commit</a>, not here — so plan stays lean.</p>
-        </div>
+    <div class="eyebrow">Highlight</div>
+    <h1><span class="accent4">context-log</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">A markdown file in the project that survives compaction and session handoffs. <code>.opencode/context-log.md</code>, gitignored.</p>
+    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--accent4);">
+        <strong>Session start</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">create with issue context — title, acceptance criteria, key references</span>
       </div>
-      <div class="stack">
-        <div class="card" style="border-color:var(--accent2); height:100%;">
-          <div class="eyebrow" style="color:var(--accent2);margin-bottom:10px;"><a href="https://github.com/athal7/dotfiles/blob/main/skills/respond-to-review/SKILL.md" style="color:var(--accent2);">respond-to-review</a></div>
-          <p style="font-size:14px;margin-bottom:12px;">After review feedback lands — resolve threads fixed by a commit, reply to threads you're not addressing.</p>
-          <ul class="clean">
-            <li style="font-size:13px; margin-bottom:6px;">Read all open threads and classify each as fixed, acknowledged, or deferred</li>
-            <li style="font-size:13px; margin-bottom:6px;">Resolve threads where a commit already addressed the concern</li>
-            <li style="font-size:13px; margin-bottom:6px;">Post replies for anything you're intentionally not changing</li>
-          </ul>
-        </div>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <strong>After each commit</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">append a checkpoint — intent, tests, what's next</span>
       </div>
-      <div class="stack">
-        <div class="card" style="border-color:var(--accent4); height:100%;">
-          <div class="eyebrow" style="color:var(--accent4);margin-bottom:10px;"><a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/context-log/SKILL.md" style="color:var(--accent4);">context-log</a></div>
-          <p style="font-size:14px;margin-bottom:12px;">Session continuity across compaction and handoffs.</p>
-          <p style="font-size:13px;margin-bottom:8px;">Maintains <code>.opencode/context-log.md</code> — updated at session start, after each commit, and on compaction.</p>
-          <ul class="clean">
-            <li style="font-size:13px; margin-bottom:6px;">Long sessions where review/QA need full history</li>
-            <li style="font-size:13px; margin-bottom:6px;">Context survives history summarization</li>
-            <li style="font-size:13px;">Another agent can pick up mid-session</li>
-          </ul>
-        </div>
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <strong>On compaction</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">don't re-summarize — point at the log instead</span>
       </div>
     </div>
-    <div class="pull-quote" style="font-size:13px;margin-top:16px;">
-      Each skill triggers at a specific moment — keeping instructions focused means the agent actually follows them.
-    </div>
+    <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Compaction normally collapses everything older than the recent window into a summary. The log is the durable record of <em>why</em> and <em>what's next</em> — outside the model's memory.</p>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 7 — Review
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s7">
-    <div class="slide-content">
-    <div class="eyebrow">Quality gate</div>
-    <h2>Multi-specialist <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/review/SKILL.md" style="color:var(--accent);">review</a></h2>
-    <div class="cols cols-2" style="margin-top:8px;">
-      <div class="stack">
-        <p>The skill routes to one of two paths based on whose code it is. Each reconciles against automated review (e.g. Copilot) when it has already run.</p>
-        <div class="compare" style="margin-top:12px; font-size:13px;">
-          <div class="compare-header">Path</div>
-          <div class="compare-header">What it does</div>
-          <div class="compare-cell">Reviewing your code</div>
-          <div class="compare-cell">Reconcile prior automation, fix pending findings, then run local passes</div>
-          <div class="compare-cell">Reviewing theirs</div>
-          <div class="compare-cell">Reconcile, then add reviewer judgment — never post AI findings as your own</div>
-        </div>
-        <p style="font-size:13px; margin-top:12px;">Two passes always run: <strong>correctness</strong> (behavior + acceptance criteria) and <strong>code quality</strong> (smells, hygiene, propagation, testing pyramid). Two are conditional: security and performance.</p>
-      </div>
-      <div class="stack">
-        <div class="card green">
-          <div class="eyebrow" style="color:var(--accent3);margin-bottom:8px;">Auto-QA</div>
-          <p style="font-size:14px;">If the diff touches views, templates, controllers, or UI — the <a href="https://github.com/athal7/dotfiles/blob/main/skills/qa/SKILL.md" style="color:var(--accent3);">qa</a> skill runs automatically via Firefox DevTools before findings are surfaced.</p>
-        </div>
-        <div class="card" style="border-color:var(--accent2);">
-          <div class="eyebrow" style="color:var(--accent2);margin-bottom:8px;">Copilot as first pass</div>
-          <p style="font-size:14px;">When automation has already reviewed, the skill reconciles against it rather than duplicating effort — classifying each finding as addressed, pending, or moved-but-still-true. Findings post inline; verdict stays in session output only.</p>
-        </div>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       SLIDE 8 — MCP → Skills evolution
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s8">
-    <div class="slide-content">
-    <div class="eyebrow">A change of approach</div>
-    <h2>From MCP servers to <span class="accent2">skills</span></h2>
-    <div class="cols cols-2" style="margin-top:6px; gap:24px;">
-      <div class="stack" style="gap:8px;">
-        <p style="font-size:14px;">My earlier setup wrapped every data source in a persistent MCP server — then curating, maintaining, and keeping that wrapper in sync with APIs that keep changing.</p>
-        <div class="card red" style="margin-top:0;">
-          <div class="eyebrow" style="color:var(--accent5);margin-bottom:6px;">The MCP tax</div>
-          <ul class="clean">
-            <li style="font-size:13px;">Every source needs a server process — ports, LaunchAgents, restart logic</li>
-            <li style="font-size:13px;">Wrappers go stale when the underlying API changes — you maintain two surfaces</li>
-            <li style="font-size:13px;">All context loaded all the time — no scoping to what the task actually needs</li>
-            <li style="font-size:13px;">Hard to inspect, hard to version, hard to trust</li>
-          </ul>
-        </div>
-        <div class="card" style="margin-top:0;">
-          <div class="eyebrow" style="margin-bottom:6px;">MCPs that stayed</div>
-          <p style="font-size:13px;"><code>context7</code> and <code>firefox-devtools</code> remain — both expose capabilities that genuinely can't be replicated with a CLI call. That's the bar: if a CLI or documented API exists, a skill beats an MCP.</p>
-        </div>
-      </div>
-      <div class="stack" style="gap:8px;">
-        <div class="card green">
-          <div class="eyebrow" style="color:var(--accent3);margin-bottom:6px;">Skills use the API directly</div>
-          <ul class="clean">
-            <li style="font-size:13px;"><a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/conversations/SKILL.md" style="color:var(--accent3);">conversations</a> runs <code>minutes search</code>, <code>gws gmail</code>, Slack curl — documented CLIs and APIs directly</li>
-            <li style="font-size:13px;"><code>issues</code> capability calls the Linear GraphQL API with <code>graphqurl</code> — no wrapper, no server</li>
-            <li style="font-size:13px;"><code>gh</code>, <code>jq</code>, <code>rg</code> — the agent already knows these; skills tell it when and how</li>
-          </ul>
-        </div>
-        <div class="card purple" style="margin-top:0;">
-          <div class="eyebrow" style="color:var(--accent2);margin-bottom:6px;">The flexibility win</div>
-          <p style="font-size:13px;">A skill is plain markdown. When an API changes, update two lines. No server to redeploy, no wrapper to maintain. <em>Skills don't replace the API — they tell the agent how to use it.</em></p>
-        </div>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       SLIDE 9 — The Meta Skill Pattern
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s9">
-    <div class="slide-content">
-    <div class="eyebrow">The Pattern</div>
-    <h2>Any repeatable workflow <span class="accent2">can become a skill</span></h2>
-    <div class="cols cols-2" style="margin-top:8px; gap:40px;">
-      <div class="stack">
-        <p>A skill is not a prompt. It's a <strong>workflow</strong> — with routing logic, gates, subagent delegation, and direct tool calls. The model reads it like a runbook and executes it.</p>
-        <div class="card" style="border-color:var(--accent2);margin-top:4px;padding:20px 24px;">
-          <div class="eyebrow" style="color:var(--accent2);margin-bottom:12px;">Anatomy</div>
-          <div class="code-block" style="font-size:12px;"><span class="comment">---</span>
-<span class="kw">name</span>: my-skill
-<span class="kw">description</span>: one sentence — when to invoke me
-<span class="comment">---</span>
-
-<span class="fn">Step 1:</span> gather context (read files, run CLIs)
-<span class="fn">Step 2:</span> reason (route to sub-skill or framework)
-<span class="fn">Step 3:</span> act (spawn agents, call APIs, write artifacts)
-<span class="fn">Step 4:</span> gate (stop and verify before proceeding)</div>
-        </div>
-      </div>
-      <div class="stack">
-        <div class="card green">
-          <div class="eyebrow" style="color:var(--accent3);margin-bottom:8px;">Skills compose</div>
-          <ul class="clean">
-            <li style="font-size:14px;"><a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/plan/SKILL.md" style="color:var(--accent3);">plan</a> presents intent and gates on approval before implementing</li>
-            <li style="font-size:14px;"><a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/commit/SKILL.md" style="color:var(--accent3);">commit</a> runs tests + self-review + approval gate before every commit</li>
-            <li style="font-size:14px;"><a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/review/SKILL.md" style="color:var(--accent3);">review</a> auto-triggers <a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/qa/SKILL.md" style="color:var(--accent3);">qa</a> when UI is touched</li>
-            <li style="font-size:14px;"><a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/attention/SKILL.md" style="color:var(--accent3);">attention</a> dispatches sessions into other repos via the agent capability</li>
-          </ul>
-        </div>
-        <div class="card">
-          <div class="eyebrow" style="margin-bottom:8px;">Skills compound</div>
-          <p style="font-size:14px;">After each session, non-obvious discoveries are extracted into <code>AGENTS.md</code> or new skill files. Every session makes the environment a little smarter. Managed by chezmoi — every improvement is a git commit.</p>
-        </div>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       SLIDE 10 — chezmoi manages it all
+       Highlight: chezmoi (with OpenClaw counterpoint)
   ══════════════════════════════════════════ -->
   <div class="slide" id="s10">
     <div class="slide-content">
-    <div class="eyebrow">The Infrastructure</div>
-    <h2><a href="https://github.com/athal7/dotfiles/blob/main/dot_agents/skills/chezmoi/SKILL.md" style="color:var(--accent2);">chezmoi</a> manages everything</h2>
-    <div class="cols cols-2" style="margin-top:8px; gap:40px;">
-      <div class="stack">
-        <p>One <code>chezmoi apply</code> deploys the entire AI environment — skills, config, binaries, and services.</p>
-
-        <div class="code-block" style="margin-top:8px;font-size:12px;"><span class="comment"># dotfiles/</span>
-skills/                   <span class="comment">← edit here</span>
-   attention/SKILL.md      <span class="comment">→ ~/.agents/skills/</span>
-   plan/SKILL.md
-   review/SKILL.md
-   ...
-
-dot_config/opencode/
-  opencode.json           <span class="comment">← MCPs, model, permissions</span>
-  AGENTS.md.tmpl          <span class="comment">← agent instructions (templated)</span>
-
-.chezmoidata/packages.yaml  <span class="comment">← single package registry</span>
-  brews: [ripgrep, gh ...]
-  github_releases: [...]
-
-.chezmoiscripts/         <span class="comment">← run on every apply</span>
-  brew bundle
-  launchagent reload
-  opencode restart</div>
+    <div class="eyebrow">Highlight</div>
+    <h1><span class="accent2">chezmoi</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Skills, config, binaries, services — one <code>chezmoi apply</code> on any machine. Every change is a git commit.</p>
+    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <strong>What ships</strong>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">All 26 skills → <code>~/.agents/skills/</code>. <code>opencode.json</code> for MCPs, model, permissions. <code>AGENTS.md.tmpl</code> for agent instructions. Plugins, LaunchAgents, packages.</p>
       </div>
-      <div class="stack">
-        <div class="card" style="border-color:var(--accent2);">
-          <div class="eyebrow" style="color:var(--accent2);margin-bottom:10px;">Key insight</div>
-          <p style="font-size:15px;"><strong>Skills are opt-in by trigger.</strong></p>
-          <p style="font-size:13px;margin-top:8px;">The agent reads a skill only when the task matches its <code>description</code>. No context bloat — each skill is loaded on demand, not pre-loaded for every session.</p>
-        </div>
-        <div class="card">
-          <div class="eyebrow" style="margin-bottom:8px;">LaunchAgent</div>
-          <p style="font-size:14px;">OpenCode runs as a persistent web service on port 4096. Managed by a macOS LaunchAgent — automatically restarted on apply.</p>
-        </div>
-        <div class="card">
-          <div class="eyebrow" style="margin-bottom:8px;">Schema validation</div>
-          <p style="font-size:14px;"><code>opencode.json</code> is validated against its schema before the service restarts. Bad JSON → apply fails loud, service stays up.</p>
-        </div>
+      <div class="card" style="border-left:3px solid var(--accent5);">
+        <div class="eyebrow" style="color:var(--accent5); margin-bottom:6px;">Why not <a href="https://github.com/steipete/openclaw" style="color:var(--accent5);">OpenClaw</a></div>
+        <p style="font-size:14px;">Chat-native, proactive, self-modifying — compelling. But my skills and config belong in <strong>git</strong>, not in an agent's own memory. Reproducible, auditable, portable.</p>
       </div>
     </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 11b — Why not OpenClaw
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s11b">
-    <div class="slide-content">
-    <div class="eyebrow">The Alternative</div>
-    <h2>The allure of <span class="accent5">OpenClaw</span></h2>
-    <div class="cols cols-2" style="margin-top:6px; gap:24px;">
-      <div class="stack" style="gap:6px;">
-        <p style="font-size:13px;">OpenClaw (by @steipete) is a genuinely compelling alternative. A personal AI assistant that runs on your machine, accessible from WhatsApp, Telegram, iMessage, or Discord — 24/7.</p>
-        <div class="card" style="margin-top:0;padding:12px 16px;">
-          <div class="eyebrow" style="margin-bottom:6px;">What makes it seductive</div>
-          <ul class="clean">
-            <li style="font-size:13px;"><strong>Proactive</strong> — heartbeats, cron jobs, it reaches out to <em>you</em></li>
-            <li style="font-size:13px;"><strong>Persistent memory</strong> across all conversations, 24/7</li>
-            <li style="font-size:13px;"><strong>Chat-native</strong> — control it from your phone over any messenger</li>
-            <li style="font-size:13px;"><strong>Self-modifying</strong> — it can write and hot-reload its own skills mid-conversation</li>
-            <li style="font-size:13px;"><strong>Open source</strong> — hackable, self-hostable, community-driven skills</li>
-          </ul>
-        </div>
-        <div class="pull-quote" style="font-size:13px;margin-top:0;">
-          "Your context and skills live on YOUR computer, not a walled garden."
-          <br><span style="font-size:11px;color:var(--text-dim);">— @danpeguine on X</span>
-        </div>
-      </div>
-      <div class="stack" style="justify-content:center; gap:8px;">
-        <div class="card green" style="padding:12px 16px;">
-          <div class="eyebrow" style="color:var(--accent3);margin-bottom:6px;">The answer: Tailscale + PWA</div>
-          <p style="font-size:13px;margin-bottom:6px;">Two LaunchAgents, always running, managed by chezmoi:</p>
-          <div class="code-block" style="font-size:11px;padding:10px 14px;"><span class="comment"># opencode-web.plist</span>
-opencode web --port <span class="val">4096</span>   <span class="comment">← persistent web UI</span>
-<span class="comment"># tailscale-serve.plist</span>
-tailscale serve --bg \
-  --https=<span class="val">4096</span> http://127.0.0.1:<span class="val">4096</span>
-<span class="comment"># → HTTPS on the tailnet, any device</span></div>
-        </div>
-        <div class="card" style="border-color:var(--accent5);margin-top:0;">
-          <div class="eyebrow" style="color:var(--accent5);margin-bottom:6px;">Same "anywhere" pitch, different model</div>
-          <ul class="clean">
-            <li style="font-size:12px;">Phone, tablet, laptop — install as a <strong>PWA</strong>, works offline-ish</li>
-            <li style="font-size:12px;"><strong>No chat intermediary</strong> — full coding UI, not a Telegram bot</li>
-            <li style="font-size:12px;">Secured by Tailscale — no public exposure, no tokens to manage</li>
-            <li style="font-size:12px;">Skills and config still live in <strong>git</strong>, not the agent's own memory</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       SLIDE 11 — Full skill inventory
+       SLIDE 11 — Full skill inventory + install
   ══════════════════════════════════════════ -->
   <div class="slide" id="s11">
     <div class="slide-content">
-    <div class="eyebrow">The Full Picture</div>
-    <h2>26 skills. One <code>chezmoi apply</code>. Every workflow covered.</h2>
-    <p style="margin-bottom:12px;">Skills live in <code>dotfiles/skills/</code>, deployed to <code>~/.agents/skills/</code>. Commands live in <code>dot_config/opencode/commands/</code>.</p>
-    <div class="skill-grid">
-      <div class="skill-pill" style="border-left:3px solid var(--accent);">attention <small>orientation</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent4);">conversations <small>chat, meetings, email</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--highlight);">thinking-tools <small>frameworks</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent2);">writing <small>artifacts</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent2);">architecture <small>decisions</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent2);">code-quality <small>smells, patterns, hygiene</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent3);">plan <small>approval gates</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent4);">context-log <small>session continuity</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent3);">tdd <small>red/green/refactor</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent);">review <small>verify + code-review</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent2);">respond-to-review <small>address feedback</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent3);">commit <small>semantic format</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--accent3);">push <small>CI watching</small></div>
-      <div class="skill-pill">opencode <small>sessions, dispatch, repair</small></div>
-      <div class="skill-pill">chezmoi <small>safe apply flow</small></div>
-      <div class="skill-pill">gh <small>PRs, reviews, CI</small></div>
-      <div class="skill-pill">issues <small>Linear + GitHub Issues</small></div>
-      <div class="skill-pill">secrets <small>Keychain + 1Password</small></div>
-      <div class="skill-pill">qa <small>browser automation</small></div>
-      <div class="skill-pill">observability <small>logs + traces</small></div>
-      <div class="skill-pill">elasticsearch <small>log queries</small></div>
-      <div class="skill-pill">figma <small>design files</small></div>
-      <div class="skill-pill">slack <small>messaging</small></div>
-      <div class="skill-pill">docs <small>Google Docs + Confluence</small></div>
-      <div class="skill-pill">post-meeting <small>minutes cleanup</small></div>
-      <div class="skill-pill">pty <small>background processes</small></div>
+    <div class="eyebrow">The Full Set</div>
+    <h2>26 skills. Take any of them.</h2>
+
+    <div style="margin-top:24px;">
+      <div class="eyebrow" style="color:var(--accent3); margin-bottom:10px;">Pipeline</div>
+      <div class="skill-grid">
+        <div class="skill-pill" style="border-left:3px solid var(--accent3);">attention</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent3);">plan</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent3);">tdd</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent3);">review</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent3);">qa</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent3);">commit</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent3);">push</div>
+      </div>
     </div>
-    <div class="skill-grid" style="margin-top:10px; opacity:0.6; padding-bottom:64px;">
-      <div class="skill-pill" style="border-left:3px solid var(--text-dim);">learn <small>command · session capture</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--text-dim);">cleanup <small>command · worktree/DB hygiene</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--text-dim);">todo <small>command · task list</small></div>
-      <div class="skill-pill" style="border-left:3px solid var(--text-dim);">audit <small>command · skill review</small></div>
+
+    <div style="margin-top:18px;">
+      <div class="eyebrow" style="color:var(--accent2); margin-bottom:10px;">Quality &amp; review</div>
+      <div class="skill-grid">
+        <div class="skill-pill" style="border-left:3px solid var(--accent2);">architecture</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent2);">code-quality</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent2);">respond-to-review</div>
+      </div>
     </div>
+
+    <div style="margin-top:18px;">
+      <div class="eyebrow" style="color:var(--highlight); margin-bottom:10px;">Knowledge &amp; writing</div>
+      <div class="skill-grid">
+        <div class="skill-pill" style="border-left:3px solid var(--highlight);">thinking-tools</div>
+        <div class="skill-pill" style="border-left:3px solid var(--highlight);">writing</div>
+        <div class="skill-pill" style="border-left:3px solid var(--highlight);">conversations</div>
+        <div class="skill-pill" style="border-left:3px solid var(--highlight);">context-log</div>
+        <div class="skill-pill" style="border-left:3px solid var(--highlight);">docs</div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;">
+      <div class="eyebrow" style="color:var(--accent4); margin-bottom:10px;">Tooling integrations</div>
+      <div class="skill-grid">
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">opencode</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">chezmoi</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">gh</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">issues</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">secrets</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">slack</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">figma</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">observability</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">elasticsearch</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">post-meeting</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent4);">pty</div>
+      </div>
+    </div>
+
+    <div class="code-block" style="margin-top:32px; max-width:540px; font-size:14px;"><span class="comment"># install any skill from this repo</span>
+gh skill install athal7/dotfiles <span class="val">commit</span>
+gh skill install athal7/dotfiles <span class="val">review</span></div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 12 — Closing
+       References
   ══════════════════════════════════════════ -->
-  <div class="slide slide-center" id="s12">
-    <div class="hero-gradient"></div>
+  <div class="slide" id="s13">
     <div class="slide-content">
-    <div class="eyebrow" style="text-align:center;">The Takeaway</div>
-    <h1 style="text-align:center; max-width:720px;">Skills over servers.<br><span class="accent2">CLIs over wrappers.</span></h1>
-    <p class="subtitle" style="text-align:center; margin:0 auto; max-width:600px; margin-top:20px;">
-      The agent already knows how to use documented tools.
-      Skills tell it when, in what order, and with what guardrails.
-      chezmoi keeps the whole thing in git — reproducible, auditable, portable.
-    </p>
-    <div style="margin-top:32px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <span class="chip blue">attention → orientation</span>
-      <span class="chip green">plan → execution</span>
-      <span class="chip green">tdd → correctness</span>
-      <span class="chip blue">review → quality</span>
-      <span class="chip orange">commit + push</span>
-    </div>
-    <div style="margin-top:10px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; opacity:0.6;">
-      <span class="chip orange">conversations</span>
-      <span class="chip orange">thinking-tools</span>
-      <span class="chip purple">writing</span>
-      <span class="chip purple">architecture</span>
-      <span style="font-size:12px; color:var(--text-dim); align-self:center;">— reach for when needed</span>
-    </div>
-    <div class="byline" style="margin-top:40px; text-align:center;">
-      <a href="https://github.com/athal7/dotfiles/tree/main/skills" style="color:var(--text-muted);"><code>athal7/dotfiles</code></a> · managed by chezmoi · shipped with <code>chezmoi apply</code>
+    <div class="eyebrow">References</div>
+    <h2>Links &amp; sources</h2>
+    <div class="stack" style="margin-top:18px; gap:14px; max-width:900px;">
+      <div>
+        <div class="eyebrow" style="color:var(--accent2);margin-bottom:2px;">Tools</div>
+        <p style="font-size:14px; line-height:1.7;">
+          <a href="https://opencode.ai" style="color:var(--accent2);">opencode.ai</a> &middot;
+          <a href="https://chezmoi.io" style="color:var(--accent4);">chezmoi.io</a> &middot;
+          <a href="https://agentskills.io" style="color:var(--accent3);">agentskills.io</a>
+        </p>
+      </div>
+      <div>
+        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">This deck and source</div>
+        <p style="font-size:14px; line-height:1.7;">
+          <a href="https://github.com/athal7/dotfiles" style="color:var(--accent);">github.com/athal7/dotfiles</a> &middot;
+          <a href="https://github.com/athal7/dotfiles/blob/main/dot_config/opencode/plugins/gates.ts" style="color:var(--accent5);">gates plugin source</a> &middot;
+          <a href="https://github.com/athal7/dotfiles/tree/main/skills" style="color:var(--accent3);">skills directory</a>
+        </p>
+      </div>
+      <div>
+        <div class="eyebrow" style="color:var(--accent4);margin-bottom:2px;">Mentioned</div>
+        <p style="font-size:14px; line-height:1.7;">
+          <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent4);">agentskills capabilities proposal</a> &middot;
+          <a href="https://tailscale.com" style="color:var(--accent);">Tailscale</a> &middot;
+          <a href="https://github.com/silverstein/minutes" style="color:var(--accent4);">silverstein/minutes</a>
+        </p>
+      </div>
+      <div>
+        <div class="eyebrow" style="color:var(--accent5);margin-bottom:2px;">Related work</div>
+        <p style="font-size:14px; line-height:1.7;">
+          <a href="https://github.com/steipete/openclaw" style="color:var(--accent5);">OpenClaw</a> &middot;
+          <a href="https://opencode.ai/docs/plugins/" style="color:var(--accent2);">opencode plugins docs</a> &middot;
+          <a href="https://opencode.ai/docs/skills/" style="color:var(--accent2);">opencode skills docs</a>
+        </p>
+      </div>
     </div>
     </div>
   </div>

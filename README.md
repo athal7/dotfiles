@@ -44,6 +44,12 @@ Note: the example file lives at the repo root rather than under `.chezmoidata/`.
 
 Skills use a capability-based composition system — workflow skills declare what they `requires`, and [`skills/capabilities.yaml`](skills/capabilities.yaml) binds capabilities to providers (a skill, `cli://<binary>`, or `mcp://<server>`). This lets workflow skills stay tool-agnostic: swap Linear for Jira by changing one line. See [agentskills/agentskills#311](https://github.com/agentskills/agentskills/discussions/311) for the spec proposal.
 
+## Gates: mechanical workflow enforcement
+
+Skills tell the agent *what* to do. The [`gates` plugin](dot_config/opencode/plugins/gates.ts) makes sure it actually does. Without mechanical enforcement, every skill is a polite suggestion the agent skim-selects from — so plan, commit, and push get blocked at `tool.execute.before` until the user answers an approval question via the built-in `question` tool. The agent can call the question, but only the user can pick the answer in the UI.
+
+Per-branch state lives outside the repo at `~/.local/state/opencode/gates/<repo-hash>/<branch>.json`. Push deletes state entirely — each new unit of work starts fresh. See [the plugin](dot_config/opencode/plugins/gates.ts) and its [tests](dot_config/opencode/plugin-tests/gates.test.ts).
+
 ### Installing individual skills
 
 **With the GitHub CLI:**

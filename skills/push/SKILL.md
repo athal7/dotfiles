@@ -11,19 +11,14 @@ metadata:
     - branching
     - issues
     - ci
+    - automated-review
 ---
-
-**Never push on your own initiative.** A push requires either an explicit user command ("push", "ship it", "commit and push") or explicit approval after you show a push summary.
 
 ## Before pushing
 
 1. **Check the branch name** via your `branching` capability. Rename auto-generated worktree branches (e.g., `opencode/cosmic-wizard`) to `<type>/<short-description>` matching the commit type, 2-4 kebab-case words.
-2. **Run the full local test suite.** If tests fail: fix them first, or stop and report on a user-initiated push.
-3. **Show a summary of unpushed commits** via your `branching` capability.
-
-If the user issued a push command, push immediately — the command is the approval.
-
-If you decided a push is needed, **end your response and wait.** Only push on explicit confirmation in the next message: "yes", "approve", "go ahead", "lgtm", "do it". General continuations like "keep going" and earlier-in-conversation approvals do NOT count.
+2. **Run the full local test suite.** Fix failures before pushing.
+3. **Show a summary of unpushed commits in chat** via your `branching` capability — branch name, commit subjects, one per line.
 
 ## After push — draft merge request
 
@@ -36,12 +31,15 @@ Example:
 Adds retry logic for flaky external API calls. Closes #123
 ```
 
-## After draft merge request — watch CI
+## After draft merge request — trigger automated review and watch CI in parallel
 
-Watch CI to completion via your `ci` capability. Do not hand back to the user before this finishes.
+If your `automated-review` capability is available for this repo, trigger it *in parallel* with watching CI. Iterate on the combined feedback from both — don't wait for one before responding to the other.
 
-1. Poll every 30s until checks are no longer queued or in progress.
-2. On all-pass, report success with a markdown link to the merge request — never the bare number.
-3. On failure: get the failure output, fix the root cause, run the full test suite locally before pushing the fix, then commit (via `commit`) and push. Return to step 1.
+Watch CI to completion via your `ci` capability. Do not hand back to the user before both CI and automated review have completed.
 
-Keep iterating until CI is green. Do not give up after one fix attempt.
+1. Trigger automated review (if configured) and start polling CI every 30s in parallel.
+2. As findings arrive from automated review, address them. As CI failures arrive, fix the root cause.
+3. Both fixes flow through `commit` then `push`, returning to step 1 of this iteration loop.
+4. On all-pass from CI *and* either no automated review or all findings addressed, report success with a markdown link to the merge request — never the bare number.
+
+Keep iterating until both CI is green and automated review feedback is resolved. Do not give up after one fix attempt.

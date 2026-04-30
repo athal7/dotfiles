@@ -19,6 +19,6 @@ Skip for typo fixes, single-line config changes, and trivial one-file edits.
 
    If a prerequisite refactor would simplify the work, surface it: propose a separate issue/PR, get user confirmation, do it first.
 
-3. **Write the plan.** Include: files that will change and why; approach and key decisions; risks or open questions; the first failing test you will write.
+3. **Present the plan in chat.** Include: files that will change and why; approach and key decisions; risks or open questions; the first failing test you will write.
 
-4. **Present and STOP.** End your response. Wait for explicit approval — "yes", "approved", "lgtm", "go ahead", or equivalent. After approval, implementation begins with that failing test, strict red/green/refactor.
+4. After approval, implementation begins with the first failing test, strict red/green/refactor.

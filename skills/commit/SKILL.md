@@ -22,7 +22,7 @@ Run automatically without asking:
    ```
    Co-Authored-By: anthropic/claude-sonnet-4-6 <noreply@opencode.ai>
    ```
-5. **Present and STOP.** Show what was implemented and the drafted message. End your response and wait for explicit approval — *unless* the user already said "ship it"/"push"/"commit and push", in which case that command is the approval; skip directly to the commit.
+5. **Show the drafted commit message in chat.** Brief summary of what was implemented + the message itself. The user reviews it before approving.
 
 ## Format
 
