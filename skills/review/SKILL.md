@@ -52,8 +52,14 @@ Run these against the diff in order, treating each as a distinct lens. Write fin
 
 **Always run:**
 
-1. **Correctness** — does behavior match intent and the issue's acceptance criteria? See `specialists/correctness.md`.
-2. **Code quality** — apply your `code-quality` capability. Follow the pre-existing-pattern rule.
+1. **Reviewability** — can a human reviewer understand and confidently approve this diff? Check for:
+   - Unrelated changes (refactors, dep bumps, formatting fixes) mixed into the diff → split into a separate commit, branch, or PR
+   - Whitespace-only or formatting-only hunks with no semantic content → drop or isolate
+   - Large single commits that could be decomposed into logical steps without losing safety → suggest split points
+   - Diff noise that obscures intent (e.g. indentation reflow, import reordering mixed with logic) → separate
+   If any issues found, list the specific files/hunks and the recommended action (drop, stage separately, squash, etc.) before proceeding with other passes.
+2. **Correctness** — does behavior match intent and the issue's acceptance criteria? See `specialists/correctness.md`.
+3. **Code quality** — apply your `code-quality` capability. Follow the pre-existing-pattern rule.
 
 **Conditional (run if the diff touches the trigger):**
 
