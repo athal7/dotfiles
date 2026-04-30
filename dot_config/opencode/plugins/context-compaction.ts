@@ -1,31 +1,40 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { readFile } from "fs/promises"
 import { existsSync } from "fs"
+import { join } from "path"
 
 /**
  * Compaction hook that preserves context across session compaction.
  *
  * Injects:
- * - Context log contents (if .opencode/context-log.md exists)
+ * - Context log contents (if .opencode/context-log.md exists in project)
  * - Continuation rules for key behavioral compliance
+ *
+ * Resolves the context log path against the current worktree/directory
+ * rather than process.cwd(), since the opencode server is launched from
+ * $HOME (via LaunchAgent) and a relative path would never match.
  */
 export const ContextCompactionPlugin: Plugin = async (ctx) => {
+  // Prefer the active worktree (set per-session for git worktrees), fall back
+  // to the plugin's directory.
+  const projectRoot = ctx.worktree ?? ctx.directory ?? process.cwd()
+
   return {
-    "experimental.session.compacting": async (input, output) => {
-      // Inject context log if it exists
-      const contextLogPath = ".opencode/context-log.md"
+    "experimental.session.compacting": async (_input, output) => {
+      const contextLogPath = join(projectRoot, ".opencode", "context-log.md")
+
       if (existsSync(contextLogPath)) {
         try {
           const log = await readFile(contextLogPath, "utf-8")
           output.context.push(`
 ## Context Log
 
-The following log was maintained during this session. Reference it for issue context and build history:
+The following log was maintained during this session. Reference it for issue context and build history (source: ${contextLogPath}):
 
 ${log}
 `)
-        } catch (err) {
-          // File exists but couldn't be read - skip silently
+        } catch {
+          // File exists but couldn't be read — skip silently
         }
       }
 
