@@ -667,7 +667,7 @@
         </div>
       </div>
     </div>
-    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Three approval gates — the agent can't skip them. A <a href="https://github.com/athal7/dotfiles/blob/main/dot_config/opencode/plugins/gates.ts" style="color:var(--accent2);">plugin</a> blocks edits, commits, and pushes until the user answers an approval question.</p>
+    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Three approval gates the agent can't skip. An <a href="https://github.com/athal7/dotfiles/blob/main/dot_config/opencode/plugins/gates.ts" style="color:var(--accent2);">opencode plugin</a> hooks every tool call: editing files, running <code>git commit</code>, running <code>git push</code> — each is blocked until the user clicks <em>"Approved"</em> on a question the agent itself raised. The agent can call the question tool, but only the user can pick the answer.</p>
     </div>
   </div>
 
