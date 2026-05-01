@@ -102,7 +102,6 @@ packages:
     - name: claude-code
     - name: stats
     - name: tailscale-app
-    - name: wispr-flow
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
