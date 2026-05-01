@@ -48,3 +48,4 @@ Keep `README.md` up to date when making structural changes: adding or removing s
 - **Skill added or removed** — update the inventory slide and the pipeline slide
 - **Skill behavior changes significantly** — update the slide that covers that skill
 - **Workflow structure changes** (e.g. new phase, skill dissolved) — update the relevant step slides and the closing summary
+- **Gates plugin changes** (new gate, trigger semantics, config schema) — update the gates slide

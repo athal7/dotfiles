@@ -631,10 +631,7 @@
           <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">📋</div>
           <div class="pipe-label" style="color:var(--accent3);">plan</div>
         </div>
-        <div class="pipe-gate">
-          <div class="pipe-gate-icon">🔒</div>
-          <div class="pipe-gate-label">gate</div>
-        </div>
+        <div class="pipe-arrow"></div>
         <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">🔴🟢</div>
           <div class="pipe-label" style="color:var(--accent3);">tdd</div>
@@ -649,25 +646,62 @@
           <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🧪</div>
           <div class="pipe-label" style="color:var(--accent);">qa</div>
         </div>
-        <div class="pipe-gate">
-          <div class="pipe-gate-icon">🔒</div>
-          <div class="pipe-gate-label">gate</div>
-        </div>
+        <div class="pipe-arrow"></div>
         <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">💾</div>
           <div class="pipe-label" style="color:var(--accent4);">commit</div>
         </div>
-        <div class="pipe-gate">
-          <div class="pipe-gate-icon">🔒</div>
-          <div class="pipe-gate-label">gate</div>
-        </div>
+        <div class="pipe-arrow"></div>
         <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">🚀</div>
           <div class="pipe-label" style="color:var(--accent4);">push</div>
         </div>
       </div>
     </div>
-    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Three approval gates the agent can't skip. An <a href="https://github.com/athal7/dotfiles/blob/main/dot_config/opencode/plugins/gates.ts" style="color:var(--accent2);">opencode plugin</a> hooks every tool call: editing files, running <code>git commit</code>, running <code>git push</code> — each is blocked until the user clicks <em>"Approved"</em> on a question the agent itself raised. The agent can call the question tool, but only the user can pick the answer.</p>
+    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Each step is a skill — instructions and workflow loaded only when the phase is entered. The agent advances left-to-right, picking up <code>tdd</code> after the plan is set, <code>review</code> before <code>commit</code>, and so on. Earlier phases don't auto-load later ones, so the context stays scoped to the work at hand.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       Gates — approval mechanism
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-gates">
+    <div class="slide-content">
+    <div class="eyebrow">Mechanism</div>
+    <h1><span class="accent4">gates</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Three approval points the agent can't skip. An <a href="https://github.com/athal7/dotfiles/blob/main/dot_config/opencode/plugins/gates.ts" style="color:var(--accent2);">opencode plugin</a> hooks every tool call and blocks high-stakes actions until the user clicks <em>"Approved"</em>.</p>
+    <div class="pipeline" style="margin-top:32px;">
+      <div class="pipeline-row" style="justify-content:flex-start; gap:0;">
+        <div class="pipe-gate">
+          <div class="pipe-gate-icon">🔒</div>
+          <div class="pipe-gate-label">plan</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-gate">
+          <div class="pipe-gate-icon">🔒</div>
+          <div class="pipe-gate-label">commit</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-gate">
+          <div class="pipe-gate-icon">🔒</div>
+          <div class="pipe-gate-label">push</div>
+        </div>
+      </div>
+    </div>
+    <div class="stack" style="margin-top:32px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">What's blocked</div>
+        <p style="font-size:14px;">File edits until the plan is approved. <code>git commit</code> until the diff is approved. <code>git push</code> until the branch is approved. The block lives in the plugin, not the agent's instructions — there's no prompt to ignore.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent4);">
+        <div class="eyebrow" style="color:var(--accent4); margin-bottom:6px;">How approval works</div>
+        <p style="font-size:14px;">The agent calls the question tool with a recognized header. The question UI is the only place the user can answer. State is per-repo, per-branch, on disk — survives compaction, isolated across worktrees.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Configurable</div>
+        <p style="font-size:14px;">Defaults ship with the three gates above. <code>~/.config/opencode/gates.json</code> can override message text or disable a gate. Triggers use argv prefix matching — no regex.</p>
+      </div>
+    </div>
     </div>
   </div>
 
