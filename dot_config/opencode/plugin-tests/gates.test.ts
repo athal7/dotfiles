@@ -273,6 +273,73 @@ describe("branch handling", () => {
   })
 })
 
+describe("argv tokenizer (cli trigger matching)", () => {
+  beforeEach(() => setup())
+  afterEach(teardown)
+
+  test("matches `git commit` after compound `&&`", async () => {
+    const result = await callBefore("bash", { command: "cd foo && git commit -m 'x'" })
+    expect(result.thrown).not.toBeNull()
+    expect(result.thrown!.message).toContain("commit gate not approved")
+  })
+
+  test("matches `git commit` after compound `;`", async () => {
+    const result = await callBefore("bash", { command: "echo hi; git commit -m 'x'" })
+    expect(result.thrown).not.toBeNull()
+  })
+
+  test("matches `git commit` after pipe `|`", async () => {
+    const result = await callBefore("bash", { command: "echo body | git commit -F -" })
+    expect(result.thrown).not.toBeNull()
+  })
+
+  test("does NOT split on `;` inside single quotes", async () => {
+    const result = await callBefore("bash", { command: "echo 'has ; semicolon'" })
+    expect(result.thrown).toBeNull()
+  })
+
+  test("does NOT split on `;` inside double quotes", async () => {
+    const result = await callBefore("bash", { command: "echo \"has ; semicolon\"" })
+    expect(result.thrown).toBeNull()
+  })
+
+  test("does NOT match `git commit` mentioned only in a quoted argument", async () => {
+    const result = await callBefore("bash", { command: "echo 'remember to git commit later'" })
+    expect(result.thrown).toBeNull()
+  })
+
+  test("does NOT match `git` alone (prefix requires `commit`)", async () => {
+    const result = await callBefore("bash", { command: "git status" })
+    expect(result.thrown).toBeNull()
+  })
+
+  test("does NOT match `commit` alone (prefix requires `git` first)", async () => {
+    const result = await callBefore("bash", { command: "commit -m 'x'" })
+    expect(result.thrown).toBeNull()
+  })
+
+  test("matches `git commit` with --message= form", async () => {
+    const result = await callBefore("bash", { command: "git commit --message='multi word'" })
+    expect(result.thrown).not.toBeNull()
+  })
+
+  test("backslash-escaped semicolon does not split segment", async () => {
+    const result = await callBefore("bash", { command: "echo a\\;b" })
+    expect(result.thrown).toBeNull()
+  })
+
+  test("matches `git push` after `||`", async () => {
+    const result = await callBefore("bash", { command: "false || git push" })
+    expect(result.thrown).not.toBeNull()
+    expect(result.thrown!.message).toContain("push gate not approved")
+  })
+
+  test("matches `git push` after background `&`", async () => {
+    const result = await callBefore("bash", { command: "echo done & git push" })
+    expect(result.thrown).not.toBeNull()
+  })
+})
+
 describe("non-git contexts", () => {
   let originalDir: string
   let nonGitDir: string
