@@ -9,12 +9,30 @@ packages:
     - name: autojump
     - name: bat
     - name: chezmoi
+      permissions:
+        ask:
+          - "chezmoi destroy*"
+          - "chezmoi init*"
     - name: colima
     - name: direnv
     - name: docker
     - name: docker-compose
     - name: ffmpeg
     - name: gh
+      permissions:
+        ask:
+          - "gh *"
+        allow_reads:
+          - "gh search*"
+          - "gh pr list*"
+          - "gh pr view*"
+          - "gh pr diff*"
+          - "gh pr checks*"
+          - "gh issue list*"
+          - "gh issue view*"
+          - "gh repo view*"
+          - "gh run list*"
+          - "gh run view*"
     - name: git-spice
     - name: jc
     - name: jq
@@ -34,8 +52,48 @@ packages:
     - name: worktrunk
     - name: googleworkspace-cli
     - name: steipete/tap/remindctl
+      command: remindctl
+      permissions:
+        ask:
+          - "remindctl add*"
+          - "remindctl edit*"
+          - "remindctl delete*"
+          - "remindctl complete*"
+        allow_reads:
+          - "remindctl show*"
+          - "remindctl list*"
+          - "remindctl status*"
     - name: schpet/tap/linear
+      command: linear
+      permissions:
+        ask:
+          - "linear *"
+        allow_reads:
+          - "linear issue view*"
+          - "linear issue list*"
+          - "linear issue mine*"
+          - "linear issue describe*"
+          - "linear team list*"
+          - "linear team members*"
+          - "linear project list*"
+          - "linear project view*"
+          - "linear cycle list*"
+          - "linear cycle view*"
+          - "linear schema*"
+          - "linear auth whoami*"
     - name: pchuri/tap/confluence-cli
+      command: confluence
+      permissions:
+        ask:
+          - "confluence create*"
+          - "confluence update*"
+          - "confluence delete*"
+          - "confluence append*"
+          - "confluence reply*"
+        allow_reads:
+          - "confluence read*"
+          - "confluence search*"
+          - "confluence find*"
 
   casks:
     - name: gcloud-cli
@@ -80,6 +138,20 @@ packages:
       path: ical
       executable: true
       refresh_period: 24h
+      permissions:
+        ask:
+          - "ical add*"
+          - "ical update*"
+          - "ical delete*"
+          - "ical calendars create*"
+          - "ical calendars update*"
+          - "ical calendars delete*"
+        allow_reads:
+          - "ical today*"
+          - "ical upcoming*"
+          - "ical list*"
+          - "ical show*"
+          - "ical search*"
 
     - name: minutes
       repo: silverstein/minutes
@@ -88,6 +160,15 @@ packages:
       type: file
       executable: true
       refresh_period: 24h
+      permissions:
+        allow_reads:
+          - "minutes list*"
+          - "minutes search*"
+          - "minutes get*"
+          - "minutes person*"
+          - "minutes research*"
+          - "minutes actions*"
+          - "minutes consistency*"
 
     - name: minutes-desktop
       repo: silverstein/minutes

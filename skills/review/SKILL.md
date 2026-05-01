@@ -80,8 +80,6 @@ Always attempt for code review requests; only when UI is touched for commit/bran
 
 Post findings as inline comments via your `source-control` capability — do not include verdict, TL;DR, or summaries in the submitted body (those are session output only). Exception: a review-wide observation that genuinely cannot be attributed to any line.
 
-**Show the full proposed review and ask "Do you approve?"** before submitting. STOP and wait for explicit approval.
-
 When a code review request has reviews and merge conflicts, use merge (not rebase) — rebasing invalidates existing inline comments.
 
 See `output-format.md` for the output template.

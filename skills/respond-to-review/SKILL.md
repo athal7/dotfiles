@@ -34,4 +34,3 @@ metadata:
 - Resolve silently when a commit fixes — no "fixed" reply.
 - Reply without resolving when declining — never silently resolve a disagreement.
 - Never resolve a thread you didn't fix.
-- Show proposed replies to the user and wait for approval before posting.

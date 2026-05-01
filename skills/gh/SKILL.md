@@ -294,4 +294,3 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
 
 - Omit top-level `body` field to skip summary comment
 - Each comment needs: `path`, `line`, `body`
-- Always show proposed comments and wait for approval before posting

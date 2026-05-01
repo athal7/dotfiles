@@ -43,9 +43,4 @@ Keep `README.md` up to date when making structural changes: adding or removing s
 
 ## Presentation
 
-`index.html` at the repo root is a slide deck describing this workflow, served via GitHub Pages at `https://athal7.github.io/dotfiles/`. Keep it in sync with the skills:
-
-- **Skill added or removed** — update the inventory slide and the pipeline slide
-- **Skill behavior changes significantly** — update the slide that covers that skill
-- **Workflow structure changes** (e.g. new phase, skill dissolved) — update the relevant step slides and the closing summary
-- **Gates plugin changes** (new gate, trigger semantics, config schema) — update the gates slide
+`index.html` at the repo root is a slide deck describing this workflow, served via GitHub Pages at `https://athal7.github.io/dotfiles/`. Keep it in sync with how the repo actually works.
