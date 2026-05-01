@@ -14,6 +14,20 @@ metadata:
 
 GitHub CLI (`gh`) gotchas that `--help` won't tell you.
 
+## Reading PR/issue comments — prefer `gh pr view --json`
+
+For plain comment reads, use `gh pr view N --json comments,reviews --jq ...` (or `gh issue view`) instead of `gh api repos/.../pulls/N/comments`. The `gh pr view` form is allow-listed as read-only; `gh api` is on `ask` because it accepts `-X POST/PATCH/DELETE`.
+
+```bash
+# Top-level PR comments
+gh pr view "$PR" --json comments --jq '.comments[] | {user: .author.login, body: .body}'
+
+# Inline review comments
+gh pr view "$PR" --json reviews --jq '.reviews[] | {user: .author.login, state, body: .body}'
+```
+
+Field names differ from REST: `.author.login` (not `.user.login`), no `commit_id` or `in_reply_to_id`. Drop down to `gh api .../comments` only when you need those REST-only fields (e.g. the automated-review flow below).
+
 ## What needs action across repos
 
 Bucket your cross-repo PR work by action required with `gh search prs`, ordered closest-to-done first:
