@@ -2,6 +2,8 @@ Send a task to an OpenCode session running in a different workspace. Prefer reus
 
 **API base:** `http://localhost:4096`
 
+**Dispatch in plan mode by default.** Always include `"agent": "plan"` in the message body — the dispatched session should propose changes and wait for approval, not edit autonomously. Only override with a different agent when the user explicitly asks for autonomous execution.
+
 ---
 
 ## Worktree sandboxes — mandatory for PR reviews
@@ -35,7 +37,7 @@ SESSION_ID=$(curl -s -X POST "http://localhost:4096/session?directory=$WORKTREE"
 # Send task — use --max-time 10 so curl doesn't block waiting for the session to finish
 curl -s --max-time 10 -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$WORKTREE" \
   -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}' || true
+  -d '{"agent": "plan", "parts": [{"type": "text", "text": "<prompt>"}]}' || true
 ```
 
 ---
@@ -75,7 +77,7 @@ echo "Session: $SESSION_ID"
 # --max-time 10 prevents blocking — the session keeps running server-side after curl exits
 curl -s --max-time 10 -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$REPO_DIR" \
   -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "<prompt>"}]}' || true
+  -d '{"agent": "plan", "parts": [{"type": "text", "text": "<prompt>"}]}' || true
 ```
 
 The POST streams and will hit the timeout — that's expected and correct. The session keeps running server-side.
@@ -99,6 +101,7 @@ The session is also visible in the OpenCode web UI at `http://localhost:4096` or
 
 ## Design principles
 
+- **Plan mode by default** — dispatched sessions get `"agent": "plan"` so they propose changes for approval rather than editing autonomously
 - **Worktree for anything branch-specific** — PRs, experiments, multi-session work on same repo
 - **Reuse over creation** — check for idle sessions first (standard dispatch only)
 - **Fire and forget** — the POST may timeout; the session is still working
