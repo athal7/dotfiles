@@ -877,9 +877,18 @@
       </div>
     </div>
 
-    <div class="code-block" style="margin-top:32px; max-width:540px; font-size:14px;"><span class="comment"># install any skill from this repo</span>
-gh skill install athal7/dotfiles <span class="val">commit</span>
-gh skill install athal7/dotfiles <span class="val">review</span></div>
+    <div class="cols cols-2" style="margin-top:28px; gap:20px;">
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Portable across runtimes</div>
+        <p style="font-size:14px;">Skills follow the <a href="https://agentskills.io" style="color:var(--accent3);">agentskills</a> spec — same <code>SKILL.md</code> works in opencode <em>and</em> Claude Code. No fork, no rewrite.</p>
+        <div class="code-block" style="margin-top:10px; font-size:13px; padding:12px 14px;"><span class="comment"># install any skill from this repo</span>
+gh skill install athal7/dotfiles <span class="val">commit</span></div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Share without forking</div>
+        <p style="font-size:14px;">My <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent2);">capability registration proposal</a> — skills declare <code>requires</code>, host injects <code>provides</code>. Swap Linear for Jira, Slack for Teams — fork only when you actually want to.</p>
+      </div>
+    </div>
     </div>
   </div>
 
