@@ -57,7 +57,7 @@ gh skill install athal7/dotfiles commit
 gh skill install athal7/dotfiles review
 ```
 
-**With chezmoi** — declare skills in `.chezmoidata/packages.yaml` and use a `run_onchange_` script to install and update them weekly. See [our sync script](.chezmoiscripts/run_onchange_after_sync-and-validate-skills.sh.tmpl) as a reference:
+**With chezmoi** — declare skills in `.chezmoidata/packages.yaml` and use a `run_onchange_` script to install and update them weekly. See [my sync script](.chezmoiscripts/run_onchange_after_sync-and-validate-skills.sh.tmpl) as a reference:
 
 ```yaml
 # .chezmoidata/packages.yaml
