@@ -37,6 +37,16 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 **Feedback sensors during implementation:** run the project's linter after edits, run the relevant test suite after a logical unit of work, surface failures immediately. Tool choices are project-determined — read the project's own AGENTS.md/Makefile/package.json first.
 
+## Tone for messages to humans
+
+Applies whenever drafting text another person will read — chat messages, code review comments, merge request descriptions, emails, doc bodies, ticket descriptions.
+
+- **Humble Inquiry.** Ask before asserting. Surface assumptions as questions, not conclusions. Prefer "I'm reading this as X — does that match?" over "this is X." Invite correction.
+- **Informal.** Conversational register. Contractions are fine. Skip corporate hedging ("I just wanted to reach out…", "per my last…"). Skip exclamation marks unless something is genuinely surprising.
+- **Concise.** Cut anything that doesn't carry information. One specific sentence beats three vague ones. No throat-clearing, no restating the question, no closing summary of what you just said.
+
+Before sending: would the recipient learn something? Is anything in here padding? Is anything stated where a question would do?
+
 ## Host-Specific Files (NOT managed by chezmoi)
 
 - `~/.config/zsh/private.zsh` — work-specific shell config (sourced at end of `.zshrc`)
