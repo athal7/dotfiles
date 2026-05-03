@@ -19,6 +19,17 @@ When a capability is fulfilled by a CLI, prefer providers in this order (simples
 
 When evaluating an existing local integration skill, ask: does an upstream skill exist now? If yes, switch.
 
+#### Watchlist — local integrations to upstream when an adequate skill appears
+
+| Local skill | Upstream candidate to watch |
+|---|---|
+| `slack` | A maintained Slack CLI on `gh skill install` discoverable, or an Anthropic-published Slack skill bundle |
+| `gh` (provides `source-control`, `ci`, `automated-review`) | `cli/cli` shipping a SKILL.md, or a community skill bundle for inline review/CI patterns |
+| `figma` | Figma maintainer publishing a SKILL.md alongside the REST API docs |
+| `elasticsearch` | An ES-maintained or APM-vendor skill bundle for log/trace queries |
+
+Re-evaluate during each `/audit` run.
+
 **When using any CLI capability, read `--help` first.** Run `<binary> --help` and `<binary> <subcommand> --help` before issuing commands. Integration skills document only what help text won't tell you — silent failures, wrong-output traps, and non-obvious cross-command dependencies. Everything else is in `--help`.
 
 **For short gotchas (1-3 sentences), use the `notes` field in `capabilities.yaml` instead of a skill file.** The manifest supports an extended map form:
