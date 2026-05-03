@@ -835,9 +835,9 @@
     <div class="slide-content">
       <div class="lived-quote">
         <div class="lived-artifact">"Use Opus 4.7 + xhigh / max effort."</div>
-        <div class="lived-attribution">— An Anthropic engineer's recommended workaround during a Claude Code outage earlier this year</div>
+        <div class="lived-attribution">— An Anthropic engineer, responding to complaints about Opus 4.7 quality</div>
         <div class="lived-response">
-          The fix for degraded performance: pay more, burn more compute. <em>Technofeudalism, rearing its head.</em>
+          The fix for degraded performance: pay more, burn more compute. <em>The rent, going up.</em>
         </div>
         <div class="lived-aside">(Reader, I made these slides on Opus 4.7 xhigh.)</div>
       </div>
@@ -845,22 +845,7 @@
   </div>
 
   <!-- ══════════════════════════════════════════
-       3 · Diagnosis (Varoufakis)
-  ══════════════════════════════════════════ -->
-  <div class="slide slide-center" id="s-varoufakis">
-    <div class="hero-gradient"></div>
-    <div class="slide-content">
-      <div class="section-break">
-        <div class="section-eyebrow">Diagnosis</div>
-        <div class="section-quote">"Capitalism is dead. Long live technofeudalism."</div>
-        <div class="section-gloss">Cloud serfs on cloud fiefs. AI assistants are the new land — we don't rent them, we till them.</div>
-        <div class="section-attribution">— Yanis Varoufakis, <em>Technofeudalism</em> (2023)</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       4 · Section I (Krikorian)
+       3 · Section I (Krikorian)
   ══════════════════════════════════════════ -->
   <div class="slide slide-center" id="s-section-1">
     <div class="hero-gradient"></div>
@@ -875,29 +860,85 @@
   </div>
 
   <!-- ══════════════════════════════════════════
-       5 · MCP journey
+       4 · Rent evidence (xhigh + unlimited/metered)
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-mcp-journey">
+  <div class="slide" id="s-rent-evidence">
     <div class="slide-content">
-      <h2>How capability ended up as files.</h2>
-      <div class="journey">
-        <div class="journey-step">
-          <div class="journey-stage muted">per-source MCP</div>
-          <div class="journey-gloss">A process per source. Wrappers drift. Descriptions bloat context every session.</div>
+      <h2>The rent, in detail.</h2>
+      <div class="contexts">
+        <div class="context">
+          <div class="context-label">When quality dips</div>
+          <div class="context-headline">"Use Opus 4.7 + xhigh / max effort."</div>
+          <div class="context-detail">An Anthropic engineer's fix for quality complaints — more compute, more cost, same model.</div>
         </div>
-        <div class="journey-step">
-          <div class="journey-stage muted">gateway MCP</div>
-          <div class="journey-gloss">One server fronting many tools. Still wrappers, still context bloat. Bandage.</div>
-        </div>
-        <div class="journey-step">
-          <div class="journey-stage live">skills + <code style="background:transparent;border:none;color:var(--accent5);padding:0;font-size:0.9em;">capabilities.yaml</code></div>
-          <div class="journey-gloss">Markdown calling documented CLIs. <code>--help</code> <em>is</em> the docs. Less context per call.</div>
+        <div class="context">
+          <div class="context-label">Same model, two prices</div>
+          <div class="context-headline">Unlimited via Claude Code · metered via API</div>
+          <div class="context-detail">$200/mo flat in the vendor's client. Per-token everywhere else. The cheaper price only works through their client.</div>
         </div>
       </div>
-      <div class="journey-survivors">
-        <strong>MCPs that stayed:</strong>
-        <code>context7</code> — live vendor docs the CLI surface can't reach.
-        <code>firefox-devtools</code> — browser instrumentation that needs a running process.
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       5 · Raffi's four layers — where I rent, where I own
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-opencode">
+    <div class="slide-content">
+      <h2>Where I'm growing into ownership.</h2>
+      <div class="compare-rows">
+        <div class="row-label"></div>
+        <div class="row-header rent">Renting</div>
+        <div class="row-header own">Owning</div>
+
+        <div class="row-label">Developer interfaces</div>
+        <div class="row-rent">Closed clients (Claude Code, Cursor)</div>
+        <div class="row-own"><strong>opencode</strong> + skills</div>
+
+        <div class="row-label">Data</div>
+        <div class="row-rent">Vendor chat memory; opaque logs</div>
+        <div class="row-own">Local files; context in git</div>
+
+        <div class="row-label">Models</div>
+        <div class="row-rent">Anthropic API (work)</div>
+        <div class="row-own">opencode-zen · Ollama (personal)</div>
+
+        <div class="row-label">Compute</div>
+        <div class="row-rent">Anthropic cloud (work)</div>
+        <div class="row-own">Local hardware (personal)</div>
+      </div>
+      <p style="margin-top:24px; font-size:16px; color:var(--text-muted); max-width:1100px; line-height:1.5;">
+        With <strong style="color:var(--accent3);">opencode</strong>, swapping inference is one config line per project. The harder portability problem lives one layer up — at the skills.
+      </p>
+      <p style="margin-top:14px; font-size:13px; color:var(--text-dim); max-width:900px;">
+        Four cracks where openness can still win — after Raffi Krikorian, <a href="https://blog.mozilla.org/en/mozilla/mozilla-open-source-ai-strategy/" style="color:var(--text-dim); text-decoration:underline;"><em>Owners, not renters: Mozilla's open source AI strategy</em></a> (Jan 2026).
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       6 · Portability problem + agent-skills proposal
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-portability">
+    <div class="slide-content">
+      <h2>Skills and MCPs share a portability problem.</h2>
+      <div class="compare-pair">
+        <div class="compare-side a">
+          <div class="compare-label">MCP · install friction</div>
+          <div class="compare-headline">A process per source.</div>
+          <div class="compare-detail">Per-environment runtime deps. Brittle config. Server processes to manage on every machine.</div>
+        </div>
+        <div class="compare-side b">
+          <div class="compare-label">Skills · the fork problem</div>
+          <div class="compare-headline">Adoption equals forking.</div>
+          <div class="compare-detail">No inheritance, no override. Upstream updates require manual merge. The community fragments into copies.</div>
+        </div>
+      </div>
+      <div class="compare-extra">
+        <div class="extra-label">Open proposal · agent-skills</div>
+        <div class="extra-body">
+          <strong>DI</strong> for capability binding · <strong>workflow vs integration</strong> skill types · capabilities backed by <strong>CLI or MCP</strong>. Running this fork today.
+        </div>
       </div>
     </div>
   </div>
@@ -909,17 +950,15 @@
     <div class="slide-content">
       <h2>Workflow skills name capabilities, not tools.</h2>
       <div class="fragment-slide">
-<pre class="code-block"><span class="comment">--- skills/push/SKILL.md</span>
-<span class="kw">name</span>: push
-<span class="kw">description</span>: Push approval, branch naming, MR descriptions, post-push CI watching
+<pre class="code-block"><span class="comment">--- skills/respond-to-review/SKILL.md</span>
+<span class="kw">name</span>: respond-to-review
+<span class="kw">description</span>: Address review feedback on your own merge request
 <span class="kw">metadata</span>:
   <span class="kw">requires</span>:
-    - <span class="val">commit</span>
     - <span class="val">source-control</span>
-    - <span class="val">branching</span>
-    - <span class="val">issues</span>
-    - <span class="val">ci</span>
-    - <span class="val">automated-review</span>
+    - <span class="val">tdd</span>
+    - <span class="val">push</span>
+    - <span class="val">verify</span>
 ---
 
 <span class="comment"># Body: imperative steps. Names capabilities, never tools.</span></pre>
@@ -960,62 +999,7 @@ chat:     <span class="val">skill://slack</span></pre>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       8 · opencode dimensions
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s-opencode">
-    <div class="slide-content">
-      <h2>The runtime: <code style="font-size:0.85em; color:var(--accent3); background:transparent; border:none; padding:0;">opencode</code>.</h2>
-      <div class="compare-rows">
-        <div class="row-label"></div>
-        <div class="row-header rent">Closed runtime</div>
-        <div class="row-header own">opencode</div>
 
-        <div class="row-label">Source</div>
-        <div class="row-rent">Closed; vendor-cultivated</div>
-        <div class="row-own">Open; fork on github</div>
-
-        <div class="row-label">Models</div>
-        <div class="row-rent">Vendor catalog only</div>
-        <div class="row-own">Swap freely, per agent</div>
-
-        <div class="row-label">Trust boundary</div>
-        <div class="row-rent">Containerized sandbox; bridge config required</div>
-        <div class="row-own">Local execution; per-action permission prompts</div>
-
-        <div class="row-label">Reach</div>
-        <div class="row-rent">Vendor cloud only</div>
-        <div class="row-own">Tunnel to your runtime; mobile included</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       9 · Two contexts (formerly Concession I)
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s-two-contexts">
-    <div class="slide-content">
-      <h2>Same interface. Different rent.</h2>
-      <div class="contexts">
-        <div class="context work">
-          <div class="context-label">Work projects</div>
-          <div class="context-headline">Anthropic API</div>
-          <div class="context-detail">Audited inference, employer-paid catalog. Cloud rent — acknowledged.</div>
-        </div>
-        <div class="context personal">
-          <div class="context-label">Personal projects</div>
-          <div class="context-headline">opencode-zen · Ollama</div>
-          <div class="context-detail">Local or open-routed. No subscription, no rent.</div>
-        </div>
-      </div>
-      <p class="contexts-shared">
-        Same <strong>opencode</strong> runtime. Same skills. Same pipeline. <strong>One config line per project.</strong>
-      </p>
-      <div class="contexts-footer">
-        <strong>The lock-in:</strong> the same Claude model is unlimited on Anthropic's $200 Max plan when accessed through Claude Code, and metered per-token everywhere else. Same model, two prices — the cheaper one only works through their client.
-      </div>
-    </div>
-  </div>
 
   <!-- ══════════════════════════════════════════
        10 · Section II (Morris)
@@ -1101,7 +1085,7 @@ chat:     <span class="val">skill://slack</span></pre>
   ══════════════════════════════════════════ -->
   <div class="slide" id="s-thinking">
     <div class="slide-content">
-      <h2><code style="background:transparent;border:none;color:var(--accent5);padding:0;font-size:0.9em;">thinking-tools</code> — deliberation as a file.</h2>
+      <h2><code style="background:transparent;border:none;color:var(--accent5);padding:0;font-size:0.9em;">thinking-tools</code> — structure for the fuzzy moments.</h2>
       <div class="quadrant">
         <div class="quadrant-cell">
           <div class="quadrant-title">Problem framing</div>
@@ -1121,7 +1105,7 @@ chat:     <span class="val">skill://slack</span></pre>
         </div>
       </div>
       <p style="margin-top:24px; max-width:720px; font-size:14px; color:var(--text-muted); line-height:1.55;">
-        Couldn't exist as an MCP server — there's no API behind it, just frameworks applied to the situation in front of me.
+        Adapted from <a href="https://untools.co" style="color:var(--text-muted); text-decoration:underline;">untools.co</a>. When a decision turns fuzzy, the skill brings a named framework — Cynefin, Inversion, Five Whys — so the reasoning has shape instead of vibes.
       </p>
     </div>
   </div>
@@ -1192,7 +1176,7 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
       <div class="concession">
         <h2 style="margin-bottom:32px;">What being on the loop costs.</h2>
         <p class="concession-line">Parallel work fragments attention — beyond two or three streams the math stops working.</p>
-        <p class="concession-line">The <code>attention</code> skill is a buffer, not a fix. The kit can't out-engineer the human limit.</p>
+        <p class="concession-line">The kit can't out-engineer the human limit.</p>
       </div>
     </div>
   </div>
@@ -1240,22 +1224,11 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
     </div>
 
     <div style="margin-top:14px;">
-      <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; color:var(--text-dim); margin-bottom:8px;">External · maintained upstream · <code>gh skill install</code></div>
+      <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; color:var(--text-dim); margin-bottom:8px;">External · maintained upstream</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent);">ical-cli</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent);">linear-cli</div>
       </div>
-    </div>
-
-    <div style="margin-top:14px;">
-      <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; color:var(--text-dim); margin-bottom:8px;">Pure CLI mappings · no skill needed · <code>capabilities.yaml</code></div>
-      <p style="font-size:14px; color:var(--text-muted); line-height:1.55;">
-        <code>cli://minutes</code> · <code>cli://gws</code> · <code>cli://remindctl</code> · <code>cli://git-spice</code>
-      </p>
-    </div>
-
-    <div style="margin-top:18px;">
-      <div class="code-block" style="font-size:13px; padding:10px 14px; display:inline-block;">gh skill install athal7/dotfiles <span class="val">&lt;skill&gt;</span></div>
     </div>
     </div>
   </div>
@@ -1270,9 +1243,15 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
       <div>
         <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; color:var(--accent3); margin-bottom:6px;">Anchor frames</div>
         <p style="font-size:14px; line-height:1.8; color:var(--text-muted);">
-          Technofeudalism — Yanis Varoufakis, <a href="https://www.yanisvaroufakis.eu/books/technofeudalism-what-killed-capitalism/" style="color:var(--text-muted); text-decoration:underline;">Technofeudalism (2023)</a><br>
-          Owners, not renters — Raffi Krikorian, <a href="https://www.socallinuxexpo.org/scale/23x/presentations/owners-not-renters-mozillas-open-source-ai-strategy" style="color:var(--text-muted); text-decoration:underline;">SCALE 23x</a><br>
-          Humans on the loop — Kief Morris, <a href="https://martinfowler.com/articles/exploring-gen-ai/humans-and-agents.html" style="color:var(--text-muted); text-decoration:underline;">martinfowler.com</a>
+          Owners, not renters — Raffi Krikorian, <a href="https://blog.mozilla.org/en/mozilla/mozilla-open-source-ai-strategy/" style="color:var(--text-muted); text-decoration:underline;">Mozilla's open source AI strategy</a><br>
+          Humans on the loop — Kief Morris, <a href="https://martinfowler.com/articles/exploring-gen-ai/humans-and-agents.html" style="color:var(--text-muted); text-decoration:underline;">martinfowler.com</a><br>
+          Thinking frameworks — <a href="https://untools.co" style="color:var(--text-muted); text-decoration:underline;">untools.co</a>
+        </p>
+      </div>
+      <div>
+        <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; color:var(--accent3); margin-bottom:6px;">Open proposal</div>
+        <p style="font-size:14px; line-height:1.8; color:var(--text-muted);">
+          DI for capabilities, workflow vs integration skills, CLI-or-MCP backings — <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--text-muted); text-decoration:underline;">agentskills/discussions/311</a>
         </p>
       </div>
       <div>
