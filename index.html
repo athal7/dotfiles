@@ -672,59 +672,42 @@
     <div class="slide-content">
     <div class="eyebrow">Workflow</div>
     <h2>Pipeline</h2>
-    <!-- Pipeline: vertical sequence (mobile-friendly). Color encodes primitive
-         type (pink = agent, yellow = skill); tdd as a footnote line. -->
-    <div style="margin-top:32px; display:flex; flex-direction:column; align-items:flex-start; gap:0; max-width:520px;">
-      <div class="pipe-step-h">
-        <div class="pipe-icon" style="background:rgba(236,72,153,0.18); border:1px dashed rgba(236,72,153,0.5);"></div>
-        <div class="pipe-label" style="color:var(--accent4);">plan</div>
-        <div class="pipe-step-meta">agent</div>
+    <!-- Pipeline: vertical sequence. Color encodes primitive type.
+         review/qa run in parallel; either can loop back to plan. Model under
+         each work step. -->
+    <div style="margin-top:40px; position:relative; max-width:420px;">
+      <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0; font-size:24px; font-weight:600;">
+        <div style="color:var(--accent5);">attention</div>
+        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
+        <div>
+          <div style="color:var(--accent4);">plan</div>
+          <div style="font-size:12px; font-weight:400; color:var(--accent2); margin-top:2px;">opus</div>
+        </div>
+        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
+        <div>
+          <div style="color:var(--text);">tdd</div>
+          <div style="font-size:12px; font-weight:400; color:var(--accent2); margin-top:2px;">sonnet</div>
+        </div>
+        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
+        <div>
+          <div style="color:var(--accent5);">review / qa</div>
+          <div style="font-size:12px; font-weight:400; color:var(--accent2); margin-top:2px;">codex</div>
+        </div>
+        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
+        <div style="color:var(--accent5);">commit</div>
+        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
+        <div style="color:var(--accent5);">push</div>
       </div>
-      <div class="pipe-arrow-down" style="margin-left:23px;"></div>
-
-      <div class="pipe-step-h">
-        <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-        <div class="pipe-label" style="color:var(--accent5);">attention</div>
-      </div>
-      <div class="pipe-arrow-down" style="margin-left:23px;"></div>
-
-      <div class="pipe-step-h">
-        <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-        <div class="pipe-label" style="color:var(--accent5);">review</div>
-      </div>
-      <div class="pipe-arrow-down" style="margin-left:23px;"></div>
-
-      <div class="pipe-step-h">
-        <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-        <div class="pipe-label" style="color:var(--accent5);">qa</div>
-      </div>
-      <div class="pipe-arrow-down" style="margin-left:23px;"></div>
-
-      <div class="pipe-step-h">
-        <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-        <div class="pipe-label" style="color:var(--accent5);">commit</div>
-      </div>
-      <div class="pipe-arrow-down" style="margin-left:23px;"></div>
-
-      <div class="pipe-step-h">
-        <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-        <div class="pipe-label" style="color:var(--accent5);">push</div>
-      </div>
-
-      <div style="margin-top:18px; display:flex; align-items:center; gap:10px; padding:6px 18px; border:1px dashed var(--border); border-radius:20px; background:var(--surface);">
-        <div style="width:8px; height:8px; border-radius:50%; background:var(--text-muted);"></div>
-        <span style="color:var(--text); font-size:14px;">tdd</span>
-        <span style="color:var(--text-dim); font-size:11px; opacity:0.7;">— always loaded</span>
-      </div>
+      <!-- feedback loop: review/qa → plan, drawn as dashed L on the right -->
+      <svg style="position:absolute; top:90px; left:240px; pointer-events:none;" width="120" height="220" viewBox="0 0 120 220" fill="none">
+        <path d="M 10 200 L 100 200 L 100 20 L 30 20" stroke="var(--text-dim)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5"/>
+        <path d="M 30 20 l 6 -4 m -6 4 l 6 4" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+      </svg>
     </div>
     <div class="pipeline-meta" style="margin-top:48px; display:flex; gap:64px; justify-content:flex-start; max-width:1100px; flex-wrap:wrap;">
       <div>
         <div class="eyebrow" style="color:var(--text-dim); margin-bottom:4px;">Parallelism</div>
         <p style="font-size:14px; color:var(--text-muted);">attention dispatches each issue into its own worktree session</p>
-      </div>
-      <div>
-        <div class="eyebrow" style="color:var(--accent2); margin-bottom:4px;">Models</div>
-        <p style="font-size:14px; color:var(--text-muted);">Opus for plan · Sonnet for tdd · codex for review</p>
       </div>
     </div>
     </div>
