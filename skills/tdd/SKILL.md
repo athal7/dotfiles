@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Strict TDD loop — red/green/refactor must be followed for every code change, no exceptions
+description: Strict red/green/refactor loop — load before any source-code edit. Applies to new features, bug fixes, refactors, and review-driven fixes alike. Write the failing test first, every time.
 license: MIT
 compatibility: opencode
 metadata:
@@ -48,6 +48,16 @@ metadata:
 | Skipping the red phase ("I know it'll fail") | Not optional. Run it. See the failure. |
 | Writing multiple features before committing | One cycle at a time. Commit after each green. |
 | "Just a small change, no test needed" | No change is too small. Write the test. |
+
+## Bug Fixes and Refactors
+
+TDD isn't only for new features. The same loop applies:
+
+- **Bug fix:** write a test that reproduces the bug — it should fail in the current code. Then fix, see green. The reproduction test stays in the suite.
+- **Refactor:** the existing tests are your safety net. If they don't cover the area you're refactoring, write them *first* (red where appropriate), get them green on current code, then refactor under green.
+- **Review-driven fix:** the reviewer pointed at a behavior. Write the test that asserts the desired behavior — it should fail. Then fix.
+
+If you're touching source code without a test in hand, you're not doing TDD. Stop and write the test.
 
 ## Resuming Mid-Session
 
