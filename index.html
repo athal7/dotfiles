@@ -902,29 +902,26 @@
   </div>
 
   <!-- ══════════════════════════════════════════
-       6 · Portability problem + agent-skills proposal
+       6 · The fork problem at the skills layer
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-portability">
+  <div class="slide slide-center" id="s-fork-problem">
     <div class="slide-content">
-      <h2>Skills and MCPs share a portability problem.</h2>
-      <div class="compare-pair">
-        <div class="compare-side a">
-          <div class="compare-label">MCP · install friction</div>
-          <div class="compare-headline">A process per source.</div>
-          <div class="compare-detail">Per-environment runtime deps. Brittle config. Server processes to manage on every machine.</div>
-        </div>
-        <div class="compare-side b">
-          <div class="compare-label">Skills · the fork problem</div>
-          <div class="compare-headline">Adoption equals forking.</div>
-          <div class="compare-detail">No inheritance, no override. Upstream updates require manual merge. The community fragments into copies.</div>
-        </div>
+      <h2 style="margin-bottom:36px;">One named tool. A cascade of forks.</h2>
+      <div style="font-family:var(--mono); font-size:clamp(18px,2.4vw,26px); margin-bottom:36px; letter-spacing:0.02em;">
+        <span style="color:var(--accent3);">on-call</span>
+        <span style="color:var(--text-dim); margin:0 12px;">&rarr;</span>
+        <span style="color:var(--accent3);">post-incident</span>
+        <span style="color:var(--text-dim); margin:0 12px;">&rarr;</span>
+        <span style="color:var(--accent3);">observability</span>
+        <span style="color:var(--text-dim); margin:0 12px;">&rarr;</span>
+        <span style="color:var(--accent);">elasticsearch</span>
       </div>
-      <div class="compare-extra">
-        <div class="extra-label">Open proposal · agent-skills</div>
-        <div class="extra-body">
-          <strong>DI</strong> for capability binding · <strong>workflow vs integration</strong> skill types · capabilities backed by <strong>CLI or MCP</strong>. Running this fork today.
-        </div>
-      </div>
+      <p style="font-size:18px; color:var(--text-muted); line-height:1.55; max-width:980px; margin:0 0 14px;">
+        Swap the leaf from <code style="color:var(--accent);">elasticsearch</code> to <code style="color:var(--accent);">datadog</code> and three skills upstream need a fork &mdash; none of the workflow logic changed, only the leaf.
+      </p>
+      <p style="font-size:16px; color:var(--text-dim); line-height:1.5; max-width:980px; margin:0;">
+        Then the forks diverge from upstream. Adoption splits the community into copies.
+      </p>
     </div>
   </div>
 
@@ -981,6 +978,9 @@ chat:     <span class="val">skill://slack</span></pre>
           <strong>CLI when <code>--help</code> is enough; skill when it isn't.</strong> Workflow skills point at capability names; this file points capability names at providers. Swap the right side without touching the left.
         </div>
       </div>
+      <p style="margin-top:28px; font-size:14px; color:var(--text-dim); font-style:italic; max-width:1000px;">
+        What you just saw is an open proposal &mdash; <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--text-dim); text-decoration:underline;">agent-skills #311</a>. Running it in production here.
+      </p>
     </div>
   </div>
 
@@ -995,7 +995,7 @@ chat:     <span class="val">skill://slack</span></pre>
       <div class="section-break">
         <div class="section-eyebrow">Part II · Response</div>
         <div class="section-quote">"Humans on the loop."</div>
-        <div class="section-gloss">I shape the loop. The agents work inside it.</div>
+        <div class="section-gloss">I shape the loop, and I shift left &mdash; review the plan before the code, approve the remote action before it fires.</div>
         <div class="section-attribution">— Kief Morris, Thoughtworks</div>
       </div>
     </div>
@@ -1015,26 +1015,27 @@ chat:     <span class="val">skill://slack</span></pre>
         <div class="pipeline-conn"></div>
         <div class="pipeline-node">
           <div class="pipeline-name">plan</div>
-          <div class="pipeline-model">opus · read-only deliberation</div>
+          <div class="pipeline-model">read-only deliberation</div>
         </div>
         <div class="pipeline-conn"></div>
         <div class="pipeline-node">
           <div class="pipeline-name">tdd</div>
-          <div class="pipeline-model">sonnet · failing test first, always</div>
+          <div class="pipeline-model">failing test first, always</div>
         </div>
         <div class="pipeline-conn"></div>
         <div class="pipeline-node">
           <div class="pipeline-name">review · qa</div>
-          <div class="pipeline-model">codex · second pair of eyes</div>
+          <div class="pipeline-model">second pair of eyes</div>
         </div>
         <div class="pipeline-conn"></div>
         <div class="pipeline-node">
           <div class="pipeline-name">commit · push</div>
-          <div class="pipeline-model">sonnet · semantic format, CI watch</div>
+          <div class="pipeline-model">semantic format, CI watch</div>
         </div>
       </div>
       <div class="pipeline-aside">
-        Each issue gets <strong>its own worktree session</strong>. Each phase picks the right model. Review and qa can loop back to plan.
+        Each issue gets <strong>its own worktree session</strong>. Review and qa can loop back to plan.
+        <div style="margin-top:10px; font-style:italic; color:var(--text-dim);">Shift left: the plan is read-only deliberation; every remote write asks for approval. Course-correction is cheap before code, expensive after.</div>
       </div>
     </div>
   </div>
@@ -1145,23 +1146,10 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
         </div>
       </div>
       <div class="compare-extra">
-        <div class="extra-label">Mobile, no separate app</div>
+        <div class="extra-label">Either stance, same ceiling</div>
         <div class="extra-body">
-          <strong>opencode-web</strong> as a LaunchAgent on my desktop, exposed over <strong>Tailscale</strong>, installed as a PWA on my phone.
+          Two or three streams is the cap &mdash; autonomous or supervised, the human bottleneck holds. <strong>Shift left makes each loop cheaper. It does not move the ceiling.</strong>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       16 · Concession II (plain language)
-  ══════════════════════════════════════════ -->
-  <div class="slide slide-center" id="s-concession-2">
-    <div class="slide-content">
-      <div class="concession">
-        <h2 style="margin-bottom:32px;">What being on the loop costs.</h2>
-        <p class="concession-line">Parallel work fragments attention — beyond two or three streams the math stops working.</p>
-        <p class="concession-line">The kit can't out-engineer the human limit.</p>
       </div>
     </div>
   </div>
@@ -1215,6 +1203,10 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
         <div class="skill-pill" style="border-left:3px solid var(--accent);">linear-cli</div>
       </div>
     </div>
+
+    <p style="margin-top:18px; font-size:13px; color:var(--text-dim); line-height:1.55; max-width:1000px;">
+      <strong style="color:var(--text-muted);">On phone:</strong> <code>opencode-web</code> as a LaunchAgent on the desktop, exposed over Tailscale, installed as a PWA. No separate app.
+    </p>
     </div>
   </div>
 
