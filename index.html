@@ -631,55 +631,52 @@
     <div class="slide-content">
     <div class="eyebrow">Workflow</div>
     <h2>Pipeline</h2>
-    <div class="pipeline" style="margin-top:48px;">
-      <!-- Top tier: agent (plan) — floats independent of phase order -->
-      <div style="display:flex; gap:8px; align-items:center; margin-bottom:18px;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent4); width:120px;">agent</div>
+    <!-- Pipeline: rows by primitive, columns aligned by phase position so the
+         left-to-right flow remains the temporal sequence. -->
+    <div style="margin-top:48px; display:grid; grid-template-columns:120px repeat(5, 100px); gap-row: 12px; align-items:center; max-width:1000px;">
+      <!-- Agent row: plan sits above attention (the planning moment) -->
+      <div style="grid-row:1; grid-column:1; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent4);">agent</div>
+      <div style="grid-row:1; grid-column:2; display:flex; flex-direction:column; align-items:center; gap:8px; padding:8px 0;">
+        <div style="width:48px; height:48px; border-radius:50%; background:rgba(236,72,153,0.18); border:1px dashed rgba(236,72,153,0.5);"></div>
+        <span style="color:var(--accent4); font-weight:500; font-size:16px;">plan</span>
+      </div>
+
+      <!-- Skills row: attention → review → qa → commit → push -->
+      <div style="grid-row:2; grid-column:1; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent5);">skills</div>
+      <div style="grid-row:2; grid-column:2 / span 5; display:flex; align-items:center; justify-content:space-between; padding:12px 0;">
         <div class="pipe-step" style="min-width:auto;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:14px; height:14px; border-radius:50%; background:rgba(236,72,153,0.18); border:1px dashed rgba(236,72,153,0.5);"></div>
-            <span style="color:var(--accent4); font-weight:500;">plan</span>
-          </div>
+          <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+          <div class="pipe-label" style="color:var(--accent5);">attention</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step" style="min-width:auto;">
+          <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+          <div class="pipe-label" style="color:var(--accent5);">review</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step" style="min-width:auto;">
+          <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+          <div class="pipe-label" style="color:var(--accent5);">qa</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step" style="min-width:auto;">
+          <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+          <div class="pipe-label" style="color:var(--accent5);">commit</div>
+        </div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-step" style="min-width:auto;">
+          <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+          <div class="pipe-label" style="color:var(--accent5);">push</div>
         </div>
       </div>
 
-      <!-- Main row: skills along the flow -->
-      <div style="display:flex; gap:8px; align-items:center;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent5); width:120px;">skills</div>
-        <div class="pipeline-row" style="justify-content:flex-start; gap:0;">
-          <div class="pipe-step">
-            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-            <div class="pipe-label" style="color:var(--accent5);">attention</div>
-          </div>
-          <div class="pipe-arrow"></div>
-          <div class="pipe-step">
-            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-            <div class="pipe-label" style="color:var(--accent5);">review</div>
-          </div>
-          <div class="pipe-arrow"></div>
-          <div class="pipe-step">
-            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-            <div class="pipe-label" style="color:var(--accent5);">qa</div>
-          </div>
-          <div class="pipe-arrow"></div>
-          <div class="pipe-step">
-            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-            <div class="pipe-label" style="color:var(--accent5);">commit</div>
-          </div>
-          <div class="pipe-arrow"></div>
-          <div class="pipe-step">
-            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
-            <div class="pipe-label" style="color:var(--accent5);">push</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom tier: instructions (tdd) — band suggests it spans all phases -->
-      <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); width:120px;">instructions</div>
-        <div style="display:flex; align-items:center; gap:10px; padding:6px 14px; border:1px dashed var(--border); border-radius:20px; background:var(--surface);">
-          <div style="width:10px; height:10px; border-radius:50%; background:var(--text-muted);"></div>
-          <span style="color:var(--text);">tdd</span>
+      <!-- Instructions row: tdd as a band stretching across review → commit -->
+      <div style="grid-row:3; grid-column:1; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim);">instructions</div>
+      <div style="grid-row:3; grid-column:3 / span 3; display:flex; align-items:center; justify-content:center; padding:10px 0;">
+        <div style="display:flex; align-items:center; gap:10px; padding:6px 18px; border:1px dashed var(--border); border-radius:20px; background:var(--surface); width:100%; justify-content:center;">
+          <div style="width:8px; height:8px; border-radius:50%; background:var(--text-muted);"></div>
+          <span style="color:var(--text); font-size:14px;">tdd</span>
+          <span style="color:var(--text-dim); font-size:11px; opacity:0.7;">↔ spans the code-change phases</span>
         </div>
       </div>
     </div>
