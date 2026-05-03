@@ -805,7 +805,7 @@
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
       <div class="card" style="border-left:3px solid var(--accent2);">
         <strong>What ships</strong>
-        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">All 26 skills → <code>~/.agents/skills/</code>. <code>opencode.json</code> for MCPs, model, permissions. <code>AGENTS.md.tmpl</code> for agent instructions. Plugins, LaunchAgents, packages.</p>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">All 27 skills → <code>~/.agents/skills/</code> (25 in the repo, 2 installed via <code>gh skill install</code> from upstream maintainers). <code>opencode.json</code> for MCPs, model, permissions. <code>AGENTS.md.tmpl</code> for agent instructions. Plugins, LaunchAgents, packages.</p>
       </div>
       <div class="card" style="border-left:3px solid var(--accent5);">
         <div class="eyebrow" style="color:var(--accent5); margin-bottom:6px;">Why not <a href="https://github.com/steipete/openclaw" style="color:var(--accent5);">OpenClaw</a></div>
@@ -825,10 +825,10 @@
   <div class="slide" id="s11">
     <div class="slide-content">
     <div class="eyebrow">The Full Set</div>
-    <h2>26 skills. Take any of them.</h2>
+    <h2>27 skills. Take any of them.</h2>
 
-    <div style="margin-top:24px;">
-      <div class="eyebrow" style="color:var(--accent3); margin-bottom:10px;">Pipeline</div>
+    <div style="margin-top:20px;">
+      <div class="eyebrow" style="color:var(--accent3); margin-bottom:8px;">Pipeline</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent3);">attention</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent3);">plan</div>
@@ -840,8 +840,8 @@
       </div>
     </div>
 
-    <div style="margin-top:18px;">
-      <div class="eyebrow" style="color:var(--accent2); margin-bottom:10px;">Quality &amp; review</div>
+    <div style="margin-top:14px;">
+      <div class="eyebrow" style="color:var(--accent2); margin-bottom:8px;">Quality &amp; review</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent2);">architecture</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent2);">code-quality</div>
@@ -849,19 +849,18 @@
       </div>
     </div>
 
-    <div style="margin-top:18px;">
-      <div class="eyebrow" style="color:var(--highlight); margin-bottom:10px;">Knowledge &amp; writing</div>
+    <div style="margin-top:14px;">
+      <div class="eyebrow" style="color:var(--highlight); margin-bottom:8px;">Knowledge</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--highlight);">thinking-tools</div>
-        <div class="skill-pill" style="border-left:3px solid var(--highlight);">writing</div>
         <div class="skill-pill" style="border-left:3px solid var(--highlight);">conversations</div>
         <div class="skill-pill" style="border-left:3px solid var(--highlight);">context-log</div>
         <div class="skill-pill" style="border-left:3px solid var(--highlight);">docs</div>
       </div>
     </div>
 
-    <div style="margin-top:18px;">
-      <div class="eyebrow" style="color:var(--accent4); margin-bottom:10px;">Tooling integrations</div>
+    <div style="margin-top:14px;">
+      <div class="eyebrow" style="color:var(--accent4); margin-bottom:8px;">Tooling integrations (local)</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent4);">opencode</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent4);">chezmoi</div>
@@ -877,16 +876,32 @@
       </div>
     </div>
 
-    <div class="cols cols-2" style="margin-top:28px; gap:20px;">
+    <div style="margin-top:14px;">
+      <div class="eyebrow" style="color:var(--accent5); margin-bottom:8px;">External (installed via <code>gh skill install</code>, maintained upstream)</div>
+      <div class="skill-grid">
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">ical-cli</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">linear-cli</div>
+      </div>
+    </div>
+
+    <div class="cols cols-3" style="margin-top:28px; gap:16px;">
       <div class="card" style="border-left:3px solid var(--accent3);">
         <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Portable across runtimes</div>
-        <p style="font-size:14px;">Skills follow the <a href="https://agentskills.io" style="color:var(--accent3);">agentskills</a> spec — same <code>SKILL.md</code> works in opencode <em>and</em> Claude Code. No fork, no rewrite.</p>
-        <div class="code-block" style="margin-top:10px; font-size:13px; padding:12px 14px;"><span class="comment"># install any skill from this repo</span>
+        <p style="font-size:13px;">Skills follow the <a href="https://agentskills.io" style="color:var(--accent3);">agentskills</a> spec — same <code>SKILL.md</code> works in opencode <em>and</em> Claude Code. No fork, no rewrite.</p>
+        <div class="code-block" style="margin-top:10px; font-size:12px; padding:10px 12px;"><span class="comment"># install any skill from this repo</span>
 gh skill install athal7/dotfiles <span class="val">commit</span></div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent5);">
+        <div class="eyebrow" style="color:var(--accent5); margin-bottom:6px;">Prefer upstream skills</div>
+        <p style="font-size:13px;">When a CLI has a maintained skill, install it from the source repo instead of writing your own. Updates flow automatically; gotchas track the tool.</p>
+        <div class="code-block" style="margin-top:10px; font-size:12px; padding:10px 12px;"><span class="comment"># in packages.yaml</span>
+skills:
+  - repo: <span class="val">BRO3886/ical</span>
+    skill: <span class="val">ical-cli</span></div>
       </div>
       <div class="card" style="border-left:3px solid var(--accent2);">
         <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Share without forking</div>
-        <p style="font-size:14px;">My <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent2);">capability registration proposal</a> — skills declare <code>requires</code>, host injects <code>provides</code>. Swap Linear for Jira, Slack for Teams — fork only when you actually want to.</p>
+        <p style="font-size:13px;">My <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent2);">capability registration proposal</a> — skills declare <code>requires</code>, host injects <code>provides</code>. Swap Linear for Jira, Slack for Teams — fork only when you actually want to.</p>
       </div>
     </div>
     </div>
