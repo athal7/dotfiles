@@ -541,6 +541,152 @@
     max-width: 700px;
   }
 
+  /* ─── Section break (Krikorian / Morris quote slides) ─── */
+  .section-break {
+    max-width: 900px;
+    text-align: center;
+  }
+  .section-break .section-eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+  .section-break .section-quote {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  .section-break .section-gloss {
+    font-size: clamp(18px, 2.2vw, 24px);
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 32px;
+    line-height: 1.4;
+  }
+  .section-break .section-attribution {
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── Compare (own vs rent, on vs out) ─── */
+  .compare-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 32px;
+    max-width: 1100px;
+  }
+  .compare-side {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+  .compare-side .compare-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-dim);
+  }
+  .compare-side.muted .compare-label {
+    color: var(--text-dim);
+  }
+  .compare-side.own {
+    border-left: 3px solid var(--accent3);
+  }
+  .compare-side.own .compare-label {
+    color: var(--accent3);
+  }
+  .compare-side .compare-headline {
+    font-size: clamp(18px, 2.2vw, 24px);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .compare-side .compare-detail {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .compare-extra {
+    margin-top: 24px;
+    padding: 18px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent5);
+    border-radius: 8px;
+    max-width: 1100px;
+  }
+  .compare-extra .extra-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--accent5);
+    margin-bottom: 8px;
+  }
+  .compare-extra .extra-body {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .compare-extra .extra-body strong {
+    color: var(--text);
+  }
+  .compare-extra .extra-punchline {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 6px;
+  }
+
+  /* ─── Concession (matching tone for §I, §II, and "still figuring out") ─── */
+  .concession {
+    max-width: 900px;
+  }
+  .concession .concession-line {
+    font-size: clamp(18px, 2.2vw, 22px);
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .concession .concession-line strong {
+    color: var(--text);
+  }
+  .concession .concession-attribution {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 32px;
+    font-style: italic;
+  }
+  .concession ul {
+    list-style: none;
+    margin-top: 20px;
+  }
+  .concession ul li {
+    font-size: clamp(17px, 2vw, 20px);
+    color: var(--text);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .concession ul li:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 768px) {
+    .compare-pair { grid-template-columns: 1fr; }
+  }
+
   /* ─── Keyboard hint ─── */
   kbd {
     background: var(--surface2);
@@ -653,220 +799,216 @@
   <!-- ══════════════════════════════════════════
        SLIDE 1 — Title
   ══════════════════════════════════════════ -->
-  <div class="slide slide-title active" id="s1">
+  <div class="slide slide-title active" id="s-title">
     <div class="hero-gradient"></div>
     <div class="slide-content">
       <div class="eyebrow">May 2026</div>
-      <h1>My AI Workflow</h1>
+      <h1>Owners on the loop</h1>
       <p class="subtitle">
-        worktrees · models · skills · instructions · agents · permissions
+        Designing my AI workflow around the human in it.
       </p>
       <div class="byline">← → to navigate &nbsp;·&nbsp; <kbd>Space</kbd> to advance</div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 2 — opencode (the runtime)
+       SLIDE 2 — Recognition
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-opencode">
+  <div class="slide slide-center" id="s-recognition">
     <div class="slide-content">
-    <div class="eyebrow">Foundation</div>
-    <h1><span style="color:var(--accent3);">opencode</span></h1>
-    <div class="stack" style="margin-top:32px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Swap models freely</strong>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Permission control</strong>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Open source &amp; standards compliant</strong>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Mobile, no extra app</strong>
-      </div>
-    </div>
+      <div class="eyebrow">Recognition</div>
+      <h1 style="margin-bottom:32px;">Who's driving — you, or the app?</h1>
+      <p style="max-width:780px; font-size:clamp(17px, 2vw, 21px); line-height:1.55;">
+        Most of us share these values. Most of us also spend the day <em>being driven</em> — opening Slack, opening Linear, opening the AI chat, accepting the defaults.
+      </p>
+      <p style="max-width:780px; font-size:clamp(17px, 2vw, 21px); line-height:1.55; margin-top:18px;">
+        This talk is about flipping that polarity.
+      </p>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 3 — The Big Picture
+       SLIDE 3 — § I section break
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s2">
+  <div class="slide slide-center" id="s-section-1">
+    <div class="hero-gradient"></div>
     <div class="slide-content">
-    <div class="eyebrow">Workflow</div>
-    <h2>Pipeline</h2>
-    <!-- Pipeline: vertical sequence. Color encodes primitive type.
-         review/qa run in parallel; either can loop back to plan. Model under
-         each work step. -->
-    <div style="margin-top:40px; position:relative; max-width:420px;">
-      <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0; font-size:24px; font-weight:600; color:var(--text);">
-        <div>attention</div>
-        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
-        <div>
-          <div>plan</div>
-          <div style="font-size:12px; font-weight:400; color:var(--accent2); margin-top:2px;">opus</div>
+      <div class="section-break">
+        <div class="section-eyebrow">Part I</div>
+        <div class="section-quote">"Owners, not renters."</div>
+        <div class="section-gloss">Tools that outlast the vendor.</div>
+        <div class="section-attribution">— Raffi Krikorian, CTO, Mozilla</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 4 — Runtime &amp; surface
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-runtime">
+    <div class="slide-content">
+      <div class="eyebrow">Part I · Runtime &amp; surface</div>
+      <h2>Where does the work happen?</h2>
+      <div class="compare-pair">
+        <div class="compare-side muted">
+          <div class="compare-label">Rent</div>
+          <div class="compare-headline">Claude Code · vendor chat apps</div>
+          <div class="compare-detail">Closed runtime. A different vendor surface for every device.</div>
         </div>
-        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
-        <div>
-          <div>tdd</div>
-          <div style="font-size:12px; font-weight:400; color:var(--accent2); margin-top:2px;">sonnet</div>
+        <div class="compare-side own">
+          <div class="compare-label">Own</div>
+          <div class="compare-headline">opencode · PWA over Tailscale</div>
+          <div class="compare-detail">Open source. One workflow, any device, my network.</div>
         </div>
-        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
-        <div>
-          <div>review / qa</div>
-          <div style="font-size:12px; font-weight:400; color:var(--accent2); margin-top:2px;">codex</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 5 — Capability
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-capability">
+    <div class="slide-content">
+      <div class="eyebrow">Part I · Capability</div>
+      <h2>Where does capability live?</h2>
+      <div class="compare-pair">
+        <div class="compare-side muted">
+          <div class="compare-label">Rent · MCP</div>
+          <div class="compare-headline">Capability behind a protocol</div>
+          <div class="compare-detail">Lives in someone else's running server. Changes when they change.</div>
         </div>
-        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
-        <div>commit / push</div>
+        <div class="compare-side own">
+          <div class="compare-label">Own · skills + CLIs</div>
+          <div class="compare-headline">Capability as files in my repo</div>
+          <div class="compare-detail">Read, edit, version. CLIs ship their own help.</div>
+        </div>
       </div>
-      <!-- feedback loop: review/qa → plan, drawn as dashed L on the right -->
-      <svg style="position:absolute; top:90px; left:240px; pointer-events:none;" width="120" height="220" viewBox="0 0 120 220" fill="none">
-        <path d="M 10 200 L 100 200 L 100 20 L 30 20" stroke="var(--text-dim)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5"/>
-        <path d="M 30 20 l 6 -4 m -6 4 l 6 4" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
-      </svg>
-    </div>
-    <div class="pipeline-meta" style="margin-top:48px; display:flex; gap:64px; justify-content:flex-start; max-width:1100px; flex-wrap:wrap;">
-      <div>
-        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:4px;">Parallelism</div>
-        <p style="font-size:14px; color:var(--text-muted);">attention dispatches each issue into its own worktree session</p>
+      <div class="compare-extra">
+        <div class="extra-label">Example · <code>thinking-tools</code></div>
+        <div class="extra-body">
+          Five Whys, First Principles, Cynefin, Minto Pyramid. <strong>Deliberation as a file.</strong>
+        </div>
+        <div class="extra-punchline">Couldn't exist as an MCP server.</div>
       </div>
-    </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       Highlight: attention
+       SLIDE 6 — § I concession
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-attention">
+  <div class="slide slide-center" id="s-concession-1">
     <div class="slide-content">
-    <div class="eyebrow">Highlight</div>
-    <h1><span style="color:var(--accent5);">attention</span></h1>
-    <div class="stack" style="margin-top:32px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Pulled in parallel</strong>
-        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">Calendar runway, reminders (overdue / today / undated), merge requests, issues — assigned and cross-referenced.</p>
+      <div class="concession">
+        <div class="eyebrow">Part I · Honest about</div>
+        <h2 style="margin-bottom:32px;">What I'm still renting.</h2>
+        <p class="concession-line">The model. <strong>Anthropic API</strong>, for now.</p>
+        <p class="concession-line">Open models are coming. The workflow is designed swappable — when they're good enough, it's one config line.</p>
       </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Output tuned to energy</strong>
-        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;"><strong style="color:var(--text);">Low</strong> → 1 work + 1 personal. <strong style="color:var(--text);">Medium</strong> → 2–3 quick wins. <strong style="color:var(--text);">High</strong> → longer-horizon work.</p>
-      </div>
-    </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       Highlight: thinking-tools
+       SLIDE 7 — § II section break
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-thinking">
+  <div class="slide slide-center" id="s-section-2">
+    <div class="hero-gradient"></div>
     <div class="slide-content">
-    <div class="eyebrow">Highlight</div>
-    <h1><span style="color:var(--accent5);">thinking-tools</span></h1>
-    <div class="stack" style="margin-top:32px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Problem framing</strong>
-        <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">Five Whys, First Principles, Inversion</div>
+      <div class="section-break">
+        <div class="section-eyebrow">Part II</div>
+        <div class="section-quote">"Humans on the loop."</div>
+        <div class="section-gloss">I shape the loop. The agents work inside it.</div>
+        <div class="section-attribution">— Kief Morris, Thoughtworks</div>
       </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Decision making</strong>
-        <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">Decision Matrix, Cynefin, Eisenhower</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Systems thinking</strong>
-        <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">Causal loops, feedback, leverage points</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Communication</strong>
-        <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">Minto Pyramid, SBI, conflict resolution</div>
-      </div>
-    </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       Highlight: conversations
+       SLIDE 8 — Work loop
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-conversations">
+  <div class="slide" id="s-work-loop">
     <div class="slide-content">
-    <div class="eyebrow">Highlight</div>
-    <h1><span style="color:var(--accent5);">conversations</span></h1>
-    <div class="stack" style="margin-top:32px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Knowledge base</strong>
+      <div class="eyebrow">Part II · The work loop</div>
+      <h2>Who runs the how-loop?</h2>
+      <div class="compare-pair">
+        <div class="compare-side muted">
+          <div class="compare-label">Out of the loop</div>
+          <div class="compare-headline">Symphony · vibe coding</div>
+          <div class="compare-detail">Agents own the how-loop. PRs appear.</div>
+        </div>
+        <div class="compare-side own">
+          <div class="compare-label">On the loop</div>
+          <div class="compare-headline">My pipeline</div>
+          <div class="compare-detail">plan · TDD · review · commit · push. Agents do the work; I shape the harness.</div>
+        </div>
       </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Meetings</strong>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Chat</strong>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Email</strong>
-      </div>
-    </div>
-    <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Picked in order of fidelity. Provider-agnostic — each source swaps independently.</p>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       Highlight: context-log
+       SLIDE 9 — Meta-work loop
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-context-log">
+  <div class="slide" id="s-meta-loop">
     <div class="slide-content">
-    <div class="eyebrow">Highlight</div>
-    <h1><span style="color:var(--accent5);">context-log</span></h1>
-    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);"><code>.opencode/context-log.md</code>, gitignored.</p>
-    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>Session start</strong>
-        <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">create with issue context</div>
+      <div class="eyebrow">Part II · The meta-work loop</div>
+      <h2>Who shapes the workflow itself?</h2>
+      <div class="compare-pair">
+        <div class="compare-side muted">
+          <div class="compare-label">Out of the loop</div>
+          <div class="compare-headline">The assistant reshapes itself</div>
+          <div class="compare-detail">Vendor pushes updates. Skills change behind your back.</div>
+        </div>
+        <div class="compare-side own">
+          <div class="compare-label">On the loop</div>
+          <div class="compare-headline">Managed dotfiles</div>
+          <div class="compare-detail">Skills, instructions, capability mappings — all files. Every change a commit I review.</div>
+        </div>
       </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>After each commit</strong>
-        <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">append a checkpoint</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>On compaction</strong>
-        <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">point at the log, don't re-summarize</div>
-      </div>
-    </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       Evolution: MCP → gateway → skills (timeline)
+       SLIDE 10 — § II concession (attention)
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s-mcp">
+  <div class="slide slide-center" id="s-concession-2">
     <div class="slide-content">
-    <div class="eyebrow">Evolution</div>
-    <h2>MCP → gateway → skills</h2>
-    <div style="margin-top:40px; position:relative; max-width:520px;">
-      <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0; font-size:24px; font-weight:600; color:var(--text);">
-        <div>per-source MCP</div>
-        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
-        <div>gateway MCP</div>
-        <div class="pipe-arrow-down" style="margin:6px 0 6px 14px;"></div>
-        <div>skills</div>
+      <div class="concession">
+        <div class="eyebrow">Part II · Honest about</div>
+        <h2 style="margin-bottom:32px;">What being on the loop costs.</h2>
+        <p class="concession-line">Parallel agents fracture attention beyond what engineering culture has language for.</p>
+        <p class="concession-line">So I borrowed language: <strong>monotropism, alexithymia, energy management.</strong> Built a small skill — <code>attention</code> — to give myself a buffer.</p>
+        <div class="concession-attribution">— with thanks to Neurodivergent Insights</div>
       </div>
-    </div>
-    <div class="pipeline-meta" style="margin-top:48px; display:flex; gap:64px; justify-content:flex-start; max-width:1100px; flex-wrap:wrap;">
-      <div>
-        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:4px;">MCPs that stayed</div>
-        <p style="font-size:14px; color:var(--text-muted);"><code>context7</code>, <code>firefox-devtools</code></p>
-      </div>
-    </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 11 — Full skill inventory + install
+       SLIDE 11 — Still figuring out
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s11">
+  <div class="slide slide-center" id="s-questions">
     <div class="slide-content">
-    <div class="eyebrow">The Full Set</div>
-    <h2>25 skills.</h2>
+      <div class="concession">
+        <div class="eyebrow">Open</div>
+        <h2 style="margin-bottom:24px;">What I'm still figuring out.</h2>
+        <ul>
+          <li>When are open models good enough?</li>
+          <li>Does any of this work past 2–3 parallel streams?</li>
+          <li>Does it work when it's not just me?</li>
+          <li>At what point does the kit become its own job?</li>
+          <li>Where does the workflow still not respect the human?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
-    <div style="margin-top:20px;">
+  <!-- ══════════════════════════════════════════
+       SLIDE 12 — Inventory
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-inventory">
+    <div class="slide-content">
+    <div class="eyebrow">Take a piece</div>
+    <h2 style="margin-bottom:18px;">25 skills.</h2>
+
+    <div style="margin-top:8px;">
       <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Workflow</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent5);">attention</div>
@@ -921,68 +1063,50 @@
       </div>
     </div>
 
-    <div class="cols cols-3" style="margin-top:28px; gap:16px;">
-      <div class="card" style="border-left:3px solid var(--border);">
-        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Portable across runtimes</div>
-        <p style="font-size:13px;">Skills follow the agentskills.io spec — same <code>SKILL.md</code> works in opencode <em>and</em> Claude Code. No fork, no rewrite.</p>
-        <div class="code-block" style="margin-top:10px; font-size:12px; padding:10px 12px;"><span class="comment"># install any skill from this repo</span>
-gh skill install athal7/dotfiles <span class="val">commit</span></div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Prefer upstream skills</div>
-        <p style="font-size:13px;">When a CLI has a maintained skill, install it from the source repo instead of writing your own. Updates flow automatically; gotchas track the tool.</p>
-        <div class="code-block" style="margin-top:10px; font-size:12px; padding:10px 12px;"><span class="comment"># in packages.yaml</span>
-skills:
-  - repo: <span class="val">BRO3886/ical</span>
-    skill: <span class="val">ical-cli</span></div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
-        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Right primitive for the trigger</div>
-        <p style="font-size:13px;">Skill if the trigger is a <em>concrete moment</em>. Instructions if it's <em>continuous</em>. Agent + permission if it's <em>mode-restricted</em>. Asking which primitive fits is the audit move that beats redesigning the skill description.</p>
-      </div>
+    <div style="margin-top:20px;">
+      <div class="code-block" style="font-size:13px; padding:10px 14px; display:inline-block;">gh skill install athal7/dotfiles <span class="val">&lt;skill&gt;</span></div>
     </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       References
+       SLIDE 13 — References
   ══════════════════════════════════════════ -->
-  <div class="slide" id="s13">
+  <div class="slide" id="s-references">
     <div class="slide-content">
     <div class="eyebrow">References</div>
-    <h2>Links &amp; sources</h2>
-    <div class="stack" style="margin-top:18px; gap:14px; max-width:900px;">
+    <h2 style="margin-bottom:24px;">Borrowed shoulders.</h2>
+    <div class="stack" style="gap:22px; max-width:900px;">
       <div>
-        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">Tools</div>
-        <p style="font-size:14px; line-height:1.7;">
-          <a href="https://opencode.ai" style="color:var(--text);">opencode.ai</a> &middot;
-          <a href="https://chezmoi.io" style="color:var(--text);">chezmoi.io</a> &middot;
-          <a href="https://agentskills.io" style="color:var(--text);">agentskills.io</a> &middot;
-          <a href="https://untools.co" style="color:var(--text);">untools.co</a> &middot;
-          <a href="https://tailscale.com" style="color:var(--text);">tailscale.com</a>
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Anchor frames</div>
+        <p style="font-size:14px; line-height:1.8; color:var(--text-muted);">
+          Owners, not renters — Raffi Krikorian, <a href="https://www.socallinuxexpo.org/scale/23x/presentations/owners-not-renters-mozillas-open-source-ai-strategy" style="color:var(--text-muted); text-decoration:underline;">SCALE 23x</a><br>
+          Humans on the loop — Kief Morris, <a href="https://martinfowler.com/articles/exploring-gen-ai/humans-and-agents.html" style="color:var(--text-muted); text-decoration:underline;">martinfowler.com</a><br>
+          Attentional concepts — Dr. Megan Anna Neff, <a href="https://neurodivergentinsights.com" style="color:var(--text-muted); text-decoration:underline;">Neurodivergent Insights</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">This deck and source</div>
-        <p style="font-size:14px; line-height:1.7;">
-          <a href="https://github.com/athal7/dotfiles" style="color:var(--text);">github.com/athal7/dotfiles</a> &middot;
-          <a href="https://github.com/athal7/dotfiles/tree/main/skills" style="color:var(--text);">skills directory</a>
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Tools I run</div>
+        <p style="font-size:14px; line-height:1.8; color:var(--text-muted);">
+          <a href="https://opencode.ai" style="color:var(--text-muted); text-decoration:underline;">opencode</a> ·
+          <a href="https://chezmoi.io" style="color:var(--text-muted); text-decoration:underline;">chezmoi</a> ·
+          <a href="https://agentskills.io" style="color:var(--text-muted); text-decoration:underline;">agentskills</a> ·
+          <a href="https://tailscale.com" style="color:var(--text-muted); text-decoration:underline;">tailscale</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">Related work</div>
-        <p style="font-size:14px; line-height:1.7;">
-          <a href="https://claude.com/blog/claude-code-on-the-web" style="color:var(--text);">Claude Code on the web</a> &middot;
-          <a href="https://github.com/openclaw/openclaw" style="color:var(--text);">OpenClaw</a> &middot;
-          <a href="https://opencode.ai/docs/web/" style="color:var(--text);">opencode web</a> &middot;
-          <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--text);">agentskills capabilities proposal</a>
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Tools mentioned in contrast</div>
+        <p style="font-size:14px; line-height:1.8; color:var(--text-muted);">
+          <a href="https://claude.com/code" style="color:var(--text-muted); text-decoration:underline;">Claude Code</a> ·
+          <a href="https://openai.com/codex/" style="color:var(--text-muted); text-decoration:underline;">Codex</a> ·
+          <a href="https://github.com/openai/symphony" style="color:var(--text-muted); text-decoration:underline;">Symphony</a> ·
+          <a href="https://github.com/openclaw/openclaw" style="color:var(--text-muted); text-decoration:underline;">OpenClaw</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">Docs</div>
-        <p style="font-size:14px; line-height:1.7;">
-          <a href="https://opencode.ai/docs/plugins/" style="color:var(--text);">opencode plugins</a> &middot;
-          <a href="https://opencode.ai/docs/skills/" style="color:var(--text);">opencode skills</a>
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">This deck</div>
+        <p style="font-size:14px; line-height:1.8; color:var(--text-muted);">
+          <a href="https://github.com/athal7/dotfiles" style="color:var(--text-muted); text-decoration:underline;">github.com/athal7/dotfiles</a>
         </p>
       </div>
     </div>
@@ -997,7 +1121,7 @@ skills:
 <!-- Navigation -->
 <div id="nav">
   <button id="btn-prev" onclick="go(-1)" title="Previous">←</button>
-  <span id="counter">1 / 14</span>
+  <span id="counter">1 / 13</span>
   <button id="btn-next" onclick="go(1)" title="Next">→</button>
 </div>
 
