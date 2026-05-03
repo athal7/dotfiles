@@ -28,12 +28,13 @@
   },
   "agent": {
     "plan": {
+      "model": "anthropic/claude-opus-4-7",
       "permission": {
         "bash": {{ merge (dict "*" "ask") $planBash | toPrettyJson | indent 10 | trim }}
       }
     }
   },
-  "model": "anthropic/claude-opus-4-7",
+  "model": "anthropic/claude-sonnet-4-6",
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
