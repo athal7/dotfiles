@@ -666,7 +666,37 @@
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 2 — The Big Picture
+       SLIDE 2 — opencode (the runtime)
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-opencode">
+    <div class="slide-content">
+    <div class="eyebrow">Foundation</div>
+    <h1><span style="color:var(--accent3);">opencode</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">The runtime that runs everything else. Open source, model-agnostic, scriptable.</p>
+    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <strong>Swap models freely</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">sonnet for build, opus for plan, codex for review — and any provider when one is having a bad day</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <strong>Permission control</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">per-agent tool and bash allow/ask lists — plan agent reads, build agent writes</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <strong>Open source</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">auditable, forkable, no lock-in</span>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <strong>Mobile, no extra app</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;"><a href="https://opencode.ai/docs/web/" style="color:var(--accent3);">opencode web</a> as a LaunchAgent over <a href="https://tailscale.com" style="color:var(--accent3);">Tailscale</a>, installed as a PWA — vs Claude dispatch or <a href="https://github.com/steipete/openclaw" style="color:var(--accent3);">OpenClaw</a> chat servers</span>
+      </div>
+    </div>
+    <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Skills, agents, and <code>AGENTS.md</code> are becoming standards — the primitives port even if I leave.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 3 — The Big Picture
   ══════════════════════════════════════════ -->
   <div class="slide" id="s2">
     <div class="slide-content">
@@ -840,31 +870,6 @@
       <div class="card" style="border-left:3px solid var(--border);">
         <strong>On compaction</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">don't re-summarize — point at the log instead</span>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       Highlight: chezmoi (with OpenClaw counterpoint)
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s10">
-    <div class="slide-content">
-    <div class="eyebrow">Highlight</div>
-    <h1>chezmoi</h1>
-    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Skills, config, binaries, services — one <code>chezmoi apply</code> on any machine. Every change is a git commit.</p>
-    <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--border);">
-        <strong>What ships</strong>
-        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">All 25 skills → <code>~/.agents/skills/</code> (23 in the repo, 2 installed via <code>gh skill install</code> from upstream). <code>tdd.md</code> always loaded via <code>instructions:</code>. Plan is opencode's built-in agent. <code>opencode.json</code> wires per-agent permissions, MCPs, models. Plugins, LaunchAgents, packages.</p>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Why not <a href="https://github.com/steipete/openclaw" style="color:var(--accent3);">OpenClaw</a></div>
-        <p style="font-size:14px;">Chat-native, proactive, self-modifying — compelling. But my skills and config belong in <strong>git</strong>, not in an agent's own memory. Reproducible, auditable, portable.</p>
-      </div>
-      <div class="card" style="border-left:3px solid var(--border);">
-        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Mobile, without a separate app</div>
-        <p style="font-size:14px;"><a href="https://opencode.ai/docs/web/" style="color:var(--accent3);">opencode web</a> runs as a LaunchAgent on my desktop, exposed over <a href="https://tailscale.com" style="color:var(--accent3);">Tailscale</a>, installed as a <strong>PWA</strong> on my phone.</p>
       </div>
     </div>
     </div>
