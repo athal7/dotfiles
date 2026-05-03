@@ -10,15 +10,16 @@
     --surface: #161b22;
     --surface2: #21262d;
     --border: #30363d;
-    --accent: #58a6ff;
-    --accent2: #bc8cff;
-    --accent3: #56d364;
-    --accent4: #f0883e;
-    --accent5: #ff7b72;
+    /* highlighter palette — each color encodes primitive type */
+    --accent: #7dd3fc;       /* light blue → mcp */
+    --accent2: #fb923c;      /* orange → model */
+    --accent3: #84cc16;      /* lime green → highlight */
+    --accent4: #ec4899;      /* pink → agent */
+    --accent5: #f1e05a;      /* yellow → skill */
     --text: #e6edf3;
     --text-muted: #8b949e;
     --text-dim: #7d8590;
-    --highlight: #ffa657;
+    --highlight: #84cc16;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -311,16 +312,13 @@
   }
 
   .pipe-badge {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
     color: var(--text-dim);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 2px 8px;
     margin-top: -2px;
+    opacity: 0.7;
   }
 
   .pipe-gate {
@@ -620,7 +618,7 @@
       <div class="eyebrow">May 2026</div>
       <h1>My AI Workflow</h1>
       <p class="subtitle">
-        Parallel worktrees. Right model per phase. Skills, instructions, agents — three primitives, three triggers.
+        worktrees · models · skills · instructions · agents · permissions
       </p>
       <div class="byline">← → to navigate &nbsp;·&nbsp; <kbd>Space</kbd> to advance</div>
     </div>
@@ -633,55 +631,66 @@
     <div class="slide-content">
     <div class="eyebrow">Workflow</div>
     <h2>Pipeline</h2>
-    <div class="pipeline" style="margin-top:32px;">
-      <div class="pipeline-row" style="justify-content:flex-start; gap:0;">
-        <div class="pipe-step">
-          <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🧠</div>
-          <div class="pipe-label" style="color:var(--accent);">attention</div>
+    <div class="pipeline" style="margin-top:48px;">
+      <!-- Top tier: agent (plan) — floats independent of phase order -->
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:18px;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent4); width:120px;">agent</div>
+        <div class="pipe-step" style="min-width:auto;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:14px; height:14px; border-radius:50%; background:rgba(236,72,153,0.18); border:1px dashed rgba(236,72,153,0.5);"></div>
+            <span style="color:var(--accent4); font-weight:500;">plan</span>
+          </div>
         </div>
-        <div class="pipe-arrow"></div>
-        <div class="pipe-step">
-          <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">📋</div>
-          <div class="pipe-label" style="color:var(--accent3);">plan</div>
-          <div class="pipe-badge">agent</div>
+      </div>
+
+      <!-- Main row: skills along the flow -->
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent5); width:120px;">skills</div>
+        <div class="pipeline-row" style="justify-content:flex-start; gap:0;">
+          <div class="pipe-step">
+            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+            <div class="pipe-label" style="color:var(--accent5);">attention</div>
+          </div>
+          <div class="pipe-arrow"></div>
+          <div class="pipe-step">
+            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+            <div class="pipe-label" style="color:var(--accent5);">review</div>
+          </div>
+          <div class="pipe-arrow"></div>
+          <div class="pipe-step">
+            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+            <div class="pipe-label" style="color:var(--accent5);">qa</div>
+          </div>
+          <div class="pipe-arrow"></div>
+          <div class="pipe-step">
+            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+            <div class="pipe-label" style="color:var(--accent5);">commit</div>
+          </div>
+          <div class="pipe-arrow"></div>
+          <div class="pipe-step">
+            <div class="pipe-icon" style="background:rgba(241,224,90,0.12);"></div>
+            <div class="pipe-label" style="color:var(--accent5);">push</div>
+          </div>
         </div>
-        <div class="pipe-arrow"></div>
-        <div class="pipe-step">
-          <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">🔴🟢</div>
-          <div class="pipe-label" style="color:var(--accent3);">tdd</div>
-          <div class="pipe-badge">always loaded</div>
-        </div>
-        <div class="pipe-arrow"></div>
-        <div class="pipe-step">
-          <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🔍</div>
-          <div class="pipe-label" style="color:var(--accent);">review</div>
-        </div>
-        <div class="pipe-arrow"></div>
-        <div class="pipe-step">
-          <div class="pipe-icon" style="background:rgba(88,166,255,0.12);">🧪</div>
-          <div class="pipe-label" style="color:var(--accent);">qa</div>
-        </div>
-        <div class="pipe-arrow"></div>
-        <div class="pipe-step">
-          <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">💾</div>
-          <div class="pipe-label" style="color:var(--accent4);">commit</div>
-        </div>
-        <div class="pipe-arrow"></div>
-        <div class="pipe-step">
-          <div class="pipe-icon" style="background:rgba(240,136,62,0.12);">🚀</div>
-          <div class="pipe-label" style="color:var(--accent4);">push</div>
+      </div>
+
+      <!-- Bottom tier: instructions (tdd) — band suggests it spans all phases -->
+      <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); width:120px;">instructions</div>
+        <div style="display:flex; align-items:center; gap:10px; padding:6px 14px; border:1px dashed var(--border); border-radius:20px; background:var(--surface);">
+          <div style="width:10px; height:10px; border-radius:50%; background:var(--text-muted);"></div>
+          <span style="color:var(--text);">tdd</span>
         </div>
       </div>
     </div>
-    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Three primitives, three triggers: <strong style="color:var(--accent3);">plan</strong> is opencode's built-in agent (Tab to enter, mode-restricted by permission). <strong style="color:var(--accent3);">tdd</strong> is loaded into every session via opencode's <code>instructions:</code> array. The rest are skills, loaded only when the step starts. Writes prompt for approval through <a href="https://opencode.ai/docs/permissions" style="color:var(--accent2);">permissions</a>.</p>
-    <div class="cols cols-2" style="margin-top:24px; gap:16px; max-width:1100px;">
-      <div class="card" style="border-left:3px solid var(--accent);">
-        <div class="eyebrow" style="color:var(--accent); margin-bottom:6px;">Worktree per unit of work</div>
-        <p style="font-size:13px;"><strong style="color:var(--accent);">attention</strong> dispatches each picked-up issue into its own opencode session inside a fresh git worktree. Branches are isolated; multiple sessions run in parallel without clobbering each other's index. The pipeline runs inside the worktree, end to end.</p>
+    <div class="pipeline-meta" style="margin-top:48px; display:flex; gap:64px; justify-content:flex-start; max-width:1100px; flex-wrap:wrap;">
+      <div>
+        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:4px;">Parallelism</div>
+        <p style="font-size:14px; color:var(--text-muted);">attention dispatches each issue into its own worktree session</p>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent2);">
-        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Model per phase</div>
-        <p style="font-size:13px;">Different model families catch different issues. Opus deliberates on <strong style="color:var(--accent3);">plan</strong>; Sonnet runs the tighter <strong style="color:var(--accent3);">tdd</strong> loop; codex catches different patterns on <strong style="color:var(--accent);">review</strong>. Switch mid-session via opencode's model picker — same agent, different model.</p>
+      <div>
+        <div class="eyebrow" style="color:var(--accent2); margin-bottom:4px;">Models</div>
+        <p style="font-size:14px; color:var(--text-muted);">Opus for plan · Sonnet for tdd · codex for review</p>
       </div>
     </div>
     </div>
@@ -693,18 +702,18 @@
   <div class="slide" id="s-mcp">
     <div class="slide-content">
     <div class="eyebrow">Highlight</div>
-    <h1>MCP <span class="text-muted" style="color:var(--text-muted); font-weight:600;">→</span> <span class="accent2">skills</span></h1>
+    <h1><span style="color:var(--accent);">MCP</span> <span class="text-muted" style="color:var(--text-muted); font-weight:600;">→</span> <span style="color:var(--accent5);">skills</span></h1>
     <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Wrappers per source got stale and bloated context. Skills replaced them.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--accent5);">
+      <div class="card" style="border-left:3px solid var(--accent);">
         <strong>The MCP tax</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">process per source, wrappers drift, descriptions in context every session</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
+      <div class="card" style="border-left:3px solid var(--accent5);">
         <strong>Skills point at APIs directly</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">markdown calling documented CLIs and APIs — less context per call</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent2);">
+      <div class="card" style="border-left:3px solid var(--accent);">
         <strong>MCPs that stayed</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;"><code>context7</code> for live docs, <code>firefox-devtools</code> for QA — capabilities CLIs can't replicate</span>
       </div>
@@ -718,27 +727,27 @@
   <div class="slide" id="s-thinking">
     <div class="slide-content">
     <div class="eyebrow">Highlight</div>
-    <h1><span class="highlight">thinking-tools</span></h1>
-    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Structured frameworks, applied to the actual situation. Inspired by <a href="https://untools.co" style="color:var(--highlight);">untools.co</a>.</p>
+    <h1><span style="color:var(--accent5);">thinking-tools</span></h1>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Structured frameworks, applied to the actual situation. Inspired by <a href="https://untools.co" style="color:var(--accent3);">untools.co</a>.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--highlight);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Problem framing</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Five Whys, First Principles, Inversion</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent2);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Decision making</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Decision Matrix, Cynefin, Eisenhower</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Systems thinking</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Causal loops, feedback, leverage points</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Communication</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">Minto Pyramid, SBI, conflict resolution</span>
       </div>
     </div>
-    <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Say <em style="color:var(--highlight);">"use inversion"</em> to jump to a framework, or describe the problem and let the skill route. Each framework is applied to <em>your</em> situation — not recited as a definition.</p>
+    <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Say <em style="color:var(--accent3);">"use inversion"</em> to jump to a framework, or describe the problem and let the skill route. Each framework is applied to <em>your</em> situation — not recited as a definition.</p>
     </div>
   </div>
 
@@ -748,14 +757,14 @@
   <div class="slide" id="s-attention">
     <div class="slide-content">
     <div class="eyebrow">Highlight</div>
-    <h1><span class="accent">attention</span></h1>
+    <h1><span style="color:var(--accent5);">attention</span></h1>
     <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">What needs my focus right now? Pulled from across my work and life, calibrated to my energy.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--accent);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Pulled in parallel</strong>
         <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">Calendar runway, reminders (overdue / today / undated), merge requests, issues — assigned and cross-referenced.</p>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Output tuned to energy</strong>
         <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">Cognitive, social, sensory — multidimensional. <strong style="color:var(--text);">Low</strong> → 1 work + 1 personal. <strong style="color:var(--text);">Medium</strong> → 2–3 quick wins. <strong style="color:var(--text);">High</strong> → longer-horizon work.</p>
       </div>
@@ -769,22 +778,22 @@
   <div class="slide" id="s-conversations">
     <div class="slide-content">
     <div class="eyebrow">Highlight</div>
-    <h1><span class="accent3">conversations</span></h1>
+    <h1><span style="color:var(--accent5);">conversations</span></h1>
     <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Research people, decisions, and context across four sources. Each has different fidelity and recency — the skill picks in order.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--highlight);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Knowledge base</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">distilled profiles — start here, fast and structured</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Meetings</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">transcripts when KB doesn't have enough detail</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Chat</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">live and undigested — today, yesterday, threads not yet ingested</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent2);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Email</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">formal correspondence, tickets, procurement</span>
       </div>
@@ -799,18 +808,18 @@
   <div class="slide" id="s-context-log">
     <div class="slide-content">
     <div class="eyebrow">Highlight</div>
-    <h1><span class="accent4">context-log</span></h1>
+    <h1><span style="color:var(--accent5);">context-log</span></h1>
     <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">A markdown file in the project that survives compaction and session handoffs. <code>.opencode/context-log.md</code>, gitignored.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--accent4);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Session start</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">create with issue context — title, acceptance criteria, key references</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>After each commit</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">append a checkpoint — intent, tests, what's next</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent2);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>On compaction</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">don't re-summarize — point at the log instead</span>
       </div>
@@ -825,20 +834,20 @@
   <div class="slide" id="s10">
     <div class="slide-content">
     <div class="eyebrow">Highlight</div>
-    <h1><span class="accent2">chezmoi</span></h1>
+    <h1>chezmoi</h1>
     <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Skills, config, binaries, services — one <code>chezmoi apply</code> on any machine. Every change is a git commit.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--accent2);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>What ships</strong>
         <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">All 25 skills → <code>~/.agents/skills/</code> (23 in the repo, 2 installed via <code>gh skill install</code> from upstream). <code>tdd.md</code> always loaded via <code>instructions:</code>. Plan is opencode's built-in agent. <code>opencode.json</code> wires per-agent permissions, MCPs, models. Plugins, LaunchAgents, packages.</p>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent5);">
-        <div class="eyebrow" style="color:var(--accent5); margin-bottom:6px;">Why not <a href="https://github.com/steipete/openclaw" style="color:var(--accent5);">OpenClaw</a></div>
+      <div class="card" style="border-left:3px solid var(--border);">
+        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Why not <a href="https://github.com/steipete/openclaw" style="color:var(--accent3);">OpenClaw</a></div>
         <p style="font-size:14px;">Chat-native, proactive, self-modifying — compelling. But my skills and config belong in <strong>git</strong>, not in an agent's own memory. Reproducible, auditable, portable.</p>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent);">
-        <div class="eyebrow" style="color:var(--accent); margin-bottom:6px;">Mobile, without a separate app</div>
-        <p style="font-size:14px;"><a href="https://opencode.ai/docs/web/" style="color:var(--accent);">opencode web</a> runs as a LaunchAgent on my desktop, exposed over <a href="https://tailscale.com" style="color:var(--accent);">Tailscale</a>, installed as a <strong>PWA</strong> on my phone.</p>
+      <div class="card" style="border-left:3px solid var(--border);">
+        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Mobile, without a separate app</div>
+        <p style="font-size:14px;"><a href="https://opencode.ai/docs/web/" style="color:var(--accent3);">opencode web</a> runs as a LaunchAgent on my desktop, exposed over <a href="https://tailscale.com" style="color:var(--accent3);">Tailscale</a>, installed as a <strong>PWA</strong> on my phone.</p>
       </div>
     </div>
     </div>
@@ -855,11 +864,11 @@
     <div style="margin-top:20px;">
       <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Beyond skills — different primitive for different trigger</div>
       <div class="cols cols-2" style="gap:12px;">
-        <div class="card" style="border-left:3px solid var(--accent3); padding:12px 14px;">
+        <div class="card" style="border-left:3px solid var(--border); padding:12px 14px;">
           <div style="font-size:14px; font-weight:600;">tdd <span class="pipe-badge" style="margin-left:6px;">always loaded</span></div>
           <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Trigger is continuous (every code change), not a discrete moment. Lives in <code>opencode.json</code>'s <code>instructions:</code>.</p>
         </div>
-        <div class="card" style="border-left:3px solid var(--accent3); padding:12px 14px;">
+        <div class="card" style="border-left:3px solid var(--accent4); padding:12px 14px;">
           <div style="font-size:14px; font-weight:600;">plan <span class="pipe-badge" style="margin-left:6px;">agent</span></div>
           <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Trigger is mode-restricted (read-only deliberation). Built-in plan agent with its own permission profile.</p>
         </div>
@@ -867,49 +876,49 @@
     </div>
 
     <div style="margin-top:18px;">
-      <div class="eyebrow" style="color:var(--accent3); margin-bottom:8px;">Pipeline (skills)</div>
+      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Pipeline</div>
       <div class="skill-grid">
-        <div class="skill-pill" style="border-left:3px solid var(--accent3);">attention</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent3);">review</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent3);">qa</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent3);">commit</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent3);">push</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">attention</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">review</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">qa</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">commit</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">push</div>
       </div>
     </div>
 
     <div style="margin-top:14px;">
-      <div class="eyebrow" style="color:var(--accent2); margin-bottom:8px;">Quality &amp; review</div>
+      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Quality &amp; review</div>
       <div class="skill-grid">
-        <div class="skill-pill" style="border-left:3px solid var(--accent2);">architecture</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent2);">code-quality</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent2);">respond-to-review</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">architecture</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">code-quality</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">respond-to-review</div>
       </div>
     </div>
 
     <div style="margin-top:14px;">
-      <div class="eyebrow" style="color:var(--highlight); margin-bottom:8px;">Knowledge</div>
+      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Knowledge</div>
       <div class="skill-grid">
-        <div class="skill-pill" style="border-left:3px solid var(--highlight);">thinking-tools</div>
-        <div class="skill-pill" style="border-left:3px solid var(--highlight);">conversations</div>
-        <div class="skill-pill" style="border-left:3px solid var(--highlight);">context-log</div>
-        <div class="skill-pill" style="border-left:3px solid var(--highlight);">docs</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">thinking-tools</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">conversations</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">context-log</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">docs</div>
       </div>
     </div>
 
     <div style="margin-top:14px;">
-      <div class="eyebrow" style="color:var(--accent4); margin-bottom:8px;">Tooling integrations (local)</div>
+      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Tooling integrations (local)</div>
       <div class="skill-grid">
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">opencode</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">chezmoi</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">gh</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">issues</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">secrets</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">slack</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">figma</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">observability</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">elasticsearch</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">post-meeting</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent4);">pty</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">opencode</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">chezmoi</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">gh</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">issues</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">secrets</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">slack</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">figma</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">observability</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">elasticsearch</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">post-meeting</div>
+        <div class="skill-pill" style="border-left:3px solid var(--accent5);">pty</div>
       </div>
     </div>
 
@@ -922,22 +931,22 @@
     </div>
 
     <div class="cols cols-3" style="margin-top:28px; gap:16px;">
-      <div class="card" style="border-left:3px solid var(--accent3);">
-        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Portable across runtimes</div>
+      <div class="card" style="border-left:3px solid var(--border);">
+        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Portable across runtimes</div>
         <p style="font-size:13px;">Skills follow the <a href="https://agentskills.io" style="color:var(--accent3);">agentskills</a> spec — same <code>SKILL.md</code> works in opencode <em>and</em> Claude Code. No fork, no rewrite.</p>
         <div class="code-block" style="margin-top:10px; font-size:12px; padding:10px 12px;"><span class="comment"># install any skill from this repo</span>
 gh skill install athal7/dotfiles <span class="val">commit</span></div>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent5);">
-        <div class="eyebrow" style="color:var(--accent5); margin-bottom:6px;">Prefer upstream skills</div>
+      <div class="card" style="border-left:3px solid var(--border);">
+        <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Prefer upstream skills</div>
         <p style="font-size:13px;">When a CLI has a maintained skill, install it from the source repo instead of writing your own. Updates flow automatically; gotchas track the tool.</p>
         <div class="code-block" style="margin-top:10px; font-size:12px; padding:10px 12px;"><span class="comment"># in packages.yaml</span>
 skills:
   - repo: <span class="val">BRO3886/ical</span>
     skill: <span class="val">ical-cli</span></div>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent2);">
-        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Right primitive for the trigger</div>
+      <div class="card" style="border-left:3px solid var(--accent3);">
+        <div class="eyebrow" style="color:var(--accent3); margin-bottom:6px;">Right primitive for the trigger</div>
         <p style="font-size:13px;">Skill if the trigger is a <em>concrete moment</em>. Instructions if it's <em>continuous</em>. Agent + permission if it's <em>mode-restricted</em>. Asking which primitive fits is the audit move that beats redesigning the skill description.</p>
       </div>
     </div>
@@ -953,34 +962,34 @@ skills:
     <h2>Links &amp; sources</h2>
     <div class="stack" style="margin-top:18px; gap:14px; max-width:900px;">
       <div>
-        <div class="eyebrow" style="color:var(--accent2);margin-bottom:2px;">Tools</div>
+        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">Tools</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://opencode.ai" style="color:var(--accent2);">opencode.ai</a> &middot;
-          <a href="https://chezmoi.io" style="color:var(--accent4);">chezmoi.io</a> &middot;
+          <a href="https://opencode.ai" style="color:var(--accent3);">opencode.ai</a> &middot;
+          <a href="https://chezmoi.io" style="color:var(--accent3);">chezmoi.io</a> &middot;
           <a href="https://agentskills.io" style="color:var(--accent3);">agentskills.io</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">This deck and source</div>
+        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">This deck and source</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://github.com/athal7/dotfiles" style="color:var(--accent);">github.com/athal7/dotfiles</a> &middot;
+          <a href="https://github.com/athal7/dotfiles" style="color:var(--accent3);">github.com/athal7/dotfiles</a> &middot;
           <a href="https://github.com/athal7/dotfiles/tree/main/skills" style="color:var(--accent3);">skills directory</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--accent4);margin-bottom:2px;">Mentioned</div>
+        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">Mentioned</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent4);">agentskills capabilities proposal</a> &middot;
-          <a href="https://tailscale.com" style="color:var(--accent);">Tailscale</a> &middot;
-          <a href="https://github.com/silverstein/minutes" style="color:var(--accent4);">silverstein/minutes</a>
+          <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent3);">agentskills capabilities proposal</a> &middot;
+          <a href="https://tailscale.com" style="color:var(--accent3);">Tailscale</a> &middot;
+          <a href="https://github.com/silverstein/minutes" style="color:var(--accent3);">silverstein/minutes</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--accent5);margin-bottom:2px;">Related work</div>
+        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">Related work</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://github.com/steipete/openclaw" style="color:var(--accent5);">OpenClaw</a> &middot;
-          <a href="https://opencode.ai/docs/plugins/" style="color:var(--accent2);">opencode plugins docs</a> &middot;
-          <a href="https://opencode.ai/docs/skills/" style="color:var(--accent2);">opencode skills docs</a>
+          <a href="https://github.com/steipete/openclaw" style="color:var(--accent3);">OpenClaw</a> &middot;
+          <a href="https://opencode.ai/docs/plugins/" style="color:var(--accent3);">opencode plugins docs</a> &middot;
+          <a href="https://opencode.ai/docs/skills/" style="color:var(--accent3);">opencode skills docs</a>
         </p>
       </div>
     </div>
