@@ -674,21 +674,21 @@
     <h1><span style="color:var(--accent3);">opencode</span></h1>
     <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Open source, model-agnostic, scriptable.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
-      <div class="card" style="border-left:3px solid var(--accent3);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Swap models freely</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">any model, any provider, per agent</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Permission control</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">scope tools and bash commands per agent</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
+      <div class="card" style="border-left:3px solid var(--border);">
         <strong>Open source</strong>
         <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">auditable, forkable, no lock-in</span>
       </div>
-      <div class="card" style="border-left:3px solid var(--accent3);">
-        <strong>Mobile, no extra app</strong>
-        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;"><a href="https://opencode.ai/docs/web/" style="color:var(--accent3);">opencode web</a> as a LaunchAgent over <a href="https://tailscale.com" style="color:var(--accent3);">Tailscale</a>, installed as a PWA — vs Claude dispatch or <a href="https://github.com/steipete/openclaw" style="color:var(--accent3);">OpenClaw</a> chat servers</span>
+      <div class="card" style="border-left:3px solid var(--border);">
+        <strong>Runs on my own hardware</strong>
+        <span style="font-size:14px; color:var(--text-muted); margin-left:12px;">opencode web on my desktop, exposed over Tailscale, installed as a PWA — phone access without someone else's cloud or another app to install</span>
       </div>
     </div>
     <p style="margin-top:24px; max-width:900px; font-size:15px; color:var(--text-muted);">Skills, agents, and <code>AGENTS.md</code> are becoming standards — the primitives port even if I leave.</p>
@@ -777,7 +777,7 @@
     <div class="slide-content">
     <div class="eyebrow">Highlight</div>
     <h1><span style="color:var(--accent5);">thinking-tools</span></h1>
-    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Structured frameworks, applied to your situation — not recited. Inspired by <a href="https://untools.co" style="color:var(--accent3);">untools.co</a>.</p>
+    <p style="margin-top:16px; max-width:900px; font-size:18px; color:var(--text-muted);">Structured frameworks, applied to your situation — not recited. Inspired by untools.co.</p>
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
       <div class="card" style="border-left:3px solid var(--border);">
         <strong>Problem framing</strong>
@@ -881,24 +881,10 @@
   <div class="slide" id="s11">
     <div class="slide-content">
     <div class="eyebrow">The Full Set</div>
-    <h2>25 skills + 2 things that aren't skills.</h2>
+    <h2>25 skills.</h2>
 
     <div style="margin-top:20px;">
-      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Beyond skills — different primitive for different trigger</div>
-      <div class="cols cols-2" style="gap:12px;">
-        <div class="card" style="border-left:3px solid var(--border); padding:12px 14px;">
-          <div style="font-size:14px; font-weight:600;">tdd <span class="pipe-badge" style="margin-left:6px;">always loaded</span></div>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Trigger is continuous (every code change), not a discrete moment. Lives in <code>opencode.json</code>'s <code>instructions:</code>.</p>
-        </div>
-        <div class="card" style="border-left:3px solid var(--accent4); padding:12px 14px;">
-          <div style="font-size:14px; font-weight:600;">plan <span class="pipe-badge" style="margin-left:6px;">agent</span></div>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Trigger is mode-restricted (read-only deliberation). Built-in plan agent with its own permission profile.</p>
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-top:18px;">
-      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Pipeline</div>
+      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Workflow</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent5);">attention</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent5);">review</div>
@@ -945,7 +931,7 @@
     </div>
 
     <div style="margin-top:14px;">
-      <div class="eyebrow" style="color:var(--accent5); margin-bottom:8px;">External (installed via <code>gh skill install</code>, maintained upstream)</div>
+      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">External (installed via <code>gh skill install</code>, maintained upstream)</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent5);">ical-cli</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent5);">linear-cli</div>
@@ -955,7 +941,7 @@
     <div class="cols cols-3" style="margin-top:28px; gap:16px;">
       <div class="card" style="border-left:3px solid var(--border);">
         <div class="eyebrow" style="color:var(--text-dim); margin-bottom:6px;">Portable across runtimes</div>
-        <p style="font-size:13px;">Skills follow the <a href="https://agentskills.io" style="color:var(--accent3);">agentskills</a> spec — same <code>SKILL.md</code> works in opencode <em>and</em> Claude Code. No fork, no rewrite.</p>
+        <p style="font-size:13px;">Skills follow the agentskills.io spec — same <code>SKILL.md</code> works in opencode <em>and</em> Claude Code. No fork, no rewrite.</p>
         <div class="code-block" style="margin-top:10px; font-size:12px; padding:10px 12px;"><span class="comment"># install any skill from this repo</span>
 gh skill install athal7/dotfiles <span class="val">commit</span></div>
       </div>
@@ -984,34 +970,36 @@ skills:
     <h2>Links &amp; sources</h2>
     <div class="stack" style="margin-top:18px; gap:14px; max-width:900px;">
       <div>
-        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">Tools</div>
+        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">Tools</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://opencode.ai" style="color:var(--accent3);">opencode.ai</a> &middot;
-          <a href="https://chezmoi.io" style="color:var(--accent3);">chezmoi.io</a> &middot;
-          <a href="https://agentskills.io" style="color:var(--accent3);">agentskills.io</a>
+          <a href="https://opencode.ai" style="color:var(--text);">opencode.ai</a> &middot;
+          <a href="https://chezmoi.io" style="color:var(--text);">chezmoi.io</a> &middot;
+          <a href="https://agentskills.io" style="color:var(--text);">agentskills.io</a> &middot;
+          <a href="https://untools.co" style="color:var(--text);">untools.co</a> &middot;
+          <a href="https://tailscale.com" style="color:var(--text);">tailscale.com</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">This deck and source</div>
+        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">This deck and source</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://github.com/athal7/dotfiles" style="color:var(--accent3);">github.com/athal7/dotfiles</a> &middot;
-          <a href="https://github.com/athal7/dotfiles/tree/main/skills" style="color:var(--accent3);">skills directory</a>
+          <a href="https://github.com/athal7/dotfiles" style="color:var(--text);">github.com/athal7/dotfiles</a> &middot;
+          <a href="https://github.com/athal7/dotfiles/tree/main/skills" style="color:var(--text);">skills directory</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">Mentioned</div>
+        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">Related work</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent3);">agentskills capabilities proposal</a> &middot;
-          <a href="https://tailscale.com" style="color:var(--accent3);">Tailscale</a> &middot;
-          <a href="https://github.com/silverstein/minutes" style="color:var(--accent3);">silverstein/minutes</a>
+          <a href="https://claude.com/blog/claude-code-on-the-web" style="color:var(--text);">Claude Code on the web</a> &middot;
+          <a href="https://github.com/openclaw/openclaw" style="color:var(--text);">OpenClaw</a> &middot;
+          <a href="https://opencode.ai/docs/web/" style="color:var(--text);">opencode web</a> &middot;
+          <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--text);">agentskills capabilities proposal</a>
         </p>
       </div>
       <div>
-        <div class="eyebrow" style="color:var(--text-dim);margin-bottom:2px;">Related work</div>
+        <div class="eyebrow" style="color:var(--accent3);margin-bottom:2px;">Docs</div>
         <p style="font-size:14px; line-height:1.7;">
-          <a href="https://github.com/steipete/openclaw" style="color:var(--accent3);">OpenClaw</a> &middot;
-          <a href="https://opencode.ai/docs/plugins/" style="color:var(--accent3);">opencode plugins docs</a> &middot;
-          <a href="https://opencode.ai/docs/skills/" style="color:var(--accent3);">opencode skills docs</a>
+          <a href="https://opencode.ai/docs/plugins/" style="color:var(--text);">opencode plugins</a> &middot;
+          <a href="https://opencode.ai/docs/skills/" style="color:var(--text);">opencode skills</a>
         </p>
       </div>
     </div>
