@@ -620,7 +620,7 @@
       <div class="eyebrow">May 2026</div>
       <h1>My AI Workflow</h1>
       <p class="subtitle">
-        opencode, skills, permissions, chezmoi.
+        Parallel worktrees. Right model per phase. Skills, instructions, agents — three primitives, three triggers.
       </p>
       <div class="byline">← → to navigate &nbsp;·&nbsp; <kbd>Space</kbd> to advance</div>
     </div>
@@ -674,6 +674,16 @@
       </div>
     </div>
     <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Three primitives, three triggers: <strong style="color:var(--accent3);">plan</strong> is opencode's built-in agent (Tab to enter, mode-restricted by permission). <strong style="color:var(--accent3);">tdd</strong> is loaded into every session via opencode's <code>instructions:</code> array. The rest are skills, loaded only when the step starts. Writes prompt for approval through <a href="https://opencode.ai/docs/permissions" style="color:var(--accent2);">permissions</a>.</p>
+    <div class="cols cols-2" style="margin-top:24px; gap:16px; max-width:1100px;">
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <div class="eyebrow" style="color:var(--accent); margin-bottom:6px;">Worktree per unit of work</div>
+        <p style="font-size:13px;"><strong style="color:var(--accent);">attention</strong> dispatches each picked-up issue into its own opencode session inside a fresh git worktree. Branches are isolated; multiple sessions run in parallel without clobbering each other's index. The pipeline runs inside the worktree, end to end.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2);">
+        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Model per phase</div>
+        <p style="font-size:13px;">Different model families catch different issues. Opus deliberates on <strong style="color:var(--accent3);">plan</strong>; Sonnet runs the tighter <strong style="color:var(--accent3);">tdd</strong> loop; codex catches different patterns on <strong style="color:var(--accent);">review</strong>. Switch mid-session via opencode's model picker — same agent, different model.</p>
+      </div>
+    </div>
     </div>
   </div>
 
