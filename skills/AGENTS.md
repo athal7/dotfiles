@@ -99,7 +99,7 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
 |---|---|
 | `` `gh pr view`, `gh pr diff` `` | `use your \`code-review\` capability` |
 | `gh api graphql -f query='...'` | `use your \`code-review\` capability` |
-| `load the \`plan\` skill` | `use your \`plan\` capability` |
+| `load the \`commit\` skill` | `use your \`commit\` capability` |
 | `the \`architecture\` skill Section 2` | `the \`architecture\` capability Section 2` |
 | `via \`gq\`` | remove — capability reference is sufficient |
 | `` `gh repo view --json visibility` `` | `use your \`code-review\` capability` |
@@ -139,6 +139,24 @@ After editing, re-read the full body of the skill and ask: "If this skill were u
 
 Sub-files (`.md` files referenced from a SKILL.md) inherit the type of their parent skill. A sub-file of a workflow skill is also a workflow skill and must follow the same rules. A sub-file of an integration skill may contain tool-specific content.
 
+## When something shouldn't be a skill
+
+Before writing a skill, ask what the trigger looks like. Three patterns map to three primitives, only one of them being a skill:
+
+| Trigger pattern | Right primitive | Example |
+|---|---|---|
+| Continuous — applies to every session of some kind | Instructions file (`opencode.json`'s `instructions:` array) | TDD: every code-change session, write the failing test first. Lives in `dot_config/opencode/tdd.md`, always loaded. |
+| Mode-restricted — needs different tool/skill access than the default agent | Built-in or custom agent + `permission` config | Plan: read-only deliberation. Built-in plan agent (Tab) with its own skill allow-list. Build agent denies the deliberation skills. |
+| Concrete moment — fires at a specific, named point in a workflow | Skill (SKILL.md) | Commit, push, review, qa — each has a clear trigger ("about to commit"). |
+
+Signs you're building the wrong primitive:
+
+- "This skill should fire on every code change." → it's an instructions file, not a skill.
+- "Build agent shouldn't see this skill." → use `permission.skill` deny on build, not a skill body that tells the agent when to skip.
+- "This skill orchestrates several other skills." → see the orchestrator failure section below.
+
+When the data shows a skill is underperforming its trigger (low load rate when the moment clearly happened), the fix is usually relocating to the right primitive, not redesigning the skill description.
+
 ## Skill shape — lessons from the orchestrator failure
 
 A previous "process" skill declared ten required capabilities and an eight-phase workflow. Measured across 69 sessions: TDD compliance fell from 34% to 9%, and architecture capability loading fell from 26% to 7%, **when the orchestrator was loaded vs. not**. The orchestrator actively suppressed the capabilities it wrapped.
@@ -150,7 +168,7 @@ The rules below are the generalized lessons — follow them when creating or edi
 A skill should fire at a specific, concrete moment. If you find yourself writing "Phase 1… Phase 2… Phase 3…" or "After step N, also do X," you are building an orchestrator. Split instead.
 
 Signs a skill is becoming an orchestrator:
-- A single skill covers multiple distinct moments in a workflow (e.g., "plan" that also governs commit-time behavior)
+- A single skill covers multiple distinct moments in a workflow (e.g., one that governs both pre-commit and post-commit behavior)
 - `provides` lists more than one capability whose triggers fire at different times
 - Step N of the skill says "do this other thing from a different capability"
 
@@ -158,7 +176,7 @@ Split rule: **split by when the skill fires, not by what topic it covers.** Two 
 
 ### Agents read long phase graphs as menus
 
-A long workflow skill is not read as imperatives — it is read as a list the agent skim-selects from. The action phases (implement, commit, push) get executed; the deliberative phases (plan, verify, capture) get skipped. This is why the process skill suppressed TDD — TDD was mentioned inside a phase list, not as a standing imperative.
+A long workflow skill is not read as imperatives — it is read as a list the agent skim-selects from. The action phases (implement, commit, push) get executed; the deliberative phases (plan, verify, capture) get skipped. This is why the process skill suppressed TDD — TDD was mentioned inside a phase list, not as a standing imperative. The fix that worked: TDD became an always-loaded instructions file, not a skill at all.
 
 Corollary: short, standalone skills with concrete triggers outperform long skills with phase graphs, even when the long skill formally `requires` the same capabilities.
 

@@ -310,6 +310,19 @@
     text-align: center;
   }
 
+  .pipe-badge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2px 8px;
+    margin-top: -2px;
+  }
+
   .pipe-gate {
     display: flex;
     flex-direction: column;
@@ -630,11 +643,13 @@
         <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">📋</div>
           <div class="pipe-label" style="color:var(--accent3);">plan</div>
+          <div class="pipe-badge">agent</div>
         </div>
         <div class="pipe-arrow"></div>
         <div class="pipe-step">
           <div class="pipe-icon" style="background:rgba(86,211,100,0.12);">🔴🟢</div>
           <div class="pipe-label" style="color:var(--accent3);">tdd</div>
+          <div class="pipe-badge">always loaded</div>
         </div>
         <div class="pipe-arrow"></div>
         <div class="pipe-step">
@@ -658,7 +673,7 @@
         </div>
       </div>
     </div>
-    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Each phase is a skill, loaded only when the step starts. Writes prompt for approval through opencode <a href="https://opencode.ai/docs/permissions" style="color:var(--accent2);">permissions</a>.</p>
+    <p style="margin-top:32px; max-width:900px; font-size:16px; color:var(--text-muted);">Three primitives, three triggers: <strong style="color:var(--accent3);">plan</strong> is opencode's built-in agent (Tab to enter, mode-restricted by permission). <strong style="color:var(--accent3);">tdd</strong> is loaded into every session via opencode's <code>instructions:</code> array. The rest are skills, loaded only when the step starts. Writes prompt for approval through <a href="https://opencode.ai/docs/permissions" style="color:var(--accent2);">permissions</a>.</p>
     </div>
   </div>
 
@@ -805,7 +820,7 @@
     <div class="stack" style="margin-top:24px; gap:10px; max-width:900px;">
       <div class="card" style="border-left:3px solid var(--accent2);">
         <strong>What ships</strong>
-        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">All 27 skills → <code>~/.agents/skills/</code> (25 in the repo, 2 installed via <code>gh skill install</code> from upstream maintainers). <code>opencode.json</code> for MCPs, model, permissions. <code>AGENTS.md.tmpl</code> for agent instructions. Plugins, LaunchAgents, packages.</p>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:6px;">All 25 skills → <code>~/.agents/skills/</code> (23 in the repo, 2 installed via <code>gh skill install</code> from upstream). <code>tdd.md</code> always loaded via <code>instructions:</code>. Plan is opencode's built-in agent. <code>opencode.json</code> wires per-agent permissions, MCPs, models. Plugins, LaunchAgents, packages.</p>
       </div>
       <div class="card" style="border-left:3px solid var(--accent5);">
         <div class="eyebrow" style="color:var(--accent5); margin-bottom:6px;">Why not <a href="https://github.com/steipete/openclaw" style="color:var(--accent5);">OpenClaw</a></div>
@@ -825,14 +840,26 @@
   <div class="slide" id="s11">
     <div class="slide-content">
     <div class="eyebrow">The Full Set</div>
-    <h2>27 skills. Take any of them.</h2>
+    <h2>25 skills + 2 things that aren't skills.</h2>
 
     <div style="margin-top:20px;">
-      <div class="eyebrow" style="color:var(--accent3); margin-bottom:8px;">Pipeline</div>
+      <div class="eyebrow" style="color:var(--text-dim); margin-bottom:8px;">Beyond skills — different primitive for different trigger</div>
+      <div class="cols cols-2" style="gap:12px;">
+        <div class="card" style="border-left:3px solid var(--accent3); padding:12px 14px;">
+          <div style="font-size:14px; font-weight:600;">tdd <span class="pipe-badge" style="margin-left:6px;">always loaded</span></div>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Trigger is continuous (every code change), not a discrete moment. Lives in <code>opencode.json</code>'s <code>instructions:</code>.</p>
+        </div>
+        <div class="card" style="border-left:3px solid var(--accent3); padding:12px 14px;">
+          <div style="font-size:14px; font-weight:600;">plan <span class="pipe-badge" style="margin-left:6px;">agent</span></div>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Trigger is mode-restricted (read-only deliberation). Built-in plan agent with its own permission profile.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;">
+      <div class="eyebrow" style="color:var(--accent3); margin-bottom:8px;">Pipeline (skills)</div>
       <div class="skill-grid">
         <div class="skill-pill" style="border-left:3px solid var(--accent3);">attention</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent3);">plan</div>
-        <div class="skill-pill" style="border-left:3px solid var(--accent3);">tdd</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent3);">review</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent3);">qa</div>
         <div class="skill-pill" style="border-left:3px solid var(--accent3);">commit</div>
@@ -900,8 +927,8 @@ skills:
     skill: <span class="val">ical-cli</span></div>
       </div>
       <div class="card" style="border-left:3px solid var(--accent2);">
-        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Share without forking</div>
-        <p style="font-size:13px;">My <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--accent2);">capability registration proposal</a> — skills declare <code>requires</code>, host injects <code>provides</code>. Swap Linear for Jira, Slack for Teams — fork only when you actually want to.</p>
+        <div class="eyebrow" style="color:var(--accent2); margin-bottom:6px;">Right primitive for the trigger</div>
+        <p style="font-size:13px;">Skill if the trigger is a <em>concrete moment</em>. Instructions if it's <em>continuous</em>. Agent + permission if it's <em>mode-restricted</em>. Asking which primitive fits is the audit move that beats redesigning the skill description.</p>
       </div>
     </div>
     </div>
