@@ -36,7 +36,7 @@ External skills (installed via `gh skill install` from upstream maintainers) —
 Two parts of the workflow are *not* skills, by design — see `skills/AGENTS.md` for when to pick which primitive.
 
 - **TDD** lives in `dot_config/opencode/tdd.md` and is loaded into every session via `instructions:`. The trigger ("every code change") is continuous, not a discrete moment, so a skill would underperform — and the data showed it did.
-- **Plan** is the built-in OpenCode plan agent (Tab to enter, or `@plan` to delegate from build). It's a mode with its own permission profile, not a skill — the platform enforces read-only and gates writes through `ask`.
+- **Plan** is the built-in OpenCode plan agent (Tab to enter). It's a mode with its own permission profile, not a skill — the platform enforces read-only and gates writes through `ask`.
 
 ## Commands
 
@@ -45,6 +45,19 @@ User-triggered slash commands that package self-contained workflows. Invoke with
 | Command | Description |
 |---------|-------------|
 | **/learn** | Capture non-obvious discoveries from this session into AGENTS.md or a new skill |
-| **/audit** | Evaluate agent config — instruction hierarchy, context budget, redundancy, effectiveness |
+| **/audit** | Five-phase audit of the agent system — load rates, capability layer health, frontmatter, content, primitive fit |
 | **/cleanup** | Reclaim disk space — stale worktrees, PostgreSQL databases, OpenCode DB entries |
 | **/todo** | Add to todo list without interrupting current work |
+
+## Spec extension watchlist
+
+This repo solo-extends the agentskills spec via a capabilities manifest (`requires`/`provides` + `capabilities.yaml`). Several open proposals would let parts of that move upstream. Re-check during each `/audit`.
+
+| Issue | What it would change for us |
+|---|---|
+| [agentskills #110](https://github.com/agentskills/agentskills/issues/110) — Skill dependencies + version | Native `requires:` for inter-skill dependencies. Would replace the `requires:` half of our manifest. |
+| [agentskills #330](https://github.com/agentskills/agentskills/issues/330) — Tool dependencies | Spec-level way to declare CLI/tool requirements per skill. Adjacent to our `provides: cli://` pattern. |
+| [agentskills #111](https://github.com/agentskills/agentskills/issues/111) — `agents:` field (closed) | Per-agent skill scoping in frontmatter. Would have replaced our (now-removed) per-agent permission scoping if it had landed. |
+| [agentskills #129](https://github.com/agentskills/agentskills/issues/129) — Sub-agent + skill interop (closed) | Strategic-direction thread on how subagents reference skills. Worth tracking even though closed. |
+| [anthropics/claude-code #44952](https://github.com/anthropics/claude-code/issues/44952) — Per-agent skill scoping | Same problem in Claude Code. If they ship something portable, we adopt. |
+| [anomalyco/opencode #21793](https://github.com/anomalyco/opencode/issues/21793) — `permission.skill` patterns not enforced | Open bug. If we ever re-add per-agent skill scoping, this needs to ship first. |
