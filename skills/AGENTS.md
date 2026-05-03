@@ -108,6 +108,14 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
    - Tool-specific content is expected and correct here
 4. Run `agentskills validate` on the skill directory
 
+## Don't expose machine-specific configuration
+
+This is a public repository. Skill bodies must not hard-code values that are configured per-workspace in an external system: template names, project names, team keys, channel names, account IDs, internal URLs, or anything that's a label inside someone's tool. These vary by user and won't apply to anyone else who clones this repo.
+
+Instead, teach the agent how to *discover* the values at runtime — show the query, command, or config file that surfaces them, so each user sees their own. Examples that need this treatment: list templates via the integration's API, read repo-level template files (`.github/ISSUE_TEMPLATE/`), check workspace config (`.linear.toml`, `orgs.<org>.*`).
+
+If the value is a true public constant of the tool (a documented endpoint URL, a stable command name, a published vocabulary term), it can be hard-coded.
+
 
 
 ## Editing an existing skill
