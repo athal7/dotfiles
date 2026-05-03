@@ -47,3 +47,7 @@ Use this when facing a software design decision with multiple valid approaches, 
    - You are genuinely uncertain after applying the framework
 
 6. **Recommend** with one concrete sentence naming the single most important reason. Never be vague. Never present one option as if no alternatives exist.
+
+## Writing the decision down
+
+If the user asks for an ADR (architecture decision record), use `templates/adr.md` in this skill directory — covers status, context, decision, decision matrix, alternatives, consequences, and common mistakes. Apply the template to the user's situation; don't repeat it verbatim.

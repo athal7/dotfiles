@@ -45,3 +45,19 @@ GRAPHQL
 ```
 
 Note: `linear document create --project` creates an *attached* document (Documents tab), not the inline body. `linear document update --content-file` is broken (schpet/linear-cli#153).
+
+## Templates
+
+Both trackers have templates configured outside this skill. Read the relevant one before authoring an issue, project, or status update so the artifact matches the established shape; don't invent your own structure.
+
+**Linear:** templates are configured in the workspace and applied automatically in the web UI. The CLI doesn't apply them — fetch the template content and follow it manually:
+
+```bash
+# List templates available to you
+linear api '{ templates { id name type team { key } } }'
+
+# Get the content of a specific template
+linear api --variable id=TEMPLATE_UUID '{ template(id: $id) { name templateData } }'
+```
+
+**GitHub:** templates live in the repo at `.github/ISSUE_TEMPLATE/*.md` and `.github/pull_request_template.md`. `gh issue create --template <name>` only works in interactive mode; for non-interactive use, read the template file directly and pass content via `--body-file`.
