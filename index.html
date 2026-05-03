@@ -65,7 +65,7 @@
   }
 
   .slide-title .slide-content  { align-items: flex-start; }
-  .slide-center .slide-content { align-items: center; text-align: center; }
+  .slide-center .slide-content { align-items: flex-start; }
 
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(16px); }
@@ -488,7 +488,6 @@
   .tag.orange { background: rgba(240,136,62,0.12); color: var(--accent4); }
 
   /* ─── Slide-specific ─── */
-  .slide-center p { text-align: center; }
 
   .subtitle {
     font-size: clamp(16px, 2vw, 22px);
@@ -544,7 +543,6 @@
   /* ─── Section break (Krikorian / Morris quote slides) ─── */
   .section-break {
     max-width: 900px;
-    text-align: center;
   }
   .section-break .section-eyebrow {
     font-size: 13px;
@@ -685,6 +683,62 @@
 
   @media (max-width: 768px) {
     .compare-pair { grid-template-columns: 1fr; }
+  }
+
+  /* ─── Row-style comparison (used for opencode slide) ─── */
+  .compare-rows {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 1100px;
+    margin-top: 28px;
+  }
+  .compare-rows > div {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  .compare-rows > div:nth-last-child(-n+3) {
+    border-bottom: none;
+  }
+  .compare-rows .row-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+  }
+  .compare-rows .row-rent {
+    color: var(--text-muted);
+    border-left: 1px solid var(--border);
+  }
+  .compare-rows .row-own {
+    color: var(--text);
+    border-left: 3px solid var(--accent3);
+  }
+  .compare-rows .row-header {
+    background: var(--surface2);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 12px 20px;
+  }
+  .compare-rows .row-header.rent { color: var(--text-dim); }
+  .compare-rows .row-header.own { color: var(--accent3); }
+
+  @media (max-width: 768px) {
+    .compare-rows { grid-template-columns: 1fr; }
+    .compare-rows > div { border-bottom: 1px solid var(--border); }
+    .compare-rows .row-label { padding: 10px 20px; }
+    .compare-rows .row-own { border-left: 1px solid var(--border); border-top: 3px solid var(--accent3); }
   }
 
   /* ─── Keyboard hint ─── */
@@ -843,29 +897,7 @@
   </div>
 
   <!-- ══════════════════════════════════════════
-       SLIDE 4 — Runtime &amp; surface
-  ══════════════════════════════════════════ -->
-  <div class="slide" id="s-runtime">
-    <div class="slide-content">
-      <div class="eyebrow">Part I · Runtime &amp; surface</div>
-      <h2>Where does the work happen?</h2>
-      <div class="compare-pair">
-        <div class="compare-side muted">
-          <div class="compare-label">Rent</div>
-          <div class="compare-headline">Claude Code · vendor chat apps</div>
-          <div class="compare-detail">Closed runtime. A different vendor surface for every device.</div>
-        </div>
-        <div class="compare-side own">
-          <div class="compare-label">Own</div>
-          <div class="compare-headline">opencode · PWA over Tailscale</div>
-          <div class="compare-detail">Open source. One workflow, any device, my network.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       SLIDE 5 — Capability
+       SLIDE 4 — Capability
   ══════════════════════════════════════════ -->
   <div class="slide" id="s-capability">
     <div class="slide-content">
@@ -889,6 +921,37 @@
           Five Whys, First Principles, Cynefin, Minto Pyramid. <strong>Deliberation as a file.</strong>
         </div>
         <div class="extra-punchline">Couldn't exist as an MCP server.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 5 — opencode
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s-opencode">
+    <div class="slide-content">
+      <div class="eyebrow">Part I · Runtime</div>
+      <h2><code style="font-size:0.9em; color:var(--accent3); background:transparent; border:none; padding:0;">opencode</code></h2>
+      <div class="compare-rows">
+        <div class="row-label"></div>
+        <div class="row-header rent">Closed</div>
+        <div class="row-header own">opencode</div>
+
+        <div class="row-label">Source</div>
+        <div class="row-rent">Vendor's, not readable</div>
+        <div class="row-own">Open, fork on github</div>
+
+        <div class="row-label">Models</div>
+        <div class="row-rent">Locked to vendor</div>
+        <div class="row-own">Swap freely, per agent</div>
+
+        <div class="row-label">Mobile</div>
+        <div class="row-rent">Dispatch into vendor cloud</div>
+        <div class="row-own">PWA tunnel to my runtime</div>
+
+        <div class="row-label">Permissions</div>
+        <div class="row-rent">Trust the vendor's defaults</div>
+        <div class="row-own">Ask before destructive ops, per agent</div>
       </div>
     </div>
   </div>
@@ -932,8 +995,8 @@
       <div class="compare-pair">
         <div class="compare-side muted">
           <div class="compare-label">Out of the loop</div>
-          <div class="compare-headline">Symphony · vibe coding</div>
-          <div class="compare-detail">Agents own the how-loop. PRs appear.</div>
+          <div class="compare-headline">Hosted agents</div>
+          <div class="compare-detail">Agents own the how-loop. PRs appear. <em>e.g. Symphony, Codex, Devin.</em></div>
         </div>
         <div class="compare-side own">
           <div class="compare-label">On the loop</div>
