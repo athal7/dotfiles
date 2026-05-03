@@ -25,6 +25,8 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 **The pipeline is plan → tdd → review → commit → push.** Each phase has its own skill. Load them in sequence as you advance — earlier phases do not auto-load later ones.
 
+**TDD is the default for every code change** — new functionality, bug fixes, refactors, all of it. Before editing source files, load your `tdd` capability and write the failing test first. The exceptions are pure configuration (no logic), generated files, and edits where no test framework exists for the file type. If you're not sure, default to TDD.
+
 **Branch discipline:** Create a new branch off `origin/main` before any code change. Never implement directly on `main`. If the target branch is already checked out in another worktree, remove that worktree first (`git worktree remove <path> --force`).
 
 **Issue discipline:** When picking up a tracked issue, set it to In Progress and assign it to the user before any code.
