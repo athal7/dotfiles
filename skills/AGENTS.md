@@ -8,6 +8,17 @@
 
 **CLI providers** — when a tool has comprehensive `--help`, map the capability to `cli://<binary>` in `capabilities.yaml` instead of writing a wrapper skill. Only write an integration skill when there are genuine gotchas that help text won't surface.
 
+### Integration skill provider preference
+
+When a capability is fulfilled by a CLI, prefer providers in this order (simplest first, fall through when the previous tier doesn't fit):
+
+1. **Pure CLI.** If `--help` is sufficient, just map `<capability>: cli://<binary>` in `capabilities.yaml`. The default for self-explanatory tools.
+2. **CLI with capability notes.** If the CLI has good `--help` plus one or two gotchas, map `<capability>: { provider: cli://<binary>, notes: "..." }`. No skill file needed.
+3. **External skill from the CLI maintainer.** If the CLI ships a SKILL.md upstream (e.g. `BRO3886/ical`, `schpet/linear-cli`), install it via `gh skill install` declared in `.chezmoidata/packages.yaml: skills:`. The maintainer owns the gotchas; updates flow automatically.
+4. **Local integration skill.** When no upstream skill exists but the CLI has gotchas that don't fit in `notes:`, write a local skill in `skills/<name>/SKILL.md` with `provides: [<capability>]`. This is the consolation pattern — keep it until an adequate upstream skill appears.
+
+When evaluating an existing local integration skill, ask: does an upstream skill exist now? If yes, switch.
+
 **When using any CLI capability, read `--help` first.** Run `<binary> --help` and `<binary> <subcommand> --help` before issuing commands. Integration skills document only what help text won't tell you — silent failures, wrong-output traps, and non-obvious cross-command dependencies. Everything else is in `--help`.
 
 **For short gotchas (1-3 sentences), use the `notes` field in `capabilities.yaml` instead of a skill file.** The manifest supports an extended map form:
@@ -41,6 +52,8 @@ metadata:
 `requires` is a YAML list of capability names — **no colons, no defaults**.
 
 `provides` is optional author metadata for discoverability. The manifest is authoritative, not skill frontmatter.
+
+**Workflow skills that no other skill consumes correctly omit `provides`.** Examples: `attention`, `conversations`, `context-log`, `post-meeting`, `thinking-tools`. They orchestrate capabilities for direct invocation; nothing depends on them, so there's no capability to declare. Adding a `provides` here is noise.
 
 ## Capability naming
 
@@ -141,6 +154,8 @@ Skills measured with high adoption (commit 57%, push similar) all have:
 - Imperative steps, not descriptive phases
 - <80 lines in the main body
 - No chained `requires` that the agent must load additional skills to satisfy the described behavior
+
+**`conversations` is the workflow-skill success case** — 3% session load with a phase-graph-shaped body of four sources (KB, meetings, chat, email). It works because the trigger is concrete ("research a person/decision") and the body is a *decision tree*, not a phase graph. The agent enters at one of four entry points based on the question; it doesn't read top-to-bottom executing each phase. When writing a workflow skill that needs to cover multiple sources or paths, prefer decision-tree structure (here's the question, here's where to go) over phase structure (do this, then this, then this).
 
 ### Measure before refactoring a skill
 
