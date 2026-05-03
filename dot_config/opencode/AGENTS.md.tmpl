@@ -23,9 +23,11 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 ## Development Workflow
 
-**The pipeline is plan → tdd → review → commit → push.** Each phase has its own skill. Load them in sequence as you advance — earlier phases do not auto-load later ones.
+**The pipeline is plan → tdd → review → commit → push.** Each phase has its own primitive: plan is the built-in plan agent (Tab to enter). TDD is always loaded — see the TDD instructions in your context. Review, commit, and push are skills you load in sequence as you advance.
 
-**TDD is the default for every code change** — new functionality, bug fixes, refactors, all of it. Before editing source files, load your `tdd` capability and write the failing test first. The exceptions are pure configuration (no logic), generated files, and edits where no test framework exists for the file type. If you're not sure, default to TDD.
+**Planning:** skip for typo fixes, single-line config changes, and trivial one-file edits. For non-trivial work, switch to plan mode (Tab) and present a plan before implementing. Plans should include the first failing test you'll write.
+
+**TDD is the default for every code change** — new functionality, bug fixes, refactors, all of it. Before editing source files, write the failing test first. The exceptions are pure configuration (no logic), generated files, and edits where no test framework exists for the file type. If you're not sure, default to TDD.
 
 **Branch discipline:** Create a new branch off `origin/main` before any code change. Never implement directly on `main`. If the target branch is already checked out in another worktree, remove that worktree first (`git worktree remove <path> --force`).
 

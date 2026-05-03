@@ -12,6 +12,16 @@ metadata:
 
 Use this when facing a software design decision with multiple valid approaches, hard-to-reverse consequences, or system boundary implications.
 
+## Design prerequisite check
+
+Before evaluating options, check whether a prerequisite refactor would simplify the work. For any change touching domain logic, authorization, state machines, or anything enforced in more than one layer — read the relevant code and answer:
+
+- **Scattered enforcement:** is this concept already checked in multiple places? List callsites. If yes, is centralizing first a prerequisite?
+- **Coupling:** does this add a new dependency between modules that had no prior relationship?
+- **Extensibility:** is this the 2nd or 3rd instance of a pattern? Is there a single abstraction that serves all of them?
+
+If a prerequisite refactor would simplify the work, surface it: propose a separate issue/PR, get user confirmation, do it first.
+
 ## Steps
 
 1. **Gather context.** State the problem, constraints, and options. Use your `issues` capability for history and prior decisions if relevant. Research patterns, prior art, library docs.
