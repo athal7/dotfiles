@@ -1,9 +1,11 @@
 #!/bin/sh
-# Sync and validate agent skills when skill files change
-# Hashes for change detection (source skill content + external-skill manifest +
-# deployed-state presence so a missing external skill triggers re-run):
-{{- range (glob (joinPath .chezmoi.sourceDir "skills/*/SKILL.md")) }}
-# skill: {{ . | include | sha256sum }}
+# Sync and validate agent skills when skill files change.
+# Hashes for change detection (every file inside per-skill folders + external-skill
+# manifest + deployed-state presence so a missing external skill triggers re-run):
+{{- range (glob (joinPath .chezmoi.sourceDir "skills/*/**/*")) }}
+{{- if not (stat .).isDir }}
+# skill-file: {{ . | include | sha256sum }}
+{{- end }}
 {{- end }}
 # gh_skills: {{ .packages.skills | toJson | sha256sum }}
 {{- range .packages.skills }}
@@ -14,10 +16,13 @@ SKILLS_SRC="{{ .chezmoi.sourceDir }}/skills"
 SKILLS_DEST="$HOME/.agents/skills"
 
 # Sync skills from repo to destination, replacing it wholesale to remove orphans.
+# AGENTS.md and README.md at the skills/ root are authoring/repo-meta docs —
+# only useful in the source tree, never in the deployed agent skill list.
 echo "syncing skills from $SKILLS_SRC..."
 rm -rf "$SKILLS_DEST"
 mkdir -p "$SKILLS_DEST"
 cp -r "$SKILLS_SRC"/. "$SKILLS_DEST/"
+rm -f "$SKILLS_DEST/AGENTS.md" "$SKILLS_DEST/README.md"
 
 # Install external skills via gh skill install
 # stdin redirected from /dev/null so gh detects non-interactive mode;
