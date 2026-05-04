@@ -412,8 +412,43 @@
   @media (max-width: 768px) {
     .compare-rows { grid-template-columns: 1fr; }
     .compare-rows > div { border-bottom: 1px solid var(--border); }
-    .compare-rows .row-label { padding: 10px 20px; }
-    .compare-rows .row-own { border-left: 1px solid var(--border); border-top: 3px solid var(--accent3); }
+    .compare-rows .row-label {
+      padding: 12px 20px 4px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: none;
+    }
+    /* Hide the orphan top "Renting" / "Owning" header row on mobile */
+    .compare-rows .row-header.rent,
+    .compare-rows .row-header.own { display: none; }
+    /* Prefix rent/own values with inline labels so the dichotomy survives single-column */
+    .compare-rows .row-rent,
+    .compare-rows .row-own {
+      border-left: none;
+      padding: 6px 20px 6px 20px;
+      position: relative;
+      padding-left: 90px;
+    }
+    .compare-rows .row-rent::before,
+    .compare-rows .row-own::before {
+      content: 'Renting';
+      position: absolute;
+      left: 20px;
+      top: 9px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+    .compare-rows .row-own::before {
+      content: 'Owning';
+      color: var(--accent3);
+    }
+    .compare-rows .row-own { border-bottom: none; padding-bottom: 14px; }
+    .compare-rows .row-rent { padding-top: 4px; }
+    /* First row-label has no preceding category separator */
+    .compare-rows .row-label:first-of-type { border-top: none; }
   }
 
   /* ─── Lived example (Slack-style blockquote) ─── */
@@ -755,15 +790,24 @@
   /* ─── Responsive — narrow viewports (tablet, phone) ─── */
   @media (max-width: 768px) {
     .slide-content {
-      padding: 24px 28px 56px;
+      /* extra bottom padding clears the fixed nav pill (~bottom 32px + 52px tall + breathing room) */
+      padding: 24px 28px 104px;
+      /* Top-align so over-long content doesn't get cropped by justify-content: center */
+      justify-content: flex-start;
+      /* Allow vertical scroll within the slide on phones where content exceeds viewport */
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
     h1 { font-size: clamp(28px, 7vw, 44px); }
     h2 { font-size: clamp(22px, 5vw, 34px); }
+    /* Print is a desktop-export affordance; hide on phone to free up the title row */
+    #btn-print { display: none; }
   }
 
   /* ─── Responsive — combined short + narrow ─── */
   @media (max-height: 700px) and (max-width: 768px) {
-    .slide-content { padding: 16px 20px 48px; }
+    .slide-content { padding: 16px 20px 96px; }
   }
 
   /* ─── Print / PDF ─── */
