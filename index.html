@@ -251,17 +251,17 @@
     color: var(--text);
     margin-bottom: 24px;
   }
-  .section-break .section-gloss {
-    font-size: clamp(18px, 2.2vw, 24px);
-    color: var(--text-muted);
-    font-style: italic;
-    margin-bottom: 32px;
-    line-height: 1.4;
-  }
   .section-break .section-attribution {
     font-size: 14px;
     color: var(--text-dim);
     letter-spacing: 0.04em;
+    margin-bottom: 28px;
+  }
+  .section-break .section-gloss {
+    font-size: clamp(18px, 2.2vw, 24px);
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.4;
   }
 
   /* ─── Compare (own vs rent, on vs out) ─── */
@@ -836,8 +836,8 @@
     <div class="slide-content">
       <div class="section-break">
         <div class="section-quote">"Owners, not renters."</div>
-        <div class="section-gloss">Tools that outlast the vendor.</div>
         <div class="section-attribution">— Raffi Krikorian, CTO, Mozilla</div>
+        <div class="section-gloss">Tools that outlast the vendor.</div>
       </div>
     </div>
   </div>
@@ -947,6 +947,9 @@
           <strong>The body never names a tool.</strong> Switch from one source-control provider to another and the workflow doesn't change a line.
         </div>
       </div>
+      <p style="margin-top:28px; font-size:14px; color:var(--text-dim); font-style:italic; max-width:1000px;">
+        What you just saw is an open proposal &mdash; <a href="https://github.com/agentskills/agentskills/discussions/311" style="color:var(--text-dim); text-decoration:underline;">agent-skills #311</a>. Running it in production here.
+      </p>
     </div>
   </div>
 
@@ -993,7 +996,6 @@ chat:     <span class="val">skill://slack</span></pre>
     <div class="slide-content">
       <div class="section-break">
         <div class="section-quote">"Humans on the loop."</div>
-        <div class="section-gloss">I shape the loop, and I shift left &mdash; review the plan before the code, approve the remote action before it fires.</div>
         <div class="section-attribution">— Kief Morris, Thoughtworks</div>
       </div>
     </div>
@@ -1033,7 +1035,7 @@ chat:     <span class="val">skill://slack</span></pre>
       </div>
       <div class="pipeline-aside">
         Each issue gets <strong>its own worktree session</strong>. Review and qa can loop back to plan.
-        <div style="margin-top:10px; font-style:italic; color:var(--text-dim);">Shift left: the plan is read-only deliberation; every remote write asks for approval. Course-correction is cheap before code, expensive after.</div>
+        <div style="margin-top:10px; font-style:italic; color:var(--text-dim);">Two mindsets &mdash; autonomous coder reviews the diff; this pipeline reviews the plan. Review capacity is fixed; only the unit changes.</div>
       </div>
     </div>
   </div>
@@ -1043,23 +1045,27 @@ chat:     <span class="val">skill://slack</span></pre>
   ══════════════════════════════════════════ -->
   <div class="slide" id="s-attention">
     <div class="slide-content">
-      <h2><code style="background:transparent;border:none;color:var(--accent5);padding:0;font-size:0.9em;">attention</code> — energy in, output calibrated.</h2>
+      <h2><code style="background:transparent;border:none;color:var(--accent5);padding:0;font-size:0.9em;">attention</code> — what's worth picking up?</h2>
       <div class="energy-map">
         <div class="energy-row">
-          <div class="energy-label low">Low</div>
-          <div class="energy-output">One work item + one personal. Quick wins or rest.</div>
+          <div class="energy-label">Sessions</div>
+          <div class="energy-output">opencode worktrees &mdash; messages I've steered today, peak concurrency</div>
         </div>
         <div class="energy-row">
-          <div class="energy-label med">Medium</div>
-          <div class="energy-output">Two or three short-cycle items. Reviews, fixes, follow-ups.</div>
+          <div class="energy-label">Calendar</div>
+          <div class="energy-output">today's events, runway to the next block (or 4pm wind-down)</div>
+        </div>
+        <div class="energy-row">
+          <div class="energy-label">Reminders</div>
+          <div class="energy-output">overdue, due today, no due date</div>
         </div>
         <div class="energy-row last">
-          <div class="energy-label high">High</div>
-          <div class="energy-output">Longer-horizon work. New features, architectural moves, deep reads.</div>
+          <div class="energy-label">Work</div>
+          <div class="energy-output">reviews + issues, closest-to-done first</div>
         </div>
       </div>
-      <p style="margin-top:24px; max-width:720px; font-size:14px; color:var(--text-muted); line-height:1.55;">
-        Pulls calendar runway, reminders, merge requests, assigned issues — in parallel. Outputs a list <em>scaled to today</em>, not the maximum possible day.
+      <p style="margin-top:24px; max-width:760px; font-size:14px; color:var(--text-muted); line-height:1.55;">
+        Three signals score the day &mdash; <strong style="color:var(--text);">msgs steered</strong>, <strong style="color:var(--text);">peak concurrent sessions</strong>, <strong style="color:var(--text);">runway</strong>. The list scales to the score, not the maximum possible day.
       </p>
     </div>
   </div>
@@ -1141,12 +1147,6 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
           <div class="compare-label">Cloud memory · OpenClaw &amp; co.</div>
           <div class="compare-headline">Skills as agent state</div>
           <div class="compare-detail">Chat-native, proactive, self-modifying. Faster to bootstrap. Modifications happen in territory the runtime owns, without commits.</div>
-        </div>
-      </div>
-      <div class="compare-extra">
-        <div class="extra-label">Either stance, same ceiling</div>
-        <div class="extra-body">
-          Two or three streams is the cap &mdash; autonomous or supervised, the human bottleneck holds. <strong>Shift left makes each loop cheaper. It does not move the ceiling.</strong>
         </div>
       </div>
     </div>
