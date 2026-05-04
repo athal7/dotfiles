@@ -12,8 +12,7 @@ reminders:
   provider: cli://remindctl
   notes: >-
     `show upcoming` only returns reminders with a due date — use `show all` to include
-    undated items. ISO 8601 without Z (e.g. 2026-04-25T09:00:00) is rejected; use
-    `YYYY-MM-DD HH:mm` for local time or `...Z` for explicit UTC.
+    undated items.
 
 branching:
   provider: cli://git-spice
