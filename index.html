@@ -1316,7 +1316,7 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
   const total = slides.length;
   let current = 0;
 
-  function show(idx) {
+  function show(idx, pushState = true) {
     slides[current].classList.remove('active');
     current = Math.max(0, Math.min(total - 1, idx));
     slides[current].classList.add('active');
@@ -1324,6 +1324,7 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
     document.getElementById('btn-prev').disabled = current === 0;
     document.getElementById('btn-next').disabled = current === total - 1;
     document.getElementById('progress-bar').style.width = `${((current + 1) / total) * 100}%`;
+    if (pushState) history.replaceState(null, null, `#${current + 1}`);
   }
 
   function go(dir) { show(current + dir); }
@@ -1350,7 +1351,9 @@ Wired up. CI green. <span class="kw">Next</span>: e2e against staging.</pre>
     touchX = null;
   });
 
-  show(0);
+  // Init from URL hash
+  const hash = parseInt(location.hash.slice(1), 10);
+  show(isNaN(hash) || hash < 1 || hash > total ? 0 : hash - 1, false);
 </script>
 </body>
 </html>
