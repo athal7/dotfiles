@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>My AI Workflow</title>
 <style>
   :root {
@@ -790,8 +790,10 @@
   /* ─── Responsive — narrow viewports (tablet, phone) ─── */
   @media (max-width: 768px) {
     .slide-content {
-      /* extra bottom padding clears the fixed nav pill (~bottom 32px + 52px tall + breathing room) */
-      padding: 24px 28px 104px;
+      /* Top padding adds the iOS safe-area inset (status bar / dynamic island).
+         Bottom padding clears the fixed nav pill (~bottom 32px + 52px tall + breathing room)
+         and the home indicator. */
+      padding: calc(24px + env(safe-area-inset-top)) 28px calc(104px + env(safe-area-inset-bottom));
       /* Top-align so over-long content doesn't get cropped by justify-content: center */
       justify-content: flex-start;
       /* Allow vertical scroll within the slide on phones where content exceeds viewport */
@@ -803,11 +805,13 @@
     h2 { font-size: clamp(22px, 5vw, 34px); }
     /* Print is a desktop-export affordance; hide on phone to free up the title row */
     #btn-print { display: none; }
+    /* Lift the nav pill above the home indicator */
+    #nav { bottom: calc(32px + env(safe-area-inset-bottom)); }
   }
 
   /* ─── Responsive — combined short + narrow ─── */
   @media (max-height: 700px) and (max-width: 768px) {
-    .slide-content { padding: 16px 20px 96px; }
+    .slide-content { padding: calc(16px + env(safe-area-inset-top)) 20px calc(96px + env(safe-area-inset-bottom)); }
   }
 
   /* ─── Print / PDF ─── */
