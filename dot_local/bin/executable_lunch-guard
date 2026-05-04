@@ -57,7 +57,7 @@ def busy_intervals(events, tz):
     for e in events:
         if e.get("all_day"):
             continue
-        if (e.get("title") or "").startswith("Lunch"):
+        if (e.get("notes") or "").strip() == TAG:
             continue
         if e.get("availability") == "free":
             continue
