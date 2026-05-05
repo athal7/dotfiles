@@ -25,7 +25,10 @@ def ical(*args):
     ical_bin = subprocess.run(["which", "ical"], capture_output=True, text=True).stdout.strip() \
                or str(Path.home() / ".local/bin/ical")
     result = subprocess.run([ical_bin, *args], capture_output=True, text=True)
-    return json.loads(result.stdout or "[]")
+    try:
+        return json.loads(result.stdout or "[]")
+    except json.JSONDecodeError:
+        return []
 
 
 def chezmoi_data():
@@ -61,6 +64,8 @@ def busy_intervals(events, tz):
             continue
         if e.get("availability") == "free":
             continue
+        if "lunch" in e.get("title", "").lower():
+            continue
         intervals.append((to_min(e["start_date"], tz), to_min(e["end_date"], tz)))
     return sorted(intervals)
 
@@ -93,6 +98,21 @@ def process_day(day, cal, tz):
     events = ical("list", "-c", cal, "--from", str(day), "--to", str(day), "-o", "json")
 
     guard = next((e for e in events if e.get("notes", "").strip() == TAG), None)
+
+    has_lunch_meeting = any(
+        "lunch" in e.get("title", "").lower()
+        and e.get("notes", "").strip() != TAG
+        for e in events
+        if e.get("availability") != "free" and not e.get("all_day")
+    )
+
+    if has_lunch_meeting:
+        if guard:
+            log(f"{day}: Lunch meeting exists, removing guard event")
+            ical("delete", guard["id"], "--force")
+        else:
+            log(f"{day}: Lunch meeting exists, protected")
+        return
 
     intervals = busy_intervals(events, tz)
     busy_mins = busy_in_window(intervals, *WINDOW)
