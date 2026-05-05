@@ -118,7 +118,7 @@ packages:
       repo: sst/opencode
       target: Applications
       app: OpenCode.app
-      asset: opencode-desktop-darwin-aarch64.app.tar.gz
+      asset: opencode-desktop-mac-arm64.app.tar.gz
       type: archive
       refresh_period: 24h
 
