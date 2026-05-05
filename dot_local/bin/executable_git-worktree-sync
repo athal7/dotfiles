@@ -3,7 +3,15 @@
 #
 # Iterates over repos in ~/code/ that have git worktrees and:
 # 1. Fetches the default branch from origin
-# 2. Fast-forwards the local default branch ref (without checkout)
+# 2. Fast-forwards the local default branch via `reset --hard` so the main
+#    checkout's HEAD, index, and working tree all stay in sync.
+#
+# Important: this assumes you do NOT do real work in the main checkout.
+# If a repo has uncommitted edits in the main checkout when this runs and a
+# fast-forward is possible, those edits are stashed (tagged
+# "git-worktree-sync auto-stash") before the reset. Recover with `git stash list`
+# / `git stash apply` if needed; prune the auto-stash entries when stale.
+# A diverged main (local commits not in origin) is left alone.
 #
 # Designed to run on a schedule via LaunchAgent. Pairs well with
 # `git maintenance` prefetch for near-instant fetches.
@@ -49,17 +57,33 @@ for repo in "$CODE_DIR"/*/; do
   # Already up to date
   [ "$local_ref" != "$remote_ref" ] || continue
 
-  # Skip if the main worktree has uncommitted changes (staged, unstaged, or untracked)
-  if [ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]; then
-    log "$name: $default_branch dirty, skipping fast-forward"
+  # Only fast-forward (remote must be a descendant of local). A diverged main
+  # means there are local commits not in origin -- leave it alone, that's a
+  # human problem.
+  if ! git -C "$repo" merge-base --is-ancestor "$local_ref" "$remote_ref" 2>/dev/null; then
+    log "$name: $default_branch diverged, skipping"
     continue
   fi
 
-  # Only fast-forward (remote must be a descendant of local)
-  if git -C "$repo" merge-base --is-ancestor "$local_ref" "$remote_ref" 2>/dev/null; then
-    git -C "$repo" update-ref "refs/heads/$default_branch" "$remote_ref" "$local_ref"
-    log "$name: $default_branch fast-forwarded to $(echo "$remote_ref" | cut -c1-8)"
+  short_remote=$(echo "$remote_ref" | cut -c1-8)
+
+  # If the main checkout is dirty, stash before the reset so nothing is lost.
+  # Tag the stash message so these auto-stashes are distinguishable from
+  # human-created ones and can be pruned safely.
+  if [ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]; then
+    stash_msg="git-worktree-sync auto-stash $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    if git -C "$repo" stash push --include-untracked --quiet --message "$stash_msg" 2>/dev/null; then
+      log "$name: $default_branch had local mods, stashed and hard-reset to $short_remote"
+    else
+      log "$name: $default_branch had local mods, stash failed, skipping"
+      continue
+    fi
   else
-    log "$name: $default_branch diverged, skipping"
+    log "$name: $default_branch fast-forwarded to $short_remote"
   fi
+
+  # Hard reset so HEAD, index, and working tree stay coherent. Using
+  # `update-ref` here would leave the index and worktree at the old commit,
+  # which is exactly the corruption mode this script used to cause.
+  git -C "$repo" reset --hard --quiet "$remote_ref"
 done
