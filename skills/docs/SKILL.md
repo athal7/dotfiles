@@ -26,6 +26,19 @@ Run `--help` on each tool and subcommand first. This skill covers only what help
 - `gws docs documents get` output begins with a "Using keyring backend" line — strip non-JSON prefix lines before parsing
 - Inserting real tables requires a multi-phase approach; see `tables.md`
 
+## Google Slides
+
+- `gws slides presentations create` creates a blank presentation — use `gws drive files copy` on an existing themed presentation to inherit its master/theme instead
+- Google's template gallery IDs are **not** accessible via the API (404) — copy from a presentation you already own that has the desired theme
+- The default master (`Simple Light`) has no named layouts returned in `masters[].layouts` via the API, but predefined layouts (`TITLE_AND_BODY`, `TITLE_ONLY`, `SECTION_HEADER`, `BIG_NUMBER`, `BLANK`) work via `createSlide.slideLayoutReference.predefinedLayout`
+- **Use placeholders, not text boxes.** Slides created with a predefined layout get `TITLE` and `BODY` placeholder shapes — insert text into those via `insertText` and the master handles font, size, and position. Manual text boxes (`createShape: TEXT_BOX`) bypass the master entirely and require you to hardcode all coordinates in EMU
+- **Canvas is 720×405pt (9144000×5143500 EMU)** — `pt → EMU` conversion: `pt * 12700`. Placeholder positions are already set by the layout; you only need coordinates when placing decorative shapes
+- **Object IDs must be ≥5 characters** and match `[a-zA-Z0-9_][a-zA-Z0-9_\-:]*` — no spaces
+- `foregroundColor` in `updateTextStyle` takes `{"opaqueColor": {"rgbColor": {...}}}`, not `{"solidFill": ...}`. Page background and shape fills use `{"solidFill": {"color": {"rgbColor": {...}}}}`
+- `alignment` in `updateParagraphStyle` uses `START`/`CENTER`/`END`, not `LEFT`/`RIGHT`
+- `batchUpdate` request type is `createSlide`, not `addSlide`
+- All slides in a `batchUpdate` must succeed or none are applied — validate object IDs and request shape before sending
+
 ## Confluence
 
 - `confluence find` matches by exact title — use `confluence search` for partial or full-text matches
