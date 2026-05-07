@@ -42,7 +42,3 @@ When writing skills, examples, or documentation: use generic placeholder names (
 ## README
 
 Keep `README.md` up to date when making structural changes: adding or removing skills, new LaunchAgents, new config sections, changes to the package registry design, or anything that affects how someone would use or contribute to this repo. The README is the primary entry point for external readers.
-
-## Presentation
-
-`index.html` at the repo root is a slide deck describing this workflow, served via GitHub Pages at `https://athal7.github.io/dotfiles/`. Keep it in sync with how the repo actually works.

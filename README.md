@@ -2,10 +2,6 @@
 
 Manages `~` on macOS via [chezmoi](https://chezmoi.io). Covers shell, editor, AI tooling, calendar automation, and a library of AI agent skills.
 
-## Workflow Demo
-
-**[athal7.github.io/dotfiles](https://athal7.github.io/dotfiles/)** — a slide deck walking through how the agent skills fit together into a daily development workflow.
-
 ## Quick start
 
 ```bash
