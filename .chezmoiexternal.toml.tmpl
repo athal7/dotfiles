@@ -1,15 +1,21 @@
 {{ range .packages.github_releases -}}
+{{ $url := "" -}}
+{{ if index . "tag" -}}
+{{ $url = gitHubReleaseAssetURL .repo .tag .asset -}}
+{{ else -}}
+{{ $url = gitHubLatestReleaseAssetURL .repo .asset -}}
+{{ end -}}
 {{ if eq .target "Applications" -}}
 [{{ printf "Applications/%s" .app | quote }}]
     type = {{ .type | quote }}
-    url = {{ gitHubLatestReleaseAssetURL .repo .asset | quote }}
+    url = {{ $url | quote }}
     stripComponents = 1
     refreshPeriod = {{ .refresh_period | quote }}
 
 {{ else -}}
 [{{ .target | quote }}]
     type = {{ .type | quote }}
-    url = {{ gitHubLatestReleaseAssetURL .repo .asset | quote }}
+    url = {{ $url | quote }}
     {{- if eq .type "archive-file" }}
     path = {{ .path | quote }}
     {{- end }}
