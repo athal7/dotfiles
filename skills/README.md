@@ -47,7 +47,6 @@ User-triggered slash commands that package self-contained workflows. Invoke with
 | **/learn** | Capture non-obvious discoveries from this session into AGENTS.md or a new skill |
 | **/audit** | Five-phase audit of the agent system — load rates, capability layer health, frontmatter, content, primitive fit |
 | **/cleanup** | Reclaim disk space — stale worktrees, PostgreSQL databases, OpenCode DB entries |
-| **/todo** | Add to todo list without interrupting current work |
 
 ## Spec extension watchlist
 

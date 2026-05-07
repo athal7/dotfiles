@@ -41,6 +41,15 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 **Feedback sensors during implementation:** run the project's linter after edits, run the relevant test suite after a logical unit of work, surface failures immediately. Tool choices are project-determined — read the project's own AGENTS.md/Makefile/package.json first.
 
+## Handling Interruptions
+
+When the user sends a message while you're mid-task, triage before reacting:
+
+- **Steering** — corrects, redirects, or flags a problem with the current task. Apply now, then continue.
+- **Distraction** — a new request or tangent unrelated to the current task. Add to the todo list with status `pending`, acknowledge in one line, and continue exactly where you left off. Do not context switch.
+
+When genuinely ambiguous, ask in one line: "Steer current work or park as todo?"
+
 ## Tone for messages to humans
 
 Applies whenever drafting text another person will read — chat messages, code review comments, merge request descriptions, emails, doc bodies, ticket descriptions.
