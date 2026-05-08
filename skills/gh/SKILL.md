@@ -30,7 +30,7 @@ Field names differ from REST: `.author.login` (not `.user.login`), no `commit_id
 
 ## What needs action across repos
 
-Bucket cross-repo PR work on `latestReviews[].state` and `mergeStateStatus` — `gh search prs --review=...` uses the aggregate `reviewDecision` and silently drops `COMMENTED` and CI-failing states.
+Bucket cross-repo PR work on `latestReviews[].state` and `mergeStateStatus`:
 
 ```bash
 gh api graphql -f query='{
