@@ -189,6 +189,22 @@ curl -s -X POST "https://api.pagerduty.com/incidents/INCIDENT_ID/notes" \
   | jq '.note | {id, content, created_at}'
 ```
 
+## What a `user`-role token can and can't do
+
+PagerDuty's REST API silently degrades several admin-gated writes — the request returns 200 and the field appears in the response, but the value is dropped. Check `/users/me` to see your role; if `role` is `user`, the table below applies.
+
+| Action | Works at user role? | Notes |
+|---|---|---|
+| `PUT /services/{id}` (description, name) | ✅ if you're a manager on the service's team | |
+| `PUT /services/{id}` (other fields like `documentation_link`) | ❌ silent — field echoes but stays null | UI-only at user role; admin can write via API |
+| `POST /addons` (incident_show_addon) | ❌ 403 Access Denied | Admin-only |
+| `POST /incidents` (ack, resolve, snooze, note) | ✅ | Requires `From: <email>` header |
+| Read endpoints (oncalls, incidents, services, addons) | ✅ | |
+| `POST /response_plays` | ❌ 301 redirect | Deprecated in favor of incident workflows on most accounts |
+| `POST /incident_workflows` | ❌ admin-only | Read works; write doesn't |
+
+Service Profile fields visible in the UI (Documentation Link, Communication Channel, Custom Incident Actions) are not writable through the public REST API at user role. Either configure manually in the UI or have an admin make the change.
+
 ## Notes
 
 - The `Accept: application/vnd.pagerduty+json;version=2` header is required on every request — without it the API may return a different schema or reject the call.
