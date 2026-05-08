@@ -33,6 +33,7 @@ secrets:
   figma_access_token: {}
   es_api_key: {}
   es_url: {}
+  pagerduty_api_token: {}
 # Calendar configuration
 calendars:
   personal:

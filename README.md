@@ -8,7 +8,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io). Covers shell, editor, AI
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 ```
 
-You'll be prompted for a few required values (name, email, code directory, GitHub token, calendar names). Optional integrations — Slack, Figma, Elasticsearch, Linear, ICS feeds, etc. — can be added by editing `~/.config/chezmoi/chezmoi.toml` after init. See the commented sections in [`.chezmoi.toml.tmpl`](.chezmoi.toml.tmpl) for the full list.
+You'll be prompted for a few required values (name, email, code directory, GitHub token, calendar names). Optional integrations — Slack, Figma, Elasticsearch, Linear, PagerDuty, ICS feeds, etc. — can be added by editing `~/.config/chezmoi/chezmoi.toml` after init. See the commented sections in [`.chezmoi.toml.tmpl`](.chezmoi.toml.tmpl) for the full list.
 
 ## Machine-specific config
 
