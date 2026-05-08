@@ -102,6 +102,7 @@ packages:
     - name: claude-code
     - name: stats
     - name: tailscale-app
+    - name: handy
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
