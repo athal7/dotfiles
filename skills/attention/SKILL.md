@@ -47,11 +47,17 @@ The collected names are the only calendars and lists the next step should query.
 
 - **Sessions:** use your `agent` capability with `sessions-today.sql`, `sessions-summary.sql`, `sessions-concurrent.sql` from this skill directory
 - **Calendar:** use your `calendar` capability for today's events and current time, **filtered to the calendar names from Step 1 only**. **Exclude events the user has declined** — for any event with attendee participation status available, drop it if the user's status is "declined." A declined event no longer holds time on the calendar and must not count toward `RUNWAY`. Compute `RUNWAY` = minutes until the earlier of (next non-declined event on those calendars, 4pm). 4pm is the wind-down boundary — buffer for gradual transition, not end of work.
-- **Reminders:** use your `reminders` capability **filtered to the list names from Step 1 only** and bucket them by urgency:
+- **Reminders:** use your `reminders` capability **filtered to the list names from Step 1 only** and **only fetch open (incomplete) reminders** — completed items are done and must never appear in the attention view. Reminder counts climb over time; querying without the open filter surfaces a stale archive that masks what's actually in flight.
+
+  Bucket the open reminders by urgency:
   1. **Overdue** — due before today. Always surface; these are the first thing the user should see.
   2. **Due today** — due date is today. Surface if any exist.
-  3. **No due date** — undated backlog. Sample at most 3, oldest-created first; treat as steady noise unless one is clearly the keystone of `CURRENT`.
+  3. **No due date with explicit priority** — undated reminders the user has tagged `high` or `medium`. The user has signalled these matter; treat as standing items the focus check should respect.
+  4. **No due date, no priority** — undated backlog tagged `none` or `low`. Sample at most 3, oldest-created first; treat as steady noise unless one is clearly the keystone of `CURRENT`.
+
   Future-dated reminders (tomorrow onward) are out of scope for the attention check — they belong to a planning ritual, not a focus check.
+
+  Within each bucket, sort by priority (`high` → `medium` → `low` → `none`), then by due date / creation date.
 - **Work:** use your `source-control` and `issues` capabilities for review requests, received reviews, and assigned work. Prioritize closest-to-done: approved merge request ready to merge → received review to address → incoming review request → new work. Group linked merge requests and issues together. Flag any "In Progress" issue whose merge request has changes requested or a conflict. Consult your `source-control` capability's known gotchas before querying reviews. "Received review to address" means a reviewer left feedback on **your** merge request — never surface another person's merge request under this category. When a surfaced merge request or issue matches `CURRENT` (same branch / linked issue), tag it `[active]` — do not list it again in top-items. Items in the same repository as the current working directory rank higher than items in other repositories at the same priority level.
 
 ---
@@ -75,7 +81,7 @@ Energy: <Low|Medium|High>
 
 When comparing items to `CURRENT`: if `CURRENT ≠ idle` and an item is more urgent, mark it `↑ switch`. If less urgent, mark it `↓ later` and only include if there's room. If nothing surfaced is more urgent than `CURRENT`, the recommendation is "continue current." Items in the same repository as the current working directory are considered one urgency level higher than equivalent items in other repositories.
 
-When choosing the personal item(s) to surface, use the reminder buckets in priority order — overdue first, then due today, then a single representative from undated. Never surface a no-due-date reminder while overdue or due-today items exist in the same energy state.
+When choosing the personal item(s) to surface, use the reminder buckets in order: overdue → due today → undated-with-priority → undated-no-priority. Never surface an undated-no-priority reminder while higher buckets have content in the same energy state. Within a bucket, prefer the highest-priority item.
 
 **LOW**
 ```
@@ -84,7 +90,7 @@ When choosing the personal item(s) to surface, use the reminder buckets in prior
 Take care of yourself first. Are you hydrated? Have you eaten?
 
 Top work: [single most urgent item — or "continue current" if nothing more urgent]
-Top personal: [overdue reminder if any, else due-today, else single undated]
+Top personal: [overdue reminder if any, else due-today, else highest-priority undated, else single undated-no-priority]
 
 Everything else can wait.
 ```
