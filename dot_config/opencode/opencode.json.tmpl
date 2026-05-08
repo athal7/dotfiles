@@ -25,7 +25,7 @@
   },
   "permission": {
     "skill": "allow",
-    "bash": {{ merge (dict "*" "allow" "git push*" "ask") $buildBash | toPrettyJson | indent 6 | trim }}
+    "bash": {{ merge (dict "*" "allow" "git push *" "ask" "git -C * push *" "ask" "git push" "ask") $buildBash | toPrettyJson | indent 6 | trim }}
   },
   "agent": {
     "plan": {
