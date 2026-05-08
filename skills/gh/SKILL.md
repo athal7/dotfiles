@@ -30,72 +30,51 @@ Field names differ from REST: `.author.login` (not `.user.login`), no `commit_id
 
 ## What needs action across repos
 
-Bucket your cross-repo PR work by action required with `gh search prs`, ordered closest-to-done first:
+Bucket cross-repo PR work on `latestReviews[].state` and `mergeStateStatus` — `gh search prs --review=...` uses the aggregate `reviewDecision` and silently drops `COMMENTED` and CI-failing states.
 
 ```bash
-echo "=== ready-to-merge ==="     && gh search prs --author=@me --review=approved --checks=success --state=open --json number,title,url,repository
-echo "=== review-to-address ===" && gh search prs --author=@me --review=changes_requested --state=open --json number,title,url,repository
-echo "=== waiting-for-review ===" && gh search prs --author=@me --review=required --state=open --json number,title,url,repository
-echo "=== review-requested ==="   && gh search prs --review-requested=@me --state=open --json number,title,url,repository
+gh api graphql -f query='{
+  viewer { pullRequests(first: 50, states: OPEN) { nodes {
+    number title url isDraft mergeStateStatus
+    repository { nameWithOwner }
+    reviewRequests(first: 20) { nodes { requestedReviewer { ... on User { login } ... on Bot { login } } } }
+    latestReviews(first: 20) { nodes { state author { login } submittedAt } }
+    commits(last: 1) { nodes { commit { committedDate } } }
+  } } }
+  search(query: "is:pr is:open review-requested:@me", type: ISSUE, first: 50) { nodes { ... on PullRequest {
+    number title url repository { nameWithOwner }
+  } } }
+}'
 ```
 
-**Silent failures:** `gh pr list --reviewer @me` silently returns empty results even when review requests exist — always use `gh search prs --review-requested=@me`. Similarly, `gh search prs --reviewed-by @me` silently returns empty; to find PRs you've already reviewed, query per-repo with `gh pr list --json author,reviews` and filter `reviews[].author.login == @me AND author.login != @me` client-side — without the author filter you'll get your own PRs where you commented back.
+Bucket your authored PRs (closest-to-done first). `lastCommit = commits[-1].commit.committedDate`:
 
-Priority order:
+| Bucket | Rule |
+|---|---|
+| **conflict** | `mergeStateStatus == DIRTY` — fix first |
+| **ci-failing** | `mergeStateStatus == UNSTABLE` |
+| **review-to-address** | any `latestReviews[].state` in `(CHANGES_REQUESTED, COMMENTED)` with `submittedAt > lastCommit` — bots count |
+| **ready-to-merge** | `mergeStateStatus == CLEAN` AND any `APPROVED` in `latestReviews[].state` AND no `CHANGES_REQUESTED`/`COMMENTED` newer than `lastCommit` |
+| **waiting-for-review** | none of the above; `reviewRequests` non-empty or no review yet |
 
-1. **ready-to-merge** — approved + green, just needs merging
-2. **review-to-address** — your PR has a review to respond to
-3. **waiting-for-review** — your PR waiting on reviewers (nothing you can do, but track it)
-4. **review-requested** — someone else's PR waiting on you
-
-For mentions and assigned work (issues without PRs, @-mentions in discussions), use `gh status`. `--org <org>` scopes to an org; `-e <owner/repo>` excludes noisy repos.
-
-## Per-PR health — `mergeStateStatus`
-
-The bucket queries above tell you *where* the work is. To check the *health* of a specific PR (merge conflicts, CI failures, hidden blocks), query `mergeStateStatus` and `latestReviews`:
-
-```bash
-gh api graphql -f query='{ viewer { pullRequests(first: 20, states: OPEN) { nodes {
-  number title url
-  repository { nameWithOwner }
-  mergeStateStatus
-  reviewRequests(first: 10) { nodes { requestedReviewer { ... on User { login } } } }
-  latestReviews(first: 10) { nodes { state authorAssociation author { login } submittedAt } }
-  commits(last: 1) { nodes { committedDate } }
-} } } }'
-```
-
-Flag anything matching:
-
-1. **Merge conflict** — `mergeStateStatus == "DIRTY"` — highest priority
-2. **CI failing** — `mergeStateStatus == "UNSTABLE"` (not caught by the `ready-to-merge` bucket query; failing PRs are dropped silently there)
-3. **Re-review not requested** — a reviewer has `COMMENTED` or `CHANGES_REQUESTED` in `latestReviews`, their `authorAssociation != "NONE"` (excludes bots), their `submittedAt` is before your last commit (`commits[-1].committedDate`), and they are not already in `reviewRequests` — you pushed a response but haven't asked them to look again
+The `search` block returns others' PRs requesting your review (**review-requested**). For mentions and assigned issues without PRs, use `gh status` (`--org <org>` to scope, `-e <owner/repo>` to exclude).
 
 ### `mergeStateStatus` values
 
 | Value | Means |
 |---|---|
 | `CLEAN` | No conflicts, branch protection satisfied |
-| `DIRTY` | Has merge conflicts — surface first, fix immediately |
-| `UNSTABLE` | CI is failing |
-| `BLOCKED` | Branch protection rules not satisfied (e.g. required review not yet approved) — **does not mean conflict** |
-| `BEHIND` | Branch is behind the base branch |
-| `HAS_HOOKS` | Mergeable with passing commit status and pre-receive hooks |
-| `UNKNOWN` | State cannot currently be determined — retry or use per-repo `gh pr list` |
+| `DIRTY` | Merge conflicts |
+| `UNSTABLE` | CI failing |
+| `BLOCKED` | Branch protection unsatisfied (e.g. required approval missing) — **not a conflict** |
+| `BEHIND` | Behind base branch |
+| `HAS_HOOKS` | Mergeable with passing status and pre-receive hooks |
+| `UNKNOWN` | Retry |
 
-`BLOCKED` + `mergeable: MERGEABLE` = branch protection (missing required approval), not a conflict. Do not file as a merge conflict.
+### Known silent failures
 
-### Review state fields
-
-`reviewDecision` is an aggregate and loses per-reviewer signal — do not use it to determine if a merge request is waiting on the reviewer vs the author. Use `latestReviews[].state` instead:
-
-| State | Action needed by |
-|---|---|
-| `CHANGES_REQUESTED` | **Author** — reviewer wants changes addressed |
-| `APPROVED` | Nobody — this reviewer is satisfied |
-| `COMMENTED` | **Author** — reviewer wants changes addressed |
-
-A PR with only `COMMENTED` reviews is **not ready to merge** — it belongs in "review-to-address," not "ready-to-merge." Only `APPROVED` in `latestReviews[].state` combined with `mergeStateStatus == CLEAN` qualifies as ready to merge.
+- `gh pr list --reviewer @me` returns empty even when review requests exist — use the GraphQL `search` block above (or `gh search prs --review-requested=@me`).
+- `gh search prs --reviewed-by @me` returns empty — for PRs you've reviewed, query per-repo with `gh pr list --json author,reviews` and filter `reviews[].author.login == @me AND author.login != @me`.
 
 ## Automated review (Copilot, Codex, etc.)
 
