@@ -175,7 +175,6 @@ packages:
       target: Applications
       app: Minutes.app
       asset: Minutes.app.tar.gz
-      tag: v0.16.3
       type: archive
       refresh_period: 24h
 
