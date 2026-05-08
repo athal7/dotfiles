@@ -9,7 +9,15 @@ metadata:
     - verify
 ---
 
-**Precondition:** verification must have happened first — use your `verify` capability, apply findings, re-verify until clean. Do not load `commit` on an unverified diff.
+## STOP — verification gate
+
+**Before reading further, confirm in this session you have:**
+
+1. Used your `verify` capability on the staged diff.
+2. Applied any findings.
+3. Re-verified until clean.
+
+**If any of those is missing, stop now and verify first.** A 30-day audit found 60% of commit-time sessions skipped this step despite the precondition being declared. The pattern is the agent skipping past preamble — this gate exists to interrupt that. Do not draft the commit message, do not run `git add`, do not continue past this section until verification has happened.
 
 ## Before every commit
 

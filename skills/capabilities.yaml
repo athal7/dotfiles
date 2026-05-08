@@ -7,6 +7,7 @@
 
 meetings: cli://minutes
 email: cli://gws
+calendar: ical-cli
 
 reminders:
   provider: cli://remindctl

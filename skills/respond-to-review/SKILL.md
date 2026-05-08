@@ -8,7 +8,6 @@ metadata:
     - respond-to-review
   requires:
     - source-control
-    - tdd
     - push
     - verify
 ---
@@ -20,7 +19,7 @@ metadata:
 3. **Verify the plan** via your `verify` capability: every thread has a stance, fix-stance has a test-first approach, decline-stance has a substantive reason. Apply findings.
 
 4. **Work through every thread:**
-   - **Fix:** follow strict red/green/refactor via `tdd`. Present a per-file summary (reviewer comment beside addressing diff) and wait for acknowledgement, then commit with a message referencing the feedback. Resolve the thread via `source-control` — no reply needed.
+   - **Fix:** follow strict red/green/refactor (your standing TDD instructions apply). Present a per-file summary (reviewer comment beside addressing diff) and wait for acknowledgement, then commit with a message referencing the feedback. Resolve the thread via `source-control` — no reply needed.
    - **Decline:** do NOT resolve. Post an inline reply on the thread (not a top-level comment) via `source-control` using the thread's top comment ID, explaining why the code isn't changing.
 
 5. **Push** via your `push` capability. The source control host ties thread resolution to the commit, so push before resolving or replying.

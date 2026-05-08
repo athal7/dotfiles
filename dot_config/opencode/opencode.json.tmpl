@@ -25,13 +25,25 @@
   },
   "permission": {
     "skill": "allow",
-    "bash": {{ merge (dict "*" "allow" "git commit*" "ask" "git push*" "ask") $buildBash | toPrettyJson | indent 6 | trim }}
+    "bash": {{ merge (dict "*" "allow" "git push*" "ask") $buildBash | toPrettyJson | indent 6 | trim }}
   },
   "agent": {
     "plan": {
       "model": "anthropic/claude-opus-4-7",
       "permission": {
-        "bash": {{ merge (dict "*" "ask") $planBash | toPrettyJson | indent 10 | trim }}
+        "bash": {{ merge (dict
+          "*" "ask"
+          "ls*" "allow"
+          "sqlite3 -readonly*" "allow"
+          "wc*" "allow"
+          "comm*" "allow"
+          "sort*" "allow"
+          "uniq*" "allow"
+          "yq*" "allow"
+          "chezmoi diff*" "allow"
+          "chezmoi data*" "allow"
+          "chezmoi managed*" "allow"
+        ) $planBash | toPrettyJson | indent 10 | trim }}
       }
     }
   },

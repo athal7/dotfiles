@@ -1,6 +1,6 @@
 ---
 name: code-quality
-description: Code quality reference — design patterns, smells, anti-patterns, and review hygiene rules with refactoring direction and severity discipline
+description: Load when reviewing a diff for design quality, naming a code smell or anti-pattern, deciding refactoring direction, or grading review-comment severity. Used by the review and architecture skills to ground feedback in named patterns rather than vague impressions.
 license: MIT
 metadata:
   provides:
