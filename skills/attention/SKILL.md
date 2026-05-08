@@ -38,7 +38,7 @@ If nothing is active, `CURRENT = idle`.
 - **Sessions:** use your `agent` capability with `sessions-today.sql`, `sessions-summary.sql`, `sessions-concurrent.sql` from this skill directory
 - **Calendar:** use your `calendar` capability for today's events and current time, scoped to calendars configured for attention check. Compute `RUNWAY` = minutes until the earlier of (next event, 4pm). 4pm is the wind-down boundary — buffer for gradual transition, not end of work.
 - **Reminders:** use your `reminders` capability — overdue, due today, no due date — scoped to lists configured for attention check
-- **Work:** use your `source-control` and `issues` capabilities for review requests, received reviews, and assigned work. Prioritize closest-to-done: approved merge request ready to merge → received review to address → incoming review request → new work. Group linked merge requests and issues together. Flag any "In Progress" issue whose merge request has changes requested or a conflict. Consult your `source-control` capability's known gotchas before querying reviews. "Received review to address" means a reviewer left feedback on **your** merge request — never surface another person's merge request under this category. When a surfaced merge request or issue matches `CURRENT` (same branch / linked issue), tag it `[active]` — do not list it again in top-items.
+- **Work:** use your `source-control` and `issues` capabilities for review requests, received reviews, and assigned work. Prioritize closest-to-done: approved merge request ready to merge → received review to address → incoming review request → new work. Group linked merge requests and issues together. Flag any "In Progress" issue whose merge request has changes requested or a conflict. Consult your `source-control` capability's known gotchas before querying reviews. "Received review to address" means a reviewer left feedback on **your** merge request — never surface another person's merge request under this category. When a surfaced merge request or issue matches `CURRENT` (same branch / linked issue), tag it `[active]` — do not list it again in top-items. Items in the same repository as the current working directory rank higher than items in other repositories at the same priority level.
 
 ---
 
@@ -59,7 +59,7 @@ Energy: <Low|Medium|High>
   msgs steered: X   concurrent: X   runway: Xm
 ```
 
-When comparing items to `CURRENT`: if `CURRENT ≠ idle` and an item is more urgent, mark it `↑ switch`. If less urgent, mark it `↓ later` and only include if there's room. If nothing surfaced is more urgent than `CURRENT`, the recommendation is "continue current."
+When comparing items to `CURRENT`: if `CURRENT ≠ idle` and an item is more urgent, mark it `↑ switch`. If less urgent, mark it `↓ later` and only include if there's room. If nothing surfaced is more urgent than `CURRENT`, the recommendation is "continue current." Items in the same repository as the current working directory are considered one urgency level higher than equivalent items in other repositories.
 
 **LOW**
 ```
