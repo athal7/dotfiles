@@ -129,6 +129,32 @@ open(path, 'w').write(json.dumps(data))
 
 After writing, tell the user to reopen the Desktop app.
 
+## Step 9: Clean scratch files in /tmp
+
+Agents leave scratch files (markdown notes, scripts, screenshots, JSON dumps) directly in `/tmp`. List user-owned regular files only — skip lock files, sockets, and TemporaryDirectory.* dirs which belong to running processes:
+
+```bash
+# Note: /tmp is a symlink on macOS, so find needs -L
+find -L /tmp -maxdepth 1 -type f -user "$(whoami)" \
+  -not -name '.*' \
+  -not -name 'LCK.*' \
+  -not -name '*.lock' \
+  -not -name 'MozillaUpdateLock-*' \
+  -not -name 'com.apple.*' \
+  2>/dev/null | xargs du -sh 2>/dev/null | sort -h
+```
+
+Show the list and total size, then ask: "Delete these N scratch files from /tmp?" before deleting. Use the same find expression with `-delete`:
+
+```bash
+find -L /tmp -maxdepth 1 -type f -user "$(whoami)" \
+  -not -name '.*' -not -name 'LCK.*' -not -name '*.lock' \
+  -not -name 'MozillaUpdateLock-*' -not -name 'com.apple.*' \
+  -delete 2>/dev/null
+```
+
+Do not touch `TemporaryDirectory.*`, sockets, or anything not owned by the current user. Add the reclaimed size to the final summary.
+
 ## Safety rules
 
 1. **Never delete a worktree with uncommitted changes**
