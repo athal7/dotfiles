@@ -91,6 +91,91 @@ SQL
 
 When tdd is no longer a skill, replace the t.session_id check with a manual sample of "did the session involve tests" — see Phase 5.
 
+### 1f. Delegation effectiveness
+
+The "always delegate the work itself" rule from AGENTS.md is binary: any session where the primary agent edited files without dispatching at least one `task` call is a violation. These three queries surface the violation rate, the volume bucket where it concentrates, and the projects where the habit is weakest.
+
+**Headline metric — sessions with edits but zero `task` calls:**
+
+```bash
+sqlite3 -readonly "$DB" <<SQL
+WITH base AS (
+  SELECT id FROM session
+  WHERE time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+    AND parent_id IS NULL
+),
+edits AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool') IN ('edit','write') GROUP BY session_id),
+tasks AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool')='task' GROUP BY session_id)
+SELECT
+  COUNT(*) FILTER (WHERE COALESCE(e.n,0) > 0) AS sessions_with_edits,
+  SUM(CASE WHEN COALESCE(e.n,0)>0 AND COALESCE(t.n,0)=0 THEN 1 ELSE 0 END) AS violations,
+  ROUND(100.0 * SUM(CASE WHEN COALESCE(e.n,0)>0 AND COALESCE(t.n,0)=0 THEN 1 ELSE 0 END)
+        / NULLIF(COUNT(*) FILTER (WHERE COALESCE(e.n,0)>0),0), 1) AS pct_violations
+FROM base b
+LEFT JOIN edits e ON e.session_id=b.id
+LEFT JOIN tasks t ON t.session_id=b.id;
+SQL
+```
+
+**Delegation rate by edit-volume bucket** — shows where the habit is weakest. Under "always delegate" every "no_delegation" cell is a violation; the buckets just tell you whether the rule is breaking on small jobs, large jobs, or everywhere.
+
+```bash
+sqlite3 -readonly "$DB" <<SQL
+WITH base AS (
+  SELECT id FROM session
+  WHERE time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+    AND parent_id IS NULL
+),
+edits AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool') IN ('edit','write') GROUP BY session_id),
+tasks AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool')='task' GROUP BY session_id)
+SELECT
+  CASE
+    WHEN COALESCE(e.n,0)=0 THEN '0 edits'
+    WHEN e.n BETWEEN 1 AND 2 THEN '1-2 edits'
+    WHEN e.n BETWEEN 3 AND 9 THEN '3-9 edits'
+    WHEN e.n BETWEEN 10 AND 29 THEN '10-29 edits'
+    ELSE '30+ edits'
+  END AS bucket,
+  COUNT(*) AS sessions,
+  SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) AS delegated,
+  SUM(CASE WHEN COALESCE(t.n,0)=0 THEN 1 ELSE 0 END) AS no_delegation,
+  ROUND(100.0 * SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_delegated
+FROM base b
+LEFT JOIN edits e ON e.session_id=b.id
+LEFT JOIN tasks t ON t.session_id=b.id
+GROUP BY bucket
+ORDER BY bucket;
+SQL
+```
+
+**Per-project delegation rate** for sessions with at least one edit — surfaces which repos have become habit black holes:
+
+```bash
+sqlite3 -readonly "$DB" <<SQL
+WITH base AS (
+  SELECT s.id, p.name AS project
+  FROM session s LEFT JOIN project p ON p.id = s.project_id
+  WHERE s.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+    AND s.parent_id IS NULL
+),
+edits AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool') IN ('edit','write') GROUP BY session_id),
+tasks AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool')='task' GROUP BY session_id)
+SELECT
+  COALESCE(NULLIF(b.project,''), '(no project)') AS project,
+  COUNT(*) AS sessions_with_edits,
+  SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) AS delegated,
+  ROUND(100.0 * SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_delegated
+FROM base b
+JOIN edits e ON e.session_id=b.id AND e.n > 0
+LEFT JOIN tasks t ON t.session_id=b.id
+GROUP BY project
+HAVING sessions_with_edits >= 3
+ORDER BY pct_delegated ASC;
+SQL
+```
+
+Sort ascending so the worst-offending projects float to the top.
+
 ---
 
 ## Phase 2 — Capability layer health
@@ -244,6 +329,7 @@ Sessions where a skill *should* have fired (per its description) but didn't. Thr
 - External skills declared in `packages.yaml` but not installed.
 - Source skills modified but not deployed (`chezmoi apply` would fix).
 - Local integration skills where an upstream skill now exists (consult the watchlist in `skills/AGENTS.md`).
+- Sessions with edits but no `task` calls — direct violation of the "always delegate" rule. Phase 1f's per-project rate surfaces the habit hotspots.
 
 ### Recommendations
 
@@ -258,6 +344,7 @@ For each issue, pick one:
 | Local integration when upstream skill exists | Switch to external skill via `gh skill install` |
 | AGENTS.md > 400 lines | Move continuous-trigger content to `instructions:` |
 | Capability dangling | Wire to a provider, or remove the requirement |
+| Sessions with edits but zero `task` calls | Violation of "always delegate". Tighten AGENTS.md delegation language; if the rate doesn't drop after the next quarter, escalate to a hook that warns on the first non-delegated edit. |
 
 Pre-existing changes from prior audits should be re-checked: the principle "measure before refactoring" applies to every audit, not just the first.
 
@@ -271,6 +358,7 @@ Run `/audit` quarterly. Also run after:
 - A new agent type appearing (e.g. opencode adds a built-in agent)
 - A noticeable shift in project mix (different repo dominating sessions)
 - A felt sense that "something isn't firing" — measure first
+- AGENTS.md delegation rules change — re-run Phase 1f to verify the violation rate drops
 
 ## File locations (chezmoi)
 

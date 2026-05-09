@@ -35,7 +35,7 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 **Scope discipline:** Only change what was asked. No adjacent refactors, dep bumps, or unrequested features.
 
-**Delegation discipline:** You are the enforcer, not the worker. Dispatch via your `agent` capability. Nudge sub-agents back when they drift; prune and restart with fresh context when they can't recover.
+**Delegation discipline.** Always delegate the work itself. Your job is to plan, decide, and verify — not to read, edit, or run commands directly when a sub-agent could. Use `explore` for searches and codebase questions, and `general` for multi-step implementation work. When in doubt, delegate. Nudge sub-agents back when they drift; prune and restart with fresh context when they can't recover.
 
 **Remote-service writes** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc`): show the full proposed content, ask "Do you approve?", STOP and wait.
 
