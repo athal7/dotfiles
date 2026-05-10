@@ -57,10 +57,18 @@
       },
       "models": {
         "qwen3:8b": {
-          "name": "qwen3:8b"
+          "name": "qwen3:8b",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
         },
         "gemma4:e4b": {
-          "name": "gemma4:e4b"
+          "name": "gemma4:e4b",
+          "limit": {
+            "context": 8192,
+            "output": 2048
+          }
         },
         "gemma4:31b-cloud": {
           "name": "gemma4:31b-cloud"

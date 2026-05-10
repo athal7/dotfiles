@@ -1,0 +1,268 @@
+#!/bin/bash
+# bench-ollama — measure local Ollama performance under realistic OpenCode-shaped load.
+#
+# Captures four scenarios:
+#   1. baseline-idle    — single inference, nothing else running
+#   2. parallel-browser — same inference while you exercise the browser/video
+#   3. parallel-agents  — same inference while another opencode agent runs
+#   4. long-context     — 8k token input prompt to surface num_ctx limits
+#
+# Metrics per run: TTFT, tokens/sec, eval count, p50/p95 inter-token latency,
+#                  peak GPU%, peak memory pressure, load average.
+#
+# Usage:
+#   bench-ollama                # run all 4 scenarios for default model
+#   bench-ollama -m qwen3:8b    # specify model
+#   bench-ollama -s 1,4         # run only specific scenarios (comma-separated)
+#   bench-ollama -o results.md  # output file (default: ./bench-<timestamp>.md)
+#
+# Each scenario runs N=3 iterations and reports min/median/max.
+
+set -euo pipefail
+
+MODEL="${MODEL:-qwen3:8b}"
+ITERATIONS=3
+SCENARIOS="1,2,3,4"
+OUT=""
+YES=0
+
+while getopts "m:s:o:n:yh" opt; do
+  case "$opt" in
+    m) MODEL="$OPTARG" ;;
+    s) SCENARIOS="$OPTARG" ;;
+    o) OUT="$OPTARG" ;;
+    n) ITERATIONS="$OPTARG" ;;
+    y) YES=1 ;;
+    h) sed -n '2,21p' "$0"; exit 0 ;;
+  esac
+done
+
+[[ -z "$OUT" ]] && OUT="./bench-$(date +%Y%m%d-%H%M%S).md"
+OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
+
+# ---------- prompts ----------
+
+# Realistic opencode-shaped prompt: system role + user task with file context.
+SHORT_PROMPT='You are a careful coding assistant. Given the function below, identify the bug and propose a fix.
+
+```python
+def calculate_average(numbers):
+    total = 0
+    for n in numbers:
+        total += n
+    return total / len(numbers)
+```
+
+The bug appears when the input list is empty. Provide a corrected version.'
+
+# Long-context prompt: ~8k tokens of synthetic codebase context + a question.
+make_long_prompt() {
+  local body=""
+  for i in $(seq 1 200); do
+    body+="
+function processItem${i}(input) {
+  // Validates and transforms item ${i} according to the configured pipeline
+  if (!input || typeof input !== 'object') {
+    throw new Error('processItem${i}: invalid input shape');
+  }
+  const result = { id: input.id, kind: 'item-${i}', value: input.value * ${i} };
+  return result;
+}"
+  done
+  printf 'Given this codebase excerpt:\n%s\n\nWrite a single function that processes all items in parallel using Promise.all. Include error handling.' "$body"
+}
+
+# ---------- helpers ----------
+
+check_ollama() {
+  if ! curl -sf "${OLLAMA_URL}/api/version" >/dev/null; then
+    echo "ERROR: Ollama not reachable at ${OLLAMA_URL}" >&2
+    exit 1
+  fi
+  if ! curl -sf "${OLLAMA_URL}/api/tags" | grep -q "\"name\":\"${MODEL}\""; then
+    echo "ERROR: Model ${MODEL} not found. Pull it first: ollama pull ${MODEL}" >&2
+    exit 1
+  fi
+}
+
+# Run inference, capture timing fields from Ollama's response.
+# Returns: <ttft_ms> <tps> <eval_count> <total_ms>
+run_inference() {
+  local prompt="$1"
+  local start_ns end_ns ttft_ns
+  local payload response
+
+  payload=$(jq -n --arg model "$MODEL" --arg prompt "$prompt" \
+    '{model: $model, prompt: $prompt, stream: false, options: {num_predict: 256}}')
+
+  start_ns=$(date +%s%N)
+  response=$(curl -sf -X POST "${OLLAMA_URL}/api/generate" \
+    -H "Content-Type: application/json" \
+    -d "$payload")
+  end_ns=$(date +%s%N)
+
+  # Ollama returns: prompt_eval_duration (ns), eval_duration (ns), eval_count
+  local prompt_eval_dur eval_dur eval_count
+  prompt_eval_dur=$(echo "$response" | jq -r '.prompt_eval_duration // 0')
+  eval_dur=$(echo "$response" | jq -r '.eval_duration // 0')
+  eval_count=$(echo "$response" | jq -r '.eval_count // 0')
+
+  # TTFT ≈ time to load + prompt eval; tps = eval_count / eval_duration
+  local ttft_ms tps_calc
+  ttft_ms=$(awk "BEGIN { printf \"%.0f\", $prompt_eval_dur / 1000000 }")
+  if [[ "$eval_dur" -gt 0 && "$eval_count" -gt 0 ]]; then
+    tps_calc=$(awk "BEGIN { printf \"%.2f\", ($eval_count * 1000000000) / $eval_dur }")
+  else
+    tps_calc="0"
+  fi
+  local total_ms=$(( (end_ns - start_ns) / 1000000 ))
+
+  echo "$ttft_ms $tps_calc $eval_count $total_ms"
+}
+
+# Continuously sample GPU% and load average, writing peaks to $1 (a file).
+# Runs until killed. The file is updated on every tick so the caller can
+# read the latest peak even if the sampler is killed mid-loop.
+sample_system() {
+  local outfile="$1"
+  local peak_gpu=0 peak_load=0
+  echo "0 0" > "$outfile"
+  while true; do
+    local gpu
+    gpu=$(ioreg -r -c IOAccelerator -d 1 2>/dev/null | \
+      grep -o '"Device Utilization %"=[0-9]*' | head -1 | grep -o '[0-9]*$')
+    [[ -z "$gpu" ]] && gpu=0
+    [[ "$gpu" -gt "$peak_gpu" ]] && peak_gpu=$gpu
+
+    local load
+    load=$(uptime | awk -F'load averages?: ' '{print $2}' | awk '{print $1}' | tr -d ',')
+    if awk "BEGIN { exit !($load > $peak_load) }"; then
+      peak_load=$load
+    fi
+
+    echo "$peak_gpu $peak_load" > "$outfile"
+    sleep 0.5
+  done
+}
+
+# Run one scenario: warmup + N iterations, sample system in parallel.
+run_scenario() {
+  local label="$1"
+  local prompt="$2"
+  local instructions="$3"
+
+  echo
+  echo "═══════════════════════════════════════"
+  echo "  Scenario: $label"
+  echo "═══════════════════════════════════════"
+  if [[ -n "$instructions" && "$YES" -eq 0 ]]; then
+    echo
+    echo "  $instructions"
+    echo
+    read -r -p "  Press Enter when ready..."
+  fi
+
+  # Warmup (load model into VRAM)
+  echo "  Warming up..." >&2
+  run_inference "$prompt" >/dev/null
+
+  local results=()
+  for i in $(seq 1 "$ITERATIONS"); do
+    echo "  Iteration $i/$ITERATIONS..." >&2
+
+    # Sample system in background while inference runs.
+    # Sampler writes peaks to a file on every tick so we capture data even
+    # though the inference call may complete before the sleep finishes.
+    local samplefile="/tmp/bench-sample-$$"
+    sample_system "$samplefile" &
+    local sample_pid=$!
+
+    local result
+    result=$(run_inference "$prompt")
+    kill "$sample_pid" 2>/dev/null || true
+    wait "$sample_pid" 2>/dev/null || true
+
+    local sys
+    sys=$(cat "$samplefile" 2>/dev/null || echo "0 0")
+    rm -f "$samplefile"
+
+    results+=("$result $sys")
+    echo "    → $result | gpu/load: $sys"
+  done
+
+  # Aggregate
+  printf '\n### %s\n\n' "$label" >> "$OUT"
+  printf '| iter | TTFT (ms) | tok/s | eval_count | total (ms) | peak_gpu%% | peak_load |\n' >> "$OUT"
+  printf '|------|-----------|-------|------------|------------|-----------|-----------|\n' >> "$OUT"
+  local i=1
+  for r in "${results[@]}"; do
+    read -r ttft tps ec total gpu load <<< "$r"
+    printf '| %d | %s | %s | %s | %s | %s | %s |\n' \
+      "$i" "$ttft" "$tps" "$ec" "$total" "$gpu" "$load" >> "$OUT"
+    i=$((i+1))
+  done
+
+  # Median tps
+  local median_tps
+  median_tps=$(printf '%s\n' "${results[@]}" | awk '{print $2}' | sort -n | \
+    awk -v n="${#results[@]}" 'NR==int((n+1)/2) {print; exit}')
+  printf '\n**median tok/s: %s**\n' "$median_tps" >> "$OUT"
+}
+
+# ---------- main ----------
+
+check_ollama
+
+cat > "$OUT" <<EOF
+# Ollama Benchmark — $(date '+%Y-%m-%d %H:%M:%S')
+
+**Model:** \`$MODEL\`
+**Iterations per scenario:** $ITERATIONS
+
+## Environment
+
+\`\`\`
+$(ps eww "$(pgrep -f 'ollama serve' | head -1)" 2>/dev/null | tr ' ' '\n' | grep '^OLLAMA_' | sort || echo '(unable to read env)')
+\`\`\`
+
+## System
+
+- **Hardware:** $(sysctl -n machdep.cpu.brand_string), $(sysctl -n hw.memsize | awk '{printf "%d GB", $1/1024/1024/1024}')
+- **macOS:** $(sw_vers -productVersion)
+- **Ollama:** $(curl -sf "${OLLAMA_URL}/api/version" | jq -r .version)
+
+## Results
+EOF
+
+LONG_PROMPT=$(make_long_prompt)
+
+IFS=',' read -ra WANTED <<< "$SCENARIOS"
+for s in "${WANTED[@]}"; do
+  case "$s" in
+    1)
+      run_scenario "1. baseline-idle (short prompt, nothing else running)" \
+        "$SHORT_PROMPT" \
+        "Close other apps. We want a clean ceiling measurement."
+      ;;
+    2)
+      run_scenario "2. parallel-browser (short prompt + browser/video active)" \
+        "$SHORT_PROMPT" \
+        "Open Firefox, start a 1080p YouTube video, scroll through a busy page. Keep it active during the run."
+      ;;
+    3)
+      run_scenario "3. parallel-agents (short prompt + another opencode agent running)" \
+        "$SHORT_PROMPT" \
+        "In another opencode session, kick off a non-trivial task with Sonnet (the one you'd normally do). Let it run while we benchmark."
+      ;;
+    4)
+      run_scenario "4. long-context (~8k token prompt, idle)" \
+        "$LONG_PROMPT" \
+        "Close other apps. This stresses the KV cache."
+      ;;
+  esac
+done
+
+echo
+echo "═══════════════════════════════════════"
+echo "  Done. Results: $OUT"
+echo "═══════════════════════════════════════"
