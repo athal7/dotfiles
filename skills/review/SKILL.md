@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review changes [commit|branch|merge-request|staged] — verifies your own work before shipping, or reviews someone else's code with inline comments and approval
+description: Load before every commit, push, or merge-request finalization — also use to review someone else's branch or merge request with inline comments and approval. Verifies your own work before shipping; routes by target [commit|branch|merge-request|staged].
 license: MIT
 compatibility: opencode
 metadata:

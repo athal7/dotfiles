@@ -1,6 +1,6 @@
 ---
 name: code-quality
-description: Load when reviewing a diff for design quality, naming a code smell or anti-pattern, deciding refactoring direction, or grading review-comment severity. Used by the review and architecture skills to ground feedback in named patterns rather than vague impressions.
+description: Load when reviewing a diff, naming a code smell or anti-pattern, deciding refactoring direction, or grading review-comment severity. Required reading when the architecture or code-review capabilities cite a named pattern — load explicitly rather than paraphrasing from memory.
 license: MIT
 metadata:
   provides:
