@@ -52,8 +52,8 @@ The collected names are the only calendars and lists the next step should query.
   Bucket the open reminders by urgency:
   1. **Overdue** — due before today. Always surface; these are the first thing the user should see.
   2. **Due today** — due date is today. Surface if any exist.
-  3. **No due date with explicit priority** — undated reminders the user has tagged `high` or `medium`. The user has signalled these matter; treat as standing items the focus check should respect.
-  4. **No due date, no priority** — undated backlog tagged `none` or `low`. Sample at most 3, oldest-created first; treat as steady noise unless one is clearly the keystone of `CURRENT`.
+  3. **No due date with explicit priority** — undated reminders the user has tagged `high`, `medium`, or `low`. The user has triaged these; treat as standing items the focus check should respect, sorted by priority.
+  4. **No due date, priority `none`** — awaiting triage. The user has not decided whether these matter. Sample at most 3, oldest-created first. When surfaced, the expected response is "prioritize or act" — tag with a priority, complete, or delete; do not treat as a task to do as-is.
 
   Future-dated reminders (tomorrow onward) are out of scope for the attention check — they belong to a planning ritual, not a focus check.
 
@@ -81,7 +81,13 @@ Energy: <Low|Medium|High>
 
 When comparing items to `CURRENT`: if `CURRENT ≠ idle` and an item is more urgent, mark it `↑ switch`. If less urgent, mark it `↓ later` and only include if there's room. If nothing surfaced is more urgent than `CURRENT`, the recommendation is "continue current." Items in the same repository as the current working directory are considered one urgency level higher than equivalent items in other repositories.
 
-When choosing the personal item(s) to surface, use the reminder buckets in order: overdue → due today → undated-with-priority → undated-no-priority. Never surface an undated-no-priority reminder while higher buckets have content in the same energy state. Within a bucket, prefer the highest-priority item.
+When choosing the personal item(s) to surface, use the reminder buckets in order: overdue → due today → undated-with-priority → undated-none. Within a bucket, prefer the highest-priority item.
+
+Items from bucket 4 (priority `none`) are surfaced with an inline `[triage]` tag — these are unprioritized, so the expected response is to set a priority, act, or delete, not to treat them as a task. Energy gating for bucket 4:
+
+- **LOW** — suppress bucket 4 entirely. No spoons for triage.
+- **MEDIUM** — prefer buckets 1–3. If buckets 1–3 are empty, always surface one bucket-4 item tagged `[triage]`.
+- **HIGH** — include up to 3 bucket-4 items tagged `[triage]` when room permits, even when buckets 1–3 also have content.
 
 **LOW**
 ```
@@ -90,7 +96,7 @@ When choosing the personal item(s) to surface, use the reminder buckets in order
 Take care of yourself first. Are you hydrated? Have you eaten?
 
 Top work: [single most urgent item — or "continue current" if nothing more urgent]
-Top personal: [overdue reminder if any, else due-today, else highest-priority undated, else single undated-no-priority]
+Top personal: [overdue reminder if any, else due-today, else highest-priority undated-with-priority — bucket 4 suppressed at LOW]
 
 Everything else can wait.
 ```
@@ -99,7 +105,7 @@ Everything else can wait.
 ```
 [signal block]
 
-[1–2 items — mix of work and personal, compared against CURRENT; personal items pulled from the highest-priority reminder bucket that has content]
+[1–2 items — mix of work and personal, compared against CURRENT; personal items pulled from buckets 1–3, falling back to one bucket-4 `[triage]` item when 1–3 are empty]
 [Flag any stuck/blocked items briefly]
 
 How does your body feel right now?
@@ -109,7 +115,7 @@ How does your body feel right now?
 ```
 [signal block]
 
-[3–4 items — mix of work and personal, excluding items tagged [active]; personal items pulled from the highest-priority reminder bucket first, then sampled from lower buckets only if room remains]
+[3–4 items — mix of work and personal, excluding items tagged [active]; personal items pulled from buckets 1–3 first, then up to 3 bucket-4 `[triage]` items when room permits]
 
 Is there anything nagging that isn't on this list?
 What do you want to focus on?
