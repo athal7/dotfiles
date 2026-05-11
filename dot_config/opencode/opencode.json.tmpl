@@ -51,15 +51,15 @@
       }
     },
     "local-build": {
-      "description": "Build-mode agent slimmed for local models — denies MCP tools (firefox-devtools, context7) and subagent delegation to cut ~25KB / ~7k tokens off the system prompt. The build agent's default prompt is sized for Sonnet/Opus; on a 30B MoE running MLX 4-bit, prompt eval is the bottleneck.",
+      "description": "Build-mode agent slimmed for local models — denies MCP tools (firefox-devtools, context7) and subagent delegation to cut ~25KB / ~7k tokens off the system prompt. The build agent's default prompt is sized for Sonnet/Opus; on a 30B MoE running MLX 4-bit, prompt eval is the bottleneck. Edits are allowed without prompting because the local model is sandboxed by its own limited tool set and the user is expected to review work in this agent rather than gate each tool.",
       "mode": "primary",
       "model": "lmstudio/qwen3-coder-30b",
       "permission": {
         "firefox-devtools_*": "deny",
         "context7_*": "deny",
         "task": "deny",
-        "edit": "ask",
-        "write": "ask",
+        "edit": "allow",
+        "write": "allow",
         "bash": {
           "*": "ask",
           "ls*": "allow",
