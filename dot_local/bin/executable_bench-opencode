@@ -39,17 +39,19 @@ OUT=""
 COMPARE=""
 YES=0
 KEEP=0
+BUILD_AGENT="build"
 
 usage() {
   sed -n '2,30p' "$0"
 }
 
-while getopts "m:s:o:c:ykh" opt; do
+while getopts "m:s:o:c:a:ykh" opt; do
   case "$opt" in
     m) MODEL="$OPTARG" ;;
     s) SCENARIOS="$OPTARG" ;;
     o) OUT="$OPTARG" ;;
     c) COMPARE="$OPTARG" ;;
+    a) BUILD_AGENT="$OPTARG" ;;
     y) YES=1 ;;
     k) KEEP=1 ;;
     h) usage; exit 0 ;;
@@ -341,10 +343,10 @@ for s in "${WANTED[@]}"; do
         180 validate_plan_multi)
       ;;
     3)
-      echo "═══ Scenario 3: build-edit ═══" >&2
+      echo "═══ Scenario 3: build-edit (agent=$BUILD_AGENT) ═══" >&2
       # Reset the scratch file
       echo "scratch file for bench-opencode" > /tmp/bench-target.txt
-      result=$(run_scenario "build-edit" "build" \
+      result=$(run_scenario "build-edit" "$BUILD_AGENT" \
         "Edit /tmp/bench-target.txt to add the line '# bench test ran here' at the top. Use the edit tool. Do not ask for confirmation." \
         300 validate_build_edit)
       ;;

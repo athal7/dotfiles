@@ -49,6 +49,29 @@
           "chezmoi execute-template*" "allow"
         ) $planBash | toPrettyJson | indent 10 | trim }}
       }
+    },
+    "local-build": {
+      "description": "Build-mode agent slimmed for local models — denies MCP tools (firefox-devtools, context7) and subagent delegation to cut ~25KB / ~7k tokens off the system prompt. The build agent's default prompt is sized for Sonnet/Opus; on a 30B MoE running MLX 4-bit, prompt eval is the bottleneck.",
+      "mode": "primary",
+      "model": "lmstudio/qwen3-coder-30b",
+      "permission": {
+        "firefox-devtools_*": "deny",
+        "context7_*": "deny",
+        "task": "deny",
+        "edit": "ask",
+        "write": "ask",
+        "bash": {
+          "*": "ask",
+          "ls*": "allow",
+          "cat*": "allow",
+          "head*": "allow",
+          "tail*": "allow",
+          "grep*": "allow",
+          "rg*": "allow",
+          "find*": "allow",
+          "wc*": "allow"
+        }
+      }
     }
   },
   "model": "anthropic/claude-sonnet-4-6",
