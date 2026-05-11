@@ -51,9 +51,9 @@
       }
     },
     "local-build": {
-      "description": "Build-mode agent slimmed for local models — denies MCP tools (firefox-devtools, context7) and subagent delegation to cut ~25KB / ~7k tokens off the system prompt. The build agent's default prompt is sized for Sonnet/Opus; on a 30B MoE running MLX 4-bit, prompt eval is the bottleneck. Edits are allowed without prompting because the local model is sandboxed by its own limited tool set and the user is expected to review work in this agent rather than gate each tool.",
+      "description": "Build-mode agent slimmed for local models — denies MCP tools (firefox-devtools, context7) and subagent delegation to cut ~25KB / ~7k tokens off the system prompt. The build agent's default prompt is sized for Sonnet/Opus; on a smaller local model prompt eval is the bottleneck. Edits are allowed without prompting because the local model is sandboxed by its own limited tool set and the user is expected to review work in this agent rather than gate each tool. Model: Qwen 3.5 27B (Unsloth UD-IQ3_XXS) — Glukhov's top empirical pick for OpenCode local (5.0% error rate; see README).",
       "mode": "primary",
-      "model": "lmstudio/qwen3-coder-30b",
+      "model": "lmstudio/qwen3.5-27b",
       "permission": {
         "firefox-devtools_*": "deny",
         "context7_*": "deny",
@@ -83,11 +83,11 @@
         "baseURL": "http://127.0.0.1:1234/v1"
       },
       "models": {
-        "qwen3-coder-30b": {
-          "name": "qwen3-coder-30b",
+        "qwen3.5-27b": {
+          "name": "qwen3.5-27b",
           "limit": {
-            "context": 65536,
-            "output": 16384
+            "context": 32768,
+            "output": 8192
           }
         }
       }

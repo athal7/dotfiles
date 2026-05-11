@@ -54,19 +54,22 @@ lms --help
 # 4. In LM Studio GUI → Settings, enable "Run server on login"
 #    (makes the server auto-start without keeping the GUI open)
 
-# 5. Download Qwen3-Coder-30B-A3B (Unsloth UD-Q4_K_XL, ~18 GB)
-lms get unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF@q4_k_xl
+# 5. Download Qwen 3.5 27B Unsloth UD-IQ3_XXS (~11.5 GB)
+#    LM Studio's `lms get` can't target a specific quant — download via curl.
+mkdir -p ~/.lmstudio/models/unsloth/Qwen3.5-27B-GGUF
+curl -fL -o ~/.lmstudio/models/unsloth/Qwen3.5-27B-GGUF/Qwen3.5-27B-UD-IQ3_XXS.gguf \
+  "https://huggingface.co/unsloth/Qwen3.5-27B-GGUF/resolve/main/Qwen3.5-27B-UD-IQ3_XXS.gguf?download=true"
 
 # 6. Load with a stable identifier matching opencode.json
-lms load unsloth/qwen3-coder-30b-a3b-instruct --identifier qwen3-coder-30b
+lms load unsloth/Qwen3.5-27B-GGUF --identifier qwen3.5-27b --context-length 32768 --ttl 999999
 
 # 7. Verify the server is up
 curl http://localhost:1234/v1/models | jq
 ```
 
-After step 4, the server auto-starts on each login. Reference the model in OpenCode as `lmstudio/qwen3-coder-30b`.
+After step 4, the server auto-starts on each login. Reference the model in OpenCode as `lmstudio/qwen3.5-27b`.
 
-To benchmark: `bench-opencode -m lmstudio/qwen3-coder-30b` drives the OpenCode HTTP API through 6 realistic agent scenarios. See [`dot_local/bin/executable_bench-opencode`](dot_local/bin/executable_bench-opencode).
+To benchmark: `bench-opencode -m lmstudio/qwen3.5-27b` drives the OpenCode HTTP API through 6 realistic agent scenarios. See [`dot_local/bin/executable_bench-opencode`](dot_local/bin/executable_bench-opencode).
 
 ### Picking a model
 
