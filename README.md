@@ -68,6 +68,16 @@ After step 4, the server auto-starts on each login. Reference the model in OpenC
 
 To benchmark: `bench-opencode -m lmstudio/qwen3-coder-30b` drives the OpenCode HTTP API through 6 realistic agent scenarios. See [`dot_local/bin/executable_bench-opencode`](dot_local/bin/executable_bench-opencode).
 
+### Picking a model
+
+Glukhov maintains an empirical comparison of local models for OpenCode agentic coding, with measured error rates on real coding tasks: **<https://www.glukhov.org/ai-devtools/opencode/llms-comparison/>**. Top recommendations as of May 2026:
+
+- **Qwen 3.5 27B Unsloth UD-Q3_XXS** — 5.0% error rate (clear winner)
+- **Qwen3-Coder-Next UD-IQ4_XS** — fastest, 8.8% error rate
+- **Gemma 4 26B A4B IQ4_XS** — 6.3% error rate
+
+Glukhov tests on llama.cpp, but LM Studio can serve the same Unsloth GGUFs and ships patched chat templates. Quantization source matters — Unsloth quants have patched templates that Bartowski quants do not, which materially affects tool-call quality.
+
 ## Agent Skills
 
 [Agent Skills](https://agentskills.io)-compatible skills deployed to `~/.agents/skills/`. Works with [OpenCode](https://opencode.ai) and any compatible agent.
