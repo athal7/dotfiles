@@ -8,14 +8,6 @@ min_words = 3
 language = "en"
 vad_model = "silero-v6.2.0"
 noise_reduction = true
-parakeet_binary = "parakeet"
-parakeet_model = "tdt-600m"
-parakeet_boost_limit = 0
-parakeet_boost_score = 2.0
-parakeet_fp16 = true
-parakeet_sidecar_enabled = false
-parakeet_fp16_blacklist_reset = false
-parakeet_vocab = "tdt-600m.tokenizer.vocab"
 
 [diarization]
 engine = "auto"
@@ -28,12 +20,6 @@ stem_correlation_threshold = 1.0
 engine = "agent"
 agent_command = "opencode"
 chunk_max_tokens = 4000
-ollama_url = "http://localhost:11434"
-ollama_model = "gemma4:e4b"
-openai_compatible_base_url = "http://localhost:11434/v1"
-openai_compatible_model = "llama3.2"
-openai_compatible_api_key_env = ""
-mistral_model = "mistral-large-latest"
 language = "auto"
 
 [search]
