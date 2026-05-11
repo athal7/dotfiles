@@ -34,6 +34,40 @@ Note: the example file lives at the repo root rather than under `.chezmoidata/`.
 - **macOS services** — LaunchAgents for background processes (`Library/LaunchAgents/`)
 - **Agent skills** — see [`skills/`](skills/)
 
+## Local model setup (LM Studio)
+
+LM Studio serves the local model used by OpenCode for agentic coding. Ollama remains installed for the `minutes` skill and cloud-proxied models, but qwen3-family models leak XML tool-calls through Ollama's OpenAI-compatible endpoint (see [OpenCode #26162](https://github.com/anomalyco/opencode/issues/26162), [#24316](https://github.com/anomalyco/opencode/issues/24316), [#4428](https://github.com/anomalyco/opencode/issues/4428)). LM Studio is the most-reported working setup.
+
+One-time bootstrap after `chezmoi apply` installs the cask:
+
+```bash
+# 1. Launch LM Studio.app once — sets up ~/.lmstudio/ and accepts quarantine
+open -a "LM Studio"
+# (close the app after first launch)
+
+# 2. Install the lms CLI on PATH
+npx lmstudio install-cli
+
+# 3. Verify
+lms --help
+
+# 4. In LM Studio GUI → Settings, enable "Run server on login"
+#    (makes the server auto-start without keeping the GUI open)
+
+# 5. Download Qwen3-Coder-30B-A3B (Unsloth UD-Q4_K_XL, ~18 GB)
+lms get unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF@q4_k_xl
+
+# 6. Load with a stable identifier matching opencode.json
+lms load unsloth/qwen3-coder-30b-a3b-instruct --identifier qwen3-coder-30b
+
+# 7. Verify the server is up
+curl http://localhost:1234/v1/models | jq
+```
+
+After step 4, the server auto-starts on each login. Reference the model in OpenCode as `lmstudio/qwen3-coder-30b`.
+
+To benchmark: `bench-opencode -m lmstudio/qwen3-coder-30b` drives the OpenCode HTTP API through 6 realistic agent scenarios. See [`dot_local/bin/executable_bench-opencode`](dot_local/bin/executable_bench-opencode).
+
 ## Agent Skills
 
 [Agent Skills](https://agentskills.io)-compatible skills deployed to `~/.agents/skills/`. Works with [OpenCode](https://opencode.ai) and any compatible agent.

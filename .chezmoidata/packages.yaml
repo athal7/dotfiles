@@ -103,6 +103,7 @@ packages:
     - name: stats
     - name: tailscale-app
     - name: handy
+    - name: lm-studio
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
