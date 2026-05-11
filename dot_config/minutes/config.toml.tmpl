@@ -1,7 +1,7 @@
 output_dir = "{{ .chezmoi.homeDir }}/meetings"
 
 [transcription]
-engine = "parakeet"
+engine = "whisper"
 model = "large-v3"
 model_path = "{{ .chezmoi.homeDir }}/.minutes/models"
 min_words = 3
@@ -133,7 +133,7 @@ enabled = true
 match_threshold = 0.44999998807907104
 
 [live_transcript]
-backend = "parakeet"
+backend = "whisper"
 model = ""
 max_utterance_secs = 30
 save_wav = true
