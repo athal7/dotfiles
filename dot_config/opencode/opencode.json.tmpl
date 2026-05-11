@@ -39,10 +39,14 @@
           "comm*" "allow"
           "sort*" "allow"
           "uniq*" "allow"
+          "head*" "allow"
+          "tail*" "allow"
+          "grep*" "allow"
           "yq*" "allow"
           "chezmoi diff*" "allow"
           "chezmoi data*" "allow"
           "chezmoi managed*" "allow"
+          "chezmoi execute-template*" "allow"
         ) $planBash | toPrettyJson | indent 10 | trim }}
       }
     }

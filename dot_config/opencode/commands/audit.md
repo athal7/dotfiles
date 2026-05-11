@@ -244,7 +244,62 @@ yq -r '.packages.skills[].skill' .chezmoidata/packages.yaml | while read skill; 
 done
 ```
 
-### 2d. Walk the integration-skill provider preference
+### 2d. Opencode permissions audit
+
+Inspect `dot_config/opencode/opencode.json.tmpl` and the rendered config:
+
+```bash
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.plan.permission.bash'
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.permission.bash'
+```
+
+Flag both directions of permission drift:
+
+**Too permissive** (allow that should be ask, ask that should be deny):
+
+- A write/mutate command (`create`, `update`, `delete`, `push`, `apply`, `commit`, `merge`, `destroy`, `complete`, `add`, `edit`, `reply`, `append`) glob-matched to `allow` in the build-mode bash dict. Extract and scan:
+
+```bash
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
+  | jq -r '.permission.bash | to_entries[] | select(.value=="allow") | .key' \
+  | grep -E '(create|update|delete|push|apply|commit|merge|destroy|complete|add|edit|reply|append)'
+```
+
+- A pattern in plan mode that's `allow` but routes to a binary that can mutate via certain flags or subcommands (e.g. allowing `foo*` when only `foo view*` is read-only). Apply judgment to the plan allow list.
+- Read globs broader than necessary (`*` instead of `subcmd*`).
+
+**Too restrictive** (ask that should be allow, missing — causes friction):
+
+- Commands declared `allow_reads` in `packages.yaml` that aren't in the rendered plan dict:
+
+```bash
+# Extract declared allow_reads
+yq -r '.packages[][] | select(type == "!!map") | .permissions.allow_reads // [] | .[]' \
+  .chezmoidata/packages.yaml 2>/dev/null | sort -u > /tmp/declared_reads.txt
+
+# Extract plan-mode allows
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
+  | jq -r '.agent.plan.permission.bash | to_entries[] | select(.value=="allow") | .key' \
+  | sort -u > /tmp/plan_allows.txt
+
+# Missing from plan
+comm -23 /tmp/declared_reads.txt /tmp/plan_allows.txt
+```
+
+- Tools in `mise`, `github_releases`, or npm sections of `packages.yaml` with no `permissions:` block (fall through to `*: ask`):
+
+```bash
+yq -r '.packages | (.mise // []) + (.github_releases // []) + (.npm // []) | .[] | select(type == "!!map") | select(.permissions == null) | .name // .repo' \
+  .chezmoidata/packages.yaml
+```
+
+- Remember opencode evaluates pipeline segments independently — `linear issue view X | head -N` prompts on `head` even if `linear issue view*` is allowed. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) are in the plan allow list.
+
+For each finding: tighten to `ask`, broaden to `allow`, add missing `permissions:` block in `packages.yaml`, or remove as redundant with `*`.
+
+---
+
+### 2e. Walk the integration-skill provider preference
 
 For each local integration skill (`provides:` with a tool-shaped capability like `chat`, `source-control`), check if an upstream skill now exists. The watchlist in `skills/AGENTS.md` is the starting point.
 
