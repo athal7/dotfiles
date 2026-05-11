@@ -1,0 +1,420 @@
+#!/bin/bash
+# bench-opencode — drive OpenCode through its HTTP API across realistic agent
+# scenarios to measure whether a (provider, model) pair actually works end-to-end.
+#
+# This is the bench that should have existed before the qwen3-coder XML-leak
+# debacle. bench-ollama measured raw inference throughput against the Ollama
+# HTTP endpoint and gave a false-positive "67 tok/s, works great" — but real
+# OpenCode usage routes through the Vercel AI SDK with tool definitions, which
+# is where qwen3 models fail.
+#
+# Six scenarios:
+#   1. plan-simple        — "What files are in dot_config/opencode/?"
+#   2. plan-multi-step    — "Identify any unused models in opencode.json"
+#   3. build-edit         — actually edit a scratch file in /tmp
+#   4. long-context       — paste ~5k tokens, ask for summary
+#   5. concurrency        — two parallel sessions of scenario 1
+#   6. thinking-detector  — like scenario 1, fail if no tool call in 15s
+#
+# Each scenario reports pass/fail + wall time + tool-call success rate +
+# XML-leak detection. The headline metric is "N/6 pass."
+#
+# Usage:
+#   bench-opencode                                      # all scenarios, default model
+#   bench-opencode -m lmstudio/qwen3-coder-30b          # specific model
+#   bench-opencode --compare a,b -m model               # head-to-head
+#   bench-opencode -s 1,3 -m model                      # subset
+#   bench-opencode -o /tmp/report.md                    # output location
+#   bench-opencode -y                                   # non-interactive (no warnings)
+#
+# Requires the opencode-web server to be running on 127.0.0.1:4096.
+
+set -euo pipefail
+
+API="${OPENCODE_API:-http://127.0.0.1:4096}"
+DIR="${BENCH_DIR:-$(pwd)}"
+MODEL=""
+SCENARIOS="1,2,3,4,5,6"
+OUT=""
+COMPARE=""
+YES=0
+KEEP=0
+
+usage() {
+  sed -n '2,30p' "$0"
+}
+
+while getopts "m:s:o:c:ykh" opt; do
+  case "$opt" in
+    m) MODEL="$OPTARG" ;;
+    s) SCENARIOS="$OPTARG" ;;
+    o) OUT="$OPTARG" ;;
+    c) COMPARE="$OPTARG" ;;
+    y) YES=1 ;;
+    k) KEEP=1 ;;
+    h) usage; exit 0 ;;
+    *) usage; exit 1 ;;
+  esac
+done
+
+[[ -z "$OUT" ]] && OUT="./bench-opencode-$(date +%Y%m%d-%H%M%S).md"
+
+# ---------- helpers ----------
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+check_server() {
+  curl -sf "${API}/doc" >/dev/null 2>&1 \
+    || die "opencode-web not reachable at ${API} — is the LaunchAgent running?"
+}
+
+# Split "provider/modelId" into providerID and modelID
+split_model() {
+  local m="$1"
+  local provider="${m%%/*}"
+  local mid="${m#*/}"
+  [[ "$provider" == "$mid" ]] && die "model must be provider/modelID format, got '$m'"
+  echo "$provider $mid"
+}
+
+# Create a session pinned to agent + model. Echoes session id.
+create_session() {
+  local agent="$1" provider="$2" mid="$3"
+  curl -sf -X POST "${API}/session?directory=${DIR}" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n --arg a "$agent" --arg id "$mid" --arg pid "$provider" \
+      '{agent: $a, model: {id: $id, providerID: $pid}}')" \
+    | jq -r '.id'
+}
+
+# Post a user message. Streams; we use --max-time 5 and rely on /wait below.
+post_message() {
+  local sid="$1" prompt="$2"
+  curl -sf --max-time 5 -X POST \
+    "${API}/session/${sid}/message?directory=${DIR}" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n --arg t "$prompt" \
+      '{parts: [{type: "text", text: $t}]}')" \
+    >/dev/null 2>&1 || true
+}
+
+# Wait for session to be idle, with timeout in seconds. Returns 0 on idle, 1 on timeout.
+wait_for_idle() {
+  local sid="$1" timeout_sec="$2"
+  timeout "$timeout_sec" curl -sf -X POST \
+    "${API}/api/session/${sid}/wait?directory=${DIR}" \
+    -o /dev/null 2>&1
+}
+
+# Abort a session.
+abort_session() {
+  local sid="$1"
+  curl -sf -X POST "${API}/session/${sid}/abort?directory=${DIR}" \
+    >/dev/null 2>&1 || true
+}
+
+# Delete a session (cascade removes messages and parts).
+delete_session() {
+  local sid="$1"
+  curl -sf -X DELETE "${API}/session/${sid}?directory=${DIR}" \
+    >/dev/null 2>&1 || true
+}
+
+# Fetch full transcript as JSON to stdout.
+get_transcript() {
+  local sid="$1"
+  curl -sf "${API}/session/${sid}/message?directory=${DIR}"
+}
+
+# Count tool parts in a transcript JSON file. Echoes "total completed errored xml_hits"
+inspect_transcript() {
+  local f="$1"
+  local total completed errored xml_hits
+  total=$(jq '[.[].parts[]? | select(.type=="tool")] | length' "$f" 2>/dev/null || echo 0)
+  completed=$(jq '[.[].parts[]? | select(.type=="tool" and .state.status=="completed")] | length' "$f" 2>/dev/null || echo 0)
+  errored=$(jq '[.[].parts[]? | select(.type=="tool" and .state.status=="error")] | length' "$f" 2>/dev/null || echo 0)
+  # XML leak: any text part containing tool-call-shaped XML
+  xml_hits=$(jq -r '[.[].parts[]? | select(.type=="text") | .text] | join("\n")' "$f" 2>/dev/null \
+    | grep -cE '<(tool_use|tool_call|function_calls?|invoke|tool_calls|parameter=)[ />]' \
+    || true)
+  echo "$total $completed $errored $xml_hits"
+}
+
+# Poll for first tool call within N seconds; echoes elapsed_ms or "TIMEOUT".
+poll_first_tool_call() {
+  local sid="$1" deadline_sec="$2"
+  local start end elapsed
+  start=$(date +%s%N)
+  end=$(( $(date +%s) + deadline_sec ))
+  while [[ $(date +%s) -lt $end ]]; do
+    local count
+    count=$(curl -sf "${API}/session/${sid}/message?directory=${DIR}" 2>/dev/null \
+      | jq '[.[].parts[]? | select(.type=="tool")] | length' 2>/dev/null || echo 0)
+    if [[ "$count" -gt 0 ]]; then
+      end=$(date +%s%N)
+      elapsed=$(( (end - start) / 1000000 ))
+      echo "$elapsed"
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "TIMEOUT"
+  return 1
+}
+
+# Run one scenario. Args: scenario_name, agent, prompt, timeout_sec, validator_fn
+# Echoes a result line: "PASS|FAIL <wall_ms> <details>"
+run_scenario() {
+  local name="$1" agent="$2" prompt="$3" timeout_sec="$4" validator="$5"
+  local provider mid sid t_start t_end wall_ms
+  read -r provider mid <<< "$(split_model "$MODEL")"
+
+  sid=$(create_session "$agent" "$provider" "$mid")
+  t_start=$(date +%s%N)
+  post_message "$sid" "$prompt"
+
+  if wait_for_idle "$sid" "$timeout_sec"; then
+    t_end=$(date +%s%N)
+    wall_ms=$(( (t_end - t_start) / 1000000 ))
+    local tf="/tmp/bench-${sid}.json"
+    get_transcript "$sid" > "$tf"
+    local verdict
+    verdict=$("$validator" "$tf" "$sid")
+    [[ "$KEEP" -eq 0 ]] && { rm -f "$tf"; delete_session "$sid"; }
+    echo "$verdict $wall_ms $sid"
+  else
+    abort_session "$sid"
+    t_end=$(date +%s%N)
+    wall_ms=$(( (t_end - t_start) / 1000000 ))
+    [[ "$KEEP" -eq 0 ]] && delete_session "$sid"
+    echo "FAIL $wall_ms TIMEOUT-${timeout_sec}s sid=$sid"
+  fi
+}
+
+# ---------- validators ----------
+
+# Scenario 1: at least one tool part completed + no XML leak in text
+validate_plan_simple() {
+  local tf="$1"
+  read -r total completed errored xml_hits <<< "$(inspect_transcript "$tf")"
+  if [[ "$xml_hits" -gt 0 ]]; then
+    echo "FAIL xml_hits=$xml_hits tools=$total/$completed"
+  elif [[ "$completed" -gt 0 ]]; then
+    echo "PASS tools=$total/$completed"
+  else
+    echo "FAIL no-tool-calls tools=$total/$completed"
+  fi
+}
+
+# Scenario 2: at least 2 tool calls completed
+validate_plan_multi() {
+  local tf="$1"
+  read -r total completed errored xml_hits <<< "$(inspect_transcript "$tf")"
+  if [[ "$xml_hits" -gt 0 ]]; then
+    echo "FAIL xml_hits=$xml_hits tools=$total/$completed"
+  elif [[ "$completed" -ge 2 ]]; then
+    echo "PASS tools=$total/$completed"
+  else
+    echo "FAIL needs-multi-step tools=$total/$completed"
+  fi
+}
+
+# Scenario 3: file on disk actually changed
+validate_build_edit() {
+  local tf="$1"
+  read -r total completed errored xml_hits <<< "$(inspect_transcript "$tf")"
+  local marker="# bench test ran here"
+  if grep -qF "$marker" /tmp/bench-target.txt 2>/dev/null; then
+    echo "PASS file-modified tools=$total/$completed"
+  elif [[ "$xml_hits" -gt 0 ]]; then
+    echo "FAIL xml_hits=$xml_hits tools=$total/$completed"
+  else
+    echo "FAIL file-unchanged tools=$total/$completed"
+  fi
+}
+
+# Scenario 4: response was coherent (assistant text part exists, > 100 chars)
+validate_long_context() {
+  local tf="$1"
+  read -r total completed errored xml_hits <<< "$(inspect_transcript "$tf")"
+  local text_len
+  text_len=$(jq -r '[.[] | select(.info.role=="assistant") | .parts[]? | select(.type=="text") | .text] | join("\n") | length' "$tf" 2>/dev/null || echo 0)
+  if [[ "$xml_hits" -gt 0 ]]; then
+    echo "FAIL xml_hits=$xml_hits text_len=$text_len"
+  elif [[ "$text_len" -gt 100 ]]; then
+    echo "PASS text_len=$text_len"
+  else
+    echo "FAIL response-too-short text_len=$text_len"
+  fi
+}
+
+# Scenario 6: first tool call observed within deadline
+# (run_scenario doesn't fit — this one polls during execution)
+run_thinking_detector() {
+  local provider mid sid t_start
+  read -r provider mid <<< "$(split_model "$MODEL")"
+  sid=$(create_session "plan" "$provider" "$mid")
+  t_start=$(date +%s%N)
+  post_message "$sid" "What files are in dot_config/opencode/?"
+
+  local result
+  if result=$(poll_first_tool_call "$sid" 15); then
+    local verdict="PASS first-tool=${result}ms"
+    # Wait briefly for cleanup
+    timeout 60 curl -sf -X POST "${API}/api/session/${sid}/wait?directory=${DIR}" -o /dev/null 2>&1 || true
+    [[ "$KEEP" -eq 0 ]] && delete_session "$sid"
+    local t_end=$(date +%s%N)
+    local wall_ms=$(( (t_end - t_start) / 1000000 ))
+    echo "$verdict $wall_ms $sid"
+  else
+    abort_session "$sid"
+    local t_end=$(date +%s%N)
+    local wall_ms=$(( (t_end - t_start) / 1000000 ))
+    [[ "$KEEP" -eq 0 ]] && delete_session "$sid"
+    echo "FAIL 15s-no-tool-call $wall_ms $sid"
+  fi
+}
+
+# ---------- prompts ----------
+
+make_long_prompt() {
+  local body=""
+  for i in $(seq 1 80); do
+    body+="
+function processItem${i}(input) {
+  if (!input || typeof input !== 'object') {
+    throw new Error('processItem${i}: invalid input shape');
+  }
+  const result = { id: input.id, kind: 'item-${i}', value: input.value * ${i} };
+  if (input.metadata && Array.isArray(input.metadata.tags)) {
+    result.tags = input.metadata.tags.filter(t => typeof t === 'string');
+  }
+  return result;
+}
+"
+  done
+  printf 'Below is an excerpt of a codebase with %d similar functions. Briefly identify the bug or anti-pattern they all share, in 2-3 sentences.\n\n%s' 80 "$body"
+}
+
+# ---------- main ----------
+
+[[ -z "$MODEL" ]] && die "model required (-m provider/modelID)"
+check_server
+
+cat > "$OUT" <<EOF
+# bench-opencode — $(date '+%Y-%m-%d %H:%M:%S')
+
+**Model:** \`$MODEL\`
+**API:** \`$API\`
+**Working directory:** \`$DIR\`
+
+## Results
+
+EOF
+
+declare -A RESULTS
+
+IFS=',' read -ra WANTED <<< "$SCENARIOS"
+for s in "${WANTED[@]}"; do
+  case "$s" in
+    1)
+      echo "═══ Scenario 1: plan-simple ═══" >&2
+      result=$(run_scenario "plan-simple" "plan" \
+        "What files are in dot_config/opencode/?" \
+        60 validate_plan_simple)
+      ;;
+    2)
+      echo "═══ Scenario 2: plan-multi-step ═══" >&2
+      result=$(run_scenario "plan-multi-step" "plan" \
+        "Look at dot_config/opencode/opencode.json.tmpl and tell me which provider blocks are defined and what models each contains. Use file reading tools." \
+        120 validate_plan_multi)
+      ;;
+    3)
+      echo "═══ Scenario 3: build-edit ═══" >&2
+      # Reset the scratch file
+      echo "scratch file for bench-opencode" > /tmp/bench-target.txt
+      result=$(run_scenario "build-edit" "build" \
+        "Edit /tmp/bench-target.txt to add the line '# bench test ran here' at the top. Use the edit tool. Do not ask for confirmation." \
+        90 validate_build_edit)
+      ;;
+    4)
+      echo "═══ Scenario 4: long-context ═══" >&2
+      LONG=$(make_long_prompt)
+      result=$(run_scenario "long-context" "plan" \
+        "$LONG" \
+        120 validate_long_context)
+      ;;
+    5)
+      echo "═══ Scenario 5: concurrency ═══" >&2
+      t0=$(date +%s%N)
+      # Run two scenario-1-style sessions in parallel
+      tmp_a=$(mktemp); tmp_b=$(mktemp)
+      ( run_scenario "concurrency-a" "plan" \
+          "What files are in dot_config/opencode/?" \
+          90 validate_plan_simple > "$tmp_a" ) &
+      pid_a=$!
+      ( run_scenario "concurrency-b" "plan" \
+          "What files are in dot_config/?" \
+          90 validate_plan_simple > "$tmp_b" ) &
+      pid_b=$!
+      wait $pid_a $pid_b
+      ra=$(cat "$tmp_a"); rb=$(cat "$tmp_b")
+      rm -f "$tmp_a" "$tmp_b"
+      t1=$(date +%s%N)
+      wall=$(( (t1 - t0) / 1000000 ))
+      verdict_a=$(echo "$ra" | awk '{print $1}')
+      verdict_b=$(echo "$rb" | awk '{print $1}')
+      if [[ "$verdict_a" == "PASS" && "$verdict_b" == "PASS" ]]; then
+        result="PASS $wall both-completed a=($ra) b=($rb)"
+      else
+        result="FAIL $wall one-or-both-failed a=($ra) b=($rb)"
+      fi
+      ;;
+    6)
+      echo "═══ Scenario 6: thinking-detector ═══" >&2
+      result=$(run_thinking_detector)
+      ;;
+    *)
+      echo "unknown scenario: $s" >&2
+      continue
+      ;;
+  esac
+  RESULTS[$s]="$result"
+  echo "  → $result" >&2
+done
+
+# Render results table
+{
+  echo ""
+  echo "| # | Scenario | Verdict | Wall (ms) | Details |"
+  echo "|---|---|---|---|---|"
+  pass_count=0
+  total_count=0
+  for s in "${WANTED[@]}"; do
+    r="${RESULTS[$s]:-}"
+    [[ -z "$r" ]] && continue
+    total_count=$((total_count + 1))
+    verdict=$(echo "$r" | awk '{print $1}')
+    wall=$(echo "$r" | awk '{print $2}')
+    details=$(echo "$r" | cut -d' ' -f3-)
+    [[ "$verdict" == "PASS" ]] && pass_count=$((pass_count + 1))
+    case "$s" in
+      1) sn="plan-simple" ;;
+      2) sn="plan-multi-step" ;;
+      3) sn="build-edit" ;;
+      4) sn="long-context" ;;
+      5) sn="concurrency" ;;
+      6) sn="thinking-detector" ;;
+      *) sn="?" ;;
+    esac
+    echo "| $s | $sn | **$verdict** | $wall | $details |"
+  done
+  echo ""
+  echo "**Score: $pass_count / $total_count scenarios passed.**"
+} >> "$OUT"
+
+echo "" >&2
+echo "═════════════════════════════════════════════" >&2
+echo "  Score: $pass_count / $total_count" >&2
+echo "  Report: $OUT" >&2
+echo "═════════════════════════════════════════════" >&2
