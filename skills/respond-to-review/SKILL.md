@@ -14,7 +14,7 @@ metadata:
 
 1. **Fetch all open review threads** via your `source-control` capability. Note thread ID, file, line, comment body, author, resolved status.
 
-2. **Plan a stance per thread** as a list — `fix`, `decline-with-reason`, or `defer-with-issue` — before any code changes.
+2. **Plan a stance per thread** as a list — `fix` or `decline-with-reason` — before any code changes. Do not propose follow-up issues or deferred work as a stance; if the work is genuinely tracked elsewhere, that is a `decline-with-reason` whose reason cites the existing tracking.
 
 3. **Verify the plan** via your `verify` capability: every thread has a stance, fix-stance has a test-first approach, decline-stance has a substantive reason. Apply findings.
 
