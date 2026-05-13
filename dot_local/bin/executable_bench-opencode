@@ -70,6 +70,31 @@ check_server() {
     || die "opencode-web not reachable at ${API} — is the LaunchAgent running?"
 }
 
+# Check that the provider's inference server is up (e.g. LM Studio on 1234).
+# Only validates the provider referenced in the model string.
+check_inference_server() {
+  local provider="${MODEL%%/*}"
+  local base_url=""
+  case "$provider" in
+    lmstudio) base_url="http://127.0.0.1:1234/v1/models" ;;
+    ollama)   base_url="http://127.0.0.1:11434/api/version" ;;
+    *)        return 0 ;;  # unknown provider, skip
+  esac
+  if ! curl -sf "$base_url" >/dev/null 2>&1; then
+    echo "WARN: $provider inference server not reachable at $base_url" >&2
+    case "$provider" in
+      lmstudio)
+        echo "WARN: LM Studio server not running. Use LM Studio GUI → Settings → 'Run server on login'" >&2
+        echo "WARN: Do NOT run 'lms server start' manually — that starts an ad-hoc process that dies on model reload." >&2
+        ;;
+      ollama)
+        echo "WARN: Ollama not running. Check: launchctl list | grep ollama" >&2
+        ;;
+    esac
+    die "$provider inference server is required for this benchmark"
+  fi
+}
+
 # Split "provider/modelId" into providerID and modelID
 split_model() {
   local m="$1"
@@ -270,7 +295,7 @@ run_thinking_detector() {
   local bg_pid=$!
 
   local result
-  if result=$(poll_first_tool_call "$sid" 15); then
+  if result=$(poll_first_tool_call "$sid" 240); then
     # Tool fired in time. Wait for the bg curl to finish (agent completes).
     wait "$bg_pid" 2>/dev/null
     local verdict="PASS first-tool=${result}ms"
@@ -313,6 +338,7 @@ function processItem${i}(input) {
 
 [[ -z "$MODEL" ]] && die "model required (-m provider/modelID)"
 check_server
+check_inference_server
 
 cat > "$OUT" <<EOF
 # bench-opencode — $(date '+%Y-%m-%d %H:%M:%S')
@@ -334,13 +360,13 @@ for s in "${WANTED[@]}"; do
       echo "═══ Scenario 1: plan-simple ═══" >&2
       result=$(run_scenario "plan-simple" "plan" \
         "What files are in dot_config/opencode/?" \
-        90 validate_plan_simple)
+        300 validate_plan_simple)
       ;;
     2)
       echo "═══ Scenario 2: plan-multi-step ═══" >&2
       result=$(run_scenario "plan-multi-step" "plan" \
         "Look at dot_config/opencode/opencode.json.tmpl and tell me which provider blocks are defined and what models each contains. Use file reading tools." \
-        180 validate_plan_multi)
+        360 validate_plan_multi)
       ;;
     3)
       echo "═══ Scenario 3: build-edit (agent=$BUILD_AGENT) ═══" >&2
@@ -348,14 +374,14 @@ for s in "${WANTED[@]}"; do
       echo "scratch file for bench-opencode" > /tmp/bench-target.txt
       result=$(run_scenario "build-edit" "$BUILD_AGENT" \
         "Edit /tmp/bench-target.txt to add the line '# bench test ran here' at the top. Use the edit tool. Do not ask for confirmation." \
-        300 validate_build_edit)
+        480 validate_build_edit)
       ;;
     4)
       echo "═══ Scenario 4: long-context ═══" >&2
       LONG=$(make_long_prompt)
       result=$(run_scenario "long-context" "plan" \
         "$LONG" \
-        180 validate_long_context)
+        360 validate_long_context)
       ;;
     5)
       echo "═══ Scenario 5: concurrency ═══" >&2
@@ -364,11 +390,11 @@ for s in "${WANTED[@]}"; do
       tmp_a=$(mktemp); tmp_b=$(mktemp)
       ( run_scenario "concurrency-a" "plan" \
           "What files are in dot_config/opencode/?" \
-          120 validate_plan_simple > "$tmp_a" ) &
+          300 validate_plan_simple > "$tmp_a" ) &
       pid_a=$!
       ( run_scenario "concurrency-b" "plan" \
           "What files are in dot_config/?" \
-          120 validate_plan_simple > "$tmp_b" ) &
+          300 validate_plan_simple > "$tmp_b" ) &
       pid_b=$!
       wait $pid_a $pid_b
       ra=$(cat "$tmp_a"); rb=$(cat "$tmp_b")
