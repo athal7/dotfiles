@@ -19,5 +19,5 @@ talisman_report/
 # Machine-specific local config — lives only on the machine, never committed
 .chezmoidata/local.yaml
 
-# bench-ollama output files (scratch, not config)
+# bench-*.md output files (scratch, not config)
 bench-*.md

@@ -64,7 +64,6 @@ packages:
     - name: mas
     - name: mise
     - name: neovim
-    - name: ollama
     - name: openssl
     - name: opentofu
     - name: ripgrep

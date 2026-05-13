@@ -53,8 +53,6 @@ lms --help
 
 # 4. In LM Studio GUI → Developer tab, enable "Run server on login"
 #    (makes the server auto-start without keeping the GUI open)
-#    Do NOT call 'lms server start' manually — it starts an ad-hoc process
-#    that dies when you unload/reload models. The GUI toggle is the right path.
 
 # 5. Download Qwen 3.5 27B Unsloth UD-IQ3_XXS (~11.5 GB)
 #    LM Studio's `lms get` can't target a specific quant — download via curl.

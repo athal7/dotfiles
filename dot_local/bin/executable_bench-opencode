@@ -77,20 +77,12 @@ check_inference_server() {
   local base_url=""
   case "$provider" in
     lmstudio) base_url="http://127.0.0.1:1234/v1/models" ;;
-    ollama)   base_url="http://127.0.0.1:11434/api/version" ;;
     *)        return 0 ;;  # unknown provider, skip
   esac
   if ! curl -sf "$base_url" >/dev/null 2>&1; then
     echo "WARN: $provider inference server not reachable at $base_url" >&2
-    case "$provider" in
-      lmstudio)
-        echo "WARN: LM Studio server not running. Use LM Studio GUI → Settings → 'Run server on login'" >&2
-        echo "WARN: Do NOT run 'lms server start' manually — that starts an ad-hoc process that dies on model reload." >&2
-        ;;
-      ollama)
-        echo "WARN: Ollama not running. Check: launchctl list | grep ollama" >&2
-        ;;
-    esac
+    [[ "$provider" == "lmstudio" ]] && \
+      echo "WARN: LM Studio server not running. Enable 'Run server on login' in LM Studio." >&2
     die "$provider inference server is required for this benchmark"
   fi
 }

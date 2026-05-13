@@ -16,7 +16,6 @@ SELF_LOG="check-error-logs.error.log"
 # Format: one entry per line, "service_name|pattern"
 # The service_name matches the basename of the .error.log file (without extension).
 EXCLUDE_PATTERNS="
-ollama|address already in use
 opencode-web|Could not find 'bundler'
 homebridge|\[NestAccfactory\]
 "

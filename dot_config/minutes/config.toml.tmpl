@@ -17,8 +17,9 @@ embedding_model = "cam++-lm"
 stem_correlation_threshold = 1.0
 
 [summarization]
-engine = "agent"
-agent_command = "opencode"
+engine = "openai-compatible"
+openai_compatible_base_url = "http://127.0.0.1:1234/v1"
+openai_compatible_model = "qwen3.5-27b"
 chunk_max_tokens = 4000
 language = "auto"
 
@@ -51,7 +52,7 @@ dictation_threshold_secs = 120
 agent = "opencode"
 agent_args = [
     "-m",
-    "ollama/gemma4:e4b",
+    "lmstudio/qwen3.5-27b",
 ]
 
 [privacy]
