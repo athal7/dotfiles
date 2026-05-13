@@ -16,6 +16,10 @@ packages:
         allow_reads:
           - "chezmoi cat*"
           - "chezmoi verify*"
+          - "chezmoi diff*"
+          - "chezmoi data*"
+          - "chezmoi managed*"
+          - "chezmoi execute-template*"
     - name: colima
     - name: direnv
     - name: docker
@@ -51,6 +55,9 @@ packages:
     - name: git-spice
     - name: jc
     - name: jq
+      permissions:
+        allow_reads:
+          - "jq*"
     - name: graphqurl
     - name: k9s
     - name: kubernetes-cli
@@ -61,6 +68,9 @@ packages:
     - name: openssl
     - name: opentofu
     - name: ripgrep
+      permissions:
+        allow_reads:
+          - "rg*"
     - name: starship
     - name: talisman
     - name: watch
