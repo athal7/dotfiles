@@ -13,11 +13,26 @@ packages:
         ask:
           - "chezmoi destroy*"
           - "chezmoi init*"
+        allow_reads:
+          - "chezmoi cat*"
+          - "chezmoi verify*"
     - name: colima
     - name: direnv
     - name: docker
     - name: docker-compose
     - name: ffmpeg
+    - name: git
+      permissions:
+        allow_reads:
+          - "git log*"
+          - "git diff*"
+          - "git status*"
+          - "git show*"
+          - "git rev-parse*"
+          - "git blame*"
+          - "git stack-log*"
+          - "git stack-diff*"
+          - "git stack-range*"
     - name: gh
       permissions:
         ask:
@@ -51,6 +66,12 @@ packages:
     - name: watch
     - name: worktrunk
     - name: googleworkspace-cli
+      command: gws
+      permissions:
+        allow_reads:
+          - "gws docs documents get*"
+          - "gws drive files list*"
+          - "gws drive files export*"
     - name: steipete/tap/remindctl
       command: remindctl
       permissions:
