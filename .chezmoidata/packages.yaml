@@ -10,16 +10,19 @@ packages:
     - name: bat
     - name: chezmoi
       permissions:
-        ask:
-          - "chezmoi destroy*"
-          - "chezmoi init*"
-        allow_reads:
+        reads:
           - "chezmoi cat*"
           - "chezmoi verify*"
           - "chezmoi diff*"
           - "chezmoi data*"
           - "chezmoi managed*"
           - "chezmoi execute-template*"
+        lead:
+          ask:
+            - "chezmoi *"
+        build:
+          deny:
+            - "chezmoi *"
     - name: colima
     - name: direnv
     - name: docker
@@ -27,7 +30,7 @@ packages:
     - name: ffmpeg
     - name: git
       permissions:
-        allow_reads:
+        reads:
           - "git log*"
           - "git diff*"
           - "git status*"
@@ -37,11 +40,22 @@ packages:
           - "git stack-log*"
           - "git stack-diff*"
           - "git stack-range*"
+        lead:
+          ask:
+            - "git *"
+        build:
+          deny:
+            - "git *"
+          allow:
+            - "git log*"
+            - "git diff*"
+            - "git status*"
+            - "git show*"
+            - "git rev-parse*"
+            - "git blame*"
     - name: gh
       permissions:
-        ask:
-          - "gh *"
-        allow_reads:
+        reads:
           - "gh search*"
           - "gh pr list*"
           - "gh pr view*"
@@ -52,11 +66,17 @@ packages:
           - "gh repo view*"
           - "gh run list*"
           - "gh run view*"
+        lead:
+          ask:
+            - "gh *"
+        build:
+          deny:
+            - "gh *"
     - name: git-spice
     - name: jc
     - name: jq
       permissions:
-        allow_reads:
+        reads:
           - "jq*"
     - name: graphqurl
     - name: k9s
@@ -68,7 +88,7 @@ packages:
     - name: opentofu
     - name: ripgrep
       permissions:
-        allow_reads:
+        reads:
           - "rg*"
     - name: starship
     - name: talisman
@@ -77,28 +97,33 @@ packages:
     - name: googleworkspace-cli
       command: gws
       permissions:
-        allow_reads:
+        reads:
           - "gws docs documents get*"
           - "gws drive files list*"
           - "gws drive files export*"
+        build:
+          deny:
+            - "gws *"
     - name: steipete/tap/remindctl
       command: remindctl
       permissions:
-        ask:
-          - "remindctl add*"
-          - "remindctl edit*"
-          - "remindctl delete*"
-          - "remindctl complete*"
-        allow_reads:
+        reads:
           - "remindctl show*"
           - "remindctl list*"
           - "remindctl status*"
+        lead:
+          ask:
+            - "remindctl add*"
+            - "remindctl edit*"
+            - "remindctl delete*"
+            - "remindctl complete*"
+        build:
+          deny:
+            - "remindctl *"
     - name: schpet/tap/linear
       command: linear
       permissions:
-        ask:
-          - "linear *"
-        allow_reads:
+        reads:
           - "linear issue view*"
           - "linear issue list*"
           - "linear issue mine*"
@@ -111,19 +136,29 @@ packages:
           - "linear cycle view*"
           - "linear schema*"
           - "linear auth whoami*"
+        lead:
+          ask:
+            - "linear *"
+        build:
+          deny:
+            - "linear *"
     - name: pchuri/tap/confluence-cli
       command: confluence
       permissions:
-        ask:
-          - "confluence create*"
-          - "confluence update*"
-          - "confluence delete*"
-          - "confluence append*"
-          - "confluence reply*"
-        allow_reads:
+        reads:
           - "confluence read*"
           - "confluence search*"
           - "confluence find*"
+        lead:
+          ask:
+            - "confluence create*"
+            - "confluence update*"
+            - "confluence delete*"
+            - "confluence append*"
+            - "confluence reply*"
+        build:
+          deny:
+            - "confluence *"
 
   casks:
     - name: gcloud-cli
@@ -170,19 +205,23 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        ask:
-          - "ical add*"
-          - "ical update*"
-          - "ical delete*"
-          - "ical calendars create*"
-          - "ical calendars update*"
-          - "ical calendars delete*"
-        allow_reads:
+        reads:
           - "ical today*"
           - "ical upcoming*"
           - "ical list*"
           - "ical show*"
           - "ical search*"
+        lead:
+          ask:
+            - "ical add*"
+            - "ical update*"
+            - "ical delete*"
+            - "ical calendars create*"
+            - "ical calendars update*"
+            - "ical calendars delete*"
+        build:
+          deny:
+            - "ical *"
 
     - name: minutes
       repo: silverstein/minutes
@@ -192,7 +231,7 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        allow_reads:
+        reads:
           - "minutes list*"
           - "minutes search*"
           - "minutes get*"
@@ -200,6 +239,9 @@ packages:
           - "minutes research*"
           - "minutes actions*"
           - "minutes consistency*"
+        build:
+          deny:
+            - "minutes *"
 
     - name: minutes-desktop
       repo: silverstein/minutes

@@ -1,15 +1,57 @@
-{{- $buildBash := dict -}}
+{{- /*
+  opencode.json — agent topology and permissions
+
+  Topology
+    lead  (primary, default) — orchestrates, decides, dispatches, verifies; never edits
+    plan  (subagent)         — deep analysis and architectural thinking; read-only
+    build (subagent)         — receives scoped task, runs TDD loop, returns summary
+
+  Permission model
+    Top-level permission.bash applies to any subagent without its own override
+      (general, explore, scout). `*: ask` errs safe; explicit allow only for
+      universal safe reads.
+
+    Lead override (primary): `*: ask` + universal reads + per-package reads (allow)
+      + per-package lead.ask (ask). Lead asks before any write — including
+      dispatching workflow commands (commit, push, gh, linear, etc.).
+
+    Plan override (subagent): edit/write denied; `*: ask` + universal reads +
+      per-package reads (allow). Read-only analytical agent.
+
+    Build override (subagent): `*: allow` + per-package build.deny / build.allow.
+      Build runs local dev tooling freely; denied from service writes (gh, linear,
+      confluence, ical, remindctl) and git workflow ops (commit, push, rebase,
+      checkout, etc.), and chezmoi.
+
+  Per-package permissions live in .chezmoidata/packages.yaml under each
+  package's optional `permissions: { reads, lead: {ask}, build: {deny, allow} }`.
+  See dot_config/opencode/commands/audit.md for the permission audit recipe.
+
+  Last-matching-rule wins in opencode. JSON map keys serialize alphabetically,
+  so `*` (0x2A) lands before letters — specific rules layered after the
+  wildcard naturally take precedence.
+*/ -}}
+{{- $leadBash  := dict -}}
 {{- $planBash  := dict -}}
+{{- $buildBash := dict -}}
 {{- range $list := .packages -}}
   {{- if kindIs "slice" $list -}}
     {{- range $entry := $list -}}
       {{- if kindIs "map" $entry -}}
         {{- $perms := index $entry "permissions" -}}
         {{- if $perms -}}
-          {{- range $p := index $perms "ask" }}{{- $_ := set $buildBash $p "ask" -}}{{- end -}}
-          {{- range $p := index $perms "allow_reads" -}}
-            {{- $_ := set $buildBash $p "allow" -}}
-            {{- $_ := set $planBash  $p "allow" -}}
+          {{- /* reads → allow in both lead and plan */ -}}
+          {{- range $p := index $perms "reads"  }}{{- $_ := set $leadBash $p "allow" -}}{{- $_ := set $planBash $p "allow" -}}{{- end -}}
+          {{- /* lead.ask → ask in lead */ -}}
+          {{- $lead := index $perms "lead" -}}
+          {{- if $lead -}}
+            {{- range $p := index $lead "ask"   }}{{- $_ := set $leadBash $p "ask"   -}}{{- end -}}
+          {{- end -}}
+          {{- /* build.deny / build.allow → build */ -}}
+          {{- $build := index $perms "build" -}}
+          {{- if $build -}}
+            {{- range $p := index $build "deny"  }}{{- $_ := set $buildBash $p "deny"  -}}{{- end -}}
+            {{- range $p := index $build "allow" }}{{- $_ := set $buildBash $p "allow" -}}{{- end -}}
           {{- end -}}
         {{- end -}}
       {{- end -}}
@@ -18,62 +60,104 @@
 {{- end -}}
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "plan",
-  "instructions": ["{{ .chezmoi.homeDir }}/.config/opencode/tdd.md"],
+  "default_agent": "lead",
   "server": {
     "hostname": "127.0.0.1"
   },
   "permission": {
     "skill": "allow",
-    "bash": {{ merge (dict "*" "allow" "git push *" "ask" "git -C * push *" "ask" "git push" "ask") $buildBash | toPrettyJson | indent 6 | trim }}
+    "bash": {
+      "*": "ask",
+      "ls*": "allow",
+      "cat*": "allow",
+      "head*": "allow",
+      "tail*": "allow",
+      "grep*": "allow",
+      "rg*": "allow",
+      "find*": "allow",
+      "wc*": "allow",
+      "jq*": "allow",
+      "comm*": "allow",
+      "sort*": "allow",
+      "uniq*": "allow",
+      "git status*": "allow",
+      "git log*": "allow",
+      "git diff*": "allow",
+      "git show*": "allow",
+      "git rev-parse*": "allow",
+      "git blame*": "allow"
+    }
   },
   "agent": {
-    "plan": {
-      "model": "anthropic/claude-opus-4-7",
+    "lead": {
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/lead.md}",
       "permission": {
+        "task": "allow",
         "bash": {{ merge (dict
           "*" "ask"
           "ls*" "allow"
-          "sqlite3 -readonly*" "allow"
-          "wc*" "allow"
-          "comm*" "allow"
-          "sort*" "allow"
-          "uniq*" "allow"
+          "cat*" "allow"
           "head*" "allow"
           "tail*" "allow"
           "grep*" "allow"
+          "rg*" "allow"
+          "find*" "allow"
+          "wc*" "allow"
+          "jq*" "allow"
+          "comm*" "allow"
+          "sort*" "allow"
+          "uniq*" "allow"
+          "sqlite3 -readonly*" "allow"
+        ) $leadBash | toPrettyJson | indent 10 | trim }}
+      }
+    },
+    "plan": {
+      "description": "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only.",
+      "mode": "subagent",
+      "model": "anthropic/claude-opus-4-7",
+      "prompt": "{file:./prompts/plan.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny",
+        "bash": {{ merge (dict
+          "*" "ask"
+          "ls*" "allow"
           "cat*" "allow"
+          "head*" "allow"
+          "tail*" "allow"
+          "grep*" "allow"
+          "rg*" "allow"
+          "find*" "allow"
+          "wc*" "allow"
+          "jq*" "allow"
+          "comm*" "allow"
+          "sort*" "allow"
+          "uniq*" "allow"
+          "sqlite3 -readonly*" "allow"
         ) $planBash | toPrettyJson | indent 10 | trim }}
       }
     },
-    "local-build": {
-      "description": "Build-mode agent slimmed for local models — denies MCP tools (firefox-devtools, context7) and subagent delegation to cut ~25KB / ~7k tokens off the system prompt. The build agent's default prompt is sized for Sonnet/Opus; on a smaller local model prompt eval is the bottleneck. Edits are allowed without prompting because the local model is sandboxed by its own limited tool set and the user is expected to review work in this agent rather than gate each tool. Model: Qwen 3.5 27B (Unsloth UD-IQ3_XXS) — Glukhov's top empirical pick for OpenCode local (5.0% error rate; see README).",
-      "mode": "primary",
-      "model": "lmstudio/qwen3.5-27b",
+    "build": {
+      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling (test runners, linters, formatters, read-only git). Denied from service writes (gh, linear, confluence, ical, remindctl) and git workflow operations (commit, push, rebase, checkout, etc.). Returns a tight summary when done.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/build.md}",
+      "steps": 30,
       "permission": {
-        "firefox-devtools_*": "deny",
-        "context7_*": "deny",
-        "task": "deny",
         "edit": "allow",
         "write": "allow",
-        "bash": {
-          "*": "ask",
-          "ls*": "allow",
-          "cat*": "allow",
-          "head*": "allow",
-          "tail*": "allow",
-          "grep*": "allow",
-          "rg*": "allow",
-          "find*": "allow",
-          "wc*": "allow"
-        }
+        "bash": {{ merge (dict
+          "*" "allow"
+        ) $buildBash | toPrettyJson | indent 10 | trim }}
       }
     }
   },
   "command": {
     "review": {
       "description": "review changes [commit|branch|pr|staged], defaults to uncommitted",
-      "agent": "plan",
+      "agent": "lead",
       "subtask": true,
       "template": "Load your `review` skill, then review the following target: $ARGUMENTS\n\nIf $ARGUMENTS is empty, review uncommitted changes. If it looks like a PR number/URL, branch name, or commit SHA, route accordingly per the skill's instructions. Apply the tone rules from your global AGENTS.md when writing findings."
     }
