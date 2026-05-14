@@ -23,7 +23,7 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 ## Development Workflow
 
-**The pipeline is plan → tdd → review → commit → push.** Each phase has its own primitive: plan is the built-in plan agent (Tab to enter). TDD is always loaded — see the TDD instructions in your context. Review, commit, and push are skills you load in sequence as you advance.
+**The pipeline is plan → tdd → review → commit → push.** Each phase has its own primitive: plan is the built-in plan agent (Tab to enter). TDD is always loaded — see the TDD instructions in your context. Review, commit, and push are skills you MUST load before performing that phase: before producing any review output, before staging a commit, and before pushing — load the corresponding skill first. Do not skip.
 
 **Planning:** skip for typo fixes, single-line config changes, and trivial one-file edits. For non-trivial work, switch to plan mode (Tab) and present a plan before implementing. Plans should include the first failing test you'll write.
 
@@ -31,7 +31,7 @@ When you load a skill that has `requires` in its metadata, resolve each capabili
 
 **Branch discipline:** Create a new branch off `origin/main` before any code change. Never implement directly on `main`. If the target branch is already checked out in another worktree, remove that worktree first (`git worktree remove <path> --force`).
 
-**Issue discipline:** When picking up a tracked issue, set it to In Progress and assign it to the user before any code.
+**Issue discipline:** If the user's message references an issue, ticket, or PR by ID (e.g. "issue 1216", "ABC-123", "#774", "PR 752"), your FIRST action MUST be to fetch its context via your `issues` capability before any other tool call — not `git status`, not `ls`, not `read`. When picking up a tracked issue, set it to In Progress and assign it to the user before any code.
 
 **Scope discipline:** Only change what was asked. No adjacent refactors, dep bumps, or unrequested features.
 
@@ -57,7 +57,7 @@ Applies whenever drafting text another person will read — chat messages, code 
 - **Humble Inquiry.** Ask before asserting. Surface assumptions as questions, not conclusions. Prefer "I'm reading this as X — does that match?" over "this is X." Invite correction.
 - **Informal.** Conversational register. Contractions are fine. Skip corporate hedging ("I just wanted to reach out…", "per my last…"). Skip exclamation marks unless something is genuinely surprising.
 - **Concise.** Cut anything that doesn't carry information. One specific sentence beats three vague ones. No throat-clearing, no restating the question, no closing summary of what you just said.
-- **AI-authorship marker.** Prefix the message with ✨ when the prose is composed by you (the agent). The marker is the first character, before any other content. Omit it when relaying the user's own words verbatim or paraphrasing tightly — the marker means "I wrote this." For multi-part artifacts, one marker at the top is enough; don't sprinkle it through subsections. Skip the marker on commit messages and PR/MR descriptions (the `Co-Authored-By` trailer already signals AI authorship) and on titles (too short for the marker not to dominate).
+- **AI-authorship marker.** Prefix the message with `[ai]` when the prose is composed by you (the agent). The marker is the first token, before any other content. Omit it when relaying the user's own words verbatim or paraphrasing tightly — the marker means "I wrote this." For multi-part artifacts, one marker at the top is enough; don't sprinkle it through subsections. Skip the marker on commit messages and PR/MR descriptions (the `Co-Authored-By` trailer already signals AI authorship) and on titles (too short for the marker not to dominate).
 
 Before sending: would the recipient learn something? Is anything in here padding? Is anything stated where a question would do?
 

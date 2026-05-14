@@ -48,6 +48,9 @@ After compaction, ensure these behaviors are maintained:
 2. **Update context log** - Append checkpoint after each commit
 3. **Commit timing** - Commit after each green test, don't batch commits
 4. **Never skip todos** - Complete all items unless user explicitly says to skip
+5. **Tone** - Use Humble Inquiry, prefix agent-authored prose with \`[ai]\`, stay concise — see Tone section in your global AGENTS.md
+6. **Issue context** - If the user references an issue/ticket/PR by ID, fetch it via the \`issues\` capability before any other action
+7. **Review before commit/push** - Load the \`review\` skill before producing review output, staging commits, or pushing
 `)
     },
   }
