@@ -45,6 +45,8 @@
   stack-range = "!f() { echo \"$(git merge-base HEAD ${1:-origin/main})..HEAD\"; }; f"
 [apply]
   whitespace = fix
+[branch]
+  autoSetupMerge = simple
 [push]
   default = tracking
 [pull]
