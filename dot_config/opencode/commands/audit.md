@@ -71,7 +71,7 @@ SQL
 
 ### 1e. Workflow co-occurrence
 
-For each pair of skills that should fire together (commit + tdd, plan + architecture, etc.), check the gap. Example:
+For each pair of skills that should fire together (commit + review, plan + architecture, etc.), check the gap. Example:
 
 ```bash
 sqlite3 -readonly "$DB" <<SQL
@@ -81,19 +81,17 @@ WITH project AS (SELECT id FROM session WHERE project_id='$PROJECT_ID' AND time_
                   AND json_extract(data,'\$.state.status')='completed'
                   AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000))
 SELECT
-  SUM(CASE WHEN c.session_id IS NOT NULL AND t.session_id IS NULL THEN 1 ELSE 0 END) AS commit_no_tdd,
-  SUM(CASE WHEN c.session_id IS NOT NULL AND t.session_id IS NOT NULL THEN 1 ELSE 0 END) AS commit_and_tdd
+  SUM(CASE WHEN c.session_id IS NOT NULL AND t.session_id IS NULL THEN 1 ELSE 0 END) AS commit_no_review,
+  SUM(CASE WHEN c.session_id IS NOT NULL AND t.session_id IS NOT NULL THEN 1 ELSE 0 END) AS commit_and_review
 FROM project pr
 LEFT JOIN (SELECT DISTINCT session_id FROM loaded WHERE skill='commit') c ON c.session_id=pr.id
-LEFT JOIN (SELECT DISTINCT session_id FROM loaded WHERE skill='tdd') t ON t.session_id=pr.id;
+LEFT JOIN (SELECT DISTINCT session_id FROM loaded WHERE skill='review') t ON t.session_id=pr.id;
 SQL
 ```
 
-When tdd is no longer a skill, replace the t.session_id check with a manual sample of "did the session involve tests" — see Phase 5.
-
 ### 1f. Delegation effectiveness
 
-The "always delegate the work itself" rule from AGENTS.md is binary: any session where the primary agent edited files without dispatching at least one `task` call is a violation. These three queries surface the violation rate, the volume bucket where it concentrates, and the projects where the habit is weakest.
+The topology enforces delegation structurally: `lead` has no edit/write tools, so any edit-bearing session that isn't a child session (dispatched build) is a topology violation. This also catches sessions where the user manually invoked build as `@build`, bypassing lead entirely. These three queries surface the violation rate, the volume bucket where it concentrates, and the projects where the habit is weakest.
 
 **Headline metric — sessions with edits but zero `task` calls:**
 
@@ -117,7 +115,7 @@ LEFT JOIN tasks t ON t.session_id=b.id;
 SQL
 ```
 
-**Delegation rate by edit-volume bucket** — shows where the habit is weakest. Under "always delegate" every "no_delegation" cell is a violation; the buckets just tell you whether the rule is breaking on small jobs, large jobs, or everywhere.
+**Delegation rate by edit-volume bucket** — shows where the habit is weakest. Under the topology every "no_delegation" cell in a parent session is a violation; the 1-2 and 3-9 edit buckets are the key signal — direct-edit bypasses (user invoking `@build` directly, or pre-topology sessions) concentrate there.
 
 ```bash
 sqlite3 -readonly "$DB" <<SQL
@@ -249,41 +247,51 @@ done
 Inspect `dot_config/opencode/opencode.json.tmpl` and the rendered config:
 
 ```bash
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.lead.permission.bash'
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.plan.permission.bash'
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.permission.bash'
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.build.permission.bash'
 ```
 
 Flag both directions of permission drift:
 
 **Too permissive** (allow that should be ask, ask that should be deny):
 
-- A write/mutate command (`create`, `update`, `delete`, `push`, `apply`, `commit`, `merge`, `destroy`, `complete`, `add`, `edit`, `reply`, `append`) glob-matched to `allow` in the build-mode bash dict. Extract and scan:
+- A write/mutate command (`create`, `update`, `delete`, `push`, `apply`, `commit`, `merge`, `destroy`, `complete`, `add`, `edit`, `reply`, `append`) glob-matched to `allow` in the lead bash dict. Extract and scan:
 
 ```bash
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
-  | jq -r '.permission.bash | to_entries[] | select(.value=="allow") | .key' \
+  | jq -r '.agent.lead.permission.bash | to_entries[] | select(.value=="allow") | .key' \
   | grep -E '(create|update|delete|push|apply|commit|merge|destroy|complete|add|edit|reply|append)'
 ```
 
-- A pattern in plan mode that's `allow` but routes to a binary that can mutate via certain flags or subcommands (e.g. allowing `foo*` when only `foo view*` is read-only). Apply judgment to the plan allow list.
+- A pattern in plan mode that's `allow` but routes to a binary that can mutate via certain flags or subcommands (e.g. allowing `foo*` when only `foo view*` is read-only). Apply judgment to the lead allow list.
 - Read globs broader than necessary (`*` instead of `subcmd*`).
 
 **Too restrictive** (ask that should be allow, missing — causes friction):
 
-- Commands declared `allow_reads` in `packages.yaml` that aren't in the rendered plan dict:
+- Commands declared `reads` in `packages.yaml` that aren't in the rendered lead dict:
 
 ```bash
-# Extract declared allow_reads
-yq -r '.packages[][] | select(type == "!!map") | .permissions.allow_reads // [] | .[]' \
-  .chezmoidata/packages.yaml 2>/dev/null | sort -u > /tmp/declared_reads.txt
+# Extract declared reads (new key in packages.yaml)
+python3 -c "
+import yaml, sys
+data = yaml.safe_load(open('.chezmoidata/packages.yaml'))
+for section in data['packages'].values():
+    if not isinstance(section, list): continue
+    for entry in section:
+        if not isinstance(entry, dict): continue
+        perms = entry.get('permissions', {})
+        for p in perms.get('reads', []):
+            print(p)
+" | sort -u > /tmp/declared_reads.txt
 
-# Extract plan-mode allows
+# Extract lead-mode allows
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
-  | jq -r '.agent.plan.permission.bash | to_entries[] | select(.value=="allow") | .key' \
-  | sort -u > /tmp/plan_allows.txt
+  | jq -r '.agent.lead.permission.bash | to_entries[] | select(.value=="allow") | .key' \
+  | sort -u > /tmp/lead_allows.txt
 
-# Missing from plan
-comm -23 /tmp/declared_reads.txt /tmp/plan_allows.txt
+# Missing from lead (reads declared in packages.yaml but not in rendered lead bash)
+comm -23 /tmp/declared_reads.txt /tmp/lead_allows.txt
 ```
 
 - Tools in `mise`, `github_releases`, or npm sections of `packages.yaml` with no `permissions:` block (fall through to `*: ask`):
@@ -293,7 +301,7 @@ yq -r '.packages | (.mise // []) + (.github_releases // []) + (.npm // []) | .[]
   .chezmoidata/packages.yaml
 ```
 
-- Remember opencode evaluates pipeline segments independently — `linear issue view X | head -N` prompts on `head` even if `linear issue view*` is allowed. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) are in the plan allow list.
+- Remember opencode evaluates pipeline segments independently — `linear issue view X | head -N` prompts on `head` even if `linear issue view*` is allowed. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) are in the lead allow list.
 
 For each finding: tighten to `ask`, broaden to `allow`, add missing `permissions:` block in `packages.yaml`, or remove as redundant with `*`.
 
@@ -330,8 +338,9 @@ The original instruction-hierarchy/redundancy/context-budget checks. These still
 ```
 Base system prompt (opencode upstream)  → built-in
   + AGENTS.md (global)                  → always loaded
-  + instructions: files                 → always loaded (e.g. tdd.md)
+  + instructions: files                 → always loaded
   + opencode.json                       → agent config (models, permissions)
+  + prompts/*.md                        → per-agent system prompt (lead, plan, build)
   + skills/*/SKILL.md                   → on-demand via skill tool
   + commands/*.md                       → on /command invocation
 ```
@@ -343,6 +352,7 @@ Base system prompt (opencode upstream)  → built-in
 | Universal rules, tone, scope discipline | `dot_config/opencode/AGENTS.md.tmpl` | Always |
 | Standing rules (continuous trigger) | `dot_config/opencode/<name>.md` + `instructions:` | Always |
 | Agent config (model, permissions, temperature) | `dot_config/opencode/opencode.json.tmpl` | Always |
+| Agent-specific system prompt (lead/plan/build) | `dot_config/opencode/prompts/<agent>.md` | Per-agent always |
 | Specific-moment workflow (concrete trigger) | `skills/<name>/SKILL.md` | On `skill` tool call |
 | User-triggered workflow | `dot_config/opencode/commands/<name>.md` | On `/command` |
 
@@ -399,7 +409,7 @@ For each issue, pick one:
 | Local integration when upstream skill exists | Switch to external skill via `gh skill install` |
 | AGENTS.md > 400 lines | Move continuous-trigger content to `instructions:` |
 | Capability dangling | Wire to a provider, or remove the requirement |
-| Sessions with edits but zero `task` calls | Violation of "always delegate". Tighten AGENTS.md delegation language; if the rate doesn't drop after the next quarter, escalate to a hook that warns on the first non-delegated edit. |
+| Sessions with edits but zero `task` calls (in parent sessions) | Topology violation — lead should never edit directly. Check if user bypassed via `@build` direct invocation. If frequent: add step limit or tighten lead permissions. |
 
 Pre-existing changes from prior audits should be re-checked: the principle "measure before refactoring" applies to every audit, not just the first.
 
@@ -413,7 +423,7 @@ Run `/audit` quarterly. Also run after:
 - A new agent type appearing (e.g. opencode adds a built-in agent)
 - A noticeable shift in project mix (different repo dominating sessions)
 - A felt sense that "something isn't firing" — measure first
-- AGENTS.md delegation rules change — re-run Phase 1f to verify the violation rate drops
+  - Agent topology changes (new agents, mode changes, permission restructure) — re-run Phase 1f to verify the violation rate drops
 
 ## File locations (chezmoi)
 
@@ -421,7 +431,10 @@ Run `/audit` quarterly. Also run after:
 |---|---|
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md.tmpl` |
 | `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json.tmpl` |
-| `~/.config/opencode/tdd.md` (and other instructions: files) | `dot_config/opencode/<name>.md` |
+| `~/.config/opencode/*.md` (instructions: files) | `dot_config/opencode/<name>.md` |
+| `~/.config/opencode/prompts/lead.md` | `dot_config/opencode/prompts/lead.md` |
+| `~/.config/opencode/prompts/plan.md` | `dot_config/opencode/prompts/plan.md` |
+| `~/.config/opencode/prompts/build.md` | `dot_config/opencode/prompts/build.md` |
 | `~/.agents/skills/*` | `skills/*` (via `run_onchange_after_sync-and-validate-skills.sh.tmpl`) |
 | `~/.config/opencode/commands/*` | `dot_config/opencode/commands/*` |
 
