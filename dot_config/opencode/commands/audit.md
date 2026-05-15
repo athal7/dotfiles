@@ -244,66 +244,56 @@ done
 
 ### 2d. Opencode permissions audit
 
-Inspect `dot_config/opencode/opencode.json.tmpl` and the rendered config:
+For lead/plan, reads are classified at runtime by the permission-classifier plugin
+(`dot_config/opencode/plugins/permission-classifier.ts`) consulting `permission-reads.json`
+(generated from packages.yaml `permissions.always_allow`). The plugin uses `TOOL_ALWAYS_ALLOW` — a
+per-tool map of read subcommand suffixes — falling back to generic `DEFAULT_READ_VERBS`
+for anything not declared. The bash rules in opencode.json for lead/plan only carry
+universal defaults.
+
+Build uses `*: allow` plus ``build: deny`` from packages.yaml, rendered as
+`"<tool> *": "deny"` with `"<tool> <suffix>*": "allow"` carve-outs for each `always_allow` entry.
+
+The plugin emits a startup warning for any `always_allow` entry whose last token is already in
+`DEFAULT_READ_VERBS` — check opencode logs to catch redundant declarations after editing
+packages.yaml.
+
+Inspect rendered config:
 
 ```bash
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.lead.permission.bash'
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.plan.permission.bash'
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.build.permission.bash'
+chezmoi execute-template < dot_config/opencode/permission-reads.json.tmpl | jq '.tools | keys'
 ```
 
 Flag both directions of permission drift:
 
 **Too permissive** (allow that should be ask, ask that should be deny):
 
-- A write/mutate command (`create`, `update`, `delete`, `push`, `apply`, `commit`, `merge`, `destroy`, `complete`, `add`, `edit`, `reply`, `append`) glob-matched to `allow` in the lead bash dict. Extract and scan:
+- A write/mutate suffix in `permissions.always_allow` in packages.yaml. Scan the rendered output:
 
 ```bash
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
-  | jq -r '.agent.lead.permission.bash | to_entries[] | select(.value=="allow") | .key' \
+chezmoi execute-template < dot_config/opencode/permission-reads.json.tmpl \
+  | jq -r '.tools | to_entries[] | .key as $t | .value[] | "\($t) \(.)"' \
   | grep -E '(create|update|delete|push|apply|commit|merge|destroy|complete|add|edit|reply|append)'
 ```
 
-- A pattern in plan mode that's `allow` but routes to a binary that can mutate via certain flags or subcommands (e.g. allowing `foo*` when only `foo view*` is read-only). Apply judgment to the lead allow list.
-- Read globs broader than necessary (`*` instead of `subcmd*`).
+- Build deny list missing a subcommand that mutates state. Compare `build: deny` in packages.yaml against the tool's full subcommand list.
+- A `reads` suffix broader than necessary (e.g. bare `get` when `docs get` is the real scope).
 
 **Too restrictive** (ask that should be allow, missing — causes friction):
 
-- Commands declared `reads` in `packages.yaml` that aren't in the rendered lead dict:
-
-```bash
-# Extract declared reads (new key in packages.yaml)
-python3 -c "
-import yaml, sys
-data = yaml.safe_load(open('.chezmoidata/packages.yaml'))
-for section in data['packages'].values():
-    if not isinstance(section, list): continue
-    for entry in section:
-        if not isinstance(entry, dict): continue
-        perms = entry.get('permissions', {})
-        for p in perms.get('reads', []):
-            print(p)
-" | sort -u > /tmp/declared_reads.txt
-
-# Extract lead-mode allows
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
-  | jq -r '.agent.lead.permission.bash | to_entries[] | select(.value=="allow") | .key' \
-  | sort -u > /tmp/lead_allows.txt
-
-# Missing from lead (reads declared in packages.yaml but not in rendered lead bash)
-comm -23 /tmp/declared_reads.txt /tmp/lead_allows.txt
-```
-
-- Tools in `mise`, `github_releases`, or npm sections of `packages.yaml` with no `permissions:` block (fall through to `*: ask`):
+- Tools in `mise`, `github_releases`, or npm sections of `packages.yaml` with no `permissions:` block (the plugin falls back to generic verb classification, which may miss tool-specific subcommands):
 
 ```bash
 yq -r '.packages | (.mise // []) + (.github_releases // []) + (.npm // []) | .[] | select(type == "!!map") | select(.permissions == null) | .name // .repo' \
   .chezmoidata/packages.yaml
 ```
 
-- Remember opencode evaluates pipeline segments independently — `linear issue view X | head -N` prompts on `head` even if `linear issue view*` is allowed. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) are in the lead allow list.
+- Remember opencode evaluates pipeline segments independently — `linear issue view X | head -N` prompts on `head` even if `linear issue view` is a known read. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) are in the lead allow list.
 
-For each finding: tighten to `ask`, broaden to `allow`, add missing `permissions:` block in `packages.yaml`, or remove as redundant with `*`.
+For each finding: tighten to `ask`, broaden to `allow`, add missing `permissions:` block in `packages.yaml`, or remove as redundant with `DEFAULT_READ_VERBS`.
 
 ---
 

@@ -1,38 +1,3 @@
-{{- /*
-  opencode.json — agent topology and permissions
-
-  Topology
-    lead  (primary, default) — orchestrates, decides, dispatches, verifies; never edits
-    plan  (subagent)         — deep analysis and architectural thinking; read-only
-    build (subagent)         — receives scoped task, runs TDD loop, returns summary
-
-  Permission model
-    Top-level permission.bash applies to any subagent without its own override
-      (general, explore, scout). `*: ask` errs safe; explicit allow only for
-      universal safe reads.
-
-    Lead override (primary): `*: ask` + universal reads + per-package reads (allow)
-      + per-package lead.ask (ask). Lead asks before any write — including
-      dispatching workflow commands (commit, push, gh, linear, etc.).
-
-    Plan override (subagent): edit/write denied; `*: ask` + universal reads +
-      per-package reads (allow). Read-only analytical agent.
-
-    Build override (subagent): `*: allow` + per-package build.deny / build.allow.
-      Build runs local dev tooling freely; denied from service writes (gh, linear,
-      confluence, ical, remindctl) and git workflow ops (commit, push, rebase,
-      checkout, etc.), and chezmoi.
-
-  Per-package permissions live in .chezmoidata/packages.yaml under each
-  package's optional `permissions: { reads, lead: {ask}, build: {deny, allow} }`.
-  See dot_config/opencode/commands/audit.md for the permission audit recipe.
-
-  Last-matching-rule wins in opencode. JSON map keys serialize alphabetically,
-  so `*` (0x2A) lands before letters — specific rules layered after the
-  wildcard naturally take precedence.
-*/ -}}
-{{- $leadBash  := dict -}}
-{{- $planBash  := dict -}}
 {{- $buildBash := dict -}}
 {{- range $list := .packages -}}
   {{- if kindIs "slice" $list -}}
@@ -40,18 +5,20 @@
       {{- if kindIs "map" $entry -}}
         {{- $perms := index $entry "permissions" -}}
         {{- if $perms -}}
-          {{- /* reads → allow in both lead and plan */ -}}
-          {{- range $p := index $perms "reads"  }}{{- $_ := set $leadBash $p "allow" -}}{{- $_ := set $planBash $p "allow" -}}{{- end -}}
-          {{- /* lead.ask → ask in lead */ -}}
-          {{- $lead := index $perms "lead" -}}
-          {{- if $lead -}}
-            {{- range $p := index $lead "ask"   }}{{- $_ := set $leadBash $p "ask"   -}}{{- end -}}
-          {{- end -}}
-          {{- /* build.deny / build.allow → build */ -}}
-          {{- $build := index $perms "build" -}}
-          {{- if $build -}}
-            {{- range $p := index $build "deny"  }}{{- $_ := set $buildBash $p "deny"  -}}{{- end -}}
-            {{- range $p := index $build "allow" }}{{- $_ := set $buildBash $p "allow" -}}{{- end -}}
+          {{- $denyBuild := index $perms "build" -}}
+          {{- if eq $denyBuild "deny" -}}
+            {{- $rawName := index $entry "name" | toString -}}
+            {{- $cmd := index $entry "command" -}}
+            {{- if not $cmd -}}
+              {{- $parts := splitList "/" $rawName -}}
+              {{- $cmd = last $parts -}}
+            {{- end -}}
+            {{- $denyPattern := printf "%s *" $cmd -}}
+            {{- $_ := set $buildBash $denyPattern "deny" -}}
+            {{- range $suffix := index $perms "always_allow" -}}
+              {{- $allowPattern := printf "%s %s*" $cmd $suffix -}}
+              {{- $_ := set $buildBash $allowPattern "allow" -}}
+            {{- end -}}
           {{- end -}}
         {{- end -}}
       {{- end -}}
@@ -95,7 +62,7 @@
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
         "task": "allow",
-        "bash": {{ merge (dict
+        "bash": {{ dict
           "*" "ask"
           "ls*" "allow"
           "cat*" "allow"
@@ -110,7 +77,7 @@
           "sort*" "allow"
           "uniq*" "allow"
           "sqlite3 -readonly*" "allow"
-        ) $leadBash | toPrettyJson | indent 10 | trim }}
+        | toPrettyJson | indent 10 | trim }}
       }
     },
     "plan": {
@@ -121,7 +88,7 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": {{ merge (dict
+        "bash": {{ dict
           "*" "ask"
           "ls*" "allow"
           "cat*" "allow"
@@ -136,11 +103,11 @@
           "sort*" "allow"
           "uniq*" "allow"
           "sqlite3 -readonly*" "allow"
-        ) $planBash | toPrettyJson | indent 10 | trim }}
+        | toPrettyJson | indent 10 | trim }}
       }
     },
     "build": {
-      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling (test runners, linters, formatters, read-only git). Denied from service writes (gh, linear, confluence, ical, remindctl) and git workflow operations (commit, push, rebase, checkout, etc.). Returns a tight summary when done.",
+      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling (test runners, linters, formatters, read-only git). Denied from service writes (gh, linear, confluence, ical, remindctl) and git workflow operations (commit, push, rebase, checkout, etc.) via per-package agents.build.deny rules. Returns a tight summary when done.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/build.md}",

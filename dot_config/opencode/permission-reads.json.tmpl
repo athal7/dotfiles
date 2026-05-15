@@ -1,0 +1,23 @@
+{{- $tools := dict -}}
+{{- range $list := .packages -}}
+  {{- if kindIs "slice" $list -}}
+    {{- range $entry := $list -}}
+      {{- if kindIs "map" $entry -}}
+        {{- $perms := index $entry "permissions" -}}
+        {{- if $perms -}}
+          {{- $alwaysAllow := index $perms "always_allow" -}}
+          {{- if $alwaysAllow -}}
+            {{- $rawName := index $entry "name" | toString -}}
+            {{- $cmd := index $entry "command" -}}
+            {{- if not $cmd -}}
+              {{- $parts := splitList "/" $rawName -}}
+              {{- $cmd = last $parts -}}
+            {{- end -}}
+            {{- $_ := set $tools $cmd (dict "always_allow" $alwaysAllow) -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{ dict "tools" $tools | toJson }}

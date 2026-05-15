@@ -10,19 +10,10 @@ packages:
     - name: bat
     - name: chezmoi
       permissions:
-        reads:
-          - "chezmoi cat*"
-          - "chezmoi verify*"
-          - "chezmoi diff*"
-          - "chezmoi data*"
-          - "chezmoi managed*"
-          - "chezmoi execute-template*"
-        lead:
-          ask:
-            - "chezmoi *"
-        build:
-          deny:
-            - "chezmoi *"
+        always_allow:
+          - execute-template
+          - source-path
+        build: deny
     - name: colima
     - name: direnv
     - name: docker
@@ -30,54 +21,30 @@ packages:
     - name: ffmpeg
     - name: git
       permissions:
-        reads:
-          - "git log*"
-          - "git diff*"
-          - "git status*"
-          - "git show*"
-          - "git rev-parse*"
-          - "git blame*"
-          - "git stack-log*"
-          - "git stack-diff*"
-          - "git stack-range*"
-        lead:
-          ask:
-            - "git *"
-        build:
-          deny:
-            - "git *"
-          allow:
-            - "git log*"
-            - "git diff*"
-            - "git status*"
-            - "git show*"
-            - "git rev-parse*"
-            - "git blame*"
+        always_allow:
+          - rev-parse
+          - merge-base
+          - for-each-ref
+          - ls-files
+          - ls-tree
+          - ls-remote
+          - cat-file
+          - reflog
+          - shortlog
+          - name-rev
+          - symbolic-ref
+          - stack-log
+          - stack-diff
+          - stack-range
+        build: deny
     - name: gh
       permissions:
-        reads:
-          - "gh search*"
-          - "gh pr list*"
-          - "gh pr view*"
-          - "gh pr diff*"
-          - "gh pr checks*"
-          - "gh issue list*"
-          - "gh issue view*"
-          - "gh repo view*"
-          - "gh run list*"
-          - "gh run view*"
-        lead:
-          ask:
-            - "gh *"
-        build:
-          deny:
-            - "gh *"
+        always_allow:
+          - checks
+        build: deny
     - name: git-spice
     - name: jc
     - name: jq
-      permissions:
-        reads:
-          - "jq*"
     - name: graphqurl
     - name: k9s
     - name: kubernetes-cli
@@ -87,9 +54,6 @@ packages:
     - name: openssl
     - name: opentofu
     - name: ripgrep
-      permissions:
-        reads:
-          - "rg*"
     - name: starship
     - name: talisman
     - name: watch
@@ -97,68 +61,25 @@ packages:
     - name: googleworkspace-cli
       command: gws
       permissions:
-        reads:
-          - "gws docs documents get*"
-          - "gws drive files list*"
-          - "gws drive files export*"
-        build:
-          deny:
-            - "gws *"
+        always_allow:
+          - drive files export
+        build: deny
     - name: steipete/tap/remindctl
       command: remindctl
       permissions:
-        reads:
-          - "remindctl show*"
-          - "remindctl list*"
-          - "remindctl status*"
-        lead:
-          ask:
-            - "remindctl add*"
-            - "remindctl edit*"
-            - "remindctl delete*"
-            - "remindctl complete*"
-        build:
-          deny:
-            - "remindctl *"
+        build: deny
     - name: schpet/tap/linear
       command: linear
       permissions:
-        reads:
-          - "linear issue view*"
-          - "linear issue list*"
-          - "linear issue mine*"
-          - "linear issue describe*"
-          - "linear team list*"
-          - "linear team members*"
-          - "linear project list*"
-          - "linear project view*"
-          - "linear cycle list*"
-          - "linear cycle view*"
-          - "linear schema*"
-          - "linear auth whoami*"
-        lead:
-          ask:
-            - "linear *"
-        build:
-          deny:
-            - "linear *"
+        always_allow:
+          - mine
+          - members
+          - schema
+        build: deny
     - name: pchuri/tap/confluence-cli
       command: confluence
       permissions:
-        reads:
-          - "confluence read*"
-          - "confluence search*"
-          - "confluence find*"
-        lead:
-          ask:
-            - "confluence create*"
-            - "confluence update*"
-            - "confluence delete*"
-            - "confluence append*"
-            - "confluence reply*"
-        build:
-          deny:
-            - "confluence *"
+        build: deny
 
   casks:
     - name: gcloud-cli
@@ -205,23 +126,10 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        reads:
-          - "ical today*"
-          - "ical upcoming*"
-          - "ical list*"
-          - "ical show*"
-          - "ical search*"
-        lead:
-          ask:
-            - "ical add*"
-            - "ical update*"
-            - "ical delete*"
-            - "ical calendars create*"
-            - "ical calendars update*"
-            - "ical calendars delete*"
-        build:
-          deny:
-            - "ical *"
+        always_allow:
+          - today
+          - upcoming
+        build: deny
 
     - name: minutes
       repo: silverstein/minutes
@@ -231,17 +139,11 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        reads:
-          - "minutes list*"
-          - "minutes search*"
-          - "minutes get*"
-          - "minutes person*"
-          - "minutes research*"
-          - "minutes actions*"
-          - "minutes consistency*"
-        build:
-          deny:
-            - "minutes *"
+        always_allow:
+          - person
+          - research
+          - consistency
+        build: deny
 
     - name: minutes-desktop
       repo: silverstein/minutes
