@@ -49,6 +49,12 @@ const DEFAULT_WRITE_VERBS = new Set([
   "undo", "rerun", "cancel", "repair", "fix", "run",
 ])
 
+const READ_ONLY_COMMANDS = new Set([
+  "ls", "cat", "head", "tail", "grep", "rg", "wc", "jq",
+  "comm", "sort", "uniq", "bat", "less", "more", "file",
+  "stat", "tree", "which", "whereis", "pwd", "echo",
+])
+
 function validateAlwaysAllow(toolAlwaysAllow: Record<string, Set<string>>): void {
   for (const [tool, entries] of Object.entries(toolAlwaysAllow)) {
     for (const entry of entries) {
@@ -176,9 +182,26 @@ function classifyDefault(argv: string[]): Classification {
   return "unknown"
 }
 
+function classifyFind(argv: string[]): Classification {
+  // find is destructive with -exec, -execdir, -delete, -ok, -okdir
+  const dangerous = new Set(["-exec", "-execdir", "-delete", "-ok", "-okdir"])
+  if (argv.some(t => dangerous.has(t))) return "write"
+  return "read"
+}
+
+function classifySqlite(argv: string[]): Classification {
+  // Only safe if -readonly is explicitly passed
+  if (argv.some(t => t === "-readonly" || t === "--readonly")) return "read"
+  return "unknown"
+}
+
 function classifySegment(segment: string, rawCommand?: string): Classification {
   const argv = tokens(segment)
   if (argv.length === 0) return "unknown"
+
+  if (argv[0] === "find") return classifyFind(argv)
+  if (argv[0] === "sqlite3") return classifySqlite(argv)
+  if (READ_ONLY_COMMANDS.has(argv[0])) return "read"
 
   switch (argv[0]) {
     case "git":  {

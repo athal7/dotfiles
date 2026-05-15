@@ -34,25 +34,7 @@
   "permission": {
     "skill": "allow",
     "bash": {
-      "*": "ask",
-      "ls*": "allow",
-      "cat*": "allow",
-      "head*": "allow",
-      "tail*": "allow",
-      "grep*": "allow",
-      "rg*": "allow",
-      "find*": "allow",
-      "wc*": "allow",
-      "jq*": "allow",
-      "comm*": "allow",
-      "sort*": "allow",
-      "uniq*": "allow",
-      "git status*": "allow",
-      "git log*": "allow",
-      "git diff*": "allow",
-      "git show*": "allow",
-      "git rev-parse*": "allow",
-      "git blame*": "allow"
+      "*": "ask"
     }
   },
   "agent": {
@@ -62,22 +44,9 @@
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
         "task": "allow",
-        "bash": {{ dict
-          "*" "ask"
-          "ls*" "allow"
-          "cat*" "allow"
-          "head*" "allow"
-          "tail*" "allow"
-          "grep*" "allow"
-          "rg*" "allow"
-          "find*" "allow"
-          "wc*" "allow"
-          "jq*" "allow"
-          "comm*" "allow"
-          "sort*" "allow"
-          "uniq*" "allow"
-          "sqlite3 -readonly*" "allow"
-        | toPrettyJson | indent 10 | trim }}
+        "bash": {
+          "*": "ask"
+        }
       }
     },
     "plan": {
@@ -88,22 +57,9 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": {{ dict
-          "*" "ask"
-          "ls*" "allow"
-          "cat*" "allow"
-          "head*" "allow"
-          "tail*" "allow"
-          "grep*" "allow"
-          "rg*" "allow"
-          "find*" "allow"
-          "wc*" "allow"
-          "jq*" "allow"
-          "comm*" "allow"
-          "sort*" "allow"
-          "uniq*" "allow"
-          "sqlite3 -readonly*" "allow"
-        | toPrettyJson | indent 10 | trim }}
+        "bash": {
+          "*": "ask"
+        }
       }
     },
     "build": {

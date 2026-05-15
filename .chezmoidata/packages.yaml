@@ -36,6 +36,9 @@ packages:
           - stack-log
           - stack-diff
           - stack-range
+          - fetch
+          - checkout
+          - branch
         build: deny
     - name: gh
       permissions:

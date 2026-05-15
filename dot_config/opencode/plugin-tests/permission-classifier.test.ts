@@ -348,6 +348,89 @@ function classifyDefault(argv: string[]): Classification {
   return "unknown"
 }
 
+// ---------------------------------------------------------------------------
+// classifyFind, classifySqlite, READ_ONLY_COMMANDS — argv[0]-based classifiers
+// ---------------------------------------------------------------------------
+
+const READ_ONLY_COMMANDS = new Set([
+  "ls", "cat", "head", "tail", "grep", "rg", "wc", "jq",
+  "comm", "sort", "uniq", "bat", "less", "more", "file",
+  "stat", "tree", "which", "whereis", "pwd", "echo",
+])
+
+function classifyFind(argv: string[]): Classification {
+  const dangerous = new Set(["-exec", "-execdir", "-delete", "-ok", "-okdir"])
+  if (argv.some(t => dangerous.has(t))) return "write"
+  return "read"
+}
+
+function classifySqlite(argv: string[]): Classification {
+  if (argv.some(t => t === "-readonly" || t === "--readonly")) return "read"
+  return "unknown"
+}
+
+describe("classifyFind — find safety classification", () => {
+  it("classifies find with no flags as read", () => {
+    // Arrange / Act / Assert
+    expect(classifyFind(["find", "."])).toBe("read")
+  })
+
+  it("classifies find with safe filter flags as read", () => {
+    expect(classifyFind(["find", ".", "-type", "f"])).toBe("read")
+  })
+
+  it("classifies find with -exec as write", () => {
+    expect(classifyFind(["find", ".", "-exec", "rm", "{}", ";"])).toBe("write")
+  })
+
+  it("classifies find with -delete as write", () => {
+    expect(classifyFind(["find", ".", "-delete"])).toBe("write")
+  })
+
+  it("classifies find with -execdir as write", () => {
+    expect(classifyFind(["find", ".", "-execdir", "echo", "{}"])).toBe("write")
+  })
+})
+
+describe("classifySqlite — sqlite3 read-only guard", () => {
+  it("classifies sqlite3 with -readonly as read", () => {
+    expect(classifySqlite(["sqlite3", "-readonly", "db.sqlite", ".tables"])).toBe("read")
+  })
+
+  it("classifies sqlite3 without -readonly as unknown", () => {
+    expect(classifySqlite(["sqlite3", "db.sqlite", ".tables"])).toBe("unknown")
+  })
+})
+
+describe("READ_ONLY_COMMANDS — argv[0] static allowlist", () => {
+  it("returns read for each command in the set", () => {
+    // Minimal inline classifier that mirrors step 3 of classifySegment
+    function classifyByArgv0(argv: string[]): Classification {
+      if (READ_ONLY_COMMANDS.has(argv[0])) return "read"
+      return "unknown"
+    }
+
+    const cases: [string, string[]][] = [
+      ["ls /tmp",       ["ls", "/tmp"]],
+      ["cat foo",       ["cat", "foo"]],
+      ["grep pattern file", ["grep", "pattern", "file"]],
+      ["rg pattern",    ["rg", "pattern"]],
+      ["wc -l file",    ["wc", "-l", "file"]],
+      ["jq '.' file",   ["jq", ".", "file"]],
+      ["sort file",     ["sort", "file"]],
+      ["uniq input",    ["uniq", "input"]],
+    ]
+
+    for (const [label, argv] of cases) {
+      expect(classifyByArgv0(argv), label).toBe("read")
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// classifyDefault — walk-backward verb detection
+// ---------------------------------------------------------------------------
+
 describe("classifyDefault — walk-backward verb detection", () => {
   it("classifies a nested CLI with positional args after the verb as read", () => {
     // Arrange: "get" is the verb; "DOC_ID" and "outfile.txt" are positional args after it
