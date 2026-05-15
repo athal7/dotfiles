@@ -17,6 +17,34 @@ Perform QA verification using Firefox DevTools browser automation.
 3. **Verify Server** — curl localhost:PORT before browser automation
 4. **If server not running** — Report clearly and stop
 
+## Session Audit Trail
+
+At the start of every run:
+
+```bash
+SESSION_DIR="/tmp/qa-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$SESSION_DIR"
+```
+
+After **every** browser action (navigate, click, fill, submit), scroll then screenshot:
+
+- Interacted with a specific element → `evaluate_script` with `(el) => el.scrollIntoView({ block: 'center' })`, passing the element's UID as an arg
+- General page-state shot → `evaluate_script` with `() => window.scrollTo(0, 0)`
+
+Then save the screenshot:
+
+```
+screenshot_page saveTo="$SESSION_DIR/001-page-name.png"
+```
+
+Number files sequentially (`001-`, `002-`, …). Use a short descriptive slug as the name.
+
+After all testing is done, generate and open the HTML report:
+
+```bash
+(cd "$SESSION_DIR" && printf '<html><body style="font-family:sans-serif">' > report.html && for f in *.png; do printf '<figure style="margin:2em 0"><img src="%s" style="max-width:100%%;border:1px solid #ccc"><figcaption>%s</figcaption></figure>\n' "$f" "$f" >> report.html; done && printf '</body></html>' >> report.html && open report.html)
+```
+
 ## Verification
 
 Use firefox-devtools MCP tools. Check project AGENTS.md for selectors/credentials.
@@ -33,5 +61,6 @@ Verify the main flow, then edge cases (empty states, errors, boundaries). Screen
 ## Output
 
 1. Pass/fail summary with issues found
-2. Screenshots of key states
-3. Steps to reproduce failures
+2. Session directory path (e.g. `/tmp/qa-20260515-143022/`)
+3. HTML report opened for inspection (all screenshots in sequence)
+4. Steps to reproduce failures
