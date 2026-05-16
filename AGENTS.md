@@ -12,7 +12,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
 - **`dot_config/opencode/`** — OpenCode config: model, MCPs, plugins, permissions, agent instructions
-- **`dot_agents/skills/`** — agent skills deployed to `~/.agents/skills/`
+- **`skills/`** — agent skills deployed to `~/.agents/skills/`
 - **`Library/LaunchAgents/`** — macOS services (opencode web on port 4096)
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
@@ -24,9 +24,9 @@ All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`
 
 ## OpenCode Config
 
-MCPs, plugins, and permissions are all in `opencode.json`. Skills live in `dot_agents/skills/` — edit here, not in `~/.agents/skills/`.
+MCPs, plugins, and permissions are all in `opencode.json`. Skills live in `skills/` — edit here, not in `~/.agents/skills/`.
 
-**Keep the global `AGENTS.md.tmpl` lean.** Resist adding DO/DO NOT lists to `dot_config/opencode/AGENTS.md.tmpl`. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
+**Keep the global `dot_config/opencode/AGENTS.md` lean.**  Resist adding DO/DO NOT lists to it. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
 
 ## Public Repo — Privacy Guidelines
 

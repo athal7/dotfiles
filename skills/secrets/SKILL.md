@@ -7,7 +7,7 @@ metadata:
     - secrets
 ---
 
-All secrets are stored in the macOS Keychain under service `chezmoi`. The account name matches the secret name declared in `$(chezmoi source-path)/.chezmoidata/local.yaml` under the `secrets` key.
+All secrets are stored in the macOS Keychain under service `chezmoi`. The account name matches the secret name declared in `$(chezmoi source-path)/.chezmoidata/local.yaml` under the `secrets` key — these are lowercase (e.g. `slack_user_token`), not the uppercase env var convention a skill body might use (e.g. `$SLACK_USER_TOKEN`).
 
 This works non-interactively from any agent context (including remote sessions) — no Touch ID, no biometric prompts.
 

@@ -172,6 +172,28 @@ function classifyCurl(argv: string[], rawCommand?: string): Classification {
   return "read"
 }
 
+function classifyXh(argv: string[]): Classification {
+  const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
+  const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"])
+  const nf = nonFlagTokens(argv.slice(1))
+
+  // Explicit HTTP method as first positional arg
+  if (nf.length > 0) {
+    const upper = nf[0].toUpperCase()
+    if (WRITE_METHODS.has(upper)) return "write"
+    if (READ_METHODS.has(upper)) return "read"
+  }
+
+  // Body flags
+  if (argv.some(t => ["--json", "--form", "--multipart"].includes(t))) return "write"
+
+  // Body items: key=value or key:=value but NOT key==value (query param)
+  const hasBodyItem = nf.some(t => !t.startsWith("http") && /^[^:=]+(:=|[^=]=)[^=]/.test(t))
+  if (hasBodyItem) return "write"
+
+  return "read"
+}
+
 function classifyDefault(argv: string[]): Classification {
   const nf = nonFlagTokens(argv)
   for (let i = nf.length - 1; i >= 1; i--) {
@@ -215,6 +237,7 @@ function classifySegment(segment: string, rawCommand?: string): Classification {
       break
     }
     case "curl": return classifyCurl(argv, rawCommand)
+    case "xh": return classifyXh(argv)
   }
 
   if (matchesToolAlwaysAllow(argv)) return "read"

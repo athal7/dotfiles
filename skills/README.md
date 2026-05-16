@@ -6,7 +6,7 @@ See the [dotfiles README](../README.md) for install instructions, the capability
 
 ## Skills
 
-Capabilities backed by a CLI (`cli://`) don't have a skill — the agent reads `--help` on demand. Capabilities backed by a skill carry non-obvious usage knowledge that `--help` doesn't surface.
+Integration skills self-register their provided capabilities via `provides` in frontmatter — no manifest needed. Capabilities backed by a skill carry non-obvious usage knowledge that `--help` doesn't surface.
 
 | Integration (skill) | Workflow |
 |---------------------|----------|
@@ -14,8 +14,8 @@ Capabilities backed by a CLI (`cli://`) don't have a skill — the agent reads `
 | **figma** — Read Figma files, components, variables, and projects | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
 | **gh** — GitHub CLI integration: merge requests, CI, inline comments | **chezmoi** — Manage dotfiles via chezmoi |
 | **docs** — Read/write Google Docs and Confluence | **commit** — Semantic commit format, branch naming, squashing |
-| **slack** — Send messages, search conversations, read threads | **context-log** — Maintain `.opencode/context-log.md` across sessions |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **conversations** — Research people and decisions across chat, meetings, email |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **context-log** — Maintain `.opencode/context-log.md` across sessions |
+| | **conversations** — Research people and decisions across chat, meetings, email |
 | **pty** — PTY sessions for long-running or interactive processes | **issues** — Route to Linear or GitHub Issues based on org |
 | **secrets** — Fetch credentials and API keys | **observability** — Investigate production issues using logs and traces |
 | | **post-meeting** — Post-recording meeting processing |
@@ -29,7 +29,6 @@ Capabilities backed by a CLI (`cli://`) don't have a skill — the agent reads `
 External skills (installed via `gh skill install` from upstream maintainers) — see `.chezmoidata/packages.yaml` `skills:` block:
 
 - **ical-cli** ([BRO3886/ical](https://github.com/BRO3886/ical)) — macOS Calendar from the terminal
-- **linear-cli** ([schpet/linear-cli](https://github.com/schpet/linear-cli)) — Linear issues from the terminal
 
 ## Beyond skills
 
@@ -50,12 +49,12 @@ User-triggered slash commands that package self-contained workflows. Invoke with
 
 ## Spec extension watchlist
 
-This repo solo-extends the agentskills spec via a capabilities manifest (`requires`/`provides` + `capabilities.yaml`). Several open proposals would let parts of that move upstream. Re-check during each `/audit`.
+This repo implements the `requires`/`provides` dependency injection pattern from the agentskills spec. Capabilities are discovered entirely through skill `provides` declarations — no manifest file. Several open proposals would let this move upstream. Re-check during each `/audit`.
 
 | Issue | What it would change for us |
 |---|---|
-| [agentskills #110](https://github.com/agentskills/agentskills/issues/110) — Skill dependencies + version | Native `requires:` for inter-skill dependencies. Would replace the `requires:` half of our manifest. |
-| [agentskills #330](https://github.com/agentskills/agentskills/issues/330) — Tool dependencies | Spec-level way to declare CLI/tool requirements per skill. Adjacent to our `provides: cli://` pattern. |
+| [agentskills #110](https://github.com/agentskills/agentskills/issues/110) — Skill dependencies + version | Native `requires:` for inter-skill dependencies. Would replace the `requires:` half of our frontmatter `requires` declarations. |
+| [agentskills #330](https://github.com/agentskills/agentskills/issues/330) — Tool dependencies | Spec-level way to declare CLI/tool requirements per skill. Adjacent to our `provides:` + integration skill pattern. |
 | [agentskills #111](https://github.com/agentskills/agentskills/issues/111) — `agents:` field (closed) | Per-agent skill scoping in frontmatter. Would have replaced our (now-removed) per-agent permission scoping if it had landed. |
 | [agentskills #129](https://github.com/agentskills/agentskills/issues/129) — Sub-agent + skill interop (closed) | Strategic-direction thread on how subagents reference skills. Worth tracking even though closed. |
 | [anthropics/claude-code #44952](https://github.com/anthropics/claude-code/issues/44952) — Per-agent skill scoping | Same problem in Claude Code. If they ship something portable, we adopt. |

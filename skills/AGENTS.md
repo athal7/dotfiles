@@ -6,49 +6,11 @@
 
 **Workflow skills** describe how to carry out a process. They are tool-agnostic by design: they declare `requires` in metadata and reference only capability names in their body — never tool names, binary names, CLI flags, or other skill names.
 
-**CLI providers** — when a tool has comprehensive `--help`, map the capability to `cli://<binary>` in `capabilities.yaml` instead of writing a wrapper skill. Only write an integration skill when there are genuine gotchas that help text won't surface.
-
-### Integration skill provider preference
-
-When a capability is fulfilled by a CLI, prefer providers in this order (simplest first, fall through when the previous tier doesn't fit):
-
-1. **Pure CLI.** If `--help` is sufficient, just map `<capability>: cli://<binary>` in `capabilities.yaml`. The default for self-explanatory tools.
-2. **CLI with capability notes.** If the CLI has good `--help` plus one or two gotchas, map `<capability>: { provider: cli://<binary>, notes: "..." }`. No skill file needed.
-3. **External skill from the CLI maintainer.** If the CLI ships a SKILL.md upstream (e.g. `BRO3886/ical`, `schpet/linear-cli`), install it via `gh skill install` declared in `.chezmoidata/packages.yaml: skills:`. The maintainer owns the gotchas; updates flow automatically.
-4. **Local integration skill.** When no upstream skill exists but the CLI has gotchas that don't fit in `notes:`, write a local skill in `skills/<name>/SKILL.md` with `provides: [<capability>]`. This is the consolation pattern — keep it until an adequate upstream skill appears.
-
-When evaluating an existing local integration skill, ask: does an upstream skill exist now? If yes, switch.
-
-#### Watchlist — local integrations to upstream when an adequate skill appears
-
-| Local skill | Upstream candidate to watch |
-|---|---|
-| `slack` | A maintained Slack CLI on `gh skill install` discoverable, or an Anthropic-published Slack skill bundle |
-| `gh` (provides `source-control`, `ci`, `automated-review`) | `cli/cli` shipping a SKILL.md, or a community skill bundle for inline review/CI patterns |
-| `figma` | Figma maintainer publishing a SKILL.md alongside the REST API docs |
-| `elasticsearch` | An ES-maintained or APM-vendor skill bundle for log/trace queries |
-
-Re-evaluate during each `/audit` run.
-
 **When using any CLI capability, read `--help` first.** Run `<binary> --help` and `<binary> <subcommand> --help` before issuing commands. Integration skills document only what help text won't tell you — silent failures, wrong-output traps, and non-obvious cross-command dependencies. Everything else is in `--help`.
 
-**For short gotchas (1-3 sentences), use the `notes` field in `capabilities.yaml` instead of a skill file.** The manifest supports an extended map form:
+## The mechanism: `requires` + skill discovery
 
-```yaml
-# flat form — no gotchas
-issues: cli://linear
-
-# extended form — with notes
-calendar:
-  provider: cli://ical
-  notes: "Timestamps in JSON output are UTC — always convert to local before displaying."
-```
-
-Use a skill file when the guidance needs examples, command references, or spans more than a few sentences. Use `notes` for single silent-failure facts.
-
-## The mechanism: `requires` + manifest
-
-The manifest (`~/.agents/capabilities.yaml`) is the registry. It maps capability names to providers — a skill name, `cli://<binary>`, or `mcp://<server>`.
+The capability harness discovers providers by scanning installed skills for `provides` declarations — there is no manifest file. Skills self-register.
 
 Workflow skills declare what they need:
 
@@ -56,13 +18,11 @@ Workflow skills declare what they need:
 metadata:
   requires:
     - code-review
-    - issues
+    - observability
     - ci
 ```
 
 `requires` is a YAML list of capability names — **no colons, no defaults**.
-
-`provides` is optional author metadata for discoverability. The manifest is authoritative, not skill frontmatter.
 
 **Workflow skills that no other skill consumes correctly omit `provides`.** Examples: `attention`, `conversations`, `context-log`, `post-meeting`, `thinking-tools`. They orchestrate capabilities for direct invocation; nothing depends on them, so there's no capability to declare. Adding a `provides` here is noise.
 
@@ -113,7 +73,6 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
    - Add `requires` listing the capabilities it needs
    - In the body, reference only capability names — never tools, binaries, or other skills
    - Name capabilities after domains, not tools
-   - Add a manifest entry in `dot_agents/capabilities.yaml` if the capability isn't already mapped
 3. If integration:
    - Add `provides` listing the capability name(s) this skill implements
    - Tool-specific content is expected and correct here
@@ -126,8 +85,6 @@ This is a public repository. Skill bodies must not hard-code values that are con
 Instead, teach the agent how to *discover* the values at runtime — show the query, command, or config file that surfaces them, so each user sees their own. Examples that need this treatment: list templates via the integration's API, read repo-level template files (`.github/ISSUE_TEMPLATE/`), check workspace config (`.linear.toml`, `orgs.<org>.*`).
 
 If the value is a true public constant of the tool (a documented endpoint URL, a stable command name, a published vocabulary term), it can be hard-coded.
-
-
 
 ## Editing an existing skill
 

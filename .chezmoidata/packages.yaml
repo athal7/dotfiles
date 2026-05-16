@@ -2,7 +2,6 @@ packages:
   taps:
     - github/gh
     - steipete/tap
-    - schpet/tap
     - pchuri/tap
 
   brews:
@@ -36,9 +35,6 @@ packages:
           - stack-log
           - stack-diff
           - stack-range
-          - fetch
-          - checkout
-          - branch
         build: deny
     - name: gh
       permissions:
@@ -61,6 +57,7 @@ packages:
     - name: talisman
     - name: watch
     - name: worktrunk
+    - name: xh
     - name: googleworkspace-cli
       command: gws
       permissions:
@@ -70,14 +67,6 @@ packages:
     - name: steipete/tap/remindctl
       command: remindctl
       permissions:
-        build: deny
-    - name: schpet/tap/linear
-      command: linear
-      permissions:
-        always_allow:
-          - mine
-          - members
-          - schema
         build: deny
     - name: pchuri/tap/confluence-cli
       command: confluence
@@ -160,8 +149,6 @@ packages:
   skills:
     - repo: BRO3886/ical
       skill: ical-cli
-    - repo: schpet/linear-cli
-      skill: linear-cli
 
   # npm-managed global packages
   npm:

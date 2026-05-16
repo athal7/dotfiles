@@ -1,6 +1,6 @@
 ---
 name: gh
-description: GitHub CLI integration — non-obvious behavior for PRs, reviews, CI, and repo queries
+description: GitHub CLI — source control, CI, code review, and issues for OSS and personal repos
 license: MIT
 compatibility: opencode
 metadata:
@@ -8,6 +8,7 @@ metadata:
     - source-control
     - ci
     - automated-review
+    - issues
 ---
 
 # Skill: gh
@@ -287,3 +288,7 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
 
 - Omit top-level `body` field to skip summary comment
 - Each comment needs: `path`, `line`, `body`
+
+## GitHub Issues
+
+`gh issue` handles GitHub Issues for OSS and personal repos (non-Linear trackers). Use `gh issue create`, `gh issue list`, `gh issue view`, and `gh issue edit`. GitHub issue templates live in `.github/ISSUE_TEMPLATE/*.md` — `gh issue create --template` only works interactively; read the template file directly and pass content via `--body-file`.

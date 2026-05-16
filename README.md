@@ -85,7 +85,7 @@ Glukhov tests on llama.cpp, but LM Studio can serve the same Unsloth GGUFs and s
 
 [Agent Skills](https://agentskills.io)-compatible skills deployed to `~/.agents/skills/`. Works with [OpenCode](https://opencode.ai) and any compatible agent.
 
-Skills use a capability-based composition system — workflow skills declare what they `requires`, and [`skills/capabilities.yaml`](skills/capabilities.yaml) binds capabilities to providers (a skill, `cli://<binary>`, or `mcp://<server>`). This lets workflow skills stay tool-agnostic: swap Linear for Jira by changing one line. See [agentskills/agentskills#311](https://github.com/agentskills/agentskills/discussions/311) for the spec proposal.
+Skills use a capability-based composition system — workflow skills declare what they `requires`, and integration skills self-register via `provides`. The capability harness discovers providers by scanning installed skills — no manifest file needed. This lets workflow skills stay tool-agnostic: swap providers by installing a different integration skill. See [agentskills/agentskills#311](https://github.com/agentskills/agentskills/discussions/311) for the spec proposal.
 
 ## Mechanical workflow enforcement
 

@@ -178,11 +178,11 @@ Sort ascending so the worst-offending projects float to the top.
 
 ## Phase 2 — Capability layer health
 
-Validate the manifest and frontmatter consistency.
+Validate frontmatter consistency and provider coverage.
 
 ### 2a. Find dangling capabilities
 
-For every `requires:` entry across all skills, confirm a provider exists (skill `provides`, `cli://` mapping, or `mcp://`).
+For every `requires:` entry across all skills, confirm a provider exists (a skill with a matching `provides:` declaration).
 
 ```bash
 # Collect all requires
@@ -199,7 +199,7 @@ for r in md.get('requires', []) or []:
 "
 done | sort -u > /tmp/required.txt
 
-# Collect all provides + manifest entries
+# Collect all provides
 for f in skills/*/SKILL.md; do
   python3 -c "
 import yaml
@@ -211,11 +211,6 @@ for p in md.get('provides', []) or []:
     print(p)
 "
 done > /tmp/provided.txt
-python3 -c "
-import yaml
-m = yaml.safe_load(open('skills/capabilities.yaml'))
-for k in m: print(k)
-" >> /tmp/provided.txt
 
 # Anything required but not provided
 comm -23 <(sort -u /tmp/required.txt) <(sort -u /tmp/provided.txt)
@@ -299,7 +294,7 @@ For each finding: tighten to `ask`, broaden to `allow`, add missing `permissions
 
 ### 2e. Walk the integration-skill provider preference
 
-For each local integration skill (`provides:` with a tool-shaped capability like `chat`, `source-control`), check if an upstream skill now exists. The watchlist in `skills/AGENTS.md` is the starting point.
+For each local integration skill (`provides:` with a tool-shaped capability like `chat`, `source-control`), check if an upstream skill now exists.
 
 ---
 
@@ -339,7 +334,7 @@ Base system prompt (opencode upstream)  → built-in
 
 | Content type | Location | When loaded |
 |---|---|---|
-| Universal rules, tone, scope discipline | `dot_config/opencode/AGENTS.md.tmpl` | Always |
+| Universal rules, tone, scope discipline | `dot_config/opencode/AGENTS.md` | Always |
 | Standing rules (continuous trigger) | `dot_config/opencode/<name>.md` + `instructions:` | Always |
 | Agent config (model, permissions, temperature) | `dot_config/opencode/opencode.json.tmpl` | Always |
 | Agent-specific system prompt (lead/plan/build) | `dot_config/opencode/prompts/<agent>.md` | Per-agent always |
@@ -383,7 +378,7 @@ Sessions where a skill *should* have fired (per its description) but didn't. Thr
 - Capabilities required but not provided.
 - External skills declared in `packages.yaml` but not installed.
 - Source skills modified but not deployed (`chezmoi apply` would fix).
-- Local integration skills where an upstream skill now exists (consult the watchlist in `skills/AGENTS.md`).
+- Local integration skills where an upstream skill now exists.
 - Sessions with edits but no `task` calls — direct violation of the "always delegate" rule. Phase 1f's per-project rate surfaces the habit hotspots.
 
 ### Recommendations
@@ -419,7 +414,7 @@ Run `/audit` quarterly. Also run after:
 
 | Target | Source |
 |---|---|
-| `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md.tmpl` |
+| `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md` |
 | `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json.tmpl` |
 | `~/.config/opencode/*.md` (instructions: files) | `dot_config/opencode/<name>.md` |
 | `~/.config/opencode/prompts/lead.md` | `dot_config/opencode/prompts/lead.md` |
