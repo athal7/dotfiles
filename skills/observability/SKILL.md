@@ -1,6 +1,6 @@
 ---
 name: observability
-description: Investigate production issues using logs, traces, and errors — how to triage, correlate signals, and know when to escalate. Load your logs capability for query syntax.
+description: Investigate production issues using logs, traces, and errors — how to triage, correlate signals, and know when to escalate.
 license: MIT
 metadata:
   requires:
