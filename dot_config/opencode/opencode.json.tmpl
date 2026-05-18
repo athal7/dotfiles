@@ -86,7 +86,7 @@
       }
     },
     "build": {
-      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling (test runners, linters, formatters, read-only git). Denied from service writes (gh, confluence, ical, remindctl) and git workflow operations (commit, push, rebase, checkout, etc.) via per-package build deny rules. Returns a tight summary when done.",
+      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/build.md}",

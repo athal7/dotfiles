@@ -2,7 +2,6 @@ packages:
   taps:
     - github/gh
     - steipete/tap
-    - pchuri/tap
 
   brews:
     - name: autojump
@@ -168,20 +167,6 @@ packages:
           lead: allow
           plan: allow
         "status*":
-          lead: allow
-          plan: allow
-        "*":
-          build: deny
-    - name: pchuri/tap/confluence-cli
-      command: confluence
-      permissions:
-        "read*":
-          lead: allow
-          plan: allow
-        "search*":
-          lead: allow
-          plan: allow
-        "find*":
           lead: allow
           plan: allow
         "*":
