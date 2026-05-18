@@ -7,12 +7,35 @@ packages:
   brews:
     - name: autojump
     - name: bat
+      permissions:
+        "*":
+          "*": allow
     - name: chezmoi
       permissions:
-        always_allow:
-          - execute-template
-          - source-path
-        build: deny
+        "cat*":
+          lead: allow
+          plan: allow
+        "verify*":
+          lead: allow
+          plan: allow
+        "diff*":
+          lead: allow
+          plan: allow
+        "data*":
+          lead: allow
+          plan: allow
+        "status*":
+          lead: allow
+          plan: allow
+        "managed*":
+          lead: allow
+          plan: allow
+        "execute-template*":
+          "*": allow
+        "source-path*":
+          "*": allow
+        "*":
+          build: deny
     - name: colima
     - name: direnv
     - name: docker
@@ -20,31 +43,84 @@ packages:
     - name: ffmpeg
     - name: git
       permissions:
-        always_allow:
-          - rev-parse
-          - merge-base
-          - for-each-ref
-          - ls-files
-          - ls-tree
-          - ls-remote
-          - cat-file
-          - reflog
-          - shortlog
-          - name-rev
-          - symbolic-ref
-          - stack-log
-          - stack-diff
-          - stack-range
-        build: deny
+        "log*":
+          "*": allow
+        "diff*":
+          "*": allow
+        "show*":
+          "*": allow
+        "status*":
+          "*": allow
+        "blame*":
+          "*": allow
+        "reflog*":
+          "*": allow
+        "shortlog*":
+          "*": allow
+        "rev-parse*":
+          "*": allow
+        "merge-base*":
+          "*": allow
+        "for-each-ref*":
+          "*": allow
+        "ls-*":
+          "*": allow
+        "cat-file*":
+          "*": allow
+        "name-rev*":
+          "*": allow
+        "symbolic-ref*":
+          "*": allow
+        "* list*":
+          "*": allow
+        "* show*":
+          "*": allow
+        "branch -v*":
+          "*": allow
+        "tag -l*":
+          "*": allow
+        "config --get*":
+          "*": allow
+        "stack-*":
+          "*": allow
+        "*":
+          build: deny
     - name: gh
       permissions:
-        always_allow:
-          - checks
-        build: deny
+        "* list*":
+          lead: allow
+          plan: allow
+        "* view*":
+          lead: allow
+          plan: allow
+        "* diff*":
+          lead: allow
+          plan: allow
+        "* checks*":
+          lead: allow
+          plan: allow
+        "* status*":
+          lead: allow
+          plan: allow
+        "search*":
+          lead: allow
+          plan: allow
+        "api -X GET *":
+          lead: allow
+          plan: allow
+        "*":
+          build: deny
     - name: git-spice
     - name: jc
     - name: jq
+      permissions:
+        "*":
+          "*": allow
     - name: graphqurl
+      command: gq
+      permissions:
+        "*":
+          build: deny
     - name: k9s
     - name: kubernetes-cli
     - name: mas
@@ -53,25 +129,63 @@ packages:
     - name: openssl
     - name: opentofu
     - name: ripgrep
+      command: rg
+      permissions:
+        "*":
+          "*": allow
     - name: starship
     - name: talisman
     - name: watch
     - name: worktrunk
     - name: xh
+      permissions:
+        "*GET *":
+          lead: allow
+          plan: allow
+        "*HEAD *":
+          lead: allow
+          plan: allow
+        "*":
+          build: deny
     - name: googleworkspace-cli
       command: gws
       permissions:
-        always_allow:
-          - drive files export
-        build: deny
+        "* list*":
+          lead: allow
+          plan: allow
+        "* get*":
+          lead: allow
+          plan: allow
+        "*":
+          build: deny
     - name: steipete/tap/remindctl
       command: remindctl
       permissions:
-        build: deny
+        "show*":
+          lead: allow
+          plan: allow
+        "list*":
+          lead: allow
+          plan: allow
+        "status*":
+          lead: allow
+          plan: allow
+        "*":
+          build: deny
     - name: pchuri/tap/confluence-cli
       command: confluence
       permissions:
-        build: deny
+        "read*":
+          lead: allow
+          plan: allow
+        "search*":
+          lead: allow
+          plan: allow
+        "find*":
+          lead: allow
+          plan: allow
+        "*":
+          build: deny
 
   casks:
     - name: gcloud-cli
@@ -118,10 +232,20 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        always_allow:
-          - today
-          - upcoming
-        build: deny
+        "today*":
+          lead: allow
+          plan: allow
+        "upcoming*":
+          lead: allow
+          plan: allow
+        "list*":
+          lead: allow
+          plan: allow
+        "show*":
+          lead: allow
+          plan: allow
+        "*":
+          build: deny
 
     - name: minutes
       repo: silverstein/minutes
@@ -131,11 +255,23 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        always_allow:
-          - person
-          - research
-          - consistency
-        build: deny
+        "person*":
+          lead: allow
+          plan: allow
+        "research*":
+          lead: allow
+          plan: allow
+        "consistency*":
+          lead: allow
+          plan: allow
+        "list*":
+          lead: allow
+          plan: allow
+        "show*":
+          lead: allow
+          plan: allow
+        "*":
+          build: deny
 
     - name: minutes-desktop
       repo: silverstein/minutes

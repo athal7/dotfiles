@@ -1,3 +1,22 @@
+{{- /* Universal read-only shell utilities — apply to all agents */ -}}
+{{- $universalReads := dict
+  "*" "ask"
+  "awk*" "allow"   "gawk*" "allow"  "mawk*" "allow"  "nawk*" "allow"
+  "cat*" "allow"   "comm*" "allow"  "cut*" "allow"
+  "date*" "allow"  "echo*" "allow"  "false*" "allow" "file*" "allow"
+  "grep*" "allow"  "head*" "allow"  "ls*" "allow"
+  "printf*" "allow" "pwd*" "allow"  "seq*" "allow"
+  "sleep*" "allow"  "sort*" "allow" "stat*" "allow"  "tail*" "allow"
+  "tr *" "allow"    "tree*" "allow" "true*" "allow"   "uniq*" "allow"
+  "wc*" "allow"     "whereis*" "allow" "which*" "allow" "yes*" "allow"
+  "find *" "allow"  "find * -delete*" "ask"  "find * -exec*" "ask"
+  "find * -execdir*" "ask"  "find * -ok*" "ask"  "find * -okdir*" "ask"
+  "sed *" "allow"   "sed -i*" "ask"  "sed --in-place*" "ask"
+  "sqlite3 -readonly *" "allow"
+-}}
+{{- /* Collect per-package patterns from packages.yaml */ -}}
+{{- $leadBash := dict -}}
+{{- $planBash := dict -}}
 {{- $buildBash := dict -}}
 {{- range $list := .packages -}}
   {{- if kindIs "slice" $list -}}
@@ -5,25 +24,35 @@
       {{- if kindIs "map" $entry -}}
         {{- $perms := index $entry "permissions" -}}
         {{- if $perms -}}
-          {{- $denyBuild := index $perms "build" -}}
-          {{- if eq $denyBuild "deny" -}}
-            {{- $rawName := index $entry "name" | toString -}}
-            {{- $cmd := index $entry "command" -}}
-            {{- if not $cmd -}}
-              {{- $parts := splitList "/" $rawName -}}
-              {{- $cmd = last $parts -}}
-            {{- end -}}
-            {{- $denyPattern := printf "%s *" $cmd -}}
-            {{- $_ := set $buildBash $denyPattern "deny" -}}
-            {{- range $suffix := index $perms "always_allow" -}}
-              {{- $allowPattern := printf "%s %s*" $cmd $suffix -}}
-              {{- $_ := set $buildBash $allowPattern "allow" -}}
+          {{- $rawName := index $entry "name" | toString -}}
+          {{- $cmd := index $entry "command" -}}
+          {{- if not $cmd -}}
+            {{- $parts := splitList "/" $rawName -}}
+            {{- $cmd = last $parts -}}
+          {{- end -}}
+          {{- range $suffix, $agents := $perms -}}
+            {{- $pattern := printf "%s %s" $cmd $suffix -}}
+            {{- range $agent, $action := $agents -}}
+              {{- if or (eq $agent "*") (eq $agent "lead") -}}
+                {{- $_ := set $leadBash $pattern $action -}}
+              {{- end -}}
+              {{- if or (eq $agent "*") (eq $agent "plan") -}}
+                {{- $_ := set $planBash $pattern $action -}}
+              {{- end -}}
+              {{- if or (eq $agent "*") (eq $agent "build") -}}
+                {{- $_ := set $buildBash $pattern $action -}}
+              {{- end -}}
             {{- end -}}
           {{- end -}}
         {{- end -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
+{{- end -}}
+{{- /* Merge universal reads into lead and plan — agent bash overrides global, so they need their own copy */ -}}
+{{- range $p, $action := $universalReads -}}
+  {{- $_ := set $leadBash $p $action -}}
+  {{- $_ := set $planBash $p $action -}}
 {{- end -}}
 {
   "$schema": "https://opencode.ai/config.json",
@@ -33,9 +62,7 @@
   },
   "permission": {
     "skill": "allow",
-    "bash": {
-      "*": "ask"
-    }
+    "bash": {{ $universalReads | toPrettyJson | indent 4 | trim }}
   },
   "agent": {
     "lead": {
@@ -44,9 +71,7 @@
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
         "task": "allow",
-        "bash": {
-          "*": "ask"
-        }
+        "bash": {{ $leadBash | toPrettyJson | indent 8 | trim }}
       }
     },
     "plan": {
@@ -57,13 +82,11 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": {
-          "*": "ask"
-        }
+        "bash": {{ $planBash | toPrettyJson | indent 8 | trim }}
       }
     },
     "build": {
-      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling (test runners, linters, formatters, read-only git). Denied from service writes (gh, linear, confluence, ical, remindctl) and git workflow operations (commit, push, rebase, checkout, etc.) via per-package agents.build.deny rules. Returns a tight summary when done.",
+      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling (test runners, linters, formatters, read-only git). Denied from service writes (gh, confluence, ical, remindctl) and git workflow operations (commit, push, rebase, checkout, etc.) via per-package build deny rules. Returns a tight summary when done.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/build.md}",
@@ -71,9 +94,7 @@
       "permission": {
         "edit": "allow",
         "write": "allow",
-        "bash": {{ merge (dict
-          "*" "allow"
-        ) $buildBash | toPrettyJson | indent 10 | trim }}
+        "bash": {{ merge (dict "*" "allow") $buildBash | toPrettyJson | indent 8 | trim }}
       }
     }
   },

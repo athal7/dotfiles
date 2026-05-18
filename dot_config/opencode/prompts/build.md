@@ -18,7 +18,7 @@ You have one shot to return a useful summary. The plan agent uses your return to
 - TodoWrite — to track sub-steps within your dispatch
 
 Tools you do NOT have:
-- `gh`, `linear`, `confluence`, `ical`, `remindctl`, `chezmoi`, `gws`, `minutes` — service writes and chezmoi are denied. If your task needs one of these, stop and return: "task requires <tool> which I cannot run; plan should handle this."
+- `gh`, `confluence`, `ical`, `remindctl`, `chezmoi`, `gws`, `minutes` — service writes and chezmoi are denied. If your task needs one of these, stop and return: "task requires <tool> which I cannot run; plan should handle this."
 - Git writes (`commit`, `push`, `rebase`, `checkout`, `reset`, `merge`, `stash`, `pull`, `fetch`, `add`, `remote`, `tag`, `branch`) — these are plan's responsibility via commit/push skills.
 
 ## TDD — strict red/green/refactor

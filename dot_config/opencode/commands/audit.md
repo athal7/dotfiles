@@ -239,19 +239,12 @@ done
 
 ### 2d. Opencode permissions audit
 
-For lead/plan, reads are classified at runtime by the permission-classifier plugin
-(`dot_config/opencode/plugins/permission-classifier.ts`) consulting `permission-reads.json`
-(generated from packages.yaml `permissions.always_allow`). The plugin uses `TOOL_ALWAYS_ALLOW` — a
-per-tool map of read subcommand suffixes — falling back to generic `DEFAULT_READ_VERBS`
-for anything not declared. The bash rules in opencode.json for lead/plan only carry
-universal defaults.
-
-Build uses `*: allow` plus ``build: deny`` from packages.yaml, rendered as
-`"<tool> *": "deny"` with `"<tool> <suffix>*": "allow"` carve-outs for each `always_allow` entry.
-
-The plugin emits a startup warning for any `always_allow` entry whose last token is already in
-`DEFAULT_READ_VERBS` — check opencode logs to catch redundant declarations after editing
-packages.yaml.
+Permissions are declared statically in `packages.yaml` under `permissions.reads` (full glob patterns
+for lead/plan) and `permissions.build.{deny,allow}` (for build). The template
+`dot_config/opencode/opencode.json.tmpl` renders these directly into agent bash permission maps.
+The global `permission.bash` block (applies to agents without their own override: scout, general,
+explore) uses universal verb-position globs (`* list*`, `* view*`, etc.) plus read-only utility
+commands (`cat*`, `grep*`, `jq*`, `find *`, etc.).
 
 Inspect rendered config:
 
@@ -259,36 +252,35 @@ Inspect rendered config:
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.lead.permission.bash'
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.plan.permission.bash'
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.build.permission.bash'
-chezmoi execute-template < dot_config/opencode/permission-reads.json.tmpl | jq '.tools | keys'
 ```
 
 Flag both directions of permission drift:
 
 **Too permissive** (allow that should be ask, ask that should be deny):
 
-- A write/mutate suffix in `permissions.always_allow` in packages.yaml. Scan the rendered output:
+- A write/mutate pattern in `permissions.reads` in packages.yaml. Scan the rendered lead bash:
 
 ```bash
-chezmoi execute-template < dot_config/opencode/permission-reads.json.tmpl \
-  | jq -r '.tools | to_entries[] | .key as $t | .value[] | "\($t) \(.)"' \
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
+  | jq -r '.agent.lead.permission.bash | to_entries[] | select(.value == "allow") | .key' \
   | grep -E '(create|update|delete|push|apply|commit|merge|destroy|complete|add|edit|reply|append)'
 ```
 
-- Build deny list missing a subcommand that mutates state. Compare `build: deny` in packages.yaml against the tool's full subcommand list.
-- A `reads` suffix broader than necessary (e.g. bare `get` when `docs get` is the real scope).
+- Build deny list missing a subcommand that mutates state. Compare `build.deny` in packages.yaml against the tool's full subcommand list.
+- A `reads` pattern broader than necessary (e.g. `tool get*` when only `tool docs get` is safe).
 
 **Too restrictive** (ask that should be allow, missing — causes friction):
 
-- Tools in `mise`, `github_releases`, or npm sections of `packages.yaml` with no `permissions:` block (the plugin falls back to generic verb classification, which may miss tool-specific subcommands):
+- Tools in `mise`, `github_releases`, or npm sections of `packages.yaml` with no `permissions:` block — those tools fall through to the global `*: ask` floor:
 
 ```bash
 yq -r '.packages | (.mise // []) + (.github_releases // []) + (.npm // []) | .[] | select(type == "!!map") | select(.permissions == null) | .name // .repo' \
   .chezmoidata/packages.yaml
 ```
 
-- Remember opencode evaluates pipeline segments independently — `linear issue view X | head -N` prompts on `head` even if `linear issue view` is a known read. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) are in the lead allow list.
+- Remember opencode evaluates pipeline segments independently — `gh pr view X | head -N` prompts on `head` even if `gh pr view` is a known read. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) appear in the global allow list.
 
-For each finding: tighten to `ask`, broaden to `allow`, add missing `permissions:` block in `packages.yaml`, or remove as redundant with `DEFAULT_READ_VERBS`.
+For each finding: tighten to `ask`, broaden to `allow`, or add/adjust a `permissions:` block in `packages.yaml`.
 
 ---
 
