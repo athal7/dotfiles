@@ -215,6 +215,9 @@ packages:
       type: archive
       refresh_period: 24h
 
+    # Note: com.apple.provenance on Apple Silicon prevents chezmoi's atomic
+    # rename from updating files inside this bundle. On version updates, run:
+    #   rm -rf ~/Applications/NayaFlow-Beta.app && chezmoi apply
     - name: naya-flow-beta
       repo: NayaTech/NayaFlow-beta-releases
       target: Applications
