@@ -137,6 +137,27 @@ def log(msg):
     subprocess.run(["logger", "-t", "sync-calendars", msg], capture_output=True)
 
 
+STATE_FILE = Path.home() / ".local/share/sync-calendars/state.json"
+
+
+def load_last_run():
+    if STATE_FILE.exists():
+        try:
+            data = json.loads(STATE_FILE.read_text())
+            return {tuple(k) for k in data.get("last_run", [])}
+        except Exception:
+            pass
+    return set()
+
+
+def save_last_run(keys):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(
+        {"last_run": [list(k) for k in sorted(keys)]},
+        indent=2
+    ))
+
+
 def main():
     data = chezmoi_data()
     calendars = data.get("calendars", {})  # {label: {name, sync_to, ...}}
@@ -214,6 +235,15 @@ def main():
         for dst_label, mirrors in all_mirrors.items()
         for m in mirrors
     }
+
+    last_run = load_last_run()
+    # Keys managed last run that should still exist but are gone from the calendar
+    # → user deleted them intentionally; don't re-create
+    user_deleted = {k for k in last_run if k in expected and k not in mirrored}
+    if user_deleted:
+        for k in sorted(user_deleted):
+            log(f"Skipping user-deleted mirror: {k[0]} {k[1][:16]}")
+
     # Also track what we create this run to avoid duplicates
     created = set()
 
@@ -241,6 +271,8 @@ def main():
                 key = (dst_label, start, end)
                 if key in mirrored or key in created:
                     continue
+                if key in user_deleted:
+                    continue
                 # Skip if a real event already covers this slot on dst
                 if any(e["start_date"] == start and e["end_date"] == end
                        for e in all_events.get(dst_label, [])):
@@ -257,6 +289,9 @@ def main():
                     add_args += ["--location", location]
                 ical_write(*add_args)
                 created.add(key)
+
+    active = {k for k in mirrored if k in expected} | created | user_deleted
+    save_last_run(active)
 
     log("done")
 
