@@ -13,6 +13,7 @@
   "find * -execdir*" "ask"  "find * -ok*" "ask"  "find * -okdir*" "ask"
   "sed *" "allow"   "sed -i*" "ask"  "sed --in-place*" "ask"
   "sqlite3 -readonly *" "allow"
+  "* --help*" "allow"  "* --version*" "allow"  "* -h" "allow"
 -}}
 {{- /* Collect per-package patterns from packages.yaml */ -}}
 {{- $leadBash := dict -}}

@@ -74,11 +74,11 @@ packages:
           "*": allow
         "* show*":
           "*": allow
-        "branch -v*":
+        "branch*":
           "*": allow
         "tag -l*":
           "*": allow
-        "config --get*":
+        "config*":
           "*": allow
         "stack-*":
           "*": allow
