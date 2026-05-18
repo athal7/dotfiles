@@ -21,3 +21,7 @@ talisman_report/
 
 # bench-*.md output files (scratch, not config)
 bench-*.md
+
+# Python bytecode
+__pycache__/
+*.pyc
