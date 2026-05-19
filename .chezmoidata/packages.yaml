@@ -82,6 +82,10 @@ packages:
           "*": allow
         "stack-*":
           "*": allow
+        "checkout*":
+          lead: allow
+        "fetch*":
+          lead: allow
         "*":
           build: deny
     - name: gh

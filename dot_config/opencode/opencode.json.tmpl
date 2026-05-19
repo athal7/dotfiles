@@ -6,7 +6,7 @@
   "date*" "allow"  "echo*" "allow"  "false*" "allow" "file*" "allow"
   "grep*" "allow"  "head*" "allow"  "ls*" "allow"
   "printf*" "allow" "pwd*" "allow"  "seq*" "allow"
-  "sleep*" "allow"  "sort*" "allow" "stat*" "allow"  "tail*" "allow"
+  "sleep*" "allow"  "sort*" "allow" "source*" "allow" "stat*" "allow"  "tail*" "allow"
   "tr *" "allow"    "tree*" "allow" "true*" "allow"   "uniq*" "allow"
   "wc*" "allow"     "whereis*" "allow" "which*" "allow" "yes*" "allow"
   "find *" "allow"  "find * -delete*" "ask"  "find * -exec*" "ask"
@@ -19,6 +19,7 @@
 {{- $leadBash := dict -}}
 {{- $planBash := dict -}}
 {{- $buildBash := dict -}}
+{{- $globalBash := dict -}}
 {{- range $list := .packages -}}
   {{- if kindIs "slice" $list -}}
     {{- range $entry := $list -}}
@@ -43,6 +44,9 @@
               {{- if or (eq $agent "*") (eq $agent "build") -}}
                 {{- $_ := set $buildBash $pattern $action -}}
               {{- end -}}
+              {{- if eq $agent "*" -}}
+                {{- $_ := set $globalBash $pattern $action -}}
+              {{- end -}}
             {{- end -}}
           {{- end -}}
         {{- end -}}
@@ -55,6 +59,10 @@
   {{- $_ := set $leadBash $p $action -}}
   {{- $_ := set $planBash $p $action -}}
 {{- end -}}
+{{- /* Merge universal reads into global — covers built-in agents (general, explore) */ -}}
+{{- range $p, $action := $universalReads -}}
+  {{- $_ := set $globalBash $p $action -}}
+{{- end -}}
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "lead",
@@ -63,7 +71,7 @@
   },
   "permission": {
     "skill": "allow",
-    "bash": {{ $universalReads | toPrettyJson | indent 4 | trim }}
+    "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}
   },
   "agent": {
     "lead": {
