@@ -107,6 +107,9 @@ packages:
         "api -X GET *":
           lead: allow
           plan: allow
+        "api graphql*":
+          lead: allow
+          plan: allow
         "*":
           build: deny
     - name: git-spice
