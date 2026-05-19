@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+# zoom-postprocess — transcribe a Zoom WAV recording and produce a meeting markdown file.
+# Usage: zoom-postprocess /path/to/recording.wav
+set -euo pipefail
+
+# ── Defaults ──────────────────────────────────────────────────────────────────
+WHISPER_MODEL="${WHISPER_MODEL:-$HOME/.minutes/models/ggml-medium.bin}"
+LMS_URL="${LMS_URL:-http://127.0.0.1:1234/v1/chat/completions}"
+LMS_MODEL="${LMS_MODEL:-qwen3.5-27b}"
+MEETINGS_DIR="${MEETINGS_DIR:-$HOME/meetings}"
+IDENTITY_NAME="${IDENTITY_NAME:-Andrew Thal}"
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2; }
+
+die() { log "ERROR: $*"; exit 1; }
+
+slugify() {
+  echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9 ]//g' | tr ' ' '-' | sed 's/--*/-/g; s/^-//; s/-$//'
+}
+
+# ── Args ──────────────────────────────────────────────────────────────────────
+WAV_FILE="${1:-}"
+[[ -z "$WAV_FILE" ]] && die "Usage: zoom-postprocess /path/to/recording.wav"
+[[ -f "$WAV_FILE" ]] || die "File not found: $WAV_FILE"
+WAV_FILE="$(cd "$(dirname "$WAV_FILE")" && pwd)/$(basename "$WAV_FILE")"
+
+# ── Step 1: Find whisper binary ───────────────────────────────────────────────
+WHISPER_BIN=""
+for candidate in \
+    "$HOME/.local/bin/whisper-cli" \
+    "$(which whisper-cli 2>/dev/null || true)" \
+    "$(which whisper-cpp 2>/dev/null || true)" \
+    "$(which whisper    2>/dev/null || true)" \
+    "$(brew --prefix whisper-cpp 2>/dev/null)/bin/whisper-cpp"; do
+  if [[ -n "$candidate" && -x "$candidate" ]]; then WHISPER_BIN="$candidate"; break; fi
+done
+
+[[ -z "$WHISPER_BIN" ]] && die "No whisper binary found. Install via: brew install whisper-cpp"
+[[ -f "$WHISPER_MODEL" ]] || die "Whisper model not found: $WHISPER_MODEL"
+log "Using whisper: $WHISPER_BIN"
+log "Using model:   $WHISPER_MODEL"
+
+# ── Step 2: Transcribe ────────────────────────────────────────────────────────
+TMPDIR_WORK="$(mktemp -d /tmp/zoom-postprocess.XXXXXX)"
+trap 'rm -rf "$TMPDIR_WORK"' EXIT
+
+VTT_OUT="$TMPDIR_WORK/transcript"
+log "Transcribing $WAV_FILE …"
+"$WHISPER_BIN" -m "$WHISPER_MODEL" -f "$WAV_FILE" --output-vtt --output-file "$VTT_OUT" \
+  || die "whisper transcription failed"
+
+VTT_FILE="$VTT_OUT.vtt"
+[[ -f "$VTT_FILE" ]] || die "whisper did not produce $VTT_FILE"
+
+# Parse VTT → plain transcript preserving timestamps
+# Format: 00:01:23.456 --> 00:01:26.789\ntext\n
+TRANSCRIPT="$(awk '
+  /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\.[0-9]+ -->/ {
+    split($1, a, ":"); h=int(a[1]); m=int(a[2]); s=int(a[3])
+    ts=sprintf("[%02d:%02d]", h * 60 + m, s)
+    getline text
+    if (text != "") print ts " " text
+  }
+' "$VTT_FILE")"
+
+[[ -z "$TRANSCRIPT" ]] && { log "WARN: transcript is empty — continuing anyway"; TRANSCRIPT="(no speech detected)"; }
+
+# ── Step 3: WAV metadata ───────────────────────────────────────────────────────
+# File creation time → ISO8601 and date slug
+FILE_MTIME="$(stat -f "%Sm" -t "%Y-%m-%dT%H:%M:%S" "$WAV_FILE" 2>/dev/null \
+  || date -r "$WAV_FILE" "+%Y-%m-%dT%H:%M:%S" 2>/dev/null)"
+DATE_SLUG="$(echo "$FILE_MTIME" | cut -c1-10)"
+
+# Duration via ffmpeg
+DURATION_SEC="$(ffprobe -v error -show_entries format=duration \
+  -of default=noprint_wrappers=1:nokey=1 "$WAV_FILE" 2>/dev/null | cut -d. -f1 || echo 0)"
+DURATION_MIN=$(( DURATION_SEC / 60 ))
+DURATION_HMS="$(printf '%d:%02d:%02d' $((DURATION_SEC/3600)) $(( (DURATION_SEC%3600)/60 )) $((DURATION_SEC%60)))"
+
+# ── Step 4: Calendar lookup ────────────────────────────────────────────────────
+MEETING_TITLE="Zoom Meeting"
+if command -v ical >/dev/null 2>&1; then
+  START_TIME="$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "$WAV_FILE" 2>/dev/null \
+    || date -r "$WAV_FILE" "+%Y-%m-%d %H:%M" 2>/dev/null)"
+  log "Looking up calendar event around $START_TIME …"
+  CAL_JSON="$(ical list -f "$START_TIME" -t "+90m" -n 1 -o json 2>/dev/null || echo '[]')"
+  CAL_TITLE="$(echo "$CAL_JSON" | jq -r '.[0].title // empty' 2>/dev/null || true)"
+  [[ -n "$CAL_TITLE" ]] && MEETING_TITLE="$CAL_TITLE" && log "Calendar title: $MEETING_TITLE"
+else
+  log "ical not found — using fallback title"
+fi
+
+# ── Step 5: Summarize with LM Studio ──────────────────────────────────────────
+PROCESSING_WARNINGS=""
+FRONTMATTER_STATUS="complete"
+SUMMARY_SECTIONS=""
+
+log "Requesting summary from LM Studio …"
+# Build JSON payload via jq so the transcript is safely escaped
+LMS_PAYLOAD="$(jq -n \
+  --arg model "$LMS_MODEL" \
+  --arg transcript "$TRANSCRIPT" \
+  '{
+    model: $model,
+    temperature: 0.3,
+    max_tokens: 2000,
+    messages: [
+      {"role": "system", "content": "You are a meeting summarizer. Output ONLY markdown sections: ## Summary (3-5 sentences), ## Key Points (bullets), ## Action Items (bullets with owner, or \"- none\"), ## Open Questions (bullets or \"- none\"). No preamble, no reasoning, no thinking tags."},
+      {"role": "user", "content": ("/no_think\n\nMeeting transcript:\n\n" + $transcript + "\n\n/no_think Generate the markdown summary now.")}
+    ]
+  }')"
+
+LMS_RESPONSE="$(curl -s -m 300 "$LMS_URL" \
+  -H "Content-Type: application/json" \
+  -d "$LMS_PAYLOAD" 2>/dev/null || true)"
+
+if [[ -n "$LMS_RESPONSE" ]]; then
+  SUMMARY_SECTIONS="$(echo "$LMS_RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null || true)"
+fi
+
+if [[ -z "$SUMMARY_SECTIONS" ]]; then
+  log "WARN: LM Studio unavailable or returned no content — skipping summary"
+  FRONTMATTER_STATUS="degraded"
+  PROCESSING_WARNINGS="processing_warnings: lm-studio unavailable; summary skipped"
+  SUMMARY_SECTIONS="## Summary
+*(unavailable — LM Studio not running at time of processing)*
+
+## Key Points
+- none
+
+## Action Items
+- none
+
+## Open Questions
+- none"
+fi
+
+# ── Step 6: Write markdown ─────────────────────────────────────────────────────
+SLUG="$(slugify "$MEETING_TITLE")"
+[[ -z "$SLUG" ]] && SLUG="zoom-meeting"
+IDENTITY_SLUG="$(slugify "${IDENTITY_NAME%% *}")"  # first name only for filename
+OUTPUT_FILE="$MEETINGS_DIR/${DATE_SLUG}-${SLUG}-${IDENTITY_SLUG}.md"
+
+mkdir -p "$MEETINGS_DIR"
+log "Writing $OUTPUT_FILE …"
+
+{
+  echo "---"
+  echo "title: $MEETING_TITLE"
+  echo "type: meeting"
+  echo "date: $FILE_MTIME"
+  echo "duration: $DURATION_HMS"
+  echo "status: $FRONTMATTER_STATUS"
+  [[ -n "$PROCESSING_WARNINGS" ]] && echo "$PROCESSING_WARNINGS"
+  echo "recorded_by: $IDENTITY_NAME"
+  echo "source: zoom-capture"
+  echo "---"
+  echo ""
+  echo "$SUMMARY_SECTIONS"
+  echo ""
+  echo "## Transcript"
+  echo ""
+  echo "$TRANSCRIPT"
+} > "$OUTPUT_FILE" || die "Failed to write $OUTPUT_FILE"
+
+log "Wrote: $OUTPUT_FILE"
+
+# ── Step 7: Trigger post-meeting skill (optional) ─────────────────────────────
+OC_URL="http://localhost:4096"
+if curl -s -m 3 "$OC_URL" >/dev/null 2>&1; then
+  log "OpenCode reachable — creating post-meeting session …"
+  SESSION_ID="$(curl -s "$OC_URL/session?directory=$MEETINGS_DIR&roots=true" \
+    | jq -r '[.[] | select(.time.archived == null)] | sort_by(.time.updated) | reverse | .[0].id // empty' 2>/dev/null || true)"
+  if [[ -z "$SESSION_ID" ]]; then
+    SESSION_ID="$(curl -s -X POST "$OC_URL/session" \
+      -H "Content-Type: application/json" \
+      -d "{\"directory\": \"$MEETINGS_DIR\"}" \
+      | jq -r '.id // empty' 2>/dev/null || true)"
+  fi
+  if [[ -n "$SESSION_ID" ]]; then
+    curl -s -X POST "$OC_URL/session/$SESSION_ID/message" \
+      -H "Content-Type: application/json" \
+      -d "{\"role\": \"user\", \"content\": \"Run the post-meeting skill for $OUTPUT_FILE\"}" \
+      >/dev/null 2>&1 || true
+    log "Post-meeting task dispatched (session $SESSION_ID)"
+  else
+    log "WARN: Could not obtain OpenCode session — skipping post-meeting trigger"
+  fi
+else
+  log "OpenCode not running — skipping post-meeting trigger"
+fi
+
+# ── Step 8: Archive WAV ────────────────────────────────────────────────────────
+ARCHIVE_DIR="$MEETINGS_DIR/raw/processed"
+mkdir -p "$ARCHIVE_DIR"
+mv "$WAV_FILE" "$ARCHIVE_DIR/"
+log "Archived WAV to $ARCHIVE_DIR/$(basename "$WAV_FILE")"
+
+log "Done. Output: $OUTPUT_FILE"

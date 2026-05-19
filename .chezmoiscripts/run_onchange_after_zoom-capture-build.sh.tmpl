@@ -1,0 +1,20 @@
+#!/bin/bash
+# Compile zoom-capture Swift daemon and package as .app bundle (re-runs when source changes)
+# source hash: {{ include "dot_local/share/zoom-capture/main.swift" | sha256sum }}
+# plist hash: {{ include "dot_local/share/zoom-capture/Info.plist" | sha256sum }}
+
+set -euo pipefail
+
+APP_DIR="$HOME/.local/share/zoom-capture/ZoomCapture.app"
+MACOS_DIR="$APP_DIR/Contents/MacOS"
+CONTENTS_DIR="$APP_DIR/Contents"
+
+mkdir -p "$MACOS_DIR"
+mkdir -p "$HOME/meetings/raw/processed"
+
+swiftc -O -framework CoreAudio -framework AVFoundation -framework UserNotifications \
+    -o "$MACOS_DIR/zoom-capture" \
+    "$HOME/.local/share/zoom-capture/main.swift" \
+    && cp "$HOME/.local/share/zoom-capture/Info.plist" "$CONTENTS_DIR/Info.plist" \
+    && echo "zoom-capture built and bundled successfully." \
+    || echo "WARNING: zoom-capture build failed — daemon will not run."
