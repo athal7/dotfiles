@@ -2,11 +2,6 @@
 name: gws
 description: Google Workspace CLI for email, docs, drive, and sheets
 license: MIT
-metadata:
-  provides:
-    - email
-    - docs
-    - calendar
 ---
 
 `gws` CLI — call directly via Bash; read `gws --help` on demand.

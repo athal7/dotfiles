@@ -3,13 +3,6 @@ name: respond-to-review
 description: Address review feedback on your own merge request — resolve threads fixed by a commit, reply to threads you are not addressing
 license: MIT
 compatibility: opencode
-metadata:
-  provides:
-    - respond-to-review
-  requires:
-    - source-control
-    - push
-    - verify
 ---
 
 1. **Fetch all open review threads.** Note thread ID, file, line, comment body, author, resolved status.

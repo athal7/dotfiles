@@ -3,9 +3,6 @@ name: opencode
 description: OpenCode agent runtime — manage sessions, dispatch tasks, answer waiting questions, repair DB issues, and reset diffs
 license: MIT
 compatibility: opencode
-metadata:
-  provides:
-    - agent
 ---
 
 Unified skill for all OpenCode agent runtime operations. Use the reference files below for each area.

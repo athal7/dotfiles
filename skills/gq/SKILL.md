@@ -2,11 +2,6 @@
 name: gq
 description: GraphQL client for querying and mutating GraphQL APIs
 license: MIT
-metadata:
-  provides:
-    - graphql
-  requires:
-    - secrets
 ---
 
 `gq` CLI (graphqurl) — GraphQL queries and mutations from the terminal.

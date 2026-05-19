@@ -2,11 +2,6 @@
 name: xh
 description: HTTPie-compatible HTTP client for REST API calls
 license: MIT
-metadata:
-  provides:
-    - rest
-  requires:
-    - secrets
 ---
 
 `xh` CLI — HTTPie-compatible, cleaner than curl.

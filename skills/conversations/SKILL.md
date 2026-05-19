@@ -2,11 +2,6 @@
 name: conversations
 description: Research people, decisions, and context across meetings, chat, email, and the knowledge base
 license: MIT
-metadata:
-  requires:
-    - chat
-    - meetings
-    - email
 ---
 
 Four sources of conversation context, each with different fidelity and recency. Use them in order.

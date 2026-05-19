@@ -3,12 +3,6 @@ name: gh
 description: GitHub CLI — source control, CI, code review, and issues for OSS and personal repos
 license: MIT
 compatibility: opencode
-metadata:
-  provides:
-    - source-control
-    - ci
-    - automated-review
-    - issues
 ---
 
 # Skill: gh

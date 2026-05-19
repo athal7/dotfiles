@@ -2,11 +2,6 @@
 name: slack
 description: Slack Web API for messaging, search, and channel management
 license: MIT
-metadata:
-  provides:
-    - chat
-  requires:
-    - rest
 ---
 
 Base URL: https://slack.com/api

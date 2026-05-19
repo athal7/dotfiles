@@ -2,11 +2,6 @@
 name: confluence
 description: Confluence REST API for wiki pages, spaces, and search
 license: MIT
-metadata:
-  provides:
-    - wiki
-  requires:
-    - rest
 ---
 
 Base URL: `https://<your-domain>.atlassian.net/wiki/api/v2`

@@ -2,9 +2,6 @@
 name: observability
 description: Investigate production issues using logs, traces, and errors — how to triage, correlate signals, and know when to escalate.
 license: MIT
-metadata:
-  requires:
-    - logs
 ---
 
 Use this skill to investigate production problems. For query syntax, index patterns, and curl commands, consult the log query reference.

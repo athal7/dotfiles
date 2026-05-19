@@ -3,9 +3,6 @@ name: qa
 description: QA verification with Firefox DevTools browser automation — load when a diff touches UI, views, or user-facing flows and needs functional verification before committing
 license: MIT
 compatibility: opencode
-metadata:
-  provides:
-    - qa
 ---
 
 Perform QA verification using Firefox DevTools browser automation.

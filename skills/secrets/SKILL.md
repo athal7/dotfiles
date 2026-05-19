@@ -2,9 +2,6 @@
 name: secrets
 description: Fetch credentials and API keys. Use when a skill needs an API token, password, or other secret.
 license: MIT
-metadata:
-  provides:
-    - secrets
 ---
 
 All secrets are stored in the macOS Keychain under service `chezmoi`. The account name matches the secret name declared in `$(chezmoi source-path)/.chezmoidata/local.yaml` under the `secrets` key — these are lowercase (e.g. `slack_user_token`), not the uppercase env var convention a skill body might use (e.g. `$SLACK_USER_TOKEN`).

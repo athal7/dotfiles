@@ -2,9 +2,6 @@
 name: branching
 description: Stacked branch management via git-spice
 license: MIT
-metadata:
-  provides:
-    - branching
 ---
 
 `git-spice` CLI — call directly via Bash; read `git-spice --help` on demand.

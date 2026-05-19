@@ -2,12 +2,6 @@
 name: pagerduty
 description: PagerDuty REST API for incidents, on-call schedules, and escalation policies
 license: MIT
-metadata:
-  provides:
-    - oncall
-    - incidents
-  requires:
-    - rest
 ---
 
 Base URL: https://api.pagerduty.com

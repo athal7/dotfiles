@@ -1,10 +1,7 @@
 ---
 name: code-quality
-description: Load when reviewing a diff, naming a code smell or anti-pattern, deciding refactoring direction, or grading review-comment severity. Required reading when the architecture or code-review capabilities cite a named pattern — load explicitly rather than paraphrasing from memory.
+description: Load when reviewing a diff, naming a code smell or anti-pattern, deciding refactoring direction, or grading review-comment severity. Required reading when a named pattern is cited — load explicitly rather than paraphrasing from memory.
 license: MIT
-metadata:
-  provides:
-    - code-quality
 ---
 
 Reference content for naming and addressing structural and hygiene problems in code. Consumers cite the relevant pattern or rule by name.

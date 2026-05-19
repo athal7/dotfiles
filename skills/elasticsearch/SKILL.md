@@ -2,11 +2,6 @@
 name: elasticsearch
 description: Query Elasticsearch logs, APM traces, and errors via curl — index patterns, field names, auth setup, and time-range syntax
 license: MIT
-metadata:
-  provides:
-    - logs
-  requires:
-    - secrets
 ---
 
 Query application logs, APM traces, and errors using the Elasticsearch REST API directly.

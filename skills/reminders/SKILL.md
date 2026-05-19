@@ -2,9 +2,6 @@
 name: reminders
 description: macOS Reminders via remindctl CLI
 license: MIT
-metadata:
-  provides:
-    - reminders
 ---
 
 `remindctl` CLI — call directly via Bash; read `remindctl --help` on demand.

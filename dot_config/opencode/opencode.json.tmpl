@@ -69,6 +69,28 @@
   "server": {
     "hostname": "127.0.0.1"
   },
+  "plugin": [
+    ["./plugins/skill-inject.ts", {
+      "architecture": ["gh", "linear", "code-quality"],
+      "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
+      "commit": ["review"],
+      "confluence": ["xh"],
+      "conversations": ["slack", "meetings", "gws"],
+      "elasticsearch": ["secrets"],
+      "figma": ["xh"],
+      "gq": ["secrets"],
+      "linear": ["gq"],
+      "observability": ["elasticsearch"],
+      "pagerduty": ["xh"],
+      "push": ["commit", "gh", "branching", "linear"],
+      "respond-to-review": ["gh", "push", "review"],
+      "review": ["qa", "gh", "linear", "code-quality"],
+      "slack": ["xh"],
+      "xh": ["secrets"]
+    }],
+    "./plugins/context-compaction.ts",
+    "./plugins/direnv.ts"
+  ],
   "permission": {
     "skill": "allow",
     "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}

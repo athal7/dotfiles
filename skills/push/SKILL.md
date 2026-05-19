@@ -2,16 +2,6 @@
 name: push
 description: Push approval protocol, branch naming, merge request descriptions, and post-push CI watching
 license: MIT
-metadata:
-  provides:
-    - push
-  requires:
-    - commit
-    - source-control
-    - branching
-    - issues
-    - ci
-    - automated-review
 ---
 
 ## Before pushing

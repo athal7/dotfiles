@@ -2,11 +2,6 @@
 name: linear
 description: Linear issue tracker — use for orgs where orgs.<org>.issues is "linear" in local.yaml
 license: MIT
-metadata:
-  provides:
-    - issues
-  requires:
-    - graphql
 ---
 
 Endpoint: https://api.linear.app/graphql

@@ -3,9 +3,6 @@ name: chezmoi
 description: Manage dotfiles via chezmoi — apply safely, destroy files, manage LaunchAgents and externals, config and template gotchas
 license: MIT
 compatibility: opencode
-metadata:
-  provides:
-    - machine-config
 ---
 
 `chezmoi apply` may trigger an opencode server restart if plist files change (via `run_onchange_after_ensure-launchagents.sh`). The current session loses its WebSocket connection and appears to hang indefinitely.

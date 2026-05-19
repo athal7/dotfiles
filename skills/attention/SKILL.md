@@ -3,13 +3,6 @@ name: attention
 description: Energy and spoon check — come up for air, see what needs attention without breaking focus
 license: MIT
 compatibility: opencode
-metadata:
-  requires:
-    - agent
-    - calendar
-    - reminders
-    - issues
-    - source-control
 ---
 
 # Skill: Attention

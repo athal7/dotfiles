@@ -2,12 +2,6 @@
 name: architecture
 description: Load before designing a new system, choosing between competing implementations, weighing tradeoffs across libraries or frameworks, or escalating an architectural question to a human. Fires at the moment a multi-option design decision appears, not during routine implementation.
 license: MIT
-metadata:
-  provides:
-    - architecture
-  requires:
-    - issues
-    - code-quality
 ---
 
 Use this when facing a software design decision with multiple valid approaches, hard-to-reverse consequences, or system boundary implications.

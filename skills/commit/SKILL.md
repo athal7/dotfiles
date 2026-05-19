@@ -2,11 +2,6 @@
 name: commit
 description: Semantic commit format and pre-commit checks
 license: MIT
-metadata:
-  provides:
-    - commit
-  requires:
-    - verify
 ---
 
 ## STOP — verification gate

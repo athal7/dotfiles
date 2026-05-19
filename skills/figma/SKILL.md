@@ -2,11 +2,6 @@
 name: figma
 description: Figma REST API for reading design files, components, and assets
 license: MIT
-metadata:
-  provides:
-    - design
-  requires:
-    - rest
 ---
 
 Base URL: https://api.figma.com/v1

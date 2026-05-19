@@ -3,16 +3,6 @@ name: review
 description: Load before every commit, push, or merge-request finalization — also use to review someone else's branch or merge request with inline comments and approval. Verifies your own work before shipping; routes by target [commit|branch|merge-request|staged].
 license: MIT
 compatibility: opencode
-metadata:
-  provides:
-    - verify
-    - code-review
-  requires:
-    - qa
-    - source-control
-    - automated-review
-    - issues
-    - code-quality
 ---
 
 ## Setup
