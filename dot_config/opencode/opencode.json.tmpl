@@ -68,7 +68,7 @@
   "agent": {
     "lead": {
       "mode": "primary",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-opus-4-6",
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
         "task": "allow",
@@ -78,7 +78,7 @@
     "plan": {
       "description": "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only.",
       "mode": "subagent",
-      "model": "anthropic/claude-opus-4-7",
+      "model": "anthropic/claude-opus-4-6",
       "prompt": "{file:./prompts/plan.md}",
       "permission": {
         "edit": "deny",
@@ -89,7 +89,7 @@
     "build": {
       "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done.",
       "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-opus-4-6",
       "prompt": "{file:./prompts/build.md}",
       "steps": 30,
       "permission": {
@@ -107,7 +107,7 @@
       "template": "Load your `review` skill, then review the following target: $ARGUMENTS\n\nIf $ARGUMENTS is empty, review uncommitted changes. If it looks like a PR number/URL, branch name, or commit SHA, route accordingly per the skill's instructions. Apply the tone rules from your global AGENTS.md when writing findings."
     }
   },
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "anthropic/claude-opus-4-6",
   "provider": {
     "lmstudio": {
       "npm": "@ai-sdk/openai-compatible",
