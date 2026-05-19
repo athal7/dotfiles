@@ -7,7 +7,7 @@ metadata:
     - logs
 ---
 
-Use this skill to investigate production problems. For query syntax, index patterns, and curl commands, use your `logs` capability.
+Use this skill to investigate production problems. For query syntax, index patterns, and curl commands, consult the log query reference.
 
 ## Triage process
 

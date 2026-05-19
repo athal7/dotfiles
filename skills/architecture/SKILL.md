@@ -24,7 +24,7 @@ If a prerequisite refactor would simplify the work, surface it: propose a separa
 
 ## Steps
 
-1. **Gather context.** State the problem, constraints, and options. Use your `issues` capability for history and prior decisions if relevant. Research patterns, prior art, library docs.
+1. **Gather context.** State the problem, constraints, and options. Check issue history and prior decisions if relevant. Research patterns, prior art, library docs.
 
 2. **Present options as a table.** Always include 2+ options — never one-option-as-fait-accompli.
 
@@ -47,7 +47,7 @@ If a prerequisite refactor would simplify the work, surface it: propose a separa
 
    **Prefer reversibility and simplicity when criteria conflict. Complexity must earn its place.**
 
-4. **Call out system-level anti-patterns by name** when present in any option — use the catalog under your `code-quality` capability (Premature Abstraction, Wrong Layer, Leaky Abstraction, Distributed Monolith, Config as Code, Speculative Generality).
+4. **Call out system-level anti-patterns by name** when present in any option — use the code-quality catalog (Premature Abstraction, Wrong Layer, Leaky Abstraction, Distributed Monolith, Config as Code, Speculative Generality).
 
 5. **Escalate** when any of these are true; do not recommend unilaterally:
 

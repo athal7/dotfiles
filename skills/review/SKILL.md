@@ -17,15 +17,15 @@ metadata:
 
 ## Setup
 
-Fetch the diff for the requested scope (commit hash, branch, staged, or code review request via your `source-control` capability). Read modified files for full context; skip generated files, lock files, vendored code.
+Fetch the diff for the requested scope (commit hash, branch, staged, or code review request). Read modified files for full context; skip generated files, lock files, vendored code.
 
 Read project rules: `AGENTS.md` (root + nested), `CONVENTIONS.md`, `REVIEW.md`, `CONTRIBUTING.md`, plus `docs/` development guides. `REVIEW.md` overrides everything else.
 
-Fetch issue context via your `issues` capability — parse branch name and code review request body for issue IDs, fetch acceptance criteria.
+Fetch issue context — parse branch name and code review request body for issue IDs, fetch acceptance criteria.
 
 ## Trigger and reconcile automated review (when a code review request exists)
 
-When reviewing a code review request, check your `automated-review` capability:
+When reviewing a code review request, check whether automated review is available:
 
 - **Available, not yet run** → trigger it and wait for completion before proceeding.
 - **Available, has run** → fetch prior comments. Per-finding, classify as `addressed | dismissed-with-reasoning | pending | moved-but-still-true`. Treat pending and moved-but-still-true findings as required input to the next path.
@@ -59,7 +59,7 @@ Run these against the diff in order, treating each as a distinct lens. Write fin
    - Diff noise that obscures intent (e.g. indentation reflow, import reordering mixed with logic) → separate
    If any issues found, list the specific files/hunks and the recommended action (drop, stage separately, squash, etc.) before proceeding with other passes.
 2. **Correctness** — does behavior match intent and the issue's acceptance criteria? See `specialists/correctness.md`.
-3. **Code quality** — apply your `code-quality` capability. Follow the pre-existing-pattern rule.
+3. **Code quality** — apply code-quality rules. Follow the pre-existing-pattern rule.
 
 **Conditional (run if the diff touches the trigger):**
 
@@ -72,13 +72,13 @@ After all passes: deduplicate findings, verify each by attempting to disprove it
 
 ## QA when UI is touched
 
-If the diff modifies views, templates, controllers, frontend code, or UI interactions: spawn the project's dev server in the background (auto-detect from `package.json` scripts.dev/start, then `Procfile` web entry, then `Makefile` dev/serve/start target, then `README.md` getting-started block). Wait up to 15 s for ready signal. Use your `qa` capability with the changed flows. Kill the server when done.
+If the diff modifies views, templates, controllers, frontend code, or UI interactions: spawn the project's dev server in the background (auto-detect from `package.json` scripts.dev/start, then `Procfile` web entry, then `Makefile` dev/serve/start target, then `README.md` getting-started block). Wait up to 15 s for ready signal. Run QA verification with the changed flows. Kill the server when done.
 
 Always attempt for code review requests; only when UI is touched for commit/branch/staged. Include results under `## QA Results`.
 
 ## Submit
 
-Post findings as inline comments via your `source-control` capability — do not include verdict, TL;DR, or summaries in the submitted body (those are session output only). Exception: a review-wide observation that genuinely cannot be attributed to any line.
+Post findings as inline comments on the code review request — do not include verdict, TL;DR, or summaries in the submitted body (those are session output only). Exception: a review-wide observation that genuinely cannot be attributed to any line.
 
 When a code review request has reviews and merge conflicts, use merge (not rebase) — rebasing invalidates existing inline comments.
 

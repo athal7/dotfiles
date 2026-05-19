@@ -25,7 +25,7 @@ Skip when: the event was very recent (last day or two) and may not be ingested y
 
 Raw meeting markdown with transcripts, summaries, action items.
 
-Use your `meetings` capability for full command reference (list, search, get, person, research, actions, consistency).
+Run `--help` for full command reference (list, search, get, person, research, actions, consistency).
 
 Use when: KB doesn't have enough detail, or you need the surrounding conversation.
 
@@ -35,7 +35,7 @@ Note: daily internal chat digests are also ingested as meetings — check there 
 
 Real-time search for things too recent to be ingested, or threads not captured in digests. Covers both internal team messaging and customer support/community channels.
 
-Use your `chat` capability for full API reference (search, post, reply, find channel IDs). Your `chat` capability may support multiple channels — specify context (internal vs. support/community) when searching if the provider supports it.
+Run `--help` for full API reference (search, post, reply, find channel IDs). The chat provider may support multiple channels — specify context (internal vs. support/community) when searching if the provider supports it.
 
 Use when: looking for something from today or yesterday, a specific thread not in a digest, or customer-reported issues and community feedback.
 
@@ -43,7 +43,7 @@ Use when: looking for something from today or yesterday, a specific thread not i
 
 Sent/received email, support tickets, procurement threads, and anything via your work email domain.
 
-Use your `email` capability for full command reference (search messages, get threads, send/reply).
+Run `--help` for full command reference (search messages, get threads, send/reply).
 
 Use when: looking for email correspondence, ticketing notifications, procurement threads, or any thread not in chat or meetings.
 
@@ -51,11 +51,11 @@ Use when: looking for email correspondence, ticketing notifications, procurement
 
 | Question | Source |
 |---|---|
-| What has someone committed to? | KB → `meetings` capability |
-| What was decided about X last week? | KB → `meetings` capability |
-| Who was in a specific meeting? | `meetings` capability or KB |
-| What did someone say in chat today? | `chat` capability |
-| What's the latest on a thread? | `chat` capability |
-| Customer complaint or support request? | `chat` capability |
-| Community feedback or bug report from users? | `chat` capability |
-| Email thread, ticket notification, procurement? | `email` capability |
+| What has someone committed to? | KB → meeting transcripts |
+| What was decided about X last week? | KB → meeting transcripts |
+| Who was in a specific meeting? | meeting transcripts or KB |
+| What did someone say in chat today? | chat search |
+| What's the latest on a thread? | chat search |
+| Customer complaint or support request? | chat search |
+| Community feedback or bug report from users? | chat search |
+| Email thread, ticket notification, procurement? | email search |

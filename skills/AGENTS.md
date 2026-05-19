@@ -4,7 +4,7 @@
 
 **Integration skills** document how to use a specific external tool or API — non-obvious flags, auth gotchas, silent failure modes. They may (and should) name the tool, show CLI commands, and reference binary names directly. They declare `provides` in metadata.
 
-**Workflow skills** describe how to carry out a process. They are tool-agnostic by design: they declare `requires` in metadata and reference only capability names in their body — never tool names, binary names, CLI flags, or other skill names.
+**Workflow skills** describe how to carry out a process. They are tool-agnostic by design: they declare `requires` in metadata — capabilities are auto-injected at load time. The body describes actions in plain language, never referencing capability names, tool names, binary names, CLI flags, or other skill names.
 
 **When using any CLI capability, read `--help` first.** Run `<binary> --help` and `<binary> <subcommand> --help` before issuing commands. Integration skills document only what help text won't tell you — silent failures, wrong-output traps, and non-obvious cross-command dependencies. Everything else is in `--help`.
 
@@ -44,6 +44,7 @@ If the name would only make sense with one specific tool, it's wrong.
 
 A **coupling violation** is any reference in a workflow skill body (or its included sub-files) to:
 
+- A capability name: `` `your source-control capability` ``, `` `via your issues capability` ``, `` `use your code-review capability` `` — `requires` handles wiring; the body describes actions
 - A CLI binary name: `gh`, `git`, `linear`, `sqlite3`, `opencode`, `jq`, `curl`, etc.
 - A specific skill name: `` `load the slack skill` ``, `` `the architecture skill` ``
 - An MCP tool name: `context7`, `webfetch` (when used as a named tool, not a concept)
@@ -57,13 +58,12 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
 
 | Violation | Fix |
 |---|---|
-| `` `gh pr view`, `gh pr diff` `` | `use your \`code-review\` capability` |
-| `gh api graphql -f query='...'` | `use your \`code-review\` capability` |
-| `load the \`commit\` skill` | `use your \`commit\` capability` |
-| `the \`architecture\` skill Section 2` | `the \`architecture\` capability Section 2` |
-| `via \`gq\`` | remove — capability reference is sufficient |
-| `` `gh repo view --json visibility` `` | `use your \`code-review\` capability` |
-| `context7` (in workflow body) | `your documentation lookup capability` |
+| `` `gh pr view`, `gh pr diff` `` | describe the action: "fetch the diff", "list open review threads" |
+| `gh api graphql -f query='...'` | describe the action: "query for review threads" |
+| `load the \`commit\` skill` | just do the action — `requires` auto-injects the capability |
+| `` `use your \`code-review\` capability` `` | describe the action: "post findings as inline comments" |
+| `` `via your \`source-control\` capability` `` | remove the via-clause entirely |
+| `context7` (in workflow body) | "look up the library documentation" |
 | "PR", "pull request" (in workflow body) | "merge request" or "code review request" |
 
 ## Adding a skill
@@ -71,7 +71,7 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
 1. Determine: integration or workflow?
 2. If workflow:
    - Add `requires` listing the capabilities it needs
-   - In the body, reference only capability names — never tools, binaries, or other skills
+   - In the body, describe actions in plain language — never reference capability names, tools, binaries, or other skills
    - Name capabilities after domains, not tools
 3. If integration:
    - Add `provides` listing the capability name(s) this skill implements

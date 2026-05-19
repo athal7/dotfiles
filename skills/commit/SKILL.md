@@ -13,7 +13,7 @@ metadata:
 
 **Before reading further, confirm in this session you have:**
 
-1. Used your `verify` capability on the staged diff.
+1. Verified the staged diff.
 2. Applied any findings.
 3. Re-verified until clean.
 

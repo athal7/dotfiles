@@ -26,7 +26,7 @@ Once complete, its `output_path` is the meeting file. If a path or slug was prov
 
 ## Step 2: Update the title
 
-Use your `calendar` capability to list non-all-day, non-Busy events in a ±90-minute window around the meeting's `date` field. Pass **local time** to the query bounds.
+List non-all-day, non-Busy calendar events in a ±90-minute window around the meeting's `date` field. Pass **local time** to the query bounds.
 
 Find the best match: prefer an event whose window contains the recording start time; fall back to nearest start. Skip events titled `""` or `"Busy"`.
 
@@ -97,7 +97,7 @@ Collect items assigned to `recorded_by` from **both** of these structures — th
 
 For any entry whose `assignee`/`who` is still a `SPEAKER_N` label, look it up in `speaker_map` and rewrite it in the file before adding the reminder.
 
-Add each item not already in reminders via your `reminders` capability, targeting the configured post-meeting list, with the meeting title as a note and any due date from the entry.
+Add each item not already in reminders, targeting the configured post-meeting list, with the meeting title as a note and any due date from the entry.
 
 ---
 

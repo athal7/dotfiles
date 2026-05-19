@@ -24,7 +24,7 @@ Build `CURRENT` from in-context signals only — do not call any external tools 
 
 - in-progress todo item (if any)
 - last 1–2 user messages — what is this session aimed at?
-- current branch and dirty files via your `source-control` capability
+- current branch and dirty files from version control
 
 Summarize as: one-line description + urgency tag (time-sensitive / steady / exploratory / idle).
 If nothing is active, `CURRENT = idle`.
@@ -45,9 +45,9 @@ The collected names are the only calendars and lists the next step should query.
 
 ## Step 2: Gather context (all in parallel)
 
-- **Sessions:** use your `agent` capability with `sessions-today.sql`, `sessions-summary.sql`, `sessions-concurrent.sql` from this skill directory
-- **Calendar:** use your `calendar` capability for today's events and current time, **filtered to the calendar names from Step 1 only**. **Exclude events the user has declined** — for any event with attendee participation status available, drop it if the user's status is "declined." A declined event no longer holds time on the calendar and must not count toward `RUNWAY`. Compute `RUNWAY` = minutes until the earlier of (next non-declined event on those calendars, 4pm). 4pm is the wind-down boundary — buffer for gradual transition, not end of work.
-- **Reminders:** use your `reminders` capability **filtered to the list names from Step 1 only** and **only fetch open (incomplete) reminders** — completed items are done and must never appear in the attention view. Reminder counts climb over time; querying without the open filter surfaces a stale archive that masks what's actually in flight.
+- **Sessions:** query the agent session database with `sessions-today.sql`, `sessions-summary.sql`, `sessions-concurrent.sql` from this skill directory
+- **Calendar:** fetch today's events and current time, **filtered to the calendar names from Step 1 only**. **Exclude events the user has declined** — for any event with attendee participation status available, drop it if the user's status is "declined." A declined event no longer holds time on the calendar and must not count toward `RUNWAY`. Compute `RUNWAY` = minutes until the earlier of (next non-declined event on those calendars, 4pm). 4pm is the wind-down boundary — buffer for gradual transition, not end of work.
+- **Reminders:** fetch reminders **filtered to the list names from Step 1 only** and **only fetch open (incomplete) reminders** — completed items are done and must never appear in the attention view. Reminder counts climb over time; querying without the open filter surfaces a stale archive that masks what's actually in flight.
 
   Bucket the open reminders by urgency:
   1. **Overdue** — due before today. Always surface; these are the first thing the user should see.
@@ -58,7 +58,7 @@ The collected names are the only calendars and lists the next step should query.
   Future-dated reminders (tomorrow onward) are out of scope for the attention check — they belong to a planning ritual, not a focus check.
 
   Within each bucket, sort by priority (`high` → `medium` → `low` → `none`), then by due date / creation date.
-- **Work:** use your `source-control` and `issues` capabilities for review requests, received reviews, and assigned work. Prioritize closest-to-done: approved merge request ready to merge → received review to address → incoming review request → new work. Group linked merge requests and issues together. Flag any "In Progress" issue whose merge request has changes requested or a conflict. Consult your `source-control` capability's known gotchas before querying reviews. "Received review to address" means a reviewer left feedback on **your** merge request — never surface another person's merge request under this category. When a surfaced merge request or issue matches `CURRENT` (same branch / linked issue), tag it `[active]` — do not list it again in top-items. Items in the same repository as the current working directory rank higher than items in other repositories at the same priority level.
+- **Work:** fetch review requests, received reviews, and assigned work. Prioritize closest-to-done: approved merge request ready to merge → received review to address → incoming review request → new work. Group linked merge requests and issues together. Flag any "In Progress" issue whose merge request has changes requested or a conflict. Consult the source control provider's known gotchas before querying reviews. "Received review to address" means a reviewer left feedback on **your** merge request — never surface another person's merge request under this category. When a surfaced merge request or issue matches `CURRENT` (same branch / linked issue), tag it `[active]` — do not list it again in top-items. Items in the same repository as the current working directory rank higher than items in other repositories at the same priority level.
 
 ---
 
