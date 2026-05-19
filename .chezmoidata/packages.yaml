@@ -242,40 +242,6 @@ packages:
         "*":
           build: deny
 
-    - name: minutes
-      repo: silverstein/minutes
-      target: .local/bin/minutes
-      asset: minutes-macos-arm64
-      type: file
-      executable: true
-      refresh_period: 24h
-      permissions:
-        "person*":
-          lead: allow
-          plan: allow
-        "research*":
-          lead: allow
-          plan: allow
-        "consistency*":
-          lead: allow
-          plan: allow
-        "list*":
-          lead: allow
-          plan: allow
-        "show*":
-          lead: allow
-          plan: allow
-        "*":
-          build: deny
-
-    - name: minutes-desktop
-      repo: silverstein/minutes
-      target: Applications
-      app: Minutes.app
-      asset: Minutes.app.tar.gz
-      type: archive
-      refresh_period: 24h
-
   # agent skills installed via gh skill install
   skills:
     - repo: BRO3886/ical

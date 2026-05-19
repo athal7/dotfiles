@@ -36,7 +36,7 @@ Note: the example file lives at the repo root rather than under `.chezmoidata/`.
 
 ## Local model setup (LM Studio)
 
-LM Studio serves the local model used by OpenCode for agentic coding. Ollama remains installed for the `minutes` skill and cloud-proxied models, but qwen3-family models leak XML tool-calls through Ollama's OpenAI-compatible endpoint (see [OpenCode #26162](https://github.com/anomalyco/opencode/issues/26162), [#24316](https://github.com/anomalyco/opencode/issues/24316), [#4428](https://github.com/anomalyco/opencode/issues/4428)). LM Studio is the most-reported working setup.
+LM Studio serves the local model used by OpenCode for agentic coding. Qwen3-family models leak XML tool-calls through Ollama's OpenAI-compatible endpoint (see [OpenCode #26162](https://github.com/anomalyco/opencode/issues/26162), [#24316](https://github.com/anomalyco/opencode/issues/24316), [#4428](https://github.com/anomalyco/opencode/issues/4428)). LM Studio is the most-reported working setup.
 
 One-time bootstrap after `chezmoi apply` installs the cask:
 

@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.{{ .chezmoi.username }}.zoom-capture</string>
+    <string>com.{{ .chezmoi.username }}.meeting-postprocess</string>
     <key>ProgramArguments</key>
     <array>
-        <string>{{ .chezmoi.homeDir }}/.local/share/zoom-capture/ZoomCapture.app/Contents/MacOS/zoom-capture</string>
+        <string>{{ .chezmoi.homeDir }}/.local/bin/meeting-postprocess</string>
     </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
+    <key>WatchPaths</key>
+    <array>
+        <string>{{ .chezmoi.homeDir }}/Documents/Zoom</string>
+    </array>
     <key>LimitLoadToSessionType</key>
     <string>Aqua</string>
     <key>WorkingDirectory</key>
@@ -22,8 +22,8 @@
         <string>{{ .chezmoi.homeDir }}/.local/bin:{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>{{ .chezmoi.homeDir }}/Library/Logs/zoom-capture.log</string>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/meeting-postprocess.log</string>
     <key>StandardErrorPath</key>
-    <string>{{ .chezmoi.homeDir }}/Library/Logs/zoom-capture.log</string>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/meeting-postprocess.log</string>
 </dict>
 </plist>

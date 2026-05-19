@@ -18,7 +18,6 @@ Integration skills self-register their provided capabilities via `provides` in f
 | | **conversations** — Research people and decisions across chat, meetings, email |
 | **pty** — PTY sessions for long-running or interactive processes | **issues** — Route to Linear or GitHub Issues based on org |
 | **secrets** — Fetch credentials and API keys | **observability** — Investigate production issues using logs and traces |
-| | **post-meeting** — Post-recording meeting processing |
 | | **push** — Push approval protocol and CI watching |
 | | **qa** — Browser QA verification via Firefox DevTools |
 | | **respond-to-review** — Address review feedback on a merge request |

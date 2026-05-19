@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+"""meeting-postprocess — convert a Zoom caption file into a meeting markdown file.
+Summarizes via LM Studio, writes to ~/meetings/, updates knowledge base.
+
+Usage: meeting-postprocess [/path/to/caption.txt]
+       meeting-postprocess                # finds most recent caption in ~/Documents/Zoom/
+"""
+import json, os, re, subprocess, sys, traceback, urllib.request, urllib.error
+from datetime import datetime
+from pathlib import Path
+
+ZOOM_DIR = Path.home() / "Documents" / "Zoom"
+MEETINGS_DIR = Path(os.environ.get("MEETINGS_DIR", Path.home() / "meetings"))
+LMS_URL = os.environ.get("LMS_URL", "http://127.0.0.1:1234/v1/chat/completions")
+LMS_MODEL = os.environ.get("LMS_MODEL", "qwen3.5-27b")
+def get_identity_name():
+    """Get identity from chezmoi data, fall back to env var."""
+    name = os.environ.get("IDENTITY_NAME")
+    if name:
+        return name
+    try:
+        result = subprocess.run(
+            ["chezmoi", "data", "--format=json"],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            return data.get("fullName", "Unknown")
+    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        pass
+    return "Unknown"
+
+IDENTITY_NAME = get_identity_name()
+
+def log(msg):
+    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] meeting-postprocess: {msg}", file=sys.stderr)
+
+def slugify(text):
+    s = text.lower()
+    s = re.sub(r"[^a-z0-9 ]", "", s)
+    s = s.strip().replace(" ", "-")
+    return re.sub(r"-{2,}", "-", s)
+
+def find_caption():
+    if len(sys.argv) > 1:
+        return Path(sys.argv[1])
+    cutoff = datetime.now().timestamp() - 7200
+    best, best_mtime = None, 0
+    for p in ZOOM_DIR.rglob("meeting_saved_closed_caption.txt"):
+        mt = p.stat().st_mtime
+        if mt > cutoff and mt > best_mtime:
+            best, best_mtime = p, mt
+    return best
+
+def get_title(caption_path):
+    title = os.environ.get("MEETING_TITLE", "")
+    if not title:
+        folder = caption_path.parent.name
+        m = re.match(r"^\d{4}-\d{2}-\d{2} \d+\.\d+\.\d+ (.+)$", folder)
+        title = m.group(1) if m else ""
+    if not title:
+        try:
+            mtime = datetime.fromtimestamp(caption_path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+            result = subprocess.run(
+                ["ical", "list", "-f", mtime, "-t", "+90m", "-n", "1", "-o", "json"],
+                capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                if data and data[0].get("title"):
+                    title = data[0]["title"]
+        except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError, IndexError, KeyError):
+            pass
+    return title or "Zoom Meeting"
+
+def load_name_map():
+    """Load display name → canonical name mapping from knowledge/names.json."""
+    names_file = MEETINGS_DIR / "knowledge" / "names.json"
+    if names_file.exists():
+        try:
+            return json.loads(names_file.read_text())
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def normalize_name(name, name_map):
+    """Map a Zoom display name to its canonical form."""
+    if name in name_map:
+        return name_map[name]
+    # Try case-insensitive match
+    lower = name.lower()
+    for k, v in name_map.items():
+        if k.lower() == lower:
+            return v
+    return name
+
+
+def parse_transcript(caption_path):
+    name_map = load_name_map()
+    lines = caption_path.read_text().split("\n")
+    entries, i = [], 0
+    while i < len(lines):
+        m = re.match(r"^\[(.+)\] (\d+):(\d+):(\d+)$", lines[i])
+        if m and i + 1 < len(lines):
+            speaker = normalize_name(m.group(1), name_map)
+            secs = int(m.group(2)) * 3600 + int(m.group(3)) * 60 + int(m.group(4))
+            entries.append((speaker, secs, lines[i + 1]))
+            i += 2
+        else:
+            i += 1
+    if not entries:
+        return "", 0, "unknown"
+    start = entries[0][1]
+    dur_secs = entries[-1][1] - start
+    if dur_secs < 0:
+        dur_secs = 0
+    duration = f"{dur_secs // 60}m {dur_secs % 60}s"
+    parsed = []
+    for speaker, secs, text in entries:
+        rel = secs - start
+        mm, ss = divmod(rel, 60)
+        parsed.append(f"[{speaker} {mm}:{ss:02d}] {text}")
+    transcript = "\n".join(parsed)
+    return transcript, len(transcript.split()), duration
+
+def summarize(transcript):
+    try:
+        urllib.request.urlopen("http://127.0.0.1:1234/v1/models", timeout=2)
+    except Exception:
+        log("LM Studio not available — skipping summary")
+        return ""
+    log(f"Summarizing via LM Studio ({LMS_MODEL})...")
+    payload = json.dumps({
+        "model": LMS_MODEL,
+        "messages": [
+            {"role": "system", "content": "You are a meeting summarizer. Output ONLY markdown sections: ## Summary (3-5 sentences), ## Key Points (bullets), ## Action Items (bullets with owner, or \"- none\"), ## Open Questions (bullets or \"- none\"). No preamble, no reasoning, no thinking tags."},
+            {"role": "user", "content": f"/no_think\n\nMeeting transcript:\n\n{transcript}\n\n/no_think Generate the markdown summary now."}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 2000,
+    }).encode()
+    try:
+        req = urllib.request.Request(LMS_URL, data=payload, headers={"Content-Type": "application/json"})
+        resp = urllib.request.urlopen(req, timeout=300)
+        data = json.loads(resp.read())
+        summary = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        if summary:
+            log(f"Summary: {len(summary.split())} words")
+        else:
+            log("WARNING: LM Studio returned empty summary")
+        return summary
+    except Exception as e:
+        log(f"WARNING: LM Studio request failed: {e}")
+        return ""
+
+def write_output(title, date_str, duration, summary, transcript, word_count):
+    slug = slugify(title)
+    first_name = IDENTITY_NAME.split()[0].lower() if IDENTITY_NAME else "unknown"
+    date_prefix = date_str[:10]
+    output = MEETINGS_DIR / f"{date_prefix}-{slug}-{first_name}.md"
+    if output.exists():
+        output = output.with_name(f"{output.stem}-2.md")
+    status = "complete" if summary else "degraded"
+    parts = [
+        "---",
+        f"title: {title}",
+        "type: meeting",
+        f"date: {date_str}",
+        f"duration: {duration}",
+        f"status: {status}",
+        f"source: zoom-capture",
+        f"recorded_by: {IDENTITY_NAME}",
+        "---",
+        "",
+    ]
+    if summary:
+        parts.extend([summary, ""])
+    parts.extend(["## Transcript", "", transcript, ""])
+    MEETINGS_DIR.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts))
+    log(f"Wrote: {output} ({word_count} words)")
+    return output, date_prefix
+
+def update_knowledge_base(transcript, title, date_prefix, summary):
+    kb_dir = MEETINGS_DIR / "knowledge" / "people"
+    if not kb_dir.is_dir():
+        return
+    identity_slug = slugify(IDENTITY_NAME)
+    names = sorted(set(re.findall(r"^\[([^\]]+?) \d+:\d{2}\]", transcript, re.MULTILINE)))
+    speakers = [n for n in names if slugify(n) != identity_slug]
+    if not speakers:
+        return
+
+    try:
+        urllib.request.urlopen("http://127.0.0.1:1234/v1/models", timeout=2)
+        lms_available = True
+    except Exception:
+        lms_available = False
+
+    updated = 0
+    for name in speakers:
+        slug = slugify(name)
+        profile = kb_dir / f"{slug}.md"
+        meeting_ref = f"{date_prefix}: {title}"
+
+        # Skip if this meeting is already in the profile
+        if profile.exists() and meeting_ref in profile.read_text():
+            continue
+
+        # Extract just this speaker's lines for a focused context
+        speaker_lines = [l for l in transcript.split("\n") if l.startswith(f"[{name} ")]
+        if not speaker_lines:
+            continue
+        speaker_text = "\n".join(speaker_lines[:50])  # cap at 50 lines
+
+        existing = profile.read_text() if profile.exists() else ""
+
+        if lms_available:
+            updated_profile = update_person_profile(name, existing, speaker_text, title, date_prefix)
+            if updated_profile:
+                profile.write_text(updated_profile.rstrip("\n") + "\n")
+                updated += 1
+                continue
+
+        # Fallback without LLM: simple append
+        if existing:
+            profile.write_text(existing.rstrip("\n") + f"\n\n## {title} ({date_prefix})\n- Attended\n")
+        else:
+            profile.write_text(f"# {name}\n\n## {title} ({date_prefix})\n- Attended\n")
+        updated += 1
+
+    log(f"Knowledge base: {updated} profiles created/updated")
+
+
+def update_person_profile(name, existing_profile, speaker_text, title, date_prefix):
+    """Ask LM Studio to update a person's profile with new meeting facts.
+    Provides existing profile as context so it can deduplicate and stay concise."""
+    existing_section = f"Existing profile:\n{existing_profile}" if existing_profile else "No existing profile."
+    payload = json.dumps({
+        "model": LMS_MODEL,
+        "messages": [
+            {"role": "system", "content": (
+                "Update a person's knowledge base profile with facts from a new meeting. "
+                "Rules: (1) Start with '# Name'. (2) Each meeting gets a '## Title (date)' section with 1-3 bullet points of substantive facts (decisions, commitments, demonstrations, concerns). "
+                "Skip filler. (3) If the profile is getting long (>15 sections), consolidate older sections — merge similar facts, drop superseded decisions, keep what matters. "
+                "(4) Output ONLY the complete updated markdown profile. No commentary."
+            )},
+            {"role": "user", "content": (
+                f"/no_think\n\n{existing_section}\n\n"
+                f"New meeting: {title} ({date_prefix})\n"
+                f"{name}'s statements:\n{speaker_text}\n\n"
+                f"/no_think Update the profile now."
+            )}
+        ],
+        "temperature": 0.2,
+        "max_tokens": 3000,
+    }).encode()
+    try:
+        req = urllib.request.Request(LMS_URL, data=payload, headers={"Content-Type": "application/json"})
+        resp = urllib.request.urlopen(req, timeout=120)
+        data = json.loads(resp.read())
+        result = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        if result and f"# {name}" in result:
+            return result
+        log(f"WARNING: KB update for {name} returned unexpected format")
+        return None
+    except Exception as e:
+        log(f"WARNING: KB update failed for {name}: {e}")
+        return None
+
+
+def report_error(title, error_msg):
+    """Add a reminder about a processing error so the user notices."""
+    try:
+        list_name = get_reminders_list()
+        if not list_name:
+            return
+        subprocess.run(
+            ["remindctl", "add", "--list", list_name,
+             f"meeting-postprocess failed: {title}: {error_msg}"],
+            capture_output=True, text=True, timeout=10)
+    except Exception:
+        pass  # best-effort
+
+
+def get_reminders_list():
+    """Find which reminders list has post_meeting: true in chezmoi data."""
+    try:
+        result = subprocess.run(
+            ["chezmoi", "data", "--format=json"],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            for key, cfg in data.get("reminders", {}).items():
+                if cfg.get("post_meeting"):
+                    return cfg.get("name", key)
+    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        pass
+    return None
+
+
+def add_reminders(summary, title):
+    """Extract action items assigned to me from the summary and add to Reminders."""
+    if not summary:
+        return
+    try:
+        subprocess.run(["remindctl", "--help"], capture_output=True, timeout=3)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return
+
+    list_name = get_reminders_list()
+    if not list_name:
+        return
+
+    # Find the Action Items section
+    in_actions = False
+    items = []
+    for line in summary.split("\n"):
+        if re.match(r"^##\s*Action Items", line, re.IGNORECASE):
+            in_actions = True
+            continue
+        if in_actions and line.startswith("## "):
+            break
+        if in_actions and line.strip().startswith(("- ", "* ")):
+            item = line.strip().lstrip("-* ").strip()
+            if item.lower() != "none":
+                items.append(item)
+
+    # Filter to items assigned to me (first name match)
+    first_name = IDENTITY_NAME.split()[0].lower() if IDENTITY_NAME else ""
+    my_items = [i for i in items if first_name and first_name in i.lower()]
+    if not my_items:
+        return
+
+    added = 0
+    for item in my_items:
+        try:
+            result = subprocess.run(
+                ["remindctl", "add", "--list", list_name, "--note", title, item],
+                capture_output=True, text=True, timeout=10)
+            if result.returncode == 0:
+                added += 1
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+    if added:
+        log(f"Reminders: {added} action items added to {list_name} list")
+
+
+def main():
+    caption_path = find_caption()
+    if caption_path is None:
+        log(f"No recent caption file found in {ZOOM_DIR}")
+        return
+    caption_path = Path(caption_path)
+    if not caption_path.is_file():
+        log(f"ERROR: file not found: {caption_path}")
+        sys.exit(1)
+    title = get_title(caption_path)
+    log(f"Title: {title}")
+    transcript, word_count, duration = parse_transcript(caption_path)
+    log(f"Transcript: {word_count} words")
+    if word_count < 10:
+        log("Transcript too short — skipping")
+        return
+    mtime = caption_path.stat().st_mtime
+    date_str = datetime.fromtimestamp(mtime).astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
+    warnings = []
+    summary = summarize(transcript)
+    if not summary:
+        warnings.append("summary failed")
+    _, date_prefix = write_output(title, date_str, duration, summary, transcript, word_count)
+    update_knowledge_base(transcript, title, date_prefix, summary)
+    add_reminders(summary, title)
+    if warnings:
+        report_error(title, "; ".join(warnings))
+    log("Done")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        log(f"FATAL: {e}")
+        traceback.print_exc(file=sys.stderr)
+        report_error("unknown meeting", str(e))
+        sys.exit(1)
