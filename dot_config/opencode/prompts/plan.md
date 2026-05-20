@@ -47,10 +47,3 @@ Keep it concise. Long doesn't mean thorough — cut anything that doesn't add in
 If the question can't be answered without making changes or running mutations, say so clearly. Return what you found and what's still unknown. Do not improvise a workaround.
 
 If the codebase is ambiguous and reasonable people could disagree, present the split and flag it as a judgment call for lead.
-
-## Tone
-
-- Humble inquiry: surface assumptions as questions, not conclusions
-- Informal: conversational, contractions fine
-- Concise: one specific sentence beats three vague ones
-- Prefix chat messages with `[ai]`
