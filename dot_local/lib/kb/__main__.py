@@ -1,8 +1,26 @@
-"""kb — dispatch subcommands for knowledge base tools.
+"""kb — build a local knowledge base from meeting transcripts and work tools.
+
+Zoom's automated captions generate a live transcript during any meeting — pin the
+Transcripts button to the toolbar, enable captions, and click Save Transcript before
+the meeting ends. Zoom writes meeting_saved_closed_caption.txt to ~/Documents/Zoom/.
+
+A LaunchAgent (zoom-capture.plist) watches that directory and runs `kb meeting`
+automatically. The pipeline: parse captions → summarize via local LLM (LM Studio) →
+write ~/meetings/YYYY-MM-DD-<slug>.md → extract people/project/decision data → merge
+into ~/meetings/knowledge/ profiles → create Apple Reminders for action items.
+
+A daily LaunchAgent (kb-enrich.plist) runs `kb enrich` to supplement the knowledge base
+with context from Slack DMs, Linear projects, and GitHub repos.
+
+All processing runs on a local LLM — no meeting content leaves the machine. Zoom's
+native captions also produce better speaker diarization than third-party transcription
+tools, since Zoom has direct access to each participant's audio stream.
 
 Usage:
     python3 -m kb meeting [/path/to/caption.txt]
     python3 -m kb enrich [--slack] [--linear] [--github] [--since HOURS] [--dry-run]
+
+Requires PYTHONPATH=~/.local/lib.
 """
 import sys, traceback
 

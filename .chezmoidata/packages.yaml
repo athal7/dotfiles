@@ -1,3 +1,10 @@
+# Package registry — single source of truth for all managed dependencies.
+# brew, cask, mise, and GitHub release packages. Install scripts and
+# chezmoi externals are generated from this file.
+#
+# Each entry can also declare per-tool permission rules for OpenCode agents
+# (merged into opencode.json at template time).
+
 packages:
   taps:
     - github/gh

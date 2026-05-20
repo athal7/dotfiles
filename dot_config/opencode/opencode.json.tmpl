@@ -1,3 +1,19 @@
+{{- /*
+opencode.json — OpenCode agent configuration.
+
+Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
+  - Model selection (cloud and local via LM Studio)
+  - Per-tool permission rules (allow/ask gates for shell commands, git, gh, etc.)
+  - MCP server connections
+  - Plugin wiring (skill injection, custom commands)
+  - Agent-specific permission and skill overrides (lead, plan, build)
+
+Local model setup: LM Studio serves Qwen3 for agentic coding and the kb meeting
+pipeline. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
+"Run server on login", and download Qwen 3.5 27B Unsloth UD-IQ3_XXS. Reference
+as lmstudio/qwen3.5-27b. See https://www.glukhov.org/ai-devtools/opencode/llms-comparison/
+for model benchmarks — use Unsloth quants for patched chat templates.
+*/ -}}
 {{- /* Universal read-only shell utilities — apply to all agents */ -}}
 {{- $universalReads := dict
   "*" "ask"

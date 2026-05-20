@@ -1,10 +1,19 @@
-"""cal — calendar management automations.
+"""cal — calendar management automations via the ical CLI.
+
+Each subcommand runs on a schedule via its own LaunchAgent in ~/Library/LaunchAgents/.
+Config (calendar names, sync rules, ICS feed URLs, reminder lists) comes from chezmoi
+data in .chezmoidata/local.yaml.
+
+Subcommands:
+    sync        Mirror busy blocks between configured calendars.
+    lunch       Block lunch on calendar when meetings threaten the 11am–1pm window.
+    family      Fetch events from ICS feeds and add conflict-free ones to a family calendar.
+    babysitter  Flag evening/weekend events that may need babysitter coverage.
 
 Usage:
-    python3 -m cal babysitter
-    python3 -m cal family
-    python3 -m cal lunch
-    python3 -m cal sync
+    python3 -m cal <subcommand>
+
+Requires PYTHONPATH=~/.local/lib.
 """
 import sys, traceback
 
