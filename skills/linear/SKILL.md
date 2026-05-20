@@ -16,3 +16,21 @@ The project body is `documentContent.content` — not the legacy `description` f
 ## Templates
 
 Templates apply automatically in the web UI but not via the API. Query `{ templates { id name templateData } }` and follow the template manually.
+
+## Search
+
+`issueSearch` is deprecated (returns 400). Use `searchIssues` instead:
+```graphql
+{ searchIssues(term: "query", first: 10) { nodes { identifier title state { name } url } } }
+```
+
+## Project Milestones
+
+Create milestones on a project with `projectMilestoneCreate`. Assign issues to milestones via `projectMilestoneId` in `issueCreate`.
+
+```graphql
+mutation($input: ProjectMilestoneCreateInput!) {
+  projectMilestoneCreate(input: $input) { success projectMilestone { id name } }
+}
+# input: { name, projectId, sortOrder }
+```
