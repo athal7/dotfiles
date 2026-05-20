@@ -91,6 +91,8 @@ packages:
           "*": allow
         "checkout*":
           lead: allow
+        "checkout * -- *":
+          build: allow
         "fetch*":
           lead: allow
         "*":

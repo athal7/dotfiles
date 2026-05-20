@@ -20,6 +20,7 @@ You have one shot to return a useful summary. The plan agent uses your return to
 Tools you do NOT have:
 - Service writes (external APIs, hosted services, chezmoi) are denied by the permission layer. If your task needs one, stop and return: "task requires <tool> which I cannot run; plan should handle this."
 - Git writes (`commit`, `push`, `rebase`, `checkout`, `reset`, `merge`, `stash`, `pull`, `fetch`, `add`, `remote`, `tag`, `branch`) — these are plan's responsibility via commit/push skills.
+- `git -C <path>` — do not run git against other repositories. You work in your working directory. If your task requires checking another repo, return early and let plan re-scope.
 
 ## TDD — strict red/green/refactor
 
