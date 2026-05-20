@@ -1,5 +1,5 @@
 """KB profile merge logic — people, projects, decisions."""
-import os, re
+import json, os, re
 from pathlib import Path
 from kb.util import slugify, log
 from kb.llm import lms_call
@@ -90,7 +90,7 @@ def consolidate_profiles(log_prefix="kb"):
                     "- Current section: keep only the 3-5 MOST RECENT and ACTIVE items. Drop anything completed or stale.\n"
                     "- Key Decisions: keep only the 5-8 most important. Drop minor or superseded ones.\n"
                     "- Style/Personal: keep as-is (these are already concise).\n"
-                    "- Contact fields (Email, Slack, Title, Team): preserve exactly as they are.\n"
+                    "- Contact/link fields (Email, Slack, Title, Team, Linear, GitHub): preserve exactly as they are.\n"
                     "- Target: under 35 lines total.\n"
                     "- Output ONLY the condensed markdown."
                 )},
@@ -116,12 +116,38 @@ def consolidate_profiles(log_prefix="kb"):
     return consolidated
 
 
+def load_project_map():
+    """Load project name -> canonical name mapping."""
+    projects_file = KB_DIR / "projects.json"
+    if projects_file.exists():
+        try:
+            return json.loads(projects_file.read_text())
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def normalize_project(name, project_map):
+    """Map a project name to its canonical form. Returns empty string to suppress."""
+    if name in project_map:
+        return project_map[name]
+    lower = name.lower()
+    for k, v in project_map.items():
+        if k.lower() == lower:
+            return v
+    return name
+
+
 def update_projects(project_facts, context_label, date_prefix, log_prefix="kb"):
     """Merge project facts into KB profiles."""
     projects_dir = KB_DIR / "projects"
     projects_dir.mkdir(parents=True, exist_ok=True)
     updated = 0
+    project_map = load_project_map()
     for project, updates in project_facts.items():
+        project = normalize_project(project, project_map)
+        if not project:  # suppressed
+            continue
         slug = slugify(project)
         if not slug:
             continue
@@ -131,10 +157,13 @@ def update_projects(project_facts, context_label, date_prefix, log_prefix="kb"):
         updated_profile = lms_call([
             {"role": "system", "content": (
                 "Update a project's knowledge base profile. The profile should reflect current state, NOT be a meeting log. "
-                "Format:\n# Project Name\n\n## Status\n- Current state, what's active, what's blocked\n"
+                "Format:\n# Project Name\n- **Linear**: project URL\n- **GitHub**: repo URL\n"
+                "(Only include a link field if the URL is known — omit the line entirely otherwise.)\n"
+                "\n## Status\n- Current state, what's active, what's blocked\n"
                 "\n## Key Decisions\n- Important decisions (with date)\n"
                 "\n## People\n- Key people involved and their roles\n"
                 "\nRules: Merge new info. Update status if changed. Drop superseded decisions. Keep concise. "
+                "IMPORTANT: Preserve all existing link fields (Linear, GitHub) — never remove them. "
                 "Output ONLY the markdown."
             )},
             {"role": "user", "content": (
