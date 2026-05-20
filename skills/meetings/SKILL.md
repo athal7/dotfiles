@@ -12,18 +12,21 @@ Meeting data lives in `~/meetings/` as markdown files with YAML frontmatter.
 ## Files
 
 - `~/meetings/YYYY-MM-DD-<slug>.md` — meeting markdown (frontmatter + summary + transcript in one file)
-- `~/meetings/knowledge/people/<slug>.md` — person profiles (facts, decisions, commitments per meeting)
-- `~/meetings/knowledge/projects/<slug>.md` — project profiles (status updates, decisions per meeting)
+- `~/meetings/knowledge/people/<slug>.md` — person profiles (contact info, current work, style, personal, key decisions)
+- `~/meetings/knowledge/projects/<slug>.md` — project profiles (Linear/GitHub links, status, key decisions, people)
 - `~/meetings/knowledge/decisions/log.md` — chronological decision log across all meetings
-- `~/meetings/knowledge/names.json` — display name → canonical name mapping
+- `~/meetings/knowledge/names.json` — display name → canonical name mapping (people)
+- `~/meetings/knowledge/projects.json` — project name → canonical name mapping
+- `~/meetings/knowledge/product-labels.json` — Linear label → product profile mapping
+- `~/meetings/knowledge/github-repos.json` — GitHub repo → project profile mapping
 
 ## Knowledge base
 
-Three categories, updated automatically after each meeting and daily from Slack:
+Three categories, updated automatically from meetings, Slack, Linear, and GitHub:
 
-**People** — what each person said, decided, committed to, or demonstrated. Profiles consolidate automatically when they exceed 15 meeting sections. Look up a person to understand their role, recent decisions, and open commitments.
+**People** — distilled reference cards: contact info (Email, Slack ID), current work, communication style, personal details, key decisions. Profiles consolidate automatically when they grow past 40 lines.
 
-**Projects** — status updates per meeting. Tracks what changed, what was decided, what's blocked. Consolidates the same way as people profiles.
+**Projects** — current state with metadata links (Linear project URLs, GitHub repos). Products get Linear label mappings; projects get direct URLs. Name normalization via `projects.json` prevents duplicates.
 
 **Decisions** — cross-meeting decision log. Later decisions that supersede earlier ones are reconciled automatically — the log reflects current state, not accumulated contradictions.
 
@@ -39,7 +42,10 @@ New Zoom meetings are processed automatically by launchd when a caption file is 
 python3 -m kb meeting /path/to/caption.txt    # new Zoom caption
 python3 -m kb meeting /path/to/meeting.md     # reprocess existing (KB + reminders only)
 python3 -m kb enrich --slack --since 48        # scan last 48h of Slack
-python3 -m kb enrich --slack --dry-run         # preview what would be processed
+python3 -m kb enrich --linear                  # sync Linear project URLs and labels
+python3 -m kb enrich --github                  # sync GitHub repo URLs
+python3 -m kb enrich                           # all sources
+python3 -m kb enrich --dry-run                 # preview what would change
 ```
 
 Requires `PYTHONPATH=~/.local/lib` (set automatically by the LaunchAgents).
