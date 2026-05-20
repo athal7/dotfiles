@@ -2,7 +2,7 @@
 
 Usage:
     python3 -m kb meeting [/path/to/caption.txt]
-    python3 -m kb enrich [--slack] [--linear] [--email] [--since HOURS] [--dry-run]
+    python3 -m kb enrich [--slack] [--linear] [--github] [--email] [--since HOURS] [--dry-run]
 """
 import sys, traceback
 

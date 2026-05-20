@@ -402,27 +402,110 @@ def process_linear(args):
     log(f"Linear enrichment: {updated} profiles updated")
 
 
+def process_github(args):
+    """Enrich KB project profiles with GitHub repo URLs."""
+    from kb.github import fetch_org_repos
+
+    repos_file = KB_DIR / "github-repos.json"
+    if not repos_file.exists():
+        log("No github-repos.json found — skipping GitHub enrichment")
+        return
+    try:
+        repo_map = json.loads(repos_file.read_text())
+    except json.JSONDecodeError:
+        log("Invalid github-repos.json — skipping")
+        return
+
+    org = repo_map.pop("_org", "")
+    if not org:
+        log("No _org key in github-repos.json — skipping")
+        return
+
+    repos = fetch_org_repos(org, log_prefix=LOG_PREFIX)
+    if not repos:
+        log("No GitHub repos fetched")
+        return
+    log(f"Fetched {len(repos)} repos from {org}")
+
+    projects_dir = KB_DIR / "projects"
+    if not projects_dir.is_dir():
+        return
+
+    updated = 0
+    for repo in repos:
+        repo_name = repo["name"]
+        profile_slug = repo_map.get(repo_name)
+        if not profile_slug:
+            continue
+
+        profile_path = projects_dir / f"{profile_slug}.md"
+        if not profile_path.exists():
+            continue
+
+        repo_url = repo["url"]
+        content = profile_path.read_text()
+
+        if repo_url in content:
+            continue
+
+        if args.dry_run:
+            log(f"  {profile_slug}: would add GitHub URL {repo_url}")
+            updated += 1
+            continue
+
+        if re.search(r"^- \*\*GitHub\*\*:", content, re.MULTILINE):
+            # Append to existing field (a project can have multiple repos)
+            existing_match = re.search(r"^(- \*\*GitHub\*\*: .+)$", content, re.MULTILINE)
+            if existing_match and repo_url not in existing_match.group(1):
+                content = content.replace(
+                    existing_match.group(1),
+                    f"{existing_match.group(1)}, {repo_url}")
+        else:
+            # Insert after Linear field if present, otherwise after # Name header
+            if re.search(r"^- \*\*Linear\*\*:", content, re.MULTILINE):
+                content = re.sub(
+                    r"^(- \*\*Linear\*\*: .+)$",
+                    f"\\1\n- **GitHub**: {repo_url}",
+                    content, count=1, flags=re.MULTILINE)
+            else:
+                content = re.sub(
+                    r"^(# .+)$",
+                    f"\\1\n- **GitHub**: {repo_url}",
+                    content, count=1, flags=re.MULTILINE)
+
+        profile_path.write_text(content)
+        log(f"  {profile_slug}: added GitHub URL")
+        updated += 1
+
+    log(f"GitHub enrichment: {updated} profiles updated")
+
+
 def main(args):
     import argparse
     parser = argparse.ArgumentParser(description="Update knowledge base from conversations")
     parser.add_argument("--slack", action="store_true", help="Enrich from Slack only")
     parser.add_argument("--email", action="store_true", help="Enrich from email only")
     parser.add_argument("--linear", action="store_true", help="Enrich project metadata from Linear")
+    parser.add_argument("--github", action="store_true", help="Enrich project profiles with GitHub repo URLs")
     parser.add_argument("--since", type=float, metavar="HOURS", help="Override state file, fetch from N hours ago")
     parser.add_argument("--dry-run", action="store_true", help="Fetch and format but skip LLM calls")
     parsed = parser.parse_args(args)
 
     # Default: all sources when no specific flag given
-    no_source_flag = not parsed.slack and not parsed.email and not parsed.linear
+    no_source_flag = not parsed.slack and not parsed.email and not parsed.linear and not parsed.github
     do_slack = parsed.slack or no_source_flag
     do_email = parsed.email or no_source_flag
     do_linear = parsed.linear or no_source_flag
+    do_github = parsed.github or no_source_flag
 
     if do_email:
         log("Email enrichment not yet implemented")
 
     if do_linear:
         process_linear(parsed)
+
+    if do_github:
+        process_github(parsed)
 
     if do_slack:
         process_slack(parsed)
