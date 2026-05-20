@@ -1,5 +1,5 @@
 """LM Studio helpers."""
-import json, os, re, urllib.request
+import json, os, re, urllib.error, urllib.request
 from kb.util import log
 
 LMS_URL = os.environ.get("LMS_URL", "http://127.0.0.1:1234/v1/chat/completions")
@@ -25,6 +25,14 @@ def lms_call(messages, max_tokens=2000, timeout=60, log_prefix="kb"):
         resp = urllib.request.urlopen(req, timeout=timeout)
         data = json.loads(resp.read())
         return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode()[:200]
+        except Exception:
+            pass
+        log(f"WARNING: LM Studio HTTP {e.code}: {body}", prefix=log_prefix)
+        return None
     except Exception as e:
         log(f"WARNING: LM Studio call failed: {e}", prefix=log_prefix)
         return None

@@ -45,12 +45,14 @@ def update_people(people_facts, context_label, date_prefix, log_prefix="kb"):
                 "Update a person's knowledge base profile. The profile should be a distilled summary, NOT a meeting log. "
                 "Format:\n# Name\n- **Email**: value\n- **Slack**: value\n- **Title**: value\n- **Team**: value\n"
                 "(Only include a contact field if the value is known — omit the line entirely otherwise.)\n"
-                "\n## Current\n- What they're working on, their responsibilities\n"
+                "\n## Current\n- What they're actively working on RIGHT NOW (max 5 bullets)\n"
                 "\n## Style\n- How they communicate (direct/detailed, technical/non-technical, preferences observed)\n"
                 "\n## Personal\n- Interests, family mentions, hobbies, location, anything personal shared in conversation\n"
-                "\n## Key Decisions\n- Important decisions they've made or been part of (with date)\n"
+                "\n## Key Decisions\n- Important decisions they've made or been part of (with date, max 10)\n"
                 "\nRules: Merge new facts into the existing profile. Update fields that changed. "
-                "Drop outdated info that's been superseded. Keep it concise — this is a reference card, not a transcript. "
+                "AGGRESSIVELY drop outdated info: if something in Current was from weeks ago and isn't mentioned in new info, remove it. "
+                "Current = what they're doing THIS WEEK, not a history. Key Decisions = only the most important and recent. "
+                "Keep it concise — this is a reference card, not a transcript. "
                 "IMPORTANT: Preserve all existing contact fields (Email, Slack, Title, Team) — never remove them. "
                 "Omit any section or field entirely if there's no information — never write placeholders like '(if known)' or '(No details)'. Output ONLY the markdown."
             )},
@@ -66,6 +68,52 @@ def update_people(people_facts, context_label, date_prefix, log_prefix="kb"):
             profile.write_text(updated_profile.rstrip("\n") + "\n")
             updated += 1
     return updated
+
+
+def consolidate_profiles(log_prefix="kb"):
+    """Consolidate bloated people and project profiles. Run after updates."""
+    max_lines = 40
+    consolidated = 0
+    for subdir in ["people", "projects"]:
+        profile_dir = KB_DIR / subdir
+        if not profile_dir.is_dir():
+            continue
+        for profile in profile_dir.glob("*.md"):
+            content = profile.read_text()
+            lines = content.strip().split("\n")
+            if len(lines) <= max_lines:
+                continue
+            log(f"Consolidating {subdir}/{profile.name} ({len(lines)} lines)", prefix=log_prefix)
+            result = lms_call([
+                {"role": "system", "content": (
+                    "Condense this knowledge base profile. It has grown too long. Rules:\n"
+                    "- Current section: keep only the 3-5 MOST RECENT and ACTIVE items. Drop anything completed or stale.\n"
+                    "- Key Decisions: keep only the 5-8 most important. Drop minor or superseded ones.\n"
+                    "- Style/Personal: keep as-is (these are already concise).\n"
+                    "- Contact fields (Email, Slack, Title, Team): preserve exactly as they are.\n"
+                    "- Target: under 35 lines total.\n"
+                    "- Output ONLY the condensed markdown."
+                )},
+                {"role": "user", "content": f"/no_think\n\n{content}\n\n/no_think"}
+            ], max_tokens=1500, log_prefix=log_prefix)
+            if result:
+                result = result.strip()
+                # Preserve original name header
+                name_m = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+                if name_m:
+                    expected_header = f"# {name_m.group(1).strip()}"
+                    if not result.startswith(expected_header):
+                        # Try to replace an existing header
+                        if re.match(r"^#\s+", result):
+                            result = re.sub(r"^#\s+.*$", expected_header, result, count=1, flags=re.MULTILINE)
+                        else:
+                            # LLM omitted header entirely — prepend it
+                            result = expected_header + "\n" + result
+                profile.write_text(result.rstrip("\n") + "\n")
+                new_lines = len(result.strip().split("\n"))
+                log(f"  → {new_lines} lines", prefix=log_prefix)
+                consolidated += 1
+    return consolidated
 
 
 def update_projects(project_facts, context_label, date_prefix, log_prefix="kb"):

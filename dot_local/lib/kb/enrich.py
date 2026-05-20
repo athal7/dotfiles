@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from kb.util import get_identity_name, log as _log
 from kb.llm import lms_available, lms_call, clean_json
-from kb.profiles import KB_DIR, update_people, update_projects, update_decisions, load_kb_people
+from kb.profiles import KB_DIR, update_people, update_projects, update_decisions, load_kb_people, consolidate_profiles
 from kb.slack import get_slack_token, slack_api
 
 LOG_PREFIX = "kb-enrich"
@@ -272,8 +272,10 @@ def process_slack(args):
         log(f"  {context_label}: {conv_updates} KB updates ({people_count} people, {project_count} projects, {decision_count} decisions)")
 
     if not args.dry_run:
+        # Consolidate bloated profiles
+        consolidated = consolidate_profiles(log_prefix=LOG_PREFIX)
         save_state()
-        log(f"Done — {total_updates} total KB updates")
+        log(f"Done — {total_updates} total KB updates, {consolidated} consolidated")
     else:
         log("Dry run complete — no LLM calls or KB writes made")
 

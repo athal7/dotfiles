@@ -7,7 +7,7 @@ from pathlib import Path
 
 from kb.util import slugify, get_identity_name, log as _log
 from kb.llm import LMS_URL, LMS_MODEL, lms_available, lms_call, clean_json
-from kb.profiles import MEETINGS_DIR, KB_DIR, update_people, update_projects, update_decisions
+from kb.profiles import MEETINGS_DIR, KB_DIR, update_people, update_projects, update_decisions, consolidate_profiles
 
 LOG_PREFIX = "meeting-postprocess"
 
@@ -317,7 +317,10 @@ def update_knowledge_base(summary, title, date_prefix, speakers):
     decision_count = update_decisions(extracted.get("decisions", []), title, date_prefix, log_prefix=LOG_PREFIX)
     updated += decision_count
 
-    log(f"Knowledge base: {updated} updates")
+    # Consolidate bloated profiles
+    consolidated = consolidate_profiles(log_prefix=LOG_PREFIX)
+
+    log(f"Knowledge base: {updated} updates, {consolidated} consolidated")
 
 
 def main(args):
