@@ -19,7 +19,7 @@ Meeting data lives in `~/meetings/` as markdown files with YAML frontmatter.
 
 ## Knowledge base
 
-Three categories, all updated automatically by `meeting-postprocess` after each meeting:
+Three categories, updated automatically after each meeting and daily from Slack:
 
 **People** — what each person said, decided, committed to, or demonstrated. Profiles consolidate automatically when they exceed 15 meeting sections. Look up a person to understand their role, recent decisions, and open commitments.
 
@@ -33,9 +33,13 @@ Search transcripts and summaries using grep, ripgrep, or file reads. Frontmatter
 
 ## Processing
 
-New Zoom meetings are processed automatically by launchd when a caption file is saved. To manually process a transcript or reprocess an existing meeting:
+New Zoom meetings are processed automatically by launchd when a caption file is saved. Slack DMs and private channels are scanned daily at 6am. To manually process:
 
 ```bash
-meeting-postprocess /path/to/caption.txt    # new Zoom caption
-meeting-postprocess /path/to/meeting.md     # reprocess existing (KB + reminders only)
+python3 -m kb meeting /path/to/caption.txt    # new Zoom caption
+python3 -m kb meeting /path/to/meeting.md     # reprocess existing (KB + reminders only)
+python3 -m kb enrich --slack --since 48        # scan last 48h of Slack
+python3 -m kb enrich --slack --dry-run         # preview what would be processed
 ```
+
+Requires `PYTHONPATH=~/.local/lib` (set automatically by the LaunchAgents).

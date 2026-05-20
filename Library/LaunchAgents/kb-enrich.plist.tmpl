@@ -3,18 +3,22 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.{{ .chezmoi.username }}.meeting-postprocess</string>
+    <string>com.{{ .chezmoi.username }}.kb-enrich</string>
     <key>ProgramArguments</key>
     <array>
         <string>/opt/homebrew/bin/python3</string>
         <string>-m</string>
         <string>kb</string>
-        <string>meeting</string>
+        <string>enrich</string>
+        <string>--slack</string>
     </array>
-    <key>WatchPaths</key>
-    <array>
-        <string>{{ .chezmoi.homeDir }}/Documents/Zoom</string>
-    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
     <key>LimitLoadToSessionType</key>
     <string>Aqua</string>
     <key>WorkingDirectory</key>
@@ -27,8 +31,8 @@
         <string>{{ .chezmoi.homeDir }}/.local/lib</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>{{ .chezmoi.homeDir }}/Library/Logs/meeting-postprocess.log</string>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/kb-enrich.log</string>
     <key>StandardErrorPath</key>
-    <string>{{ .chezmoi.homeDir }}/Library/Logs/meeting-postprocess.log</string>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/kb-enrich.log</string>
 </dict>
 </plist>
