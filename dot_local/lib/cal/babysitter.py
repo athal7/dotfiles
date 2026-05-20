@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 babysitter-check - Remind about events that may need babysitter coverage.
 
@@ -11,65 +10,23 @@ Requires: ical, remindctl, chezmoi
 """
 
 import json
-import os
 import subprocess
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from zoneinfo import ZoneInfo
+
+from cal.util import chezmoi_data, ical, is_eligible, local_tz, log, to_local
 
 LOOKAHEAD_DAYS = 28
 EVENING_START = 17  # 5pm
 MARKER = "Managed by babysitter-check"
 SEEN_FILE = Path.home() / ".local/share/babysitter-check/seen.json"
 
-_ICAL_BIN = None
-
-
-def ical_bin():
-    global _ICAL_BIN
-    if not _ICAL_BIN:
-        _ICAL_BIN = subprocess.run(
-            ["which", "ical"], capture_output=True, text=True
-        ).stdout.strip() or str(Path.home() / ".local/bin/ical")
-    return _ICAL_BIN
-
-
-def ical(*args):
-    result = subprocess.run([ical_bin(), *args], capture_output=True, text=True)
-    return json.loads(result.stdout or "[]")
+TAG = "babysitter-check"
 
 
 def remindctl(*args):
     result = subprocess.run(["remindctl", *args], capture_output=True, text=True)
     return result
-
-
-def chezmoi_data():
-    result = subprocess.run(
-        ["chezmoi", "data", "--format", "json"],
-        capture_output=True, text=True
-    )
-    return json.loads(result.stdout)
-
-
-def local_tz():
-    return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
-
-
-def to_local(dt_str, tz):
-    return datetime.fromisoformat(dt_str.replace("Z", "+00:00")).astimezone(tz)
-
-
-def log(msg):
-    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
-    subprocess.run(["logger", "-t", "babysitter-check", msg], capture_output=True)
-
-
-def is_eligible(dt):
-    """Evenings (5pm+) on weekdays, or any time on weekends."""
-    if dt.weekday() >= 5:
-        return True
-    return dt.hour >= EVENING_START
 
 
 def events_overlap(a_start, a_end, b_start, b_end):
@@ -119,7 +76,7 @@ def main():
     # Find calendars to check for events needing babysitter coverage
     check_cals = {k: v for k, v in cal_entries.items() if v.get("babysitter_check")}
     if not check_cals:
-        log("No calendars with babysitter_check=true configured, skipping")
+        log("No calendars with babysitter_check=true configured, skipping", TAG)
         return
 
     # Find the reminders list to write to
@@ -129,7 +86,7 @@ def main():
         None
     )
     if not reminder_list:
-        log("No reminders list with babysitter_reminders=true configured, skipping")
+        log("No reminders list with babysitter_reminders=true configured, skipping", TAG)
         return
 
     tz = local_tz()
@@ -157,7 +114,7 @@ def main():
             title = e.get("title", "").strip()
             ignore = cal.get("babysitter_ignore_patterns", [])
             if any(p.lower() in title.lower() for p in ignore):
-                log(f"Ignoring '{title}' — matches babysitter_ignore_patterns")
+                log(f"Ignoring '{title}' — matches babysitter_ignore_patterns", TAG)
                 continue
 
             start = to_local(e["start_date"], tz)
@@ -169,7 +126,7 @@ def main():
             reminder_title = f"Book babysitter for {title} on {event_date}"
 
             if reminder_title in existing:
-                log(f"Reminder already exists for '{title}' on {event_date}")
+                log(f"Reminder already exists for '{title}' on {event_date}", TAG)
                 continue
 
             # Check if any event containing "babysit" overlaps
@@ -185,17 +142,13 @@ def main():
             )
 
             if covered:
-                log(f"'{title}' on {event_date} already has babysitter coverage")
+                log(f"'{title}' on {event_date} already has babysitter coverage", TAG)
                 continue
 
-            log(f"Adding reminder: {reminder_title}")
+            log(f"Adding reminder: {reminder_title}", TAG)
             remindctl("add", reminder_title, "--list", reminder_list, "--notes", MARKER, "--quiet")
             existing.add(reminder_title)
             save_seen(existing)
             added += 1
 
-    log(f"Done — added {added} reminder(s)")
-
-
-if __name__ == "__main__":
-    main()
+    log(f"Done — added {added} reminder(s)", TAG)

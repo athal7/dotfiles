@@ -6,7 +6,10 @@
     <string>com.{{ .chezmoi.username }}.sync-calendars</string>
     <key>ProgramArguments</key>
     <array>
-        <string>{{ .chezmoi.homeDir }}/.local/bin/sync-calendars</string>
+        <string>/opt/homebrew/bin/python3</string>
+        <string>-m</string>
+        <string>cal</string>
+        <string>sync</string>
     </array>
     <key>StartInterval</key>
     <integer>3600</integer>
@@ -20,6 +23,8 @@
     <dict>
         <key>PATH</key>
         <string>{{ .chezmoi.homeDir }}/.local/bin:{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>PYTHONPATH</key>
+        <string>{{ .chezmoi.homeDir }}/.local/lib</string>
     </dict>
 </dict>
 </plist>

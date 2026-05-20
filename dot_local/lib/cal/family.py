@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 family-scheduler - Fetch local family events and add to family calendar.
 
@@ -9,68 +8,23 @@ and adds to the family calendar.
 Requires: ical, chezmoi, icalendar (pip install icalendar)
 """
 
-import json
-import os
-import subprocess
 import urllib.request
 from datetime import date, datetime, timedelta
-from pathlib import Path
-from zoneinfo import ZoneInfo
+
+from cal.util import chezmoi_data, ical, ical_write, is_eligible, local_tz, log
 
 MARKER = "Managed by family-scheduler"
 LOOKAHEAD_DAYS = 14
 EVENING_START = 17  # 5pm weekday evenings
 
-_ICAL_BIN = None
-
-
-def ical_bin():
-    global _ICAL_BIN
-    if not _ICAL_BIN:
-        _ICAL_BIN = subprocess.run(
-            ["which", "ical"], capture_output=True, text=True
-        ).stdout.strip() or str(Path.home() / ".local/bin/ical")
-    return _ICAL_BIN
-
-
-def ical(*args):
-    result = subprocess.run([ical_bin(), *args], capture_output=True, text=True)
-    return json.loads(result.stdout or "[]")
-
-
-def ical_write(*args):
-    subprocess.run([ical_bin(), *args], capture_output=True, text=True)
-
-
-def chezmoi_data():
-    result = subprocess.run(
-        ["chezmoi", "data", "--format", "json"],
-        capture_output=True, text=True
-    )
-    return json.loads(result.stdout)
-
-
-def local_tz():
-    return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
-
-
-def log(msg):
-    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
-    subprocess.run(["logger", "-t", "family-scheduler", msg], capture_output=True)
-
-
-def is_eligible(dt):
-    """Weekends all day, weekday evenings from EVENING_START."""
-    if dt.weekday() >= 5:
-        return True
-    return dt.hour >= EVENING_START
+TAG = "family-scheduler"
 
 
 def fetch_ics(name, url, tz):
     try:
         from icalendar import Calendar
     except ImportError:
-        log(f"[{name}] icalendar not installed — run: pip install icalendar")
+        log(f"[{name}] icalendar not installed — run: pip install icalendar", TAG)
         return []
 
     try:
@@ -78,7 +32,7 @@ def fetch_ics(name, url, tz):
         with urllib.request.urlopen(req, timeout=10) as r:
             cal = Calendar.from_ical(r.read())
     except Exception as e:
-        log(f"[{name}] fetch failed: {e}")
+        log(f"[{name}] fetch failed: {e}", TAG)
         return []
 
     today = date.today()
@@ -150,10 +104,10 @@ def main():
     family_cal = target_entry["name"] if target_entry else None
 
     if not family_cal:
-        log("No calendar with family_scheduler_target=true configured, skipping")
+        log("No calendar with family_scheduler_target=true configured, skipping", TAG)
         return
     if not feeds:
-        log("No feeds configured in chezmoi [data.feeds], skipping")
+        log("No feeds configured in chezmoi [data.feeds], skipping", TAG)
         return
 
     tz = local_tz()
@@ -166,7 +120,7 @@ def main():
         candidates.extend(fetch_ics(name.replace("_", " ").title(), url, tz))
 
     if not candidates:
-        log("No candidate events found")
+        log("No candidate events found", TAG)
         return
 
     occupied = occupied_slots(calendars, from_date, to_date)
@@ -179,13 +133,13 @@ def main():
 
         start_str = e["start"].strftime("%Y-%m-%dT%H:%M")
         if start_str[:16] in occupied:
-            log(f"Skipping '{e['title']}' — conflict at {start_str[:16]}")
+            log(f"Skipping '{e['title']}' — conflict at {start_str[:16]}", TAG)
             continue
 
         start_iso = e["start"].strftime("%Y-%m-%d %H:%M")
         end_iso = e["end"].strftime("%Y-%m-%d %H:%M")
 
-        log(f"Adding '{e['title']}' to {family_cal} ({start_iso})")
+        log(f"Adding '{e['title']}' to {family_cal} ({start_iso})", TAG)
         args = ["add", e["title"], "-c", family_cal,
                 "-s", start_iso, "-e", end_iso, "--notes", MARKER]
         if e["url"] and e["url"] != "None":
@@ -194,8 +148,4 @@ def main():
         added.add(e["title"])
         added_count += 1
 
-    log(f"Done — added {added_count} events")
-
-
-if __name__ == "__main__":
-    main()
+    log(f"Done — added {added_count} events", TAG)

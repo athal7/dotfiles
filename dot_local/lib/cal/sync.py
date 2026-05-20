@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 sync-calendars - Mirror busy blocks between configured calendars.
 
@@ -10,50 +9,15 @@ Requires: ical, chezmoi
 """
 
 import json
-import os
-import subprocess
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from zoneinfo import ZoneInfo
+
+from cal.util import chezmoi_data, ical, ical_write, local_tz, log, to_local
 
 MARKER = "Managed by sync-calendars"
 WEEKS = 4
 
-_ICAL_BIN = None
-
-
-def ical_bin():
-    global _ICAL_BIN
-    if not _ICAL_BIN:
-        _ICAL_BIN = subprocess.run(
-            ["which", "ical"], capture_output=True, text=True
-        ).stdout.strip() or str(Path.home() / ".local/bin/ical")
-    return _ICAL_BIN
-
-
-def ical(*args):
-    result = subprocess.run([ical_bin(), *args], capture_output=True, text=True)
-    return json.loads(result.stdout or "[]")
-
-
-def ical_write(*args):
-    subprocess.run([ical_bin(), *args], capture_output=True, text=True)
-
-
-def chezmoi_data():
-    result = subprocess.run(
-        ["chezmoi", "data", "--format", "json"],
-        capture_output=True, text=True
-    )
-    return json.loads(result.stdout)
-
-
-def local_tz():
-    return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
-
-
-def to_local(dt_str, tz):
-    return datetime.fromisoformat(dt_str.replace("Z", "+00:00")).astimezone(tz)
+TAG = "sync-calendars"
 
 
 def mirror_title(event, title_mappings, default_title="Busy", passthrough=False):
@@ -124,19 +88,6 @@ def mirrors_for(calendar, from_date, to_date):
     return [e for e in events if e.get("notes", "").strip() == MARKER]
 
 
-def find_mirror(mirrors, start, end):
-    return next(
-        (m for m in mirrors if m["start_date"] == start and m["end_date"] == end),
-        None
-    )
-
-
-
-def log(msg):
-    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
-    subprocess.run(["logger", "-t", "sync-calendars", msg], capture_output=True)
-
-
 STATE_FILE = Path.home() / ".local/share/sync-calendars/state.json"
 
 
@@ -169,7 +120,7 @@ def main():
     cal_entries = {k: v for k, v in calendars.items() if isinstance(v, dict)}
 
     if len(cal_entries) < 2:
-        log("Need at least 2 calendars configured, skipping")
+        log("Need at least 2 calendars configured, skipping", TAG)
         return
 
     # Derive sync rules and writable calendars from attributes
@@ -225,7 +176,7 @@ def main():
         for mirror in mirrors:
             key = (dst_label, mirror["start_date"], mirror["end_date"])
             if key not in expected:
-                log(f"Removing stale mirror from {write_labels[dst_label]} ({mirror['start_date'][:16]}): {mirror['title']}")
+                log(f"Removing stale mirror from {write_labels[dst_label]} ({mirror['start_date'][:16]}): {mirror['title']}", TAG)
                 ical_write("delete", mirror["id"], "--force")
 
     # Phase 2: create missing mirrors
@@ -242,7 +193,7 @@ def main():
     user_deleted = {k for k in last_run if k in expected and k not in mirrored}
     if user_deleted:
         for k in sorted(user_deleted):
-            log(f"Skipping user-deleted mirror: {k[0]} {k[1][:16]}")
+            log(f"Skipping user-deleted mirror: {k[0]} {k[1][:16]}", TAG)
 
     # Also track what we create this run to avoid duplicates
     created = set()
@@ -278,7 +229,7 @@ def main():
                        for e in all_events.get(dst_label, [])):
                     continue
 
-                log(f"Adding '{title}' to {write_labels[dst_label]} ({start[:16]})")
+                log(f"Adding '{title}' to {write_labels[dst_label]} ({start[:16]})", TAG)
                 add_args = ["add", title,
                             "-c", write_labels[dst_label],
                             "-s", start,
@@ -293,8 +244,4 @@ def main():
     active = {k for k in mirrored if k in expected} | created | user_deleted
     save_last_run(active)
 
-    log("done")
-
-
-if __name__ == "__main__":
-    main()
+    log("done", TAG)

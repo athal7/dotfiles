@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 lunch-guard - Block lunch on calendar when it's at risk.
 
@@ -9,39 +8,16 @@ first free slot in the window (or 11:00 if fully packed).
 Requires: ical, chezmoi
 """
 
-import json
-import subprocess
 from datetime import date, datetime, timedelta
-from pathlib import Path
-from zoneinfo import ZoneInfo
+
+from cal.util import chezmoi_data, ical, local_tz, log
 
 TAG = "Managed by lunch-guard"
 WINDOW = (11 * 60, 13 * 60)  # 11:00-13:00 in minutes
 RISK_THRESHOLD = 60           # busy minutes that trigger a block
 DURATION = 45                 # lunch block length
 
-
-def ical(*args):
-    ical_bin = subprocess.run(["which", "ical"], capture_output=True, text=True).stdout.strip() \
-               or str(Path.home() / ".local/bin/ical")
-    result = subprocess.run([ical_bin, *args], capture_output=True, text=True)
-    try:
-        return json.loads(result.stdout or "[]")
-    except json.JSONDecodeError:
-        return []
-
-
-def chezmoi_data():
-    result = subprocess.run(
-        ["chezmoi", "data", "--format", "json"],
-        capture_output=True, text=True
-    )
-    return json.loads(result.stdout)
-
-
-def local_tz():
-    import os
-    return ZoneInfo(os.readlink("/etc/localtime").split("zoneinfo/")[-1])
+LOG_TAG = "lunch-guard"
 
 
 def to_min(dt_str, tz):
@@ -108,10 +84,10 @@ def process_day(day, cal, tz):
 
     if has_lunch_meeting:
         if guard:
-            log(f"{day}: Lunch meeting exists, removing guard event")
+            log(f"{day}: Lunch meeting exists, removing guard event", LOG_TAG)
             ical("delete", guard["id"], "--force")
         else:
-            log(f"{day}: Lunch meeting exists, protected")
+            log(f"{day}: Lunch meeting exists, protected", LOG_TAG)
         return
 
     intervals = busy_intervals(events, tz)
@@ -119,19 +95,19 @@ def process_day(day, cal, tz):
 
     if busy_mins < RISK_THRESHOLD:
         if guard:
-            log(f"{day}: OK ({busy_mins}min busy), removing guard event")
+            log(f"{day}: OK ({busy_mins}min busy), removing guard event", LOG_TAG)
             ical("delete", guard["id"], "--force")
         else:
-            log(f"{day}: OK ({busy_mins}min busy)")
+            log(f"{day}: OK ({busy_mins}min busy)", LOG_TAG)
         return
 
     if guard:
-        log(f"{day}: AT RISK ({busy_mins}min busy), guard exists")
+        log(f"{day}: AT RISK ({busy_mins}min busy), guard exists", LOG_TAG)
         return
 
     slot = first_free_slot(intervals, *WINDOW, DURATION)
     st, et = from_min(slot), from_min(slot + DURATION)
-    log(f"{day}: AT RISK ({busy_mins}min busy), creating Lunch {st}-{et}")
+    log(f"{day}: AT RISK ({busy_mins}min busy), creating Lunch {st}-{et}", LOG_TAG)
     ical("add", "Lunch",
          "-c", cal,
          "-s", f"{day} {st}",
@@ -139,20 +115,15 @@ def process_day(day, cal, tz):
          "--notes", TAG)
 
 
-def log(msg):
-    print(f"{datetime.now().strftime('%H:%M:%S')} {msg}", flush=True)
-    subprocess.run(["logger", "-t", "lunch-guard", msg], capture_output=True)
-
-
-if __name__ == "__main__":
+def main():
     tz = local_tz()
     data = chezmoi_data()
     calendars = data.get("calendars", {})
     cal_entries = {k: v for k, v in calendars.items() if isinstance(v, dict)}
     guard_entry = next((v for v in cal_entries.values() if v.get("lunch_guard")), None)
     if not guard_entry:
-        log("No calendar with lunch_guard=true configured, skipping")
-        exit(0)
+        log("No calendar with lunch_guard=true configured, skipping", LOG_TAG)
+        return
     cal = guard_entry["name"]
     today = date.today()
     for i in range(14):
@@ -160,5 +131,5 @@ if __name__ == "__main__":
         try:
             process_day(day, cal, tz)
         except Exception as e:
-            log(f"ERROR {day}: {e}")
-    log("done")
+            log(f"ERROR {day}: {e}", LOG_TAG)
+    log("done", LOG_TAG)
