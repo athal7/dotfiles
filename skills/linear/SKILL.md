@@ -5,7 +5,7 @@ license: MIT
 ---
 
 Endpoint: https://api.linear.app/graphql
-Auth: `Authorization: Bearer $LINEAR_API_KEY`
+Auth: `Authorization: $LINEAR_API_KEY` (raw key, **no Bearer prefix** — Linear returns 400 "trying to use an API key as a Bearer token" if you add it)
 
 Use for work orgs. Check `git remote get-url origin`, parse the org, confirm via `orgs.<org>.issues` config.
 

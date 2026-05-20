@@ -7,14 +7,15 @@ metadata:
     - knowledge-base
 ---
 
-The knowledge base at `~/meetings/knowledge/` is a distilled, maintained view of people, projects, and decisions. Updated automatically after each meeting. Enriched with contact info from Slack, email, and calendar when encountered.
+The knowledge base at `~/meetings/knowledge/` is a distilled, maintained view of people, projects, and decisions. Updated automatically from meetings, Slack, Linear, and GitHub.
 
 ## Structure
 
-- `people/<slug>.md` — person profiles: contact info, role, current focus, key decisions
-- `projects/<slug>.md` — project profiles: current status, recent changes, key decisions
+- `people/<slug>.md` — person profiles: contact info (Email, Slack ID), current work, communication style, personal details, key decisions
+- `projects/<slug>.md` — project and product profiles with Linear/GitHub links, status, key decisions, people involved
 - `decisions/log.md` — active decisions with context, reconciled when superseded
-- `names.json` — display name → canonical name mapping
+- `names.json` — people display name → canonical name mapping
+- `projects.json` — project name → canonical name mapping (prevents LLM-generated duplicates)
 
 ## People profiles
 
