@@ -484,7 +484,6 @@ def main(args):
     import argparse
     parser = argparse.ArgumentParser(description="Update knowledge base from conversations")
     parser.add_argument("--slack", action="store_true", help="Enrich from Slack only")
-    parser.add_argument("--email", action="store_true", help="Enrich from email only")
     parser.add_argument("--linear", action="store_true", help="Enrich project metadata from Linear")
     parser.add_argument("--github", action="store_true", help="Enrich project profiles with GitHub repo URLs")
     parser.add_argument("--since", type=float, metavar="HOURS", help="Override state file, fetch from N hours ago")
@@ -492,14 +491,10 @@ def main(args):
     parsed = parser.parse_args(args)
 
     # Default: all sources when no specific flag given
-    no_source_flag = not parsed.slack and not parsed.email and not parsed.linear and not parsed.github
+    no_source_flag = not parsed.slack and not parsed.linear and not parsed.github
     do_slack = parsed.slack or no_source_flag
-    do_email = parsed.email or no_source_flag
     do_linear = parsed.linear or no_source_flag
     do_github = parsed.github or no_source_flag
-
-    if do_email:
-        log("Email enrichment not yet implemented")
 
     if do_linear:
         process_linear(parsed)
