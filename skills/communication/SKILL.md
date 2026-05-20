@@ -1,10 +1,14 @@
 ---
-name: tone
-description: Tone, AI-authorship markers, and question formatting for human-facing prose — load when composing chat messages, review comments, merge request descriptions, emails, doc bodies, or ticket descriptions.
+name: communication
+description: Communication style, audience awareness, and AI-authorship markers for human-facing prose — load when composing chat messages, review comments, merge request descriptions, emails, doc bodies, or ticket descriptions
 license: MIT
 ---
 
 Apply these rules to all human-facing prose: chat messages, review comments, merge request descriptions, emails, doc bodies, ticket descriptions.
+
+## Audience
+
+When writing to a specific person, tailor to them — their role, communication style, technical depth, and your relationship. Some people prefer direct and brief; others need more context.
 
 ## Voice
 
