@@ -218,6 +218,10 @@ def update_knowledge_base(summary, title, date_prefix, speakers):
 
     meeting_ref = f"{date_prefix}: {title}"
 
+    # Build known-names hint so the LLM uses canonical names
+    known_people = [p.stem.replace("-", " ").title() for p in (kb_dir / "people").glob("*.md")]
+    known_hint = f"\nKnown people (use these exact names): {', '.join(known_people)}" if known_people else ""
+
     # One LLM call to extract all KB updates from the summary
     result = lms_call([
         {"role": "system", "content": (
@@ -226,9 +230,10 @@ def update_knowledge_base(summary, title, date_prefix, speakers):
             '  "projects": {"Project Name": ["update1", "update2"]},\n'
             '  "decisions": ["Decision 1", "Decision 2"]\n'
             "Rules: Only substantive facts — decisions, commitments, status changes, role/responsibility info. "
-            "Skip filler and meeting logistics. Use real names, not roles. Output ONLY valid JSON, no commentary."
+            "Skip filler and meeting logistics. Use the canonical names listed below when referring to known people. "
+            "Do NOT include the meeting organizer/recorder in people. Output ONLY valid JSON, no commentary."
         )},
-        {"role": "user", "content": f"/no_think\n\nMeeting: {title} ({date_prefix})\n\n{summary}\n\n/no_think"}
+        {"role": "user", "content": f"/no_think\n\nMeeting: {title} ({date_prefix})\nRecorded by: {IDENTITY_NAME}{known_hint}\n\n{summary}\n\n/no_think"}
     ], max_tokens=2000)
 
     if not result:
@@ -243,9 +248,11 @@ def update_knowledge_base(summary, title, date_prefix, speakers):
 
     updated = 0
     identity_slug = slugify(IDENTITY_NAME)
+    name_map = load_name_map()
 
     # People — distilled profiles, not meeting logs
     for name, facts in extracted.get("people", {}).items():
+        name = normalize_name(name, name_map)
         slug = slugify(name)
         if not slug or slug == identity_slug:
             continue
