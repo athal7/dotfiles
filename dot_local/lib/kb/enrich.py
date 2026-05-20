@@ -1,5 +1,5 @@
-"""kb-enrich — update knowledge base from Slack conversations.
-Scans DMs and private channels, extracts via LM Studio, merges into KB.
+"""kb-enrich — update knowledge base from conversations and project metadata.
+Scans Slack DMs/channels (via LLM), Linear projects (metadata only), and more.
 """
 import json, re, sys, time
 from datetime import datetime, timezone
@@ -280,23 +280,149 @@ def process_slack(args):
         log("Dry run complete — no LLM calls or KB writes made")
 
 
+def _write_linear_field(profile_path, value, dry_run):
+    """Add or update the `- **Linear**: ...` field in a profile. Returns True if changed."""
+    content = profile_path.read_text()
+    if re.search(r"^- \*\*Linear\*\*:", content, re.MULTILINE):
+        new_content = re.sub(
+            r"^- \*\*Linear\*\*:.*$",
+            f"- **Linear**: {value}",
+            content, count=1, flags=re.MULTILINE)
+    else:
+        new_content = re.sub(
+            r"^(# .+)$",
+            f"\\1\n- **Linear**: {value}",
+            content, count=1, flags=re.MULTILINE)
+    if new_content == content:
+        return False
+    if not dry_run:
+        profile_path.write_text(new_content)
+    return True
+
+
+def load_product_labels():
+    """Load Linear label -> product profile slug mapping from product-labels.json."""
+    labels_file = KB_DIR / "product-labels.json"
+    if labels_file.exists():
+        try:
+            return json.loads(labels_file.read_text())
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def process_linear(args):
+    """Enrich KB profiles from Linear: labels for products, URLs for projects."""
+    from kb.linear import get_linear_token, fetch_all_projects
+    from kb.profiles import load_project_map, normalize_project
+    from kb.util import slugify
+
+    token = get_linear_token()
+    if not token:
+        log("ERROR: Could not retrieve Linear API key from keychain")
+        return
+
+    projects = fetch_all_projects(token, log_prefix=LOG_PREFIX)
+    if not projects:
+        log("No Linear projects found")
+        return
+    log(f"Fetched {len(projects)} Linear projects")
+
+    projects_dir = KB_DIR / "projects"
+    if not projects_dir.is_dir():
+        log("No KB projects directory")
+        return
+
+    project_map = load_project_map()
+    updated = 0
+
+    # --- Phase 1: Product label enrichment ---
+    product_labels = load_product_labels()
+
+    # Collect which labels apply to which product slugs
+    product_label_sets = {}  # slug -> set of label names
+    for lp in projects:
+        for label in lp.get("labels", []):
+            slug = product_labels.get(label)
+            if slug:
+                product_label_sets.setdefault(slug, set()).add(label)
+
+    for slug, labels in product_label_sets.items():
+        profile_path = projects_dir / f"{slug}.md"
+        if not profile_path.exists():
+            continue
+
+        label_value = ", ".join(f"label:{l}" for l in sorted(labels))
+
+        if args.dry_run:
+            log(f"  {slug}: would set Linear labels {label_value}")
+            updated += 1
+            continue
+
+        if _write_linear_field(profile_path, label_value, dry_run=False):
+            log(f"  {slug}: set Linear labels")
+            updated += 1
+
+    # --- Phase 2: Project URL enrichment ---
+    for lp in projects:
+        linear_name = lp["name"]
+        linear_url = lp["url"]
+
+        # Normalize through projects.json
+        canonical = normalize_project(linear_name, project_map)
+        if not canonical:  # suppressed
+            continue
+        slug = slugify(canonical)
+        profile_path = projects_dir / f"{slug}.md"
+
+        if not profile_path.exists():
+            # Fallback: slugify the Linear name directly
+            slug2 = slugify(linear_name)
+            profile_path2 = projects_dir / f"{slug2}.md"
+            if profile_path2.exists():
+                profile_path = profile_path2
+            else:
+                continue  # no matching KB profile
+
+        content = profile_path.read_text()
+
+        # Already has this exact URL — skip
+        if linear_url in content:
+            continue
+
+        if args.dry_run:
+            log(f"  {canonical}: would add Linear URL {linear_url}")
+            updated += 1
+            continue
+
+        if _write_linear_field(profile_path, linear_url, dry_run=False):
+            log(f"  {canonical}: added Linear URL")
+            updated += 1
+
+    log(f"Linear enrichment: {updated} profiles updated")
+
+
 def main(args):
     import argparse
     parser = argparse.ArgumentParser(description="Update knowledge base from conversations")
     parser.add_argument("--slack", action="store_true", help="Enrich from Slack only")
     parser.add_argument("--email", action="store_true", help="Enrich from email only")
+    parser.add_argument("--linear", action="store_true", help="Enrich project metadata from Linear")
     parser.add_argument("--since", type=float, metavar="HOURS", help="Override state file, fetch from N hours ago")
     parser.add_argument("--dry-run", action="store_true", help="Fetch and format but skip LLM calls")
     parsed = parser.parse_args(args)
 
-    # Default: both sources
-    do_slack = parsed.slack or (not parsed.slack and not parsed.email)
-    do_email = parsed.email or (not parsed.slack and not parsed.email)
+    # Default: all sources when no specific flag given
+    no_source_flag = not parsed.slack and not parsed.email and not parsed.linear
+    do_slack = parsed.slack or no_source_flag
+    do_email = parsed.email or no_source_flag
+    do_linear = parsed.linear or no_source_flag
 
     if do_email:
         log("Email enrichment not yet implemented")
-        if not do_slack:
-            return
+
+    if do_linear:
+        process_linear(parsed)
 
     if do_slack:
         process_slack(parsed)
