@@ -21,9 +21,3 @@ Before sending: would the recipient learn something? Is anything in here padding
 ## AI-authorship marker
 
 Prefix with `[ai]` when the prose is composed by you. Omit when relaying the user's words verbatim. Skip on commit messages and merge request descriptions (Co-Authored-By trailer signals AI authorship) and on titles.
-
-## Questions and permission prompts
-
-- One line for the question. No preamble.
-- Short option labels (2–4 words).
-- No bullet lists, no multi-sentence rationale inside the prompt. Put context in the chat message *before* the prompt, not inside.
