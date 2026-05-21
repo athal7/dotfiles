@@ -1,11 +1,39 @@
 """KB profile merge logic — people, projects, decisions."""
 import json, os, re
+from datetime import date
 from pathlib import Path
 from kb.util import slugify, log
 from kb.llm import lms_call
 
 MEETINGS_DIR = Path(os.environ.get("MEETINGS_DIR", Path.home() / "meetings"))
 KB_DIR = MEETINGS_DIR / "knowledge"
+
+_FRONTMATTER_RE = re.compile(r'\A---\n(.*?\n)---\n', re.DOTALL)
+
+
+def _strip_frontmatter(content):
+    """Remove YAML frontmatter, return (dict, body)."""
+    m = _FRONTMATTER_RE.match(content)
+    if m:
+        raw = m.group(1)
+        fm = {}
+        for line in raw.strip().split('\n'):
+            if ': ' in line:
+                k, v = line.split(': ', 1)
+                fm[k.strip()] = v.strip()
+        return fm, content[m.end():]
+    return {}, content
+
+
+def _add_frontmatter(body, fm):
+    """Prepend YAML frontmatter dict to markdown body."""
+    if not fm:
+        return body
+    lines = ['---']
+    for k, v in fm.items():
+        lines.append(f'{k}: {v}')
+    lines.append('---')
+    return '\n'.join(lines) + '\n' + body
 
 
 def load_kb_people():
@@ -39,11 +67,12 @@ def update_people(people_facts, context_label, date_prefix, log_prefix="kb"):
             continue
         profile = people_dir / f"{slug}.md"
         existing = profile.read_text() if profile.exists() else ""
+        existing_fm, existing_body = _strip_frontmatter(existing)
         new_facts = "\n".join(f"- {f}" for f in facts)
         updated_profile = lms_call([
             {"role": "system", "content": (
                 "Update a person's knowledge base profile. The profile should be a distilled summary, NOT a meeting log. "
-                "Format:\n# Name\n- **Email**: value\n- **Slack**: value\n- **Title**: value\n- **Team**: value\n"
+                "Format:\n# Name\n- **Email**: (their email)\n- **Slack**: (their Slack ID)\n- **Title**: (their job title)\n- **Team**: (their team name)\n"
                 "(Only include a contact field if the value is known — omit the line entirely otherwise.)\n"
                 "\n## Current\n- What they're actively working on RIGHT NOW (max 5 bullets)\n"
                 "\n## Style\n- How they communicate (direct/detailed, technical/non-technical, preferences observed)\n"
@@ -54,10 +83,11 @@ def update_people(people_facts, context_label, date_prefix, log_prefix="kb"):
                 "Current = what they're doing THIS WEEK, not a history. Key Decisions = only the most important and recent. "
                 "Keep it concise — this is a reference card, not a transcript. "
                 "IMPORTANT: Preserve all existing contact fields (Email, Slack, Title, Team) — never remove them. "
+                "When mentioning projects in the Current section, use Obsidian wikilinks like [[Project Name]]. "
                 "Omit any section or field entirely if there's no information — never write placeholders like '(if known)' or '(No details)'. Output ONLY the markdown."
             )},
             {"role": "user", "content": (
-                f"/no_think\n\n{'Existing profile:\n' + existing if existing else 'New person — no existing profile.'}\n\n"
+                f"/no_think\n\n{'Existing profile:\n' + existing_body if existing_body else 'New person — no existing profile.'}\n\n"
                 f"New info from: {context_label} ({date_prefix})\n{new_facts}\n\n/no_think"
             )}
         ], max_tokens=1500, log_prefix=log_prefix)
@@ -65,7 +95,9 @@ def update_people(people_facts, context_label, date_prefix, log_prefix="kb"):
             updated_profile = updated_profile.strip()
             if not updated_profile.startswith(f"# {name}"):
                 updated_profile = re.sub(r"^#\s+.*$", f"# {name}", updated_profile, count=1, flags=re.MULTILINE)
-            profile.write_text(updated_profile.rstrip("\n") + "\n")
+            fm = {**existing_fm, 'type': 'person', 'last_updated': date.today().isoformat()}
+            full = _add_frontmatter(updated_profile, fm)
+            profile.write_text(full.rstrip("\n") + "\n")
             updated += 1
     return updated
 
@@ -80,7 +112,8 @@ def consolidate_profiles(log_prefix="kb"):
             continue
         for profile in profile_dir.glob("*.md"):
             content = profile.read_text()
-            lines = content.strip().split("\n")
+            existing_fm, body = _strip_frontmatter(content)
+            lines = body.strip().split("\n")
             if len(lines) <= max_lines:
                 continue
             log(f"Consolidating {subdir}/{profile.name} ({len(lines)} lines)", prefix=log_prefix)
@@ -94,12 +127,12 @@ def consolidate_profiles(log_prefix="kb"):
                     "- Target: under 35 lines total.\n"
                     "- Output ONLY the condensed markdown."
                 )},
-                {"role": "user", "content": f"/no_think\n\n{content}\n\n/no_think"}
+                {"role": "user", "content": f"/no_think\n\n{body}\n\n/no_think"}
             ], max_tokens=1500, log_prefix=log_prefix)
             if result:
                 result = result.strip()
                 # Preserve original name header
-                name_m = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+                name_m = re.search(r"^#\s+(.+)$", body, re.MULTILINE)
                 if name_m:
                     expected_header = f"# {name_m.group(1).strip()}"
                     if not result.startswith(expected_header):
@@ -109,7 +142,9 @@ def consolidate_profiles(log_prefix="kb"):
                         else:
                             # LLM omitted header entirely — prepend it
                             result = expected_header + "\n" + result
-                profile.write_text(result.rstrip("\n") + "\n")
+                fm = {**existing_fm, 'last_updated': date.today().isoformat()}
+                full = _add_frontmatter(result, fm)
+                profile.write_text(full.rstrip("\n") + "\n")
                 new_lines = len(result.strip().split("\n"))
                 log(f"  → {new_lines} lines", prefix=log_prefix)
                 consolidated += 1
@@ -153,6 +188,7 @@ def update_projects(project_facts, context_label, date_prefix, log_prefix="kb"):
             continue
         profile = projects_dir / f"{slug}.md"
         existing = profile.read_text() if profile.exists() else ""
+        existing_fm, existing_body = _strip_frontmatter(existing)
         new_facts = "\n".join(f"- {u}" for u in updates)
         updated_profile = lms_call([
             {"role": "system", "content": (
@@ -164,10 +200,12 @@ def update_projects(project_facts, context_label, date_prefix, log_prefix="kb"):
                 "\n## People\n- Key people involved and their roles\n"
                 "\nRules: Merge new info. Update status if changed. Drop superseded decisions. Keep concise. "
                 "IMPORTANT: Preserve all existing link fields (Linear, GitHub) — never remove them. "
+                "In the People section, use Obsidian wikilinks for person names like [[Person Name]]. "
+                "In Status section, use wikilinks for related projects like [[Other Project]]. "
                 "Output ONLY the markdown."
             )},
             {"role": "user", "content": (
-                f"/no_think\n\n{'Existing profile:\n' + existing if existing else 'New project — no existing profile.'}\n\n"
+                f"/no_think\n\n{'Existing profile:\n' + existing_body if existing_body else 'New project — no existing profile.'}\n\n"
                 f"New info from: {context_label} ({date_prefix})\n{new_facts}\n\n/no_think"
             )}
         ], max_tokens=1500, log_prefix=log_prefix)
@@ -175,7 +213,9 @@ def update_projects(project_facts, context_label, date_prefix, log_prefix="kb"):
             updated_profile = updated_profile.strip()
             if not updated_profile.startswith(f"# {project}"):
                 updated_profile = re.sub(r"^#\s+.*$", f"# {project}", updated_profile, count=1, flags=re.MULTILINE)
-            profile.write_text(updated_profile.rstrip("\n") + "\n")
+            fm = {**existing_fm, 'type': 'project', 'last_updated': date.today().isoformat()}
+            full = _add_frontmatter(updated_profile, fm)
+            profile.write_text(full.rstrip("\n") + "\n")
             updated += 1
     return updated
 
