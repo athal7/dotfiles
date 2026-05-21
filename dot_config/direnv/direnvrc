@@ -1,2 +1,2 @@
-# Global secrets are sourced in ~/.zshrc directly.
+# Global secrets are exported via ~/.envrc (managed by chezmoi).
 # This file is for per-project direnv helpers only.

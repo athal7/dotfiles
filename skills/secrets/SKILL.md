@@ -4,26 +4,39 @@ description: Fetch credentials and API keys. Use when a skill needs an API token
 license: MIT
 ---
 
-All secrets are stored in the macOS Keychain under service `chezmoi`. The account name matches the secret name declared in `$(chezmoi source-path)/.chezmoidata/local.yaml` under the `secrets` key — these are lowercase (e.g. `slack_user_token`), not the uppercase env var convention a skill body might use (e.g. `$SLACK_USER_TOKEN`).
+Secrets declared in `local.yaml` under the `secrets` key are exported as uppercase environment variables via `~/.envrc`. Direnv caches the keychain lookups and the opencode direnv plugin injects them into every bash call automatically.
 
-This works non-interactively from any agent context (including remote sessions) — no Touch ID, no biometric prompts.
+## Use a secret
 
-## Fetch a secret
+Read the uppercase env var directly. No setup, no fetch step.
+
+```bash
+# Examples
+curl -H "Authorization: $LINEAR_API_KEY" ...
+curl -H "X-Slack-Token: $SLACK_TOKEN" ...
+```
+
+The env var name is the secret name uppercased (e.g. `linear_api_key` → `LINEAR_API_KEY`). The full list of secret names lives in `$(chezmoi source-path)/.chezmoidata/local.yaml` under `secrets`.
+
+## Fallback — direct keychain lookup
+
+If the env var is empty (e.g. outside direnv context, or a secret just added to Keychain but not yet reloaded):
 
 ```bash
 MY_TOKEN=$(security find-generic-password -s "chezmoi" -a "<secret-name>" -w)
 ```
 
-If the command fails with `The specified item could not be found in the keychain`, the secret hasn't been populated yet. Tell the user: "The Keychain entry for `<secret-name>` is missing. Please add it via `security add-generic-password -U -s chezmoi -a <secret-name> -w <value>` and let me know when done."
-
 ## Adding a new secret
 
-1. Add an entry to `$(chezmoi source-path)/.chezmoidata/local.yaml` under `secrets` (the entry can be empty: `my_secret: {}`).
-2. Add the value to Keychain:
+1. Add an entry to `$(chezmoi source-path)/.chezmoidata/local.yaml` under `secrets` (can be empty: `my_secret: {}`).
+2. Run `chezmoi apply` — this regenerates `~/.envrc` with the new secret.
+3. Add the value to Keychain:
    ```bash
    security add-generic-password -U -s "chezmoi" -a "<name>" -w "<value>"
    ```
-3. Verify the fetch works:
-   ```bash
-   security find-generic-password -s "chezmoi" -a "<name>" -w
-   ```
+4. Run `direnv reload` to pick up the new value immediately.
+
+## Troubleshooting
+
+- **Env var is empty** — run `direnv reload` or check that the Keychain entry exists: `security find-generic-password -s "chezmoi" -a "<name>" -w`
+- **`The specified item could not be found in the keychain`** — the secret hasn't been added yet. Tell the user to run `security add-generic-password -U -s chezmoi -a <name> -w <value>`.
