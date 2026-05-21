@@ -1,12 +1,12 @@
 """meeting — convert a Zoom caption file into a meeting markdown file.
 Summarizes via LM Studio, writes to ~/meetings/, updates knowledge base.
 """
-import json, os, re, subprocess, sys, traceback, urllib.request
+import hashlib, json, os, re, subprocess, sys, time, traceback
 from datetime import datetime
 from pathlib import Path
 
 from kb.util import slugify, get_identity_name, log as _log
-from kb.llm import LMS_URL, LMS_MODEL, lms_available, lms_call, clean_json
+from kb.llm import LMS_MODEL, lms_available, lms_call, clean_json
 from kb.profiles import MEETINGS_DIR, KB_DIR, update_people, update_projects, update_decisions, consolidate_profiles
 
 LOG_PREFIX = "meeting-postprocess"
@@ -16,6 +16,32 @@ def log(msg):
 
 ZOOM_DIR = Path.home() / "Documents" / "Zoom"
 IDENTITY_NAME = get_identity_name()
+STATE_FILE = Path.home() / ".local" / "state" / "kb" / "processed.json"
+SUMMARY_WORD_LIMIT = 4000  # safe limit for qwen3-8b with prompt overhead
+CHUNK_WORD_TARGET = 3000   # words per chunk in map-reduce
+
+
+def content_hash(path):
+    """Return SHA-256 hex digest of a file's contents."""
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def load_state():
+    """Read the dedup state file. Returns {} if missing or corrupt."""
+    try:
+        return json.loads(STATE_FILE.read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_state(state):
+    """Write the dedup state file, pruning entries whose caption files no longer exist."""
+    pruned = {
+        k: v for k, v in state.items()
+        if Path(k).exists()
+    }
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(pruned, indent=2))
 
 
 def find_caption(args):
@@ -103,44 +129,78 @@ def parse_transcript(caption_path):
     return transcript, len(transcript.split()), duration
 
 
-def summarize(transcript):
-    try:
-        urllib.request.urlopen("http://127.0.0.1:1234/v1/models", timeout=2)
-    except Exception:
+def _chunk_transcript(transcript, target_words=CHUNK_WORD_TARGET):
+    """Split transcript into chunks of ~target_words, breaking at line boundaries."""
+    lines = transcript.split("\n")
+    chunks, current, current_wc = [], [], 0
+    for line in lines:
+        line_wc = len(line.split())
+        if current and current_wc + line_wc > target_words:
+            chunks.append("\n".join(current))
+            current, current_wc = [], 0
+        current.append(line)
+        current_wc += line_wc
+    if current:
+        chunks.append("\n".join(current))
+    return chunks
+
+
+def summarize(transcript, title=""):
+    if not lms_available():
         log("LM Studio not available — skipping summary")
         return ""
-    log(f"Summarizing via LM Studio ({LMS_MODEL})...")
-    payload = json.dumps({
-        "model": LMS_MODEL,
-        "messages": [
+
+    word_count = len(transcript.split())
+    log(f"Summarizing via LM Studio ({LMS_MODEL}), {word_count} words...")
+
+    if word_count <= SUMMARY_WORD_LIMIT:
+        # Single-shot summarization
+        result = lms_call([
             {"role": "system", "content": "You are a meeting summarizer. Output ONLY markdown sections: ## Summary (3-5 sentences), ## Key Points (bullets), ## Action Items (bullets with owner, or \"- none\"), ## Open Questions (bullets or \"- none\"). No preamble, no reasoning, no thinking tags."},
             {"role": "user", "content": f"/no_think\n\nMeeting transcript:\n\n{transcript}\n\n/no_think Generate the markdown summary now."}
-        ],
-        "temperature": 0.3,
-        "max_tokens": 2000,
-    }).encode()
-    try:
-        req = urllib.request.Request(LMS_URL, data=payload, headers={"Content-Type": "application/json"})
-        resp = urllib.request.urlopen(req, timeout=300)
-        data = json.loads(resp.read())
-        summary = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        if summary:
-            log(f"Summary: {len(summary.split())} words")
-        else:
-            log("WARNING: LM Studio returned empty summary")
-        return summary
-    except Exception as e:
-        log(f"WARNING: LM Studio request failed: {e}")
-        return ""
+        ], max_tokens=2000, timeout=300, log_prefix=LOG_PREFIX)
+        summary = result or ""
+    else:
+        # Map-reduce for long transcripts
+        chunks = _chunk_transcript(transcript)
+        log(f"Transcript too long for single pass — splitting into {len(chunks)} chunks")
+        chunk_summaries = []
+        for i, chunk in enumerate(chunks):
+            log(f"  Summarizing chunk {i+1}/{len(chunks)}...")
+            result = lms_call([
+                {"role": "system", "content": "Summarize this section of a meeting transcript. Focus on key points, decisions, and action items. Output 3-5 bullet points. No preamble, no reasoning, no thinking tags."},
+                {"role": "user", "content": f"/no_think\n\n{chunk}\n\n/no_think"}
+            ], max_tokens=1000, timeout=120, log_prefix=LOG_PREFIX)
+            if result:
+                chunk_summaries.append(result)
+        if not chunk_summaries:
+            log("WARNING: All chunk summaries failed")
+            return ""
+        combined_input = "\n\n---\n\n".join(
+            f"Section {i+1}:\n{s}" for i, s in enumerate(chunk_summaries)
+        )
+        title_hint = f" titled '{title}'" if title else ""
+        result = lms_call([
+            {"role": "system", "content": "You are a meeting summarizer. Combine section summaries into a single cohesive summary. Output ONLY markdown sections: ## Summary (3-5 sentences), ## Key Points (bullets), ## Action Items (bullets with owner, or \"- none\"), ## Open Questions (bullets or \"- none\"). No preamble, no reasoning, no thinking tags."},
+            {"role": "user", "content": f"/no_think\n\nThese are summaries of consecutive sections of a meeting{title_hint}. Combine them into a single cohesive summary.\n\n{combined_input}\n\n/no_think"}
+        ], max_tokens=2000, timeout=300, log_prefix=LOG_PREFIX)
+        summary = result or ""
+
+    if summary:
+        log(f"Summary: {len(summary.split())} words")
+    else:
+        log("WARNING: LM Studio returned empty summary")
+    return summary
 
 
-def write_output(title, date_str, duration, summary, transcript, word_count):
+def write_output(title, date_str, duration, summary, transcript, word_count, existing_output=None):
     slug = slugify(title)
     first_name = IDENTITY_NAME.split()[0].lower() if IDENTITY_NAME else "unknown"
     date_prefix = date_str[:10]
-    output = MEETINGS_DIR / f"{date_prefix}-{slug}-{first_name}.md"
-    if output.exists():
-        output = output.with_name(f"{output.stem}-2.md")
+    if existing_output:
+        output = Path(existing_output)
+    else:
+        output = MEETINGS_DIR / f"{date_prefix}-{slug}-{first_name}.md"
     status = "complete" if summary else "degraded"
     parts = [
         "---",
@@ -373,6 +433,19 @@ def main(args):
         log("Done")
         return
 
+    # Dedup guard — skip if caption is unchanged since last run
+    caption_key = str(caption_path.resolve())
+    file_hash = content_hash(caption_path)
+    state = load_state()
+    existing_output = None
+    if caption_key in state:
+        prev = state[caption_key]
+        if prev.get("hash") == file_hash:
+            log("Already processed (unchanged), skipping")
+            return
+        log("Caption updated, reprocessing")
+        existing_output = Path(prev["output"]) if prev.get("output") else None
+
     # New Zoom caption — full pipeline
     title = get_title(caption_path)
     log(f"Title: {title}")
@@ -384,10 +457,21 @@ def main(args):
     mtime = caption_path.stat().st_mtime
     date_str = datetime.fromtimestamp(mtime).astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
     warnings = []
-    summary = summarize(transcript)
+    summary = summarize(transcript, title=title)
     if not summary:
         warnings.append("summary failed")
-    _, date_prefix = write_output(title, date_str, duration, summary, transcript, word_count)
+    output_path, date_prefix = write_output(
+        title, date_str, duration, summary, transcript, word_count,
+        existing_output=existing_output,
+    )
+    # Update dedup state
+    state[caption_key] = {
+        "hash": file_hash,
+        "output": str(output_path),
+        "timestamp": time.time(),
+    }
+    save_state(state)
+
     speakers = sorted(set(re.findall(r"^\[([^\]]+?) \d+:\d{2}\]", transcript, re.MULTILINE)))
     update_knowledge_base(summary, title, date_prefix, speakers)
     if add_reminders(summary, title) is False:
