@@ -215,17 +215,23 @@ def report_error(title, error_msg):
 
 
 def add_reminders(summary, title):
-    """Extract action items assigned to me from the summary and add to Reminders."""
+    """Extract action items assigned to me from the summary and add to Reminders.
+
+    Returns True if all items were added (or there was nothing to add),
+    False if any remindctl add call failed.
+    """
     if not summary:
-        return
+        return True
     try:
         subprocess.run(["remindctl", "--help"], capture_output=True, timeout=3)
     except (FileNotFoundError, subprocess.TimeoutExpired):
-        return
+        log("WARNING: remindctl not available")
+        return False
 
     list_name = get_reminders_list()
     if not list_name:
-        return
+        log("WARNING: No reminders list configured with post_meeting: true")
+        return False
 
     # Find the Action Items section
     in_actions = False
@@ -245,20 +251,28 @@ def add_reminders(summary, title):
     first_name = IDENTITY_NAME.split()[0].lower() if IDENTITY_NAME else ""
     my_items = [i for i in items if first_name and first_name in i.lower()]
     if not my_items:
-        return
+        return True
 
     added = 0
+    failed = 0
     for item in my_items:
         try:
             result = subprocess.run(
-                ["remindctl", "add", "--list", list_name, "--note", title, item],
+                ["remindctl", "add", "--list", list_name, "--notes", title, item],
                 capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
                 added += 1
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
+            else:
+                failed += 1
+                log(f"WARNING: remindctl add failed (exit {result.returncode}): {result.stderr.strip()}")
+        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+            failed += 1
+            log(f"WARNING: remindctl add error: {e}")
     if added:
         log(f"Reminders: {added} action items added to {list_name} list")
+    if failed:
+        log(f"WARNING: {failed}/{len(my_items)} reminder(s) failed to add")
+    return failed == 0
 
 
 def update_knowledge_base(summary, title, date_prefix, speakers):
@@ -280,17 +294,24 @@ def update_knowledge_base(summary, title, date_prefix, speakers):
     known_hint = f"\nKnown people (use these exact names): {', '.join(known_people)}" if known_people else ""
 
     # One LLM call to extract all KB updates from the summary
+    speakers_hint = f"\nMeeting attendees (present but not necessarily involved in all topics): {', '.join(speakers)}" if speakers else ""
     result = lms_call([
         {"role": "system", "content": (
             "Extract knowledge base updates from a meeting summary. Output JSON with these keys:\n"
             '  "people": {"Person Name": ["fact1", "fact2"]},\n'
             '  "projects": {"Project Name": ["update1", "update2"]},\n'
             '  "decisions": ["Decision 1", "Decision 2"]\n'
-            "Rules: Only substantive facts — decisions, commitments, status changes, role/responsibility info. "
-            "Skip filler and meeting logistics. Use the canonical names listed below when referring to known people. "
-            "Do NOT include the meeting organizer/recorder in people. Output ONLY valid JSON, no commentary."
+            "Rules:\n"
+            "- Only substantive facts — decisions, commitments, status changes, role/responsibility info.\n"
+            "- CRITICAL ATTRIBUTION: Only attribute a fact to the person who is RESPONSIBLE for or DIRECTLY working on it. "
+            "If a topic was discussed in a meeting, do NOT add it to every attendee's profile — only to the people who own or are assigned that work. "
+            "Meeting attendance \u2260 involvement.\n"
+            "- Skip filler, meeting logistics, and general discussion topics.\n"
+            "- Use the canonical names listed below when referring to known people.\n"
+            f"- Do NOT include the meeting organizer/recorder ({IDENTITY_NAME}) in people unless they took on specific action items.\n"
+            "- Output ONLY valid JSON, no commentary."
         )},
-        {"role": "user", "content": f"/no_think\n\nMeeting: {title} ({date_prefix})\nRecorded by: {IDENTITY_NAME}{known_hint}\n\n{summary}\n\n/no_think"}
+        {"role": "user", "content": f"/no_think\n\nMeeting: {title} ({date_prefix})\nRecorded by: {IDENTITY_NAME}{known_hint}{speakers_hint}\n\n{summary}\n\n/no_think"}
     ], max_tokens=2000, log_prefix=LOG_PREFIX)
 
     if not result:
@@ -345,7 +366,8 @@ def main(args):
         log(f"Existing meeting: {title} ({date_prefix})")
         if summary:
             update_knowledge_base(summary, title, date_prefix, speakers)
-            add_reminders(summary, title)
+            if add_reminders(summary, title) is False:
+                report_error(title, "reminders failed")
         else:
             log("No summary found — skipping KB update")
         log("Done")
@@ -368,7 +390,8 @@ def main(args):
     _, date_prefix = write_output(title, date_str, duration, summary, transcript, word_count)
     speakers = sorted(set(re.findall(r"^\[([^\]]+?) \d+:\d{2}\]", transcript, re.MULTILINE)))
     update_knowledge_base(summary, title, date_prefix, speakers)
-    add_reminders(summary, title)
+    if add_reminders(summary, title) is False:
+        warnings.append("reminders failed")
     if warnings:
         report_error(title, "; ".join(warnings))
     log("Done")
