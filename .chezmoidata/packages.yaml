@@ -196,6 +196,7 @@ packages:
     - name: stats
     - name: tailscale-app
     - name: lm-studio
+    - name: obsidian
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
