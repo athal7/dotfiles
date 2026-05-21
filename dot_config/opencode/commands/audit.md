@@ -9,6 +9,8 @@ Five-phase audit of the agent skills + capabilities + commands system in this do
 
 $ARGUMENTS
 
+**Scoping:** When arguments name a specific topic (e.g. "permissions", "delegation", "skill load rates"), run only the relevant phase(s) and skip the rest. A bare `/audit` with no arguments runs all phases.
+
 ---
 
 ## Phase 1 — Data gathering
@@ -281,6 +283,53 @@ yq -r '.packages | (.mise // []) + (.github_releases // []) + (.npm // []) | .[]
 - Remember opencode evaluates pipeline segments independently — `gh pr view X | head -N` prompts on `head` even if `gh pr view` is a known read. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) appear in the global allow list.
 
 For each finding: tighten to `ask`, broaden to `allow`, or add/adjust a `permissions:` block in `packages.yaml`.
+
+**Runtime permission denials** — query actual denials from the session DB to validate that rules are firing as intended and surface unexpected friction:
+
+```bash
+# Denial counts by tool
+sqlite3 -readonly "$DB" <<SQL
+SELECT json_extract(data, '\$.tool') AS tool, COUNT(*) AS denials
+FROM part
+WHERE json_extract(data, '\$.type') = 'tool'
+  AND json_extract(data, '\$.state.error') LIKE '%permission%'
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY tool ORDER BY denials DESC;
+SQL
+```
+
+```bash
+# User-rejected vs rule-blocked
+sqlite3 -readonly "$DB" <<SQL
+SELECT CASE
+         WHEN json_extract(data, '\$.state.error') LIKE '%user rejected%' THEN 'user_rejected'
+         WHEN json_extract(data, '\$.state.error') LIKE '%rule which prevents%' THEN 'rule_blocked'
+         ELSE 'other'
+       END AS denial_type,
+       COUNT(*) AS count
+FROM part
+WHERE json_extract(data, '\$.type') = 'tool'
+  AND json_extract(data, '\$.state.error') LIKE '%permission%'
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY denial_type;
+SQL
+```
+
+```bash
+# Most-denied commands — surfaces friction hotspots
+sqlite3 -readonly "$DB" <<SQL
+SELECT json_extract(data, '\$.tool') AS tool,
+       SUBSTR(json_extract(data, '\$.state.input.command'), 1, 80) AS command,
+       COUNT(*) AS denials
+FROM part
+WHERE json_extract(data, '\$.type') = 'tool'
+  AND json_extract(data, '\$.state.error') LIKE '%permission%'
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY tool, command ORDER BY denials DESC LIMIT 20;
+SQL
+```
+
+Compare the runtime denial data against the static config findings above. A high `user_rejected` count for a specific command pattern suggests the rule should be tightened to `deny`. A high `rule_blocked` count for a command that should be allowed suggests the rule is too broad.
 
 ---
 
