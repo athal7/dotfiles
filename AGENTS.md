@@ -4,7 +4,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 **This repo does not use feature branches.** Commit directly to `main` and push. Skip the branch-creation step from the global workflow.
 
-**After every commit in this repo: run `chezmoi apply`.** Changes are not live until applied — deployed files under `~/.agents/`, `~/.config/`, etc. will be out of sync otherwise. Do this before handing back to the user.
+**Test changes before committing: run `chezmoi apply` first.** Applying is how you verify changes work in this repo — deployed files under `~/.agents/`, `~/.config/`, etc. won't update until applied. Apply, confirm the change is correct, then commit.
 
 **`chezmoi apply` may restart the opencode server** if LaunchAgent plists change. Skills, capabilities, and AGENTS.md do not trigger a restart — opencode reads those fresh per-session. When in doubt, use the PTY approach: load the `chezmoi` skill and follow the safe apply workflow.
 

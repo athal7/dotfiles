@@ -25,7 +25,6 @@ Run automatically without asking. **Set the bash tool's `workdir` to the repo ro
    ```
    Co-Authored-By: anthropic/claude-sonnet-4-6 <noreply@opencode.ai>
    ```
-5. **Show the drafted commit message in chat.** Brief summary of what was implemented + the message itself. The user reviews it before approving.
 
 ## Format
 

@@ -13,13 +13,15 @@ Read project rules: `AGENTS.md` (root + nested), `CONVENTIONS.md`, `REVIEW.md`, 
 
 Fetch issue context — parse branch name and code review request body for issue IDs, fetch acceptance criteria.
 
-## Trigger and reconcile automated review (when a code review request exists)
+## Reconcile automated review (when a code review request exists)
 
-When reviewing a code review request, check whether automated review is available:
+Automated review (e.g., GitHub Copilot) does not trigger automatically and is not needed when human reviews are present.
 
-- **Available, not yet run** → trigger it and wait for completion before proceeding.
-- **Available, has run** → fetch prior comments. Per-finding, classify as `addressed | dismissed-with-reasoning | pending | moved-but-still-true`. Treat pending and moved-but-still-true findings as required input to the next path.
-- **Not available** → skip this section.
+When automated review **has** run (check for existing bot comments):
+- Per-finding, classify as `addressed | dismissed-with-reasoning | pending | moved-but-still-true`.
+- Treat pending and moved-but-still-true findings as required input to the next path.
+
+When it has not run or only human reviews exist, skip this section.
 
 ## Two paths
 

@@ -21,15 +21,8 @@ Example:
 Adds retry logic for flaky external API calls. Closes #123
 ```
 
-## After draft merge request — trigger automated review and watch CI in parallel
+## After draft merge request — watch CI
 
-If automated review is available for this repo, trigger it *in parallel* with watching CI. Iterate on the combined feedback from both — don't wait for one before responding to the other.
+Watch CI to completion. Fix failures through the normal commit → push cycle and re-check.
 
-Watch CI to completion. Do not hand back to the user before both CI and automated review have completed.
-
-1. Trigger automated review (if configured) and start polling CI every 30s in parallel.
-2. As findings arrive from automated review, address them. As CI failures arrive, fix the root cause.
-3. Both fixes flow through `commit` then `push`, returning to step 1 of this iteration loop.
-4. On all-pass from CI *and* either no automated review or all findings addressed, report success with a markdown link to the merge request — never the bare number.
-
-Keep iterating until both CI is green and automated review feedback is resolved. Do not give up after one fix attempt.
+Automated review (e.g., GitHub Copilot) does not trigger automatically. Only request it when no human review is available or expected. If a human has already reviewed or is actively reviewing, skip automated review — it adds noise after human judgment.
