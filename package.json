@@ -1,0 +1,12 @@
+{
+  "version": "1.23.0",
+  "description": "",
+  "license": "MIT",
+  "private": true,
+  "name": "NayaFlow-Beta",
+  "type": "module",
+  "main": "dist/@naya-suite/desktop-main/index.js",
+  "dependencies": {
+    "zeromq": "^6.4.2"
+  }
+}
