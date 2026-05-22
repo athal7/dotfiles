@@ -28,14 +28,16 @@ Comments on Google Docs (and other Drive files) are a **Drive** resource, not a 
 
 Both `list` and `create` require an explicit `fields` param or you get empty/minimal responses. Example fields: `"comments(id,content,author(displayName),createdTime,resolved,quotedFileContent,replies(content,author(displayName),createdTime)),nextPageToken"`.
 
-**Anchoring comments to text:** Without `quotedFileContent`, comments silently land as unanchored sidebar notes — no error. To attach a comment to specific document text:
+**Google Docs comment anchoring does NOT work via the Drive API.** Every comment created through the REST API on a Google Doc displays "Original content deleted" in the UI — regardless of whether you set `anchor`, `quotedFileContent`, both, or neither. The `anchor` field accepts arbitrary JSON but Google Docs ignores it (per Google's own docs: "Google Workspace editor apps treat these comments as un-anchored comments"). The `kix.xxx` IDs on browser-created comments are internal paragraph IDs only the Docs web editor can generate. Do not attempt to re-anchor comments programmatically — distribute the feedback through Slack or another channel instead.
+
+The `anchor` field on browser-created comments (e.g. `"kix.dilskyhp9rug"`) is readable but the format is undocumented and not reproducible via API.
+
+**Replying to existing comments works fine:**
 
 ```bash
-gws drive comments create --params '{"fileId":"<docId>","fields":"id,quotedFileContent"}' \
-  --json '{"content":"Comment text","quotedFileContent":{"mimeType":"text/html","value":"exact text from the document"}}'
+gws drive replies create --params '{"fileId":"<docId>","commentId":"<commentId>","fields":"id,content"}' \
+  --json '{"content":"Reply text"}'
 ```
-
-The API matches `value` against the document body and anchors the comment there. If the text isn't found, the comment is created but unanchored.
 
 ## Docs
 
