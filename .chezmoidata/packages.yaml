@@ -187,6 +187,14 @@ packages:
           plan: allow
         "*":
           build: deny
+    - name: typescript-language-server
+    - name: pyright
+    - name: gopls
+    - name: rust-analyzer
+    - name: terraform-ls
+    - name: lua-language-server
+    - name: bash-language-server
+    - name: yaml-language-server
 
   casks:
     - name: gcloud-cli
