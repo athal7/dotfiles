@@ -190,7 +190,6 @@ packages:
     - name: typescript-language-server
     - name: pyright
     - name: gopls
-    - name: rust-analyzer
     - name: terraform-ls
     - name: lua-language-server
     - name: bash-language-server
