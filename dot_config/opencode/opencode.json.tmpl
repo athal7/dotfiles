@@ -113,6 +113,11 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   ],
   "permission": {
     "skill": "allow",
+    "external_directory": {
+      "*": "ask",
+      "~/code/**": "allow",
+      "~/meetings/**": "allow"
+    },
     "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}
   },
   "agent": {
