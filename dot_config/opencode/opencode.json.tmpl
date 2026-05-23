@@ -92,7 +92,6 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "commit": ["review"],
       "communication": ["knowledge-base"],
       "confluence": ["xh", "communication"],
-      "knowledge-base": ["meetings"],
       "elasticsearch": ["secrets"],
       "figma": ["xh"],
       "gh": ["communication"],
@@ -118,7 +117,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     "external_directory": {
       "*": "ask",
       "~/code/**": "allow",
-      "~/meetings/**": "allow",
+      "~/.local/share/kb/**": "allow",
       "~/.agents/skills/**": "allow"
     },
     "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}

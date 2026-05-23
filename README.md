@@ -11,10 +11,9 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Terminal](dot_config/ghostty/)
 - **AI tooling**
   - [OpenCode config](dot_config/opencode/opencode.json.tmpl)
-  - [Agent skills](skills/)
+  - [Agent skills](skills/) — knowledge base, communication, code review, and more
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)
-  - [Meeting transcripts & KB](dot_local/lib/kb/__main__.py)
   - [Homebridge](dot_homebridge/)
   - [LaunchAgents](Library/LaunchAgents/)
 - [Packages](.chezmoidata/packages.yaml)
