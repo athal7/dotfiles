@@ -1,0 +1,35 @@
+#!/bin/bash
+# chezmoi:modify-manager
+# Merge static dictionary words from dotfiles config with existing entries.
+# Receives current ~/Library/Spelling/LocalDictionary on stdin.
+
+STATIC_WORDS="
+{{- range .packages.brews }}
+{{- $name := splitList "/" .name | last }}
+{{ $name }}
+{{- if and (hasKey . "command") (ne .command $name) }}
+{{ .command }}
+{{- end }}
+{{- end }}
+{{- range .packages.casks }}
+{{ .name }}
+{{- end }}
+{{- range .packages.github_releases }}
+{{ .name }}
+{{- end }}
+{{- range .packages.mise }}
+{{- if hasPrefix "pipx:" .name }}
+{{ trimPrefix "pipx:" .name }}
+{{- else }}
+{{ .name }}
+{{- end }}
+{{- end }}
+dotfiles
+LaunchAgent
+LaunchAgents
+plist
+"
+
+EXISTING=$(cat)
+
+printf '%s\n%s\n' "$EXISTING" "$STATIC_WORDS" | sort -uf | grep -v '^$'
