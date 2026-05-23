@@ -14,34 +14,18 @@ packages:
     - name: autojump
     - name: bat
       permissions:
-        "*":
-          "*": allow
+        "*": allow
     - name: chezmoi
       permissions:
-        "cat*":
-          lead: allow
-          plan: allow
-        "verify*":
-          lead: allow
-          plan: allow
-        "diff*":
-          lead: allow
-          plan: allow
-        "data*":
-          lead: allow
-          plan: allow
-        "status*":
-          lead: allow
-          plan: allow
-        "managed*":
-          lead: allow
-          plan: allow
-        "execute-template*":
-          "*": allow
-        "source-path*":
-          "*": allow
-        "*":
-          build: deny
+        "cat*": allow
+        "verify*": allow
+        "diff*": allow
+        "data*": allow
+        "status*": allow
+        "managed*": allow
+        "execute-template*": allow
+        "source-path*": allow
+        "*": ask
     - name: colima
     - name: direnv
     - name: docker
@@ -49,93 +33,51 @@ packages:
     - name: ffmpeg
     - name: git
       permissions:
-        "log*":
-          "*": allow
-        "diff*":
-          "*": allow
-        "show*":
-          "*": allow
-        "status*":
-          "*": allow
-        "blame*":
-          "*": allow
-        "reflog*":
-          "*": allow
-        "shortlog*":
-          "*": allow
-        "rev-parse*":
-          "*": allow
-        "merge-base*":
-          "*": allow
-        "for-each-ref*":
-          "*": allow
-        "ls-*":
-          "*": allow
-        "cat-file*":
-          "*": allow
-        "name-rev*":
-          "*": allow
-        "symbolic-ref*":
-          "*": allow
-        "* list*":
-          "*": allow
-        "* show*":
-          "*": allow
-        "branch*":
-          "*": allow
-        "tag -l*":
-          "*": allow
-        "config*":
-          "*": allow
-        "stack-*":
-          "*": allow
-        "checkout*":
-          lead: allow
-        "checkout * -- *":
-          build: allow
-        "fetch*":
-          lead: allow
-        "*":
-          build: deny
+        "log*": allow
+        "diff*": allow
+        "show*": allow
+        "status*": allow
+        "blame*": allow
+        "reflog*": allow
+        "shortlog*": allow
+        "rev-parse*": allow
+        "merge-base*": allow
+        "for-each-ref*": allow
+        "ls-*": allow
+        "cat-file*": allow
+        "name-rev*": allow
+        "symbolic-ref*": allow
+        "* list*": allow
+        "* show*": allow
+        "branch*": allow
+        "tag -l*": allow
+        "config*": allow
+        "stack-*": allow
+        "checkout*": allow
+        "fetch*": allow
+        "*": ask
     - name: gh
       permissions:
-        "* list*":
-          lead: allow
-          plan: allow
-        "* view*":
-          lead: allow
-          plan: allow
-        "* diff*":
-          lead: allow
-          plan: allow
-        "* checks*":
-          lead: allow
-          plan: allow
-        "* status*":
-          lead: allow
-          plan: allow
-        "search*":
-          lead: allow
-          plan: allow
-        "api -X GET *":
-          lead: allow
-          plan: allow
-        "api graphql*":
-          lead: allow
-          plan: allow
-        "*":
-          build: deny
+        "* list*": allow
+        "* view*": allow
+        "* diff*": allow
+        "* checks*": allow
+        "* status*": allow
+        "search*": allow
+        "api -X GET *": allow
+        "api graphql*mutation*": ask
+        "api graphql*": allow
+        "*": ask
     - name: git-spice
     - name: jc
     - name: jq
       permissions:
-        "*":
-          "*": allow
+        "*": allow
     - name: graphqurl
       command: gq
       permissions:
-        "*":
-          build: deny
+        "*mutation*": ask
+        "*": allow
     - name: k9s
     - name: kubernetes-cli
     - name: mas
@@ -146,47 +88,29 @@ packages:
     - name: ripgrep
       command: rg
       permissions:
-        "*":
-          "*": allow
+        "*": allow
     - name: starship
     - name: talisman
     - name: watch
     - name: worktrunk
     - name: xh
       permissions:
-        "*GET *":
-          lead: allow
-          plan: allow
-        "*HEAD *":
-          lead: allow
-          plan: allow
-        "*":
-          build: deny
+        "*GET *": allow
+        "*HEAD *": allow
+        "*": ask
     - name: googleworkspace-cli
       command: gws
       permissions:
-        "* list*":
-          lead: allow
-          plan: allow
-        "* get*":
-          lead: allow
-          plan: allow
-        "*":
-          build: deny
+        "* list*": allow
+        "* get*": allow
+        "*": ask
     - name: steipete/tap/remindctl
       command: remindctl
       permissions:
-        "show*":
-          lead: allow
-          plan: allow
-        "list*":
-          lead: allow
-          plan: allow
-        "status*":
-          lead: allow
-          plan: allow
-        "*":
-          build: deny
+        "show*": allow
+        "list*": allow
+        "status*": allow
+        "*": ask
     - name: typescript-language-server
     - name: pyright
     - name: gopls
@@ -244,20 +168,11 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        "today*":
-          lead: allow
-          plan: allow
-        "upcoming*":
-          lead: allow
-          plan: allow
-        "list*":
-          lead: allow
-          plan: allow
-        "show*":
-          lead: allow
-          plan: allow
-        "*":
-          build: deny
+        "today*": allow
+        "upcoming*": allow
+        "list*": allow
+        "show*": allow
+        "*": ask
 
   # agent skills installed via gh skill install
   skills:

@@ -16,7 +16,7 @@ SESSION_ID=$(/usr/bin/curl -s -X POST "http://localhost:4096/session?directory=$
 [ -z "$SESSION_ID" ] &amp;&amp; exit 1
 /usr/bin/curl -s --max-time 10 -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$REPO_DIR" \
   -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "Run the daily knowledge base enrichment for yesterday. Check activity across sources: opencode coding sessions, slack chat, zoom meeting transcripts, linear issues, and gh code reviews. Extract people facts, project updates, and decisions. Write a journal entry. Merge into knowledge-base profiles."}]}' || true
+  -d '{"parts": [{"type": "text", "text": "Run the daily knowledge base enrichment for yesterday. Check activity across sources: opencode coding sessions, slack chat, zoom meeting transcripts, linear issues, and gh code reviews. Extract people facts, project updates, and decisions. Write a journal entry. Merge into knowledge-base profiles. Extract action items from yesterday's activity and create reminders for any that need follow-up. Finally, load the dictation skill and sync the knowledge base vocabulary to the macOS dictation dictionary."}]}' || true
         </string>
     </array>
     <key>StartCalendarInterval</key>

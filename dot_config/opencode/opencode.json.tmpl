@@ -14,7 +14,7 @@ pipeline. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
 as lmstudio/qwen3.5-27b. See https://www.glukhov.org/ai-devtools/opencode/llms-comparison/
 for model benchmarks — use Unsloth quants for patched chat templates.
 */ -}}
-{{- /* Universal read-only shell utilities — apply to all agents */ -}}
+{{- /* Universal read-only shell utilities — allowed for all agents */ -}}
 {{- $universalReads := dict
   "*" "ask"
   "awk*" "allow"   "gawk*" "allow"  "mawk*" "allow"  "nawk*" "allow"
@@ -31,10 +31,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   "sqlite3 -readonly *" "allow"
   "* --help*" "allow"  "* --version*" "allow"  "* -h" "allow"
 -}}
-{{- /* Collect per-package patterns from packages.yaml */ -}}
-{{- $leadBash := dict -}}
-{{- $planBash := dict -}}
-{{- $buildBash := dict -}}
+{{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask) */ -}}
 {{- $globalBash := dict -}}
 {{- range $list := .packages -}}
   {{- if kindIs "slice" $list -}}
@@ -48,34 +45,16 @@ for model benchmarks — use Unsloth quants for patched chat templates.
             {{- $parts := splitList "/" $rawName -}}
             {{- $cmd = last $parts -}}
           {{- end -}}
-          {{- range $suffix, $agents := $perms -}}
+          {{- range $suffix, $action := $perms -}}
             {{- $pattern := printf "%s %s" $cmd $suffix -}}
-            {{- range $agent, $action := $agents -}}
-              {{- if or (eq $agent "*") (eq $agent "lead") -}}
-                {{- $_ := set $leadBash $pattern $action -}}
-              {{- end -}}
-              {{- if or (eq $agent "*") (eq $agent "plan") -}}
-                {{- $_ := set $planBash $pattern $action -}}
-              {{- end -}}
-              {{- if or (eq $agent "*") (eq $agent "build") -}}
-                {{- $_ := set $buildBash $pattern $action -}}
-              {{- end -}}
-              {{- if eq $agent "*" -}}
-                {{- $_ := set $globalBash $pattern $action -}}
-              {{- end -}}
-            {{- end -}}
+            {{- $_ := set $globalBash $pattern $action -}}
           {{- end -}}
         {{- end -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- /* Merge universal reads into lead and plan — agent bash overrides global, so they need their own copy */ -}}
-{{- range $p, $action := $universalReads -}}
-  {{- $_ := set $leadBash $p $action -}}
-  {{- $_ := set $planBash $p $action -}}
-{{- end -}}
-{{- /* Merge universal reads into global — covers built-in agents (general, explore) */ -}}
+{{- /* Merge universal reads into global */ -}}
 {{- range $p, $action := $universalReads -}}
   {{- $_ := set $globalBash $p $action -}}
 {{- end -}}
@@ -92,6 +71,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "commit": ["review"],
       "communication": ["knowledge-base"],
       "confluence": ["xh", "communication"],
+      "dictation": ["knowledge-base"],
       "elasticsearch": ["secrets"],
       "figma": ["xh"],
       "gh": ["communication"],
@@ -118,7 +98,9 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "*": "ask",
       "~/code/**": "allow",
       "~/.local/share/kb/**": "allow",
-      "~/.agents/skills/**": "allow"
+      "~/.agents/skills/**": "allow",
+      "~/Documents/Zoom/**": "allow",
+      "~/Library/Spelling/**": "allow"
     },
     "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}
   },
@@ -128,8 +110,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "model": "anthropic/claude-opus-4-6",
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
-        "task": "allow",
-        "bash": {{ $leadBash | toPrettyJson | indent 8 | trim }}
+        "task": "allow"
       }
     },
     "plan": {
@@ -139,8 +120,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "prompt": "{file:./prompts/plan.md}",
       "permission": {
         "edit": "deny",
-        "write": "deny",
-        "bash": {{ $planBash | toPrettyJson | indent 8 | trim }}
+        "write": "deny"
       }
     },
     "build": {
@@ -152,7 +132,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "permission": {
         "edit": "allow",
         "write": "allow",
-        "bash": {{ merge (dict "*" "allow") $buildBash | toPrettyJson | indent 8 | trim }}
+        "bash": {{ merge (dict "*" "allow") $globalBash | toPrettyJson | indent 8 | trim }}
       }
     }
   },
