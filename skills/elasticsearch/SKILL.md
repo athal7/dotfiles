@@ -68,3 +68,10 @@ curl -s -X POST "$ES_URL/logs-apm.error-*/_search" \
 - To count by service: append `,"aggs":{"by_svc":{"terms":{"field":"service.name","size":10}}}` and read `.aggregations.by_svc.buckets`
 - `trace.id` links logs ↔ traces ↔ errors across indices
 - If `$ES_API_KEY` is missing, ensure the variable is set in your environment (open a new shell)
+
+## Kibana Dashboard API Gotchas
+
+- **`PUT /api/saved_objects/dashboard/:id` replaces ALL attributes.** Read the full object first, modify only `panelsJSON`, and write everything back including `controlGroupInput`, `optionsJSON`, etc. Omitting any attribute silently breaks panels.
+- **`PUT /api/saved_objects/index-pattern/:id` wipes the `fields` attribute** if you only set `title`/`timeFieldName`. To recreate safely, delete and use `POST /api/data_views/data_view` which auto-discovers fields.
+- **Inline Lens panels referencing an `index-pattern` saved object render blank if that object is corrupted.** The resilient pattern is `adHocDataViews` + `internalReferences` inside `embeddableConfig.attributes.state` — self-contained, no external saved-object dependency.
+- **ES transform `_update` cannot change `pivot`.** Must stop, delete, recreate. If the dest index has historical data from rolled-over source indices, check `_snapshot` first.
