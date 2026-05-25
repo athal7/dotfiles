@@ -1,6 +1,6 @@
 ---
 name: elasticsearch
-description: Query Elasticsearch logs, APM traces, and errors via curl — index patterns, field names, auth setup, and time-range syntax
+description: Query Elasticsearch logs, APM traces, and errors — index patterns, field names, auth setup, and time-range syntax
 license: MIT
 ---
 
@@ -16,15 +16,13 @@ Pass `time_range` as a string like `15m`, `1h`, `24h`, `7d`. Translates to `now-
 
 Search application logs. Index: `logs-*`. Sorted by `@timestamp` desc.
 
-```bash
-ES_QUERY='{"query":{"bool":{"must":[{"query_string":{"query":"YOUR LUCENE QUERY HERE"}},{"range":{"@timestamp":{"gte":"now-1h"}}}]}},"_source":["@timestamp","message","log.level","service.name","trace.id"],"sort":[{"@timestamp":"desc"}],"size":100}'
-
-curl -s -X POST "$ES_URL/logs-*/_search" \
-  -H "Authorization: ApiKey $ES_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$ES_QUERY" \
-  | jq '.hits.hits[]._source | {ts: .["@timestamp"], level: .["log.level"], svc: .["service.name"], msg: .message}'
 ```
+POST logs-*/_search
+```
+```json
+{"query":{"bool":{"must":[{"query_string":{"query":"YOUR LUCENE QUERY HERE"}},{"range":{"@timestamp":{"gte":"now-1h"}}}]}},"_source":["@timestamp","message","log.level","service.name","trace.id"],"sort":[{"@timestamp":"desc"}],"size":100}
+```
+Response fields: `.hits.hits[]._source` — extract `@timestamp`, `log.level`, `service.name`, `message`.
 
 Add a service filter by inserting a `term` clause into the `must` array:
 ```json
@@ -35,39 +33,31 @@ Add a service filter by inserting a `term` clause into the `must` array:
 
 Find slow transactions. Index: `traces-apm*`. Sorted by duration desc.
 
-```bash
-# min_duration_ms converts to microseconds: 500ms → 500000us
-MIN_US=500000
-
-ES_QUERY="{\"query\":{\"bool\":{\"must\":[{\"range\":{\"@timestamp\":{\"gte\":\"now-1h\"}}},{\"range\":{\"transaction.duration.us\":{\"gte\":$MIN_US}}}]}},\"_source\":[\"@timestamp\",\"service.name\",\"transaction.name\",\"transaction.duration.us\",\"transaction.result\",\"trace.id\"],\"sort\":[{\"transaction.duration.us\":\"desc\"}],\"size\":50}"
-
-curl -s -X POST "$ES_URL/traces-apm*/_search" \
-  -H "Authorization: ApiKey $ES_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$ES_QUERY" \
-  | jq '.hits.hits[]._source | {ts: .["@timestamp"], svc: .["service.name"], tx: .["transaction.name"], ms: (.["transaction.duration.us"] / 1000 | round), result: .["transaction.result"]}'
 ```
+POST traces-apm*/_search
+```
+```json
+{"query":{"bool":{"must":[{"range":{"@timestamp":{"gte":"now-1h"}}},{"range":{"transaction.duration.us":{"gte":500000}}}]}},"_source":["@timestamp","service.name","transaction.name","transaction.duration.us","transaction.result","trace.id"],"sort":[{"transaction.duration.us":"desc"}],"size":50}
+```
+Response fields: `.hits.hits[]._source` — extract `@timestamp`, `service.name`, `transaction.name`, `transaction.duration.us` (microseconds), `transaction.result`.
 
 ## Query APM errors
 
 Find exceptions and error groups. Index: `logs-apm.error-*`. Sorted by `@timestamp` desc.
 
-```bash
-ES_QUERY='{"query":{"bool":{"must":[{"exists":{"field":"error.exception"}},{"range":{"@timestamp":{"gte":"now-1h"}}}]}},"_source":["@timestamp","error.exception.type","error.exception.message","error.grouping_key","service.name","transaction.name"],"sort":[{"@timestamp":"desc"}],"size":50}'
-
-curl -s -X POST "$ES_URL/logs-apm.error-*/_search" \
-  -H "Authorization: ApiKey $ES_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$ES_QUERY" \
-  | jq '.hits.hits[]._source | {ts: .["@timestamp"], svc: .["service.name"], type: .["error.exception.type"], msg: .["error.exception.message"]}'
 ```
+POST logs-apm.error-*/_search
+```
+```json
+{"query":{"bool":{"must":[{"exists":{"field":"error.exception"}},{"range":{"@timestamp":{"gte":"now-1h"}}}]}},"_source":["@timestamp","error.exception.type","error.exception.message","error.grouping_key","service.name","transaction.name"],"sort":[{"@timestamp":"desc"}],"size":50}
+```
+Response fields: `.hits.hits[]._source` — extract `@timestamp`, `error.exception.type`, `error.exception.message`, `service.name`.
 
 ## Tips
 
 - `query_string` uses Lucene syntax: `error AND timeout`, `level:ERROR`, `message:"connection refused"`
-- To count by service: append `,"aggs":{"by_svc":{"terms":{"field":"service.name","size":10}}}` and read `.aggregations.by_svc.buckets`
+- To count by service: append `,"aggs":{"by_svc":{"terms":{"field":"service.name","size":10}}}` to the query JSON and read `.aggregations.by_svc.buckets`
 - `trace.id` links logs ↔ traces ↔ errors across indices
-- If `$ES_API_KEY` is missing, ensure the variable is set in your environment (open a new shell)
 
 ## Kibana Dashboard API Gotchas
 

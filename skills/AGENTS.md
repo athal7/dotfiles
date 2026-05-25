@@ -46,6 +46,12 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
 4. Add injection entries in `opencode.json`'s `skill-inject` plugin config for any skill that should see this one (and vice versa).
 5. Run `agentskills validate` on the skill directory.
 
+## API skills describe shape, not code
+
+When a skill documents a remote API, describe request and response shape — endpoints, request body structure, response field paths, gotchas. Don't embed code examples showing how to call the API or process its response. The injected HTTP client skill handles request mechanics; the agent already knows how to process JSON. CLI-flag usage (e.g., `gh --jq`) is part of the tool's own interface and is fine.
+
+Auth lines use generic `$VARIABLE` format (e.g., `$SLACK_USER_TOKEN`). Whether the variable comes from an env var, Keychain, or another source is handled by the injected secrets skill — the API skill doesn't need to know.
+
 ## Don't expose machine-specific configuration
 
 This is a public repository. Skill bodies must not hard-code values that are configured per-workspace in an external system: template names, project names, team keys, channel names, account IDs, internal URLs, or anything that's a label inside someone's tool. These vary by user and won't apply to anyone else who clones this repo.

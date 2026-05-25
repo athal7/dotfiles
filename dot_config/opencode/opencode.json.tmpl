@@ -72,13 +72,12 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "communication": ["knowledge-base"],
       "confluence": ["xh", "communication"],
       "dictation": ["knowledge-base"],
-      "elasticsearch": ["secrets"],
+      "elasticsearch": ["xh"],
       "figma": ["xh"],
       "gh": ["communication"],
 
-      "gq": ["secrets"],
       "gws": ["communication"],
-      "linear": ["gq", "communication"],
+      "linear": ["xh", "communication"],
       "observability": ["elasticsearch"],
       "pagerduty": ["xh"],
       "push": ["commit", "gh", "branching", "linear"],
@@ -100,7 +99,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "~/.local/share/kb/**": "allow",
       "~/.agents/skills/**": "allow",
       "~/Documents/Zoom/**": "allow",
-      "~/Library/Spelling/**": "allow"
+      "~/Library/Spelling/**": "allow",
+      "/tmp/**": "allow"
     },
     "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}
   },

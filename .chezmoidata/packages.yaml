@@ -73,11 +73,6 @@ packages:
     - name: jq
       permissions:
         "*": allow
-    - name: graphqurl
-      command: gq
-      permissions:
-        "*mutation*": ask
-        "*": allow
     - name: k9s
     - name: kubernetes-cli
     - name: mas
@@ -97,6 +92,8 @@ packages:
       permissions:
         "*GET *": allow
         "*HEAD *": allow
+        "*mutation*": ask
+        "*query*": allow
         "*": ask
     - name: googleworkspace-cli
       command: gws
