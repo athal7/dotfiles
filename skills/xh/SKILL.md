@@ -9,14 +9,14 @@ license: MIT
 ## Syntax
 
 ```
-xh [METHOD] https://endpoint Key:Value [key=value] [key==value]
+xh --ignore-stdin --session=agent [METHOD] https://endpoint Key:Value [key=value] [key==value]
 ```
 
-- **Headers:** `Key:Value` (no space after colon) — e.g. `Authorization:"Bearer $TOKEN"`
+- **Headers:** `Key:Value` (no space after colon)
 - **JSON body:** `key=value` (string) or `key:=value` (raw JSON)
 - **Query params:** `key==value`
 - **Method:** optional first arg — defaults to GET, inferred POST if body present
-- **Body-less POST:** `xh --json POST https://...`
+- **Body-less POST:** `xh --ignore-stdin --session=agent --json POST https://...`
 
 ## `--ignore-stdin`
 
@@ -24,20 +24,16 @@ Always use `--ignore-stdin` in agent/non-TTY contexts. Without it, xh tries to r
 
 ## Sessions
 
-`--session=<name>` persists auth headers across requests to the same host. Name sessions after the service (e.g., `--session=slack`).
+Sessions are pre-configured per host at `chezmoi apply` time. `--session=agent` resolves the correct credentials for each host automatically.
 
-Before creating a session, check if one exists: `ls ~/.config/xh/sessions/<hostname>/`. Sessions are host-scoped.
-
-If no session exists, seed one by including the auth header on the first request — use `$VARIABLE` from the API skill's Auth line. Subsequent requests reuse auth automatically.
-
-**Stale session (401)?** Re-include the auth header on the next request to update the session.
+If a request returns 401, the session may be stale — re-run `chezmoi apply` to refresh.
 
 ## GraphQL
 
 Pass query as a string field and variables as raw JSON:
 
 ```bash
-xh --ignore-stdin --session=myapi POST https://api.example.com/graphql \
+xh --ignore-stdin --session=agent POST https://api.example.com/graphql \
   query='{ issues { nodes { id title } } }' \
   variables:='{"id":"ABC-123"}'
 ```
@@ -49,7 +45,7 @@ Queries are read-only; mutations modify data and may require `ask` permission.
 `@/path/to/file.json` sends a file as the request body (useful for complex JSON like ES queries):
 
 ```bash
-xh --ignore-stdin POST https://api.example.com/search @/tmp/query.json
+xh --ignore-stdin --session=agent POST https://api.example.com/search @/tmp/query.json
 ```
 
 Cannot mix `@file` with `key=value` body items — pick one per request. Alternative for inline complex JSON: `key:='{"nested":"json"}'` — single-quoted bash avoids escaping inner double quotes.

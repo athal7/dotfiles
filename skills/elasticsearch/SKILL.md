@@ -6,7 +6,7 @@ license: MIT
 
 Query application logs, APM traces, and errors using the Elasticsearch REST API directly.
 
-Auth: `Authorization: ApiKey $ES_API_KEY` against `$ES_URL`.
+Endpoint: `$ES_URL` — base URL varies per environment.
 
 ## Time range syntax
 

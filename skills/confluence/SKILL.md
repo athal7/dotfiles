@@ -5,8 +5,6 @@ license: MIT
 ---
 
 Base URL: `https://<your-domain>.atlassian.net/wiki/api/v2`
-Auth: HTTP Basic — `$CONFLUENCE_EMAIL:$CONFLUENCE_API_TOKEN`
-Secrets: `confluence_base_url`, `confluence_email`, `confluence_api_token`
 Spec: https://developer.atlassian.com/cloud/confluence/rest/v2/intro/
 
 Legacy v1 still needed for labels, attachments, and CQL search: `.../wiki/rest/api`

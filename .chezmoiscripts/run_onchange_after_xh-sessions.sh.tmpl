@@ -1,0 +1,96 @@
+#!/bin/sh
+# Generate xh session files from committed session metadata and Keychain secrets.
+# Re-runs when sessions.yaml or dynamic host config changes.
+# config hash: {{ include ".chezmoidata/sessions.yaml" | sha256sum }}-{{ .confluenceHost }}-{{ .esHost }}
+
+set -eu
+
+SESSION_DIR="$HOME/.config/xh/sessions"
+
+fetch_secret() {
+  security find-generic-password -s chezmoi -a "$1" -w 2>/dev/null
+}
+
+{{ range $name, $cfg := .xh_sessions -}}
+{{   $host := "" -}}
+{{   if hasKey $cfg "host" -}}
+{{     $host = $cfg.host -}}
+{{   else if eq $name "confluence_api_token" -}}
+{{     $host = $.confluenceHost -}}
+{{   else if eq $name "es_api_key" -}}
+{{     $host = $.esHost -}}
+{{   end -}}
+{{   if hasKey $cfg "auth_type" -}}
+# {{ $name }}: basic auth → {{ $host }}
+username=$(fetch_secret "{{ $cfg.username_from }}") || true
+password=$(fetch_secret "{{ $name }}") || true
+if [ -n "$password" ] && [ -n "$username" ] && [ -n "{{ $host }}" ]; then
+  mkdir -p "$SESSION_DIR/{{ $host }}"
+  cat > "$SESSION_DIR/{{ $host }}/agent.json" <<ENDSESSION
+{
+    "__meta__": {
+        "about": "xh session file",
+        "xh": "0.25.3"
+    },
+    "auth": { "type": "basic", "raw_auth": "$username:$password" },
+    "cookies": [],
+    "headers": []
+}
+ENDSESSION
+  chmod 600 "$SESSION_DIR/{{ $host }}/agent.json"
+  echo "xh session: {{ $host }} (basic auth)"
+fi
+
+{{   else if hasKey $cfg "headers" -}}
+# {{ $name }}: multi-header → {{ $host }}
+token=$(fetch_secret "{{ $name }}") || true
+if [ -n "$token" ]; then
+  mkdir -p "$SESSION_DIR/{{ $host }}"
+  cat > "$SESSION_DIR/{{ $host }}/agent.json" <<ENDSESSION
+{
+    "__meta__": {
+        "about": "xh session file",
+        "xh": "0.25.3"
+    },
+    "auth": { "type": null, "raw_auth": null },
+    "cookies": [],
+    "headers": [
+{{- range $i, $h := $cfg.headers }}
+{{-   if hasKey $h "format" }}
+        { "name": "{{ $h.name }}", "value": "{{ $h.format | replace "{value}" "$token" }}" }{{ if not (eq $i (sub (len $cfg.headers) 1)) }},{{ end }}
+{{-   else }}
+        { "name": "{{ $h.name }}", "value": "{{ $h.value }}" }{{ if not (eq $i (sub (len $cfg.headers) 1)) }},{{ end }}
+{{-   end }}
+{{- end }}
+    ]
+}
+ENDSESSION
+  chmod 600 "$SESSION_DIR/{{ $host }}/agent.json"
+  echo "xh session: {{ $host }}"
+fi
+
+{{   else -}}
+# {{ $name }}: single header → {{ $host }}
+token=$(fetch_secret "{{ $name }}") || true
+if [ -n "$token" ] && [ -n "{{ $host }}" ]; then
+  value="{{ $cfg.format | replace "{value}" "$token" }}"
+  mkdir -p "$SESSION_DIR/{{ $host }}"
+  cat > "$SESSION_DIR/{{ $host }}/agent.json" <<ENDSESSION
+{
+    "__meta__": {
+        "about": "xh session file",
+        "xh": "0.25.3"
+    },
+    "auth": { "type": null, "raw_auth": null },
+    "cookies": [],
+    "headers": [
+        { "name": "{{ $cfg.header }}", "value": "$value" }
+    ]
+}
+ENDSESSION
+  chmod 600 "$SESSION_DIR/{{ $host }}/agent.json"
+  echo "xh session: {{ $host }}"
+fi
+
+{{   end -}}
+{{ end -}}

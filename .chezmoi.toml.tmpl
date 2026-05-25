@@ -9,3 +9,5 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
     fullName = {{ promptStringOnce . "fullName" "Full name" | quote }}
     email = {{ promptStringOnce . "email" "Work email" | quote }}
     codeDir = {{ promptStringOnce . "codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
+    confluenceHost = {{ promptStringOnce . "confluenceHost" "Confluence hostname (e.g. myorg.atlassian.net)" "" | quote }}
+    esHost = {{ promptStringOnce . "esHost" "Elasticsearch hostname (e.g. my-cluster.es.cloud.es.io)" "" | quote }}

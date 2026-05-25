@@ -33,6 +33,10 @@ secrets:
   figma_access_token: {}
   es_api_key: {}
   es_url: {}
+  linear_api_key: {}
+  confluence_base_url: {}
+  confluence_email: {}
+  confluence_api_token: {}
   pagerduty_api_token: {}
 # Calendar configuration
 calendars:

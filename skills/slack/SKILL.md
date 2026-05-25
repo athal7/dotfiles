@@ -5,7 +5,6 @@ license: MIT
 ---
 
 Base URL: https://slack.com/api
-Auth: `Authorization: Bearer $SLACK_USER_TOKEN`
 Spec: https://api.slack.com/methods
 
 SLACK_USER_TOKEN posts as you; SLACK_BOT_TOKEN posts as the bot.

@@ -5,8 +5,6 @@ license: MIT
 ---
 
 Base URL: https://api.pagerduty.com
-Auth: `Authorization: Token token=$PAGERDUTY_API_TOKEN` (not Bearer)
-Every request needs: `Accept: application/vnd.pagerduty+json;version=2`
 Write actions need: `From: <email>` — fetch from /users/me first.
 Spec: https://raw.githubusercontent.com/PagerDuty/api-schema/main/REST/openapi.yaml
 
