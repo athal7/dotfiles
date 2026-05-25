@@ -176,6 +176,131 @@ SQL
 
 Sort ascending so the worst-offending projects float to the top.
 
+### 1g. Interrupt rate
+
+Interrupts are a workflow-quality signal: the user had to kill the agent because it was progressing without adequate checkpoints, moving in the wrong direction, or producing output the user didn't want. This covers hard interrupts (agent killed mid-inference — has `step-start` but no matching `step-finish`) and empty aborts (killed before the first token — zero output tokens, no parts, no error).
+
+**Headline metric — interrupt rate per project:**
+
+```bash
+sqlite3 -readonly "$DB" <<SQL
+WITH interrupts AS (
+  SELECT m.id, m.session_id,
+    CASE
+      WHEN EXISTS (
+        SELECT 1 FROM part p
+        WHERE p.message_id = m.id
+          AND json_extract(p.data, '\$.type') = 'step-start'
+      ) AND NOT EXISTS (
+        SELECT 1 FROM part p
+        WHERE p.message_id = m.id
+          AND json_extract(p.data, '\$.type') = 'step-finish'
+      ) THEN 'hard'
+      WHEN json_extract(m.data, '\$.tokens.output') = 0
+        AND NOT EXISTS (
+          SELECT 1 FROM part p WHERE p.message_id = m.id
+        )
+        AND json_extract(m.data, '\$.error') IS NULL
+      THEN 'empty_abort'
+    END AS interrupt_type
+  FROM message m
+  WHERE json_extract(m.data, '\$.role') = 'assistant'
+    AND json_extract(m.data, '\$.finish') IS NULL
+    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+),
+totals AS (
+  SELECT m.session_id, COUNT(*) AS total
+  FROM message m
+  WHERE json_extract(m.data, '\$.role') = 'assistant'
+    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+  GROUP BY m.session_id
+)
+SELECT
+  COALESCE(NULLIF(p.name,''), '(no project)') AS project,
+  SUM(CASE WHEN i.interrupt_type IS NOT NULL THEN 1 ELSE 0 END) AS interrupts,
+  MAX(t.total) AS assistant_msgs,
+  ROUND(100.0 * SUM(CASE WHEN i.interrupt_type IS NOT NULL THEN 1 ELSE 0 END)
+        / NULLIF(SUM(t.total), 0), 1) AS pct_interrupted
+FROM interrupts i
+JOIN session s ON s.id = i.session_id
+LEFT JOIN project p ON p.id = s.project_id
+LEFT JOIN totals t ON t.session_id = i.session_id
+WHERE i.interrupt_type IS NOT NULL
+GROUP BY p.name
+ORDER BY pct_interrupted DESC;
+SQL
+```
+
+**Interrupt rate by agent type:**
+
+```bash
+sqlite3 -readonly "$DB" <<SQL
+WITH interrupts AS (
+  SELECT m.id, json_extract(m.data, '\$.agent') AS agent
+  FROM message m
+  WHERE json_extract(m.data, '\$.role') = 'assistant'
+    AND json_extract(m.data, '\$.finish') IS NULL
+    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+    AND (
+      EXISTS (
+        SELECT 1 FROM part p
+        WHERE p.message_id = m.id
+          AND json_extract(p.data, '\$.type') = 'step-start'
+          AND NOT EXISTS (
+            SELECT 1 FROM part p2
+            WHERE p2.message_id = m.id
+              AND json_extract(p2.data, '\$.type') = 'step-finish'
+          )
+      )
+      OR (
+        json_extract(m.data, '\$.tokens.output') = 0
+        AND NOT EXISTS (SELECT 1 FROM part p WHERE p.message_id = m.id)
+        AND json_extract(m.data, '\$.error') IS NULL
+      )
+    )
+),
+totals AS (
+  SELECT json_extract(m.data, '\$.agent') AS agent, COUNT(*) AS total
+  FROM message m
+  WHERE json_extract(m.data, '\$.role') = 'assistant'
+    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+  GROUP BY agent
+)
+SELECT
+  COALESCE(i.agent, '(unknown)') AS agent,
+  COUNT(*) AS interrupts,
+  t.total AS assistant_msgs,
+  ROUND(100.0 * COUNT(*) / NULLIF(t.total, 0), 1) AS pct_interrupted
+FROM interrupts i
+LEFT JOIN totals t ON COALESCE(i.agent,'') = COALESCE(t.agent,'')
+GROUP BY i.agent
+ORDER BY pct_interrupted DESC;
+SQL
+```
+
+Build interrupts may indicate poor delegation scoping; lead interrupts suggest the orchestrator is moving without checking in. Plan interrupts are normal if the user is refining scope interactively.
+
+**Interrupted tool distribution:**
+
+```bash
+sqlite3 -readonly "$DB" <<SQL
+SELECT
+  json_extract(p.data, '\$.tool') AS tool,
+  COUNT(*) AS in_flight
+FROM part p
+JOIN message m ON m.id = p.message_id
+WHERE json_extract(m.data, '\$.role') = 'assistant'
+  AND json_extract(m.data, '\$.finish') IS NULL
+  AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+  AND json_extract(p.data, '\$.type') = 'tool'
+  AND json_extract(p.data, '\$.state.status') IN ('running', 'pending')
+GROUP BY tool
+ORDER BY in_flight DESC;
+SQL
+```
+
+Shows what the agent was doing when the user intervened. A concentration on `edit` or `write` suggests the agent was making changes without confirming direction; a concentration on `bash` may indicate long-running commands the user didn't expect.
+
 ---
 
 ## Phase 2 — Capability layer health
@@ -436,6 +561,7 @@ For each issue, pick one:
 | AGENTS.md > 400 lines | Move continuous-trigger content to `instructions:` |
 | Capability dangling | Wire to a provider, or remove the requirement |
 | Sessions with edits but zero `task` calls (in parent sessions) | Topology violation — lead should never edit directly. Check if user bypassed via `@build` direct invocation. If frequent: add step limit or tighten lead permissions. |
+| High interrupt rate for a project or agent | Workflow moving too fast — add checkpoints, improve scoping, or tighten step limits |
 
 Pre-existing changes from prior audits should be re-checked: the principle "measure before refactoring" applies to every audit, not just the first.
 
