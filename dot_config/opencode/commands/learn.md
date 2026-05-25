@@ -35,13 +35,19 @@ Use for learnings that agents need **proactively on every session**: safety rule
 - Package/module-specific: `packages/foo/AGENTS.md`
 - Feature-specific: `src/auth/AGENTS.md`
 
+The global `~/.config/opencode/AGENTS.md` is chezmoi-managed — edit it at `$(chezmoi source-path)/dot_config/opencode/AGENTS.md`.
+
 ### Skills
 
 Use for learnings that are **reactive/situational** -- only needed when a specific problem arises or task is requested. This includes: troubleshooting procedures, specialized workflows, fix recipes for recurring issues, tool-specific gotchas.
 
-**Prefer updating an existing skill over creating a new one.** Check `~/.agents/skills/` first -- the learning often belongs as a new section, example, or failure mode in a skill that already exists. Create a new skill only when no existing skill covers the domain.
+**Prefer updating an existing skill over creating a new one.** Check existing skills first -- the learning often belongs as a new section, example, or failure mode in a skill that already exists. Create a new skill only when no existing skill covers the domain.
 
-New skills go under `~/.agents/skills/<name>/SKILL.md` with `name:` and `description:` frontmatter. The description is the trigger -- make it specific enough for the agent to know when to load it.
+**Project-local skills** live in `.agents/skills/` in the current repo. Use for learnings specific to one project.
+
+**Global skills** live in `$(chezmoi source-path)/skills/` (chezmoi-managed, deployed to `~/.agents/skills/`). Run `chezmoi apply` to deploy.
+
+New skills need a `<name>/SKILL.md` with `name:` and `description:` frontmatter. The description is the trigger -- make it specific enough for the agent to know when to load it.
 
 ### Decision rule
 
