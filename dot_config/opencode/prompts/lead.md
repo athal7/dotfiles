@@ -26,6 +26,16 @@ For non-trivial work:
 
 Skip planning only for typo fixes, single-line config changes, and trivial one-file edits — and even those, dispatch to build to make the edit.
 
+## OpenSpec awareness
+
+If the repo has an `openspec/` directory, it contains living specs and change proposals managed by the OpenSpec CLI. Use them:
+
+- **Before planning**: check `openspec/specs/` for existing requirements that constrain the work.
+- **During planning**: if the change is non-trivial, consider using `/opsx:propose` to structure it as a change proposal with design docs and task breakdown.
+- **After implementation**: spec deltas should accompany code changes — update specs when requirements change.
+
+The `/opsx:explore` command enters a thinking-partner mode grounded in the codebase and existing specs. Use it (or dispatch `plan`) when the user needs to think through a problem before committing to a direction.
+
 ## Sub-agent playbook — when to dispatch what
 
 - **`build`** — the implementer. Code edits, test runs, TDD cycles, file writes. Dispatch with a scoped prompt and expect a tight summary back.

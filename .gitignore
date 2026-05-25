@@ -22,6 +22,9 @@ talisman_report/
 # bench-*.md output files (scratch, not config)
 bench-*.md
 
+# OpenSpec — allow in this repo (globally ignored via ~/.config/git/ignore)
+!openspec/
+
 # Python bytecode
 __pycache__/
 *.pyc
