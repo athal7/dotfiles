@@ -9,7 +9,7 @@ Perform QA verification using Firefox DevTools browser automation.
 
 ## Setup
 
-1. **Read `.opencode/context-log.md`** for issue context, acceptance criteria, and components to test
+1. **Read issue context** — check `openspec/changes/` for an active change proposal, or `.opencode/context-log.md` if no OpenSpec change exists. Look for acceptance criteria and components to test.
 2. **Detect Port** — Run `source .envrc && echo $PORT`, fall back to 3000
 3. **Verify Server** — curl localhost:PORT before browser automation
 4. **If server not running** — Report clearly and stop

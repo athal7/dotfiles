@@ -19,7 +19,7 @@ license: MIT
 Run automatically without asking. **Set the bash tool's `workdir` to the repo root rather than passing `git -C <path>`.** Permission patterns like `git push *` match parsed argv starting with `git push`; `git -C <path> push` injects flags between `git` and the subcommand and bypasses those patterns silently.
 
 1. **Stage**: `git add -A`.
-2. **Skip globally-ignored files**: `git check-ignore <files>`. Do NOT stage files in `~/.config/git/ignore` (e.g. `.talismanrc`, `.opencode/context-log.md`).
+2. **Skip globally-ignored files**: `git check-ignore <files>`. Do NOT stage files in `~/.config/git/ignore` (e.g. `.talismanrc`).
 3. **Run the full test suite** — unit, integration, e2e, system. Do not commit with failures.
 4. **Draft the commit message** in the format below, with a `Co-Authored-By` trailer naming the model used (e.g. `anthropic/claude-sonnet-4-6`):
    ```

@@ -2,7 +2,7 @@
 
 [agentskills.io](https://agentskills.io)-compatible skills for AI agents. Works with [OpenCode](https://opencode.ai) and any compatible agent.
 
-See the [dotfiles README](../README.md) for install instructions, the capability composition system, and the [proposed spec extension](https://github.com/agentskills/agentskills/discussions/311) that powers it.
+The desired system behavior is defined in [workflow specs](../openspec/specs/) — four specs covering implementation, code review, merge request maintenance, and remote operations. Skills and commands implement those specs; [/audit](../dot_config/opencode/commands/audit.md) measures compliance.
 
 ## Skills
 
@@ -14,7 +14,7 @@ Integration skills self-register their provided capabilities via `provides` in f
 | **figma** — Read Figma files, components, variables, and projects | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
 | **gh** — GitHub CLI integration: merge requests, CI, inline comments | **chezmoi** — Manage dotfiles via chezmoi |
 | **docs** — Read/write Google Docs and Confluence | **commit** — Semantic commit format, branch naming, squashing |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **context-log** — Maintain `.opencode/context-log.md` across sessions |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
 | | **conversations** — Research people and decisions across chat, meetings, email |
 | **pty** — PTY sessions for long-running or interactive processes | **issues** — Route to Linear or GitHub Issues based on org |
 | **secrets** — Fetch credentials and API keys | **observability** — Investigate production issues using logs and traces |
@@ -31,24 +31,29 @@ External skills (installed via `gh skill install` from upstream maintainers) —
 
 ## Beyond skills
 
-Two parts of the workflow are *not* skills, by design — see `skills/AGENTS.md` for when to pick which primitive.
+Some workflow content uses different primitives — see `skills/AGENTS.md` for when to pick which.
 
-- **TDD** lives in `dot_config/opencode/tdd.md` and is loaded into every session via `instructions:`. The trigger ("every code change") is continuous, not a discrete moment, so a skill would underperform — and the data showed it did.
-- **Plan** is the built-in OpenCode plan agent (Tab to enter). It's a mode with its own permission profile, not a skill — the platform enforces read-only and gates writes through `ask`.
+- **Workflow commands** (`/implement`, `/review`, `/mr`) embed methodology directly. Review passes, triage workflow, and conflict resolution are always-loaded for the active workflow.
+- **TDD** lives in `dot_config/opencode/prompts/build.md`. Continuous trigger → always-loaded in agent prompt.
+- **Plan** is a subagent with read-only permissions. Mode-restricted → agent boundary.
+- **Specs** (`openspec/specs/`) define desired state. `/audit` measures compliance.
 
 ## Commands
 
-User-triggered slash commands that package self-contained workflows. Invoke with `/name`.
+Slash commands. Workflow commands embed methodology directly — no skill loading needed.
 
-| Command | Description |
-|---------|-------------|
-| **/learn** | Capture non-obvious discoveries from this session into AGENTS.md or a new skill |
-| **/audit** | Five-phase audit of the agent system — load rates, capability layer health, frontmatter, content, primitive fit |
-| **/cleanup** | Reclaim disk space — stale worktrees, PostgreSQL databases, OpenCode DB entries |
+| Command | Type | Description |
+|---------|------|-------------|
+| **/implement** | Workflow | Plan/build/review/ship with embedded review passes and approval gates |
+| **/review** | Workflow | Code review with multi-pass analysis, QA, finding verification |
+| **/mr** | Workflow | Merge request maintenance — triage, fix, conflicts, re-request review |
+| **/audit** | Utility | Spec compliance audit — measures against `openspec/specs/` |
+| **/learn** | Utility | Capture discoveries into AGENTS.md or a new skill |
+| **/cleanup** | Utility | Reclaim disk space — worktrees, databases, temp files |
 
-## Spec extension watchlist
+## Upstream watchlist
 
-This repo implements the `requires`/`provides` dependency injection pattern from the agentskills spec. Capabilities are discovered entirely through skill `provides` declarations — no manifest file. Several open proposals would let this move upstream. Re-check during each `/audit`.
+Skill dependencies are managed by config-driven injection (`skill-inject.ts`). Per-agent skill scoping is blocked on an upstream bug. Re-check during each `/audit`.
 
 | Issue | What it would change for us |
 |---|---|

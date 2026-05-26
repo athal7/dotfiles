@@ -1,111 +1,70 @@
 ---
-description: Audit the agent system — load rates, capability layer health, frontmatter, content, primitive fit
+description: Audit the agent system against workflow specs and measured data
 subtask: true
 ---
 
-# Agent System Audit
+# Spec Compliance Audit
 
-Five-phase audit of the agent skills + capabilities + commands system in this dotfiles repo. Run quarterly or after a structural change. Each phase produces evidence; the synthesis at the end recommends specific actions.
+Measure the agent system against the workflow specs in `openspec/specs/`. The specs are the source of truth — when they change, this audit automatically covers the new requirements.
 
 $ARGUMENTS
 
-**Scoping:** When arguments name a specific topic (e.g. "permissions", "delegation", "skill load rates"), run only the relevant phase(s) and skip the rest. A bare `/audit` with no arguments runs all phases.
+**Scoping:** When arguments name a specific spec or topic, audit only that. A bare `/audit` runs all specs.
 
 ---
 
-## Phase 1 — Data gathering
+## Step 1 — Read the specs
 
-Pull actual usage from the OpenCode session DB and compare against intent.
+Read every `spec.md` in `openspec/specs/*/`. List each requirement and scenario. These are what you're measuring against.
 
-### 1a. Window selection
+If no specs exist, fall back to the legacy audit (skill load rates, delegation effectiveness, capability layer health).
 
-Default 30 days. If the user named a different window, use it.
+## Step 2 — Set the measurement window
 
 ```bash
 WINDOW_DAYS=30
 DB=~/.local/share/opencode/opencode.db
 ```
 
-### 1b. Sessions by project
+## Step 3 — Gather evidence per spec
 
-Skill loads need to be normalized by project — a "low" load rate over all sessions can be high within the relevant project.
+For each spec, gather evidence from the session DB and config. Organize findings by spec, not by data source.
 
-```bash
-sqlite3 -readonly "$DB" <<SQL
-SELECT p.name, p.worktree, COUNT(*) AS sessions
-FROM session s LEFT JOIN project p ON p.id = s.project_id
-WHERE s.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY s.project_id ORDER BY sessions DESC;
-SQL
-```
+### Evidence sources
 
-### 1c. Skill load rates per project
-
-For each project that matters, look at load count and distinct sessions:
+**Session DB queries** — adapt these to the specific requirements you're measuring:
 
 ```bash
-PROJECT_ID="<id from 1b>"
+# Workflow command usage
 sqlite3 -readonly "$DB" <<SQL
-SELECT json_extract(p.data,'\$.state.input.name') AS skill,
-       COUNT(*) AS loads,
-       COUNT(DISTINCT p.session_id) AS sessions
-FROM part p JOIN session s ON s.id = p.session_id
-WHERE json_extract(p.data,'\$.tool')='skill'
-  AND json_extract(p.data,'\$.state.status')='completed'
-  AND s.project_id='$PROJECT_ID'
+SELECT json_extract(p.data,'$.state.input.command') AS command, COUNT(*) AS uses
+FROM part p
+WHERE json_extract(p.data,'$.type') = 'tool'
+  AND json_extract(p.data,'$.tool') = 'command'
   AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY skill ORDER BY loads DESC;
+GROUP BY command ORDER BY uses DESC;
 SQL
-```
 
-### 1d. Subagent invocations
-
-```bash
+# Skill load rates by agent
 sqlite3 -readonly "$DB" <<SQL
-SELECT json_extract(data,'\$.state.input.subagent_type') AS agent,
-       COUNT(*) AS invocations
-FROM part WHERE json_extract(data,'\$.tool')='task'
-  AND json_extract(data,'\$.state.status')='completed'
-  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY agent ORDER BY invocations DESC;
+SELECT s.agent, json_extract(p.data,'$.state.input.name') AS skill,
+       COUNT(*) AS loads, COUNT(DISTINCT p.session_id) AS sessions
+FROM part p JOIN session s ON s.id = p.session_id
+WHERE json_extract(p.data,'$.tool')='skill'
+  AND json_extract(p.data,'$.state.status')='completed'
+  AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY s.agent, skill ORDER BY s.agent, loads DESC;
 SQL
-```
 
-### 1e. Workflow co-occurrence
-
-For each pair of skills that should fire together (commit + review, plan + architecture, etc.), check the gap. Example:
-
-```bash
-sqlite3 -readonly "$DB" <<SQL
-WITH project AS (SELECT id FROM session WHERE project_id='$PROJECT_ID' AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)),
-     loaded AS (SELECT session_id, json_extract(data,'\$.state.input.name') AS skill
-                FROM part WHERE json_extract(data,'\$.tool')='skill'
-                  AND json_extract(data,'\$.state.status')='completed'
-                  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000))
-SELECT
-  SUM(CASE WHEN c.session_id IS NOT NULL AND t.session_id IS NULL THEN 1 ELSE 0 END) AS commit_no_review,
-  SUM(CASE WHEN c.session_id IS NOT NULL AND t.session_id IS NOT NULL THEN 1 ELSE 0 END) AS commit_and_review
-FROM project pr
-LEFT JOIN (SELECT DISTINCT session_id FROM loaded WHERE skill='commit') c ON c.session_id=pr.id
-LEFT JOIN (SELECT DISTINCT session_id FROM loaded WHERE skill='review') t ON t.session_id=pr.id;
-SQL
-```
-
-### 1f. Delegation effectiveness
-
-The topology enforces delegation structurally: `lead` has no edit/write tools, so any edit-bearing session that isn't a child session (dispatched build) is a topology violation. This also catches sessions where the user manually invoked build as `@build`, bypassing lead entirely. These three queries surface the violation rate, the volume bucket where it concentrates, and the projects where the habit is weakest.
-
-**Headline metric — sessions with edits but zero `task` calls:**
-
-```bash
+# Delegation rate (lead edits = topology violation)
 sqlite3 -readonly "$DB" <<SQL
 WITH base AS (
   SELECT id FROM session
   WHERE time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
     AND parent_id IS NULL
 ),
-edits AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool') IN ('edit','write') GROUP BY session_id),
-tasks AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool')='task' GROUP BY session_id)
+edits AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'$.tool') IN ('edit','write') GROUP BY session_id),
+tasks AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'$.tool')='task' GROUP BY session_id)
 SELECT
   COUNT(*) FILTER (WHERE COALESCE(e.n,0) > 0) AS sessions_with_edits,
   SUM(CASE WHEN COALESCE(e.n,0)>0 AND COALESCE(t.n,0)=0 THEN 1 ELSE 0 END) AS violations,
@@ -115,479 +74,93 @@ FROM base b
 LEFT JOIN edits e ON e.session_id=b.id
 LEFT JOIN tasks t ON t.session_id=b.id;
 SQL
-```
 
-**Delegation rate by edit-volume bucket** — shows where the habit is weakest. Under the topology every "no_delegation" cell in a parent session is a violation; the 1-2 and 3-9 edit buckets are the key signal — direct-edit bypasses (user invoking `@build` directly, or pre-topology sessions) concentrate there.
-
-```bash
+# Permission denials (friction vs enforcement)
 sqlite3 -readonly "$DB" <<SQL
-WITH base AS (
-  SELECT id FROM session
-  WHERE time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-    AND parent_id IS NULL
-),
-edits AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool') IN ('edit','write') GROUP BY session_id),
-tasks AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool')='task' GROUP BY session_id)
-SELECT
-  CASE
-    WHEN COALESCE(e.n,0)=0 THEN '0 edits'
-    WHEN e.n BETWEEN 1 AND 2 THEN '1-2 edits'
-    WHEN e.n BETWEEN 3 AND 9 THEN '3-9 edits'
-    WHEN e.n BETWEEN 10 AND 29 THEN '10-29 edits'
-    ELSE '30+ edits'
-  END AS bucket,
-  COUNT(*) AS sessions,
-  SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) AS delegated,
-  SUM(CASE WHEN COALESCE(t.n,0)=0 THEN 1 ELSE 0 END) AS no_delegation,
-  ROUND(100.0 * SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_delegated
-FROM base b
-LEFT JOIN edits e ON e.session_id=b.id
-LEFT JOIN tasks t ON t.session_id=b.id
-GROUP BY bucket
-ORDER BY bucket;
-SQL
-```
-
-**Per-project delegation rate** for sessions with at least one edit — surfaces which repos have become habit black holes:
-
-```bash
-sqlite3 -readonly "$DB" <<SQL
-WITH base AS (
-  SELECT s.id, p.name AS project
-  FROM session s LEFT JOIN project p ON p.id = s.project_id
-  WHERE s.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-    AND s.parent_id IS NULL
-),
-edits AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool') IN ('edit','write') GROUP BY session_id),
-tasks AS (SELECT session_id, COUNT(*) AS n FROM part WHERE json_extract(data,'\$.tool')='task' GROUP BY session_id)
-SELECT
-  COALESCE(NULLIF(b.project,''), '(no project)') AS project,
-  COUNT(*) AS sessions_with_edits,
-  SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) AS delegated,
-  ROUND(100.0 * SUM(CASE WHEN COALESCE(t.n,0)>0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_delegated
-FROM base b
-JOIN edits e ON e.session_id=b.id AND e.n > 0
-LEFT JOIN tasks t ON t.session_id=b.id
-GROUP BY project
-HAVING sessions_with_edits >= 3
-ORDER BY pct_delegated ASC;
-SQL
-```
-
-Sort ascending so the worst-offending projects float to the top.
-
-### 1g. Interrupt rate
-
-Interrupts are a workflow-quality signal: the user had to kill the agent because it was progressing without adequate checkpoints, moving in the wrong direction, or producing output the user didn't want. This covers hard interrupts (agent killed mid-inference — has `step-start` but no matching `step-finish`) and empty aborts (killed before the first token — zero output tokens, no parts, no error).
-
-**Headline metric — interrupt rate per project:**
-
-```bash
-sqlite3 -readonly "$DB" <<SQL
-WITH interrupts AS (
-  SELECT m.id, m.session_id,
-    CASE
-      WHEN EXISTS (
-        SELECT 1 FROM part p
-        WHERE p.message_id = m.id
-          AND json_extract(p.data, '\$.type') = 'step-start'
-      ) AND NOT EXISTS (
-        SELECT 1 FROM part p
-        WHERE p.message_id = m.id
-          AND json_extract(p.data, '\$.type') = 'step-finish'
-      ) THEN 'hard'
-      WHEN json_extract(m.data, '\$.tokens.output') = 0
-        AND NOT EXISTS (
-          SELECT 1 FROM part p WHERE p.message_id = m.id
-        )
-        AND json_extract(m.data, '\$.error') IS NULL
-      THEN 'empty_abort'
-    END AS interrupt_type
-  FROM message m
-  WHERE json_extract(m.data, '\$.role') = 'assistant'
-    AND json_extract(m.data, '\$.finish') IS NULL
-    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-),
-totals AS (
-  SELECT m.session_id, COUNT(*) AS total
-  FROM message m
-  WHERE json_extract(m.data, '\$.role') = 'assistant'
-    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-  GROUP BY m.session_id
-)
-SELECT
-  COALESCE(NULLIF(p.name,''), '(no project)') AS project,
-  SUM(CASE WHEN i.interrupt_type IS NOT NULL THEN 1 ELSE 0 END) AS interrupts,
-  MAX(t.total) AS assistant_msgs,
-  ROUND(100.0 * SUM(CASE WHEN i.interrupt_type IS NOT NULL THEN 1 ELSE 0 END)
-        / NULLIF(SUM(t.total), 0), 1) AS pct_interrupted
-FROM interrupts i
-JOIN session s ON s.id = i.session_id
-LEFT JOIN project p ON p.id = s.project_id
-LEFT JOIN totals t ON t.session_id = i.session_id
-WHERE i.interrupt_type IS NOT NULL
-GROUP BY p.name
-ORDER BY pct_interrupted DESC;
-SQL
-```
-
-**Interrupt rate by agent type:**
-
-```bash
-sqlite3 -readonly "$DB" <<SQL
-WITH interrupts AS (
-  SELECT m.id, json_extract(m.data, '\$.agent') AS agent
-  FROM message m
-  WHERE json_extract(m.data, '\$.role') = 'assistant'
-    AND json_extract(m.data, '\$.finish') IS NULL
-    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-    AND (
-      EXISTS (
-        SELECT 1 FROM part p
-        WHERE p.message_id = m.id
-          AND json_extract(p.data, '\$.type') = 'step-start'
-          AND NOT EXISTS (
-            SELECT 1 FROM part p2
-            WHERE p2.message_id = m.id
-              AND json_extract(p2.data, '\$.type') = 'step-finish'
-          )
-      )
-      OR (
-        json_extract(m.data, '\$.tokens.output') = 0
-        AND NOT EXISTS (SELECT 1 FROM part p WHERE p.message_id = m.id)
-        AND json_extract(m.data, '\$.error') IS NULL
-      )
-    )
-),
-totals AS (
-  SELECT json_extract(m.data, '\$.agent') AS agent, COUNT(*) AS total
-  FROM message m
-  WHERE json_extract(m.data, '\$.role') = 'assistant'
-    AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-  GROUP BY agent
-)
-SELECT
-  COALESCE(i.agent, '(unknown)') AS agent,
-  COUNT(*) AS interrupts,
-  t.total AS assistant_msgs,
-  ROUND(100.0 * COUNT(*) / NULLIF(t.total, 0), 1) AS pct_interrupted
-FROM interrupts i
-LEFT JOIN totals t ON COALESCE(i.agent,'') = COALESCE(t.agent,'')
-GROUP BY i.agent
-ORDER BY pct_interrupted DESC;
-SQL
-```
-
-Build interrupts may indicate poor delegation scoping; lead interrupts suggest the orchestrator is moving without checking in. Plan interrupts are normal if the user is refining scope interactively.
-
-**Interrupted tool distribution:**
-
-```bash
-sqlite3 -readonly "$DB" <<SQL
-SELECT
-  json_extract(p.data, '\$.tool') AS tool,
-  COUNT(*) AS in_flight
-FROM part p
-JOIN message m ON m.id = p.message_id
-WHERE json_extract(m.data, '\$.role') = 'assistant'
-  AND json_extract(m.data, '\$.finish') IS NULL
-  AND json_extract(m.data, '\$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-  AND json_extract(p.data, '\$.type') = 'tool'
-  AND json_extract(p.data, '\$.state.status') IN ('running', 'pending')
-GROUP BY tool
-ORDER BY in_flight DESC;
-SQL
-```
-
-Shows what the agent was doing when the user intervened. A concentration on `edit` or `write` suggests the agent was making changes without confirming direction; a concentration on `bash` may indicate long-running commands the user didn't expect.
-
----
-
-## Phase 2 — Capability layer health
-
-Validate frontmatter consistency and provider coverage.
-
-### 2a. Find dangling capabilities
-
-For every `requires:` entry across all skills, confirm a provider exists (a skill with a matching `provides:` declaration).
-
-```bash
-# Collect all requires
-for f in skills/*/SKILL.md; do
-  python3 -c "
-import yaml
-content = open('$f').read()
-if not content.startswith('---'): exit()
-parts = content.split('---', 2)
-fm = yaml.safe_load(parts[1])
-md = fm.get('metadata', {}) or {}
-for r in md.get('requires', []) or []:
-    print(r)
-"
-done | sort -u > /tmp/required.txt
-
-# Collect all provides
-for f in skills/*/SKILL.md; do
-  python3 -c "
-import yaml
-content = open('$f').read()
-parts = content.split('---', 2)
-fm = yaml.safe_load(parts[1])
-md = fm.get('metadata', {}) or {}
-for p in md.get('provides', []) or []:
-    print(p)
-"
-done > /tmp/provided.txt
-
-# Anything required but not provided
-comm -23 <(sort -u /tmp/required.txt) <(sort -u /tmp/provided.txt)
-```
-
-### 2b. Find orphan providers
-
-Skills that `provides` something nothing else `requires`. Often legitimate (workflow-only skills shouldn't `provides`) but worth flagging.
-
-```bash
-comm -23 <(sort -u /tmp/provided.txt) <(sort -u /tmp/required.txt)
-```
-
-### 2c. External skills installed?
-
-```bash
-# Confirm packages.yaml's skills: list is actually deployed
-yq -r '.packages.skills[].skill' .chezmoidata/packages.yaml | while read skill; do
-  if [ -d "$HOME/.agents/skills/$skill" ]; then
-    echo "OK $skill"
-  else
-    echo "MISSING $skill"
-  fi
-done
-```
-
-### 2d. Opencode permissions audit
-
-Permissions are declared statically in `packages.yaml` under `permissions.reads` (full glob patterns
-for lead/plan) and `permissions.build.{deny,allow}` (for build). The template
-`dot_config/opencode/opencode.json.tmpl` renders these directly into agent bash permission maps.
-The global `permission.bash` block (applies to agents without their own override: scout, general,
-explore) uses universal verb-position globs (`* list*`, `* view*`, etc.) plus read-only utility
-commands (`cat*`, `grep*`, `jq*`, `find *`, etc.).
-
-Inspect rendered config:
-
-```bash
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.lead.permission.bash'
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.plan.permission.bash'
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent.build.permission.bash'
-```
-
-Flag both directions of permission drift:
-
-**Too permissive** (allow that should be ask, ask that should be deny):
-
-- A write/mutate pattern in `permissions.reads` in packages.yaml. Scan the rendered lead bash:
-
-```bash
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
-  | jq -r '.agent.lead.permission.bash | to_entries[] | select(.value == "allow") | .key' \
-  | grep -E '(create|update|delete|push|apply|commit|merge|destroy|complete|add|edit|reply|append)'
-```
-
-- Build deny list missing a subcommand that mutates state. Compare `build.deny` in packages.yaml against the tool's full subcommand list.
-- A `reads` pattern broader than necessary (e.g. `tool get*` when only `tool docs get` is safe).
-
-**Too restrictive** (ask that should be allow, missing — causes friction):
-
-- Tools in `mise`, `github_releases`, or npm sections of `packages.yaml` with no `permissions:` block — those tools fall through to the global `*: ask` floor:
-
-```bash
-yq -r '.packages | (.mise // []) + (.github_releases // []) + (.npm // []) | .[] | select(type == "!!map") | select(.permissions == null) | .name // .repo' \
-  .chezmoidata/packages.yaml
-```
-
-- Remember opencode evaluates pipeline segments independently — `gh pr view X | head -N` prompts on `head` even if `gh pr view` is a known read. Check that common output-filter commands (`head`, `tail`, `grep`, `wc`, `sort`, `uniq`, `comm`) appear in the global allow list.
-
-For each finding: tighten to `ask`, broaden to `allow`, or add/adjust a `permissions:` block in `packages.yaml`.
-
-**Runtime permission denials** — query actual denials from the session DB to validate that rules are firing as intended and surface unexpected friction:
-
-```bash
-# Denial counts by tool
-sqlite3 -readonly "$DB" <<SQL
-SELECT json_extract(data, '\$.tool') AS tool, COUNT(*) AS denials
-FROM part
-WHERE json_extract(data, '\$.type') = 'tool'
-  AND json_extract(data, '\$.state.error') LIKE '%permission%'
-  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY tool ORDER BY denials DESC;
-SQL
-```
-
-```bash
-# User-rejected vs rule-blocked
-sqlite3 -readonly "$DB" <<SQL
-SELECT CASE
-         WHEN json_extract(data, '\$.state.error') LIKE '%user rejected%' THEN 'user_rejected'
-         WHEN json_extract(data, '\$.state.error') LIKE '%rule which prevents%' THEN 'rule_blocked'
-         ELSE 'other'
-       END AS denial_type,
-       COUNT(*) AS count
-FROM part
-WHERE json_extract(data, '\$.type') = 'tool'
-  AND json_extract(data, '\$.state.error') LIKE '%permission%'
-  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY denial_type;
-SQL
-```
-
-```bash
-# Most-denied commands — surfaces friction hotspots
-sqlite3 -readonly "$DB" <<SQL
-SELECT json_extract(data, '\$.tool') AS tool,
-       SUBSTR(json_extract(data, '\$.state.input.command'), 1, 80) AS command,
+SELECT json_extract(data, '$.tool') AS tool,
+       SUBSTR(json_extract(data, '$.state.input.command'), 1, 80) AS command,
        COUNT(*) AS denials
 FROM part
-WHERE json_extract(data, '\$.type') = 'tool'
-  AND json_extract(data, '\$.state.error') LIKE '%permission%'
+WHERE json_extract(data, '$.type') = 'tool'
+  AND json_extract(data, '$.state.error') LIKE '%permission%'
   AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
 GROUP BY tool, command ORDER BY denials DESC LIMIT 20;
 SQL
+
+# Interrupt rate by agent
+sqlite3 -readonly "$DB" <<SQL
+WITH interrupts AS (
+  SELECT m.id, json_extract(m.data, '$.agent') AS agent
+  FROM message m
+  WHERE json_extract(m.data, '$.role') = 'assistant'
+    AND json_extract(m.data, '$.finish') IS NULL
+    AND json_extract(m.data, '$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+    AND EXISTS (
+      SELECT 1 FROM part p
+      WHERE p.message_id = m.id AND json_extract(p.data, '$.type') = 'step-start'
+        AND NOT EXISTS (SELECT 1 FROM part p2 WHERE p2.message_id = m.id AND json_extract(p2.data, '$.type') = 'step-finish')
+    )
+),
+totals AS (
+  SELECT json_extract(m.data, '$.agent') AS agent, COUNT(*) AS total
+  FROM message m WHERE json_extract(m.data, '$.role') = 'assistant'
+    AND json_extract(m.data, '$.time.created') > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+  GROUP BY agent
+)
+SELECT COALESCE(i.agent, '(unknown)') AS agent, COUNT(*) AS interrupts,
+       t.total AS msgs, ROUND(100.0 * COUNT(*) / NULLIF(t.total, 0), 1) AS pct
+FROM interrupts i LEFT JOIN totals t ON COALESCE(i.agent,'') = COALESCE(t.agent,'')
+GROUP BY i.agent ORDER BY pct DESC;
+SQL
 ```
 
-Compare the runtime denial data against the static config findings above. A high `user_rejected` count for a specific command pattern suggests the rule should be tightened to `deny`. A high `rule_blocked` count for a command that should be allowed suggests the rule is too broad.
-
----
-
-### 2e. Walk the integration-skill provider preference
-
-For each local integration skill (`provides:` with a tool-shaped capability like `chat`, `source-control`), check if an upstream skill now exists.
-
----
-
-## Phase 3 — Frontmatter audit
+**Config checks:**
 
 ```bash
-# agentskills validates spec compliance
-agentskills validate skills/  # may be agentskills validate <each-dir>
+# Rendered agent permissions
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent | to_entries[] | {key, permissions: .value.permission}'
+
+# Skill injection mappings
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.plugin[0][1]'
 ```
 
-Plus this repo's conventions:
+**Manual spot-checks** — for requirements that can't be automated, sample 3-5 recent sessions and inspect:
+- Were review passes run in order? (code-review R1)
+- Were findings verified against the diff? (code-review R2)
+- Did triage happen before code fixes? (merge-request R1)
+- Was full content shown before remote writes? (remote-operations R3)
 
-- **Workflow skills** without `provides:` are correctly omitted (per `skills/AGENTS.md`'s no-provides convention) — but a workflow skill *that other skills `require`* must declare `provides`.
-- **Integration skills** must declare `provides:` naming the domain capability (`chat`, not `slack`).
-- **Description must be a concrete trigger**, not a topic. "Strict TDD loop" is a topic; "Load before any source-code edit. Applies to new features, bug fixes, refactors, and review-driven fixes" is a trigger.
-- **No machine-specific config** in skill bodies (template names, project keys, channel names, internal URLs) — public-repo rule.
+## Step 4 — Report
 
----
+For each spec, report:
 
-## Phase 4 — Content audit
-
-The original instruction-hierarchy/redundancy/context-budget checks. These still matter alongside the data work above.
-
-### Instruction hierarchy
-
-```
-Base system prompt (opencode upstream)  → built-in
-  + AGENTS.md (global)                  → always loaded
-  + instructions: files                 → always loaded
-  + opencode.json                       → agent config (models, permissions)
-  + prompts/*.md                        → per-agent system prompt (lead, plan, build)
-  + skills/*/SKILL.md                   → on-demand via skill tool
-  + commands/*.md                       → on /command invocation
-```
-
-### Where to put things
-
-| Content type | Location | When loaded |
+| Requirement | Status | Evidence |
 |---|---|---|
-| Universal rules, tone, scope discipline | `dot_config/opencode/AGENTS.md` | Always |
-| Standing rules (continuous trigger) | `dot_config/opencode/<name>.md` + `instructions:` | Always |
-| Agent config (model, permissions, temperature) | `dot_config/opencode/opencode.json.tmpl` | Always |
-| Agent-specific system prompt (lead/plan/build) | `dot_config/opencode/prompts/<agent>.md` | Per-agent always |
-| Specific-moment workflow (concrete trigger) | `skills/<name>/SKILL.md` | On `skill` tool call |
-| User-triggered workflow | `dot_config/opencode/commands/<name>.md` | On `/command` |
+| R1: ... | ✅ Compliant / ⚠️ Partial / ❌ Non-compliant | What you found |
 
-### Context budget
+Flag requirements that can't be measured and explain why.
 
-```bash
-wc -l ~/.config/opencode/AGENTS.md ~/.config/opencode/*.md
-```
+## Step 5 — Recommendations
 
-AGENTS.md + every `instructions:` file gets loaded every session. Aim to keep the always-loaded total tight (<400 lines). If it grows, ask whether something should become a skill (concrete-moment trigger) or be deleted.
+For each non-compliant requirement, recommend one action. Reference prior-attempts history at `openspec/changes/agent-rearchitecture/prior-attempts.md` to avoid repeating approaches that have failed.
 
-### Redundancy
-
-- AGENTS.md and `instructions:` files shouldn't repeat each other.
-- Skills shouldn't duplicate AGENTS.md.
-- Skill content shouldn't restate `--help` for its capability.
+| Symptom | Proven approach | Don't repeat |
+|---|---|---|
+| Behavior skipped despite instructions | Structural enforcement (permissions, tool removal) | Advisory prompt changes |
+| Skill never loads | Embed in command template or agent prompt | More skill injection |
+| Agent edits directly | Verify permission deny is in config | Identity framing |
 
 ---
 
-## Phase 5 — Findings synthesis
-
-Walk the data with the principles from `skills/AGENTS.md`. For each finding, recommend a concrete action.
-
-### What loaded as expected
-
-Skills with high project-normalized load rate that hit their right moments. Leave these alone.
-
-### What didn't load when it should have
-
-Sessions where a skill *should* have fired (per its description) but didn't. Three causes:
-
-1. **Description doesn't match the moment.** Fix the description.
-2. **Right primitive is wrong.** Continuous trigger → instructions file. Mode-restricted → agent permissions. (See `skills/AGENTS.md` "When something shouldn't be a skill".)
-3. **Skill doesn't earn its keep.** Delete or merge with a related skill.
-
-### What's drifted
-
-- Capabilities required but not provided.
-- External skills declared in `packages.yaml` but not installed.
-- Source skills modified but not deployed (`chezmoi apply` would fix).
-- Local integration skills where an upstream skill now exists.
-- Sessions with edits but no `task` calls — direct violation of the "always delegate" rule. Phase 1f's per-project rate surfaces the habit hotspots.
-
-### Recommendations
-
-For each issue, pick one:
-
-| Symptom | Action |
-|---|---|
-| Rule ignored despite being in AGENTS.md | Move up, simplify, or remove |
-| Skill never loads, moment clearly happens | Description tweak, or relocate to instructions |
-| Skill orchestrates other skills | Split per skill-shape rules |
-| Skill loads but the work doesn't get better | Measure quality, then redesign or delete |
-| Local integration when upstream skill exists | Switch to external skill via `gh skill install` |
-| AGENTS.md > 400 lines | Move continuous-trigger content to `instructions:` |
-| Capability dangling | Wire to a provider, or remove the requirement |
-| Sessions with edits but zero `task` calls (in parent sessions) | Topology violation — lead should never edit directly. Check if user bypassed via `@build` direct invocation. If frequent: add step limit or tighten lead permissions. |
-| High interrupt rate for a project or agent | Workflow moving too fast — add checkpoints, improve scoping, or tighten step limits |
-
-Pre-existing changes from prior audits should be re-checked: the principle "measure before refactoring" applies to every audit, not just the first.
-
----
-
-## Cadence
-
-Run `/audit` quarterly. Also run after:
-
-- Major skill additions or removals
-- A new agent type appearing (e.g. opencode adds a built-in agent)
-- A noticeable shift in project mix (different repo dominating sessions)
-- A felt sense that "something isn't firing" — measure first
-  - Agent topology changes (new agents, mode changes, permission restructure) — re-run Phase 1f to verify the violation rate drops
-
-## File locations (chezmoi)
+## File locations
 
 | Target | Source |
 |---|---|
-| `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md` |
+| `openspec/specs/*/spec.md` | Desired state — audit measures against these |
+| `~/.local/share/opencode/opencode.db` | Session data for compliance measurement |
 | `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json.tmpl` |
-| `~/.config/opencode/*.md` (instructions: files) | `dot_config/opencode/<name>.md` |
-| `~/.config/opencode/prompts/lead.md` | `dot_config/opencode/prompts/lead.md` |
-| `~/.config/opencode/prompts/plan.md` | `dot_config/opencode/prompts/plan.md` |
-| `~/.config/opencode/prompts/build.md` | `dot_config/opencode/prompts/build.md` |
-| `~/.agents/skills/*` | `skills/*` (via `run_onchange_after_sync-and-validate-skills.sh.tmpl`) |
-| `~/.config/opencode/commands/*` | `dot_config/opencode/commands/*` |
+| `~/.config/opencode/prompts/*.md` | `dot_config/opencode/prompts/*.md` |
+| `~/.config/opencode/commands/*.md` | `dot_config/opencode/commands/*.md` |
+| `~/.agents/skills/*` | `skills/*` |
 
-After changes: apply via your `machine-config` capability.
+Run `/audit` quarterly or after structural changes.
