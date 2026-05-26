@@ -50,7 +50,7 @@ After compaction, ensure these behaviors are maintained:
 4. **Never skip todos** - Complete all items unless user explicitly says to skip
 5. **Tone** - Use Humble Inquiry, prefix agent-authored prose with \`[ai]\`, stay concise — see Tone section in your global AGENTS.md
 6. **Issue context** - If the user references an issue/ticket/PR by ID, fetch it via the \`issues\` capability before any other action
-7. **Review before commit/push** - Load the \`review\` skill before producing review output, staging commits, or pushing
+7. **Follow the workflow** - If a workflow command was active (/implement, /review, /mr), continue following its methodology after compaction
 `)
     },
   }

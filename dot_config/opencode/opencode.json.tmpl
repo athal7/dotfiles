@@ -103,6 +103,14 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     },
     "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}
   },
+  {{- /*
+  Per-agent skill deny lists — blocked by sst/opencode#21793
+  (permission.skill patterns not enforced). When fixed, add to each agent:
+
+  lead:  deny review, respond-to-review (methodology embedded in /implement, /review, /mr commands)
+  plan:  deny commit, push, review, respond-to-review, qa, branching, chezmoi
+  build: deny commit, push, review, respond-to-review, qa, branching, architecture, thinking-tools
+  */ -}}
   "agent": {
     "lead": {
       "mode": "primary",
@@ -133,14 +141,6 @@ for model benchmarks — use Unsloth quants for patched chat templates.
         "write": "allow",
         "bash": {{ merge (dict "*" "allow") $globalBash | toPrettyJson | indent 8 | trim }}
       }
-    }
-  },
-  "command": {
-    "review": {
-      "description": "review changes [commit|branch|pr|staged], defaults to uncommitted",
-      "agent": "lead",
-      "subtask": true,
-      "template": "Load your `review` skill, then review the following target: $ARGUMENTS\n\nIf $ARGUMENTS is empty, review uncommitted changes. If it looks like a PR number/URL, branch name, or commit SHA, route accordingly per the skill's instructions. Apply the communication rules from your global AGENTS.md when writing findings."
     }
   },
   "model": "anthropic/claude-opus-4-6",

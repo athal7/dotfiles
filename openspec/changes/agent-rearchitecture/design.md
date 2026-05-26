@@ -65,8 +65,22 @@ Four workflow specs define the desired state:
 
 ## Decisions
 
-_Pending ecosystem research. Before making implementation decisions, need
-to understand what tools exist to address the gaps above. Key questions:_
+### Workflow commands embed methodology (implemented)
+Three commands (`/implement`, `/review`, `/mr`) contain workflow methodology
+directly in their templates, replacing the pattern of telling the agent to
+load skills. Review methodology, respond-to-review triage, and conflict
+resolution are always-loaded when the workflow is active.
+
+### Per-agent skill deny lists (blocked)
+Intended deny lists to prevent agents from loading skills outside their role:
+- **lead**: deny review, respond-to-review (embedded in commands now)
+- **plan**: deny commit, push, review, respond-to-review, qa, branching, chezmoi
+- **build**: deny commit, push, review, respond-to-review, qa, branching, architecture, thinking-tools
+
+Blocked by sst/opencode#21793 (`permission.skill` patterns not enforced).
+Track the bug; implement when fixed.
+
+### Open questions (pending research)
 
 1. _Does the opencode plugin API support checking session state (which
    skills were loaded) from a `tool.execute.before` hook?_
