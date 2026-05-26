@@ -1,7 +1,10 @@
 #!/bin/sh
-# Bootstrap any managed LaunchAgents that aren't loaded yet.
-# Runs when plist files change. Does not force-restart running agents —
-# launchd will pick up plist changes on its own, and check-error-logs watches for failures.
+# Ensure managed LaunchAgents are loaded and up-to-date.
+# Runs when plist content changes (chezmoi run_onchange + sha256 hashes below).
+# - Not loaded → bootstrap it.
+# - Already loaded → bootout + bootstrap to pick up plist changes.
+#   Exception: opencode-web gets `kickstart -k` instead, because bootout
+#   would kill the server hosting the current opencode session.
 # Hashes for change detection:
 {{- range (glob (joinPath .chezmoi.sourceDir "Library/LaunchAgents/*.plist.tmpl")) }}
 # {{ base . | trimSuffix ".tmpl" }}: {{ . | include | sha256sum }}
@@ -14,8 +17,24 @@ uid=$(id -u)
 plist="{{ $.chezmoi.homeDir }}/Library/LaunchAgents/{{ $name }}"
 if [ -f "$plist" ]; then
   label=$(defaults read "$plist" Label 2>/dev/null)
-  if [ -n "$label" ] && ! launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
-    launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null && echo "Loaded $label" || echo "WARNING: failed to load $label"
+  if [ -n "$label" ]; then
+    if launchctl print "gui/$uid/$label" >/dev/null 2>&1; then
+      # Agent is loaded — reload to pick up plist changes.
+      case "$label" in
+        *opencode-web*)
+          # kickstart -k restarts the process without unloading the service,
+          # avoiding a full outage of the server this session may depend on.
+          launchctl kickstart -k "gui/$uid/$label" 2>/dev/null && echo "Restarted $label (kickstart)" || echo "WARNING: failed to restart $label"
+          ;;
+        *)
+          launchctl bootout "gui/$uid/$label" 2>/dev/null
+          launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null && echo "Reloaded $label" || echo "WARNING: failed to reload $label"
+          ;;
+      esac
+    else
+      # Agent is not loaded — bootstrap it.
+      launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null && echo "Loaded $label" || echo "WARNING: failed to load $label"
+    fi
   fi
 fi
 {{- end }}
