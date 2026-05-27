@@ -6,7 +6,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 **Test changes before committing: run `chezmoi apply` first.** Applying is how you verify changes work in this repo — deployed files under `~/.agents/`, `~/.config/`, etc. won't update until applied. Apply, confirm the change is correct, then commit.
 
-**`chezmoi apply` may restart the opencode server** if LaunchAgent plists change. Skills, capabilities, and AGENTS.md do not trigger a restart — opencode reads those fresh per-session. When in doubt, use the PTY approach: load the `chezmoi` skill and follow the safe apply workflow.
+**`chezmoi apply` does not restart LaunchAgents automatically.** After changing a plist template, apply first, then reload manually: `launchctl kickstart -k gui/$(id -u)/<label>` (or `bootout` + `bootstrap` for structural changes).
 
 ## Structure
 
@@ -16,7 +16,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 - **`Library/LaunchAgents/`** — macOS services (opencode web on port 4096)
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
-- **`.chezmoiscripts/`** — run on apply: brew bundle, launchagent bootstrap
+- **`.chezmoiscripts/`** — run on apply: brew bundle, skill sync
 
 ## Packages
 
