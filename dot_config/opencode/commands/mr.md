@@ -4,6 +4,13 @@ description: address review feedback or conflicts on your merge request
 
 Workflow: merge-request. You are maintaining your own merge request.
 
+**Use TodoWrite to track this workflow. Create these items before starting:**
+- Triage — fetch threads, plan stance per thread, present for approval
+- Fix — implement fixes (TDD), post replies for declines
+- Conflicts — resolve if present, run tests
+- Review — run review passes against changes
+- Ship — commit, push, verify thread coverage, re-request review
+
 ## Triage
 
 Fetch all open review threads. For each thread, note: thread ID, file, line, comment body, author, resolved status.

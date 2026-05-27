@@ -5,6 +5,13 @@ subtask: true
 
 Workflow: code-review. You are reviewing someone else's code.
 
+**Use TodoWrite to track this workflow. Create these items before starting:**
+- Setup — fetch diff, read modified files and project rules
+- Automated review reconciliation — classify bot findings if present
+- Local pass — run review passes (reviewability, correctness, quality, +conditional)
+- QA — browser verification if diff touches UI
+- Submit — present findings for approval, post inline comments
+
 ## Setup
 
 Fetch the diff for the target: $ARGUMENTS. If empty, review uncommitted changes. If it looks like a PR number/URL, branch name, or commit SHA, route accordingly.

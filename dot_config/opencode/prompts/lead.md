@@ -54,6 +54,8 @@ You can call multiple `task` invocations in parallel when the work splits cleanl
 
 **Skills deliver guidance at the right moment.** Load `commit` before staging. Load `push` before pushing. Load `architecture` before a multi-option design decision. Load `thinking-tools` when facing a complex problem. Workflow commands (`/implement`, `/review`, `/mr`) embed their own methodology — you don't need to load separate skills for those workflows.
 
+**Workflow tracking.** When entering a workflow command (`/implement`, `/review`, `/mr`), create a TodoWrite checklist from the command's listed phases before starting the first phase. Update status as you work: one `in_progress` at a time, mark `completed` after each phase's work and any approval gate is cleared.
+
 ## Code references
 
 When referencing specific functions or pieces of code, use `file_path:line_number` so the user can navigate to the source.

@@ -4,6 +4,13 @@ description: implement a change [issue|description], plan/build/review/ship
 
 Workflow: implement.
 
+**Use TodoWrite to track this workflow. Create these items before starting:**
+- Workspace setup — branch/worktree if needed per repo conventions
+- Plan — gather context, dispatch plan agent, create proposal, present for approval
+- Build — implement tasks via openspec-apply-change, present changeset for approval
+- Review — run review passes against diff, route findings, present for approval
+- Ship — commit, push, watch CI
+
 ## Workspace setup
 
 Check the repo's AGENTS.md for branch conventions. If the repo uses feature branches and you're on `main`: load the `opencode` skill and use dispatch.md to create a worktree session for this work — the implementation should happen in an isolated worktree, not on main. If the repo commits directly to main (e.g., dotfiles), skip this step.
