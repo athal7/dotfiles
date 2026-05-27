@@ -16,11 +16,14 @@ Perform QA verification using Firefox DevTools browser automation.
 
 ## Session Audit Trail
 
-At the start of every run:
+At the start of every run, create the session directory and initialize the report:
 
 ```bash
 SESSION_DIR="/tmp/qa-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$SESSION_DIR"
+cat > "$SESSION_DIR/report.html" <<'HEADER'
+<html><head><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em}.step{display:flex;gap:1.5em;margin:2em 0;align-items:start}.step img{width:55%;border:1px solid #ccc;border-radius:4px;flex-shrink:0}.step .info{padding-top:.25em}.step .info h3{margin:0 0 .5em}.step .info p{margin:0 0 .5em;color:#333}.step .info a{color:#0969da;word-break:break-all}</style></head><body>
+HEADER
 ```
 
 After **every** browser action (navigate, click, fill, submit), scroll then screenshot:
@@ -28,18 +31,31 @@ After **every** browser action (navigate, click, fill, submit), scroll then scre
 - Interacted with a specific element → `evaluate_script` with `(el) => el.scrollIntoView({ block: 'center' })`, passing the element's UID as an arg
 - General page-state shot → `evaluate_script` with `() => window.scrollTo(0, 0)`
 
-Then save the screenshot:
+Save the screenshot, then capture the page URL via `evaluate_script` with `() => location.href`, then append a report section:
 
 ```
 screenshot_page saveTo="$SESSION_DIR/001-page-name.png"
 ```
 
-Number files sequentially (`001-`, `002-`, …). Use a short descriptive slug as the name.
+```bash
+cat >> "$SESSION_DIR/report.html" <<STEP
+<div class="step">
+  <img src="001-page-name.png">
+  <div class="info">
+    <h3>Short step title</h3>
+    <p>One-line description of what was verified or happened.</p>
+    <p><a href="THE_URL">THE_URL</a></p>
+  </div>
+</div>
+STEP
+```
 
-After all testing is done, generate and open the HTML report:
+Number files sequentially (`001-`, `002-`, …). Use a short descriptive slug. Substitute the actual step title, description, filename, and captured URL into each section.
+
+After all testing is done, close and open the report:
 
 ```bash
-(cd "$SESSION_DIR" && printf '<html><body style="font-family:sans-serif">' > report.html && for f in *.png; do printf '<figure style="margin:2em 0"><img src="%s" style="max-width:100%%;border:1px solid #ccc"><figcaption>%s</figcaption></figure>\n' "$f" "$f" >> report.html; done && printf '</body></html>' >> report.html && open report.html)
+printf '</body></html>' >> "$SESSION_DIR/report.html" && open "$SESSION_DIR/report.html"
 ```
 
 ## Verification
