@@ -193,7 +193,7 @@ packages:
   npm:
     homebridge_version: "1.11.4"
     ui_version: "5.21.0"
-    nest_plugin_version: "0.3.9"
+    nest_plugin_version: "0.4.1"
     ffmpeg_for_homebridge_version: "2.2.2"
 
   # mise-managed runtimes and tools

@@ -33,11 +33,26 @@ ffmpeg_path = find_ffmpeg()
 # Ensure platforms list exists
 config.setdefault("platforms", [])
 
-# Find or create the NestAccfactory platform entry
+# Find or create the NestAccfactory platform entry, migrating old config format if needed
 nest = next((p for p in config["platforms"] if p.get("platform") == "NestAccfactory"), None)
 if nest is None:
-    nest = {"platform": "NestAccfactory", "google": {"issuetoken": "", "cookie": "", "fieldTest": False}}
+    nest = {"platform": "NestAccfactory", "accounts": [
+        {"name": "Google", "type": "google", "issueToken": "", "cookie": "", "fieldTest": False}
+    ]}
     config["platforms"].insert(0, nest)
+
+# Migrate v0.3.x "google" object to v0.4.0+ "accounts" array
+if "google" in nest and "accounts" not in nest:
+    old = nest.pop("google")
+    nest["accounts"] = [
+        {
+            "name": "Google",
+            "type": "google",
+            "issueToken": old.get("issuetoken", ""),
+            "cookie": old.get("cookie", ""),
+            "fieldTest": old.get("fieldTest", False),
+        }
+    ]
 
 # Apply desired options (non-secret fields only)
 nest.setdefault("options", {})
