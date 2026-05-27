@@ -4,7 +4,7 @@ description: Investigate production issues using logs, traces, and errors — ho
 license: MIT
 ---
 
-Use this skill to investigate production problems. For query syntax, index patterns, and curl commands, consult the log query reference.
+Use this skill to investigate production problems. For query syntax, index patterns, and example queries, consult the log query reference.
 
 ## Triage process
 

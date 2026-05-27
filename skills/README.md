@@ -10,14 +10,13 @@ Integration skills self-register their provided capabilities via `provides` in f
 
 | Integration (skill) | Workflow |
 |---------------------|----------|
-| **elasticsearch** — Query ES logs, APM traces, and errors via curl | **architecture** — Architecture decisions, design prerequisite check, ADR template |
+| **elasticsearch** — Query ES logs, APM traces, and errors | **architecture** — Architecture decisions, design prerequisite check, ADR template |
 | **figma** — Read Figma files, components, variables, and projects | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
 | **gh** — GitHub CLI integration: merge requests, CI, inline comments | **chezmoi** — Manage dotfiles via chezmoi |
 | **docs** — Read/write Google Docs and Confluence | **commit** — Semantic commit format, branch naming, squashing |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
-| | **conversations** — Research people and decisions across chat, meetings, email |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **conversations** — Research people and decisions across chat, meetings, email |
 | **pty** — PTY sessions for long-running or interactive processes | **issues** — Route to Linear or GitHub Issues based on org |
-| **secrets** — Fetch credentials and API keys | **observability** — Investigate production issues using logs and traces |
+| | **observability** — Investigate production issues using logs and traces |
 | | **push** — Push approval protocol and CI watching |
 | | **qa** — Browser QA verification via Firefox DevTools |
 | | **respond-to-review** — Address review feedback on a merge request |
