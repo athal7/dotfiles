@@ -25,6 +25,7 @@ Distilled reference cards, not meeting logs. Omit any section with no informatio
     # Jane Smith
     - **Email**: jane@example.com
     - **Slack**: <@U123ABC>
+    - **GitHub**: @janesmith
     - **Title**: Engineering Lead
     - **Team**: Platform
     ## Current
@@ -39,7 +40,7 @@ Distilled reference cards, not meeting logs. Omit any section with no informatio
     - Deprecate old UI in favor of portal automation (2026-01)
     - Move analytics to PostHog (2026-04)
 
-Rules: preserve contact fields (never remove Email/Slack/Title/Team). Drop stale Current items (>2 weeks, no recent mention). Max 5 Current, max 10 Key Decisions. Use `[[Project Name]]` wikilinks in Current.
+Rules: preserve contact fields (never remove Email/Slack/GitHub/Title/Team). Drop stale Current items (>2 weeks, no recent mention). Max 5 Current, max 10 Key Decisions. Use `[[Project Name]]` wikilinks in Current.
 
 When looking up a person: read their profile first. If it has their email/Slack ID, use that directly.
 
@@ -93,7 +94,7 @@ Daily coding activity per project, with diff stats:
 
 ## Enriching profiles
 
-When you encounter new contact info (email, chat handle, title, team) from any source — calendar attendees, chat messages, email headers — update the person's profile.
+When you encounter new contact info (email, chat handle, GitHub handle, title, team) from any source — calendar attendees, chat messages, email headers, commit authors — update the person's profile.
 
 ## Searching
 - Find a person: `cat ~/.local/share/kb/people/<slug>.md`
