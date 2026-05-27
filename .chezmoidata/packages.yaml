@@ -78,6 +78,19 @@ packages:
     - name: mas
     - name: mise
     - name: neovim
+    - name: openspec
+      permissions:
+        "list*": allow
+        "status*": allow
+        "instructions*": allow
+        "show*": allow
+        "validate*": allow
+        "view*": allow
+        "schemas*": allow
+        "templates*": allow
+        "config*": allow
+        "new*": allow
+        "*": ask
     - name: openssl
     - name: opentofu
     - name: ripgrep
@@ -210,4 +223,7 @@ packages:
     - name: pipx:grip
       version: latest
     - name: pipx:skills-ref
+      command: agentskills
       version: latest
+      permissions:
+        "*": allow
