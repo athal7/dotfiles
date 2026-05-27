@@ -1,12 +1,20 @@
 ---
 name: linear
-description: Linear issue tracker — use for orgs where orgs.<org>.issues is "linear" in local.yaml
+description: Linear issue tracker — use for orgs whose `orgs.<org>.issues` is "linear" in chezmoi data
 license: MIT
 ---
 
 Endpoint: https://api.linear.app/graphql
 
-Use for work orgs. Check `git remote get-url origin`, parse the org, confirm via `orgs.<org>.issues` config.
+## Org detection
+
+Check `git remote get-url origin`, parse the GitHub org, then confirm it uses Linear:
+
+```bash
+chezmoi data --format json | jq '.orgs["<org>"].issues'
+```
+
+If the result is `"linear"`, this org tracks issues in Linear. The org config lives in `~/.local/share/chezmoi/.chezmoidata/local.yaml` under `orgs.<org>.issues`.
 
 ## Project Body
 

@@ -70,20 +70,20 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
       "commit": ["review"],
       "communication": ["knowledge-base"],
-      "confluence": ["xh", "communication"],
+      "confluence": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
       "dictation": ["knowledge-base"],
-      "elasticsearch": ["xh"],
-      "figma": ["xh"],
+      "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
+      "figma": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
       "gh": ["communication"],
 
       "gws": ["communication"],
-      "linear": ["xh", "communication"],
+      "linear": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
       "observability": ["elasticsearch"],
-      "pagerduty": ["xh"],
+      "pagerduty": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
       "push": ["commit", "gh", "branching", "linear"],
       "respond-to-review": ["gh", "push", "review", "communication"],
       "review": ["qa", "gh", "linear", "code-quality", "communication"],
-      "slack": ["xh", "communication"]
+      "slack": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"]
     }],
     "./plugins/direnv.ts"
   ],

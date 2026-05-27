@@ -50,7 +50,7 @@ A **coupling violation** is any reference in a workflow skill body (or its inclu
 
 When a skill documents a remote API, describe request and response shape — endpoints, request body structure, response field paths, gotchas. Don't embed code examples showing how to call the API or process its response. The injected HTTP client skill handles request mechanics; the agent already knows how to process JSON. CLI-flag usage (e.g., `gh --jq`) is part of the tool's own interface and is fine.
 
-Auth lines use generic `$VARIABLE` format (e.g., `$SLACK_USER_TOKEN`). Whether the variable comes from an env var, Keychain, or another source is outside the API skill's scope — the agent reads the env var at runtime.
+Authentication is handled by the injection mechanism — when the skill-inject plugin wires an API skill to the HTTP client skill, the config entry's `context` field tells the agent how to authenticate (e.g., "All requests use xh --ignore-stdin --session=agent for auth"). API skills should not include auth instructions in their body; the injection context carries that information to eliminate indirection hops.
 
 ## Don't expose machine-specific configuration
 

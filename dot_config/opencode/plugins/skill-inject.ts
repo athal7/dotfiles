@@ -34,15 +34,21 @@ function readDescription(skillName: string): string | null {
 // Injection block builder
 // ---------------------------------------------------------------------------
 
-function buildInjection(skills: string[]): string {
-  if (skills.length === 0) return ""
+type InjectionEntry = string | { skill: string; context: string }
+
+function buildInjection(entries: InjectionEntry[]): string {
+  if (entries.length === 0) return ""
   const lines: string[] = []
-  for (const name of skills) {
-    const desc = readDescription(name)
-    if (desc) {
-      lines.push(`- load \`${name}\` skill (${desc})`)
+  for (const entry of entries) {
+    if (typeof entry === "string") {
+      const desc = readDescription(entry)
+      if (desc) {
+        lines.push(`- load \`${entry}\` skill (${desc})`)
+      } else {
+        lines.push(`- load \`${entry}\` skill`)
+      }
     } else {
-      lines.push(`- load \`${name}\` skill`)
+      lines.push(`- load \`${entry.skill}\` skill — ${entry.context}`)
     }
   }
   return "\n---\n**Skills:**\n" + lines.join("\n")
@@ -53,7 +59,7 @@ function buildInjection(skills: string[]): string {
 // ---------------------------------------------------------------------------
 
 export default (async (_input, options) => {
-  const config = (options ?? {}) as Record<string, string[]>
+  const config = (options ?? {}) as Record<string, InjectionEntry[]>
 
   const pendingSkillArgs = new Map<string, Record<string, unknown>>()
 
@@ -66,7 +72,7 @@ export default (async (_input, options) => {
       return entries
         .map(
           ([skill, targets]) =>
-            `- ${skill}: ${targets.map((t) => `\`${t}\``).join(", ")}`,
+            `- ${skill}: ${targets.map((t) => typeof t === "string" ? `\`${t}\`` : `\`${t.skill}\` (${t.context})`).join(", ")}`,
         )
         .join("\n")
     },
