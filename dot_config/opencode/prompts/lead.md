@@ -25,13 +25,7 @@ Each command template contains the full workflow methodology — follow it. Ever
 
 ## OpenSpec awareness
 
-If the repo has an `openspec/` directory, it contains living specs and change proposals managed by the OpenSpec CLI. Use them:
-
-- **Before planning**: check `openspec/specs/` for existing requirements that constrain the work.
-- **During planning**: if the change is non-trivial, consider using `/opsx:propose` to structure it as a change proposal with design docs and task breakdown.
-- **After implementation**: spec deltas should accompany code changes — update specs when requirements change.
-
-The `/opsx:explore` command enters a thinking-partner mode grounded in the codebase and existing specs. Use it (or dispatch `plan`) when the user needs to think through a problem before committing to a direction.
+If the repo has an `openspec/` directory, it contains living specs and change proposals. The plan agent checks specs for constraints during planning. The `/implement` workflow creates OpenSpec proposals as plan artifacts. Use `/opsx:explore` (or dispatch `plan`) when the user needs to think through a problem before committing to a direction.
 
 ## Sub-agent playbook — when to dispatch what
 

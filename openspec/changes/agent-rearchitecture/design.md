@@ -48,6 +48,7 @@ Four workflow specs define the desired state:
 | Context gathering | Assemble relevant context before action | Advisory in lead prompt | No structural guarantee context is gathered. Agent can skip to action. |
 | Human gates | Approval at defined points | Permission ask on tool calls + advisory prompt | Permission shows command, not content. Plan approval is purely advisory. |
 | QA verification | Browser-based UI testing | Firefox DevTools MCP + qa skill | Triggering is advisory. No data on actual QA compliance. |
+| Phase sequencing | Enforce step A before step B | OpenSpec proposal gates build start; review passes embedded in command | Still advisory — no platform primitive prevents skipping. OpenSpec adds structural state but the sequence depends on the command being followed. |
 | Measurement | Know if harness is working | Manual SQL against session DB | No automated trending, alerts, or dashboards. |
 
 ### Gaps
@@ -55,7 +56,6 @@ Four workflow specs define the desired state:
 | Capability | What it does | Needed by | Current state |
 |---|---|---|---|
 | Workflow routing | Know which workflow the user wants | All | Implicit — agent infers from phrasing. No explicit entry points for code-review or merge-request workflows. |
-| Phase sequencing | Enforce step A before step B | All | Advisory only. 12 attempts have failed to solve this. No platform primitive for sequence gates. |
 | Proactive skill delivery | Push guidance based on what's happening | All | Agent-initiated only. Agent must choose to load skills. 20% non-compliance on review loading. |
 | Workflow state persistence | Track phase, approvals, findings across compaction | All | In-context only. Compaction loses workflow state. Context-log is general-purpose, not workflow-aware. |
 | Feedback loop routing | Route findings to right phase (build vs plan vs human) | Implement | Advisory. Agent tends to either fix everything locally or restart. No structured routing. |
@@ -65,11 +65,39 @@ Four workflow specs define the desired state:
 
 ## Decisions
 
-### Workflow commands embed methodology (implemented)
+### Workflow commands embed methodology (superseded)
 Three commands (`/implement`, `/review`, `/mr`) contain workflow methodology
 directly in their templates, replacing the pattern of telling the agent to
 load skills. Review methodology, respond-to-review triage, and conflict
 resolution are always-loaded when the workflow is active.
+
+Superseded by OpenSpec-integrated workflow below.
+
+### OpenSpec as mandatory workflow state (replacing linear checklist)
+
+The initial workflow commands (Attempt 13) embedded methodology as a linear
+checklist — the same phase-graph pattern that failed in Attempt 5. Measured
+across 9 sessions: review passes worked (3/3 shipped sessions ran them), but
+plan agent was never dispatched, OpenSpec was never checked, and no feedback
+loops existed. The commands told lead to do everything itself rather than
+orchestrating the existing agents and tools.
+
+The fix: `/implement` orchestrates existing pieces rather than being a
+self-contained checklist:
+
+- **Plan agent does all planning.** Lead dispatches plan with context. Plan
+  checks `openspec/specs/` for constraints, investigates the codebase, applies
+  analytical frameworks, and returns a structured recommendation. Lead never
+  plans alone.
+- **OpenSpec is mandatory, not conditional.** Every `/implement` creates an
+  OpenSpec proposal (via `openspec-propose` dispatched to build). The proposal
+  IS the plan artifact. Tasks track progress. Making it conditional gives the
+  agent a way out it will abuse — the spec says "No gate SHALL be skippable
+  regardless of perceived change triviality."
+- **Review findings route explicitly.** Build-level findings → dispatch build.
+  Plan-level findings → re-dispatch plan. Human-judgment → present and wait.
+- **CI failures route back.** Code fix → build. Approach problem → plan.
+  Flaky → re-run.
 
 ### Per-agent skill deny lists (blocked)
 Intended deny lists to prevent agents from loading skills outside their role:
@@ -89,8 +117,10 @@ Track the bug; implement when fixed.
    skill delivery, workflow state tracking?_
 4. _What do other agent harness tools (Cursor rules, Claude Code hooks,
    Windsurf, etc.) do for workflow enforcement?_
-5. _Can OpenSpec's change workflow itself serve as workflow state
-   persistence (proposal as plan artifact, tasks as progress tracker)?_
+5. ~~_Can OpenSpec's change workflow itself serve as workflow state
+   persistence (proposal as plan artifact, tasks as progress tracker)?_~~
+   **Yes — adopted.** OpenSpec proposals are mandatory plan artifacts, tasks
+   track implementation progress. See decision above.
 
 ## Risks / Trade-offs
 

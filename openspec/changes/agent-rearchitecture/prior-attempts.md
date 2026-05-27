@@ -293,6 +293,50 @@ continues.
 **Lesson:** Post-compaction injection is the right mechanism for
 re-establishing context. But it's still advisory.
 
+## Attempt 13: Workflow Commands as Linear Checklist (May 26, 2026)
+
+**Commits:** `e9921e0` (workflow commands), `b4ee7fb` (edit/write deny),
+`d8352f2` (remove compaction plugin)
+
+**What it did:** Created three file-based commands (`/implement`, `/review`,
+`/mr`) with workflow methodology embedded directly in the templates. Removed
+the compaction plugin (advisory continuation rules don't work). Added
+structural `edit: deny` and `write: deny` for the lead agent.
+
+**What it was trying to solve:** Skill loading is advisory and fails at 20%
+non-compliance. Embedding methodology in commands ensures 100% of sessions
+that invoke the command have the methodology in context.
+
+**What was measured (same day):** 9 sessions used workflow commands. Review
+passes worked — 3/3 shipped sessions ran all passes (Reviewability,
+Correctness, Code Quality) before commit. But: plan agent dispatched 0 times
+(lead did shallow context gathering itself). OpenSpec specs checked 0 times.
+OpenSpec skills loaded 0 times. No feedback loops — review findings went
+into lead's text, then straight to commit. CI failures were diagnosed but
+not routed back structurally.
+
+**Why it's insufficient:** The command flattened an iterative workflow into a
+sequential checklist — the same phase-graph pattern that failed in Attempt 5.
+The spec says "phases feed back and feed forward rather than executing in
+strict linear sequence." The command was strictly linear. The plan agent
+existed but was never invoked. OpenSpec provided exactly the workflow state
+the design.md identified as missing (question 5), but nothing wired it in.
+
+**What worked:** Embedded review methodology (100% of sessions had it,
+3/3 executed it). Structural edit/write deny on lead (lead performed 0
+direct edits post-deploy).
+
+**What didn't work:** Advisory planning phase (lead skipped plan agent).
+Conditional OpenSpec ("consider using openspec-propose" → 0% adoption).
+Linear flow (no routing of review findings or CI failures).
+
+**Lesson:** Embedding methodology in commands solves the loading problem
+(100% availability). But a linear checklist in a command template suffers
+the same failure mode as a phase-graph skill — deliberative phases get
+skipped, action phases get executed. The command should orchestrate existing
+agents and tools (plan agent, OpenSpec) rather than telling lead to do
+everything itself.
+
 ## The Pattern
 
 ```
@@ -318,6 +362,8 @@ Skill injection (auto-surface related skills)
     ↓ Surfaces references, not imperatives
 Compaction reinforcement (re-inject rules)
     ↓ Helps briefly, still advisory, still drifts
+Workflow commands (linear checklist)
+    ↓ Methodology loads 100%, but plan agent unused, OpenSpec disconnected, no feedback loops
 ```
 
 ## Measured Metrics Across Eras
