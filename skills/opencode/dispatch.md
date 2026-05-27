@@ -98,6 +98,20 @@ The session is also visible in the OpenCode web UI at `http://localhost:4096` or
 - "Review PR #123 in myapp" → **worktree sandbox** in `~/code/myapp` on the PR branch, send review prompt
 - "Fix the failing test in mylib" → **worktree sandbox**, send the fix prompt
 - "What's the last deploy status in myapp?" → standard dispatch, no branch isolation needed
+- "Implement Linear issue KEY-1234 in myapp" → **worktree sandbox** in `~/code/myapp` on a feature branch, dispatch `Workflow: implement. Linear issue KEY-1234`
+
+## Cross-repo implementation
+
+When the current workspace is not the target repo (e.g., you're in dotfiles but the issue targets `odin`): create a worktree + session in the target repo, then **dispatch the workflow command with the issue key**. Do not decompose the workflow yourself — the receiving session's plan agent runs the full `/implement` pipeline with direct codebase access.
+
+```bash
+# Create worktree, branch, and session (see above), then dispatch the command:
+curl -s --max-time 10 -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$WORKTREE" \
+  -H "Content-Type: application/json" \
+  -d '{"agent": "plan", "parts": [{"type": "text", "text": "Workflow: implement.\n\nLinear issue KEY-1234"}]}' || true
+```
+
+Anti-pattern: gathering context, exploring files, and running plan/build sub-agents from the wrong workspace. The dispatched session has the repo's AGENTS.md, skills, and file access — let it drive.
 
 ## Design principles
 
@@ -105,5 +119,6 @@ The session is also visible in the OpenCode web UI at `http://localhost:4096` or
 - **Worktree for anything branch-specific** — PRs, experiments, multi-session work on same repo
 - **Reuse over creation** — check for idle sessions first (standard dispatch only)
 - **Fire and forget** — the POST may timeout; the session is still working
+- **Dispatch the command, not the decomposition** — send `/implement` or `/review` as the prompt, not the individual steps. The receiving session runs its own workflow.
 - **One task per session** — don't queue multiple prompts into a busy session
 - **Never use `opencode run` for dispatch** — it bypasses the API, can't be reused, and runs synchronously in your shell
