@@ -4,7 +4,7 @@ When a session is paused waiting for a `question` tool response, use the `/quest
 
 ```bash
 # List all pending questions for a session's directory
-curl -s "http://localhost:4096/question?directory=<session-directory>" | jq '.'
+opencode-cmd -d "<session-directory>" questions
 # Returns: [{ "id": "que_...", "sessionID": "...", "questions": [...] }]
 ```
 
@@ -18,9 +18,7 @@ sqlite3 -json "$DB" "SELECT directory FROM session WHERE id = '<sessionID>'" | j
 ## Reply
 
 ```bash
-curl -s -X POST "http://localhost:4096/question/<que_id>/reply?directory=<session-directory>" \
-  -H "Content-Type: application/json" \
-  -d '{"answers": [["<option label or free-text>"]]}' | jq '.'
+opencode-cmd -d "<session-directory>" reply "<que_id>" "<option label or free-text>"
 # Returns: true on success
 ```
 

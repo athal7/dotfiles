@@ -31,7 +31,6 @@
 
 set -euo pipefail
 
-API="${OPENCODE_API:-http://127.0.0.1:4096}"
 DIR="${BENCH_DIR:-$(pwd)}"
 MODEL=""
 SCENARIOS="1,2,3,4,5,6"
@@ -66,8 +65,8 @@ done
 die() { echo "ERROR: $*" >&2; exit 1; }
 
 check_server() {
-  curl -sf "${API}/doc" >/dev/null 2>&1 \
-    || die "opencode-web not reachable at ${API} — is the LaunchAgent running?"
+  opencode-cmd health \
+    || die "opencode-web not reachable at ${OPENCODE_API:-http://localhost:4096} — is the LaunchAgent running?"
 }
 
 # Check that the provider's inference server is up (e.g. LM Studio on 1234).
@@ -87,70 +86,39 @@ check_inference_server() {
   fi
 }
 
-# Split "provider/modelId" into providerID and modelID
-split_model() {
-  local m="$1"
-  local provider="${m%%/*}"
-  local mid="${m#*/}"
-  [[ "$provider" == "$mid" ]] && die "model must be provider/modelID format, got '$m'"
-  echo "$provider $mid"
-}
-
 # Create a session pinned to agent + model. Echoes session id.
 create_session() {
-  local agent="$1" provider="$2" mid="$3"
-  curl -sf -X POST "${API}/session?directory=${DIR}" \
-    -H "Content-Type: application/json" \
-    -d "$(jq -n --arg a "$agent" --arg id "$mid" --arg pid "$provider" \
-      '{agent: $a, model: {id: $id, providerID: $pid}}')" \
-    | jq -r '.id'
+  local agent="$1" model="$2"
+  opencode-cmd -d "$DIR" -a "$agent" -m "$model" create
 }
 
 # Post a user message and wait for the agent to complete.
-# The message endpoint blocks until the agent is done, so a single curl with
-# --max-time = scenario_timeout is both the post and the wait. If curl exits
-# with code 28 (timeout), the scenario timed out. Otherwise it completed.
+# opencode-cmd msg blocks until the agent is done or -t timeout expires.
 # Returns 0 on completion within timeout, 1 on timeout.
 #
 # CRITICAL: must include agent + model in the message body, even though the
 # session is created with the same agent+model. Otherwise OpenCode's agent
 # config (e.g. plan: claude-opus-4-7 from opencode.json) silently overrides
 # the session pinning and runs the request on Claude instead of the local
-# model. This is what made the original bench give false PASS results.
-#
-# Schema asymmetry: session-create uses model.id, message-post uses model.modelID.
+# model. opencode-cmd handles the model.id vs model.modelID asymmetry.
 post_message_and_wait() {
-  local sid="$1" agent="$2" provider="$3" mid="$4" prompt="$5" timeout_sec="$6"
-  curl -sf --max-time "$timeout_sec" -X POST \
-    "${API}/session/${sid}/message?directory=${DIR}" \
-    -H "Content-Type: application/json" \
-    -d "$(jq -n \
-      --arg a "$agent" \
-      --arg mid "$mid" \
-      --arg pid "$provider" \
-      --arg t "$prompt" \
-      '{agent: $a, model: {modelID: $mid, providerID: $pid}, parts: [{type: "text", text: $t}]}')" \
-    -o /dev/null 2>&1
+  local sid="$1" agent="$2" model="$3" prompt="$4" timeout_sec="$5"
+  opencode-cmd -d "$DIR" -a "$agent" -m "$model" -t "$timeout_sec" msg "$sid" "$prompt" >/dev/null 2>&1
 }
 
 # Abort a session.
 abort_session() {
-  local sid="$1"
-  curl -sf -X POST "${API}/session/${sid}/abort?directory=${DIR}" \
-    >/dev/null 2>&1 || true
+  opencode-cmd -d "$DIR" abort "$1" >/dev/null 2>&1 || true
 }
 
 # Delete a session (cascade removes messages and parts).
 delete_session() {
-  local sid="$1"
-  curl -sf -X DELETE "${API}/session/${sid}?directory=${DIR}" \
-    >/dev/null 2>&1 || true
+  opencode-cmd -d "$DIR" delete "$1" >/dev/null 2>&1 || true
 }
 
 # Fetch full transcript as JSON to stdout.
 get_transcript() {
-  local sid="$1"
-  curl -sf "${API}/session/${sid}/message?directory=${DIR}"
+  opencode-cmd -d "$DIR" transcript "$1"
 }
 
 # Count tool parts in a transcript JSON file. Echoes "total completed errored xml_hits"
@@ -175,7 +143,7 @@ poll_first_tool_call() {
   end=$(( $(date +%s) + deadline_sec ))
   while [[ $(date +%s) -lt $end ]]; do
     local count
-    count=$(curl -sf "${API}/session/${sid}/message?directory=${DIR}" 2>/dev/null \
+    count=$(opencode-cmd -d "$DIR" transcript "$sid" 2>/dev/null \
       | jq '[.[].parts[]? | select(.type=="tool")] | length' 2>/dev/null || echo 0)
     if [[ "$count" -gt 0 ]]; then
       end=$(date +%s%N)
@@ -193,13 +161,12 @@ poll_first_tool_call() {
 # Echoes a result line: "PASS|FAIL <wall_ms> <details>"
 run_scenario() {
   local name="$1" agent="$2" prompt="$3" timeout_sec="$4" validator="$5"
-  local provider mid sid t_start t_end wall_ms
-  read -r provider mid <<< "$(split_model "$MODEL")"
+  local sid t_start t_end wall_ms
 
-  sid=$(create_session "$agent" "$provider" "$mid")
+  sid=$(create_session "$agent" "$MODEL")
   t_start=$(date +%s%N)
 
-  if post_message_and_wait "$sid" "$agent" "$provider" "$mid" "$prompt" "$timeout_sec"; then
+  if post_message_and_wait "$sid" "$agent" "$MODEL" "$prompt" "$timeout_sec"; then
     t_end=$(date +%s%N)
     wall_ms=$(( (t_end - t_start) / 1000000 ))
     local tf="/tmp/bench-${sid}.json"
@@ -277,18 +244,17 @@ validate_long_context() {
 # Scenario 6: first tool call observed within deadline
 # (run_scenario doesn't fit — this one polls during execution)
 run_thinking_detector() {
-  local provider mid sid t_start
-  read -r provider mid <<< "$(split_model "$MODEL")"
-  sid=$(create_session "plan" "$provider" "$mid")
+  local sid t_start
+  sid=$(create_session "plan" "$MODEL")
   t_start=$(date +%s%N)
 
   # Run the message POST in background so we can poll concurrently
-  ( post_message_and_wait "$sid" "plan" "$provider" "$mid" "What files are in dot_config/opencode/?" 60 ) &
+  ( post_message_and_wait "$sid" "plan" "$MODEL" "What files are in dot_config/opencode/?" 60 ) &
   local bg_pid=$!
 
   local result
   if result=$(poll_first_tool_call "$sid" 240); then
-    # Tool fired in time. Wait for the bg curl to finish (agent completes).
+    # Tool fired in time. Wait for the background message to finish.
     wait "$bg_pid" 2>/dev/null
     local verdict="PASS first-tool=${result}ms"
     [[ "$KEEP" -eq 0 ]] && delete_session "$sid"
@@ -336,7 +302,7 @@ cat > "$OUT" <<EOF
 # bench-opencode — $(date '+%Y-%m-%d %H:%M:%S')
 
 **Model:** \`$MODEL\`
-**API:** \`$API\`
+**API:** \`${OPENCODE_API:-http://localhost:4096}\`
 **Working directory:** \`$DIR\`
 
 ## Results

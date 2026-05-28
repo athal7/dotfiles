@@ -1,0 +1,212 @@
+#!/bin/sh
+# opencode-cmd — CLI wrapper for the opencode HTTP API
+# Uses xh + jq to manage sessions, send messages, and query state.
+
+set -e
+
+API="${OPENCODE_API:-http://localhost:4096}"
+DIR="${OPENCODE_DIR:-$(pwd)}"
+TIMEOUT=10
+AGENT=""
+MODEL=""
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: opencode-cmd [OPTIONS] COMMAND [ARGS...]
+
+Options:
+  -d DIR        Working directory (default: $OPENCODE_DIR or current dir)
+  -t SECS       Timeout in seconds (default: 10)
+  -a AGENT      Agent name (e.g. plan, build)
+  -m PROV/MODEL Model in provider/modelID format
+
+Commands:
+  send TEXT            Create session + send message (fire-and-forget)
+  create               Create session, print session ID
+  list                 List sessions for directory (JSON)
+  status [ID]          Session status (JSON). Without ID: all statuses.
+  msg ID TEXT          Send message to existing session
+  transcript ID        Get transcript (JSON)
+  abort ID             Abort a running session
+  delete ID            Delete session
+  worktree BRANCH      Create worktree, print directory path
+  questions            List pending questions (JSON)
+  reply QID ANSWER     Answer a pending question
+  health               Exit 0 if server reachable, 1 otherwise
+EOF
+  exit 1
+}
+
+die() { printf 'opencode-cmd: %s\n' "$1" >&2; exit 1; }
+
+# ── Model parsing ────────────────────────────────────────────────────────────
+
+# Split "provider/modelID" into PROVIDER and MODEL_ID globals.
+split_model() {
+  PROVIDER="${MODEL%%/*}"
+  MODEL_ID="${MODEL#*/}"
+  [ -n "$PROVIDER" ] && [ -n "$MODEL_ID" ] && [ "$PROVIDER" != "$MODEL" ] \
+    || die "invalid model format: '$MODEL' (expected provider/modelID)"
+}
+
+# ── Body builders ────────────────────────────────────────────────────────────
+# Build JSON bodies incrementally via piped jq calls. This avoids
+# word-splitting issues with dynamic --arg lists in POSIX sh.
+
+# Build JSON body for session creation.
+# Session create uses model.id (not model.modelID).
+build_create_body() {
+  body='{}'
+  if [ -n "$AGENT" ]; then
+    body=$(printf '%s' "$body" | jq --arg agent "$AGENT" '. + {agent: $agent}')
+  fi
+  if [ -n "$MODEL" ]; then
+    split_model
+    body=$(printf '%s' "$body" | jq \
+      --arg mid "$MODEL_ID" --arg prov "$PROVIDER" \
+      '. + {model: {id: $mid, providerID: $prov}}')
+  fi
+  printf '%s' "$body"
+}
+
+# Build JSON body for sending a message.
+# Message send uses model.modelID (API asymmetry with session create).
+build_msg_body() {
+  text="$1"
+  body=$(jq -n --arg text "$text" '{parts: [{type: "text", text: $text}]}')
+  if [ -n "$AGENT" ]; then
+    body=$(printf '%s' "$body" | jq --arg agent "$AGENT" '. + {agent: $agent}')
+  fi
+  if [ -n "$MODEL" ]; then
+    split_model
+    body=$(printf '%s' "$body" | jq \
+      --arg mid "$MODEL_ID" --arg prov "$PROVIDER" \
+      '. + {model: {modelID: $mid, providerID: $prov}}')
+  fi
+  printf '%s' "$body"
+}
+
+# ── Option parsing ───────────────────────────────────────────────────────────
+
+while getopts "d:t:a:m:" opt; do
+  case "$opt" in
+    d) DIR="$OPTARG" ;;
+    t) TIMEOUT="$OPTARG" ;;
+    a) AGENT="$OPTARG" ;;
+    m) MODEL="$OPTARG" ;;
+    *) usage ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+[ $# -ge 1 ] || usage
+CMD="$1"; shift
+
+# ── Command dispatch ─────────────────────────────────────────────────────────
+
+case "$CMD" in
+
+  # ── send: create session + fire message ──────────────────────────────────
+  send)
+    [ $# -ge 1 ] || die "send requires TEXT argument"
+    TEXT="$*"
+
+    BODY=$(build_create_body)
+    RESP=$(printf '%s' "$BODY" | xh --ignore-stdin POST "${API}/session" "directory==${DIR}" 2>/dev/null) \
+      || die "failed to create session"
+    SID=$(printf '%s' "$RESP" | jq -r '.id') || die "failed to parse session id"
+    [ -n "$SID" ] && [ "$SID" != "null" ] || die "session id is empty"
+
+    MSG_BODY=$(build_msg_body "$TEXT")
+    printf '%s' "$MSG_BODY" \
+      | xh --ignore-stdin --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}" \
+        >/dev/null 2>&1 || true
+
+    printf '%s\n' "$SID"
+    ;;
+
+  # ── create: new session ──────────────────────────────────────────────────
+  create)
+    BODY=$(build_create_body)
+    printf '%s' "$BODY" \
+      | xh --ignore-stdin POST "${API}/session" "directory==${DIR}" \
+      | jq -r '.id'
+    ;;
+
+  # ── list: sessions for directory ─────────────────────────────────────────
+  list)
+    xh --ignore-stdin GET "${API}/session" "directory==${DIR}" "roots==true"
+    ;;
+
+  # ── status: session status ───────────────────────────────────────────────
+  status)
+    if [ $# -ge 1 ]; then
+      xh --ignore-stdin GET "${API}/session/status" \
+        | jq --arg id "$1" '.[$id]'
+    else
+      xh --ignore-stdin GET "${API}/session/status"
+    fi
+    ;;
+
+  # ── msg: send message to session ─────────────────────────────────────────
+  msg)
+    [ $# -ge 2 ] || die "msg requires ID and TEXT arguments"
+    SID="$1"; shift
+    TEXT="$*"
+
+    BODY=$(build_msg_body "$TEXT")
+    printf '%s' "$BODY" \
+      | xh --ignore-stdin --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}"
+    ;;
+
+  # ── transcript: get session messages ─────────────────────────────────────
+  transcript)
+    [ $# -ge 1 ] || die "transcript requires ID argument"
+    xh --ignore-stdin GET "${API}/session/$1/message" "directory==${DIR}"
+    ;;
+
+  # ── abort: abort running session ─────────────────────────────────────────
+  abort)
+    [ $# -ge 1 ] || die "abort requires ID argument"
+    xh --ignore-stdin POST "${API}/session/$1/abort" "directory==${DIR}"
+    ;;
+
+  # ── delete: remove session ───────────────────────────────────────────────
+  delete)
+    [ $# -ge 1 ] || die "delete requires ID argument"
+    xh --ignore-stdin DELETE "${API}/session/$1" "directory==${DIR}"
+    ;;
+
+  # ── worktree: create git worktree ────────────────────────────────────────
+  worktree)
+    [ $# -ge 1 ] || die "worktree requires BRANCH argument"
+    BODY=$(jq -n --arg name "$1" '{"name": $name}')
+    printf '%s' "$BODY" \
+      | xh --ignore-stdin POST "${API}/experimental/worktree" "directory==${DIR}" \
+      | jq -r '.directory'
+    ;;
+
+  # ── questions: list pending questions ────────────────────────────────────
+  questions)
+    xh --ignore-stdin GET "${API}/question" "directory==${DIR}"
+    ;;
+
+  # ── reply: answer a pending question ─────────────────────────────────────
+  reply)
+    [ $# -ge 2 ] || die "reply requires QID and ANSWER arguments"
+    QID="$1"; shift
+    ANSWER="$*"
+    BODY=$(jq -n --arg answer "$ANSWER" '{"answers": [[$answer]]}')
+    printf '%s' "$BODY" \
+      | xh --ignore-stdin POST "${API}/question/${QID}/reply" "directory==${DIR}"
+    ;;
+
+  # ── health: check server reachability ────────────────────────────────────
+  health)
+    xh --ignore-stdin GET "${API}/doc" >/dev/null 2>&1
+    ;;
+
+  *)
+    die "unknown command: $CMD"
+    ;;
+esac

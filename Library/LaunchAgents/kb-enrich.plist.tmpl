@@ -6,18 +6,11 @@
     <string>com.{{ .chezmoi.username }}.kb-enrich</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/sh</string>
-        <string>-c</string>
-        <string>
-REPO_DIR="{{ .chezmoi.homeDir }}/code/dotfiles"
-SESSION_ID=$(/usr/bin/curl -s -X POST "http://localhost:4096/session?directory=$REPO_DIR" \
-  -H "Content-Type: application/json" -d '{}' \
-  | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
-[ -z "$SESSION_ID" ] &amp;&amp; exit 1
-/usr/bin/curl -s --max-time 10 -X POST "http://localhost:4096/session/$SESSION_ID/message?directory=$REPO_DIR" \
-  -H "Content-Type: application/json" \
-  -d '{"parts": [{"type": "text", "text": "Run the daily knowledge base enrichment for yesterday. Check activity across sources: opencode coding sessions, slack chat, zoom meeting transcripts, linear issues, and gh code reviews. Extract people facts, project updates, and decisions. Write a journal entry. Merge into knowledge-base profiles. Extract action items from activity from yesterday. Cross-reference within the same activity data — if the activity shows you already took the action (replied to the thread, reviewed the PR, closed the issue), skip the reminder. Only create reminders for items that were not resolved within the same day's activity. Finally, load the dictation skill and sync the knowledge base vocabulary to the macOS dictation dictionary. Do not extract or store health information, compensation details, performance evaluations, legal or attorney-client privileged content, or content from HR-related discussions."}]}' || true
-        </string>
+        <string>{{ .chezmoi.homeDir }}/.local/bin/opencode-cmd</string>
+        <string>-d</string>
+        <string>{{ .chezmoi.homeDir }}/code/dotfiles</string>
+        <string>send</string>
+        <string>/kb-enrich</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
@@ -26,11 +19,14 @@ SESSION_ID=$(/usr/bin/curl -s -X POST "http://localhost:4096/session?directory=$
         <key>Minute</key>
         <integer>0</integer>
     </dict>
-    <key>LimitLoadToSessionType</key>
-    <string>Aqua</string>
     <key>StandardOutPath</key>
     <string>/dev/null</string>
     <key>StandardErrorPath</key>
     <string>{{ .chezmoi.homeDir }}/Library/Logs/kb-enrich.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
 </dict>
 </plist>
