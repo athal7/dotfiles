@@ -7,6 +7,12 @@ set -eu
 
 SESSION_DIR="$HOME/.config/xh/sessions"
 
+# Prune stale per-service session files from the pre-template naming scheme.
+# Only agent.json is canonical; remove world-readable leftovers like slack.json.
+if [ -d "$SESSION_DIR" ]; then
+  find "$SESSION_DIR" -type f -name '*.json' ! -name 'agent.json' -delete
+fi
+
 fetch_secret() {
   security find-generic-password -s chezmoi -a "$1" -w 2>/dev/null
 }

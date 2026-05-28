@@ -26,6 +26,8 @@ Always use `--ignore-stdin` in agent/non-TTY contexts. Without it, xh tries to r
 
 Sessions are pre-configured per host at `chezmoi apply` time. `--session=agent` resolves the correct credentials for each host automatically.
 
+Never pass an `Authorization:` header or a `$*_API_KEY` value — the session already carries the credentials for the host.
+
 If a request returns 401, the session may be stale — re-run `chezmoi apply` to refresh.
 
 ## GraphQL
