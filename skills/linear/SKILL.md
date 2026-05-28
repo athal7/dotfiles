@@ -18,7 +18,7 @@ If the result is `"linear"`, this org tracks issues in Linear. The org config li
 
 ## Project Body
 
-The project body is `documentContent.content` — not the legacy `description` field. Write via `projectUpdate` with the `content` field. `documentCreate` with `projectId` creates an attached document (Documents tab) — not the inline body. The UI may need a hard refresh after writes.
+The project body is the `content` field (markdown) on `projectCreate` / `projectUpdate` mutations — not the legacy `description` field (short summary). `documentCreate` with `projectId` creates an attached document (Documents tab) — not the inline body.
 
 ## Templates
 
@@ -41,3 +41,15 @@ mutation($input: ProjectMilestoneCreateInput!) {
 }
 # input: { name, projectId, sortOrder }
 ```
+
+## Project Comments vs Updates
+
+`projectUpdateCreate` creates a formal status update (Activity tab). `commentCreate` with `projectId` creates a discussion comment. These are different things — users will correct you if you use the wrong one.
+
+## Comments
+
+`commentCreate` accepts multiple parent fields (`issueId`, `projectId`, `projectUpdateId`, `documentContentId`, `postId`) but only include the one you're using. Passing `null` for unused parent fields causes "missing parent entity" even if another valid parent is set.
+
+## Project Status Field
+
+Query project status with `status { name }`, not `state { name }`. The `state` field is a plain `String!` — using a selection set on it returns a 400 validation error.
