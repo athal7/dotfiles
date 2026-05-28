@@ -149,6 +149,10 @@ packages:
       path: opencode
       executable: true
       refresh_period: 24h
+      permissions:
+        "session *": allow
+        "export *": allow
+        "*": ask
 
     - name: opencode-desktop
       repo: sst/opencode
