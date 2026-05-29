@@ -27,6 +27,8 @@ External skills (installed via `gh skill install` from upstream maintainers) —
 
 - **ical-cli** ([BRO3886/ical](https://github.com/BRO3886/ical)) — macOS Calendar from the terminal
 
+The `openspec` CLI generates its skills (`openspec-explore`, `openspec-propose`, `openspec-apply-change`, `openspec-archive-change`) project-locally into `.opencode/skills/`. The skill-sync script mirrors them into the global skill dir so they're available outside this repo, version-matched to the installed CLI. Skills only — openspec slash-commands are not mirrored.
+
 ## Beyond skills
 
 Some workflow content uses different primitives — see `skills/AGENTS.md` for when to pick which.

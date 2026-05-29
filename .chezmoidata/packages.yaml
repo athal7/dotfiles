@@ -188,10 +188,15 @@ packages:
         "show*": allow
         "*": ask
 
-  # agent skills installed via gh skill install
+  # Non-authored skills synced into the global skill dir. Two entry shapes:
+  #   - remote: { repo, skill }   → fetched via `gh skill install`
+  #   - local:  { source, match } → mirrored from a project dir (skills a CLI
+  #     like openspec generates project-locally; `match` globs the dir names)
   skills:
     - repo: BRO3886/ical
       skill: ical-cli
+    - source: .opencode/skills
+      match: openspec-*
 
   # npm-managed global packages
   npm:

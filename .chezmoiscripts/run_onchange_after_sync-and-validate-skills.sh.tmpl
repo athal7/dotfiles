@@ -9,7 +9,16 @@
 {{- end }}
 # gh_skills: {{ .packages.skills | toJson | sha256sum }}
 {{- range .packages.skills }}
+{{- if hasKey . "repo" }}
 # external-present: {{ .skill }}={{ if (joinPath (env "HOME") ".agents/skills" .skill "SKILL.md" | stat) }}1{{ else }}0{{ end }}
+{{- end }}
+{{- if hasKey . "source" }}
+{{- range (glob (joinPath $.chezmoi.sourceDir .source .match "**/*")) }}
+{{- if not (stat .).isDir }}
+# local-skill-file: {{ . | include | sha256sum }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 SKILLS_SRC="{{ .chezmoi.sourceDir }}/skills"
@@ -24,13 +33,33 @@ mkdir -p "$SKILLS_DEST"
 cp -r "$SKILLS_SRC"/. "$SKILLS_DEST/"
 rm -f "$SKILLS_DEST/AGENTS.md" "$SKILLS_DEST/README.md"
 
+# Mirror locally-generated skills (declared in packages.yaml `skills` with a
+# `source`) into the global skill dir so they're available outside their
+# originating project. These come from external CLIs that only generate skills
+# project-locally; copying their output keeps them version-matched to the CLI.
+# Skips gracefully when a source dir is absent (e.g. fresh machine).
+{{- range .packages.skills }}
+{{- if hasKey . "source" }}
+LOCAL_SKILLS_SRC="{{ $.chezmoi.sourceDir }}/{{ .source }}"
+if [ -d "$LOCAL_SKILLS_SRC" ]; then
+  for skill_dir in "$LOCAL_SKILLS_SRC"/{{ .match }}/; do
+    [ -d "$skill_dir" ] || continue
+    cp -r "${skill_dir%/}" "$SKILLS_DEST/"
+    echo "mirrored local skill: $(basename "$skill_dir")"
+  done
+fi
+{{- end }}
+{{- end }}
+
 # Install external skills via gh skill install
 # stdin redirected from /dev/null so gh detects non-interactive mode;
 # --agent opencode prevents the "select target agent" prompt.
 {{ range .packages.skills -}}
+{{- if hasKey . "repo" }}
 echo "installing {{ .skill }} from {{ .repo }}..."
 gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode --force < /dev/null
 {{ end -}}
+{{- end }}
 
 # agentskills validate — checks spec compliance for local skills
 if ! command -v agentskills >/dev/null 2>&1; then
