@@ -19,8 +19,7 @@ Integration skills self-register their provided capabilities via `provides` in f
 | | **observability** — Investigate production issues using logs and traces |
 | | **push** — Push approval protocol and CI watching |
 | | **qa** — Browser QA verification via Firefox DevTools |
-| | **respond-to-review** — Address review feedback on a merge request |
-| | **review** — Review changes: commit, branch, merge request, or staged |
+| | **review** — Self-review your own diff before committing or pushing |
 | | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
 | | **thinking-tools** — Structured frameworks for decisions and problem framing |
 

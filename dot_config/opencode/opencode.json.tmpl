@@ -91,8 +91,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "observability": ["elasticsearch"],
       "pagerduty": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
       "push": ["commit", "gh", "branching", "linear"],
-      "respond-to-review": ["gh", "push", "review", "communication"],
-      "review": ["qa", "gh", "linear", "code-quality", "communication"],
+      "review": ["qa", "code-quality"],
       "slack": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"]
     }]
   ],
@@ -114,9 +113,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   Per-agent skill deny lists — blocked by sst/opencode#21793
   (permission.skill patterns not enforced). When fixed, add to each agent:
 
-  lead:  deny review, respond-to-review (methodology embedded in /implement, /review, /mr commands)
-  plan:  deny commit, push, review, respond-to-review, qa, branching, chezmoi
-  build: deny commit, push, review, respond-to-review, qa, branching, architecture, thinking-tools
+  plan:  deny commit, push, review, qa, branching, chezmoi
+  build: deny commit, push, review, qa, branching, architecture, thinking-tools
   */ -}}
   "agent": {
     "lead": {

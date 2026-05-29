@@ -1,42 +1,17 @@
 ---
 name: review
-description: Load before every commit, push, or merge-request finalization — also use to review someone else's branch or merge request with inline comments and approval. Verifies your own work before shipping; routes by target [commit|branch|merge-request|staged].
+description: Self-review your own diff before committing or pushing — multi-pass review of the changes you're about to ship.
 license: MIT
 compatibility: opencode
 ---
 
 ## Setup
 
-Fetch the diff for the requested scope (commit hash, branch, staged, or code review request). Read modified files for full context; skip generated files, lock files, vendored code.
+Fetch the diff for your changes — staged, uncommitted, or a commit or branch you're about to push. Read modified files for full context; skip generated files, lock files, vendored code.
 
 Read project rules: `AGENTS.md` (root + nested), `CONVENTIONS.md`, `REVIEW.md`, `CONTRIBUTING.md`, plus `docs/` development guides. `REVIEW.md` overrides everything else.
 
-Fetch issue context — parse branch name and code review request body for issue IDs, fetch acceptance criteria.
-
-## Reconcile automated review (when a code review request exists)
-
-Automated review (e.g., GitHub Copilot) does not trigger automatically and is not needed when human reviews are present.
-
-When automated review **has** run (check for existing bot comments):
-- Per-finding, classify as `addressed | dismissed-with-reasoning | pending | moved-but-still-true`.
-- Treat pending and moved-but-still-true findings as required input to the next path.
-
-When it has not run or only human reviews exist, skip this section.
-
-## Two paths
-
-### Reviewing your code (your own commits, branch, or your own merge request)
-
-1. If automated review surfaced findings, fix pending and moved-but-still-true findings via TDD before proceeding.
-2. **Run the local pass** (below).
-
-### Reviewing theirs (someone else's code review request)
-
-Your contribution is reviewer judgment, not a duplicate AI pass. **Posting AI-generated findings as your own is dishonest** when an embedded automated reviewer is already on the request.
-
-1. If automated review ran, add inline replies that agree, disagree, or expand on bot findings — don't open new threads duplicating them.
-2. **Run the local pass** (below) but only post issues genuinely caught yourself, plus `moved-but-still-true` cases where the bot's original comment is gone but the concern remains.
-3. **Add reviewer judgment**: verdict, acceptance-criteria coverage, QA observations.
+If the work is linked to an issue, fetch its acceptance criteria for the correctness pass.
 
 ## Local pass
 
@@ -44,34 +19,30 @@ Run these against the diff in order, treating each as a distinct lens. Write fin
 
 **Always run:**
 
-1. **Reviewability** — can a human reviewer understand and confidently approve this diff? Check for:
-   - Unrelated changes (refactors, dep bumps, formatting fixes) mixed into the diff → split into a separate commit, branch, or PR
+1. **Reviewability** — could a human understand and confidently approve this diff? Check for:
+   - Unrelated changes (refactors, dep bumps, formatting fixes) mixed in → split into a separate commit
    - Whitespace-only or formatting-only hunks with no semantic content → drop or isolate
-   - Large single commits that could be decomposed into logical steps without losing safety → suggest split points
-   - Diff noise that obscures intent (e.g. indentation reflow, import reordering mixed with logic) → separate
-   If any issues found, list the specific files/hunks and the recommended action (drop, stage separately, squash, etc.) before proceeding with other passes.
-2. **Correctness** — does behavior match intent and the issue's acceptance criteria? See `specialists/correctness.md`.
+   - Large single commits that could decompose into logical steps without losing safety → suggest split points
+   - Diff noise that obscures intent (indentation reflow, import reordering mixed with logic) → separate
+   If any issues found, list the specific files/hunks and the recommended action (drop, stage separately, squash) before proceeding.
+2. **Correctness** — does behavior match intent and, if linked, the issue's acceptance criteria? Check edge cases, error paths, and off-by-one boundaries.
 3. **Code quality** — apply code-quality rules. Follow the pre-existing-pattern rule.
 
 **Conditional (run if the diff touches the trigger):**
 
-3. **Security** — when auth, params, sessions, encryption, CORS, env config, or dependencies appear. Trace input paths end-to-end.
-4. **Performance** — when DB queries, associations, loops, batch jobs, view collections, or migrations appear. Check N+1, missing indexes, unbounded collections.
+4. **Security** — when auth, params, sessions, encryption, CORS, env config, or dependencies appear. Trace input paths end-to-end.
+5. **Performance** — when DB queries, associations, loops, batch jobs, view collections, or migrations appear. Check N+1, missing indexes, unbounded collections.
 
-When in doubt, run the conditional pass. For deeper guidance, see `specialists/` and `verify-findings.md`.
+When in doubt, run the conditional pass.
 
-After all passes: deduplicate findings, verify each by attempting to disprove it (read surrounding code, check version-control history for pre-existing issues, confirm `file:line` is in the diff). Default is keep — discard only on positive disproof.
+After all passes: deduplicate findings, then verify each by attempting to disprove it (read surrounding code, check version-control history for pre-existing issues, confirm `file:line` is in the diff). Default is keep — discard only on positive disproof.
 
 ## QA when UI is touched
 
-If the diff modifies views, templates, controllers, frontend code, or UI interactions: spawn the project's dev server in the background (auto-detect from `package.json` scripts.dev/start, then `Procfile` web entry, then `Makefile` dev/serve/start target, then `README.md` getting-started block). Wait up to 15 s for ready signal. Run QA verification with the changed flows. Kill the server when done.
+When the diff touches views, templates, frontend code, or UI interactions: spawn the project's dev server in the background (auto-detect from `package.json` scripts.dev/start, then `Procfile` web entry, then `Makefile` dev/serve/start target, then `README.md` getting-started block). Wait up to 15 s for the ready signal. Run QA verification on the changed flows. Kill the server when done. Include results under `## QA Results`.
 
-Always attempt for code review requests; only when UI is touched for commit/branch/staged. Include results under `## QA Results`.
+## Apply findings
 
-## Submit
-
-Post findings as inline comments on the code review request — do not include verdict, TL;DR, or summaries in the submitted body (those are session output only). Exception: a review-wide observation that genuinely cannot be attributed to any line.
-
-When a code review request has reviews and merge conflicts, use merge (not rebase) — rebasing invalidates existing inline comments.
+This is your own work — there's no audience to triage for. Apply every finding, then re-run the review. Iterate until the verdict is APPROVE; do not wait for input between iterations. Once APPROVE, proceed to commit.
 
 See `output-format.md` for the output template.
