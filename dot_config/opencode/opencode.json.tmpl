@@ -76,7 +76,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     "hostname": "127.0.0.1"
   },
   "plugin": [
-    ["./plugins/skill-inject.ts", {
+    ["./lib/skill-inject.ts", {
       "architecture": ["gh", "linear", "code-quality"],
       "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
       "commit": ["review"],
@@ -94,8 +94,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "respond-to-review": ["gh", "push", "review", "communication"],
       "review": ["qa", "gh", "linear", "code-quality", "communication"],
       "slack": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"]
-    }],
-    "./plugins/direnv.ts"
+    }]
   ],
   "permission": {
     "skill": "allow",

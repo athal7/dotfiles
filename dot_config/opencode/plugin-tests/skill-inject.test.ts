@@ -32,21 +32,29 @@ function parseDescription(content: string): string | null {
 
 // ---------------------------------------------------------------------------
 // Extracted: buildInjection
-// Takes skill names and a description resolver (injected for testability).
+// Takes injection entries and a description resolver (injected for testability).
+// A string entry triggers a description lookup; an object entry carries its own
+// context verbatim with an em-dash separator (no lookup).
 // ---------------------------------------------------------------------------
 
+type InjectionEntry = string | { skill: string; context: string }
+
 function buildInjection(
-  skills: string[],
+  entries: InjectionEntry[],
   descriptionOf: (name: string) => string | null,
 ): string {
-  if (skills.length === 0) return ""
+  if (entries.length === 0) return ""
   const lines: string[] = []
-  for (const name of skills) {
-    const desc = descriptionOf(name)
-    if (desc) {
-      lines.push(`- load \`${name}\` skill (${desc})`)
+  for (const entry of entries) {
+    if (typeof entry === "string") {
+      const desc = descriptionOf(entry)
+      if (desc) {
+        lines.push(`- load \`${entry}\` skill (${desc})`)
+      } else {
+        lines.push(`- load \`${entry}\` skill`)
+      }
     } else {
-      lines.push(`- load \`${name}\` skill`)
+      lines.push(`- load \`${entry.skill}\` skill — ${entry.context}`)
     }
   }
   return "\n---\n**Skills:**\n" + lines.join("\n")
@@ -54,14 +62,18 @@ function buildInjection(
 
 // ---------------------------------------------------------------------------
 // Extracted: formatInjectList
-// Formats the config for the inject_list tool output.
+// Formats the config for the inject_list tool output. String targets render as
+// a bare backtick-quoted name; object targets render as `skill` (context).
 // ---------------------------------------------------------------------------
 
-function formatInjectList(config: Record<string, string[]>): string {
+function formatInjectList(config: Record<string, InjectionEntry[]>): string {
   const entries = Object.entries(config)
   if (entries.length === 0) return "(no injection mappings configured)"
   return entries
-    .map(([skill, targets]) => `- ${skill}: ${targets.map((t) => `\`${t}\``).join(", ")}`)
+    .map(
+      ([skill, targets]) =>
+        `- ${skill}: ${targets.map((t) => (typeof t === "string" ? `\`${t}\`` : `\`${t.skill}\` (${t.context})`)).join(", ")}`,
+    )
     .join("\n")
 }
 
@@ -158,6 +170,39 @@ describe("buildInjection — multiple skills", () => {
   })
 })
 
+describe("buildInjection — object entry", () => {
+  it("emits an em-dash context line without a description lookup", () => {
+    let lookups = 0
+    const result = buildInjection(
+      [{ skill: "xh", context: "All requests use xh --ignore-stdin --session=agent for auth" }],
+      () => {
+        lookups++
+        return "should not be used"
+      },
+    )
+    expect(result).toContain(
+      "- load `xh` skill — All requests use xh --ignore-stdin --session=agent for auth",
+    )
+    // Object entries carry their own context; no description resolver call.
+    expect(lookups).toBe(0)
+  })
+})
+
+describe("buildInjection — mixed string and object entries", () => {
+  it("emits both line styles in order", () => {
+    const result = buildInjection(
+      ["communication", { skill: "xh", context: "use --session=agent for auth" }],
+      (n) => (n === "communication" ? "Communication style" : null),
+    )
+    expect(result).toContain("- load `communication` skill (Communication style)")
+    expect(result).toContain("- load `xh` skill — use --session=agent for auth")
+    // Verify order: the string entry precedes the object entry.
+    const commIdx = result.indexOf("`communication`")
+    const xhIdx = result.indexOf("`xh`")
+    expect(commIdx).toBeLessThan(xhIdx)
+  })
+})
+
 describe("buildInjection — format validation", () => {
   it("starts with newline-separator-header sequence", () => {
     const result = buildInjection(["gh"], () => "GitHub CLI")
@@ -192,5 +237,12 @@ describe("formatInjectList — output format", () => {
   it("handles a single-skill mapping", () => {
     const result = formatInjectList({ review: ["qa"] })
     expect(result).toBe("- review: `qa`")
+  })
+
+  it("renders an object entry as `skill` (context)", () => {
+    const result = formatInjectList({
+      confluence: [{ skill: "xh", context: "use --session=agent for auth" }, "communication"],
+    })
+    expect(result).toBe("- confluence: `xh` (use --session=agent for auth), `communication`")
   })
 })
