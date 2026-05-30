@@ -14,18 +14,18 @@ packages:
     - name: autojump
     - name: bat
       permissions:
-        "*": allow
+        "bat *": allow
     - name: chezmoi
       permissions:
-        "cat*": allow
-        "verify*": allow
-        "diff*": allow
-        "data*": allow
-        "status*": allow
-        "managed*": allow
-        "execute-template*": allow
-        "source-path*": allow
-        "*": ask
+        "chezmoi cat*": allow
+        "chezmoi verify*": allow
+        "chezmoi diff*": allow
+        "chezmoi data*": allow
+        "chezmoi status*": allow
+        "chezmoi managed*": allow
+        "chezmoi execute-template*": allow
+        "chezmoi source-path*": allow
+        "chezmoi *": ask
     - name: colima
     - name: direnv
     - name: docker
@@ -33,46 +33,51 @@ packages:
     - name: ffmpeg
     - name: git
       permissions:
-        "log*": allow
-        "diff*": allow
-        "show*": allow
-        "status*": allow
-        "blame*": allow
-        "reflog*": allow
-        "shortlog*": allow
-        "rev-parse*": allow
-        "merge-base*": allow
-        "for-each-ref*": allow
-        "ls-*": allow
-        "cat-file*": allow
-        "name-rev*": allow
-        "symbolic-ref*": allow
-        "* list*": allow
-        "* show*": allow
-        "branch*": allow
-        "tag -l*": allow
-        "config*": allow
-        "stack-*": allow
-        "checkout*": allow
-        "fetch*": allow
-        "*": ask
+        "git log*": allow
+        "git diff*": allow
+        "git show*": allow
+        "git status*": allow
+        "git blame*": allow
+        "git reflog*": allow
+        "git shortlog*": allow
+        "git rev-parse*": allow
+        "git merge-base*": allow
+        "git for-each-ref*": allow
+        "git ls-*": allow
+        "git cat-file*": allow
+        "git name-rev*": allow
+        "git symbolic-ref*": allow
+        "git * list*": allow
+        "git * show*": allow
+        "git branch*": allow
+        "git tag -l*": allow
+        "git config*": allow
+        "git stack-*": allow
+        "git checkout*": allow
+        "git fetch*": allow
+        "git stash*": allow
+        "git reset --soft*": allow
+        "git reset --mixed*": allow
+        "git reset HEAD*": allow
+        "git restore --staged*": allow
+        "git *": ask
     - name: gh
       permissions:
-        "* list*": allow
-        "* view*": allow
-        "* diff*": allow
-        "* checks*": allow
-        "* status*": allow
-        "search*": allow
-        "api -X GET *": allow
-        "api graphql*mutation*": ask
-        "api graphql*": allow
-        "*": ask
+        "gh * list*": allow
+        "gh * view*": allow
+        "gh * diff*": allow
+        "gh * checks*": allow
+        "gh * status*": allow
+        "gh search*": allow
+        "gh api -X GET *": allow
+        "gh api graphql*mutation*": ask
+        "gh api graphql*": allow
+        "gh *": ask
     - name: git-spice
     - name: jc
     - name: jq
       permissions:
-        "*": allow
+        "jq *": allow
     - name: k9s
     - name: kubernetes-cli
     - name: mas
@@ -80,47 +85,44 @@ packages:
     - name: neovim
     - name: openspec
       permissions:
-        "list*": allow
-        "status*": allow
-        "instructions*": allow
-        "show*": allow
-        "validate*": allow
-        "view*": allow
-        "schemas*": allow
-        "templates*": allow
-        "config*": allow
-        "new*": allow
-        "*": ask
+        "openspec list*": allow
+        "openspec status*": allow
+        "openspec instructions*": allow
+        "openspec show*": allow
+        "openspec validate*": allow
+        "openspec view*": allow
+        "openspec schemas*": allow
+        "openspec templates*": allow
+        "openspec config*": allow
+        "openspec new*": allow
+        "openspec *": ask
     - name: openssl
     - name: opentofu
     - name: ripgrep
-      command: rg
       permissions:
-        "*": allow
+        "rg *": allow
     - name: starship
     - name: talisman
     - name: watch
     - name: worktrunk
     - name: xh
       permissions:
-        "*GET *": allow
-        "*HEAD *": allow
-        "*mutation*": ask
-        "*query*": allow
-        "*": ask
+        "xh *GET *": allow
+        "xh *HEAD *": allow
+        "xh *mutation*": ask
+        "xh *query*": allow
+        "xh *": ask
     - name: googleworkspace-cli
-      command: gws
       permissions:
-        "* list*": allow
-        "* get*": allow
-        "*": ask
+        "gws * list*": allow
+        "gws * get*": allow
+        "gws *": ask
     - name: steipete/tap/remindctl
-      command: remindctl
       permissions:
-        "show*": allow
-        "list*": allow
-        "status*": allow
-        "*": ask
+        "remindctl show*": allow
+        "remindctl list*": allow
+        "remindctl status*": allow
+        "remindctl *": ask
     - name: typescript-language-server
     - name: pyright
     - name: gopls
@@ -150,9 +152,9 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        "session *": allow
-        "export *": allow
-        "*": ask
+        "opencode session *": allow
+        "opencode export *": allow
+        "opencode *": ask
 
     - name: opencode-desktop
       repo: sst/opencode
@@ -182,11 +184,11 @@ packages:
       executable: true
       refresh_period: 24h
       permissions:
-        "today*": allow
-        "upcoming*": allow
-        "list*": allow
-        "show*": allow
-        "*": ask
+        "ical today*": allow
+        "ical upcoming*": allow
+        "ical list*": allow
+        "ical show*": allow
+        "ical *": ask
 
   # Non-authored skills synced into the global skill dir. Two entry shapes:
   #   - remote: { repo, skill }   → fetched via `gh skill install`
@@ -209,12 +211,20 @@ packages:
   mise:
     - name: ruby
       version: "3.4"
+      permissions:
+        "bundle exec rspec*": allow
+        "bundle exec rake test*": allow
+        "bin/rails test*": allow
     - name: node
       version: lts
+      permissions:
+        "npm test*": allow
     - name: python
       version: "3"
     - name: rust
       version: stable
+      permissions:
+        "cargo test*": allow
     - name: ruff
       version: latest
     - name: uv
@@ -227,12 +237,15 @@ packages:
       version: latest
     - name: argocd
       version: latest
+    - name: pipx:pytest
+      version: latest
+      permissions:
+        "pytest *": allow
     - name: pipx:check-jsonschema
       version: latest
     - name: pipx:grip
       version: latest
     - name: pipx:skills-ref
-      command: agentskills
       version: latest
       permissions:
-        "*": allow
+        "agentskills *": allow

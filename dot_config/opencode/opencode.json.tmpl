@@ -34,6 +34,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   "readlink *" "allow"  "realpath *" "allow"
   "sed *" "allow"   "sed -i*" "ask"  "sed --in-place*" "ask"
   "seq*" "allow"   "sleep*" "allow"  "sort*" "allow"  "source*" "allow"
+  "security find-generic-password -s chezmoi *" "allow"
   "sqlite3 -readonly *" "allow"  "sqlite3 *" "allow"  "stat*" "allow"  "sw_vers*" "allow"
   "tail*" "allow"  "test *" "allow"  "touch *" "allow"  "tput *" "allow"  "tr *" "allow"
   "tree*" "allow"  "true*" "allow"  "type *" "allow"
@@ -50,14 +51,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       {{- if kindIs "map" $entry -}}
         {{- $perms := index $entry "permissions" -}}
         {{- if $perms -}}
-          {{- $rawName := index $entry "name" | toString -}}
-          {{- $cmd := index $entry "command" -}}
-          {{- if not $cmd -}}
-            {{- $parts := splitList "/" $rawName -}}
-            {{- $cmd = last $parts -}}
-          {{- end -}}
-          {{- range $suffix, $action := $perms -}}
-            {{- $pattern := printf "%s %s" $cmd $suffix -}}
+          {{- range $pattern, $action := $perms -}}
             {{- $_ := set $globalBash $pattern $action -}}
           {{- end -}}
         {{- end -}}
