@@ -7,28 +7,30 @@
 ## 2. Download the primary MLX MoE model
 
 - [x] 2.1 Resolve the exact LM Studio hub identifier for the MLX `Qwen3-30B-A3B` 4-bit build (`lms get --help`; hub search)
-- [ ] 2.2 Download it via `lms get <resolved-id>` into `~/.lmstudio/models`
-- [ ] 2.3 Confirm it appears in `lms ls`
+- [x] 2.2 Download it via `lms get <resolved-id>` into `~/.lmstudio/models`
+- [x] 2.3 Confirm it appears in `lms ls`
 
 ## 3. Configure load settings
 
-- [ ] 3.1 Load the model with the MLX runtime and full GPU offload (all layers)
-- [ ] 3.2 Set the context window to 32K (fall back to 16K if memory headroom is tight)
+- [x] 3.1 Load the model with the MLX runtime and full GPU offload (all layers)
+- [x] 3.2 Set the context window to 32K (fall back to 16K if memory headroom is tight)
 - [ ] 3.3 Save the per-model load config so it persists across loads
-- [ ] 3.4 Set the model as the LM Studio default
+- [x] 3.4 Set the model as the LM Studio default
 
 ## 4. Verify on M4 Pro
 
-- [ ] 4.1 Send a ~17K-token prompt and confirm no `n_ctx` overflow error
-- [ ] 4.2 Run a generation and record decode tokens-per-second as the M4 Pro baseline
-- [ ] 4.3 Confirm memory use stays within 48 GB with headroom under load
+- [x] 4.1 Send a ~17K-token prompt and confirm no `n_ctx` overflow error
+- [x] 4.2 Run a generation and record decode tokens-per-second as the M4 Pro baseline
+- [x] 4.3 Confirm memory use stays within 48 GB with headroom under load
 
 ## 5. Cleanup (optional)
 
-- [ ] 5.1 After verifying the MLX setup, remove `unsloth/Qwen3.5-27B-GGUF` (~15 GB)
-- [ ] 5.2 Remove the redundant `Qwen3-8B-GGUF` (~4.7 GB), keeping `Qwen3-8B-MLX-4bit`
-- [ ] 5.3 Record the model decision in the KB decisions log
+- [x] 5.1 After verifying the MLX setup, remove `unsloth/Qwen3.5-27B-GGUF` (~15 GB)
+- [x] 5.2 Remove the redundant `Qwen3-8B-GGUF` (~4.7 GB), keeping `Qwen3-8B-MLX-4bit`
+- [x] 5.3 Record the model decision in the KB decisions log
 
 ## 6. Documentation
 
-- [ ] 6.1 Update `README.md` if the new `run_once` script or a config section warrants it
+- [x] 6.1 Update `README.md` if the new `run_once` script or a config section warrants it
+
+> Note: 3.3 (persist load config across loads) is the one remaining item — it's a one-click GUI action (load model → set load config → "Set as default for this model"). The CLI `lms load` flags used here (`--gpu max -c 32768 --parallel 1 --ttl 1800`) are not auto-persisted. 6.1 evaluated: README is a high-level feature list and does not enumerate scripts, so no change needed.

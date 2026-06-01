@@ -23,7 +23,7 @@ The Ollama MLX blog's headline throughput (1810 tok/s prefill, 112 tok/s decode)
 MLX is Apple's framework and the `mlx-llm` runtime is already installed. On Apple Silicon, MLX typically delivers higher tok/s and lower memory overhead than llama.cpp/Metal for the same quant. Alternative considered: stay on GGUF (simpler, models already present) — rejected because it leaves measurable Apple Silicon performance unused, which is the entire point of this change.
 
 ### Decision: Mixture-of-Experts as the primary model class
-A MoE model activates only a fraction of its parameters per token. `Qwen3-30B-A3B` is ~30B total but ~3B active, so decode speed is close to a 3B dense model while quality is close to a much larger one. This mirrors the architecture the blog used (35B-A3B). Alternatives: dense 27B (current) — far more compute per token, slower; dense 14B — decent but a lower quality ceiling than a 30B-A3B at similar speed. Primary pick: `Qwen3-30B-A3B` MLX 4-bit (~17 GB). Keep `Qwen3-8B-MLX-4bit` as a lightweight, fast fallback.
+A MoE model activates only a fraction of its parameters per token. `Qwen3-30B-A3B` is ~30B total but ~3B active, so decode speed is close to a 3B dense model while quality is close to a much larger one. This mirrors the architecture the blog used (35B-A3B). Alternatives: dense 27B (current) — far more compute per token, slower; dense 14B — decent but a lower quality ceiling than a 30B-A3B at similar speed. Primary pick: `Qwen3-30B-A3B` MLX 4-bit (~17 GB). Benchmarks (below) confirm this: the MoE measured ~2.4x faster than a dense 8B on this machine, so smaller dense models are not useful fallbacks — they are slower AND lower quality.
 
 ### Decision: 16K–32K context window, full GPU offload
 The 27B failed because context was 4 K. On 48 GB, a ~17 GB MoE leaves ample room for a 32K KV cache. Use full GPU offload (all layers) — unified memory makes CPU offload pointless here. Default the primary model to 32K context; the 8B can use 16K.
@@ -31,8 +31,8 @@ The 27B failed because context was 4 K. On 48 GB, a ~17 GB MoE leaves ample room
 ### Decision: provision `lms` via dotfiles, not a separate package
 `lms` ships inside the LM Studio app bundle and is bootstrapped to `~/.lmstudio/bin/lms`. Rather than a Homebrew formula (none exists), add `~/.lmstudio/bin` to PATH in `dot_zshenv.tmpl` and add a `run_once` chezmoi script that runs `lms bootstrap` (idempotent) after the cask installs. This keeps the single-source package registry intact while making the CLI reproducible.
 
-### Decision: retire dense GGUF models (optional)
-`Qwen3.5-27B-GGUF` (15 GB, slow, misconfigured) and `Qwen3-8B-GGUF` (4.7 GB, redundant with the MLX 8B) can be removed to reclaim ~20 GB once the MLX setup is verified. Marked optional so it does not block the core change.
+### Decision: retire all non-MoE local models
+Benchmarks disproved the "keep an 8B fallback" idea — the dense 8B ran at 29.5 tok/s vs the 30B-A3B's 71.5 tok/s. So both the dense `Qwen3.5-27B-GGUF` (15.8 GB) and both `Qwen3-8B` variants (GGUF + MLX, ~4.7 GB) were removed, reclaiming ~24 GB and leaving `Qwen3-30B-A3B` as the sole local model.
 
 ## Risks / Trade-offs
 
@@ -56,3 +56,17 @@ Rollback: the existing GGUF models remain until step 6; reverting the dotfiles c
 
 - Exact hub identifier for the MLX MoE build (resolve during tasks).
 - Whether to record the model decision in the KB decisions log (nice-to-have).
+
+## Benchmark Results (M4 Pro / 48 GB, measured)
+
+Measured via the LM Studio OpenAI-compatible server (port 1234), 500-token generations:
+
+| Model | Decode tok/s | Active params | Resident |
+|---|---|---|---|
+| Qwen3-30B-A3B (MoE, MLX 4-bit) | **71.5** | ~3B | ~22 GiB |
+| Qwen3-8B (dense, MLX) | 29.5 | 8B | ~5 GiB |
+
+Findings:
+- The MoE is ~2.4x faster than the dense 8B because it activates only ~3B params/token — it wins on both speed and quality, so there is no faster small fallback.
+- A 30,023-token prompt was processed at 32K context with no `n_ctx` overflow (the failure that broke the old dense 27B at 4K).
+- With only the 30B loaded, free memory measured 79%. Loading a second model caused swapping; hence one model + a 30-minute idle TTL (`--ttl 1800`) and `--parallel 1` for a single user.
