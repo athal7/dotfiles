@@ -117,7 +117,10 @@ SQL
 **Config checks:**
 
 ```bash
-# Rendered agent permissions
+# Top-level bash policy (default-allow + guardrails; inherited by lead/plan)
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.permission'
+
+# Rendered agent permissions (agent-level overrides; bash for build)
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent | to_entries[] | {key, permissions: .value.permission}'
 
 # Skill injection mappings
