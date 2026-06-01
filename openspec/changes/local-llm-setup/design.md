@@ -25,8 +25,8 @@ MLX is Apple's framework and the `mlx-llm` runtime is already installed. On Appl
 ### Decision: Mixture-of-Experts as the primary model class
 A MoE model activates only a fraction of its parameters per token. `Qwen3-30B-A3B` is ~30B total but ~3B active, so decode speed is close to a 3B dense model while quality is close to a much larger one. This mirrors the architecture the blog used (35B-A3B). Alternatives: dense 27B (current) — far more compute per token, slower; dense 14B — decent but a lower quality ceiling than a 30B-A3B at similar speed. Primary pick: `Qwen3-30B-A3B` MLX 4-bit (~17 GB). Benchmarks (below) confirm this: the MoE measured ~2.4x faster than a dense 8B on this machine, so smaller dense models are not useful fallbacks — they are slower AND lower quality.
 
-### Decision: 16K–32K context window, full GPU offload
-The 27B failed because context was 4 K. On 48 GB, a ~17 GB MoE leaves ample room for a 32K KV cache. Use full GPU offload (all layers) — unified memory makes CPU offload pointless here. Default the primary model to 32K context; the 8B can use 16K.
+### Decision: 40K context pool, full GPU offload, 2 concurrent slots
+The 27B failed because context was 4 K. Use full GPU offload (all layers) — unified memory makes CPU offload pointless. Set context to the model max (40960) and Max Concurrent Predictions to 2: LM Studio shares the context pool dynamically across slots, so a lone session uses the full 40K while two concurrent sessions split it (~20K each). This supports parallel coding sessions without capping the single-session case. A 30-minute idle TTL (`--ttl 1800`) frees ~22 GiB when unused.
 
 ### Decision: provision `lms` via dotfiles, not a separate package
 `lms` ships inside the LM Studio app bundle and is bootstrapped to `~/.lmstudio/bin/lms`. Rather than a Homebrew formula (none exists), add `~/.lmstudio/bin` to PATH in `dot_zshenv.tmpl` and add a `run_once` chezmoi script that runs `lms bootstrap` (idempotent) after the cask installs. This keeps the single-source package registry intact while making the CLI reproducible.
@@ -69,4 +69,6 @@ Measured via the LM Studio OpenAI-compatible server (port 1234), 500-token gener
 Findings:
 - The MoE is ~2.4x faster than the dense 8B because it activates only ~3B params/token — it wins on both speed and quality, so there is no faster small fallback.
 - A 30,023-token prompt was processed at 32K context with no `n_ctx` overflow (the failure that broke the old dense 27B at 4K).
-- With only the 30B loaded, free memory measured 79%. Loading a second model caused swapping; hence one model + a 30-minute idle TTL (`--ttl 1800`) and `--parallel 1` for a single user.
+- With only the 30B loaded, free memory measured 79–82% idle. A 30-minute idle TTL (`--ttl 1800`) frees ~22 GiB when unused.
+- Concurrency (`--parallel 2`, ctx 40960): two simultaneous 17K-token prompts both succeeded (no overflow); a single 30K-token prompt also succeeded — confirming the context pool is shared dynamically, not statically split per slot. Two concurrent large contexts dropped free memory to ~44% with light swap.
+- Cold prefill is the main latency (~300 tok/s → a 30K prompt ≈ 97 s); cached follow-up turns are fast (~5 s). Decode runs ~71 tok/s at small context, ~30 tok/s at 17K. Both concurrent sessions run the identical 30B weights — concurrency trades speed/memory, never quality.
