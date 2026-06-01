@@ -14,7 +14,7 @@
 
 - [x] 3.1 Load the model with the MLX runtime and full GPU offload (all layers)
 - [x] 3.2 Set context to 40960 (model max) and Max Concurrent Predictions to 2 (supports parallel coding sessions; pool is shared dynamically)
-- [ ] 3.3 Save the per-model load config so it persists across loads
+- [x] 3.3 Save the per-model load config so it persists across loads
 - [x] 3.4 Set the model as the LM Studio default
 
 ## 4. Verify on M4 Pro
@@ -33,4 +33,4 @@
 
 - [x] 6.1 Update `README.md` if the new `run_once` script or a config section warrants it
 
-> Note: 3.3 (persist load config across loads) is the one remaining item — it's a one-click GUI action (load model → set load config → "Set as default for this model"). The CLI `lms load` flags used here (`--gpu max -c 40960 --parallel 2 --ttl 1800`) are not auto-persisted. 6.1 evaluated: README is a high-level feature list and does not enumerate scripts, so no change needed.
+> Note: The CLI `lms load` flags used here (`--gpu max -c 40960 --parallel 2 --ttl 1800`) are not auto-persisted. 6.1 evaluated: README is a high-level feature list and does not enumerate scripts, so no change needed.
