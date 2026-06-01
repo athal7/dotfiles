@@ -22,10 +22,6 @@ talisman_report/
 # bench-*.md output files (scratch, not config)
 bench-*.md
 
-# OpenSpec — track specs and changes
-# (openspec/ is globally ignored via ~/.config/git/ignore)
-!openspec/
-
 # Python bytecode
 __pycache__/
 *.pyc
