@@ -7,6 +7,7 @@ set -e
 API="${OPENCODE_API:-http://localhost:4096}"
 DIR="${OPENCODE_DIR:-$(pwd)}"
 TIMEOUT=10
+TIMEOUT_SET=""
 AGENT=""
 MODEL=""
 
@@ -16,12 +17,12 @@ Usage: opencode-cmd [OPTIONS] COMMAND [ARGS...]
 
 Options:
   -d DIR        Working directory (default: $OPENCODE_DIR or current dir)
-  -t SECS       Timeout in seconds (default: 10)
+  -t SECS       Timeout in seconds (default: 10; no timeout for 'send' unless set)
   -a AGENT      Agent name (e.g. plan, build)
   -m PROV/MODEL Model in provider/modelID format
 
 Commands:
-  send TEXT            Create session + send message (fire-and-forget)
+  send TEXT            Create session + send message (waits for run to finish)
   create               Create session, print session ID
   list                 List sessions for directory (JSON)
   status [ID]          Session status (JSON). Without ID: all statuses.
@@ -91,7 +92,7 @@ build_msg_body() {
 while getopts "d:t:a:m:" opt; do
   case "$opt" in
     d) DIR="$OPTARG" ;;
-    t) TIMEOUT="$OPTARG" ;;
+    t) TIMEOUT="$OPTARG"; TIMEOUT_SET=1 ;;
     a) AGENT="$OPTARG" ;;
     m) MODEL="$OPTARG" ;;
     *) usage ;;
@@ -118,9 +119,21 @@ case "$CMD" in
     [ -n "$SID" ] && [ "$SID" != "null" ] || die "session id is empty"
 
     MSG_BODY=$(build_msg_body "$TEXT")
-    printf '%s' "$MSG_BODY" \
-      | xh --ignore-stdin --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}" \
-        >/dev/null 2>&1 || true
+    # The message POST is synchronous: opencode holds the connection open until
+    # the run finishes, which can take minutes. Applying the short default
+    # timeout would disconnect mid-run and abort it server-side. Only pass
+    # --timeout when the caller set one explicitly with -t; otherwise block for
+    # the whole run. Discard the response body but let stderr through so
+    # scheduled runs leave a trace in the log.
+    if [ -n "$TIMEOUT_SET" ]; then
+      printf '%s' "$MSG_BODY" \
+        | xh --ignore-stdin --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}" \
+          >/dev/null || true
+    else
+      printf '%s' "$MSG_BODY" \
+        | xh --ignore-stdin POST "${API}/session/${SID}/message" "directory==${DIR}" \
+          >/dev/null || true
+    fi
 
     printf '%s\n' "$SID"
     ;;
