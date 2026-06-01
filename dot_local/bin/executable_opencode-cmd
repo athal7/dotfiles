@@ -113,7 +113,7 @@ case "$CMD" in
     TEXT="$*"
 
     BODY=$(build_create_body)
-    RESP=$(printf '%s' "$BODY" | xh --ignore-stdin POST "${API}/session" "directory==${DIR}" 2>/dev/null) \
+    RESP=$(printf '%s' "$BODY" | xh POST "${API}/session" "directory==${DIR}" 2>/dev/null) \
       || die "failed to create session"
     SID=$(printf '%s' "$RESP" | jq -r '.id') || die "failed to parse session id"
     [ -n "$SID" ] && [ "$SID" != "null" ] || die "session id is empty"
@@ -127,11 +127,11 @@ case "$CMD" in
     # scheduled runs leave a trace in the log.
     if [ -n "$TIMEOUT_SET" ]; then
       printf '%s' "$MSG_BODY" \
-        | xh --ignore-stdin --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}" \
+        | xh --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}" \
           >/dev/null || true
     else
       printf '%s' "$MSG_BODY" \
-        | xh --ignore-stdin POST "${API}/session/${SID}/message" "directory==${DIR}" \
+        | xh POST "${API}/session/${SID}/message" "directory==${DIR}" \
           >/dev/null || true
     fi
 
@@ -142,7 +142,7 @@ case "$CMD" in
   create)
     BODY=$(build_create_body)
     printf '%s' "$BODY" \
-      | xh --ignore-stdin POST "${API}/session" "directory==${DIR}" \
+      | xh POST "${API}/session" "directory==${DIR}" \
       | jq -r '.id'
     ;;
 
@@ -169,7 +169,7 @@ case "$CMD" in
 
     BODY=$(build_msg_body "$TEXT")
     printf '%s' "$BODY" \
-      | xh --ignore-stdin --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}"
+      | xh --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}"
     ;;
 
   # ── transcript: get session messages ─────────────────────────────────────
@@ -195,7 +195,7 @@ case "$CMD" in
     [ $# -ge 1 ] || die "worktree requires BRANCH argument"
     BODY=$(jq -n --arg name "$1" '{"name": $name}')
     printf '%s' "$BODY" \
-      | xh --ignore-stdin POST "${API}/experimental/worktree" "directory==${DIR}" \
+      | xh POST "${API}/experimental/worktree" "directory==${DIR}" \
       | jq -r '.directory'
     ;;
 
@@ -211,7 +211,7 @@ case "$CMD" in
     ANSWER="$*"
     BODY=$(jq -n --arg answer "$ANSWER" '{"answers": [[$answer]]}')
     printf '%s' "$BODY" \
-      | xh --ignore-stdin POST "${API}/question/${QID}/reply" "directory==${DIR}"
+      | xh POST "${API}/question/${QID}/reply" "directory==${DIR}"
     ;;
 
   # ── health: check server reachability ────────────────────────────────────
