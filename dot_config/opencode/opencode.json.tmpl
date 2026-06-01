@@ -3,7 +3,7 @@ opencode.json — OpenCode agent configuration.
 
 Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Model selection (cloud and local via LM Studio)
-  - Per-tool permission rules (allow/ask gates for shell commands, git, gh, etc.)
+  - Bash permissions: default-allow with curated ask/deny guardrails (system-destructive commands in `$coreGuardrails` here; service-write gates per-tool in packages.yaml)
   - MCP server connections
   - Plugin wiring (skill injection, custom commands)
   - Agent-specific permission and skill overrides (lead, plan, build)
@@ -14,34 +14,22 @@ pipeline. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
 as lmstudio/qwen3.5-27b. See https://www.glukhov.org/ai-devtools/opencode/llms-comparison/
 for model benchmarks — use Unsloth quants for patched chat templates.
 */ -}}
-{{- /* Universal read-only shell utilities — allowed for all agents */ -}}
-{{- $universalReads := dict
-  "*" "ask"
-  "[ *" "allow"
-  "awk*" "allow"   "gawk*" "allow"  "mawk*" "allow"  "nawk*" "allow"
-  "basename *" "allow"  "brctl *" "allow"
-  "cat*" "allow"   "cd *" "allow"   "comm*" "allow"  "cut*" "allow"
-  "date*" "allow"  "defaults read *" "allow"  "defaults *" "ask"  "df *" "allow"
-  "diff *" "allow"  "dirname *" "allow"  "du *" "allow"
-  "echo*" "allow"
-  "false*" "allow" "file*" "allow"  "find *" "allow"
-  "find * -delete*" "ask"  "find * -exec*" "ask"  "find * -execdir*" "ask"  "find * -ok*" "ask"  "find * -okdir*" "ask"
-  "grep*" "allow"  "head*" "allow"  "hostname*" "allow"
-  "id *" "allow"   "ls*" "allow"
-  "mdfind *" "allow"  "mdls *" "allow"  "mkdir *" "allow"
-  "open *" "allow"
-  "printf*" "allow" "pwd*" "allow"
-  "readlink *" "allow"  "realpath *" "allow"
-  "sed *" "allow"   "sed -i*" "ask"  "sed --in-place*" "ask"
-  "seq*" "allow"   "sleep*" "allow"  "sort*" "allow"  "source*" "allow"
-  "security find-generic-password -s chezmoi *" "allow"
-  "sqlite3 -readonly *" "allow"  "sqlite3 *" "allow"  "stat*" "allow"  "sw_vers*" "allow"
-  "tail*" "allow"  "test *" "allow"  "touch *" "allow"  "tput *" "allow"  "tr *" "allow"
-  "tree*" "allow"  "true*" "allow"  "type *" "allow"
-  "uname *" "allow"  "uniq*" "allow"
-  "wc*" "allow"    "whereis*" "allow" "which*" "allow" "whoami*" "allow"
-  "yes*" "allow"
-  "* --help*" "allow"  "* --version*" "allow"  "* -h" "allow"
+{{- /* Core guardrails — system-level dangerous commands that must prompt.
+       Everything not listed here (and not listed in packages.yaml) is allowed
+       by default via the "*": "allow" base. */ -}}
+{{- $coreGuardrails := dict
+  "rm -rf /*" "ask"   "rm -fr /*" "ask"
+  "rm -rf ~*" "ask"   "rm -fr ~*" "ask"
+  "rm -rf $HOME*" "ask"
+  "sudo *" "ask"
+  "dd if=*" "ask"   "dd of=*" "ask"
+  "mkfs*" "ask"   "diskutil *" "ask"
+  "shutdown*" "ask"   "reboot*" "ask"
+  "curl * -X POST*" "ask"   "curl * -X PUT*" "ask"
+  "curl * -X DELETE*" "ask"   "curl * -X PATCH*" "ask"
+  "curl * -d *" "ask"   "curl * --data*" "ask"
+  "curl * -T *" "ask"   "curl * --upload-file*" "ask"
+  "wget *" "ask"
 -}}
 {{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask) */ -}}
 {{- $globalBash := dict -}}
@@ -59,8 +47,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- /* Merge universal reads into global */ -}}
-{{- range $p, $action := $universalReads -}}
+{{- /* Merge core guardrails into global */ -}}
+{{- range $p, $action := $coreGuardrails -}}
   {{- $_ := set $globalBash $p $action -}}
 {{- end -}}
 {
@@ -101,7 +89,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "~/Documents/Zoom/**": "allow",
       "/tmp/**": "allow"
     },
-    "bash": {{ $globalBash | toPrettyJson | indent 4 | trim }}
+    "bash": {{ merge (dict "*" "allow") $globalBash | toPrettyJson | indent 4 | trim }}
   },
   {{- /*
   Per-agent skill deny lists — blocked by sst/opencode#21793

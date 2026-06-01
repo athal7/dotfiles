@@ -13,19 +13,15 @@ packages:
   brews:
     - name: autojump
     - name: bat
-      permissions:
-        "bat *": allow
     - name: chezmoi
       permissions:
-        "chezmoi cat*": allow
-        "chezmoi verify*": allow
-        "chezmoi diff*": allow
-        "chezmoi data*": allow
-        "chezmoi status*": allow
-        "chezmoi managed*": allow
-        "chezmoi execute-template*": allow
-        "chezmoi source-path*": allow
-        "chezmoi *": ask
+        "chezmoi apply*": ask
+        "chezmoi destroy*": ask
+        "chezmoi init*": ask
+        "chezmoi purge*": ask
+        "chezmoi forget*": ask
+        "chezmoi upgrade*": ask
+        "chezmoi add*": ask
     - name: colima
     - name: direnv
     - name: docker
@@ -33,34 +29,25 @@ packages:
     - name: ffmpeg
     - name: git
       permissions:
-        "git log*": allow
-        "git diff*": allow
-        "git show*": allow
-        "git status*": allow
-        "git blame*": allow
-        "git reflog*": allow
-        "git shortlog*": allow
-        "git rev-parse*": allow
-        "git merge-base*": allow
-        "git for-each-ref*": allow
-        "git ls-*": allow
-        "git cat-file*": allow
-        "git name-rev*": allow
-        "git symbolic-ref*": allow
-        "git * list*": allow
-        "git * show*": allow
-        "git branch*": allow
-        "git tag -l*": allow
-        "git config*": allow
-        "git stack-*": allow
-        "git checkout*": allow
-        "git fetch*": allow
-        "git stash*": allow
-        "git reset --soft*": allow
-        "git reset --mixed*": allow
-        "git reset HEAD*": allow
+        "git commit*": ask
+        "git push*": ask
+        "git reset --hard*": ask
+        "git reset --merge*": ask
+        "git clean -f*": ask
+        "git clean -d*": ask
+        "git checkout -- *": ask
+        "git checkout * -- *": ask
+        "git restore *": ask
         "git restore --staged*": allow
-        "git *": ask
+        "git branch -d*": ask
+        "git branch -D*": ask
+        "git stash drop*": ask
+        "git stash clear*": ask
+        "git worktree remove*": ask
+        "git -C * commit*": ask
+        "git -C * push*": ask
+        "git -C * reset --hard*": ask
+        "git -C * clean -f*": ask
     - name: gh
       permissions:
         "gh * list*": allow
@@ -76,31 +63,15 @@ packages:
     - name: git-spice
     - name: jc
     - name: jq
-      permissions:
-        "jq *": allow
     - name: k9s
     - name: kubernetes-cli
     - name: mas
     - name: mise
     - name: neovim
     - name: openspec
-      permissions:
-        "openspec list*": allow
-        "openspec status*": allow
-        "openspec instructions*": allow
-        "openspec show*": allow
-        "openspec validate*": allow
-        "openspec view*": allow
-        "openspec schemas*": allow
-        "openspec templates*": allow
-        "openspec config*": allow
-        "openspec new*": allow
-        "openspec *": ask
     - name: openssl
     - name: opentofu
     - name: ripgrep
-      permissions:
-        "rg *": allow
     - name: starship
     - name: talisman
     - name: watch
@@ -183,12 +154,6 @@ packages:
       path: ical
       executable: true
       refresh_period: 24h
-      permissions:
-        "ical today*": allow
-        "ical upcoming*": allow
-        "ical list*": allow
-        "ical show*": allow
-        "ical *": ask
 
   # Non-authored skills synced into the global skill dir. Two entry shapes:
   #   - remote: { repo, skill }   → fetched via `gh skill install`
@@ -211,20 +176,12 @@ packages:
   mise:
     - name: ruby
       version: "3.4"
-      permissions:
-        "bundle exec rspec*": allow
-        "bundle exec rake test*": allow
-        "bin/rails test*": allow
     - name: node
       version: lts
-      permissions:
-        "npm test*": allow
     - name: python
       version: "3"
     - name: rust
       version: stable
-      permissions:
-        "cargo test*": allow
     - name: ruff
       version: latest
     - name: uv
@@ -239,13 +196,9 @@ packages:
       version: latest
     - name: pipx:pytest
       version: latest
-      permissions:
-        "pytest *": allow
     - name: pipx:check-jsonschema
       version: latest
     - name: pipx:grip
       version: latest
     - name: pipx:skills-ref
       version: latest
-      permissions:
-        "agentskills *": allow
