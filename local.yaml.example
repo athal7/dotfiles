@@ -21,6 +21,13 @@ orgs:
       auto_runs: true
       trigger: add_reviewer @copilot
 
+# Production service → local repo mapping for the daily fix-prod-errors task.
+# Keys are Elastic APM service.name values; values are repo directory names under ~/code.
+# Used by the /fix-prod-errors command to decide which repo to create a worktree in.
+prod_services:
+  your-api-service: your-api-repo
+  your-worker-service: your-worker-repo
+
 # Secrets manifest — each entry declares a name. Values are stored in the macOS
 # Keychain under service "chezmoi" with account = the name. Populate them via:
 #   security add-generic-password -U -s "chezmoi" -a "<name>" -w "<value>"
