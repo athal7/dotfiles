@@ -17,7 +17,6 @@ SELF_LOG="check-error-logs.error.log"
 # The service_name matches the basename of the .error.log file (without extension).
 EXCLUDE_PATTERNS="
 opencode-web|Could not find 'bundler'
-homebridge|\[NestAccfactory\]
 "
 
 # Return the exclusion pattern for a service name, or empty string if none.

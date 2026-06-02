@@ -3,61 +3,27 @@
 # Reads current file from stdin, writes merged result to stdout.
 
 import json
-import subprocess
 import sys
 
 config = json.load(sys.stdin)
 
-# Resolve ffmpeg path: prefer ffmpeg-for-homebridge npm package, fall back to system ffmpeg
-def find_ffmpeg():
-    try:
-        # npm root -g gives the global node_modules path; use it to find the package
-        npm_root = subprocess.run(
-            ["npm", "root", "-g"],
-            capture_output=True, text=True, timeout=5
-        ).stdout.strip()
-        if npm_root:
-            result = subprocess.run(
-                ["node", "-e", f"process.stdout.write(require('{npm_root}/ffmpeg-for-homebridge') || '')"],
-                capture_output=True, text=True, timeout=5
-            )
-            path = result.stdout.strip()
-            if path:
-                return path
-    except Exception:
-        pass
-    return "/opt/homebrew/bin/ffmpeg"
-
-ffmpeg_path = find_ffmpeg()
-
 # Ensure platforms list exists
 config.setdefault("platforms", [])
 
-# Find or create the NestAccfactory platform entry, migrating old config format if needed
-nest = next((p for p in config["platforms"] if p.get("platform") == "NestAccfactory"), None)
-if nest is None:
-    nest = {"platform": "NestAccfactory", "accounts": [
-        {"name": "Google", "type": "google", "issueToken": "", "cookie": "", "fieldTest": False}
-    ]}
-    config["platforms"].insert(0, nest)
+# Drop the legacy unofficial-API platform (migrated to the official Google SDM plugin)
+config["platforms"] = [p for p in config["platforms"] if p.get("platform") != "NestAccfactory"]
 
-# Migrate v0.3.x "google" object to v0.4.0+ "accounts" array
-if "google" in nest and "accounts" not in nest:
-    old = nest.pop("google")
-    nest["accounts"] = [
-        {
-            "name": "Google",
-            "type": "google",
-            "issueToken": old.get("issuetoken", ""),
-            "cookie": old.get("cookie", ""),
-            "fieldTest": old.get("fieldTest", False),
-        }
-    ]
+# Find or create the homebridge-google-nest-sdm platform entry
+sdm = next((p for p in config["platforms"] if p.get("platform") == "homebridge-google-nest-sdm"), None)
+if sdm is None:
+    sdm = {"platform": "homebridge-google-nest-sdm"}
+    config["platforms"].insert(0, sdm)
 
-# Apply desired options (non-secret fields only)
-nest.setdefault("options", {})
-nest["options"]["eveHistory"] = True
-nest["options"]["ffmpegPath"] = ffmpeg_path
+# Scaffold required credential fields with empty-string defaults.
+# setdefault preserves any real values already present in the deployed config —
+# secrets live only in ~/.homebridge/config.json, never in this public repo.
+for field in ("clientId", "clientSecret", "projectId", "refreshToken", "subscriptionId"):
+    sdm.setdefault(field, "")
 
 # Ensure homebridge-config-ui-x is present
 config_ui = next((p for p in config["platforms"] if p.get("platform") == "config"), None)
