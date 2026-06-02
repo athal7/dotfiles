@@ -27,6 +27,8 @@ Gather context, then dispatch the plan agent for analysis:
 
 Create an OpenSpec proposal to persist the plan: dispatch build with `openspec-propose` to create proposal + design + tasks. The proposal is the plan artifact — it captures what changes, why, and the task breakdown.
 
+**A missing `openspec/` folder is expected, not a problem.** `openspec/` is globally gitignored — it's session scratch space for the current plan, not committed artifacts. If the repo has no `openspec/` directory, create it and proceed; don't treat its absence as a blocker or try to commit it.
+
 **Present the proposal for approval. Wait before proceeding.**
 
 ## Build
