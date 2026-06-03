@@ -1,5 +1,5 @@
 ---
-description: Reclaim disk space — stale worktrees, PostgreSQL databases, OpenCode DB entries
+description: Reclaim disk space — stale worktrees, PostgreSQL databases, OpenCode DB entries, QA reports
 subtask: true
 ---
 
@@ -154,6 +154,32 @@ find -L /tmp -maxdepth 1 -type f -user "$(whoami)" \
 ```
 
 Do not touch `TemporaryDirectory.*`, sockets, or anything not owned by the current user. Add the reclaimed size to the final summary.
+
+## Step 10: Prune old QA reports
+
+The `/demo` command and `qa` skill persist artifacts under `~/.local/share/qa/` that are never pruned: QA session reports at `~/.local/share/qa/<project>/qa-YYYYMMDD-HHMMSS/` (each with `report.html` + numbered screenshots) and demo decks at `~/.local/share/qa/demos/demo-YYYY-MM-DD.html`. These are kept longer than worktrees — use a retention window of **90 days** by default, or honor `--older-than=N` if the user passed it.
+
+List the matching session dirs and demo decks with their total size. Sessions live two levels deep under `~/.local/share/qa/<project>/`, so a `-mindepth 2 -maxdepth 2` match naturally excludes the `demos/` decks, which are handled by their own glob:
+
+```bash
+# QA session dirs: ~/.local/share/qa/<project>/qa-*/  (excludes demos/ decks via depth)
+find -L ~/.local/share/qa -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +<N> \
+  2>/dev/null | xargs du -sh 2>/dev/null | sort -h
+# Demo decks: ~/.local/share/qa/demos/demo-*.html
+find -L ~/.local/share/qa/demos -maxdepth 1 -type f -name 'demo-*.html' -mtime +<N> \
+  2>/dev/null | xargs du -sh 2>/dev/null | sort -h
+```
+
+Show the matching paths and total size, then ask: "Delete these N QA artifacts older than <N> days?" before removing. Respect `--dry-run` (list only, delete nothing) and `--force` (skip the prompt). Use the same matchers with `-delete`:
+
+```bash
+find -L ~/.local/share/qa -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +<N> \
+  -exec rm -rf {} + 2>/dev/null
+find -L ~/.local/share/qa/demos -maxdepth 1 -type f -name 'demo-*.html' -mtime +<N> \
+  -delete 2>/dev/null
+```
+
+`<N>` defaults to 90; substitute the `--older-than=N` value if given. Add the reclaimed size to the final summary like Step 9 does.
 
 ## Safety rules
 
