@@ -19,12 +19,14 @@ Perform QA verification using Firefox DevTools browser automation.
 At the start of every run, create the session directory and initialize the report:
 
 ```bash
-SESSION_DIR="/tmp/qa-$(date +%Y%m%d-%H%M%S)"
+SESSION_DIR="$HOME/.local/share/qa/$(basename "$PWD")/qa-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$SESSION_DIR"
 cat > "$SESSION_DIR/report.html" <<'HEADER'
 <html><head><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em}.step{display:flex;gap:1.5em;margin:2em 0;align-items:start}.step img{width:55%;border:1px solid #ccc;border-radius:4px;flex-shrink:0}.step .info{padding-top:.25em}.step .info h3{margin:0 0 .5em}.step .info p{margin:0 0 .5em;color:#333}.step .info a{color:#0969da;word-break:break-all}</style></head><body>
 HEADER
 ```
+
+Reports persist per-project under `~/.local/share/qa/` so they can be referenced later (e.g. by the demo command).
 
 After **every** browser action (navigate, click, fill, submit), scroll then screenshot:
 
@@ -74,6 +76,6 @@ Verify the main flow, then edge cases (empty states, errors, boundaries). Screen
 ## Output
 
 1. Pass/fail summary with issues found
-2. Session directory path (e.g. `/tmp/qa-20260515-143022/`)
+2. Session directory path (e.g. `~/.local/share/qa/<project>/qa-20260515-143022/`)
 3. HTML report opened for inspection (all screenshots in sequence)
 4. Steps to reproduce failures
