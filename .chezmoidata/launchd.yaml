@@ -1,0 +1,241 @@
+# launchd LaunchAgent definitions — single source of truth for all plists.
+#
+# Each entry's value is the plist payload expressed as YAML, using $HOME and
+# $USER placeholders (substituted with the real home directory and username at
+# apply time). The generator script .chezmoiscripts/run_onchange_after_aa-launch-agents.sh
+# renders, deploys, reloads, and prunes these agents: it pipes `yq -o=json`
+# through `plutil -convert xml1`, writes each plist to
+# ~/Library/LaunchAgents/<name>.plist, reloads only agents whose plist content
+# changed, and removes agents that were deleted from this file. The individual
+# plists are NOT individually chezmoi-managed.
+#
+# Typing matters — YAML integers become plist <integer>, YAML booleans become
+# <true/>/<false/>. ProgramArguments are always strings, so numeric args
+# (timeouts, ports) must be quoted.
+launchagents:
+  audit:
+    Label: com.$USER.audit
+    ProgramArguments:
+      - $HOME/.local/bin/opencode-cmd
+      - -d
+      - $HOME/code/dotfiles
+      - -t
+      - "1800"
+      - send
+      - /audit
+    StartCalendarInterval:
+      Weekday: 0
+      Hour: 8
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/audit.log
+    StandardErrorPath: $HOME/Library/Logs/audit.log
+    EnvironmentVariables:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  babysitter-check:
+    Label: com.$USER.babysitter-check
+    ProgramArguments:
+      - /opt/homebrew/bin/python3
+      - -m
+      - cal
+      - babysitter
+    StartCalendarInterval:
+      Hour: 8
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/babysitter-check.log
+    StandardErrorPath: $HOME/Library/Logs/babysitter-check.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PYTHONPATH: $HOME/.local/lib
+
+  check-error-logs:
+    Label: com.$USER.check-error-logs
+    ProgramArguments:
+      - $HOME/.local/bin/check-error-logs
+    StartCalendarInterval:
+      Hour: 9
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/check-error-logs.log
+    StandardErrorPath: $HOME/Library/Logs/check-error-logs.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  cleanup:
+    Label: com.$USER.cleanup
+    ProgramArguments:
+      - $HOME/.local/bin/opencode-cmd
+      - -d
+      - $HOME/code/dotfiles
+      - -t
+      - "1800"
+      - send
+      - /cleanup
+      - --force
+    StartCalendarInterval:
+      Weekday: 0
+      Hour: 9
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/cleanup.log
+    StandardErrorPath: $HOME/Library/Logs/cleanup.log
+    EnvironmentVariables:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  family-scheduler:
+    Label: com.$USER.family-scheduler
+    ProgramArguments:
+      - /opt/homebrew/bin/python3
+      - -m
+      - cal
+      - family
+    StartCalendarInterval:
+      Weekday: 2
+      Hour: 8
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/family-scheduler.log
+    StandardErrorPath: $HOME/Library/Logs/family-scheduler.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PYTHONPATH: $HOME/.local/lib
+
+  fix-prod-errors:
+    Label: com.$USER.fix-prod-errors
+    ProgramArguments:
+      - $HOME/.local/bin/opencode-cmd
+      - -d
+      - $HOME/code/dotfiles
+      - -t
+      - "1800"
+      - send
+      - /fix-prod-errors
+    StartCalendarInterval:
+      Hour: 7
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/fix-prod-errors.log
+    StandardErrorPath: $HOME/Library/Logs/fix-prod-errors.log
+    EnvironmentVariables:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  git-worktree-sync:
+    Label: com.$USER.git-worktree-sync
+    ProgramArguments:
+      - $HOME/.local/bin/git-worktree-sync
+    StartInterval: 900
+    StandardOutPath: $HOME/Library/Logs/git-worktree-sync.log
+    StandardErrorPath: $HOME/Library/Logs/git-worktree-sync.error.log
+    EnvironmentVariables:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  homebridge:
+    Label: com.$USER.homebridge
+    ProgramArguments:
+      - $HOME/.local/share/mise/shims/homebridge
+      - -U
+      - $HOME/.homebridge
+    RunAtLoad: true
+    KeepAlive: true
+    WorkingDirectory: $HOME/.homebridge
+    StandardOutPath: $HOME/Library/Logs/homebridge.log
+    StandardErrorPath: $HOME/Library/Logs/homebridge.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      HOME: $HOME
+      UIX_STORAGE_PATH: $HOME/.homebridge
+
+  kb-enrich:
+    Label: com.$USER.kb-enrich
+    ProgramArguments:
+      - $HOME/.local/bin/opencode-cmd
+      - -d
+      - $HOME/code/dotfiles
+      - -t
+      - "3600"
+      - send
+      - /kb-enrich
+    StartCalendarInterval:
+      Hour: 6
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/kb-enrich.log
+    StandardErrorPath: $HOME/Library/Logs/kb-enrich.log
+    EnvironmentVariables:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  lunch-guard:
+    Label: com.$USER.lunch-guard
+    ProgramArguments:
+      - /opt/homebrew/bin/python3
+      - -m
+      - cal
+      - lunch
+    StartCalendarInterval:
+      Hour: 7
+      Minute: 30
+    StandardOutPath: $HOME/Library/Logs/lunch-guard.log
+    StandardErrorPath: $HOME/Library/Logs/lunch-guard.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PYTHONPATH: $HOME/.local/lib
+
+  naya-sync:
+    Label: com.$USER.naya-sync
+    ProgramArguments:
+      - $HOME/.local/bin/naya-sync
+    WatchPaths:
+      - $HOME/Library/Application Support/NayaFlow/user-data.db
+      - $HOME/Library/Application Support/NayaFlow-Beta/user-data-beta.db
+    StandardOutPath: $HOME/Library/Logs/naya-sync.log
+    StandardErrorPath: $HOME/Library/Logs/naya-sync.error.log
+    EnvironmentVariables:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      HOME: $HOME
+
+  opencode-web:
+    Label: com.$USER.opencode-web
+    ProgramArguments:
+      - $HOME/.local/bin/opencode
+      - web
+      - --port
+      - "4096"
+    RunAtLoad: true
+    KeepAlive: true
+    WorkingDirectory: $HOME
+    StandardOutPath: $HOME/Library/Logs/opencode-web.log
+    StandardErrorPath: $HOME/Library/Logs/opencode-web.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  setenv-gui-path:
+    Label: com.$USER.setenv-gui-path
+    ProgramArguments:
+      - /bin/launchctl
+      - setenv
+      - PATH
+      - $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    RunAtLoad: true
+    LimitLoadToSessionType: Aqua
+
+  sync-calendars:
+    Label: com.$USER.sync-calendars
+    ProgramArguments:
+      - /opt/homebrew/bin/python3
+      - -m
+      - cal
+      - sync
+    StartInterval: 3600
+    RunAtLoad: true
+    StandardOutPath: $HOME/Library/Logs/sync-calendars.log
+    StandardErrorPath: $HOME/Library/Logs/sync-calendars.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PYTHONPATH: $HOME/.local/lib
+
+  tailscale-serve:
+    Label: com.$USER.tailscale-serve
+    ProgramArguments:
+      - /Applications/Tailscale.app/Contents/MacOS/Tailscale
+      - serve
+      - --bg
+      - --https=4096
+      - http://127.0.0.1:4096
+    RunAtLoad: true
+    StandardOutPath: $HOME/Library/Logs/tailscale-serve.log
+    StandardErrorPath: $HOME/Library/Logs/tailscale-serve.error.log

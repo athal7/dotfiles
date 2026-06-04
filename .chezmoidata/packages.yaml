@@ -83,6 +83,7 @@ packages:
         "xh *mutation*": ask
         "xh *query*": allow
         "xh *": ask
+    - name: yq
     - name: googleworkspace-cli
       permissions:
         "gws * list*": allow

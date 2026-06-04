@@ -15,7 +15,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)
   - [Homebridge](dot_homebridge/)
-  - [LaunchAgents](Library/LaunchAgents/) — scheduled macOS tasks, including a daily 7am production-error triage (`fix-prod-errors`) that dispatches worktree fix sessions, a weekly Sunday spec-compliance audit (`audit`), and a weekly Sunday disk-space cleanup (`cleanup`)
+  - [LaunchAgents](.chezmoidata/launchd.yaml) — scheduled macOS tasks defined declaratively in [`.chezmoidata/launchd.yaml`](.chezmoidata/launchd.yaml) (generated to plists via yq + plutil), including a daily 7am production-error triage (`fix-prod-errors`) that dispatches worktree fix sessions, a weekly Sunday spec-compliance audit (`audit`), and a weekly Sunday disk-space cleanup (`cleanup`)
 - [Packages](.chezmoidata/packages.yaml)
 
 ## Quick start

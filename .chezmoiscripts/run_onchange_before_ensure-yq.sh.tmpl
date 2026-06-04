@@ -1,0 +1,10 @@
+#!/bin/sh
+{{ template "brewenv" . }}
+
+# The LaunchAgent plists render via `yq` during chezmoi's file-application
+# phase (.chezmoitemplates/launchd). On a fresh machine the main package
+# install runs only *after* files are applied, so ensure yq exists first.
+if ! command -v yq >/dev/null 2>&1; then
+  echo "Installing yq (required to render LaunchAgent plists)..."
+  brew install yq
+fi

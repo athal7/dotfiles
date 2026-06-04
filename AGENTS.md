@@ -6,14 +6,14 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 **Test changes before committing: run `chezmoi apply` first.** Applying is how you verify changes work in this repo — deployed files under `~/.agents/`, `~/.config/`, etc. won't update until applied. Apply, confirm the change is correct, then commit.
 
-**`chezmoi apply` does not restart LaunchAgents automatically.** After changing a plist template, apply first, then reload manually: `launchctl kickstart -k gui/$(id -u)/<label>` (or `bootout` + `bootstrap` for structural changes).
+**`chezmoi apply` auto-deploys and reloads changed LaunchAgents.** The `run_onchange_after_aa-launch-agents.sh` generator renders every plist from `.chezmoidata/launchd.yaml` (yq → plutil), then reloads only agents whose plist content actually changed and prunes agents deleted from the YAML — so unchanged agents (notably the session-hosting opencode-web) are never restarted. The individual plists are NOT chezmoi-managed; the generator owns them. To force-run a scheduled job for testing, you can still kickstart it manually: `launchctl kickstart -k gui/$(id -u)/<label>`.
 
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
 - **`dot_config/opencode/`** — OpenCode config: model, MCPs, plugins, permissions, agent instructions
 - **`skills/`** — agent skills deployed to `~/.agents/skills/`
-- **`Library/LaunchAgents/`** — macOS services (opencode web on port 4096)
+- **`.chezmoidata/launchd.yaml`** — macOS services (opencode web on port 4096) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
 - **`.chezmoiscripts/`** — run on apply: brew bundle, skill sync
