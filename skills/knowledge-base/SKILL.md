@@ -147,6 +147,8 @@ Daily coding activity per project, with diff stats:
     - Update knowledge base skill
     - *2 sessions, 3 files changed, +87/-40 lines*
 
+Coding-stats source: opencode's local session store (`~/.local/share/opencode/storage/session`) is pruned to roughly the last few months, so it cannot supply older session counts or diff stats — derive journal stats from git instead. Beware that `git log --all` double-counts pre-squash and merged copies of the same work and includes bot commits (e.g. `reg_actions`, `argocd-image-updater`); filter to the human author and dedupe so the stats stay honest.
+
 ## Name resolution
 
 `names.json` maps display name variants to canonical names: `{"Joe": "Joseph Martinez", "J. Martinez": "Joseph Martinez"}`. Check before creating a new profile — the person may exist under a different name.
