@@ -1,6 +1,6 @@
 ---
 name: knowledge-base
-description: Local knowledge base of people, projects, and decisions — check here first before searching Slack, email, or calendar for contact info, project status, or decision history
+description: "Look up people, projects, products, and decisions locally first: contact info (email, Slack ID, GitHub handle), titles and teams, project/product status, who works on what, and past decisions. Check before searching Slack, email, calendar, or GitHub — this is the first stop for any contact detail, project context, or decision-history question."
 license: MIT
 metadata:
   provides:
