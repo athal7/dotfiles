@@ -27,12 +27,13 @@ Use the `id` from this row to locate worktrees at `~/.local/share/opencode/workt
 ```bash
 for dir in ~/.local/share/opencode/worktree/<project-id>/*/; do
   name=$(basename "$dir")
+  dir_noslash="${dir%/}"   # session.directory is stored WITHOUT a trailing slash
   branch=$(git -C "$dir" branch --show-current 2>/dev/null || echo "unknown")
   changes=$(git -C "$dir" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
   size=$(du -sh "$dir" 2>/dev/null | cut -f1)
   last=$(stat -f '%Sa' -t '%Y-%m-%d' "$dir" 2>/dev/null)
   sessions=$(sqlite3 ~/.local/share/opencode/opencode.db \
-    "SELECT COUNT(*) FROM session WHERE directory = '$dir';")
+    "SELECT COUNT(*) FROM session WHERE directory = '$dir_noslash';")
   echo "$name | $branch | changes=$changes | sessions=$sessions | $size | $last"
 done
 ```
@@ -134,22 +135,25 @@ After writing, tell the user to reopen the Desktop app.
 Agents leave scratch files (markdown notes, scripts, screenshots, JSON dumps) directly in `/tmp`. List user-owned regular files only — skip lock files, sockets, and TemporaryDirectory.* dirs which belong to running processes:
 
 ```bash
-# Note: /tmp is a symlink on macOS, so find needs -L
-find -L /tmp -maxdepth 1 -type f -user "$(whoami)" \
+# Note: /tmp is a symlink to /private/tmp on macOS. BSD find refuses -delete while
+# following symlinks (-L), so operate on the real path /private/tmp directly.
+find /private/tmp -maxdepth 1 -type f -user "$(whoami)" \
   -not -name '.*' \
   -not -name 'LCK.*' \
   -not -name '*.lock' \
   -not -name 'MozillaUpdateLock-*' \
   -not -name 'com.apple.*' \
+  -not -name 'oc_web.pid' \
   2>/dev/null | xargs du -sh 2>/dev/null | sort -h
 ```
 
 Show the list and total size, then ask: "Delete these N scratch files from /tmp?" before deleting. Use the same find expression with `-delete`:
 
 ```bash
-find -L /tmp -maxdepth 1 -type f -user "$(whoami)" \
+find /private/tmp -maxdepth 1 -type f -user "$(whoami)" \
   -not -name '.*' -not -name 'LCK.*' -not -name '*.lock' \
   -not -name 'MozillaUpdateLock-*' -not -name 'com.apple.*' \
+  -not -name 'oc_web.pid' \
   -delete 2>/dev/null
 ```
 
