@@ -159,22 +159,6 @@ launchagents:
     EnvironmentVariables:
       PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-  lunch-guard:
-    Label: com.$USER.lunch-guard
-    ProgramArguments:
-      - /opt/homebrew/bin/python3
-      - -m
-      - cal
-      - lunch
-    StartCalendarInterval:
-      Hour: 7
-      Minute: 30
-    StandardOutPath: $HOME/Library/Logs/lunch-guard.log
-    StandardErrorPath: $HOME/Library/Logs/lunch-guard.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      PYTHONPATH: $HOME/.local/lib
-
   naya-sync:
     Label: com.$USER.naya-sync
     ProgramArguments:

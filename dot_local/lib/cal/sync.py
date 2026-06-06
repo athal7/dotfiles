@@ -244,4 +244,12 @@ def main():
     active = {k for k in mirrored if k in expected} | created | user_deleted
     save_last_run(active)
 
+    # Run the lunch guard as part of the sync cycle (shares the hourly schedule
+    # instead of its own LaunchAgent). Isolated so a failure can't break sync.
+    try:
+        from cal.lunch import main as lunch_main
+        lunch_main()
+    except Exception as e:
+        log(f"lunch guard failed: {e}", TAG)
+
     log("done", TAG)
