@@ -167,19 +167,19 @@ List the matching session dirs and demo decks with their total size. Sessions li
 
 ```bash
 # QA session dirs: ~/.local/share/qa/<project>/qa-*/  (excludes demos/ decks via depth)
-find -L ~/.local/share/qa -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +<N> \
+find ~/.local/share/qa -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +<N> \
   2>/dev/null | xargs du -sh 2>/dev/null | sort -h
 # Demo decks: ~/.local/share/qa/demos/demo-*.html
-find -L ~/.local/share/qa/demos -maxdepth 1 -type f -name 'demo-*.html' -mtime +<N> \
+find ~/.local/share/qa/demos -maxdepth 1 -type f -name 'demo-*.html' -mtime +<N> \
   2>/dev/null | xargs du -sh 2>/dev/null | sort -h
 ```
 
 Show the matching paths and total size, then ask: "Delete these N QA artifacts older than <N> days?" before removing. Respect `--dry-run` (list only, delete nothing) and `--force` (skip the prompt). Use the same matchers with `-delete`:
 
 ```bash
-find -L ~/.local/share/qa -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +<N> \
+find ~/.local/share/qa -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +<N> \
   -exec rm -rf {} + 2>/dev/null
-find -L ~/.local/share/qa/demos -maxdepth 1 -type f -name 'demo-*.html' -mtime +<N> \
+find ~/.local/share/qa/demos -maxdepth 1 -type f -name 'demo-*.html' -mtime +<N> \
   -delete 2>/dev/null
 ```
 
