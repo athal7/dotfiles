@@ -1,9 +1,9 @@
 ---
-description: Daily knowledge base enrichment — enrich profiles, journal, and decisions from yesterday's activity
+description: Daily knowledge base enrichment — enrich profiles, journal, and decisions from today's activity
 subtask: true
 ---
 
-Run the daily knowledge base enrichment for yesterday (or the date given in arguments).
+Run the daily knowledge base enrichment for today (or the date given in arguments).
 
 $ARGUMENTS
 
@@ -24,7 +24,7 @@ Check activity across all available sources:
 2. **Journal** — write a journal entry for the day summarizing coding activity with diff stats
 3. **Profiles** — merge new facts into knowledge-base people and project profiles
 4. **Decisions** — add any decisions to the decisions log. Include key design decisions and rejected alternatives captured in any OpenSpec changes archived that day.
-5. **Action items** — extract action items from yesterday's activity. Cross-reference within the same activity data — if the activity shows you already took the action (replied to the thread, reviewed the PR, closed the issue), skip the reminder. Only create reminders for items that were not resolved within the same day of activity.
+5. **Action items** — extract action items from today's activity. Cross-reference within the same activity data — if the activity shows you already took the action (replied to the thread, reviewed the PR, closed the issue), skip the reminder. Only create reminders for items that were not resolved within the same day of activity.
 
 ## Privacy
 

@@ -107,9 +107,24 @@ launchagents:
       - "1800"
       - send
       - /fix-prod-errors
+    # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
+    # by then, so each run simply covers that same day's errors.
     StartCalendarInterval:
-      Hour: 7
-      Minute: 0
+      - Weekday: 1
+        Hour: 20
+        Minute: 0
+      - Weekday: 2
+        Hour: 20
+        Minute: 0
+      - Weekday: 3
+        Hour: 20
+        Minute: 0
+      - Weekday: 4
+        Hour: 20
+        Minute: 0
+      - Weekday: 5
+        Hour: 20
+        Minute: 0
     StandardOutPath: $HOME/Library/Logs/fix-prod-errors.log
     StandardErrorPath: $HOME/Library/Logs/fix-prod-errors.log
     EnvironmentVariables:
@@ -151,9 +166,24 @@ launchagents:
       - "3600"
       - send
       - /kb-enrich
+    # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
+    # by then, so each run simply enriches that same day's activity.
     StartCalendarInterval:
-      Hour: 6
-      Minute: 0
+      - Weekday: 1
+        Hour: 20
+        Minute: 0
+      - Weekday: 2
+        Hour: 20
+        Minute: 0
+      - Weekday: 3
+        Hour: 20
+        Minute: 0
+      - Weekday: 4
+        Hour: 20
+        Minute: 0
+      - Weekday: 5
+        Hour: 20
+        Minute: 0
     StandardOutPath: $HOME/Library/Logs/kb-enrich.log
     StandardErrorPath: $HOME/Library/Logs/kb-enrich.log
     EnvironmentVariables:
