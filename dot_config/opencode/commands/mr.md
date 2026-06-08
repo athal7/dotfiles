@@ -7,7 +7,7 @@ Workflow: merge-request. You are maintaining your own merge request. Each phase 
 
 **Use TodoWrite to track this workflow. Create these items before starting:**
 - Triage — fetch threads + top-level comments, categorize, present for approval
-- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD), reply to threads
+- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD), resolve fixed threads
 - Conflicts — resolve if present, run tests
 - Re-request — present summary, re-request review
 
@@ -19,7 +19,7 @@ Dispatch the `explore` subagent (`task` tool, `subagent_type: explore`) to fetch
 
 ## Fix
 
-For each actionable thread, dispatch the `build` subagent (`task` tool, `subagent_type: build`, strict TDD). After the fix commits, reply to the thread citing the commit SHA and explaining the fix. For threads you are not addressing this iteration, reply explaining why — and get approval before posting.
+For each actionable thread, dispatch the `build` subagent (`task` tool, `subagent_type: build`, strict TDD). After the fix commits, **resolve the thread** — no reply needed. Reserve replies for threads you are declining, deferring, questioning, or adding context to; always get approval before posting a reply.
 
 ## Conflicts
 
