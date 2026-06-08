@@ -6,7 +6,7 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Bash permissions: default-allow with curated ask/deny guardrails (system-destructive commands in `$coreGuardrails` here; service-write gates per-tool in packages.yaml)
   - MCP server connections
   - Plugin wiring (skill injection, custom commands)
-  - Agent-specific permission and skill overrides (lead, plan, build)
+  - Agent-specific permission and skill overrides (lead, plan, reviewer, qa, build, explore, scout, general)
 
 Local model setup: LM Studio serves Qwen3 for agentic coding and the kb meeting
 pipeline. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
@@ -61,7 +61,6 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     ["./lib/skill-inject.ts", {
       "architecture": ["gh", "linear", "code-quality"],
       "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
-      "commit": ["review"],
       "communication": ["knowledge-base"],
       "confluence": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
       "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
@@ -73,7 +72,6 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "observability": ["elasticsearch"],
       "pagerduty": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
       "push": ["commit", "gh", "branching", "linear"],
-      "review": ["qa", "code-quality"],
       "slack": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"]
     }]
   ],
@@ -95,12 +93,13 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   Per-agent skill deny lists — blocked by sst/opencode#21793
   (permission.skill patterns not enforced). When fixed, add to each agent:
 
-  plan:  deny commit, push, review, qa, branching, chezmoi
-  build: deny commit, push, review, qa, branching, architecture, thinking-tools
+  plan:  deny commit, push, branching, chezmoi
+  build: deny commit, push, branching, architecture, thinking-tools
   */ -}}
   "agent": {
     "lead": {
       "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
         "task": "allow",
@@ -117,9 +116,29 @@ for model benchmarks — use Unsloth quants for patched chat templates.
         "write": "deny"
       }
     },
+    "reviewer": {
+      "description": "Independent code reviewer — static multi-pass review of a diff, returns/posts classified findings. Opus, independent of the model that wrote the code. UI functional verification is the qa agent's job.",
+      "mode": "subagent",
+      "prompt": "{file:./prompts/reviewer.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny"
+      }
+    },
+    "qa": {
+      "description": "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior. Read-only re: code.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/qa.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny"
+      }
+    },
     "build": {
       "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done.",
       "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/build.md}",
       "steps": 30,
       "permission": {
@@ -127,9 +146,26 @@ for model benchmarks — use Unsloth quants for patched chat templates.
         "write": "allow",
         "bash": {{ merge (dict "*" "allow") $globalBash | toPrettyJson | indent 8 | trim }}
       }
+    },
+    "explore": {
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "scout": {
+      "description": "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/scout.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny"
+      }
+    },
+    "general": {
+      "model": "anthropic/claude-sonnet-4-6"
     }
   },
   "model": "anthropic/claude-opus-4-8",
+  "small_model": "anthropic/claude-haiku-4-5",
   "provider": {
     "anthropic": {
       "models": {
@@ -179,7 +215,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     }
   },
   "formatter": {
-    "rubocop": { "disabled": true }
+    "rubocop": { "disabled": true },
+    "ruff": { "disabled": true }
   },
   "lsp": true
 }
