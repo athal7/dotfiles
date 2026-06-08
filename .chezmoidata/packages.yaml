@@ -57,6 +57,8 @@ packages:
         "gh * status*": allow
         "gh search*": allow
         "gh api -X GET *": allow
+        "gh api */review-comments*": allow
+        "gh api */reviews*": allow
         "gh api graphql*mutation*": ask
         "gh api graphql*": allow
         "gh *": ask
