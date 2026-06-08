@@ -41,3 +41,11 @@ Optional argument: a time-window override — e.g. `2w`, `10d`, or an explicit d
 ## Writing guidance
 
 Visual-first slides, one idea per slide. Headlines sell the outcome; the screenshot is the hero of each slide; the detailed talk-track lives in the speaker notes, not on the slide. Sound like a confident engineer showing off working software — not a status report. Lead with impact and keep on-slide text tight.
+
+## Layout gotchas (reveal.js)
+
+Bake these in from the start — each cost a failed iteration:
+
+- **Never style `<section>` directly for layout.** reveal.js writes an inline `display` onto each visible section to show/hide it, which overrides any stylesheet rule (e.g. `.reveal section:has(.hero){display:flex}` silently does nothing). Wrap a slide's content in an inner `<div>` and lay *that* out with flex/grid instead.
+- **No `vh`/`vw` units for sizing slide content.** reveal scales the whole slide via CSS `transform: scale()`; viewport units ignore the transform and measure the real window, so `max-height: 62vh` images overflow and clip on large monitors. Size in the slide's fixed coordinate space (px against the configured `width`/`height`, or `%`).
+- For image-heavy item slides, a two-column inner grid (text left, screenshot right) keeps ~4:3 captures fully visible far better than stacking text above the image.

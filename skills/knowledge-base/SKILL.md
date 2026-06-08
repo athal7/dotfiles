@@ -20,7 +20,7 @@ The knowledge base at `~/.local/share/kb/` is a distilled, maintained view of pe
 - `names.json` — display name → canonical name (people)
 - `projects.json` — variant name → canonical name (projects, empty string = suppress)
 - `product-labels.json` — Linear label → product/project slug
-- `github-repos.json` — repo name → product/project slug
+- `github-repos.json` — repo name → product/project slug; also has an `_org` key (the GitHub org), so combine `_org` + repo name to build a `github.com/<org>/<repo>` URL (e.g. for PR links)
 
 ## People profiles
 
