@@ -96,6 +96,13 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   plan:  deny commit, push, branching, chezmoi
   build: deny commit, push, branching, architecture, thinking-tools
   */ -}}
+  {{- /*
+  NOTE: always set `model` explicitly on each agent — never rely on top-level
+  model inheritance for subagents. Testing confirmed that dispatched subagents
+  inherit the CALLING AGENT's model, not the top-level default. So if
+  lead=sonnet and plan has no model field, plan runs on sonnet even though
+  the top-level default is opus.
+  */ -}}
   "agent": {
     "lead": {
       "mode": "primary",
