@@ -55,6 +55,7 @@ packages:
         "gh * diff*": allow
         "gh * checks*": allow
         "gh * status*": allow
+        "gh run watch*": allow
         "gh search*": allow
         "gh api -X GET *": allow
         "gh api */review-comments*": allow
