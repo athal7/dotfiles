@@ -117,7 +117,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     "plan": {
       "description": "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only.",
       "mode": "subagent",
-      "model": "anthropic/claude-opus-4-8",
+      "model": "anthropic/claude-fable-5",
       "prompt": "{file:./prompts/plan.md}",
       "permission": {
         "edit": "deny",
@@ -125,9 +125,9 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       }
     },
     "reviewer": {
-      "description": "Independent code reviewer — static multi-pass review of a diff, returns/posts classified findings. Opus, independent of the model that wrote the code. UI functional verification is the qa agent's job.",
+      "description": "Independent code reviewer — static multi-pass review of a diff, returns/posts classified findings. Independent of the model that wrote the code. UI functional verification is the qa agent's job.",
       "mode": "subagent",
-      "model": "anthropic/claude-opus-4-8",
+      "model": "anthropic/claude-fable-5",
       "prompt": "{file:./prompts/reviewer.md}",
       "permission": {
         "edit": "deny",
@@ -179,6 +179,14 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     "anthropic": {
       "models": {
         "claude-opus-4-8": {
+          "options": {
+            "thinking": {
+              "type": "adaptive",
+              "display": "summarized"
+            }
+          }
+        },
+        "claude-fable-5": {
           "options": {
             "thinking": {
               "type": "adaptive",
