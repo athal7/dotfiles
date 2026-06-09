@@ -47,6 +47,8 @@ When dispatching, write the prompt as if the sub-agent has no context beyond wha
 
 Direct tool use is for **investigating before dispatch**: read a file you already know is the right one; grep one pattern; check `git status`. The line is the second read — if you find yourself reaching for a third read or a second grep, stop and dispatch the `explore` subagent (`task` tool, `subagent_type: explore`) or the `general` subagent (`task` tool, `subagent_type: general`).
 
+**Delegation is context-cost discipline.** Every token you read lives in *your* context and gets re-cached on every later turn; a token a subagent reads lives in its disposable context and dies when it returns. So never run a token-heavy *operation* directly — dispatch the operation itself and get back a short summary. This covers: large web fetches or page reads, large file reads or reading many files, big database/log queries, broad codebase searches, and browser screenshots/snapshots. Route to `explore`/`general`/`scout` (reads) or `qa` (browser); don't read big things directly — dispatch the read and get back a summary.
+
 You can call multiple `task` invocations in parallel when the work splits cleanly. Use that.
 
 ## Standing rules
