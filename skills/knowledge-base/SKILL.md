@@ -21,6 +21,7 @@ The knowledge base at `~/.local/share/kb/` is a distilled, maintained view of pe
 - `projects.json` — variant name → canonical name (projects, empty string = suppress)
 - `product-labels.json` — Linear label → product/project slug
 - `github-repos.json` — repo name → product/project slug; also has an `_org` key (the GitHub org), so combine `_org` + repo name to build a `github.com/<org>/<repo>` URL (e.g. for PR links)
+- `openspec/<repo-slug>/` — durable per-repo OpenSpec store: `specs/` (accumulated standing requirements) and `changes/` (change proposals, each with a `design.md` rationale). Active changes live at `changes/<name>/`; archived (completed) changes are date-stamped at `changes/archive/<date>-<name>/`, each with a `kb-meta.yaml` (worktree, branch, date, change) that lets enrichment correlate the producing sessions to the change. `/implement` symlinks each worktree's `openspec/` to this store, so it is read during planning and by daily enrichment (which reads the dated `changes/archive/<date>-<name>/design.md` for that day's decisions).
 
 ## People profiles
 
@@ -168,3 +169,6 @@ When you encounter new contact info (email, chat handle, GitHub handle, title, t
 - Find a decision: check the relevant product/project `## Key Decisions` first, then `cat ~/.local/share/kb/decisions/cross-cutting.md`; older context is in `decisions/archive.md`
 - Search across KB: `grep -r "search term" ~/.local/share/kb/`
 - Search journal: `grep -r "search term" ~/.local/share/kb/journal/`
+- Find OpenSpec requirements for a repo: `cat ~/.local/share/kb/openspec/<repo-slug>/specs/<capability>/spec.md`
+- Find the rationale behind a change: active changes at `cat ~/.local/share/kb/openspec/<repo-slug>/changes/<name>/design.md`; archived (dated) changes at `cat ~/.local/share/kb/openspec/<repo-slug>/changes/archive/<date>-<name>/design.md`
+- Search across all durable specs/changes: `grep -r "search term" ~/.local/share/kb/openspec/`
