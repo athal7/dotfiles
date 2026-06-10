@@ -125,6 +125,79 @@ chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent |
 
 # Skill injection mappings
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.plugin[0][1]'
+
+# Per-agent model + effort variant — verify expected models; cross-check vs empty-turn query (catch access-gated models)
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent | to_entries[] | {agent: .key, model: .value.model, variant: .value.variant}'
+```
+
+**Cost & context health** — the system's spend profile. Lead is typically the largest cost (always-on primary carrying full context); build is the largest *editing* agent. Watch for context bloat, speed regressions, and silently-broken models:
+
+```bash
+# Per-agent cost & avg context — which agent dominates spend?
+sqlite3 -readonly "$DB" <<SQL
+SELECT json_extract(data,'$.agent') AS agent,
+       ROUND(SUM(json_extract(data,'$.cost')),0) AS cost_usd,
+       COUNT(*) AS msgs,
+       ROUND(AVG(json_extract(data,'$.tokens.cache.read'))) AS avg_ctx_tok
+FROM message
+WHERE json_extract(data,'$.role')='assistant'
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY agent ORDER BY cost_usd DESC;
+SQL
+
+# Cost decomposition for top agents — is spend cache/context-bound vs output?
+sqlite3 -readonly "$DB" <<SQL
+SELECT json_extract(data,'$.agent') AS agent,
+       ROUND(SUM(json_extract(data,'$.tokens.cache.write'))/1e6,1) AS cache_w_Mtok,
+       ROUND(SUM(json_extract(data,'$.tokens.cache.read'))/1e6,1) AS cache_r_Mtok,
+       ROUND(SUM(json_extract(data,'$.tokens.output'))/1e6,1) AS out_Mtok
+FROM message
+WHERE json_extract(data,'$.role')='assistant'
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY agent ORDER BY cache_r_Mtok DESC LIMIT 5;
+SQL
+
+# Lead daily cost & context trend — are prune + delegation keeping context lean?
+sqlite3 -readonly "$DB" <<SQL
+SELECT date(time_created/1000,'unixepoch','localtime') AS day,
+       ROUND(SUM(json_extract(data,'$.cost')),0) AS lead_cost,
+       ROUND(AVG(json_extract(data,'$.tokens.cache.read'))) AS avg_ctx_tok
+FROM message
+WHERE json_extract(data,'$.role')='assistant' AND json_extract(data,'$.agent')='lead'
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY day ORDER BY day DESC;
+SQL
+
+# Per-agent/model latency & output — speed regressions (build is tuned for speed)
+sqlite3 -readonly "$DB" <<SQL
+SELECT json_extract(data,'$.agent') AS agent, json_extract(data,'$.modelID') AS model,
+       COUNT(*) AS msgs,
+       ROUND(AVG((json_extract(data,'$.time.completed')-json_extract(data,'$.time.created'))/1000.0),1) AS avg_lat_s,
+       ROUND(AVG(json_extract(data,'$.tokens.output'))) AS avg_out_tok
+FROM message
+WHERE json_extract(data,'$.role')='assistant'
+  AND json_extract(data,'$.time.completed') IS NOT NULL
+  AND json_extract(data,'$.tokens.output') > 0
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY agent, model HAVING msgs > 50 ORDER BY agent, model;
+SQL
+
+# Empty-turn RATE per agent+model — a model that's ~100% empty is broken or access-gated
+# (e.g. retention-gated). Normal tool-heavy agents have a moderate baseline; watch for >30%.
+sqlite3 -readonly "$DB" <<SQL
+SELECT json_extract(data,'$.agent') AS agent, json_extract(data,'$.modelID') AS model,
+       SUM(CASE WHEN COALESCE(json_extract(data,'$.cost'),0)=0
+                  AND COALESCE(json_extract(data,'$.tokens.output'),0)=0
+                THEN 1 ELSE 0 END) AS empty_turns,
+       COUNT(*) AS total_turns,
+       ROUND(100.0*SUM(CASE WHEN COALESCE(json_extract(data,'$.cost'),0)=0
+                  AND COALESCE(json_extract(data,'$.tokens.output'),0)=0
+                THEN 1 ELSE 0 END)/COUNT(*),1) AS empty_pct
+FROM message
+WHERE json_extract(data,'$.role')='assistant'
+  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY agent, model HAVING total_turns > 20 AND empty_pct > 30 ORDER BY empty_pct DESC;
+SQL
 ```
 
 **Manual spot-checks** — for requirements that can't be automated, sample 3-5 recent sessions and inspect:
@@ -152,6 +225,9 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Behavior skipped despite instructions | Structural enforcement (permissions, tool removal) | Advisory prompt changes |
 | Skill never loads | Embed in command template or agent prompt | More skill injection |
 | Agent edits directly | Verify permission deny is in config | Identity framing |
+| Primary/lead cost dominated by cache (>80%) | Delegate token-heavy reads to subagents; `compaction.prune` | Effort tuning alone (output is only ~10% of lead cost) |
+| Optimizing without per-agent cost data | Measure per-agent cost first (cost-health queries above) | Assuming which agent is expensive |
+| Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
 
 ---
 
