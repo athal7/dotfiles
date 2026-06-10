@@ -121,7 +121,7 @@ packages:
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
     - name: opencode
-      repo: sst/opencode
+      repo: anomalyco/opencode
       target: .local/bin/opencode
       asset: opencode-darwin-arm64.zip
       type: archive-file
@@ -134,7 +134,7 @@ packages:
         "opencode *": ask
 
     - name: opencode-desktop
-      repo: sst/opencode
+      repo: anomalyco/opencode
       target: Applications
       app: OpenCode.app
       asset: opencode-desktop-mac-arm64.app.tar.gz
