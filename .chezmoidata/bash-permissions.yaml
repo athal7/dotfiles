@@ -27,7 +27,7 @@ bashPermissions:
   # live in packages.yaml co-located with each tool; only non-package commands
   # belong here.
   lists:
-    # lead: harmless non-package navigation for its deny-base block.
+    # lead: harmless non-package navigation layered onto its allow base.
     lead:
       "ls*": allow
       "pwd": allow
@@ -52,5 +52,5 @@ bashPermissions:
   # Only entries that need a non-default bash block are defined here.
   agents:
     global: { base: allow, lists: [],     guardrails: true, packages: true }  # top-level permission.bash
-    lead:   { base: deny,  lists: [lead], guardrails: true, packages: true }
+    lead:   { base: allow, lists: [lead], guardrails: true, packages: true }
     build:  { base: allow, lists: [],     guardrails: true, packages: true }
