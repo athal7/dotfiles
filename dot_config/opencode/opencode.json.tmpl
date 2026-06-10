@@ -3,7 +3,7 @@ opencode.json — OpenCode agent configuration.
 
 Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Model selection (cloud and local via LM Studio)
-  - Bash permissions: default-allow with curated ask/deny guardrails (system-destructive commands in `$coreGuardrails` here; service-write gates per-tool in packages.yaml)
+  - Bash permissions: default-allow with curated ask/deny guardrails. Guardrails (system-destructive commands) and named allow-lists live in `.chezmoidata/bash-permissions.yaml`, rendered per-agent via the `opencode-bash` template partial; package-specific gates still live per-tool in packages.yaml. The `lead` agent defaults to `deny` (forcing delegation) with a read-only diagnostics allow-list; other subagents inherit the permissive global block
   - MCP server connections
   - Plugin wiring (skill injection, custom commands)
   - Agent-specific permission and skill overrides (lead, plan, reviewer, qa, build, explore, scout, general)
@@ -14,24 +14,9 @@ pipeline. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
 as lmstudio/qwen3.5-27b. See https://www.glukhov.org/ai-devtools/opencode/llms-comparison/
 for model benchmarks — use Unsloth quants for patched chat templates.
 */ -}}
-{{- /* Core guardrails — system-level dangerous commands that must prompt.
-       Everything not listed here (and not listed in packages.yaml) is allowed
-       by default via the "*": "allow" base. */ -}}
-{{- $coreGuardrails := dict
-  "rm -rf /*" "ask"   "rm -fr /*" "ask"
-  "rm -rf ~*" "ask"   "rm -fr ~*" "ask"
-  "rm -rf $HOME*" "ask"
-  "sudo *" "ask"
-  "dd if=*" "ask"   "dd of=*" "ask"
-  "mkfs*" "ask"   "diskutil *" "ask"
-  "shutdown*" "ask"   "reboot*" "ask"
-  "curl * -X POST*" "ask"   "curl * -X PUT*" "ask"
-  "curl * -X DELETE*" "ask"   "curl * -X PATCH*" "ask"
-  "curl * -d *" "ask"   "curl * --data*" "ask"
-  "curl * -T *" "ask"   "curl * --upload-file*" "ask"
-  "wget *" "ask"
--}}
-{{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask) */ -}}
+{{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
+       NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
+       from .chezmoidata/bash-permissions.yaml via the opencode-bash partial. */ -}}
 {{- $globalBash := dict -}}
 {{- range $list := .packages -}}
   {{- if kindIs "slice" $list -}}
@@ -47,10 +32,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- /* Merge core guardrails into global */ -}}
-{{- range $p, $action := $coreGuardrails -}}
-  {{- $_ := set $globalBash $p $action -}}
-{{- end -}}
+{{- /* Bash permission data: guardrails, named allow-lists, per-agent specs. */ -}}
+{{- $bp := .bashPermissions -}}
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "lead",
@@ -87,7 +70,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "~/Documents/Zoom/**": "allow",
       "/tmp/**": "allow"
     },
-    "bash": {{ merge (dict "*" "allow") $globalBash | toPrettyJson | indent 4 | trim }}
+    "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.global "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 4 | trim }}
   },
   {{- /*
   Per-agent skill deny lists — blocked by sst/opencode#21793
@@ -111,7 +94,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "permission": {
         "task": "allow",
         "edit": "deny",
-        "write": "deny"
+        "write": "deny",
+        "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.lead "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 8 | trim }}
       }
     },
     "plan": {
@@ -154,7 +138,7 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       "permission": {
         "edit": "allow",
         "write": "allow",
-        "bash": {{ merge (dict "*" "allow") $globalBash | toPrettyJson | indent 8 | trim }}
+        "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.build "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 8 | trim }}
       }
     },
     "explore": {

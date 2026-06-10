@@ -22,6 +22,12 @@ packages:
         "chezmoi forget*": ask
         "chezmoi upgrade*": ask
         "chezmoi add*": ask
+        "chezmoi diff*": allow
+        "chezmoi status*": allow
+        "chezmoi data*": allow
+        "chezmoi cat*": allow
+        "chezmoi managed*": allow
+        "chezmoi source-path*": allow
     - name: colima
     - name: direnv
     - name: docker
@@ -48,6 +54,17 @@ packages:
         "git -C * push*": ask
         "git -C * reset --hard*": ask
         "git -C * clean -f*": ask
+        "git status*": allow
+        "git diff*": allow
+        "git log*": allow
+        "git show*": allow
+        "git add*": allow
+        "git stash list*": allow
+        "git rev-parse*": allow
+        "git config --get*": allow
+        "git remote -v*": allow
+        "git remote show*": allow
+        "git remote get-url*": allow
     - name: gh
       permissions:
         "gh * list*": allow

@@ -1,0 +1,17 @@
+{{- /* Render an agent's bash permission object as JSON.
+       ctx: spec (base/lists/guardrails/packages), lists (named allow-list map),
+       guardrails (guardrail map), packages (harvested package dict).
+       Composition is set-if-absent to match sprig `merge` first-wins. */ -}}
+{{- $acc := dict "*" .spec.base -}}
+{{- range $name := .spec.lists -}}
+  {{- range $k, $v := (index $.lists $name) -}}
+    {{- if not (hasKey $acc $k) }}{{ $_ := set $acc $k $v }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- if .spec.guardrails -}}
+  {{- range $k, $v := $.guardrails -}}{{ if not (hasKey $acc $k) }}{{ $_ := set $acc $k $v }}{{ end }}{{- end -}}
+{{- end -}}
+{{- if .spec.packages -}}
+  {{- range $k, $v := $.packages -}}{{ if not (hasKey $acc $k) }}{{ $_ := set $acc $k $v }}{{ end }}{{- end -}}
+{{- end -}}
+{{- $acc | toPrettyJson -}}
