@@ -6,10 +6,15 @@ agent: lead
 Workflow: merge-request. You are maintaining your own merge request. Each phase below names what to dispatch or which skill to use — the methodology lives in the dispatched agents and skills.
 
 **Use TodoWrite to track this workflow. Create these items before starting:**
+- Reopen issue — if the MR references a tracked issue, set it back to In Progress
 - Triage — fetch threads + top-level comments, categorize, present for approval
 - Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD), resolve fixed threads
 - Conflicts — resolve if present, run tests
 - Re-request — present summary, re-request review
+
+## Reopen issue
+
+If the merge request references a tracked issue/ticket (check the MR title, branch name, or description), set that issue back to In Progress before doing anything else — a returning MR's issue may be sitting in a review or done state. Use the appropriate issue-tracker skill for the org.
 
 ## Triage
 
