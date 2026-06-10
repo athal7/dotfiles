@@ -147,7 +147,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     "build": {
       "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done.",
       "mode": "subagent",
-      "model": "anthropic/claude-opus-4-8",
+      "model": "anthropic/claude-opus-4-8-fast",
+      "variant": "medium",
       "prompt": "{file:./prompts/build.md}",
       "steps": 30,
       "permission": {
