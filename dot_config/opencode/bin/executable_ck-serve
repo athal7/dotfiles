@@ -1,0 +1,12 @@
+#!/bin/sh
+# Launch the ck semantic-search MCP server (stdio) for opencode.
+#
+# opencode's MCP `command` is execFile-style (no shell), so `~`, globs, and the
+# mise shim's PATH lookup are unavailable at spawn time. Resolve the real binary
+# here at runtime by globbing the mise install path, picking the first match.
+CK=$(ls "$HOME"/.local/share/mise/installs/cargo-ck-search/*/bin/ck 2>/dev/null | head -1)
+if [ ! -x "$CK" ]; then
+  echo "ck-serve: ck binary not found under ~/.local/share/mise/installs/cargo-ck-search/*/bin/ck" >&2
+  exit 1
+fi
+exec "$CK" --serve "$@"

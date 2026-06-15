@@ -200,38 +200,53 @@ GROUP BY agent, model HAVING total_turns > 20 AND empty_pct > 30 ORDER BY empty_
 SQL
 ```
 
-**Semantic-dedup effectiveness** — does the `dedup` injection actually drive `plan`/`reviewer` to run `ck`? Measures the `semantic-dedup-skill` spec. Guidance-not-enforcement, so low invocation despite injection is the signal to escalate (see recommendation row):
+**Semantic-search adoption** — measures the `semantic-code-search` spec. Are agents actually invoking the resident `ck` MCP server? The headline metric is `explore`'s advisory `ck_semantic_search` rate (prompt-driven, not enforced) plus the dedup use by `plan`/`reviewer` (injection-context-driven). MCP tool-call parts are stored with opencode's `<server>_<tool>` underscore namespacing, so the ck tools are `ck_semantic_search` and `ck_reindex` (confirmed against the live DB `part.data.tool`). Low invocation despite the prompt/injection being wired is the signal to escalate (see recommendation row):
 
 ```bash
-# (a) Did plan/reviewer sessions invoke ck? (bash parts whose command runs ck --sem)
+# (a) semantic_search adoption by agent — % of explore/plan/reviewer sessions invoking it.
+# Denominator = all sessions per agent in-window; numerator = those with >=1 ck_semantic_search.
+sqlite3 -readonly "$DB" <<SQL
+WITH sem AS (
+  SELECT DISTINCT session_id FROM part
+  WHERE json_extract(data,'$.type') = 'tool'
+    AND json_extract(data,'$.tool') = 'ck_semantic_search'
+)
+SELECT s.agent,
+       COUNT(*) AS total_sessions,
+       SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END) AS sessions_with_semantic,
+       ROUND(100.0*SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END)/COUNT(*),1) AS semantic_pct
+FROM session s LEFT JOIN sem ON sem.session_id = s.id
+WHERE s.agent IN ('explore','plan','reviewer')
+  AND s.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY s.agent ORDER BY s.agent;
+SQL
+
+# (b) reindex counts by agent — is the reindex-before-first-query guidance followed?
 sqlite3 -readonly "$DB" <<SQL
 SELECT s.agent,
-       COUNT(*) AS ck_calls,
-       COUNT(DISTINCT p.session_id) AS sessions_with_ck
+       COUNT(*) AS reindex_calls,
+       COUNT(DISTINCT p.session_id) AS sessions_with_reindex
 FROM part p JOIN session s ON s.id = p.session_id
 WHERE json_extract(p.data,'$.type') = 'tool'
-  AND json_extract(p.data,'$.tool') = 'bash'
-  AND json_extract(p.data,'$.state.input.command') LIKE '%ck %--sem%'
-  AND s.agent IN ('plan','reviewer')
+  AND json_extract(p.data,'$.tool') = 'ck_reindex'
   AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
 GROUP BY s.agent ORDER BY s.agent;
 SQL
 
-# (b) Skill-load rate for dedup + its gateway skills, by agent.
-# The "Skill load rates by agent" query above already covers this — filter its
-# output to skill IN ('dedup','architecture','code-quality') and agent IN
-# ('plan','reviewer'). Compare gateway loads (architecture/code-quality) vs.
-# dedup loads: dedup loads should track gateway loads if the footer is followed.
+# (c) ck injection-context delivery — confirm the dedup reason-to-use is wired
+# under both gateways the dedup-using agents load (architecture→plan,
+# code-quality→reviewer). Verifies the dedup-as-context delivery, not a skill.
+chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
+  | jq '.plugin[0][1] | {architecture, "code-quality"}'
 
-# (c) Review-flagged-dup proxy — reviewer findings naming an existing symbol +
+# (d) Review-flagged-dup proxy — reviewer findings naming an existing symbol +
 # file:line as a duplicate. No structured marker yet, so spot-check: list recent
-# reviewer sessions that ran ck and inspect whether a dup was flagged.
+# reviewer sessions that ran ck_semantic_search and inspect whether a dup was flagged.
 sqlite3 -readonly "$DB" <<SQL
 SELECT DISTINCT p.session_id,
        date(p.time_created/1000,'unixepoch','localtime') AS day
 FROM part p JOIN session s ON s.id = p.session_id
-WHERE json_extract(p.data,'$.tool') = 'bash'
-  AND json_extract(p.data,'$.state.input.command') LIKE '%ck %--sem%'
+WHERE json_extract(p.data,'$.tool') = 'ck_semantic_search'
   AND s.agent = 'reviewer'
   AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
 ORDER BY day DESC;
@@ -266,7 +281,8 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Primary/lead cost dominated by cache (>80%) | Delegate token-heavy reads to subagents; `compaction.prune` | Effort tuning alone (output is only ~10% of lead cost) |
 | Optimizing without per-agent cost data | Measure per-agent cost first (cost-health queries above) | Assuming which agent is expensive |
 | Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
-| `plan`/`reviewer` rarely run `ck` despite the dedup injection | Embed the dedup pointer directly in the agent prompt, or move to a structural results hook that injects matches | More advisory skill injection |
+| `explore` rarely runs `ck_semantic_search` despite the explore prompt | Staged escalation: strengthen the explore prompt first, then a structural results-injection hook that runs the search and injects matches | More advisory prompt text alone |
+| `plan`/`reviewer` rarely run `ck_semantic_search` despite the dedup injection context | Staged escalation: strengthen the injection `context`, then a structural results hook that injects matches | More advisory skill injection |
 
 ---
 

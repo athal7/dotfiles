@@ -220,6 +220,8 @@ packages:
       version: latest
     - name: cargo:ck-search
       version: latest
+    - name: npm:supergateway
+      version: latest
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema

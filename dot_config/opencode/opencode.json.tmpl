@@ -42,9 +42,9 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   },
   "plugin": [
     ["./lib/skill-inject.ts", {
-      "architecture": ["gh", "linear", "code-quality", {"skill": "dedup", "context": "Before finalizing a design, semantic-search the codebase for an existing equivalent before adding a function; prefer reuse over a differently-named duplicate"}],
+      "architecture": ["gh", "linear", "code-quality", {"skill": "ck", "context": "Before adding a function, semantic-search for an existing equivalent to reuse — avoid differently-named duplicates"}],
       "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
-      "code-quality": [{"skill": "dedup", "context": "When reviewing a diff, semantic-search the diff-added functions for existing equivalents and flag semantic dups (name the symbol + file:line); scope queries tight"}],
+      "code-quality": [{"skill": "ck", "context": "Check diff-added functions for existing semantic equivalents; flag duplicates (name the symbol + file:line)"}],
       "communication": ["knowledge-base"],
       "confluence": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
       "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
@@ -63,6 +63,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     "skill": "allow",
     "lsp": "allow",
     "websearch": "allow",
+    "ck_semantic_search": "allow",
+    "ck_reindex": "allow",
     "external_directory": {
       "*": "ask",
       "~/code/**": "allow",
@@ -143,7 +145,12 @@ for model benchmarks — use Unsloth quants for patched chat templates.
       }
     },
     "explore": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/explore.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny"
+      }
     },
     "scout": {
       "description": "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7.",
@@ -203,6 +210,10 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     }
   },
   "mcp": {
+    "ck": {
+      "type": "remote",
+      "url": "http://127.0.0.1:4097/mcp"
+    },
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp"
