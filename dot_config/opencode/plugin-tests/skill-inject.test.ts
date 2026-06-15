@@ -215,6 +215,35 @@ describe("buildInjection — format validation", () => {
   })
 })
 
+describe("buildInjection — object-entry context formatting", () => {
+  // These assert how a `{ skill, context }` entry renders, given a hand-built
+  // target array. They do NOT verify the real `architecture`/`code-quality`
+  // config maps `dedup` under both keys — that wiring is checked separately by
+  // the `chezmoi execute-template | jq` config assertion, not this unit suite.
+  it("renders a context suffix for an object entry among plain string entries", () => {
+    const targets: InjectionEntry[] = [
+      "gh",
+      "linear",
+      "code-quality",
+      { skill: "dedup", context: "semantic-search for an existing equivalent before adding a function; prefer reuse" },
+    ]
+    const result = buildInjection(targets, () => null)
+    expect(result).toContain(
+      "- load `dedup` skill — semantic-search for an existing equivalent before adding a function; prefer reuse",
+    )
+  })
+
+  it("renders a context suffix for a sole object entry", () => {
+    const targets: InjectionEntry[] = [
+      { skill: "dedup", context: "semantic-search diff-added functions, flag semantic dups, scope queries tight" },
+    ]
+    const result = buildInjection(targets, () => null)
+    expect(result).toContain(
+      "- load `dedup` skill — semantic-search diff-added functions, flag semantic dups, scope queries tight",
+    )
+  })
+})
+
 // ---------------------------------------------------------------------------
 // 3. inject_list format
 // ---------------------------------------------------------------------------

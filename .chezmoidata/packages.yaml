@@ -218,6 +218,8 @@ packages:
       version: latest
     - name: argocd
       version: latest
+    - name: cargo:ck-search
+      version: latest
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema

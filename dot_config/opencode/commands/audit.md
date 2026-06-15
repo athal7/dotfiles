@@ -200,6 +200,44 @@ GROUP BY agent, model HAVING total_turns > 20 AND empty_pct > 30 ORDER BY empty_
 SQL
 ```
 
+**Semantic-dedup effectiveness** — does the `dedup` injection actually drive `plan`/`reviewer` to run `ck`? Measures the `semantic-dedup-skill` spec. Guidance-not-enforcement, so low invocation despite injection is the signal to escalate (see recommendation row):
+
+```bash
+# (a) Did plan/reviewer sessions invoke ck? (bash parts whose command runs ck --sem)
+sqlite3 -readonly "$DB" <<SQL
+SELECT s.agent,
+       COUNT(*) AS ck_calls,
+       COUNT(DISTINCT p.session_id) AS sessions_with_ck
+FROM part p JOIN session s ON s.id = p.session_id
+WHERE json_extract(p.data,'$.type') = 'tool'
+  AND json_extract(p.data,'$.tool') = 'bash'
+  AND json_extract(p.data,'$.state.input.command') LIKE '%ck %--sem%'
+  AND s.agent IN ('plan','reviewer')
+  AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+GROUP BY s.agent ORDER BY s.agent;
+SQL
+
+# (b) Skill-load rate for dedup + its gateway skills, by agent.
+# The "Skill load rates by agent" query above already covers this — filter its
+# output to skill IN ('dedup','architecture','code-quality') and agent IN
+# ('plan','reviewer'). Compare gateway loads (architecture/code-quality) vs.
+# dedup loads: dedup loads should track gateway loads if the footer is followed.
+
+# (c) Review-flagged-dup proxy — reviewer findings naming an existing symbol +
+# file:line as a duplicate. No structured marker yet, so spot-check: list recent
+# reviewer sessions that ran ck and inspect whether a dup was flagged.
+sqlite3 -readonly "$DB" <<SQL
+SELECT DISTINCT p.session_id,
+       date(p.time_created/1000,'unixepoch','localtime') AS day
+FROM part p JOIN session s ON s.id = p.session_id
+WHERE json_extract(p.data,'$.tool') = 'bash'
+  AND json_extract(p.data,'$.state.input.command') LIKE '%ck %--sem%'
+  AND s.agent = 'reviewer'
+  AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+ORDER BY day DESC;
+SQL
+```
+
 **Manual spot-checks** — for requirements that can't be automated, sample 3-5 recent sessions and inspect:
 - Were review passes run in order? (code-review R1)
 - Were findings verified against the diff? (code-review R2)
@@ -228,6 +266,7 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Primary/lead cost dominated by cache (>80%) | Delegate token-heavy reads to subagents; `compaction.prune` | Effort tuning alone (output is only ~10% of lead cost) |
 | Optimizing without per-agent cost data | Measure per-agent cost first (cost-health queries above) | Assuming which agent is expensive |
 | Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
+| `plan`/`reviewer` rarely run `ck` despite the dedup injection | Embed the dedup pointer directly in the agent prompt, or move to a structural results hook that injects matches | More advisory skill injection |
 
 ---
 

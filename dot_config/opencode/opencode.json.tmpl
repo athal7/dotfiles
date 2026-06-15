@@ -6,7 +6,7 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Bash permissions: default-allow with curated ask/deny guardrails. Guardrails (system-destructive commands) and named allow-lists live in `.chezmoidata/bash-permissions.yaml`, rendered per-agent via the `opencode-bash` template partial; package-specific gates still live per-tool in packages.yaml. The `lead` agent defaults to `deny` (forcing delegation) with a read-only diagnostics allow-list; other subagents inherit the permissive global block
   - MCP server connections
   - Plugin wiring (skill injection, custom commands)
-  - Agent-specific permission and skill overrides (lead, plan, reviewer, qa, build, explore, scout, general)
+  - Agent-specific permission and skill overrides (lead, plan, reviewer, qa, build, explore, scout, general, title)
 
 Local model setup: LM Studio serves Qwen3 for agentic coding and the kb meeting
 pipeline. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
@@ -42,8 +42,9 @@ for model benchmarks — use Unsloth quants for patched chat templates.
   },
   "plugin": [
     ["./lib/skill-inject.ts", {
-      "architecture": ["gh", "linear", "code-quality"],
+      "architecture": ["gh", "linear", "code-quality", {"skill": "dedup", "context": "Before finalizing a design, semantic-search the codebase for an existing equivalent before adding a function; prefer reuse over a differently-named duplicate"}],
       "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
+      "code-quality": [{"skill": "dedup", "context": "When reviewing a diff, semantic-search the diff-added functions for existing equivalents and flag semantic dups (name the symbol + file:line); scope queries tight"}],
       "communication": ["knowledge-base"],
       "confluence": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
       "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
@@ -156,6 +157,11 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     },
     "general": {
       "model": "anthropic/claude-sonnet-4-6"
+    },
+    "title": {
+      "model": "anthropic/claude-haiku-4-5",
+      "prompt": "{file:./prompts/title.md}",
+      "temperature": 0.5
     }
   },
   "model": "anthropic/claude-opus-4-8",
