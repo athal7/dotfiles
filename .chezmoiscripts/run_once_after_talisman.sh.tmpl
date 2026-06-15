@@ -18,13 +18,19 @@ cat > "$HOOK_FILE" << 'HOOK'
 # If repo has a .pre-commit-config.yaml, defer to pre-commit framework
 if [ -f "$(git rev-parse --show-toplevel)/.pre-commit-config.yaml" ]; then
     if command -v pre-commit &> /dev/null; then
-        exec pre-commit run --hook-stage pre-commit
+        pre-commit run --hook-stage pre-commit || exit 1
+    fi
+else
+    # Otherwise, run talisman in warn-only mode
+    if command -v talisman &> /dev/null; then
+        talisman --githook pre-commit || echo "⚠ talisman: potential secrets detected (warning only)"
     fi
 fi
 
-# Otherwise, run talisman in warn-only mode
-if command -v talisman &> /dev/null; then
-    talisman --githook pre-commit || echo "⚠ talisman: potential secrets detected (warning only)"
+# Run the repo's own installed hook, if present (core.hooksPath bypasses .git/hooks/)
+repo_hook="$(git rev-parse --git-dir)/hooks/pre-commit"
+if [ -x "$repo_hook" ]; then
+    "$repo_hook" || exit 1
 fi
 HOOK
 
