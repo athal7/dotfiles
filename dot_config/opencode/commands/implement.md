@@ -6,7 +6,7 @@ agent: lead
 Workflow: implement.
 
 **Use TodoWrite to track this workflow. Create these items before starting:**
-- Workspace setup — branch/worktree if needed per repo conventions; link `openspec/` to the durable store
+- Workspace setup — branch/worktree if needed per repo conventions; set up `openspec/` (real dir + narrow store symlinks)
 - Plan — dispatch the `explore`/`scout` subagents (`task` tool, `subagent_type: explore` / `subagent_type: scout`) to gather, dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), create proposal, present for approval
 - Build — implement tasks via openspec-apply-change, present changeset for approval
 - Review — dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`, static), dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) if UI touched, route findings, present for approval
@@ -16,32 +16,52 @@ Workflow: implement.
 
 Check the repo's AGENTS.md for branch conventions. If the repo uses feature branches and you're on `main`: load the `opencode` skill and use dispatch.md to create a worktree session for this work — the implementation should happen in an isolated worktree, not on main. If the repo commits directly to main (e.g., dotfiles), skip the worktree step.
 
-**Spec-store link — run this BEFORE the Plan phase reads `openspec/specs/`.** `/implement` often runs in ephemeral worktrees, but `openspec/` (accumulated `specs/` and per-change `changes/`) is durable per-repo memory that must survive teardown and be shared across all worktrees of the repo. Link the worktree's `openspec/` to a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/`. Run from the worktree root:
+**Spec-store link — run this BEFORE the Plan phase reads `openspec/specs/`.** `/implement` often runs in ephemeral worktrees, but the accumulated `specs/` and archived `changes/` are durable per-repo memory that must survive teardown and be shared across all worktrees of the repo. The layout is a REAL `openspec/` directory in the worktree with only two NARROW symlinks into a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/`: `openspec/specs` → `$store/specs` and `openspec/changes/archive` → `$store/changes/archive`. In-flight change docs at `openspec/changes/<name>/` are REAL worktree files (so they surface in the opencode review UI for inline comments); only the specs and archive leaves point outside the worktree. Run from the worktree root:
 
 ```bash
 # Derive a STABLE repo slug from the git common dir — NEVER the worktree basename
 # (worktree dirs are branch-suffixed/unstable and would scatter the store).
-# --path-format=absolute is MANDATORY: the relative form returns a bare ".git",
-# and `dirname` of that breaks.
+# --path-format=absolute is MANDATORY: the relative form returns a bare ".git".
 slug="$(basename "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")")"
 store="$HOME/.local/share/kb/openspec/$slug"
-mkdir -p "$store/specs" "$store/changes"
+mkdir -p "$store/specs" "$store/changes/archive"   # both symlink targets must exist
 
-if [ -L openspec ] && [ "$(readlink openspec)" = "$store" ]; then
-  : # already linked to the store → no-op (dangling-link guard: store recreated above)
-elif [ ! -e openspec ] && [ ! -L openspec ]; then
-  ln -s "$store" openspec                                   # absent (and not a broken/other symlink) → create the link
+# Ensure a path is a symlink to $target: create if absent, no-op if correct,
+# REFUSE (don't clobber) if it exists as anything else.
+ensure_link() {  # $1=link path  $2=target
+  if [ -L "$1" ]; then
+    [ "$(readlink "$1")" = "$2" ] && return 0
+    echo "FLAG: $PWD/$1 → $(readlink "$1") but expected $2. Left untouched."; return 1
+  elif [ -e "$1" ]; then
+    echo "FLAG: $PWD/$1 exists and is not a symlink (expected → $2). Left untouched."; return 1
+  fi
+  ln -s "$2" "$1"
+}
+
+if [ -L openspec ]; then
+  # A symlink AT openspec is the OLD whole-dir layout (or a stray link). Never
+  # auto-convert: in-flight changes in the store may belong to other worktrees.
+  echo "FLAG: $PWD/openspec is a whole-directory symlink → $(readlink openspec)."
+  echo "      Run the one-time OpenSpec migration to convert it to the real-dir +"
+  echo "      narrow-symlink layout, then re-run Workspace setup. Left it untouched."
+  exit 1
+elif [ -d openspec ]; then
+  # Real dir → already migrated (or partial). Make it idempotently correct.
+  mkdir -p openspec/changes
+  ensure_link openspec/specs          "$store/specs"          || exit 1
+  ensure_link openspec/changes/archive "$store/changes/archive" || exit 1
+elif [ ! -e openspec ]; then
+  # Absent → create the new structure fresh.
+  mkdir -p openspec/changes
+  ln -s "$store/specs"          openspec/specs
+  ln -s "$store/changes/archive" openspec/changes/archive
 else
-  # Real dir, or a symlink to some OTHER target. The one-time migration already
-  # linked every repo that had a real openspec/; fresh worktrees never carry one
-  # (openspec/ is gitignored). So this is unexpected — REFUSE, touch nothing.
-  echo "FLAG: $PWD/openspec is an unexpected real/other path (not a symlink to $store)."
-  echo "Run the one-time link/migration manually to reconcile, then re-run. Left it untouched."
+  echo "FLAG: $PWD/openspec is an unexpected path (a real file?). Left it untouched."
   exit 1
 fi
 ```
 
-This is idempotent (safe every Workspace-setup) and non-destructive — it never `rm`s a real directory. Only two cases occur in steady state: `openspec` is already the store symlink (no-op) or absent (created). Anything else (a real `openspec/` dir, or a symlink to a different target) is unexpected and is REFUSED rather than seeded or relinked — the one-time migration already linked every repo that had real specs, and `openspec/` is gitignored so fresh worktrees never carry one. The symlink grounds Plan's `openspec/specs/` read in the durable accumulated specs with no extra "read the kb" instruction — the symlink IS the discovery mechanism. If the FLAG fires, surface it to the user and reconcile before proceeding.
+This is idempotent (safe every Workspace-setup) and non-destructive — it never `rm`s a real directory or clobbers an existing path. It handles four states: **absent** → create the real dir plus the two narrow symlinks; **real dir** → repair idempotently (ensure the two leaf symlinks point at the store, leaving in-flight real change dirs alone); **old whole-dir symlink** (a symlink AT `openspec`) → REFUSE and exit, pending the one-time migration (auto-converting could corrupt other worktrees whose in-flight changes live in the shared store); **unexpected** (e.g. a real file) → refuse. The `openspec/specs` symlink grounds Plan's `openspec/specs/` read in the durable store, while in-flight `changes/<name>/` are real worktree files visible to review. If a FLAG fires, surface it to the user and reconcile before proceeding.
 
 ## Plan
 
@@ -53,7 +73,7 @@ Gather context, then get a design recommendation:
 
 Create an OpenSpec proposal to persist the plan: dispatch the `build` subagent (`task` tool, `subagent_type: build`) with `openspec-propose` to create proposal + design + tasks. The proposal is the plan artifact — it captures what changes, why, and the task breakdown. This step is mandatory, not conditional on change size.
 
-**`openspec/` is git-ignored, but it is NOT throwaway.** Durability comes from the kb symlink (set up in Workspace-setup), not from git — the `specs/` (accumulated requirements) and `changes/` (proposals + design rationale) are durable per-repo memory that persists across worktrees. Don't try to `git add` `openspec/` (it's ignored on purpose), and don't treat a missing `openspec/` as a blocker — the link step creates it. Just don't mistake "git-ignored" for "disposable."
+**`openspec/` is a real dir, but it is NOT throwaway.** Only `openspec/specs` and `openspec/changes/archive` are git-ignored (they're symlinks into the durable store); in-flight `openspec/changes/<name>/` are intentionally NOT ignored so they surface in the opencode review UI for inline comments. Durability comes from the kb store at `~/.local/share/kb/openspec/<repo-slug>/` (set up in Workspace-setup), not from git — the durable `specs/` (accumulated requirements) and archived `changes/` (proposals + design rationale) are per-repo memory that persists across worktrees. Don't `git add` the `specs`/`archive` symlinks (they're the durable store), and don't blanket-`git add` in-flight change files into a code commit (they belong in the store and are moved there at archive time). Don't treat a missing `openspec/` as a blocker — the setup step creates it.
 
 **Present the proposal for approval. Wait before proceeding.**
 
@@ -78,13 +98,13 @@ When the changeset touches UI (views, templates, CSS, frontend), also dispatch t
 
 ## Ship
 
-Load `commit` skill for staging, test verification, and commit message format. Then load `push` skill for branch naming, merge request creation, and CI watching. All remote actions require explicit approval.
+Commit and push the code FIRST; the OpenSpec store steps (reviewed spec merge → archive → kb-meta stamp) run AFTER a successful push. The commit-skill guard already unstages in-flight `openspec/changes/<name>/` files, so the code commit stays clean without needing the change archived out of the worktree first. Archiving before push would prematurely finalize the durable store — moving the change to archive and folding its specs — for code that may not pass CI or get push approval; so archive runs after, not before, the push.
 
-**CI failure → diagnose and route:** code fix → dispatch the `build` subagent (`task` tool, `subagent_type: build`). Approach problem → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`). Flaky test → re-run. Do not treat CI failure as terminal.
+**Commit, push, watch CI (FIRST).** Load `commit` skill for staging, test verification, and commit message format — its in-flight-change `git reset` guard keeps `openspec/changes/<name>/` paths out of the code commit even though they're un-ignored and visible in review. Then load `push` skill for branch naming, merge request creation, and CI watching. All remote actions require explicit approval. **CI failure → diagnose and route:** code fix → dispatch the `build` subagent (`task` tool, `subagent_type: build`); approach problem → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`); flaky test → re-run. Do not treat CI failure as terminal.
 
-**Merge delta specs into the durable store (after a successful commit + push).** The change's delta specs under `openspec/changes/<name>/specs/` must be folded into the durable `openspec/specs/` (through the symlink) so the accumulated requirements compound. Do this as a **reviewed, non-lossy LLM merge**: read BOTH sides — the existing durable requirement and the delta — and integrate them, preserving existing scenarios and flagging any conflicts or supersession to the human for resolution. This reviewed merge is SEPARATE from archiving and is NOT performed by `openspec archive` — do it FIRST.
+**Merge delta specs into the durable store (after a successful commit and push, before archiving).** The change's delta specs under `openspec/changes/<name>/specs/` must be folded into the durable `openspec/specs/` (through the symlink) so the accumulated requirements compound. Do this as a **reviewed, non-lossy LLM merge**: read BOTH sides — the existing durable requirement and the delta — and integrate them, preserving existing scenarios and flagging any conflicts or supersession to the human for resolution. This reviewed merge is SEPARATE from archiving and is NOT performed by `openspec archive` — do it FIRST, before archive.
 
-**Archive the completed change (standard step, after the reviewed merge above).** From the repo root run `openspec archive <name> --skip-specs -y`. `--skip-specs` avoids OpenSpec's lossy replace-only spec auto-fold (the unimplemented-merge data-loss bug as of openspec 1.4.1) — the durable `specs/` are updated only by the reviewed merge above, never by archive. `-y` runs it non-interactively so it won't hang. Because `openspec/` is a symlink into the durable store, archive writes through it and date-stamps the change as `changes/archive/YYYY-MM-DD-<name>/`, which is exactly what daily enrichment reads.
+**Archive the completed change (after the reviewed merge above).** From the repo root run `openspec archive <name> --skip-specs -y`. `--skip-specs` avoids OpenSpec's lossy replace-only spec auto-fold (the unimplemented-merge data-loss bug as of openspec 1.4.1) — the durable `specs/` are updated only by the reviewed merge above, never by archive. `-y` runs it non-interactively so it won't hang. Because `openspec/changes/archive` is a symlink into the store, archive moves the in-flight change through it into the store and removes it from the worktree, date-stamping it as `changes/archive/YYYY-MM-DD-<name>/`, which is exactly what daily enrichment reads.
 
 **Stamp correlation metadata into the archived change (right after archive).** Write a small `kb-meta.yaml` into the archived change dir so daily enrichment can correlate opencode sessions to this change and SKIP re-reading their (token-expensive) transcripts — for those sessions it uses the change's `design.md`/specs instead. The archived dir lives in the durable store via the symlink at `openspec/changes/archive/<YYYY-MM-DD>-<name>/`; determine its exact name from the archive output or by globbing. Run from the repo root:
 

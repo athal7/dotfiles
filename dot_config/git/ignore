@@ -44,7 +44,15 @@ Thumbs.db
 .talismanrc
 .opencode/
 .scratch/
-openspec
+# OpenSpec: per-repo durable store is linked into the worktree (see /implement
+# Workspace setup). openspec/ is a REAL dir; only these two paths are symlinks
+# pointing OUTSIDE the worktree into ~/.local/share/kb/openspec/<slug>/ — ignore
+# them to suppress untracked-symlink noise and keep them out of code review.
+# Do NOT ignore openspec/ or openspec/changes/ as directories: a parent-dir
+# exclude cannot be re-included, and in-flight openspec/changes/<name>/ MUST stay
+# visible so it surfaces in the review UI. No-op in repos without an openspec/.
+/openspec/specs
+/openspec/changes/archive
 .screencast/
 favicon.svg
 

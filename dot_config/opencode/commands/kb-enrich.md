@@ -16,7 +16,7 @@ Check activity across all available sources:
 - **zoom** meeting transcripts
 - **linear** issues and comments
 - **gh** code reviews, PRs, and issues
-- **openspec durable store (AUTHORITATIVE for `/implement` work)** — `/implement` symlinks each repo's `openspec/` to a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/`, so OpenSpec artifacts persist regardless of when work shipped. For each date being enriched, read `~/.local/share/kb/openspec/*/changes/archive/<date>-*/design.md` for decisions, the "why", and rejected alternatives, and read each store's durable `specs/` for the standing requirements. These structured artifacts are the source of truth for the reasoning behind completed `/implement` work — use them instead of reconstructing it from full (token-expensive, lossy) session transcripts.
+- **openspec durable store (AUTHORITATIVE for `/implement` work)** — each worktree's `openspec/` carries two narrow symlinks into a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/` (`openspec/specs` → store `specs/`, `openspec/changes/archive` → store `changes/archive/`). At Ship, `openspec archive` moves a completed change through the `changes/archive` symlink into the store, so its artifacts persist regardless of when work shipped. For each date being enriched, read `~/.local/share/kb/openspec/*/changes/archive/<date>-*/design.md` for decisions, the "why", and rejected alternatives, and read each store's durable `specs/` for the standing requirements. These structured artifacts are the source of truth for the reasoning behind completed `/implement` work — use them instead of reconstructing it from full (token-expensive, lossy) session transcripts.
 
 ### Session exclusion — the core token-saving dedup
 

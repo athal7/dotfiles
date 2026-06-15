@@ -19,9 +19,10 @@ license: MIT
 Run automatically without asking. **Set the bash tool's `workdir` to the repo root rather than passing `git -C <path>`.** Permission patterns like `git push *` match parsed argv starting with `git push`; `git -C <path> push` injects flags between `git` and the subcommand and bypasses those patterns silently.
 
 1. **Stage**: `git add -A`.
-2. **Skip globally-ignored files**: `git check-ignore <files>`. Do NOT stage files in `~/.config/git/ignore` (e.g. `.talismanrc`).
-3. **Run the full test suite** — unit, integration, e2e, system. Do not commit with failures.
-4. **Draft the commit message** in the format below, with a `Co-Authored-By` trailer naming the model used (e.g. `anthropic/claude-sonnet-4-6`):
+2. **Unstage in-flight OpenSpec change files**: `git reset -q -- 'openspec/changes/*' ':(exclude)openspec/changes/archive'`. In-flight changes under `openspec/changes/<name>/` are intentionally un-ignored so they surface in review, but they are review artifacts, not code — they belong in the durable store and are moved there at archive time. This unstages them while leaving everything else (including any archived specs) staged.
+3. **Skip globally-ignored files**: `git check-ignore <files>`. Do NOT stage files in `~/.config/git/ignore` (e.g. `.talismanrc`).
+4. **Run the full test suite** — unit, integration, e2e, system. Do not commit with failures.
+5. **Draft the commit message** in the format below, with a `Co-Authored-By` trailer naming the model used (e.g. `anthropic/claude-sonnet-4-6`):
    ```
    Co-Authored-By: anthropic/claude-sonnet-4-6 <noreply@opencode.ai>
    ```
