@@ -79,6 +79,7 @@ packages:
         "gh api */reviews*": allow
         "gh api */comments*": allow
         "gh api */pulls/*/files*": allow
+        "gh api user*": allow
         "gh api graphql*mutation*": ask
         "gh api graphql*": allow
         "gh *": ask
