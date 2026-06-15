@@ -215,5 +215,10 @@ for model benchmarks — use Unsloth quants for patched chat templates.
     "rubocop": { "disabled": true },
     "ruff": { "disabled": true }
   },
-  "lsp": true
+  "lsp": {
+    "ruby-lsp": {
+      "command": ["ruby", "-S", "ruby-lsp"],
+      "extensions": [".rb", ".rake", ".gemspec", ".ru"]
+    }
+  }
 }
