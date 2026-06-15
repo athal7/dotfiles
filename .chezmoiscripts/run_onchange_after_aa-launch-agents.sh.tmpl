@@ -11,16 +11,28 @@
 # when its freshly-rendered plist differs byte-for-byte from the deployed file.
 # Unchanged agents are never restarted. This matters most for opencode-web
 # (label com.<user>.opencode-web), the KeepAlive daemon that hosts the live
-# opencode session running `chezmoi apply` — booting it out would kill the very
-# session doing the apply. Because the renderer is byte-stable, an unchanged
-# definition produces an identical file, hits the "no change" path, and is left
-# strictly alone.
+# opencode session running `chezmoi apply`. Because the renderer is byte-stable,
+# an unchanged definition produces an identical file, hits the "no change" path,
+# and is left strictly alone.
+#
+# Self-host carve-out: when opencode-web's definition DOES change, it cannot be
+# reloaded inline. A synchronous `launchctl bootout` would SIGKILL this very
+# `chezmoi apply` process (it lives inside the job's process tree) AND unload
+# the job, defeating KeepAlive and leaving port 4096 dead. So for that one agent
+# we deploy the new plist but defer the reload: at the very end we issue a single
+# `launchctl kickstart -k`, which launchd — not this doomed process — performs,
+# so it survives the restart. Note `kickstart -k` reuses the CACHED job config:
+# new args/env/port only go live at next login/reboot (or a manual
+# bootout+bootstrap from a terminal). For every OTHER agent we still avoid
+# `kickstart -k` and use bootout+bootstrap, since kickstart would force-run
+# scheduled jobs — the carve-out applies only to the non-scheduled KeepAlive
+# self-host.
 #
 # Agents removed from launchd.yaml are pruned: booted out and their plist
-# deleted, tracked via a manifest of the last-applied agent names.
+# deleted, tracked via a manifest of the last-applied agent names. The self-host
+# is exempt from inline bootout here too — see the prune block.
 #
-# We deliberately avoid `kickstart -k`, which would force-run scheduled jobs.
-# To force-run a job for testing, do it manually:
+# To force-run a scheduled job for testing, do it manually:
 #   launchctl kickstart -k "gui/$(id -u)/<label>"
 #
 # Every launchctl call is `|| true` so one agent's failure never aborts the
@@ -36,6 +48,7 @@ STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/chezmoi-launchd"
 MANIFEST="$STATE_DIR/managed.list"
 user="$(id -un)"
 uid_num="$(id -u)"
+SELF_AGENT="opencode-web"   # KeepAlive daemon hosting this apply session; never bootout inline
 
 mkdir -p "$STATE_DIR" "$LA_DIR"
 
@@ -54,6 +67,7 @@ names="$(yq -r '.launchagents | keys | .[]' "$YAML")"
 reloaded=0
 unchanged=0
 pruned=0
+self_changed=0
 
 # --- Prune orphans: agents in the previous manifest but no longer in the YAML.
 if [ -f "$MANIFEST" ]; then
@@ -67,7 +81,14 @@ if [ -f "$MANIFEST" ]; then
 			fi
 		done
 		if [ "$found" -eq 0 ]; then
-			launchctl bootout "gui/$uid_num/com.$user.$old" 2>/dev/null || true
+			if [ "$old" = "$SELF_AGENT" ]; then
+				# Pruning the self-host: an inline bootout would SIGKILL this
+				# apply process. Remove the plist but leave the running job for
+				# a human to bootout from a terminal.
+				echo "NOTICE: $SELF_AGENT removed from launchd.yaml; plist deleted but the running job was NOT booted out (it hosts this apply). Run 'launchctl bootout gui/$uid_num/com.$user.$SELF_AGENT' from a terminal to stop it."
+			else
+				launchctl bootout "gui/$uid_num/com.$user.$old" 2>/dev/null || true
+			fi
 			rm -f "$LA_DIR/$old.plist"
 			echo "Pruned LaunchAgent: $old"
 			pruned=$((pruned + 1))
@@ -89,11 +110,19 @@ for name in $names; do
 		fi
 		reloaded=$((reloaded + 1))
 	elif ! cmp -s "$tmp" "$plist"; then
-		# Definition changed: deploy then reload. This is the ONLY bootout path,
-		# and it fires only on a real content change.
+		# Definition changed: deploy then reload.
 		cp "$tmp" "$plist"
-		launchctl bootout "$label" 2>/dev/null || true
-		launchctl bootstrap "gui/$uid_num" "$plist" 2>/dev/null || true
+		if [ "$name" = "$SELF_AGENT" ]; then
+			# This agent hosts the running `chezmoi apply`. A synchronous
+			# bootout would SIGKILL this process AND defeat KeepAlive (the job
+			# is unloaded), leaving the daemon dead. Defer a launchd-driven
+			# kickstart to the end so launchd — not this doomed process —
+			# performs the restart.
+			self_changed=1
+		else
+			launchctl bootout "$label" 2>/dev/null || true
+			launchctl bootstrap "gui/$uid_num" "$plist" 2>/dev/null || true
+		fi
 		reloaded=$((reloaded + 1))
 	else
 		# Content identical: never bootout. Ensure it's loaded (fresh machine).
@@ -109,3 +138,9 @@ rm -f "$tmp"
 printf '%s\n' "$names" > "$MANIFEST"
 
 echo "LaunchAgents: $reloaded reloaded, $unchanged unchanged, $pruned pruned."
+
+if [ "$self_changed" -eq 1 ]; then
+	echo "opencode-web plist changed — relaunching via 'launchctl kickstart -k' (launchd-driven, survives this session)."
+	echo "NOTE: kickstart reuses the cached job config; new args/env/port go live at next login/reboot, or run a manual bootout+bootstrap from a terminal to apply immediately."
+	launchctl kickstart -k "gui/$uid_num/com.$user.$SELF_AGENT" 2>/dev/null || true
+fi
