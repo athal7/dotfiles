@@ -61,6 +61,17 @@ gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode 
 {{ end -}}
 {{- end }}
 
+# Host-local private skill installs — for skills in PRIVATE repos that must not
+# be referenced in this public repo. The file is untracked and host-specific
+# (same spirit as ~/.config/zsh/private.zsh). It receives SKILLS_DEST and runs
+# its own `gh skill install ... --dir "$SKILLS_DEST"` lines. Runs here because
+# the rebuild above wipes SKILLS_DEST, so private skills must be reinstalled too.
+PRIVATE_SKILLS_INSTALL="$HOME/.config/agentskills/private-install.sh"
+if [ -f "$PRIVATE_SKILLS_INSTALL" ]; then
+  echo "running host-local private skill installs..."
+  SKILLS_DEST="$SKILLS_DEST" sh "$PRIVATE_SKILLS_INSTALL"
+fi
+
 # agentskills validate — checks spec compliance for local skills
 if ! command -v agentskills >/dev/null 2>&1; then
   echo "agentskills not found — skipping spec validation (install: uv tool install skills-ref)" >&2
