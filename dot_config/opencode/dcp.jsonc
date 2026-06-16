@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+  // Disable the npm-registry update check — the only network call DCP makes.
+  // With this off, DCP runs 100% locally. The plugin spec is version-pinned in
+  // opencode.json's plugin array anyway, so auto-update would be a no-op here.
+  "autoUpdate": false,
+  // Prune the primary/`lead` session only — the largest-context agent and ~78%
+  // of measured spend. Leaving subagents out avoids confounding attribution.
+  "experimental": {
+    "allowSubAgents": false
+  }
+  // All other settings inherit DCP's documented defaults (deduplication +
+  // purgeErrors on, model-directed `compress` tool, native prune coexists).
+}

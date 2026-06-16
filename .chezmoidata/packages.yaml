@@ -9,6 +9,7 @@ packages:
   taps:
     - github/gh
     - steipete/tap
+    - edouard-claude/tap
 
   brews:
     - name: autojump
@@ -135,6 +136,11 @@ packages:
     - name: tailscale-app
     - name: lm-studio
     - name: obsidian
+    # snip CLI (v0.18.0) — wraps verbose shell output, trimming it at ingest
+    # before it enters context. Required on PATH by the opencode-snip plugin.
+    # Published as a cask (Binary artifact) on edouard-claude/tap; that tap is
+    # trusted in the brew-bundle script (Homebrew 6.x refuses untrusted casks).
+    - name: snip
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
@@ -222,6 +228,12 @@ packages:
       version: latest
     - name: npm:supergateway
       version: latest
+    # Token-efficiency opencode plugins (also wired in opencode.json.tmpl's
+    # plugin array; declared here for the repo's package-registry convention).
+    - name: npm:@tarquinen/opencode-dcp
+      version: "3.1.12"
+    - name: npm:opencode-snip
+      version: "1.6.1"
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema

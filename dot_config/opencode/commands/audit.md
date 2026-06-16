@@ -130,7 +130,9 @@ chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.plugin[
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent | to_entries[] | {agent: .key, model: .value.model, variant: .value.variant}'
 ```
 
-**Cost & context health** — the system's spend profile. Lead is typically the largest cost (always-on primary carrying full context); build is the largest *editing* agent. Watch for context bloat, speed regressions, and silently-broken models:
+**Cost & context health** — the system's spend profile. Lead is typically the largest cost (always-on primary carrying full context); build is the largest *editing* agent. Watch for context bloat, speed regressions, and silently-broken models.
+
+**Token-efficiency baseline (DCP + snip):** the headline metric for the token-efficiency plugins is the `lead` `avg_ctx_tok` from the queries below — the per-turn average context, which is robust across windows. `cache_r_Mtok` is a window-SUM (it scales with how much work happened that month, so a quiet month shows a fake "reduction"); treat it as **directional / decomposition support only**, not the target metric. The recorded pre-adoption baseline (before DCP/snip were wired) is **`lead` 30-day: avg_ctx_tok ≈ 159,707 (cache_r ≈ 4,582 Mtok); all-time: avg_ctx_tok ≈ 158,979 (cache_r ≈ 4,917 Mtok)**. Target: **≥15% reduction in `lead` `avg_ctx_tok`** vs that baseline (a ratcheting floor — it only moves down); use `cache_r_Mtok` only to sanity-check the direction, not to grade the target. No new SQL: reuse the per-agent `avg_ctx_tok`, the `cache_r_Mtok` decomposition, and the `lead` daily trend below. If the reduction is not measured, follow the Step-5 wiring-verification row before adding another plugin.
 
 ```bash
 # Per-agent cost & avg context — which agent dominates spend?
@@ -278,7 +280,8 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Behavior skipped despite instructions | Structural enforcement (permissions, tool removal) | Advisory prompt changes |
 | Skill never loads | Embed in command template or agent prompt | More skill injection |
 | Agent edits directly | Verify permission deny is in config | Identity framing |
-| Primary/lead cost dominated by cache (>80%) | Delegate token-heavy reads to subagents; `compaction.prune` | Effort tuning alone (output is only ~10% of lead cost) |
+| Primary/lead cost dominated by cache (>80%) | Delegate token-heavy reads to subagents; `compaction.prune`; token-efficiency plugins (DCP + snip) | Effort tuning alone (output is only ~10% of lead cost) |
+| No measurable `lead` ctx/cache-read reduction after the DCP/snip plugins | Verify plugin wiring (rendered config shows the plugins loaded, `dcp.jsonc` present with `autoUpdate` false, pruning/trimming firing) before adding another plugin | Stacking more plugins on top of a silently-unloaded one |
 | Optimizing without per-agent cost data | Measure per-agent cost first (cost-health queries above) | Assuming which agent is expensive |
 | Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
 | `explore` rarely runs `ck_semantic_search` despite the explore prompt | Staged escalation: strengthen the explore prompt first, then a structural results-injection hook that runs the search and injects matches | More advisory prompt text alone |
