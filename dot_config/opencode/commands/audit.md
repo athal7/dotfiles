@@ -202,10 +202,10 @@ GROUP BY agent, model HAVING total_turns > 20 AND empty_pct > 30 ORDER BY empty_
 SQL
 ```
 
-**Semantic-search adoption** — measures the `semantic-code-search` spec. Are agents actually invoking the resident `ck` MCP server? The headline metric is `explore`'s advisory `ck_semantic_search` rate (prompt-driven, not enforced) plus the dedup use by `plan`/`reviewer` (injection-context-driven). MCP tool-call parts are stored with opencode's `<server>_<tool>` underscore namespacing, so the ck tools are `ck_semantic_search` and `ck_reindex` (confirmed against the live DB `part.data.tool`). Low invocation despite the prompt/injection being wired is the signal to escalate (see recommendation row):
+**Semantic-search adoption** — measures the `semantic-code-search` spec. Are agents actually invoking the resident `ck` MCP server? The headline metric is `explore`'s advisory `ck_semantic_search` rate (prompt-driven, not enforced) plus the dedup use by `plan`/`reviewer` (injection-context-driven) and `build` (prompt-driven, via the build.md before-writing dedup directive). MCP tool-call parts are stored with opencode's `<server>_<tool>` underscore namespacing, so the ck tools are `ck_semantic_search` and `ck_reindex` (confirmed against the live DB `part.data.tool`). Low invocation despite the prompt/injection being wired is the signal to escalate (see recommendation row):
 
 ```bash
-# (a) semantic_search adoption by agent — % of explore/plan/reviewer sessions invoking it.
+# (a) semantic_search adoption by agent — % of explore/plan/reviewer/build sessions invoking it.
 # Denominator = all sessions per agent in-window; numerator = those with >=1 ck_semantic_search.
 sqlite3 -readonly "$DB" <<SQL
 WITH sem AS (
@@ -218,7 +218,7 @@ SELECT s.agent,
        SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END) AS sessions_with_semantic,
        ROUND(100.0*SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END)/COUNT(*),1) AS semantic_pct
 FROM session s LEFT JOIN sem ON sem.session_id = s.id
-WHERE s.agent IN ('explore','plan','reviewer')
+WHERE s.agent IN ('explore','plan','reviewer','build')
   AND s.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
 GROUP BY s.agent ORDER BY s.agent;
 SQL
@@ -284,7 +284,7 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | No measurable `lead` ctx/cache-read reduction after the DCP/snip plugins | Verify plugin wiring (rendered config shows the plugins loaded, `dcp.jsonc` present with `autoUpdate` false, pruning/trimming firing) before adding another plugin | Stacking more plugins on top of a silently-unloaded one |
 | Optimizing without per-agent cost data | Measure per-agent cost first (cost-health queries above) | Assuming which agent is expensive |
 | Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
-| `explore` rarely runs `ck_semantic_search` despite the explore prompt | Staged escalation: strengthen the explore prompt first, then a structural results-injection hook that runs the search and injects matches | More advisory prompt text alone |
+| `explore`/`build` rarely run `ck_semantic_search` despite the explore prompt / build.md dedup directive | Staged escalation: strengthen the prompt/directive first, then a structural results-injection hook that runs the search and injects matches | More advisory prompt text alone |
 | `plan`/`reviewer` rarely run `ck_semantic_search` despite the dedup injection context | Staged escalation: strengthen the injection `context`, then a structural results hook that injects matches | More advisory skill injection |
 
 ---

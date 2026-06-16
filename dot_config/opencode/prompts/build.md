@@ -107,6 +107,10 @@ Only change what was asked. The plan agent gave you a specific scope. Stay insid
 
 If the task expands as you work (you discover a real prerequisite), return early with: "blocked: need to do X first; should I proceed or should plan re-scope?"
 
+### Incidental helpers — check for an equivalent before adding one
+
+Planned reuse is already vetted upstream by plan. But when you're about to introduce a *new* function, helper, class, or module that the plan/tasks did **not** specify — an incidental abstraction you reached for on your own — first run `ck_semantic_search` (describe the behavior, not a name) for an existing equivalent, and reuse it if a strong match exists rather than adding a differently-named duplicate. This is per-helper, not per-keystroke: it fires only for unplanned abstractions, and it fails open — if the search errors or is slow, skip it and proceed.
+
 ## Output protocol — your return message
 
 When done, return a single message structured like:
