@@ -146,9 +146,15 @@ case "$CMD" in
       | jq -r '.id'
     ;;
 
-  # ── list: sessions for directory ─────────────────────────────────────────
+  # ── list: sessions for directory (v2) ────────────────────────────────────
+  # v2 has no `roots` param and paginates (default 50/page), so request a high
+  # limit, newest-first, then unwrap the {data, cursor} envelope and filter to
+  # root sessions client-side to match the legacy roots-only output shape (a
+  # bare JSON array). Legacy `roots==true` capped at 100; this returns more.
   list)
-    xh --ignore-stdin GET "${API}/session" "directory==${DIR}" "roots==true"
+    xh --ignore-stdin GET "${API}/api/session" \
+      "directory==${DIR}" "limit==1000" "order==desc" \
+      | jq '[.data[] | select(.parentID == null)]'
     ;;
 
   # ── status: session status ───────────────────────────────────────────────
@@ -172,10 +178,14 @@ case "$CMD" in
       | xh --timeout="$TIMEOUT" POST "${API}/session/${SID}/message" "directory==${DIR}"
     ;;
 
-  # ── transcript: get session messages ─────────────────────────────────────
+  # ── transcript: get session messages (v2) ────────────────────────────────
+  # v2 reads don't need a directory and return a {data, cursor} envelope;
+  # unwrap to a bare array. The message shape may differ from legacy — this is
+  # an inspection dump, so that's acceptable.
   transcript)
     [ $# -ge 1 ] || die "transcript requires ID argument"
-    xh --ignore-stdin GET "${API}/session/$1/message" "directory==${DIR}"
+    xh --ignore-stdin GET "${API}/api/session/$1/message" \
+      | jq '.data'
     ;;
 
   # ── abort: abort running session ─────────────────────────────────────────
@@ -199,24 +209,39 @@ case "$CMD" in
       | jq -r '.directory'
     ;;
 
-  # ── questions: list pending questions ────────────────────────────────────
+  # ── questions: list pending questions (v2) ───────────────────────────────
+  # Directory is passed as a deepObject query param (location[directory]); the
+  # response is a {location, data} envelope — unwrap to a bare array matching
+  # the legacy output shape [{id, sessionID, questions}].
   questions)
-    xh --ignore-stdin GET "${API}/question" "directory==${DIR}"
+    xh --ignore-stdin GET "${API}/api/question/request" \
+      "location[directory]==${DIR}" \
+      | jq '.data'
     ;;
 
-  # ── reply: answer a pending question ─────────────────────────────────────
+  # ── reply: answer a pending question (v2) ────────────────────────────────
+  # The v2 reply endpoint requires the sessionID, which the legacy endpoint did
+  # not. Keep the same CLI signature (reply QID ANSWER) and resolve the
+  # sessionID internally: look up the pending question by QID in the directory's
+  # question list, then POST to the session-scoped reply endpoint.
   reply)
     [ $# -ge 2 ] || die "reply requires QID and ANSWER arguments"
     QID="$1"; shift
     ANSWER="$*"
+    SID=$(xh --ignore-stdin GET "${API}/api/question/request" \
+      "location[directory]==${DIR}" \
+      | jq -r --arg qid "$QID" '.data[] | select(.id == $qid) | .sessionID') \
+      || die "failed to query pending questions"
+    [ -n "$SID" ] && [ "$SID" != "null" ] \
+      || die "no pending question '$QID' found in directory '$DIR'"
     BODY=$(jq -n --arg answer "$ANSWER" '{"answers": [[$answer]]}')
     printf '%s' "$BODY" \
-      | xh POST "${API}/question/${QID}/reply" "directory==${DIR}"
+      | xh POST "${API}/api/session/${SID}/question/${QID}/reply"
     ;;
 
-  # ── health: check server reachability ────────────────────────────────────
+  # ── health: check server reachability (v2) ───────────────────────────────
   health)
-    xh --ignore-stdin GET "${API}/doc" >/dev/null 2>&1
+    xh --ignore-stdin GET "${API}/api/health" >/dev/null 2>&1
     ;;
 
   *)
