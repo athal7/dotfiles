@@ -8,11 +8,11 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Plugin wiring (skill injection, custom commands)
   - Agent-specific permission and skill overrides (lead, plan, reviewer, qa, build, explore, scout, general, title)
 
-Local model setup: LM Studio serves Qwen3 for agentic coding and the kb meeting
-pipeline. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
-"Run server on login", and download Qwen 3.5 27B Unsloth UD-IQ3_XXS. Reference
-as lmstudio/qwen3.5-27b. See https://www.glukhov.org/ai-devtools/opencode/llms-comparison/
-for model benchmarks — use Unsloth quants for patched chat templates.
+Local model setup: LM Studio serves the MLX Mixture-of-Experts model
+Qwen3-30B-A3B (4-bit) for agentic coding and the kb meeting pipeline. Install
+the cask via chezmoi, run `npx lmstudio install-cli`, enable "Run server on
+login", and download via `lms get qwen/qwen3-30b-a3b`. Reference in opencode
+as lmstudio/qwen/qwen3-30b-a3b.
 */ -}}
 {{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
        NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
@@ -198,8 +198,8 @@ for model benchmarks — use Unsloth quants for patched chat templates.
         "baseURL": "http://127.0.0.1:1234/v1"
       },
       "models": {
-        "qwen3.5-27b": {
-          "name": "qwen3.5-27b",
+        "qwen/qwen3-30b-a3b": {
+          "name": "qwen/qwen3-30b-a3b",
           "limit": {
             "context": 32768,
             "output": 8192
