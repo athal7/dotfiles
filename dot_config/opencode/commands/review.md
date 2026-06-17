@@ -24,6 +24,8 @@ Dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) with t
 
 When the diff touches UI (views, templates, CSS, frontend), also dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows.
 
+On a **re-review** (the author pushed changes since a prior review/QA pass), make a judgement call: re-dispatch the `qa` subagent only when the new commits touch UI or address a prior QA finding — and scope it to the affected flows. If the changes since the last QA are non-UI (logic, tests, docs), the prior QA verdict stands; don't re-run it.
+
 ## Submit
 
 Post the findings as **inline comments** on the changed lines — no verdict or summary in the submitted body. All remote writes require explicit human approval: show the full proposed text of every comment and **wait** for approval before posting. When the MR has existing reviews and merge conflicts, use merge (not rebase) — rebasing invalidates existing inline comments.
