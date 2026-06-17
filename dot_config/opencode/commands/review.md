@@ -25,7 +25,7 @@ Dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) with t
 
 When the diff touches UI (views, templates, CSS, frontend), also dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows.
 
-On a **re-review** (the author pushed changes since a prior review/QA pass), make a judgement call: re-dispatch the `qa` subagent only when the new commits touch UI or address a prior QA finding — and scope it to the affected flows. If the changes since the last QA are non-UI (logic, tests, docs), the prior QA verdict stands; don't re-run it.
+On a **re-review** (the author pushed since a prior pass), scope to the delta. Diff the new commits against the prior-reviewed state, map the changed lines onto the AC groups, and re-dispatch the `reviewer` for only the touched groups — reconciling prior findings (`addressed` / `pending` / `moved-but-still-true`). Untouched groups keep their prior verdict, and the Walk covers only the changed groups plus any still-open findings. Same judgement for `qa`: re-dispatch only when the new commits touch UI or address a prior QA finding, scoped to the affected flows; non-UI changes leave the prior QA verdict standing.
 
 ## Walk
 

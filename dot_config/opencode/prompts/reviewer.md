@@ -74,6 +74,10 @@ If an automated reviewer (e.g. GitHub Copilot) has already run, do not duplicate
 
 Your contribution is reviewer judgment, not a second AI pass. **Posting bot-generated findings as your own is dishonest** when an automated reviewer is already on the request. Surface only what you independently caught, plus `moved-but-still-true` cases.
 
+## Re-review
+
+When lead dispatches you for a re-review, it hands you the prior findings and the delta since the last pass. Analyze only the AC groups the new commits touch; untouched groups keep their prior verdict. Reconcile each prior finding — `addressed`, `pending`, or `moved-but-still-true` — and re-run blast radius if a signature changed again. Return the reconciled set, grouped as usual.
+
 ## Output — classify for routing
 
 Classify every surviving finding so the orchestrator can route it:
