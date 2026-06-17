@@ -126,6 +126,8 @@ fi
 
 `worktree` is the absolute repo/worktree root — it equals the opencode session's `directory`, which is the join key `/kb-enrich` uses to exclude these sessions from transcript reads.
 
+**Publish the QA report (if QA ran in the Review phase).** Load the `qa-publish` skill and follow it — approval gate, then publish. The merge request must exist first (the push above creates it), so this runs after push and after approval.
+
 - **v1 is detection-only.** Surface conflicts to the human (the existing Plan read of `specs/` carries them forward as a plan-level finding); never run automated reconciliation, and never let the lossy auto-fold overwrite the durable specs. CI watch is best-effort and does NOT gate the merge.
 
 $ARGUMENTS

@@ -54,6 +54,15 @@ Number files sequentially (`001-`, `002-`, …) with a short descriptive slug. S
 printf '</body></html>' >> "$SESSION_DIR/report.html" && open "$SESSION_DIR/report.html"
 ```
 
+## Publishable report
+
+The HTML report is a local-only artifact. **Alongside it**, write `$SESSION_DIR/report.md` — a clean, standalone Markdown report of the same per-step audit trail, in this shape:
+
+- **Marker heading** `## 🧪 QA — PASS ✅` or `## 🧪 QA — FAIL ❌`. The exact `## 🧪 QA` heading is how the verdict is later read — never rename it.
+- Failure and final-state screenshots inline with **relative** refs `![caption](NNN-name.png)`; the full step-by-step in a collapsed `<details>` block (leave a blank line after `</summary>` or the inner Markdown won't render).
+- Page URLs as plain inline code (backticks), never clickable links — they're local/non-navigable.
+- A `**Could not verify:**` line listing anything unreached, or `none`.
+
 ## What good output looks like
 
 - **A clear verdict** — pass or fail, per flow. Not "looks fine."
@@ -61,6 +70,7 @@ printf '</body></html>' >> "$SESSION_DIR/report.html" && open "$SESSION_DIR/repo
 - **Failures with repro steps** — exact sequence to reproduce, expected vs. observed, the URL and any console error. A failure without repro steps is not actionable.
 - **What you couldn't verify** — flows you couldn't reach, and why.
 - **The session directory path** (e.g. `~/.local/share/qa/<project>/qa-20260515-143022/`) and the opened HTML report, so the run is auditable.
+- **The verdict and report path** — state your pass/fail verdict, the `$SESSION_DIR` path, and that `report.md` is ready. You never write to the remote; you produce text and artifacts, lead owns all remote writes.
 
 ## Resilience
 

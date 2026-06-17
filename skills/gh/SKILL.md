@@ -283,6 +283,24 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
 - Omit top-level `body` field to skip summary comment
 - Each comment needs: `path`, `line`, `body`
 
+## Top-level (issue) comments
+
+PR conversation comments are *issue* comments: `gh pr comment` creates one; the edit endpoint is `gh api repos/$O/$R/issues/comments/$ID` (note `issues/comments/$ID`, no PR number), while listing is `issues/$PR/comments`.
+
+The REST list returns the author as `.user.login` — **not** `.author.login` as `gh pr view --json comments` uses. Mixing the two field paths across commands silently yields empty results.
+
+## Hosting a file so it renders in code review
+
+A committed `.md` with **relative** image refs renders natively in GitHub's file/blob view for authenticated collaborators — even on a **private** repo — so no `?raw=true` and no URL rewriting are needed. Don't reach for raw-content or htmlpreview hacks.
+
+To host files without disturbing the working tree, push them to a long-lived orphan branch through a throwaway `git worktree`.
+
+Blob URL shape: `https://github.com/$O/$R/blob/$BRANCH/$DEST/<file>`; relative image refs inside a committed `.md` resolve against `$DEST/`.
+
+## Upserting a marked section of a PR/issue body
+
+There is no append — read the body (`gh pr view <n> --json body -q .body`), replace the text between HTML-comment markers (or append if absent) with a multiline-safe method, and write it back with `gh pr edit <n> --body-file -`. `gh issue edit` is the same.
+
 ## GitHub Issues
 
 `gh issue` handles GitHub Issues for OSS and personal repos (non-Linear trackers). Use `gh issue create`, `gh issue list`, `gh issue view`, and `gh issue edit`. GitHub issue templates live in `.github/ISSUE_TEMPLATE/*.md` — `gh issue create --template` only works interactively; read the template file directly and pass content via `--body-file`.
