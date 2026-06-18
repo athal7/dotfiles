@@ -1,6 +1,6 @@
 ---
 name: review-publish
-description: Publishing the unified review report (fused static findings + QA evidence, organized by acceptance criterion) to a merge request after approval — the branch-hosting procedure, badge composition, and ownership-based link placement. Fires when lead is about to attach the assembled review report to a merge request.
+description: Publishing the unified review report (fused static findings + QA evidence, organized by acceptance criterion) to a merge request after approval — the branch-hosting procedure, badge composition, and the ownership-based deliverable split (report block in your own request's description; inline comments plus a summary in one review on someone else's). Fires when lead is about to attach the assembled review report to a merge request.
 license: MIT
 compatibility: opencode
 ---
@@ -19,8 +19,10 @@ its local artifacts (`report.md`, `report.html`, `NNN-name.png` screenshots) in
 its session dir. **Lead assembles** the unified report — in BOTH forms
 (`review-report.html` and `review-report.md`) — into that same session dir (so
 the relative screenshot refs resolve) and is the sole writer to the remote —
-branch-hosting only the Markdown form and placing the link — only after explicit
-human approval. The HTML form is opened locally and never pushed.
+branch-hosting only the Markdown form and delivering the report by ownership (the
+report block in your own request's description; inline comments plus a summary in
+one review on someone else's) — only after explicit human approval. The HTML form
+is opened locally and never pushed.
 
 When QA did not run, lead still creates the session dir at
 `~/.local/share/qa/<project>/qa-<ts>/` (the same store and `qa-<ts>` naming the
@@ -140,37 +142,135 @@ replaces reading a QA-only heading; the QA agent keeps its own heading in its ow
 
 ## Publish procedure
 
-Publishing hosts ONLY the Markdown form (`review-report.md`) and its screenshots.
 The HTML form (`review-report.html`) is local-only — it is opened locally and
-NEVER pushed.
+NEVER pushed. The Markdown form (`review-report.md`) and its screenshots are
+ALWAYS hosted FIRST, on BOTH ownership flows — they are the worktable/record and
+the target the report links resolve against (the description block and a review
+summary both need a hosted target; screenshots render only from the hosted
+images; the description/`<details>` surface has size limits).
 
-1. **Host the report.** Push `review-report.md` and its referenced screenshots to
-   the hosting branch (`qa-assets` by default) at `pr-<n>/`, **overwritten
-   wholesale per merge request** (one report per request; deleted/renamed shots
-   don't linger), through a throwaway worktree so the working tree and
-   checked-out branch are never disturbed. Use the branch-hosting transport from
-   the injected source-control skill. The committed `.md` renders natively in the
-   file view with its **relative** images resolving — no URL rewriting.
+1. **Host the report (first, both flows).** Push `review-report.md` and its
+   referenced screenshots to the hosting branch (`qa-assets` by default) at
+   `pr-<n>/`, **overwritten wholesale per merge request** (one report per request;
+   deleted/renamed shots don't linger), through a throwaway worktree so the
+   working tree and checked-out branch are never disturbed. Use the branch-hosting
+   transport from the injected source-control skill. The committed `.md` renders
+   natively in the file view with its **relative** images resolving — no URL
+   rewriting. Even when the deliverable is inline comments (reviewing another's
+   request), the `.md` is still hosted to back the summary's report link.
 
-2. **Place the link — depends on ownership.** This is the **sole** write to the
-   merge request; there are no inline line-anchored comments. Determine whether
-   *you* authored the merge request by comparing the request's author to the
-   current user:
+2. **Deliver the report — depends on ownership.** Determine whether *you* authored
+   the merge request by comparing the request's author to the current user. Lead
+   is the sole writer to the remote, and only after the approval gate.
+
    - **You authored it** (your own request — the implement / merge-request
-     flows): upsert a single badge line into the **merge request description**
-     between `<!-- qa:start -->` / `<!-- qa:end -->` markers (read-modify-write
-     the body: replace between the markers if present, else append after a blank
-     line).
-   - **Someone else authored it** (you're reviewing — the review flow): post the
-     badge as ONE **comment** on the merge request. **Never edit another author's
-     description.**
+     flows): upsert the FULL AC review block into the **merge request
+     description** between `<!-- qa:start -->` / `<!-- qa:end -->` markers
+     (read-modify-write the body: replace between the markers if present, else
+     append after a blank line — never a new comment). The block carries a
+     visible lead line (verdict badge · finding counts · `full report ↗` link), a
+     `<sub>` provenance line (commit short ref · updated timestamp), then one
+     collapsed section per acceptance criterion — `<details open>` for any
+     blocker/FAIL AC, `<details>` for clean ACs — each leading with a single
+     head-pinned code reference (a bare same-repo permalink on its own line, which
+     unfurls to the rendered snippet) capped to the AC's primary implementing
+     region, then its classified `file:line` findings with `[build]`/`[human]`/
+     `[plan]` tags and a diff deep-link, then its QA line. Close with a
+     `Scope & cross-cutting` section and a `Could not verify` section. **The blank
+     line after each `</summary>` is mandatory** or the inner markdown won't
+     render. The permalink must be bare (on its own line, not wrapped in link
+     text) to unfurl. (See the AC-block layout below.)
 
-## Re-review
+   - **Someone else authored it** (you're reviewing — the review flow): submit ONE
+     review carrying line-anchored comments PLUS a summary body — a single review
+     event, not scattered comments and not a badge-link-only stub. **Never edit
+     another author's description.**
+     - **Inline comments:** one per surviving finding, drafted from the reviewer's
+       `file:line` + proposed text, anchored to the head-version file line(s).
+       **Strip the internal `[build]`/`[human]`/`[plan]` routing tags from these
+       author-facing bodies** — they are meaningless jargon to an external author;
+       write self-contained, actionable prose (finding → proposed fix). The
+       classification stays internal (it still drives the summary counts).
+     - **Summary body:** the verdict badge, the finding counts, a per-AC outline
+       (one line per AC with its criterion + per-AC counts + QA verdict), and a
+       link to the hosted report (screenshots, diffs). Note that the inline
+       comments below carry the line-anchored detail.
+     - The review verdict requests changes when any blocker survives, comments
+       when only nits/questions remain, and approves when clean — and **an
+       approval ALWAYS goes through the explicit human approval gate; lead never
+       auto-approves.** Inline-comment mechanics and the single-review submission
+       live in the source-control integration skill.
+
+### Your-own-request AC block layout (description)
+
+```
+<!-- qa:start -->
+🧪 **Review** — QA: PASS ✅ · 4 build · 2 human · 0 plan · [full report ↗](<hosted .md blob URL>)
+<sub>commit <shortSHA> · updated <YYYY-MM-DD HH:MM></sub>
+
+<details open><summary>AC1 — <criterion> · 2 build · 1 human · QA FAIL ❌</summary>
+
+<bare permalink: …/blob/<headSHA>/<path>#L120-L156>
+
+- `path:line` **[build]** — finding text → proposed fix · [diff ↗](<per-file deep link>)
+- `path:line` **[human]** — finding text · [diff ↗](…)
+- **QA:** FAIL ❌ — <one-line evidence> · [screenshots ↗](<hosted report blob URL>)
+
+</details>
+
+<details><summary>AC2 — <criterion> · ✅ clean · QA PASS ✅</summary>
+
+<bare permalink …#L40-L62>
+
+- Findings: none.
+- **QA:** PASS ✅ — <evidence> · [screenshots ↗](…)
+
+</details>
+
+<details><summary>Scope &amp; cross-cutting</summary>
+
+- `path:line` **[plan]** — scope-drift / AC-gap / external-contract finding · [diff ↗](…)
+
+</details>
+
+<details><summary>Could not verify</summary>
+
+- <item> — <why>
+
+</details>
+<!-- qa:end -->
+```
+
+The per-AC code reference is ONE bare permalink pinned to the head revision,
+capped to the AC's primary implementing region at ≤40 lines (pick the tightest
+`#Lstart-Lend` window over the principal finding(s)). Additional files/regions for
+that AC get a `[diff ↗]` deep-link only — NOT a second unfurl.
+
+### Someone-else summary body (review)
+
+```
+🧪 **Review** — QA: PASS ✅ · 4 build · 2 human · 0 plan
+
+**Acceptance criteria**
+- AC1 — <criterion> · ⚠️ 2 build · 1 human · QA FAIL ❌
+- AC2 — <criterion> · ✅ clean · QA PASS ✅
+- AC3 — <criterion> · ⚠️ 1 human
+
+Inline comments below carry the line-anchored detail. Full report (screenshots, diffs): [review report ↗](<hosted .md blob URL>).
+```
+
+## Re-review — by ownership
 
 On a re-review, lead REGENERATES both forms from the reconciled findings, re-opens
-the HTML form locally, and re-hosts the Markdown form — the hosted copy is
-overwritten wholesale, so the link is unchanged. Re-run the badge placement to
-refresh the verdict/count.
+the HTML form locally, and re-hosts the Markdown form (overwritten wholesale, so
+the link is unchanged). Then refresh the deliverable per ownership:
+
+- **Your own request:** in-place read-modify-write of the WHOLE marked block in
+  the description, refreshing the `<sub>` provenance line — never a new comment.
+- **Someone else's request:** submit a FRESH review event scoped to the delta
+  (reviews are immutable, so prior ones can't be edited). Add inline comments only
+  for NEW and moved-but-still-true findings, reconcile prior findings by count in
+  the summary body, and do NOT programmatically resolve prior threads.
 
 ## Approval gate
 

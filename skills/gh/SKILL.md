@@ -186,6 +186,14 @@ gh run view <run-id> --log-failed
 
 `gh pr review` doesn't support inline comments on specific lines. Use `gh api` instead.
 
+For the unified-review deliverable when reviewing someone else's PR, submit the
+whole review as ONE review event: a single `POST .../pulls/{n}/reviews` carrying
+the `comments` array AND the top-level `body` together. The `body` is the review
+summary (verdict badge + per-AC outline + hosted-report link); the `comments` are
+the line-anchored findings. One `event` value (`REQUEST_CHANGES` / `COMMENT` /
+`APPROVE`) applies to the whole submission — do not split into separate per-comment
+posts.
+
 ### Posting Inline Comments
 
 Use `--input -` with heredoc JSON (not `-f 'comments=[...]'` which gets stringified):
@@ -280,7 +288,9 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
 
 ### Notes
 
-- Omit top-level `body` field to skip summary comment
+- The top-level `body` field is the review summary; omit it only to skip the
+  summary. For the unified-review one-event submission, INCLUDE `body` — it carries
+  the verdict badge, AC outline, and report link alongside the inline `comments`.
 - Each comment needs: `path`, `line`, `body`
 
 ## Top-level (issue) comments
@@ -310,6 +320,19 @@ Get the head SHA with `gh pr view "$PR" --json headRefOid -q .headRefOid`. Use
 `printf '%s'` (not `echo`, which appends a newline and changes the hash). Compute
 the anchor for **each** changed file you reference; always pair the link with the
 `file:line` so the reader has both the navigable diff and the exact location.
+
+## Permalink → code snippet unfurl
+
+A **bare same-repo permalink on its own line** — `https://github.com/$O/$R/blob/$SHA/<path>#L10-L20` — unfurls into a rendered, syntax-highlighted code SNIPPET of that file's content at the pinned SHA for the `#Lx-Ly` range. Use this to embed an AC's primary implementing region inline in a review report block.
+
+Rules and limits:
+
+- **Bare only.** The URL must stand alone on its own line. Wrapping it in `[text](url)` link markdown defeats the unfurl — it renders as an ordinary link.
+- **Comment surfaces only.** Unfurling happens in PR/issue descriptions, top-level comments, and inline review-comment bodies. It does NOT happen inside a committed `.md` blob view (the hosted report renders as plain markdown).
+- **Same-repo only.** A permalink to a different repo links but does not unfurl the snippet inline.
+- **Content, never a diff.** It shows file content at the SHA, not a diff. To point at the diff, use the deep-link recipe above (`#diff-<hash>`); the two are complementary.
+- **Confirmed to work inside `<details>`.** A bare permalink on its own line inside a `<details>` block unfurls identically to outside it (verified) — so it can lead each collapsed per-AC section of the description report block. Keep the mandatory blank line after `</summary>`.
+- Pin to the head SHA (`gh pr view "$PR" --json headRefOid -q .headRefOid`) so the snippet stays valid as the PR evolves; cap the range to the AC's principal region (≤40 lines).
 
 ## Rendering a changed file's diff to self-contained HTML
 

@@ -17,7 +17,7 @@ Integration skills self-register their provided capabilities via `provides` in f
 | **elasticsearch** — Query ES logs, APM traces, and errors | **communication** — Human-facing prose style and AI-authorship markers |
 | **figma** — Read Figma files, components, and assets | **observability** — Investigate production issues using logs and traces |
 | **gh** — GitHub CLI: source control, CI, code review, issues | **push** — Push approval protocol and CI watching |
-| **gws** — Google Workspace: email, docs, drive, sheets | **review-publish** — Publish the unified AC-organized review report (static findings + QA evidence) |
+| **gws** — Google Workspace: email, docs, drive, sheets | **review-publish** — Deliver the unified AC-organized review report (static findings + QA evidence) by ownership: inline comments + summary for others' PRs, description block for your own |
 | **knowledge-base** — Look up people, projects, and decisions locally | **thinking-tools** — Structured frameworks for decisions and problem framing |
 | **linear** — Linear issue tracker | |
 | **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
@@ -49,7 +49,7 @@ Slash commands. Workflow commands embed methodology directly — no skill loadin
 | Command | Type | Description |
 |---------|------|-------------|
 | **/implement** | Workflow | Plan/build/review/ship with embedded review passes and approval gates |
-| **/review** | Workflow | Code review with multi-pass analysis and QA, published as one AC-organized report (findings + QA evidence, no inline comments) |
+| **/review** | Workflow | Code review with multi-pass analysis and QA; delivered by ownership — inline line-anchored comments + a summary in one review on someone else's PR, an upserted AC report block in the description on your own — backed by an AC-organized local-HTML + hosted-MD report |
 | **/mr** | Workflow | Merge request maintenance — triage, fix, conflicts, re-request review |
 | **/audit** | Utility | Spec compliance audit — measures against `openspec/specs/` |
 | **/learn** | Utility | Capture discoveries into AGENTS.md or a new skill |

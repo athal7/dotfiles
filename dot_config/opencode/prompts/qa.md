@@ -76,6 +76,11 @@ neither. Your `report-*` files and lead's `review-report-*` files share the dir
 without colliding (distinct prefixes), and the demo command's read of your exact
 `report.html` is unaffected.
 
+Your per-AC evidence also surfaces in lead's deliverable — the review summary body
+(someone else's request) or the description block (your own) — but your
+screenshots reach the remote only via the hosted `.md`; map evidence to ACs
+cleanly so it lands in the right per-AC section either way.
+
 ## What good output looks like
 
 - **A clear verdict** — pass or fail, per flow. Not "looks fine."
