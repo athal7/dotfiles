@@ -14,13 +14,15 @@ Helper commands use `--id` flag: `gws gmail +read --id <messageId>`. List messag
 
 `+read` output warns about unknown format but works — the body text/html is in the JSON response.
 
+**Body/JSON escaping gotcha.** When a `--body`, `--json`, or `--params` value contains apostrophes, quotes, or other shell-special characters, do NOT inline-escape inside single quotes with the `'\''` sequence — it silently corrupts the content (apostrophes come through as literal junk). `--json`/`--params` accept only a JSON string; `@file` and stdin (`-`) are NOT supported. Put the text/JSON in a file and substitute it verbatim: `--body "$(cat body.txt)"` or `--params "$(cat query.json)"`.
+
 ## Calendar
 
 Service name is `calendar`, not `cal`. Events: `gws calendar events list --params '{"calendarId":"primary","timeMin":"...","timeMax":"...","singleEvents":true,"orderBy":"startTime"}'`.
 
 ## Drive
 
-Search files: `gws drive files list --params '{"q":"name contains '\''keyword'\''","pageSize":20,"fields":"files(id,name,mimeType,modifiedTime)"}'`.
+Search files: write the JSON to a file and substitute it (the query value contains apostrophes — see the Gmail escaping gotcha): `gws drive files list --params "$(cat query.json)"` where `query.json` holds `{"q":"name contains 'keyword'","pageSize":20,"fields":"files(id,name,mimeType,modifiedTime)"}`.
 
 ### Comments
 
