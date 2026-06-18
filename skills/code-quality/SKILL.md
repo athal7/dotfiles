@@ -95,6 +95,12 @@ For diff review beyond named patterns.
 - **Caching correctness** — when the diff reads from caches (in-process memoization, Redis, framework cache stores), verify the cached value can't be stale relative to the operation's requirements, especially after writes.
 - **Minimize diff** — unnecessary whitespace changes (blank lines added/removed, trailing whitespace, re-indentation), unnecessary formatting changes, unrelated refactors, scope creep.
 
+## Deterministic enforcement
+
+When a finding is an instance of a standing repo convention rather than a one-off — a naming rule, a layering boundary, a banned pattern, or guidance already written down (an `AGENTS.md` / `CONVENTIONS.md` rule, an agent instruction) that keeps getting missed — the durable fix is a deterministic guardrail, not a repeated comment. Recommend encoding it as an automated check (a custom lint rule such as a custom RuboCop cop, a test, or a CI gate) so the convention self-enforces. A soft nudge that isn't being followed is the strongest signal — propose replacing it rather than restating it. Severity: `suggestion` and a separate follow-up by default; when the convention is already documented and the diff violates it, the finding carries the weight of that documented rule. Surface the candidate — adding the rule is a follow-up, not part of the diff under review.
+
+The **mechanical sweeps** above are the prime fitness-function candidates: **Propagation**, **Dead code**, **Orphaned code**, and **blast-radius** (caller/callee) checks are exactly the kind of exhaustive, automatable scan a deterministic guard should own. Run the manual sweep to catch the immediate instance in the diff, but treat an unguarded one of these as a missing fitness function: recommend the durable check (a test that fails when a reference is left dangling, a lint rule that bans the orphaned symbol, a CI grep gate) rather than relying on a human re-running the sweep every review. Hand-running an automatable scan is the soft nudge that won't scale.
+
 ## Tests
 
 - **Test coverage** — every changed behavior has tests. Missing coverage on a happy path or a documented edge case is a finding.

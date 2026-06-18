@@ -8,7 +8,7 @@ Workflow: merge-request. You are maintaining your own merge request. Each phase 
 **Use TodoWrite to track this workflow. Create these items before starting:**
 - Reopen issue — if the MR references a tracked issue, set it back to In Progress
 - Triage — fetch threads + top-level comments, categorize, present for approval
-- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD), resolve fixed threads
+- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD), resolve fixed threads, and seek deterministic fitness functions for repo conventions
 - Conflicts — resolve if present, run tests
 - Re-request — present summary, re-request review
 
@@ -25,6 +25,8 @@ Dispatch the `explore` subagent (`task` tool, `subagent_type: explore`) to fetch
 ## Fix
 
 For each actionable thread, dispatch the `build` subagent (`task` tool, `subagent_type: build`, strict TDD). After the fix commits, **resolve the thread** — no reply needed. Reserve replies for threads you are declining, deferring, questioning, or adding context to; always get approval before posting a reply.
+
+**Seek deterministic fitness functions.** Repetition is hard to see inside a single changeset, so don't wait to spot an issue twice. Ask instead whether the feedback expresses a *convention* the repo should hold everywhere — a naming rule, an architectural boundary, a banned pattern. The strongest signal is feedback that points at guidance already written down — a documented convention or an agent instruction that keeps getting missed; a soft nudge that isn't being followed is a prime candidate to replace with something deterministic rather than restate. When the feedback names a convention, look for the opportunity to encode it as a deterministic check (a custom lint rule such as a custom RuboCop cop, a test, or a CI gate) so it self-enforces and no reviewer has to flag it again. A genuine one-off just gets fixed. Propose the rule as a follow-up and get approval before adding it; if it is out of scope for the current MR, capture it as a follow-up todo rather than expanding the diff.
 
 ## Conflicts
 
