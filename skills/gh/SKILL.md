@@ -188,11 +188,11 @@ gh run view <run-id> --log-failed
 
 For the unified-review deliverable when reviewing someone else's PR, submit the
 whole review as ONE review event: a single `POST .../pulls/{n}/reviews` carrying
-the `comments` array AND the top-level `body` together. The `body` is the review
-summary (verdict badge + per-AC outline + hosted-report link); the `comments` are
-the line-anchored findings. One `event` value (`REQUEST_CHANGES` / `COMMENT` /
-`APPROVE`) applies to the whole submission — do not split into separate per-comment
-posts.
+the `comments` array (the line-anchored findings) with an EMPTY top-level `body`
+— no summary, no verdict badge, no per-AC outline, no hosted-report link. One
+`event` value applies to the whole submission (`REQUEST_CHANGES` if any blocker /
+`COMMENT` for nits / `APPROVE` for a clean review, and only ever through an
+explicit human approval gate) — do not split into separate per-comment posts.
 
 ### Posting Inline Comments
 

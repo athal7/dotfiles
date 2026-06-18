@@ -11,7 +11,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Terminal](dot_config/ghostty/)
 - **AI tooling**
   - [OpenCode config](dot_config/opencode/opencode.json.tmpl)
-  - [Agent skills](skills/) — knowledge base, communication, code review, and more. Code review produces one AC-organized report fusing static findings with QA evidence. The `review-publish` skill delivers it by ownership — inline line-anchored comments plus a summary in a single review on someone else's PR, an upserted report block in the description on your own.
+  - [Agent skills](skills/) — knowledge base, communication, code review, and more. Code review produces one AC-organized report fusing static findings with QA evidence. The `review-publish` skill delivers it by ownership — inline line-anchored comments with an empty review body (nothing hosted) on someone else's PR, an upserted report block in the description on your own.
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)
   - [Homebridge](dot_homebridge/)

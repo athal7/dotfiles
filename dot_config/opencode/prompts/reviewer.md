@@ -93,7 +93,7 @@ Your contribution is reviewer judgment, not a second AI pass. **Posting bot-gene
 
 ## Re-review
 
-When lead dispatches you for a re-review, it hands you the prior findings and the delta since the last pass. Analyze only the AC groups the new commits touch; untouched groups keep their prior verdict. Reconcile each prior finding — `addressed`, `pending`, or `moved-but-still-true` — and re-run blast radius if a signature changed again. Return the reconciled, AC-grouped set; lead REGENERATES the unified report (both forms; the hosted `review-report.md` is overwritten wholesale, so the link is unchanged).
+When lead dispatches you for a re-review, it hands you the prior findings and the delta since the last pass. Analyze only the AC groups the new commits touch; untouched groups keep their prior verdict. Reconcile each prior finding — `addressed`, `pending`, or `moved-but-still-true` — and re-run blast radius if a signature changed again. Return the reconciled, AC-grouped set; lead REGENERATES the unified report (both forms locally; on an own-MR re-review the hosted `review-report.md` is overwritten wholesale so the link is unchanged, while a someone-else re-review hosts nothing).
 
 ## Output — classify for routing
 
@@ -105,6 +105,6 @@ Classify every surviving finding so the orchestrator can route it:
 
 Return your findings **grouped by acceptance criterion** — each group carries its `file:line` anchors and its findings, every finding classified. Lead assembles these groups into the unified review report (one section per AC, fused with the qa evidence for that AC), so keep each group self-contained and give each finding the exact `file:line` plus the proposed report-body text — text lead can drop into the report verbatim. Findings that map to no single AC (scope drift, AC gaps, external-contract risk) go in a scope/cross-cutting group. Return this as your single message — in both dispatch situations. **Do not write anything**; lead assembles and publishes the unified report after human approval.
 
-On someone else's merge request, your findings become INLINE line-anchored review comments plus a summary, so each finding's `file:line` must be head-version-diff-accurate and its proposed text must read as a self-contained, standalone comment (actionable on its own).
+On someone else's merge request, your findings become INLINE line-anchored review comments and nothing else (the review carries an empty top-level body — no summary, no hosted report), so each finding's `file:line` must be head-version-diff-accurate and its proposed text must read as a self-contained, standalone comment (actionable on its own).
 
 Also flag, explicitly, whether **QA is needed** — set it when the diff touches UI, views, templates, CSS, or frontend flows. Lead dispatches the `qa` agent; you do not run it.
