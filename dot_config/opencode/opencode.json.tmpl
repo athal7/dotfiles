@@ -8,11 +8,13 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Plugin wiring (skill injection, custom commands)
   - Agent-specific permission and skill overrides (lead, plan, reviewer, qa, build, explore, scout, general, title)
 
-Local model setup: LM Studio serves the MLX Mixture-of-Experts model
-Qwen3-30B-A3B (4-bit) for agentic coding and the kb meeting pipeline. Install
-the cask via chezmoi, run `npx lmstudio install-cli`, enable "Run server on
-login", and download via `lms get qwen/qwen3-30b-a3b`. Reference in opencode
-as lmstudio/qwen/qwen3-30b-a3b.
+Local model setup: LM Studio serves the non-thinking MLX Mixture-of-Experts
+model Qwen3-30B-A3B-Instruct-2507 (4-bit MLX) for agentic coding and the kb
+meeting pipeline. It never emits <think> blocks, so no thinking-suppression is
+needed. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
+"Run server on login", and download via the full HF URL (the LM Studio catalog
+slug does not resolve): `lms get https://huggingface.co/mlx-community/Qwen3-30B-A3B-Instruct-2507-4bit -y`.
+Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
 */ -}}
 {{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
        NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
@@ -169,7 +171,7 @@ as lmstudio/qwen/qwen3-30b-a3b.
       "model": "anthropic/claude-sonnet-4-6"
     },
     "title": {
-      "model": "anthropic/claude-haiku-4-5",
+      "model": "lmstudio/qwen3-30b-a3b-instruct-2507",
       "prompt": "{file:./prompts/title.md}",
       "temperature": 0.5
     }
@@ -199,14 +201,11 @@ as lmstudio/qwen/qwen3-30b-a3b.
         "baseURL": "http://127.0.0.1:1234/v1"
       },
       "models": {
-        "qwen/qwen3-30b-a3b": {
-          "name": "qwen/qwen3-30b-a3b",
+        "qwen3-30b-a3b-instruct-2507": {
+          "name": "qwen3-30b-a3b-instruct-2507",
           "limit": {
-            "context": 32768,
+            "context": 40960,
             "output": 8192
-          },
-          "options": {
-            "think": false
           }
         }
       }
