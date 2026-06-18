@@ -20,7 +20,7 @@ Optional argument: a time-window override — e.g. `2w`, `10d`, or an explicit d
 
 2. **Gather raw material since the boundary.** All of it is your own work, so it's naturally scoped to "my work":
    - **KB journal** — entries in range at `~/.local/share/kb/journal/YYYY-MM-DD.md`, for per-project coding activity with diff stats.
-   - **QA reports** — directories under `~/.local/share/qa/*/qa-*/` whose timestamp or mtime falls in the window. Each holds a `report.html` and numbered screenshots (`001-*.png`, …) — these are visual proof of features working.
+   - **QA reports** — directories under `~/.local/share/qa/*/qa-*/` whose timestamp or mtime falls in the window. Each holds a `report.html` and numbered screenshots (`001-*.png`, …) — these are visual proof of features working. Some `qa-*` dirs may hold only `review-report.*` (a no-QA review with no screenshots) — skip those when gathering slide proof.
    - **Project profiles** — `~/.local/share/kb/projects/<slug>.md` for framing and status.
    - **Decisions log** — `~/.local/share/kb/decisions/log.md` for the "why" behind the work.
 

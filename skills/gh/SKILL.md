@@ -371,8 +371,10 @@ Source the per-file diff and wrap each file in its own block. Recommend
 {
   printf '<details open><div class="diff"><div class="file">%s</div>' "$path"
   git diff "$base..$head" -- "$path" | render_diff_html       # local changeset
-  # hosted: gh pr diff "$PR" splits into per-file sections — feed each file's
+  # when the changeset under review is a hosted PR, source its diff via `gh pr diff`:
+  # gh pr diff "$PR" splits into per-file sections — feed each file's
   # hunk block (from its "diff --git" line to the next) to render_diff_html
+  # (still rendered into the local `.html`, never the hosted `.md`)
   printf '</div></details>'
 } >> "$SESSION_DIR/review-report.html"
 ```

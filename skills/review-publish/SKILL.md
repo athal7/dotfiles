@@ -40,6 +40,9 @@ machine-readable lines:
 Findings: 1 build · 2 human · 0 plan      ← machine-readable summary count
 ```
 
+The top-line QA verdict is FAIL if any acceptance criterion's QA failed, n/a if QA
+did not run, otherwise PASS.
+
 The two forms differ in exactly two things — how they show **diffs** and how
 they show **screenshots**:
 
@@ -99,7 +102,7 @@ file's diff inline as self-contained highlighted HTML, and deep-link each change
 file in the hosted form via the per-file anchor recipe — both mechanics live in
 the source-control integration skill.
 
-Skeleton (the inline `<style>` carries a GitHub-ish diff palette; the `.diff`
+Skeleton (the inline `<style>` carries a familiar code-host diff palette; the `.diff`
 `add`/`del`/`hunk`/`ctx` classes match the rendered diff spans):
 
 ```html
@@ -136,7 +139,7 @@ Layout:
 
 Compose the verdict+link badge by parsing the **hosted Markdown form**
 (`review-report.md`): read the verdict from the `## 🧪 Review` line and the counts
-from the `Findings:` line, e.g. `🧪 QA PASS ✅ · 3 findings — <link>`. (This
+from the `Findings:` line, e.g. `🧪 Review — QA: PASS ✅ · N build · N human · N plan · [full report ↗](<link>)`. (This
 replaces reading a QA-only heading; the QA agent keeps its own heading in its own
 `report.md` for its own flow.) The local HTML form is never parsed for the badge.
 
@@ -201,16 +204,16 @@ images; the description/`<details>` surface has size limits).
        auto-approves.** Inline-comment mechanics and the single-review submission
        live in the source-control integration skill.
 
-### Your-own-request AC block layout (description)
+### Your-own-request AC block layout (Template A)
 
 ```
 <!-- qa:start -->
-🧪 **Review** — QA: PASS ✅ · 4 build · 2 human · 0 plan · [full report ↗](<hosted .md blob URL>)
+🧪 **Review** — QA: FAIL ❌ · 4 build · 2 human · 0 plan · [full report ↗](<hosted .md blob URL>)
 <sub>commit <shortSHA> · updated <YYYY-MM-DD HH:MM></sub>
 
 <details open><summary>AC1 — <criterion> · 2 build · 1 human · QA FAIL ❌</summary>
 
-<bare permalink: …/blob/<headSHA>/<path>#L120-L156>
+<head-pinned permalink to the AC's primary region>
 
 - `path:line` **[build]** — finding text → proposed fix · [diff ↗](<per-file deep link>)
 - `path:line` **[human]** — finding text · [diff ↗](…)
@@ -246,10 +249,10 @@ capped to the AC's primary implementing region at ≤40 lines (pick the tightest
 `#Lstart-Lend` window over the principal finding(s)). Additional files/regions for
 that AC get a `[diff ↗]` deep-link only — NOT a second unfurl.
 
-### Someone-else summary body (review)
+### Someone-else summary body (Template B)
 
 ```
-🧪 **Review** — QA: PASS ✅ · 4 build · 2 human · 0 plan
+🧪 **Review** — QA: FAIL ❌ · 4 build · 2 human · 0 plan
 
 **Acceptance criteria**
 - AC1 — <criterion> · ⚠️ 2 build · 1 human · QA FAIL ❌
