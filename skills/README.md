@@ -10,18 +10,22 @@ Integration skills self-register their provided capabilities via `provides` in f
 
 | Integration (skill) | Workflow |
 |---------------------|----------|
-| **elasticsearch** — Query ES logs, APM traces, and errors | **architecture** — Architecture decisions, design prerequisite check, ADR template |
-| **figma** — Read Figma files, components, variables, and projects | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
-| **gh** — GitHub CLI integration: merge requests, CI, inline comments | **chezmoi** — Manage dotfiles via chezmoi |
-| **docs** — Read/write Google Docs and Confluence | **commit** — Semantic commit format, branch naming, squashing |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **conversations** — Research people and decisions across chat, meetings, email |
-| **pty** — PTY sessions for long-running or interactive processes | **issues** — Route to Linear or GitHub Issues based on org |
-| | **observability** — Investigate production issues using logs and traces |
-| | **push** — Push approval protocol and CI watching |
-| | **qa** — Browser QA verification via Firefox DevTools |
-| | **review** — Self-review your own diff before committing or pushing |
-| | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
-| | **thinking-tools** — Structured frameworks for decisions and problem framing |
+| **branching** — Stacked branch management via git-spice | **architecture** — Architecture decisions, design prerequisite check, ADR template |
+| **chezmoi** — Manage dotfiles via chezmoi | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
+| **ck** — Semantic code search via the ck MCP server | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
+| **confluence** — Wiki pages, spaces, and search | **commit** — Semantic commit format and pre-commit checks |
+| **elasticsearch** — Query ES logs, APM traces, and errors | **communication** — Human-facing prose style and AI-authorship markers |
+| **figma** — Read Figma files, components, and assets | **observability** — Investigate production issues using logs and traces |
+| **gh** — GitHub CLI: source control, CI, code review, issues | **push** — Push approval protocol and CI watching |
+| **gws** — Google Workspace: email, docs, drive, sheets | **review-publish** — Deliver the unified AC-organized review report (static findings + QA evidence) by ownership: inline comments + summary for others' PRs, description block for your own |
+| **knowledge-base** — Look up people, projects, and decisions locally | **thinking-tools** — Structured frameworks for decisions and problem framing |
+| **linear** — Linear issue tracker | |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
+| **pagerduty** — Incidents, on-call schedules, escalation policies | |
+| **reminders** — macOS Reminders via remindctl | |
+| **slack** — Messaging, search, and channel management | |
+| **xh** — HTTPie-compatible HTTP client for REST APIs | |
+| **zoom** — Zoom meeting captions | |
 
 External skills (installed via `gh skill install` from upstream maintainers) — see `.chezmoidata/packages.yaml` `skills:` block:
 
@@ -45,7 +49,7 @@ Slash commands. Workflow commands embed methodology directly — no skill loadin
 | Command | Type | Description |
 |---------|------|-------------|
 | **/implement** | Workflow | Plan/build/review/ship with embedded review passes and approval gates |
-| **/review** | Workflow | Code review with multi-pass analysis, QA, finding verification |
+| **/review** | Workflow | Code review with multi-pass analysis and QA; delivered by ownership — inline line-anchored comments + a summary in one review on someone else's PR, an upserted AC report block in the description on your own — backed by an AC-organized local-HTML + hosted-MD report |
 | **/mr** | Workflow | Merge request maintenance — triage, fix, conflicts, re-request review |
 | **/audit** | Utility | Spec compliance audit — measures against `openspec/specs/` |
 | **/learn** | Utility | Capture discoveries into AGENTS.md or a new skill |

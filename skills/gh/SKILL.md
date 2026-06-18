@@ -186,6 +186,14 @@ gh run view <run-id> --log-failed
 
 `gh pr review` doesn't support inline comments on specific lines. Use `gh api` instead.
 
+For the unified-review deliverable when reviewing someone else's PR, submit the
+whole review as ONE review event: a single `POST .../pulls/{n}/reviews` carrying
+the `comments` array AND the top-level `body` together. The `body` is the review
+summary (verdict badge + per-AC outline + hosted-report link); the `comments` are
+the line-anchored findings. One `event` value (`REQUEST_CHANGES` / `COMMENT` /
+`APPROVE`) applies to the whole submission — do not split into separate per-comment
+posts.
+
 ### Posting Inline Comments
 
 Use `--input -` with heredoc JSON (not `-f 'comments=[...]'` which gets stringified):
@@ -280,7 +288,9 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
 
 ### Notes
 
-- Omit top-level `body` field to skip summary comment
+- The top-level `body` field is the review summary; omit it only to skip the
+  summary. For the unified-review one-event submission, INCLUDE `body` — it carries
+  the verdict badge, AC outline, and report link alongside the inline `comments`.
 - Each comment needs: `path`, `line`, `body`
 
 ## Top-level (issue) comments
@@ -288,6 +298,86 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
 PR conversation comments are *issue* comments: `gh pr comment` creates one; the edit endpoint is `gh api repos/$O/$R/issues/comments/$ID` (note `issues/comments/$ID`, no PR number), while listing is `issues/$PR/comments`.
 
 The REST list returns the author as `.user.login` — **not** `.author.login` as `gh pr view --json comments` uses. Mixing the two field paths across commands silently yields empty results.
+
+## Deep-linking to a file in the PR diff
+
+To link a specific changed file's diff in a PR (e.g. from a review report),
+GitHub anchors each file in the Files-changed view by the **sha256 of the file
+path**, prefixed with `diff-`. Compute it per file:
+
+```bash
+printf '%s' "<path>" | shasum -a 256 | cut -d' ' -f1
+```
+
+URL shape — pin the files view to the head SHA so the anchor stays valid as the
+PR evolves:
+
+```
+https://github.com/$OWNER/$REPO/pull/$PR/files/$HEAD_SHA#diff-<hash>
+```
+
+Get the head SHA with `gh pr view "$PR" --json headRefOid -q .headRefOid`. Use
+`printf '%s'` (not `echo`, which appends a newline and changes the hash). Compute
+the anchor for **each** changed file you reference; always pair the link with the
+`file:line` so the reader has both the navigable diff and the exact location.
+
+## Permalink → code snippet unfurl
+
+A **bare same-repo permalink on its own line** — `https://github.com/$O/$R/blob/$SHA/<path>#L10-L20` — unfurls into a rendered, syntax-highlighted code SNIPPET of that file's content at the pinned SHA for the `#Lx-Ly` range. Use this to embed an AC's primary implementing region inline in a review report block.
+
+Rules and limits:
+
+- **Bare only.** The URL must stand alone on its own line. Wrapping it in `[text](url)` link markdown defeats the unfurl — it renders as an ordinary link.
+- **Comment surfaces only.** Unfurling happens in PR/issue descriptions, top-level comments, and inline review-comment bodies. It does NOT happen inside a committed `.md` blob view (the hosted report renders as plain markdown).
+- **Same-repo only.** A permalink to a different repo links but does not unfurl the snippet inline.
+- **Content, never a diff.** It shows file content at the SHA, not a diff. To point at the diff, use the deep-link recipe above (`#diff-<hash>`); the two are complementary.
+- **Confirmed to work inside `<details>`.** A bare permalink on its own line inside a `<details>` block unfurls identically to outside it (verified) — so it can lead each collapsed per-AC section of the description report block. Keep the mandatory blank line after `</summary>`.
+- Pin to the head SHA (`gh pr view "$PR" --json headRefOid -q .headRefOid`) so the snippet stays valid as the PR evolves; cap the range to the AC's principal region (≤40 lines).
+
+## Rendering a changed file's diff to self-contained HTML
+
+For the LOCAL review-report HTML (which has no host to render a diff), embed each
+changed file's diff as self-contained, highlighted HTML. This is the sibling of
+the deep-link recipe above: deep-links are for the hosted `.md`; this render is
+for the local `.html`. Diff-level coloring only (add / del / hunk / context) — no
+language awareness, no syntax-highlighting dependency, no JS, no external CSS.
+
+`render_diff_html` reads a unified diff for ONE file on stdin and emits a `<pre>`
+with one HTML-escaped `<span class="line …">` per line:
+
+```bash
+render_diff_html() {
+  awk '
+    function esc(s){gsub(/&/,"\\&amp;",s);gsub(/</,"\\&lt;",s);gsub(/>/,"\\&gt;",s);return s}
+    BEGIN{print "<pre>"; h=0}
+    /^@@/  {h=1; print "<span class=\"line hunk\">" esc($0) "</span>"; next}
+    !h     {next}
+    /^\+/  {print "<span class=\"line add\">" esc($0) "</span>"; next}
+    /^-/   {print "<span class=\"line del\">" esc($0) "</span>"; next}
+           {print "<span class=\"line ctx\">" esc($0) "</span>"}
+    END{print "</pre>"}'
+}
+```
+
+Escaping `&` first (then `<`, `>`) is mandatory — reversing the order double-escapes.
+The `class` values (`add`/`del`/`hunk`/`ctx`) match the `.diff` palette in the
+`review-publish` skill's HTML skeleton, so the colors come from that `<style>`.
+
+Source the per-file diff and wrap each file in its own block. Recommend
+`<details open>` so a large file collapses without scrolling the whole report:
+
+```bash
+# Per changed file $path:
+{
+  printf '<details open><div class="diff"><div class="file">%s</div>' "$path"
+  git diff "$base..$head" -- "$path" | render_diff_html       # local changeset
+  # when the changeset under review is a hosted PR, source its diff via `gh pr diff`:
+  # gh pr diff "$PR" splits into per-file sections — feed each file's
+  # hunk block (from its "diff --git" line to the next) to render_diff_html
+  # (still rendered into the local `.html`, never the hosted `.md`)
+  printf '</div></details>'
+} >> "$SESSION_DIR/review-report.html"
+```
 
 ## Hosting a file so it renders in code review
 

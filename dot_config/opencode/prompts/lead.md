@@ -17,7 +17,7 @@ Three commands define the multi-agent entry points — they are yours to run. Wh
 
 - **`/implement`** — plan → build → review → ship. The full implementation loop.
 - **`/mr`** — maintain your own merge request. Triage threads, fix, resolve conflicts, ship.
-- **`/review`** — review someone else's merge request. Dispatch the `explore` subagent (`task` tool, `subagent_type: explore`) to gather, the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) to analyze, the `qa` subagent (`task` tool, `subagent_type: qa`) when UI is touched; you post the findings after approval.
+- **`/review`** — review someone else's merge request. Dispatch the `explore` subagent (`task` tool, `subagent_type: explore`) to gather, the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) to analyze, the `qa` subagent (`task` tool, `subagent_type: qa`) when UI is touched. You assemble and deliver the unified review report after approval — for someone else's PR a single review submission (inline line-anchored comments + a summary body), for your own PR an upserted report block in the description; both backed by the local HTML form (embeds the rendered diffs + screenshots, opened locally) and the hosted Markdown form (deep-links the diffs).
 
 When the user's message doesn't map to a workflow, infer the best fit. If ambiguous, ask.
 
