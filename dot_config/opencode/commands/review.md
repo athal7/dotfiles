@@ -8,8 +8,7 @@ Workflow: review someone else's merge request. Each phase below names what to di
 **Use TodoWrite to track this workflow. Create these items before starting:**
 - Setup — dispatch the `explore` subagent (`task` tool, `subagent_type: explore`) to gather diff, rules, acceptance criteria, bot comments
 - Review — dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) for findings grouped by acceptance criterion; dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) if UI is touched
-- Walk — reveal the grouped findings one group at a time, pausing after each for the user's triage; carry survivors forward as proposed comments
-- Submit — present the surviving comments, post inline after approval; when QA ran, also publish the QA report (`qa-publish` skill) after approval
+- Publish — assemble the unified review report (reviewer findings + qa evidence, by AC), then publish it (`review-publish` skill) after approval
 
 ## Setup
 
@@ -25,16 +24,12 @@ Dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) with t
 
 When the diff touches UI (views, templates, CSS, frontend), also dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows.
 
-On a **re-review** (the author pushed since a prior pass), scope to the delta. Diff the new commits against the prior-reviewed state, map the changed lines onto the AC groups, and re-dispatch the `reviewer` for only the touched groups — reconciling prior findings (`addressed` / `pending` / `moved-but-still-true`). Untouched groups keep their prior verdict, and the Walk covers only the changed groups plus any still-open findings. Same judgement for `qa`: re-dispatch only when the new commits touch UI or address a prior QA finding, scoped to the affected flows; non-UI changes leave the prior QA verdict standing.
+On a **re-review** (the author pushed since a prior pass), scope to the delta. Diff the new commits against the prior-reviewed state, map the changed lines onto the AC groups, and re-dispatch the `reviewer` for only the touched groups — reconciling prior findings (`addressed` / `pending` / `moved-but-still-true`). Untouched groups keep their prior verdict. Lead then REGENERATES the unified report from the reconciled findings. Same judgement for `qa`: re-dispatch only when the new commits touch UI or address a prior QA finding, scoped to the affected flows; non-UI changes leave the prior QA verdict standing.
 
-## Walk
+## Publish
 
-Reveal the reviewer's findings to the user **one group at a time**, in the reviewer's order — don't dump every group at once; the review is a conversation. For each group: name the acceptance criterion, point to its `file:line` anchors (the user opens them in their Review pane), present that group's findings, then **pause** for the user's triage — dismiss, accept, mark intentional, or ask you to dig deeper. Carry the surviving findings forward as proposed inline comments.
+Lead ASSEMBLES the unified review report in BOTH forms: interleave the reviewer's AC-grouped findings with qa's per-AC evidence, one section per acceptance criterion, into `review-report.html` (local-only — embeds the rendered diffs + screenshots + running-app links) AND `review-report.md` (hosted — deep-links the diffs, relative-ref screenshots) in qa's session dir (so the relative screenshot refs resolve). When QA did NOT run, lead still creates the `qa-<ts>` dir and writes both forms with verdict `n/a` (the diff/findings half is always present). Then load the `review-publish` skill and follow it — open the `.html` locally → approval gate → host only the `.md` → place the ownership-based link. On someone else's merge request the link is a single posted comment. There are **no** inline line-anchored comments.
 
-## Submit
-
-Post the surviving findings as **inline comments** on the changed lines — no verdict or summary in the submitted body. All remote writes require explicit human approval: show the full proposed text of every comment and **wait** for approval before posting. When the MR has existing reviews and merge conflicts, use merge (not rebase) — rebasing invalidates existing inline comments.
-
-When QA ran, also publish its report — load the `qa-publish` skill and follow it (approval gate, then publish) — separate from and in addition to the inline reviewer findings.
+When the MR has existing reviews from OTHERS (inline comments others posted) and merge conflicts arise, use merge (not rebase) — rebasing invalidates those existing inline comments. Our flow posts none, so this only matters when others' inline reviews are present.
 
 $ARGUMENTS

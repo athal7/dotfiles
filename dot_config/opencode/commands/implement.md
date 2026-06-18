@@ -126,7 +126,7 @@ fi
 
 `worktree` is the absolute repo/worktree root — it equals the opencode session's `directory`, which is the join key `/kb-enrich` uses to exclude these sessions from transcript reads.
 
-**Publish the QA report (if QA ran in the Review phase).** Load the `qa-publish` skill and follow it — approval gate, then publish. The merge request must exist first (the push above creates it), so this runs after push and after approval.
+**Assemble and publish the unified review report.** Load the `review-publish` skill and follow it — assemble the AC-organized report in BOTH forms: `review-report.html` (local-only, embeds the rendered diffs + screenshots) and `review-report.md` (hosted, deep-links the diffs). WHEN QA ran, fuse the reviewer findings with the qa evidence; WHEN QA did not run, create the `qa-<ts>` session dir yourself and write both forms with verdict `n/a` (the findings half is always present). Open the `.html` locally, then after approval host only the `.md` and upsert the badge link into the merge request **description** between the `<!-- qa:start -->` / `<!-- qa:end -->` markers. The merge request must exist first (the push above creates it), so this runs after push and after approval. **Publish when** QA ran in the Review phase **OR** noteworthy surviving human/plan findings remain; **skip** for a clean non-UI self-review.
 
 - **v1 is detection-only.** Surface conflicts to the human (the existing Plan read of `specs/` carries them forward as a plan-level finding); never run automated reconciliation, and never let the lossy auto-fold overwrite the durable specs. CI watch is best-effort and does NOT gate the merge.
 
