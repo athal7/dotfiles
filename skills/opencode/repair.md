@@ -106,6 +106,53 @@ After any fix: fully quit (Cmd+Q) and reopen Desktop.
 - `project.sandboxes` and `global.dat` `workspaceOrder` must be updated together — fixing only one leaves them inconsistent and the UI stays blank
 - Desktop dev tools (`Cmd+Option+I`) are not available in production builds; check logs at `~/Library/Logs/ai.opencode.desktop/`
 
+## Stale Workspace File-Picker Errors
+
+**Symptom:** `opencode-web` logs repeated `Failed to init file picker: Invalid path /Users/athal/.local/share/opencode/worktree/<project-id>/<name>` — one per pruned/deleted worktree. Often only the most-recently-touched one or two surface, but every dead entry is a latent error.
+
+**Root cause:** The web serve process initializes a file picker for every workspace it has metadata for in `global.dat`. Worktrees get pruned from disk, but the `workspaceName` / `workspaceBranchName` metadata in `global.dat` is not cleaned up, leaving orphaned entries that point at non-existent paths.
+
+**Key state-file facts:**
+
+- File: `~/Library/Application Support/ai.opencode.desktop/opencode.global.dat` (JSON; the Desktop Electron app's storage, shared with the web serve process). NOT chezmoi-managed (runtime state).
+- Keys use a **NUL byte** (`chr(0)`) separator. The web service's layout key is literally `'http://localhost:4096' + chr(0) + 'layout.page'`. The Desktop app's own key is just `'layout.page'`. Using a space instead of `chr(0)` returns nothing.
+- Both layout values are stored as **JSON strings**, not nested objects — round-trip with `json.loads` → edit → `json.dumps`.
+- `workspaceName`: dict keyed by **absolute worktree path** → display value (e.g. `'opencode/silent-orchid'`). The dead entries live here.
+- `workspaceBranchName`: dict keyed by **project-id** → `{ displayValue → branchName }`.
+- `workspaceOrder` and `lastProjectSession` are keyed by project root path and usually stay clean — the dead entries are name/branch metadata only.
+
+**Fix:** Quit Desktop first (Cmd+Q) so it doesn't clobber the edit, back up the file, then prune every `workspaceName` entry whose worktree path no longer exists on disk (and the matching `workspaceBranchName[project-id][displayValue]`), for BOTH the web key and the Desktop `layout.page` key. Keep entries whose worktree path still exists.
+
+```python
+import json, os, time
+
+path = os.path.expanduser(
+  '~/Library/Application Support/ai.opencode.desktop/opencode.global.dat'
+)
+data = json.loads(open(path).read())
+open(path + '.bak.' + str(int(time.time())), 'w').write(json.dumps(data))
+
+web_key = 'http://localhost:4096' + chr(0) + 'layout.page'
+for key in ('layout.page', web_key):
+    if key not in data:
+        continue
+    layout = json.loads(data[key])
+    names = layout.get('workspaceName', {})
+    branches = layout.get('workspaceBranchName', {})
+    for p in [p for p in names if not os.path.isdir(p)]:
+        display = names.pop(p)
+        projid = p.split('/worktree/')[1].split('/')[0]
+        if projid in branches:
+            branches[projid].pop(display, None)
+    data[key] = json.dumps(layout)
+
+open(path, 'w').write(json.dumps(data))
+```
+
+Then reopen Desktop (`open -a OpenCode`). **Do NOT restart `opencode-web`** — it is the session-hosting service (may host live sessions) and reads `workspaceName` on demand, so the pruned file takes effect without a restart.
+
+---
+
 ## OpenCode Binary Architecture
 
 Three distinct `opencode` binaries exist — they are NOT interchangeable:
