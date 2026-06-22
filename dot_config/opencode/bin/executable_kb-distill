@@ -23,8 +23,7 @@ set -eu
 ENDPOINT="http://127.0.0.1:1234/v1/chat/completions"
 MODELS_URL="http://127.0.0.1:1234/v1/models"
 MODEL="qwen3-30b-a3b-instruct-2507"
-# lms is NOT on the kb-enrich LaunchAgent PATH; resolve by absolute path, the
-# same house style as ck-serve resolving its binary at runtime.
+# lms is NOT on the kb-enrich LaunchAgent PATH; resolve by absolute path.
 LMS="$HOME/.lmstudio/bin/lms"
 
 # Chunk budget: JIT default context is 8192 tokens. Reserve ~700 for the

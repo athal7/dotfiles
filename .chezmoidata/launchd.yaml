@@ -60,34 +60,6 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-  ck-serve:
-    Label: com.$USER.ck-serve
-    # Single SHARED resident ck semantic-search MCP server for ALL opencode
-    # sessions/worktrees. supergateway bridges ck's stdio MCP (the ck-serve
-    # wrapper) to StreamableHTTP at http://localhost:4097/mcp, which opencode
-    # connects to as a `type:remote` MCP server. One daemon ≈ 370MB total;
-    # a per-directory `type:local` server would cost N×370MB across worktrees.
-    # CK_MCP_ALLOWED_ROOTS gates which repo paths ck will serve (colon-separated);
-    # without it ck rejects every path. Cold-start re-embeds per repo-path lazily
-    # on first query (~minutes), then ~200ms warm — so KeepAlive keeps it resident.
-    ProgramArguments:
-      - $HOME/.local/share/mise/shims/supergateway
-      - --stdio
-      - $HOME/.config/opencode/bin/ck-serve
-      - --outputTransport
-      - streamableHttp
-      - --port
-      - "4097"
-      - --streamableHttpPath
-      - /mcp
-    RunAtLoad: true
-    KeepAlive: true
-    StandardOutPath: $HOME/Library/Logs/ck-serve.log
-    StandardErrorPath: $HOME/Library/Logs/ck-serve.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      CK_MCP_ALLOWED_ROOTS: $HOME/code:$HOME/.local/share/opencode/worktree
-
   cleanup:
     Label: com.$USER.cleanup
     ProgramArguments:

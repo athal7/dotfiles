@@ -46,7 +46,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
   },
   "plugin": [
     ["./lib/skill-inject.ts", {
-      "architecture": ["gh", "linear", "code-quality", {"skill": "ck", "context": "Before adding a function, semantic-search for an existing equivalent to reuse — avoid differently-named duplicates"}],
+      "architecture": ["gh", "linear", "code-quality"],
       "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
       "communication": ["knowledge-base"],
       "confluence": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
@@ -69,8 +69,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "skill": "allow",
     "lsp": "allow",
     "websearch": "allow",
-    "ck_semantic_search": "allow",
-    "ck_reindex": "allow",
     "external_directory": {
       "*": "ask",
       "~/code/**": "allow",
@@ -202,10 +200,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     }
   },
   "mcp": {
-    "ck": {
-      "type": "remote",
-      "url": "http://127.0.0.1:4097/mcp"
-    },
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp"

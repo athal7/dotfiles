@@ -305,46 +305,6 @@ ORDER BY est_usd_avoided DESC;
 SQL
 ```
 
-**Semantic-search adoption** — measures the `semantic-code-search` spec. Are agents actually invoking the resident `ck` MCP server? The headline metric is `explore`'s advisory `ck_semantic_search` rate (prompt-driven, not enforced) plus the dedup use by `plan` (injection-context-driven) and `build` (prompt-driven, via the build.md before-writing dedup directive). MCP tool-call parts are stored with opencode's `<server>_<tool>` underscore namespacing, so the ck tools are `ck_semantic_search` and `ck_reindex` (confirmed against the live DB `part.data.tool`). Low invocation despite the prompt/injection being wired is the signal to escalate (see recommendation row):
-
-```bash
-# (a) semantic_search adoption by agent — % of explore/plan/build sessions invoking it.
-# Denominator = all sessions per agent in-window; numerator = those with >=1 ck_semantic_search.
-sqlite3 -readonly "$DB" <<SQL
-WITH sem AS (
-  SELECT DISTINCT session_id FROM part
-  WHERE json_extract(data,'$.type') = 'tool'
-    AND json_extract(data,'$.tool') = 'ck_semantic_search'
-)
-SELECT s.agent,
-       COUNT(*) AS total_sessions,
-       SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END) AS sessions_with_semantic,
-       ROUND(100.0*SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END)/COUNT(*),1) AS semantic_pct
-FROM session s LEFT JOIN sem ON sem.session_id = s.id
-WHERE s.agent IN ('explore','plan','build')
-  AND s.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY s.agent ORDER BY s.agent;
-SQL
-
-# (b) reindex counts by agent — is the reindex-before-first-query guidance followed?
-sqlite3 -readonly "$DB" <<SQL
-SELECT s.agent,
-       COUNT(*) AS reindex_calls,
-       COUNT(DISTINCT p.session_id) AS sessions_with_reindex
-FROM part p JOIN session s ON s.id = p.session_id
-WHERE json_extract(p.data,'$.type') = 'tool'
-  AND json_extract(p.data,'$.tool') = 'ck_reindex'
-  AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY s.agent ORDER BY s.agent;
-SQL
-
-# (c) ck injection-context delivery — confirm the dedup reason-to-use is wired
-# under the gateway the dedup-using agent loads (architecture→plan).
-# Verifies the dedup-as-context delivery, not a skill.
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
-  | jq '.plugin[0][1] | .architecture'
-```
-
 **Manual spot-checks** — for requirements that can't be automated, sample 3-5 recent sessions and inspect:
 - Were review passes run in order? (code-review R1)
 - Were findings verified against the diff? (code-review R2)
@@ -374,8 +334,6 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | No measurable `lead` ctx/cache-read reduction after the DCP/snip plugins | FIRST read the DCP firing signal (sidecar aggregate + DB `compress` lower bound) and grade reduction SEGMENTED at the 2026-06-16 intro date (never a straddling window): **firing-but-under-pruning** (sidecar shows prunes, post-vs-pre still <15%) → separate tuning proposal (NOT this change); **silently-no-op** (no sidecar prunes, no `compress` parts) → verify plugin wiring (rendered config loaded, `dcp.jsonc` present with `autoUpdate` false) before adding another plugin; **window-straddling artifact** (firing confirmed + segmented split clears 15%) → re-baseline the floor in `dcp-baseline.json` (down-only, guard-passing, human-ratified) | Stacking more plugins on top of a silently-unloaded one; grading R3 on a single window that straddles the DCP-intro date |
 | Optimizing without per-agent cost data | Measure per-agent cost first (cost-health queries above) | Assuming which agent is expensive |
 | Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
-| `explore`/`build` rarely run `ck_semantic_search` despite the explore prompt / build.md dedup directive | Staged escalation: strengthen the prompt/directive first, then a structural results-injection hook that runs the search and injects matches | More advisory prompt text alone |
-| `plan` rarely runs `ck_semantic_search` despite the dedup injection context | Staged escalation: strengthen the injection `context`, then a structural results hook that injects matches | More advisory skill injection |
 | Local-model turn-share flat / not expanding vs prior audit | Take the next bounded crawl→walk step (title done → kb-summarization: bulk text, no tools, latency-tolerant, privacy-positive) | Moving agentic/high-stakes roles (build/plan/lead) to local — quality regression + qwen3 tool-call XML-leak risk |
 | Local model shows high empty-turn rate or latency blowup | Raise its LM Studio load-context, or revert that role to Claude — empty/timed-out turns are fake savings | Counting broken local turns as displacement |
 

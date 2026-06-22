@@ -224,10 +224,6 @@ packages:
       version: latest
     - name: argocd
       version: latest
-    - name: cargo:ck-search
-      version: latest
-    - name: npm:supergateway
-      version: latest
     # Token-efficiency opencode plugins (also wired in opencode.json.tmpl's
     # plugin array; declared here for the repo's package-registry convention).
     - name: npm:@tarquinen/opencode-dcp

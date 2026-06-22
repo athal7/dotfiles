@@ -12,14 +12,13 @@ Integration skills self-register their provided capabilities via `provides` in f
 |---------------------|----------|
 | **branching** — Stacked branch management via git-spice | **architecture** — Architecture decisions, design prerequisite check, ADR template |
 | **chezmoi** — Manage dotfiles via chezmoi | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
-| **ck** — Semantic code search via the ck MCP server | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
-| **confluence** — Wiki pages, spaces, and search | **commit** — Semantic commit format and pre-commit checks |
-| **elasticsearch** — Query ES logs, APM traces, and errors | **communication** — Human-facing prose style and AI-authorship markers |
-| **figma** — Read Figma files, components, and assets | **observability** — Investigate production issues using logs and traces |
-| **gh** — GitHub CLI: source control, CI, code review, issues | **push** — Push approval protocol and CI watching |
-| **gws** — Google Workspace: email, docs, drive, sheets | **review-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
-| **knowledge-base** — Look up people, projects, and decisions locally | **thinking-tools** — Structured frameworks for decisions and problem framing |
-| **linear** — Linear issue tracker | |
+| **confluence** — Wiki pages, spaces, and search | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
+| **elasticsearch** — Query ES logs, APM traces, and errors | **commit** — Semantic commit format and pre-commit checks |
+| **figma** — Read Figma files, components, and assets | **communication** — Human-facing prose style and AI-authorship markers |
+| **gh** — GitHub CLI: source control, CI, code review, issues | **observability** — Investigate production issues using logs and traces |
+| **gws** — Google Workspace: email, docs, drive, sheets | **push** — Push approval protocol and CI watching |
+| **knowledge-base** — Look up people, projects, and decisions locally | **review-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
+| **linear** — Linear issue tracker | **thinking-tools** — Structured frameworks for decisions and problem framing |
 | **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
 | **pagerduty** — Incidents, on-call schedules, escalation policies | |
 | **reminders** — macOS Reminders via remindctl | |
