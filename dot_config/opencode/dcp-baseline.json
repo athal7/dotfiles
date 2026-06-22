@@ -1,0 +1,8 @@
+{
+  "floor_avg_ctx_tok": 140372,
+  "computed_date": "2026-06-22",
+  "window_days": 30,
+  "lead_turns_per_day_median": 813,
+  "source_commit": "8d3f374",
+  "_comment": "Re-derived R3 baseline floor for lead avg_ctx_tok, replacing the stale pre-adoption scalar 159707. This is the work-intensity-guarded MEDIAN of the pre-DCP (2026-05-17 -> 2026-06-15) lead per-day avg_ctx_tok series (9 of 30 days kept inside the +/-50% band of the trailing-90-day lead-turns/day median of 813). source_commit is the DCP-introduction commit (2026-06-16). Ratchet invariant: floor moves DOWN ONLY, and only on a guard-passing lower median that has been human-ratified. The current post-DCP segment (~6 days) is too young to ratchet (revisit at >=30 post-DCP days); /audit displays a candidate floor every run but does NOT auto-commit it. git history of this file is the ratchet audit trail."
+}
