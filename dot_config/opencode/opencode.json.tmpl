@@ -6,7 +6,7 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Bash permissions: default-allow with curated ask/deny guardrails. Guardrails (system-destructive commands) and named allow-lists live in `.chezmoidata/bash-permissions.yaml`, rendered per-agent via the `opencode-bash` template partial; package-specific gates still live per-tool in packages.yaml. The `lead` agent defaults to `deny` (forcing delegation) with a read-only diagnostics allow-list; other subagents inherit the permissive global block
   - MCP server connections
   - Plugin wiring (skill injection, custom commands)
-  - Agent-specific permission and skill overrides (lead, plan, reviewer, qa, build, explore, scout, general, title)
+  - Agent-specific permission and skill overrides (lead, plan, qa, build, explore, scout, general, title)
 
 Local model setup: LM Studio serves the non-thinking MLX Mixture-of-Experts
 model Qwen3-30B-A3B-Instruct-2507 (4-bit MLX) for agentic coding and the kb
@@ -113,16 +113,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "mode": "subagent",
       "model": "anthropic/claude-opus-4-8",
       "prompt": "{file:./prompts/plan.md}",
-      "permission": {
-        "edit": "deny",
-        "write": "deny"
-      }
-    },
-    "reviewer": {
-      "description": "Independent code reviewer — static multi-pass review of a diff, returns/posts classified findings. Opus, independent of the model that wrote the code. UI functional verification is the qa agent's job.",
-      "mode": "subagent",
-      "model": "anthropic/claude-opus-4-8",
-      "prompt": "{file:./prompts/reviewer.md}",
       "permission": {
         "edit": "deny",
         "write": "deny"

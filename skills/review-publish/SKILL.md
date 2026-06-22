@@ -1,34 +1,30 @@
 ---
 name: review-publish
-description: Publishing the unified review report (fused static findings + QA evidence, organized by acceptance criterion) to a merge request after approval — the branch-hosting procedure, badge composition, and the ownership-based deliverable split (report block in your own request's description; inline line-anchored comments with an empty review body on someone else's). Fires when lead is about to attach the assembled review report to a merge request.
+description: Publishing the AC-organized QA-evidence report to your own merge request after approval — the branch-hosting procedure, badge composition, and upserting the report block into the request's description. Fires when lead is about to attach the assembled QA-evidence report to its own merge request.
 license: MIT
 compatibility: opencode
 ---
 
 # Skill: review-publish
 
-Publishing the **unified review report** — one AC-organized document fusing
-static review findings and QA verification evidence — to a merge request after
-human approval.
+Publishing the **QA-evidence report** — one AC-organized document carrying QA
+verification evidence — to a merge request after human approval.
 
 ## Invariant
 
-The analysis agents are read-only with respect to the remote: the static
-reviewer returns classified findings as a message and the QA agent writes only
-its local artifacts (`report.md`, `report.html`, `NNN-name.png` screenshots) in
-its session dir. **Lead assembles** the unified report — in BOTH forms
-(`review-report.html` and `review-report.md`) — into that same session dir (so
-the relative screenshot refs resolve) and is the sole writer to the remote, only
-after explicit human approval. The remote deliverable depends on ownership: for
-your OWN request, branch-host the Markdown form and upsert the report block into
-the request's description; for SOMEONE ELSE's request, submit one review carrying
-inline line-anchored comments with an EMPTY body and host NOTHING. The HTML form
-is opened locally and never pushed on either flow.
+The QA agent is read-only with respect to the remote: it writes only its local
+artifacts (`report.md`, `report.html`, `NNN-name.png` screenshots) in its session
+dir. **Lead assembles** the report — in BOTH forms (`review-report.html` and
+`review-report.md`) — into that same session dir (so the relative screenshot refs
+resolve) and is the sole writer to the remote, only after explicit human
+approval. The remote deliverable: branch-host the Markdown form and upsert the
+report block into the request's description. The HTML form is opened locally and
+never pushed.
 
-When QA did not run, lead still creates the session dir at
-`~/.local/share/qa/<project>/qa-<ts>/` (the same store and `qa-<ts>` naming the
-disk cleanup job prunes on the same schedule) and writes BOTH forms there — the
-diff/findings half is always present even when the QA verdict is `n/a`.
+The report is QA evidence (the per-AC verdict may be `n/a` when QA didn't run)
+plus a reference to the changeset — there is no separate static-findings half;
+static and blast-radius review lives on the PR (Copilot) and is addressed via the
+merge-request workflow.
 
 ## Report forms
 
@@ -51,7 +47,7 @@ they show **screenshots**:
 |---|---|---|
 | Diffs | **embeds** each changed file's diff rendered inline as self-contained highlighted HTML | **deep-links** each changed file into the hosted changeset; never embeds hunks |
 | Screenshots | embedded `<img>` + clickable running-app links | relative-ref `![](NNN.png)` images |
-| Lifecycle | auto-opened locally, **never pushed** | hosted on the branch and linked from the request **on the own-MR flow only**; the reviewer's local worktable on a someone-else review (generated, never hosted) |
+| Lifecycle | auto-opened locally, **never pushed** | hosted on the branch and linked from the request |
 
 Everything else is identical: the verdict + `Findings:` header, the per-AC
 sections, the scope/cross-cutting and could-not-verify sections, and the
@@ -138,9 +134,9 @@ Layout:
 
 ## Badge composition
 
-The verdict+link badge is used in the **own-MR description block** (someone-else
-reviews carry no badge — their body is empty). Compose it by parsing the **hosted
-Markdown form** (`review-report.md`): read the verdict from the `## 🧪 Review` line
+The verdict+link badge is used in the **own-MR description block**. Compose it by
+parsing the **hosted Markdown form** (`review-report.md`): read the verdict from
+the `## 🧪 Review` line
 and the counts from the `Findings:` line, e.g. `🧪 Review — QA: PASS ✅ · N build · N human · N plan · [full report ↗](<link>)`. (This
 replaces reading a QA-only heading; the QA agent keeps its own heading in its own
 `report.md` for its own flow.) The local HTML form is never parsed for the badge.
@@ -148,62 +144,36 @@ replaces reading a QA-only heading; the QA agent keeps its own heading in its ow
 ## Publish procedure
 
 The HTML form (`review-report.html`) is local-only — it is opened locally and
-NEVER pushed, on BOTH ownership flows. Both forms are ALWAYS generated into the
-session dir on both flows — they are the reviewer's worktable/record. What differs
-is the remote: hosting and delivery depend on ownership.
+NEVER pushed. Both forms are ALWAYS generated into the session dir — they are
+lead's worktable/record. The remote is the hosted Markdown form plus the
+description block.
 
-Determine whether *you* authored the merge request by comparing the request's
-author to the current user. Lead is the sole writer to the remote, and only after
-the approval gate.
+Lead is the sole writer to the remote, and only after the approval gate.
 
-- **You authored it** (your own request — the implement / merge-request flows):
+1. **Host the report.** Push `review-report.md` and its referenced screenshots
+   to the hosting branch (`qa-assets` by default) at `pr-<n>/`, **overwritten
+   wholesale per merge request** (one report per request; deleted/renamed shots
+   don't linger), through a throwaway worktree so the working tree and
+   checked-out branch are never disturbed. Use the branch-hosting transport from
+   the injected source-control skill. The committed `.md` renders natively in
+   the file view with its **relative** images resolving — no URL rewriting. The
+   description block and its `<details>` screenshots need this hosted target.
 
-  1. **Host the report.** Push `review-report.md` and its referenced screenshots
-     to the hosting branch (`qa-assets` by default) at `pr-<n>/`, **overwritten
-     wholesale per merge request** (one report per request; deleted/renamed shots
-     don't linger), through a throwaway worktree so the working tree and
-     checked-out branch are never disturbed. Use the branch-hosting transport from
-     the injected source-control skill. The committed `.md` renders natively in
-     the file view with its **relative** images resolving — no URL rewriting. The
-     description block and its `<details>` screenshots need this hosted target.
-
-  2. **Upsert the report block into the merge request description** between
-     `<!-- qa:start -->` / `<!-- qa:end -->` markers (read-modify-write the body:
-     replace between the markers if present, else append after a blank line —
-     never a new comment). The block carries a visible lead line (verdict badge ·
-     finding counts · `full report ↗` link), a `<sub>` provenance line (commit
-     short ref · updated timestamp), then one collapsed section per acceptance
-     criterion — `<details open>` for any blocker/FAIL AC, `<details>` for clean
-     ACs — each leading with a single head-pinned code reference (a bare same-repo
-     permalink on its own line, which unfurls to the rendered snippet) capped to
-     the AC's primary implementing region, then its classified `file:line`
-     findings with `[build]`/`[human]`/`[plan]` tags and a diff deep-link, then
-     its QA line. Close with a `Scope & cross-cutting` section and a `Could not
-     verify` section. **The blank line after each `</summary>` is mandatory** or
-     the inner markdown won't render. The permalink must be bare (on its own line,
-     not wrapped in link text) to unfurl. (See the AC-block layout below.)
-
-- **Someone else authored it** (you're reviewing — the review flow): **host
-  NOTHING** — do not push the report to the hosting branch and do not link it. The
-  local forms remain the reviewer's worktable (generated and opened locally only).
-  Submit ONE review carrying inline line-anchored comments with an EMPTY top-level
-  body — a single review event, not scattered comments. **Never edit another
-  author's description.**
-  - **Inline comments:** one per surviving finding, drafted from the reviewer's
-    `file:line` + proposed text, anchored to the head-version file line(s).
-    **Strip the internal `[build]`/`[human]`/`[plan]` routing tags from these
-    author-facing bodies** — they are meaningless jargon to an external author;
-    write self-contained, actionable prose (finding → proposed fix). The
-    classification stays internal (it organizes the local report).
-  - **Empty body:** the review's top-level body is empty — no verdict badge, no
-    finding counts, no per-AC outline, no report link. The inline comments are the
-    whole deliverable.
-  - **Clean review:** when zero findings survive there are no inline comments to
-    post; submit an approval with an empty body. The verdict requests changes when
-    any blocker survives, comments when only nits/questions remain, and approves
-    when clean — and **an approval ALWAYS goes through the explicit human approval
-    gate; lead never auto-approves.** Inline-comment mechanics and the
-    single-review submission live in the source-control integration skill.
+2. **Upsert the report block into the merge request description** between
+   `<!-- qa:start -->` / `<!-- qa:end -->` markers (read-modify-write the body:
+   replace between the markers if present, else append after a blank line —
+   never a new comment). The block carries a visible lead line (verdict badge ·
+   finding counts · `full report ↗` link), a `<sub>` provenance line (commit
+   short ref · updated timestamp), then one collapsed section per acceptance
+   criterion — `<details open>` for any blocker/FAIL AC, `<details>` for clean
+   ACs — each leading with a single head-pinned code reference (a bare same-repo
+   permalink on its own line, which unfurls to the rendered snippet) capped to
+   the AC's primary implementing region, then its classified `file:line`
+   findings with `[build]`/`[human]`/`[plan]` tags and a diff deep-link, then
+   its QA line. Close with a `Scope & cross-cutting` section and a `Could not
+   verify` section. **The blank line after each `</summary>` is mandatory** or
+   the inner markdown won't render. The permalink must be bare (on its own line,
+   not wrapped in link text) to unfurl. (See the AC-block layout below.)
 
 ### Your-own-request AC block layout (Template A)
 
@@ -250,26 +220,19 @@ capped to the AC's primary implementing region at ≤40 lines (pick the tightest
 `#Lstart-Lend` window over the principal finding(s)). Additional files/regions for
 that AC get a `[diff ↗]` deep-link only — NOT a second unfurl.
 
-## Re-review — by ownership
+## Re-review
 
 On a re-review, lead REGENERATES both forms from the reconciled findings and
-re-opens the HTML form locally. Then refresh the deliverable per ownership:
-
-- **Your own request:** re-host the Markdown form (overwritten wholesale, so the
-  link is unchanged), then in-place read-modify-write of the WHOLE marked block in
-  the description, refreshing the `<sub>` provenance line — never a new comment.
-- **Someone else's request:** host nothing. Submit a FRESH review event scoped to
-  the delta (reviews are immutable, so prior ones can't be edited) with an EMPTY
-  body. Add inline comments only for NEW and moved-but-still-true findings, and do
-  NOT programmatically resolve prior threads. (No summary body to reconcile —
-  the body stays empty; the regenerated local forms hold the full reconciled
-  picture for the reviewer.)
+re-opens the HTML form locally. Then refresh the deliverable: re-host the Markdown
+form (overwritten wholesale, so the link is unchanged), then in-place
+read-modify-write of the WHOLE marked block in the description, refreshing the
+`<sub>` provenance line — never a new comment.
 
 ## Approval gate
 
 Before any remote write, show the plan — the files to be pushed to the hosting
-branch (own-MR only), and the exact comment text or description section to be
-added — and wait for explicit human approval. Only then perform the push and
+branch, and the exact description section to be added — and wait for explicit
+human approval. Only then perform the push and
 place the deliverable. The analysis agents never write to the remote.
 
 When a merge request is merged or closed, its `pr-<n>/` dir can be deleted from

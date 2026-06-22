@@ -107,6 +107,6 @@ Anti-pattern: gathering context, exploring files, and running plan/build sub-age
 - **Worktree for anything branch-specific** — PRs, experiments, multi-session work on same repo
 - **Reuse over creation** — check for idle sessions first (standard dispatch only)
 - **Fire and forget** — the POST may timeout; the session is still working
-- **Dispatch the command, not the decomposition** — send `/implement` or `/review` as the prompt, not the individual steps. The receiving session runs its own workflow.
+- **Dispatch the command, not the decomposition** — send `/implement` as the prompt, not the individual steps. The receiving session runs its own workflow.
 - **One task per session** — don't queue multiple prompts into a busy session
 - **Never use `opencode run` for dispatch** — it bypasses the API, can't be reused, and runs synchronously in your shell

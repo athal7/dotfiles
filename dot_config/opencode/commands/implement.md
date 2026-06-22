@@ -1,5 +1,5 @@
 ---
-description: implement a change [issue|description], plan/build/review/ship
+description: implement a change [issue|description], plan/build/QA/ship
 agent: lead
 ---
 
@@ -9,7 +9,7 @@ Workflow: implement.
 - Workspace setup — branch/worktree if needed per repo conventions; set up `openspec/` (real dir + narrow store symlinks)
 - Plan — dispatch the `explore`/`scout` subagents (`task` tool, `subagent_type: explore` / `subagent_type: scout`) to gather, dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), create proposal, present for approval
 - Build — implement tasks via openspec-apply-change, present changeset for approval
-- Review — dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`, static), dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) if UI touched, route findings, present for approval
+- Review — run QA (dispatch the `qa` subagent via `task` tool, `subagent_type: qa`) if UI is touched; route findings, present for approval
 - Ship — commit, push, watch CI, merge delta specs into the durable store
 
 ## Workspace setup
@@ -85,12 +85,12 @@ Load `openspec-apply-change` and work through the tasks. For each task, dispatch
 
 ## Review
 
-Dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) against the changeset. Reviewer owns the static review protocol (multi-pass analysis, verification) and returns findings classified by routing destination.
+When the changeset touches UI (views, templates, CSS, frontend), dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows; it returns findings classified by routing destination.
 
-When the changeset touches UI (views, templates, CSS, frontend), also dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows. Both reviewer and qa findings feed into the routing below.
+Static and blast-radius review (in-diff correctness/security/performance and out-of-diff what-breaks-elsewhere) is not performed inline — it happens automatically on the pushed PR.
 
-**Route the returned findings:**
-- **Build-level** (bug, style, missing test) → dispatch the `build` subagent (`task` tool, `subagent_type: build`) for a targeted fix, then re-dispatch the `reviewer` subagent (`task` tool, `subagent_type: reviewer`) on the fix
+**Route findings:**
+- **Build-level** (bug, style, missing test) → dispatch the `build` subagent (`task` tool, `subagent_type: build`) for a targeted fix, then re-verify the fix
 - **Plan-level** (wrong approach, missing requirement) → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), update the proposal
 - **Human judgment** (tradeoff, scope question) → present to the user and wait
 
@@ -126,7 +126,7 @@ fi
 
 `worktree` is the absolute repo/worktree root — it equals the opencode session's `directory`, which is the join key `/kb-enrich` uses to exclude these sessions from transcript reads.
 
-**Assemble and publish the unified review report.** Load the `review-publish` skill and follow it — assemble the AC-organized report in BOTH forms: `review-report.html` (local-only, embeds the rendered diffs + screenshots) and `review-report.md` (hosted, deep-links the diffs). WHEN QA ran, fuse the reviewer findings with the qa evidence; WHEN QA did not run, create the `qa-<ts>` session dir yourself and write both forms with verdict `n/a` (the findings half is always present). Open the `.html` locally, then after approval host the `.md` (it backs the `full report ↗` link and renders the screenshots) and upsert the **full Template-A collapsed-AC block** — visible verdict+counts+link line, `<sub>` provenance, per-AC `<details>`/`<details open>` sections with a head-pinned code reference + classified findings, Scope & cross-cutting, Could not verify — into the merge request **description** between the `<!-- qa:start -->` / `<!-- qa:end -->` markers. The merge request must exist first (the push above creates it), so this runs after push and after approval. **Publish when** QA ran in the Review phase **OR** noteworthy surviving human/plan findings remain; **skip** for a clean non-UI self-review.
+**Assemble and publish the QA-evidence report.** Load the `review-publish` skill and follow it — assemble the AC-organized report in BOTH forms: `review-report.html` (local-only, embeds the rendered diffs + screenshots) and `review-report.md` (hosted, deep-links the diffs). The report carries QA evidence; static and blast-radius review happens automatically on the pushed PR and is not part of this report. WHEN QA ran, publish the QA-evidence report. Open the `.html` locally, then after approval host the `.md` (it backs the `full report ↗` link and renders the screenshots) and upsert the **full Template-A collapsed-AC block** — visible verdict+counts+link line, `<sub>` provenance, per-AC `<details>`/`<details open>` sections with a head-pinned code reference + QA evidence, Scope & cross-cutting, Could not verify — into the merge request **description** between the `<!-- qa:start -->` / `<!-- qa:end -->` markers. The merge request must exist first (the push above creates it), so this runs after push and after approval. **Publish when** QA ran in the Review phase; **skip** for a clean non-UI self-review.
 
 - **v1 is detection-only.** Surface conflicts to the human (the existing Plan read of `specs/` carries them forward as a plan-level finding); never run automated reconciliation, and never let the lossy auto-fold overwrite the durable specs. CI watch is best-effort and does NOT gate the merge.
 

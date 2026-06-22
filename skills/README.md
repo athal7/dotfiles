@@ -2,7 +2,7 @@
 
 [agentskills.io](https://agentskills.io)-compatible skills for AI agents. Works with [OpenCode](https://opencode.ai) and any compatible agent.
 
-The desired system behavior is defined in [workflow specs](../openspec/specs/) — four specs covering implementation, code review, merge request maintenance, and remote operations. Skills and commands implement those specs; [/audit](../dot_config/opencode/commands/audit.md) measures compliance.
+The desired system behavior is defined in [workflow specs](../openspec/specs/) — four specs covering implementation, code review, merge request maintenance, and remote operations. Skills and commands implement those specs; [/audit](../dot_config/opencode/commands/audit.md) measures compliance. Static and blast-radius code review is not performed inline; it happens automatically on the pushed PR.
 
 ## Skills
 
@@ -17,7 +17,7 @@ Integration skills self-register their provided capabilities via `provides` in f
 | **elasticsearch** — Query ES logs, APM traces, and errors | **communication** — Human-facing prose style and AI-authorship markers |
 | **figma** — Read Figma files, components, and assets | **observability** — Investigate production issues using logs and traces |
 | **gh** — GitHub CLI: source control, CI, code review, issues | **push** — Push approval protocol and CI watching |
-| **gws** — Google Workspace: email, docs, drive, sheets | **review-publish** — Deliver the unified AC-organized review report (static findings + QA evidence) by ownership: inline comments only (empty body, nothing hosted) for others' PRs, description block for your own |
+| **gws** — Google Workspace: email, docs, drive, sheets | **review-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
 | **knowledge-base** — Look up people, projects, and decisions locally | **thinking-tools** — Structured frameworks for decisions and problem framing |
 | **linear** — Linear issue tracker | |
 | **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
@@ -37,7 +37,7 @@ The `openspec` CLI generates its skills (`openspec-explore`, `openspec-propose`,
 
 Some workflow content uses different primitives — see `skills/AGENTS.md` for when to pick which.
 
-- **Workflow commands** (`/implement`, `/review`, `/mr`) embed methodology directly. Review passes, triage workflow, and conflict resolution are always-loaded for the active workflow.
+- **Workflow commands** (`/implement`, `/mr`) embed methodology directly. QA verification, triage workflow, and conflict resolution are always-loaded for the active workflow.
 - **TDD** lives in `dot_config/opencode/prompts/build.md`. Continuous trigger → always-loaded in agent prompt.
 - **Plan** is a subagent with read-only permissions. Mode-restricted → agent boundary.
 - **Specs** (`openspec/specs/`) define desired state. `/audit` measures compliance.
@@ -48,8 +48,7 @@ Slash commands. Workflow commands embed methodology directly — no skill loadin
 
 | Command | Type | Description |
 |---------|------|-------------|
-| **/implement** | Workflow | Plan/build/review/ship with embedded review passes and approval gates |
-| **/review** | Workflow | Code review with multi-pass analysis and QA; delivered by ownership — inline line-anchored comments with an empty review body (nothing hosted) on someone else's PR, an upserted AC report block in the description on your own — backed by an AC-organized local-HTML worktable (and hosted MD on the own-PR flow) |
+| **/implement** | Workflow | Plan/build/QA/ship with approval gates; static + blast-radius review happens automatically on the pushed PR |
 | **/mr** | Workflow | Merge request maintenance — triage, fix, conflicts, re-request review |
 | **/qa** | Utility | Functional QA on the locally running app — dispatches the qa subagent with an optional focus (diff-inferred when bare) and relays the PASS/FAIL verdict and report path |
 | **/audit** | Utility | Spec compliance audit — measures against `openspec/specs/` |
