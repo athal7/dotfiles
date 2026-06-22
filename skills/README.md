@@ -51,6 +51,7 @@ Slash commands. Workflow commands embed methodology directly — no skill loadin
 | **/implement** | Workflow | Plan/build/review/ship with embedded review passes and approval gates |
 | **/review** | Workflow | Code review with multi-pass analysis and QA; delivered by ownership — inline line-anchored comments with an empty review body (nothing hosted) on someone else's PR, an upserted AC report block in the description on your own — backed by an AC-organized local-HTML worktable (and hosted MD on the own-PR flow) |
 | **/mr** | Workflow | Merge request maintenance — triage, fix, conflicts, re-request review |
+| **/qa** | Utility | Functional QA on the locally running app — dispatches the qa subagent with an optional focus (diff-inferred when bare) and relays the PASS/FAIL verdict and report path |
 | **/audit** | Utility | Spec compliance audit — measures against `openspec/specs/` |
 | **/learn** | Utility | Capture discoveries into AGENTS.md or a new skill |
 | **/cleanup** | Utility | Reclaim disk space — worktrees, databases, temp files |
