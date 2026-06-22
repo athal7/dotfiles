@@ -10,7 +10,9 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
 
 Local model setup: LM Studio serves the non-thinking MLX Mixture-of-Experts
 model Qwen3-30B-A3B-Instruct-2507 (4-bit MLX) for agentic coding and the kb
-meeting pipeline. It never emits <think> blocks, so no thinking-suppression is
+meeting pipeline. It is also wired as opencode's `small_model`, so it powers
+session-title generation (via the custom title.md prompt) and project-copy
+naming. It never emits <think> blocks, so no thinking-suppression is
 needed. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
 "Run server on login", and download via the full HF URL (the LM Studio catalog
 slug does not resolve): `lms get https://huggingface.co/mlx-community/Qwen3-30B-A3B-Instruct-2507-4bit -y`.
@@ -171,13 +173,12 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "model": "anthropic/claude-sonnet-4-6"
     },
     "title": {
-      "model": "lmstudio/qwen3-30b-a3b-instruct-2507",
       "prompt": "{file:./prompts/title.md}",
       "temperature": 0.5
     }
   },
   "model": "anthropic/claude-opus-4-8",
-  "small_model": "anthropic/claude-haiku-4-5",
+  "small_model": "lmstudio/qwen3-30b-a3b-instruct-2507",
   "compaction": {
     "prune": true
   },
