@@ -1,9 +1,17 @@
 #!/bin/sh
 # check-error-logs — daily scan of LaunchAgent error logs
-# Creates a reminder in the Work list if any services have new errors.
+# When any services have new errors, dispatches an opencode session (via
+# opencode-cmd) to triage and self-heal them — running the /fix-launchagent-errors
+# command in the dotfiles repo. Dispatch-only: no reminder is filed.
 #
 # State file tracks byte offsets per log file so only new content is read.
 # First run establishes a baseline and exits silently.
+#
+# Offset invariant: a log's byte offset is advanced only after its new errors
+# have been handed off. If the dispatch does not happen (opencode server
+# unreachable, or the dispatch command fails), offsets for logs that
+# contributed errors are NOT advanced, so the next run retries them and no
+# error is silently lost. Logs with no new errors always advance normally.
 
 LOG_DIR="$HOME/Library/Logs"
 STATE_FILE="$LOG_DIR/.check-error-logs-state"
@@ -63,6 +71,9 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') Scanning error logs..."
 
 services_with_errors=""
 total_new_lines=0
+error_context=""    # accumulated "[service] line" detail for the dispatch
+pending_offsets=""  # deferred "size<TAB>logfile" advances (applied after dispatch)
+TAB=$(printf '\t')
 
 for logfile in "$LOG_DIR"/*.error.log; do
   [ -f "$logfile" ] || continue
@@ -115,17 +126,33 @@ for logfile in "$LOG_DIR"/*.error.log; do
     printf '%s\n' "$new_content" | while IFS= read -r line; do printf '    [%s] %s\n' "$name" "$line"; done
     services_with_errors="$services_with_errors $name"
     total_new_lines=$((total_new_lines + new_line_count))
+
+    # Retain the matched detail lines (tagged with service) as dispatch context.
+    detail=$(printf '%s\n' "$new_content" | while IFS= read -r line; do printf '[%s] %s\n' "$name" "$line"; done)
+    error_context="$error_context
+$detail"
+
+    # Defer this log's offset advance until the dispatch succeeds (offset
+    # invariant) — record the target offset for replay after a good dispatch.
+    pending_offsets="$pending_offsets$(printf '\n%s\t%s' "$current_size" "$logfile")"
   else
     echo "  $name: $new_bytes new bytes, no error-keyword lines"
+    # No errors here — safe to advance the offset immediately.
+    update_offset "$logfile" "$current_size"
   fi
-
-  update_offset "$logfile" "$current_size"
 done
 
 # Also baseline any new log files that appeared since last run
 for logfile in "$LOG_DIR"/*.error.log; do
   [ -f "$logfile" ] || continue
   [ "$(basename "$logfile")" = "$SELF_LOG" ] && continue
+  # Skip logs whose offset advance is deferred pending a successful dispatch —
+  # baselining them here would advance past unhandled errors (offset invariant).
+  case "$pending_offsets" in
+    *"$TAB$logfile") continue ;;
+    *"$TAB$logfile
+"*) continue ;;
+  esac
   if ! grep -qF "$logfile:" "$STATE_FILE" 2>/dev/null; then
     size=$(stat -f%z "$logfile" 2>/dev/null || echo 0)
     update_offset "$logfile" "$size"
@@ -135,29 +162,41 @@ done
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Scan complete."
 
-# ── Create reminder if errors found ──────────────────────────────────────────
+# ── Dispatch a fix session if errors found ───────────────────────────────────
 if [ -n "$services_with_errors" ]; then
-  # Build a compact service list for the title (max ~80 chars)
   service_list=$(printf '%s' "$services_with_errors" | tr ' ' ',' | sed 's/^,//')
-  title="LaunchAgent errors: $service_list"
-  # Truncate title if too long
-  if [ ${#title} -gt 100 ]; then
-    title=$(printf '%.97s...' "$title")
+
+  # Bound the context payload. The scan already caps reads at 50KB and 20
+  # lines/file; keep the dispatch text similarly bounded.
+  context=$(printf '%s' "$error_context" | head -c 8000)
+
+  # Gate on server reachability. If the server is down, leave the error logs'
+  # offsets unadvanced (they were deferred above) so the next run retries them.
+  if ! opencode-cmd health >/dev/null 2>&1; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') opencode server unreachable — skipping dispatch."
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Offsets for error logs NOT advanced; will retry next run. Services: $service_list"
+    exit 0
   fi
-  notes="$total_new_lines error-keyword line(s) across:$services_with_errors
-Check ~/Library/Logs/*.error.log for details."
 
-  # Check if an incomplete reminder with the same title already exists
-  existing=$(remindctl show all --list Work --json 2>/dev/null \
-    | jq -r --arg t "$title" '.[] | select(.title == $t and .isCompleted == false) | .id' 2>/dev/null \
-    | head -1)
+  prompt="/fix-launchagent-errors
 
-  if [ -n "$existing" ]; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Reminder already exists (incomplete): $title"
-  elif remindctl add "$title" --list Work --notes "$notes" --priority medium -q; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Reminder created: $title"
+Services with new errors: $service_list
+
+$context"
+
+  # Short timeout: 'send' blocks for the run, but the session keeps running
+  # server-side after the client disconnects (see dispatch.md) — so a short
+  # timeout just fires the dispatch and returns. Non-fatal to this script.
+  if opencode-cmd -d "$HOME/code/dotfiles" -t 15 send "$prompt" >/dev/null 2>&1; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched /fix-launchagent-errors for: $service_list"
+    # Dispatch succeeded — now advance the deferred offsets for error logs.
+    printf '%s\n' "$pending_offsets" | while IFS="$TAB" read -r size logfile; do
+      [ -n "$logfile" ] || continue
+      update_offset "$logfile" "$size"
+    done
   else
-    echo "$(date '+%Y-%m-%d %H:%M:%S') WARNING: failed to create reminder (remindctl exited non-zero)"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') WARNING: dispatch failed — offsets for error logs NOT advanced; will retry next run. Services: $service_list"
+    exit 0
   fi
 else
   echo "$(date '+%Y-%m-%d %H:%M:%S') No new errors found."
