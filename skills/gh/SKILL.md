@@ -234,7 +234,7 @@ Do this **before** posting the review. If auto-merge wasn't enabled, the command
 
 When addressing reviewer comments after making fixes:
 
-1. **Fixed it?** Resolve the conversation thread (no reply needed).
+1. **Fixed it?** Resolve the thread silently — do **not** post a reply. The resolution is the acknowledgment.
 2. **Not addressing it?** Reply explaining why.
 
 **Push before resolving.** GitHub ties thread resolution to the commit that addressed it.
