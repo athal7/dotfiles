@@ -13,7 +13,7 @@ Check activity across all available sources:
 
 - **opencode** coding sessions
 - **slack** chat messages and threads
-- **zoom** meeting transcripts
+- **zoom** meeting transcripts — captions live at `~/Documents/Zoom/YYYY-MM-DD HH.MM.SS <Title>/meeting_saved_closed_caption.txt`. For each transcript whose dir-date falls in the enrich window, distill it with the local on-device model first (see Extract step) instead of reading the full raw caption text.
 - **linear** issues and comments
 - **gh** code reviews, PRs, and issues
 - **openspec durable store (AUTHORITATIVE for `/implement` work)** — each worktree's `openspec/` carries two narrow symlinks into a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/` (`openspec/specs` → store `specs/`, `openspec/changes/archive` → store `changes/archive/`). At Ship, `openspec archive` moves a completed change through the `changes/archive` symlink into the store, so its artifacts persist regardless of when work shipped. For each date being enriched, read `~/.local/share/kb/openspec/*/changes/archive/<date>-*/design.md` for decisions, the "why", and rejected alternatives, and read each store's durable `specs/` for the standing requirements. These structured artifacts are the source of truth for the reasoning behind completed `/implement` work — use them instead of reconstructing it from full (token-expensive, lossy) session transcripts.
@@ -39,7 +39,8 @@ The openspec store is authoritative for `/implement` work, so the sessions that 
 
 ## Enrichment Steps
 
-1. **Extract** people facts, project updates, and decisions from each source
+1. **Extract** people facts, project updates, and decisions from each source.
+   - **Zoom transcripts:** for each in-window transcript, run `~/.config/opencode/bin/kb-distill <caption-file> "<title>" <date>` and use the returned JSON facts (participants, topics, decisions, action_items, open_questions, summary) in place of the raw caption text when extracting people facts, decisions, and action items. The raw transcript is sent only to the on-device local model (privacy positive); the authoritative do-not-store privacy filter below still applies at the WRITE step. **If `kb-distill` exits non-zero, read the raw transcript yourself instead and note the fallback in the journal.**
 2. **Journal** — write one cross-project rollup journal file per enriched date, each with diff stats. By construction each is THIN: feed it only from the NON-excluded sessions (those not covered by an archived change) plus git diff-stats. For `/implement` work, do NOT re-narrate the openspec change — reference the durable store artifacts (`design.md`/specs already in the kb via the symlink). The journal's role is the cross-project rollup + non-`/implement` activity, not a reconstruction of openspec work. Keep it; just don't duplicate the store.
 3. **Profiles** — merge new facts into knowledge-base people and project profiles
 4. **Decisions** — add any decisions to the decisions log. Pull key design decisions and rejected alternatives from the durable store's `~/.local/share/kb/openspec/*/changes/archive/<date>-*/design.md` (READ, don't copy — the artifacts are already in the kb). The decisions log is a distilled record anchored to its product/project, not a dump of the design files.
