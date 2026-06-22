@@ -253,7 +253,7 @@ jq -n --argjson m "$(sqlite3 -readonly ~/.local/share/opencode/opencode.db "WITH
 jq -n --slurpfile f ~/.config/opencode/dcp-baseline.json --argjson post "$(sqlite3 -readonly ~/.local/share/opencode/opencode.db "SELECT ROUND(AVG(json_extract(data,'\$.tokens.cache.read'))) FROM message WHERE json_extract(data,'\$.role')='assistant' AND json_extract(data,'\$.agent')='lead' AND time_created >= strftime('%s','2026-06-17','localtime')*1000")" '($f[0].floor_avg_ctx_tok) as $floor | {committed_floor: $floor, post_dcp_avg_ctx_tok: $post, reduction_pct: (((($floor-$post)/$floor)*100)|.*10|round/10), target_pct: 15, r3_meets: ((($floor-$post)/$floor) >= 0.15), gate: "human ratification required before closing R3"}'
 ```
 
-**Local-model adoption (Claude displacement):** the headline metric is **local turn-share** — the % of assistant turns served by a non-Anthropic provider (`lmstudio`/`ollama`/`mlx`/etc.), which **ratchets UP** as work is displaced off Claude (the opposite direction from the DCP floor). Because every local/non-Anthropic provider records `cost = 0` in the DB, dollar savings cannot be read directly — it is **ESTIMATED** (an agent's local turns × that agent's historical avg Anthropic $/turn) and treated as **directional only**, exactly like `cache_r_Mtok`. Key the metric on `providerID`, NOT on agent name: the `title` agent's turns are not stored under `agent='title'`, so an agent-name filter would miss them. **Baseline (recorded 2026-06-18):** local turn-share = 0.1%; as of commit `fa89b03` the `title` agent runs on `lmstudio/qwen3-30b-a3b-instruct-2507` (first deliberate production displacement; prior local turns were ad-hoc experiments). **Target:** local turn-share expands run-over-run WITHOUT a rise in local empty-turn rate or interactive-latency regressions (an empty or timed-out local turn is *fake* displacement, not savings — cross-check the empty-turn and latency queries above, scanning rows where `providerID != 'anthropic'`). Expansion path: `title` (done) → kb-summarization pipeline (next) → low-stakes `explore`/`scout` (gated). Never move `build`/`reviewer`/`plan`/`lead`.
+**Local-model adoption (Claude displacement):** the headline metric is **local turn-share** — the % of assistant turns served by a non-Anthropic provider (`lmstudio`/`ollama`/`mlx`/etc.), which **ratchets UP** as work is displaced off Claude (the opposite direction from the DCP floor). Because every local/non-Anthropic provider records `cost = 0` in the DB, dollar savings cannot be read directly — it is **ESTIMATED** (an agent's local turns × that agent's historical avg Anthropic $/turn) and treated as **directional only**, exactly like `cache_r_Mtok`. Key the metric on `providerID`, NOT on agent name: the `title` agent's turns are not stored under `agent='title'`, so an agent-name filter would miss them. **Baseline (recorded 2026-06-18):** local turn-share = 0.1%; as of commit `fa89b03` the `title` agent runs on `lmstudio/qwen3-30b-a3b-instruct-2507` (first deliberate production displacement; prior local turns were ad-hoc experiments). **Target:** local turn-share expands run-over-run WITHOUT a rise in local empty-turn rate or interactive-latency regressions (an empty or timed-out local turn is *fake* displacement, not savings — cross-check the empty-turn and latency queries above, scanning rows where `providerID != 'anthropic'`). Expansion path: `title` (done) → kb-summarization pipeline (next) → low-stakes `explore`/`scout` (gated). Never move `build`/`plan`/`lead`.
 
 ```bash
 # (a) Local vs Anthropic turn-share by provider/model/agent — WHERE is work displaced?
@@ -305,10 +305,10 @@ ORDER BY est_usd_avoided DESC;
 SQL
 ```
 
-**Semantic-search adoption** — measures the `semantic-code-search` spec. Are agents actually invoking the resident `ck` MCP server? The headline metric is `explore`'s advisory `ck_semantic_search` rate (prompt-driven, not enforced) plus the dedup use by `plan`/`reviewer` (injection-context-driven) and `build` (prompt-driven, via the build.md before-writing dedup directive). MCP tool-call parts are stored with opencode's `<server>_<tool>` underscore namespacing, so the ck tools are `ck_semantic_search` and `ck_reindex` (confirmed against the live DB `part.data.tool`). Low invocation despite the prompt/injection being wired is the signal to escalate (see recommendation row):
+**Semantic-search adoption** — measures the `semantic-code-search` spec. Are agents actually invoking the resident `ck` MCP server? The headline metric is `explore`'s advisory `ck_semantic_search` rate (prompt-driven, not enforced) plus the dedup use by `plan` (injection-context-driven) and `build` (prompt-driven, via the build.md before-writing dedup directive). MCP tool-call parts are stored with opencode's `<server>_<tool>` underscore namespacing, so the ck tools are `ck_semantic_search` and `ck_reindex` (confirmed against the live DB `part.data.tool`). Low invocation despite the prompt/injection being wired is the signal to escalate (see recommendation row):
 
 ```bash
-# (a) semantic_search adoption by agent — % of explore/plan/reviewer/build sessions invoking it.
+# (a) semantic_search adoption by agent — % of explore/plan/build sessions invoking it.
 # Denominator = all sessions per agent in-window; numerator = those with >=1 ck_semantic_search.
 sqlite3 -readonly "$DB" <<SQL
 WITH sem AS (
@@ -321,7 +321,7 @@ SELECT s.agent,
        SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END) AS sessions_with_semantic,
        ROUND(100.0*SUM(CASE WHEN sem.session_id IS NOT NULL THEN 1 ELSE 0 END)/COUNT(*),1) AS semantic_pct
 FROM session s LEFT JOIN sem ON sem.session_id = s.id
-WHERE s.agent IN ('explore','plan','reviewer','build')
+WHERE s.agent IN ('explore','plan','build')
   AND s.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
 GROUP BY s.agent ORDER BY s.agent;
 SQL
@@ -339,23 +339,10 @@ GROUP BY s.agent ORDER BY s.agent;
 SQL
 
 # (c) ck injection-context delivery — confirm the dedup reason-to-use is wired
-# under both gateways the dedup-using agents load (architecture→plan,
-# code-quality→reviewer). Verifies the dedup-as-context delivery, not a skill.
+# under the gateway the dedup-using agent loads (architecture→plan).
+# Verifies the dedup-as-context delivery, not a skill.
 chezmoi execute-template < dot_config/opencode/opencode.json.tmpl \
-  | jq '.plugin[0][1] | {architecture, "code-quality"}'
-
-# (d) Review-flagged-dup proxy — reviewer findings naming an existing symbol +
-# file:line as a duplicate. No structured marker yet, so spot-check: list recent
-# reviewer sessions that ran ck_semantic_search and inspect whether a dup was flagged.
-sqlite3 -readonly "$DB" <<SQL
-SELECT DISTINCT p.session_id,
-       date(p.time_created/1000,'unixepoch','localtime') AS day
-FROM part p JOIN session s ON s.id = p.session_id
-WHERE json_extract(p.data,'$.tool') = 'ck_semantic_search'
-  AND s.agent = 'reviewer'
-  AND p.time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-ORDER BY day DESC;
-SQL
+  | jq '.plugin[0][1] | .architecture'
 ```
 
 **Manual spot-checks** — for requirements that can't be automated, sample 3-5 recent sessions and inspect:
@@ -388,8 +375,8 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Optimizing without per-agent cost data | Measure per-agent cost first (cost-health queries above) | Assuming which agent is expensive |
 | Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
 | `explore`/`build` rarely run `ck_semantic_search` despite the explore prompt / build.md dedup directive | Staged escalation: strengthen the prompt/directive first, then a structural results-injection hook that runs the search and injects matches | More advisory prompt text alone |
-| `plan`/`reviewer` rarely run `ck_semantic_search` despite the dedup injection context | Staged escalation: strengthen the injection `context`, then a structural results hook that injects matches | More advisory skill injection |
-| Local-model turn-share flat / not expanding vs prior audit | Take the next bounded crawl→walk step (title done → kb-summarization: bulk text, no tools, latency-tolerant, privacy-positive) | Moving agentic/high-stakes roles (build/reviewer/plan/lead) to local — quality regression + qwen3 tool-call XML-leak risk |
+| `plan` rarely runs `ck_semantic_search` despite the dedup injection context | Staged escalation: strengthen the injection `context`, then a structural results hook that injects matches | More advisory skill injection |
+| Local-model turn-share flat / not expanding vs prior audit | Take the next bounded crawl→walk step (title done → kb-summarization: bulk text, no tools, latency-tolerant, privacy-positive) | Moving agentic/high-stakes roles (build/plan/lead) to local — quality regression + qwen3 tool-call XML-leak risk |
 | Local model shows high empty-turn rate or latency blowup | Raise its LM Studio load-context, or revert that role to Claude — empty/timed-out turns are fake savings | Counting broken local turns as displacement |
 
 ---

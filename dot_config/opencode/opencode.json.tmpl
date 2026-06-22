@@ -48,7 +48,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     ["./lib/skill-inject.ts", {
       "architecture": ["gh", "linear", "code-quality", {"skill": "ck", "context": "Before adding a function, semantic-search for an existing equivalent to reuse — avoid differently-named duplicates"}],
       "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
-      "code-quality": [{"skill": "ck", "context": "Check diff-added functions for existing semantic equivalents; flag duplicates (name the symbol + file:line)"}],
       "communication": ["knowledge-base"],
       "confluence": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
       "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],

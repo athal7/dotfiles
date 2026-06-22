@@ -12,7 +12,7 @@
 
 Skills discover related skills through injection mappings configured in `opencode.json`'s `skill-inject` plugin. When a skill loads, the plugin appends references to the configured skills — no frontmatter declarations needed.
 
-The mapping is explicit: `"review": ["qa", "gh", "linear", "code-quality"]` means loading the `review` skill also surfaces those four skills. This works for any installed skill, including external ones.
+The mapping is explicit: `"architecture": ["gh", "linear", "code-quality"]` means loading the `architecture` skill also surfaces those skills. This works for any installed skill, including external ones.
 
 To wire a new dependency: add an entry to the plugin config. To swap a provider (e.g., replace `gh` with a GitLab skill): change the config, not the skill.
 
