@@ -42,10 +42,6 @@ mutation($input: ProjectMilestoneCreateInput!) {
 # input: { name, projectId, sortOrder }
 ```
 
-## Project Comments vs Updates
-
-`projectUpdateCreate` creates a formal status update (Activity tab). `commentCreate` with `projectId` creates a discussion comment. These are different things — users will correct you if you use the wrong one.
-
 ## Comments
 
 `commentCreate` accepts multiple parent fields (`issueId`, `projectId`, `projectUpdateId`, `documentContentId`, `postId`) but only include the one you're using. Passing `null` for unused parent fields causes "missing parent entity" even if another valid parent is set.
