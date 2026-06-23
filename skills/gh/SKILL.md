@@ -301,7 +301,7 @@ The REST list returns the author as `.user.login` — **not** `.author.login` as
 
 ## Deep-linking to a file in the PR diff
 
-To link a specific changed file's diff in a PR (e.g. from a review report),
+To link a specific changed file's diff in a PR (e.g. from a QA-evidence report),
 GitHub anchors each file in the Files-changed view by the **sha256 of the file
 path**, prefixed with `diff-`. Compute it per file:
 
@@ -323,7 +323,7 @@ the anchor for **each** changed file you reference; always pair the link with th
 
 ## Permalink → code snippet unfurl
 
-A **bare same-repo permalink on its own line** — `https://github.com/$O/$R/blob/$SHA/<path>#L10-L20` — unfurls into a rendered, syntax-highlighted code SNIPPET of that file's content at the pinned SHA for the `#Lx-Ly` range. Use this to embed an AC's primary implementing region inline in a review report block.
+A **bare same-repo permalink on its own line** — `https://github.com/$O/$R/blob/$SHA/<path>#L10-L20` — unfurls into a rendered, syntax-highlighted code SNIPPET of that file's content at the pinned SHA for the `#Lx-Ly` range. Use this to embed an AC's primary implementing region inline in a QA-evidence report block.
 
 Rules and limits:
 
@@ -336,7 +336,7 @@ Rules and limits:
 
 ## Rendering a changed file's diff to self-contained HTML
 
-For the LOCAL review-report HTML (which has no host to render a diff), embed each
+For the LOCAL qa-report HTML (which has no host to render a diff), embed each
 changed file's diff as self-contained, highlighted HTML. This is the sibling of
 the deep-link recipe above: deep-links are for the hosted `.md`; this render is
 for the local `.html`. Diff-level coloring only (add / del / hunk / context) — no
@@ -361,7 +361,7 @@ render_diff_html() {
 
 Escaping `&` first (then `<`, `>`) is mandatory — reversing the order double-escapes.
 The `class` values (`add`/`del`/`hunk`/`ctx`) match the `.diff` palette in the
-`review-publish` skill's HTML skeleton, so the colors come from that `<style>`.
+`qa-report-publish` skill's HTML skeleton, so the colors come from that `<style>`.
 
 Source the per-file diff and wrap each file in its own block. Recommend
 `<details open>` so a large file collapses without scrolling the whole report:
@@ -376,7 +376,7 @@ Source the per-file diff and wrap each file in its own block. Recommend
   # hunk block (from its "diff --git" line to the next) to render_diff_html
   # (still rendered into the local `.html`, never the hosted `.md`)
   printf '</div></details>'
-} >> "$SESSION_DIR/review-report.html"
+} >> "$SESSION_DIR/qa-report.html"
 ```
 
 ## Hosting a file so it renders in code review

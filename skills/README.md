@@ -17,7 +17,7 @@ Integration skills self-register their provided capabilities via `provides` in f
 | **figma** — Read Figma files, components, and assets | **communication** — Human-facing prose style and AI-authorship markers |
 | **gh** — GitHub CLI: source control, CI, code review, issues | **observability** — Investigate production issues using logs and traces |
 | **gws** — Google Workspace: email, docs, drive, sheets | **push** — Push approval protocol and CI watching |
-| **knowledge-base** — Look up people, projects, and decisions locally | **review-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
+| **knowledge-base** — Look up people, projects, and decisions locally | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
 | **linear** — Linear issue tracker | **thinking-tools** — Structured frameworks for decisions and problem framing |
 | **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
 | **pagerduty** — Incidents, on-call schedules, escalation policies | |

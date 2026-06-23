@@ -1,11 +1,11 @@
 ---
-name: review-publish
-description: Publishing the AC-organized QA-evidence report to your own merge request after approval — the branch-hosting procedure, badge composition, and upserting the report block into the request's description. Fires when lead is about to attach the assembled QA-evidence report to its own merge request.
+name: qa-report-publish
+description: Publishing the AC-organized QA-evidence report to your own merge request after approval — branch-hosting the report and screenshots, then upserting the report block into the request's description. Fires when lead is about to attach the assembled QA-evidence report to its own merge request.
 license: MIT
 compatibility: opencode
 ---
 
-# Skill: review-publish
+# Skill: qa-report-publish
 
 Publishing the **QA-evidence report** — one AC-organized document carrying QA
 verification evidence — to a merge request after human approval.
@@ -14,27 +14,26 @@ verification evidence — to a merge request after human approval.
 
 The QA agent is read-only with respect to the remote: it writes only its local
 artifacts (`report.md`, `report.html`, `NNN-name.png` screenshots) in its session
-dir. **Lead assembles** the report — in BOTH forms (`review-report.html` and
-`review-report.md`) — into that same session dir (so the relative screenshot refs
+dir. **Lead assembles** the report — in BOTH forms (`qa-report.html` and
+`qa-report.md`) — into that same session dir (so the relative screenshot refs
 resolve) and is the sole writer to the remote, only after explicit human
 approval. The remote deliverable: branch-host the Markdown form and upsert the
 report block into the request's description. The HTML form is opened locally and
 never pushed.
 
 The report is QA evidence (the per-AC verdict may be `n/a` when QA didn't run)
-plus a reference to the changeset — there is no separate static-findings half;
-static and blast-radius review lives on the PR (Copilot) and is addressed via the
+plus a reference to the changeset. Static and blast-radius review is not part of
+this report — it happens separately on the merge request and is addressed via the
 merge-request workflow.
 
 ## Report forms
 
-The unified report is produced in TWO forms, both written into the QA session
-dir, both organized by acceptance criterion, and both led by the same two
-machine-readable lines:
+The report is produced in TWO forms, both written into the QA session dir, both
+organized by acceptance criterion, and both led by the same machine-readable
+verdict line:
 
 ```
-🧪 Review — QA: PASS ✅ / FAIL ❌ / n/a   ← single parseable verdict (n/a when QA didn't run)
-Findings: 1 build · 2 human · 0 plan      ← machine-readable summary count
+🧪 QA — PASS ✅ / FAIL ❌ / n/a   ← single parseable verdict (n/a when QA didn't run)
 ```
 
 The top-line QA verdict is FAIL if any acceptance criterion's QA failed, n/a if QA
@@ -43,28 +42,25 @@ did not run, otherwise PASS.
 The two forms differ in exactly two things — how they show **diffs** and how
 they show **screenshots**:
 
-| | `review-report.html` (local-only) | `review-report.md` (hosted) |
+| | `qa-report.html` (local-only) | `qa-report.md` (hosted) |
 |---|---|---|
 | Diffs | **embeds** each changed file's diff rendered inline as self-contained highlighted HTML | **deep-links** each changed file into the hosted changeset; never embeds hunks |
 | Screenshots | embedded `<img>` + clickable running-app links | relative-ref `![](NNN.png)` images |
 | Lifecycle | auto-opened locally, **never pushed** | hosted on the branch and linked from the request |
 
-Everything else is identical: the verdict + `Findings:` header, the per-AC
-sections, the scope/cross-cutting and could-not-verify sections, and the
-**no-structured-AC fallback** (a single `### Goal — <stated goal>` section plus
-the scope/cross-cutting section).
+Everything else is identical: the verdict header, the per-AC sections, the
+could-not-verify section, and the **no-structured-AC fallback** (a single
+`### Goal — <stated goal>` section).
 
-### The hosted form — `review-report.md`
+### The hosted form — `qa-report.md`
 
 ```
-## 🧪 Review — QA: PASS ✅
-Findings: 1 build · 2 human · 0 plan
+## 🧪 QA — PASS ✅
 
 **Changeset:** <files-view URL pinned to the head revision>   (local: `<diff command for the range>`)
 
 ### AC1 — <criterion text>
 - **Changeset:** per-file deep links into the changed files (local: the diff command scoped to those files)
-- **Findings:** `[build] path:line` — text → proposed fix  ·  `[human] path:line` — text   (or "None.")
 - **QA:** PASS ✅ / FAIL ❌ / n/a — evidence  ![cap](003-ac1.png)  <details><summary>steps</summary>
 
   …chronological trail…
@@ -72,15 +68,12 @@ Findings: 1 build · 2 human · 0 plan
 
 ### AC2 — …
 
-### Scope & cross-cutting
-- `[plan]` scope-drift / AC-gap / external-contract findings that map to no single AC
-
 ### Could not verify
 - …
 ```
 
-- The first line — `## 🧪 Review — QA: PASS ✅` / `FAIL ❌` / `QA: n/a` — is the
-  single parseable verdict; the badge is composed by parsing THIS file.
+- The first line — `## 🧪 QA — PASS ✅` / `FAIL ❌` / `n/a` — is the single
+  parseable verdict; the badge is composed by parsing THIS file.
 - Reference the changeset; **never paste diff hunks into this form.** For a
   hosted request, deep-link each changed file the AC touches and pin the files
   view to the head revision (the source-control integration skill documents the
@@ -88,7 +81,7 @@ Findings: 1 build · 2 human · 0 plan
   diff command for the range plus `file:line`. The "never copy diff text" rule is
   specific to this hosted form — it has a host that renders the linked diff.
 
-### The local form — `review-report.html`
+### The local form — `qa-report.html`
 
 Self-contained, auto-opened, NEVER pushed. Because there is no host to render a
 linked diff, this form **embeds** each changed file's diff rendered inline as
@@ -108,8 +101,6 @@ body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0
 h1{font-size:1.5em} h2{font-size:1.15em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}
 .summary{color:#57606a;margin:.25em 0 1.5em}
 section.ac{margin:2em 0;border-top:2px solid #d0d7de;padding-top:1em}
-ul.findings li{margin:.3em 0} ul.findings code{background:#eff1f3;padding:0 .3em;border-radius:3px}
-.f-build{color:#9a6700}.f-human{color:#0969da}.f-plan{color:#8250df}
 .diff{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;overflow-x:auto;margin:.75em 0}
 .diff .file{background:#eaeef2;padding:.3em .6em;font-weight:600;border-bottom:1px solid #d0d7de}
 .diff pre{margin:0;padding:.4em 0}
@@ -122,35 +113,32 @@ ul.findings li{margin:.3em 0} ul.findings code{background:#eff1f3;padding:0 .3em
 
 Layout:
 
-- **Header:** `<h1>🧪 Review — QA: PASS ✅</h1>` then `<p class="summary">Findings: 1 build · 2 human · 0 plan</p>`.
+- **Header:** `<h1>🧪 QA — PASS ✅</h1>`.
 - **Per AC:** `<section class="ac">` → `<h2>AC1 — criterion</h2>` → the embedded
-  rendered diff (one `.diff` block per changed file) → `<ul class="findings">`
-  (each item `file:line` with a `[build]`/`[human]`/`[plan]` tag colored via
-  `f-build`/`f-human`/`f-plan`) → `<div class="qa">` (the PASS/FAIL line,
-  `<img class="shot">` screenshots, the running-app links, and a
+  rendered diff (one `.diff` block per changed file) → `<div class="qa">` (the
+  PASS/FAIL line, `<img class="shot">` screenshots, the running-app links, and a
   `<details><summary>steps</summary>` chronological trail).
-- **Tail:** a `Scope & cross-cutting` section then a `Could not verify` section.
+- **Tail:** a `Could not verify` section.
 - Close with the body/html end tags and open the file locally.
 
 ## Badge composition
 
 The verdict+link badge is used in the **own-MR description block**. Compose it by
-parsing the **hosted Markdown form** (`review-report.md`): read the verdict from
-the `## 🧪 Review` line
-and the counts from the `Findings:` line, e.g. `🧪 Review — QA: PASS ✅ · N build · N human · N plan · [full report ↗](<link>)`. (This
-replaces reading a QA-only heading; the QA agent keeps its own heading in its own
-`report.md` for its own flow.) The local HTML form is never parsed for the badge.
+parsing the **hosted Markdown form** (`qa-report.md`): read the verdict from
+the `## 🧪 QA` line, e.g.
+`🧪 QA — PASS ✅ · [full report ↗](<link>)`. The local HTML form is never parsed
+for the badge.
 
 ## Publish procedure
 
-The HTML form (`review-report.html`) is local-only — it is opened locally and
+The HTML form (`qa-report.html`) is local-only — it is opened locally and
 NEVER pushed. Both forms are ALWAYS generated into the session dir — they are
 lead's worktable/record. The remote is the hosted Markdown form plus the
 description block.
 
 Lead is the sole writer to the remote, and only after the approval gate.
 
-1. **Host the report.** Push `review-report.md` and its referenced screenshots
+1. **Host the report.** Push `qa-report.md` and its referenced screenshots
    to the hosting branch (`qa-assets` by default) at `pr-<n>/`, **overwritten
    wholesale per merge request** (one report per request; deleted/renamed shots
    don't linger), through a throwaway worktree so the working tree and
@@ -163,47 +151,38 @@ Lead is the sole writer to the remote, and only after the approval gate.
    `<!-- qa:start -->` / `<!-- qa:end -->` markers (read-modify-write the body:
    replace between the markers if present, else append after a blank line —
    never a new comment). The block carries a visible lead line (verdict badge ·
-   finding counts · `full report ↗` link), a `<sub>` provenance line (commit
-   short ref · updated timestamp), then one collapsed section per acceptance
-   criterion — `<details open>` for any blocker/FAIL AC, `<details>` for clean
-   ACs — each leading with a single head-pinned code reference (a bare same-repo
-   permalink on its own line, which unfurls to the rendered snippet) capped to
-   the AC's primary implementing region, then its classified `file:line`
-   findings with `[build]`/`[human]`/`[plan]` tags and a diff deep-link, then
-   its QA line. Close with a `Scope & cross-cutting` section and a `Could not
-   verify` section. **The blank line after each `</summary>` is mandatory** or
-   the inner markdown won't render. The permalink must be bare (on its own line,
-   not wrapped in link text) to unfurl. (See the AC-block layout below.)
+   `full report ↗` link), a `<sub>` provenance line (commit short ref · updated
+   timestamp), then one collapsed section per acceptance criterion —
+   `<details open>` for any FAIL AC, `<details>` for passing ACs — each leading
+   with a single head-pinned code reference (a bare same-repo permalink on its
+   own line, which unfurls to the rendered snippet) capped to the AC's primary
+   implementing region, then a diff deep-link as needed, then its QA line. Close
+   with a `Could not verify` section. **The blank line after each `</summary>` is
+   mandatory** or the inner markdown won't render. The permalink must be bare (on
+   its own line, not wrapped in link text) to unfurl. (See the AC-block layout
+   below.)
 
 ### Your-own-request AC block layout (Template A)
 
 ```
 <!-- qa:start -->
-🧪 **Review** — QA: FAIL ❌ · 4 build · 2 human · 0 plan · [full report ↗](<hosted .md blob URL>)
+🧪 **QA** — FAIL ❌ · [full report ↗](<hosted .md blob URL>)
 <sub>commit <shortSHA> · updated <YYYY-MM-DD HH:MM></sub>
 
-<details open><summary>AC1 — <criterion> · 2 build · 1 human · QA FAIL ❌</summary>
+<details open><summary>AC1 — <criterion> · QA FAIL ❌</summary>
 
 <head-pinned permalink to the AC's primary region>
 
-- `path:line` **[build]** — finding text → proposed fix · [diff ↗](<per-file deep link>)
-- `path:line` **[human]** — finding text · [diff ↗](…)
+- [diff ↗](<per-file deep link>)
 - **QA:** FAIL ❌ — <one-line evidence> · [screenshots ↗](<hosted report blob URL>)
 
 </details>
 
-<details><summary>AC2 — <criterion> · ✅ clean · QA PASS ✅</summary>
+<details><summary>AC2 — <criterion> · QA PASS ✅</summary>
 
 <bare permalink …#L40-L62>
 
-- Findings: none.
 - **QA:** PASS ✅ — <evidence> · [screenshots ↗](…)
-
-</details>
-
-<details><summary>Scope &amp; cross-cutting</summary>
-
-- `path:line` **[plan]** — scope-drift / AC-gap / external-contract finding · [diff ↗](…)
 
 </details>
 
@@ -217,12 +196,12 @@ Lead is the sole writer to the remote, and only after the approval gate.
 
 The per-AC code reference is ONE bare permalink pinned to the head revision,
 capped to the AC's primary implementing region at ≤40 lines (pick the tightest
-`#Lstart-Lend` window over the principal finding(s)). Additional files/regions for
+`#Lstart-Lend` window over the principal change). Additional files/regions for
 that AC get a `[diff ↗]` deep-link only — NOT a second unfurl.
 
 ## Re-review
 
-On a re-review, lead REGENERATES both forms from the reconciled findings and
+On a re-review, lead REGENERATES both forms from the reconciled evidence and
 re-opens the HTML form locally. Then refresh the deliverable: re-host the Markdown
 form (overwritten wholesale, so the link is unchanged), then in-place
 read-modify-write of the WHOLE marked block in the description, refreshing the
@@ -232,8 +211,8 @@ read-modify-write of the WHOLE marked block in the description, refreshing the
 
 Before any remote write, show the plan — the files to be pushed to the hosting
 branch, and the exact description section to be added — and wait for explicit
-human approval. Only then perform the push and
-place the deliverable. The analysis agents never write to the remote.
+human approval. Only then perform the push and place the deliverable. The
+analysis agents never write to the remote.
 
 When a merge request is merged or closed, its `pr-<n>/` dir can be deleted from
 the hosting branch as cheap cleanup.

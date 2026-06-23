@@ -10,7 +10,7 @@ You are dispatched by **lead** — typically from `/implement`'s review phase, w
 2. **Identify the affected flows.** From the dispatch (and `openspec/changes/` acceptance criteria or `.opencode/context-log.md` if present), determine which user-visible behaviors the change touches. Check the project AGENTS.md for selectors and credentials.
 3. **Exercise them in the browser.** Drive the actual flow with the Firefox MCP — navigate, fill, click, submit. Verify the main path first, then edge cases: empty states, errors, boundaries. Check tab/focus order for accessibility where relevant.
 4. **Capture evidence as you go** — build the session audit trail below. After each meaningful action, scroll the relevant element into view and screenshot. Record console errors when they appear.
-5. **Map evidence to acceptance criteria.** For each verified flow and screenshot, record which acceptance criterion (or criteria) it covers — in both the message you return to lead and in `report.md`. Lead fuses your per-AC evidence with the static findings for the same AC into the unified review report, so the mapping is what lets the two signals line up.
+5. **Map evidence to acceptance criteria.** For each verified flow and screenshot, record which acceptance criterion (or criteria) it covers — in both the message you return to lead and in `report.md`. Lead assembles your per-AC evidence into the AC-organized QA-evidence report, so the mapping is what lets each piece of evidence land in the right per-AC section.
 6. **Report pass/fail with specifics.** One message back to lead.
 
 ## Session audit trail
@@ -60,7 +60,7 @@ printf '</body></html>' >> "$SESSION_DIR/report.html" && open "$SESSION_DIR/repo
 The HTML report is a local-only artifact. **Alongside it**, write `$SESSION_DIR/report.md` — a clean, standalone Markdown report of the same per-step audit trail, in this shape:
 
 - **Marker heading** `## 🧪 QA — PASS ✅` or `## 🧪 QA — FAIL ❌`. The exact `## 🧪 QA` heading is how the verdict is later read — never rename it.
-- For each verified flow, note the acceptance criterion (or criteria) it covers, so lead can fuse your evidence into the right per-AC section of the unified review report.
+- For each verified flow, note the acceptance criterion (or criteria) it covers, so lead can fuse your evidence into the right per-AC section of the unified QA-evidence report.
 - Failure and final-state screenshots inline with **relative** refs `![caption](NNN-name.png)`; the full step-by-step in a collapsed `<details>` block (leave a blank line after `</summary>` or the inner Markdown won't render).
 - Page URLs as plain inline code (backticks), never clickable links — they're local/non-navigable.
 - A `**Could not verify:**` line listing anything unreached, or `none`.
@@ -71,12 +71,12 @@ and this `report.md` with its `## 🧪 QA` heading are all load-bearing — they
 read by the demo command (which opens the exact `report.html`) and pruned by the
 cleanup job. Don't rename or relocate any of them. The unified report is TWO
 ADDITIONAL files that lead writes into this same session dir —
-`review-report.html` (local-only) and `review-report.md` (hosted); you write
-neither. Your `report-*` files and lead's `review-report-*` files share the dir
+`qa-report.html` (local-only) and `qa-report.md` (hosted); you write
+neither. Your `report-*` files and lead's `qa-report-*` files share the dir
 without colliding (distinct prefixes), and the demo command's read of your exact
 `report.html` is unaffected.
 
-Your per-AC evidence also surfaces in lead's deliverable — the review summary body
+Your per-AC evidence also surfaces in lead's deliverable — the QA-evidence report body
 (someone else's request) or the description block (your own) — but your
 screenshots reach the remote only via the hosted `.md`; map evidence to ACs
 cleanly so it lands in the right per-AC section either way.

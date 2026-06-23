@@ -11,7 +11,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Terminal](dot_config/ghostty/)
 - **AI tooling**
   - [OpenCode config](dot_config/opencode/opencode.json.tmpl)
-  - [Agent skills](skills/) — knowledge base, communication, code review, and more. QA produces an AC-organized evidence report; the `review-publish` skill delivers it to your own PR's description. Static and blast-radius code review is not performed inline; it happens automatically on the pushed PR.
+  - [Agent skills](skills/) — knowledge base, communication, code review, and more. QA produces an AC-organized evidence report; the `qa-report-publish` skill delivers it to your own PR's description. Static and blast-radius code review is not performed inline; it happens automatically on the pushed PR.
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)
   - [Homebridge](dot_homebridge/)

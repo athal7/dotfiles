@@ -22,4 +22,4 @@ Optional argument: a focus string describing what to verify (e.g. `the checkout 
 
 ## Non-goals
 
-Fully standalone. No PR interaction, no publishing, no `review-report.*` files, no OpenSpec coupling, no remote writes.
+Fully standalone. No PR interaction, no publishing, no `qa-report.*` files, no OpenSpec coupling, no remote writes.
