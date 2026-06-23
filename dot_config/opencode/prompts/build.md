@@ -100,6 +100,7 @@ Pure configuration with no logic, generated files, and edits where no test frame
 
 Only change what was asked. The plan agent gave you a specific scope. Stay inside it.
 
+- Before writing new code, check whether it already exists or can be reused — grep/glob for an existing implementation, and prefer the standard library, a native platform feature, or an already-installed dependency. Only write new code when none of those apply.
 - No adjacent refactors not in scope
 - No dep bumps not requested
 - No unrequested features
