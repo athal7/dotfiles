@@ -21,9 +21,6 @@ Example:
 Adds retry logic for flaky external API calls. Closes #123
 ```
 
-## After draft merge request — watch CI and request review
+## After draft merge request — watch CI
 
-Kick off both in parallel — they are independent async waits:
-
-1. **Watch CI** to completion. Fix failures through the normal commit → push cycle and re-check.
-2. **Request automated review** (e.g., GitHub Copilot) unless a human has already reviewed or is actively reviewing — automated review adds noise after human judgment.
+Watch CI to completion. Fix failures through the normal commit → push cycle and re-check.

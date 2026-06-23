@@ -73,7 +73,7 @@ The `search` block returns others' PRs requesting your review (**review-requeste
 
 ## Automated review (Copilot, Codex, etc.)
 
-`gh` is the transport for GitHub-hosted automated reviewers. Per-org config lives in `~/.local/share/chezmoi/.chezmoidata/local.yaml` under `orgs.<org>.automated_review` (see `local.yaml.example` in the dotfiles repo root for schema). Orgs without that block have no automated review available.
+`gh` is the transport for GitHub-hosted automated reviewers. Automated review runs automatically when a PR is opened. Per-org config lives in `~/.local/share/chezmoi/.chezmoidata/local.yaml` under `orgs.<org>.automated_review`, which provides `bot_login` (see `local.yaml.example` in the dotfiles repo root for schema). Orgs without that block have no automated review available.
 
 ### Is automated review available for this repo?
 
@@ -84,7 +84,7 @@ ORG=$(gh repo view --json owner -q '.owner.login')
 chezmoi data --format json | jq -r ".orgs[\"$ORG\"].automated_review // empty"
 ```
 
-- **Non-empty output** = available. The returned object has `bot_login`, `auto_runs`, and `trigger`. Proceed with the trigger/wait/fetch flow below.
+- **Non-empty output** = available. The returned object provides `bot_login`. Proceed with the fetch flow below.
 - **Empty output** = not configured for this org. Only then fall back to the no-automation pipeline.
 
 Common wrong checks that will give you a false negative:
@@ -110,40 +110,9 @@ gh api "repos/$OWNER/$REPO/pulls/$PR/comments" --paginate \
 
 Reply threads on a comment use `in_reply_to_id` chains.
 
-### Trigger automated review
-
-**Use only the commands below. Do not invent alternatives.** The REST endpoint `POST /repos/{o}/{r}/pulls/{n}/requested_reviewers` returns 422 *"Reviews may only be requested from collaborators"* when given `copilot-pull-request-reviewer` — the bot is not a collaborator. Only `gh pr edit --add-reviewer "@copilot"` works, because `@copilot` is a special handle that `gh` resolves client-side (see `gh pr edit --help`).
-
-The `trigger` field returned by the availability check tells you which form. Parse it and run the corresponding command — do not hardcode the handle or text:
-
-- `add_reviewer @handle` → `gh pr edit $PR --add-reviewer "@handle"`
-- `comment @handle <text>` → `gh pr comment $PR --body "@handle <text>"`
-
-```bash
-TRIGGER=$(chezmoi data --format json | jq -r ".orgs[\"$ORG\"].automated_review.trigger")
-FORM="${TRIGGER%% *}"          # "add_reviewer" or "comment"
-ARGS="${TRIGGER#* }"           # everything after the first word
-
-if [[ "$FORM" == "add_reviewer" ]]; then
-  gh pr edit "$PR" --add-reviewer "$ARGS"
-else
-  gh pr comment "$PR" --body "$ARGS"
-fi
-```
-
-Triggering is a public action — it appears in the timeline. Announce it before doing it.
-
-After triggering, verify the bot was actually added as a reviewer before waiting:
-
-```bash
-gh api "repos/$OWNER/$REPO/pulls/$PR/requested_reviewers" --jq '.users[].login, (.users[] | select(.type=="Bot") | .login)'
-```
-
-Note: Copilot appears in `requested_reviewers` as login `Copilot` (a Bot user, app slug `copilot-pull-request-reviewer`), but its review submissions use login `copilot-pull-request-reviewer[bot]` — the `bot_login` from the availability check matches the *review author*, not the requested-reviewer login.
-
 ### Wait for a fresh review
 
-After triggering (or to wait for an auto-running bot), poll until a review exists with a `commit_id` matching the current HEAD (or just newer than `since_sha`). Reasonable cadence: every 5s, timeout 120s.
+To wait for the auto-running bot's review on the latest push, poll until a review exists with a `commit_id` matching the current HEAD. Reasonable cadence: every 5s, timeout 120s.
 
 ```bash
 TARGET_SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
@@ -154,17 +123,6 @@ for i in {1..24}; do
   sleep 5
 done
 ```
-
-### Was a prior review already requested-and-dismissed?
-
-Don't re-trigger if the human author dismissed the bot without a fix and the diff hasn't materially changed. Check review timeline events:
-
-```bash
-gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" --paginate \
-  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\") | {state, dismissed: .state == \"DISMISSED\", submitted_at, commit_id}]"
-```
-
-`state == "DISMISSED"` with no follow-up review means the author chose not to act on it.
 
 ## Checking repo visibility
 
