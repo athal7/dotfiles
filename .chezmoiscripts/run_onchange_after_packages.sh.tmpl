@@ -4,7 +4,7 @@
 # Homebrew 6.x requires explicit trust before it will load formulae/casks/
 # commands from third-party taps (HOMEBREW_REQUIRE_TAP_TRUST is default-on).
 # Trust every declared tap so `brew bundle` can install their artifacts —
-# notably the snip cask, which silently failed to install before this.
+# their third-party cask/formula artifacts, which silently failed to install before this.
 {{ range .packages.taps -}}
 brew trust --tap {{ . | quote }}
 {{ end }}
