@@ -1,13 +1,17 @@
 """
 family-scheduler - Fetch local family events and add to family calendar.
 
-Pulls from ICS feeds configured in chezmoi [data.feeds], filters to
-evenings/weekends with no conflicts across all configured calendars,
+Pulls from ICS feeds configured in chezmoi [data.feeds] plus plain-HTTP
+event APIs configured in [data.sites] (dispatched via STRATEGIES), filters
+to evenings/weekends with no conflicts across all configured calendars,
 and adds to the family calendar.
 
 Requires: ical, chezmoi, icalendar (pip install icalendar)
 """
 
+import html
+import json
+import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta
 
@@ -76,6 +80,136 @@ def fetch_ics(name, url, tz):
     return events
 
 
+def _http_json(url):
+    """GET a URL and parse the JSON body."""
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read())
+
+
+def fetch_communico(name, base_url, client, days, ages, tz):
+    """Fetch events from a Communico (libnet.info) calendar JSON API.
+
+    Optionally filters by age-group label (case-insensitive substring match
+    against the event's age fields); events with no age info are kept.
+    """
+    today = date.today()
+    req_json = json.dumps({
+        "private": False,
+        "date": str(today),
+        "days": days,
+        "locations": [],
+        "ages": [],
+        "types": [],
+    })
+    url = f"{base_url}/eeventcaldata?event_type=0&req={urllib.parse.quote(req_json)}"
+    try:
+        items = _http_json(url)
+    except Exception as e:
+        log(f"[{name}] fetch failed: {e}", TAG)
+        return []
+
+    ages = [a.lower() for a in (ages or [])]
+    lookahead = today + timedelta(days=LOOKAHEAD_DAYS)
+    events = []
+    for item in items:
+        try:
+            start_dt = datetime.strptime(
+                item["event_start"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
+            end_dt = datetime.strptime(
+                item["event_end"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
+        except (KeyError, ValueError) as e:
+            log(f"[{name}] skipping unparseable event: {e}", TAG)
+            continue
+
+        if not (today <= start_dt.date() <= lookahead):
+            continue
+        if not is_eligible(start_dt):
+            continue
+
+        if ages:
+            event_ages = item.get("agesArray") or []
+            if item.get("ages"):
+                event_ages = [*event_ages, item["ages"]]
+            event_age_text = " ".join(str(a) for a in event_ages).lower()
+            # No age info => treat as all-ages and keep; otherwise require a match.
+            if event_age_text and not any(a in event_age_text for a in ages):
+                continue
+
+        events.append({
+            "source": name,
+            "title": str(item.get("title", "")).strip(),
+            "start": start_dt,
+            "end": end_dt,
+            "url": str(item.get("url", "")),
+        })
+    return events
+
+
+def fetch_tribe(name, base_url, categories, days, tz):
+    """Fetch events from a WordPress "The Events Calendar" REST API.
+
+    Follows next_rest_url cursor pagination until exhausted. Multiple
+    categories are passed comma-joined (verified to work in one call).
+    """
+    today = date.today()
+    end_date = today + timedelta(days=days)
+    cats = ",".join(categories or [])
+    url = (
+        f"{base_url}/wp-json/tribe/events/v1/events"
+        f"?start_date={today}&end_date={end_date}&per_page=50"
+    )
+    if cats:
+        url += f"&categories={urllib.parse.quote(cats)}"
+
+    lookahead = today + timedelta(days=LOOKAHEAD_DAYS)
+    events = []
+    seen = set()
+    while url:
+        try:
+            payload = _http_json(url)
+        except Exception as e:
+            log(f"[{name}] fetch failed: {e}", TAG)
+            break
+
+        for item in payload.get("events", []):
+            key = item.get("id") or item.get("url")
+            if key in seen:
+                continue
+            seen.add(key)
+            try:
+                start_dt = datetime.strptime(
+                    item["start_date"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
+                end_dt = datetime.strptime(
+                    item["end_date"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
+            except (KeyError, ValueError) as e:
+                log(f"[{name}] skipping unparseable event: {e}", TAG)
+                continue
+
+            if not (today <= start_dt.date() <= lookahead):
+                continue
+            if not is_eligible(start_dt):
+                continue
+
+            events.append({
+                "source": name,
+                "title": html.unescape(str(item.get("title", "")).strip()),
+                "start": start_dt,
+                "end": end_dt,
+                "url": str(item.get("url", "")),
+            })
+
+        url = payload.get("next_rest_url")
+    return events
+
+
+# Dispatch table for [data.sites] strategies.
+STRATEGIES = {
+    "communico": fetch_communico,
+    "tribe_rest": fetch_tribe,
+}
+
+
 def occupied_slots(calendars, from_date, to_date):
     """Return set of start_date strings for busy events across all calendars."""
     occupied = set()
@@ -99,6 +233,7 @@ def main():
     data = chezmoi_data()
     calendars = data.get("calendars", {})
     feeds = data.get("feeds", {})
+    sites = data.get("sites", {})
     cal_entries = {k: v for k, v in calendars.items() if isinstance(v, dict)}
     target_entry = next((v for v in cal_entries.values() if v.get("family_scheduler_target")), None)
     family_cal = target_entry["name"] if target_entry else None
@@ -106,8 +241,8 @@ def main():
     if not family_cal:
         log("No calendar with family_scheduler_target=true configured, skipping", TAG)
         return
-    if not feeds:
-        log("No feeds configured in chezmoi [data.feeds], skipping", TAG)
+    if not feeds and not sites:
+        log("No feeds or sites configured in chezmoi [data.feeds]/[data.sites], skipping", TAG)
         return
 
     tz = local_tz()
@@ -118,6 +253,24 @@ def main():
     candidates = []
     for name, url in feeds.items():
         candidates.extend(fetch_ics(name.replace("_", " ").title(), url, tz))
+
+    # Fetch candidates from all configured sites (plain-HTTP event APIs).
+    for name, cfg in sites.items():
+        if not isinstance(cfg, dict):
+            continue
+        strategy = cfg.get("strategy", "")
+        fn = STRATEGIES.get(strategy)
+        if not fn:
+            log(f"[{name}] unknown strategy {strategy!r}, skipping", TAG)
+            continue
+        label = name.replace("_", " ").title()
+        days = cfg.get("days", LOOKAHEAD_DAYS)
+        if fn is fetch_communico:
+            candidates.extend(fetch_communico(
+                label, cfg["base_url"], cfg.get("client"), days, cfg.get("ages", []), tz))
+        elif fn is fetch_tribe:
+            candidates.extend(fetch_tribe(
+                label, cfg["base_url"], cfg.get("categories", []), days, tz))
 
     if not candidates:
         log("No candidate events found", TAG)
