@@ -1,6 +1,6 @@
 ---
 name: push
-description: Push approval protocol, branch naming, merge request descriptions, and post-push CI watching
+description: Push approval protocol, branch naming, merge request descriptions, and post-push CI and code-review watching
 license: MIT
 ---
 
@@ -21,6 +21,9 @@ Example:
 Adds retry logic for flaky external API calls. Closes #123
 ```
 
-## After draft merge request — watch CI
+## After draft merge request — watch CI and code review
 
-Watch CI to completion. Fix failures through the normal commit → push cycle and re-check.
+A push kicks off two asynchronous signals: CI, and — where the repo has it — an automated code review on the merge request. The push isn't settled until both have landed.
+
+- **CI.** Watch CI to completion. Fix failures through the normal commit → push cycle and re-check.
+- **Automated code review.** When the repo has automated code review configured, wait for its review to land on the just-pushed change — the review must match the current head, not a stale one. Triage the findings it posts as inline threads and top-level comments. Fix actionable items through the normal commit → push cycle and resolve the addressed threads; reply only when you are declining, deferring, or questioning, and get approval before posting any reply. If the repo has no automated code review configured, there is nothing to wait for on that signal.
