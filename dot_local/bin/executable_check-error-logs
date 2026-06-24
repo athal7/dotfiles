@@ -25,6 +25,8 @@ SELF_LOG="check-error-logs.error.log"
 # The service_name matches the basename of the .error.log file (without extension).
 EXCLUDE_PATTERNS="
 opencode-web|Could not find 'bundler'
+homebridge|Rate limited for the GetDevice API
+homebridge|bonjour-hap: send EADDRNOTAVAIL
 "
 
 # Return the exclusion pattern for a service name, or empty string if none.
