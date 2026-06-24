@@ -38,7 +38,7 @@ If the merge request conflicts with the target branch, resolve preserving both s
 
 Present a summary of what changed. After approval, re-request review from every reviewer who previously reviewed, with a comment summarizing what was addressed.
 
-**Refresh the QA-evidence report in your description.** This assumes a prior `/implement` ship already created the marked block and the `qa-<ts>` session dir. After fixes land and with (or before) re-requesting review, re-pin the diff deep-links and permalinks to the new head and refresh the `<sub>` provenance over the standing QA evidence, then upsert the refreshed block into your MR description — an in-place read-modify-write of the whole marked block between the `<!-- qa:start -->` / `<!-- qa:end -->` markers, never a new comment. Load the `qa-report-publish` skill for the mechanics.
+**Refresh the QA-evidence report in your description.** This assumes a prior `/implement` ship already created the marked block and the `qa-<ts>` session dir. After fixes land and with (or before) re-requesting review, refresh the `<sub>` provenance over the standing QA evidence, then upsert the refreshed block into your MR description — an in-place read-modify-write of the whole marked block between the `<!-- qa:start -->` / `<!-- qa:end -->` markers, never a new comment. Load the `qa-report-publish` skill for the mechanics.
 
 All remote writes (posting replies, pushing, re-requesting review) require explicit approval — use the `commit` and `push` skills for shipping.
 

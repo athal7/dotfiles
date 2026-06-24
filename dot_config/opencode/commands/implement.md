@@ -87,7 +87,7 @@ Load `openspec-apply-change` and work through the tasks. For each task, dispatch
 
 When the changeset touches UI (views, templates, CSS, frontend), dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows; it returns findings classified by routing destination.
 
-Static and blast-radius review (in-diff correctness/security/performance and out-of-diff what-breaks-elsewhere) is not performed inline — it happens automatically on the pushed PR.
+Static and blast-radius review (in-diff correctness/security/performance and out-of-diff what-breaks-elsewhere) is not performed inline — it happens automatically on the pushed merge request.
 
 **Route findings:**
 - **Build-level** (bug, style, missing test) → dispatch the `build` subagent (`task` tool, `subagent_type: build`) for a targeted fix, then re-verify the fix
@@ -126,7 +126,7 @@ fi
 
 `worktree` is the absolute repo/worktree root — it equals the opencode session's `directory`, which is the join key `/kb-enrich` uses to exclude these sessions from transcript reads.
 
-**Assemble and publish the QA-evidence report.** Load the `qa-report-publish` skill and follow it — assemble the AC-organized report in BOTH forms: `qa-report.html` (local-only, embeds the rendered diffs + screenshots) and `qa-report.md` (hosted, deep-links the diffs). The report carries QA evidence; static and blast-radius review happens automatically on the pushed PR and is not part of this report. WHEN QA ran, publish the QA-evidence report. Open the `.html` locally, then after approval host the `.md` (it backs the `full report ↗` link and renders the screenshots) and upsert the **full Template-A collapsed-AC block** — visible verdict+link line, `<sub>` provenance, per-AC `<details>`/`<details open>` sections with a head-pinned code reference + QA evidence, Could not verify — into the merge request **description** between the `<!-- qa:start -->` / `<!-- qa:end -->` markers. The merge request must exist first (the push above creates it), so this runs after push and after approval. **Publish when** QA ran in the Review phase; **skip** for a clean non-UI self-review.
+**Assemble and publish the QA-evidence report.** Load the `qa-report-publish` skill and follow it — assemble the AC-organized report in BOTH forms: `qa-report.html` (local-only, embeds the screenshots) and `qa-report.md` (hosted, carries the QA evidence). The report carries QA evidence only; static and blast-radius review happens automatically on the pushed merge request and is not part of this report. WHEN QA ran, publish the QA-evidence report. Open the `.html` locally, then after approval host the `.md` (it backs the `full report ↗` link and renders the screenshots) and upsert the **full Template-A collapsed-AC block** — visible verdict+link line, `<sub>` provenance, per-AC `<details>`/`<details open>` sections with QA evidence, Could not verify — into the merge request **description** between the `<!-- qa:start -->` / `<!-- qa:end -->` markers. The merge request must exist first (the push above creates it), so this runs after push and after approval. **Publish when** QA ran in the Review phase; **skip** for a clean non-UI self-review.
 
 - **v1 is detection-only.** Surface conflicts to the human (the existing Plan read of `specs/` carries them forward as a plan-level finding); never run automated reconciliation, and never let the lossy auto-fold overwrite the durable specs. CI watch is best-effort and does NOT gate the merge.
 
