@@ -8,7 +8,7 @@ Workflow: merge-request. You are maintaining your own merge request. Each phase 
 **Use TodoWrite to track this workflow. Create these items before starting:**
 - Reopen issue — if the MR references a tracked issue, set it back to In Progress
 - Triage — fetch threads + top-level comments, categorize, present for approval
-- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD), resolve fixed threads, and seek deterministic fitness functions for repo conventions
+- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD); run QA (dispatch the `qa` subagent) before commit/push when UI is touched; resolve fixed threads, and seek deterministic fitness functions for repo conventions
 - Conflicts — resolve if present, run tests
 - Re-request — present summary, re-request review
 
@@ -24,7 +24,9 @@ Dispatch the `explore` subagent (`task` tool, `subagent_type: explore`) to fetch
 
 ## Fix
 
-For each actionable thread, dispatch the `build` subagent (`task` tool, `subagent_type: build`, strict TDD). After the fix commits and pushes, **resolve the thread silently — do not post a reply.** The resolution *is* the acknowledgment; a "Fixed in abc123" reply is noise. Reply only when you are *not* simply fixing it — declining, deferring, questioning, or adding context — and always get approval before posting any reply.
+For each actionable thread, dispatch the `build` subagent (`task` tool, `subagent_type: build`, strict TDD).
+
+**Run QA before committing or pushing any fix that touches UI.** When a fix changes views, templates, CSS, or frontend, dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows *before* the commit/push gate. Route findings as `/implement`'s Review does: build-level (bug, style, missing test) → re-dispatch the `build` subagent for a targeted fix, then re-verify; plan-level (wrong approach, missing requirement) → reconsider the fix with the human; human judgment (tradeoff, scope) → present and wait. Only once QA passes do you proceed to commit/push; skip QA for non-UI fixes. After the fix commits and pushes, **resolve the thread silently — do not post a reply.** The resolution *is* the acknowledgment; a "Fixed in abc123" reply is noise. Reply only when you are *not* simply fixing it — declining, deferring, questioning, or adding context — and always get approval before posting any reply.
 
 **Seek deterministic fitness functions.** Repetition is hard to see inside a single changeset, so don't wait to spot an issue twice. Ask instead whether the feedback expresses a *convention* the repo should hold everywhere — a naming rule, an architectural boundary, a banned pattern. The strongest signal is feedback that points at guidance already written down — a documented convention or an agent instruction that keeps getting missed; a soft nudge that isn't being followed is a prime candidate to replace with something deterministic rather than restate. When the feedback names a convention, look for the opportunity to encode it as a deterministic check (a custom lint rule such as a custom RuboCop cop, a test, or a CI gate) so it self-enforces and no reviewer has to flag it again. A genuine one-off just gets fixed. Propose the rule as a follow-up and get approval before adding it; if it is out of scope for the current MR, capture it as a follow-up todo rather than expanding the diff.
 
