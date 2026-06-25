@@ -60,21 +60,31 @@ WHY THIS EXISTS / HOW IT WORKS (read before editing):
 
 IDEMPOTENCY: a sibling ``.kb-zoom-extract`` sentinel is written next to every
 caption file this tool creates. A Zoom-authored caption (no sentinel) is NEVER
-overwritten, in any mode. ``absent -> write + sentinel``; ``present-foreign ->
-skip``. In single-shot mode ``present-ours -> skip`` too: a later one-off run may
-carve FEWER utterances (freed pages get reused), so rewriting could lose data.
-In ``--watch`` mode the data source is a growing UNION, never shrinking, so a
-caption WE own may be rewritten — but only when the accumulated transcript is
-strictly larger than what we last wrote. The sentinel records provenance so a
-human can tell synthetic captions from real Zoom ones.
+overwritten, in any mode (``present-foreign -> skip``); ``absent -> write +
+sentinel``. For a caption WE own (``present-ours``) the rule is grow-if-bigger,
+never shrink — and the two modes get their baseline from different places:
+
+- Single-shot (scheduled): the on-disk caption IS the baseline. We count the
+  utterances already in our file and REWRITE only when the fresh carve is
+  strictly larger, otherwise skip. This lets a later, fuller poll supersede an
+  earlier partial mid-meeting carve, while a thin freelist carve can never shrink
+  the big cloud-backfilled captions already on disk (which always dwarf it).
+- ``--watch`` (backfill): the data source is a growing in-memory UNION across
+  polls, so the baseline is what we last wrote THIS process (first-poll baseline
+  0); a caption we own is rewritten only when that union is strictly larger.
+
+Either way a file only ever grows, and a foreign/real Zoom caption is never
+touched. The sentinel records provenance so a human can tell synthetic captions
+from real Zoom ones.
 
 Usage:
   kb-zoom-extract [--since YYYY-MM-DD | --days N] [--zoom-dir DIR]
                   [--cache-glob GLOB] [--dry-run] [--watch [INTERVAL]]
 
   Single-shot (default, and what the scheduled LaunchAgent runs): carve once,
-  write any new in-window caption files, never overwrite. Now WAL-aware, so it
-  surfaces more than before.
+  write any new in-window caption files and GROW our own existing ones when the
+  fresh carve is strictly larger (never shrink, never touch real Zoom captions).
+  WAL-aware, so it surfaces more than before.
 
   Backfill (operator-driven, manual): to pull a batch of older meetings out of
   the cloud into local captions, run:
@@ -271,19 +281,53 @@ def dir_name(dt, title):
 
 _SENTINEL = ".kb-zoom-extract"
 
+# One utterance == one speaker-block header line. This is the same regex the
+# kb-distill chunker uses to split a caption into utterances: a bracketed header
+# carrying an HH:MM:SS wall-clock time (e.g. ``[Alice 13:58:00]``). Counting these
+# in an on-disk caption tells us how many utterances it currently holds, which is
+# the baseline the single-shot grow-if-bigger path compares a fresh carve against.
+_HEADER_RE = re.compile(r"^\[[^]]*[0-9][0-9]:[0-9][0-9]:[0-9][0-9][^]]*\]", re.MULTILINE)
 
-def emit(meetings, utts, zoom_dir, cutoff, dry_run=False, allow_grow=False, written_counts=None):
+
+def _count_caption_utterances(path):
+    """Count utterances in an existing caption file on disk (header lines).
+
+    Returns the number of speaker-block headers (one per utterance). A missing or
+    unreadable file counts as 0, so the caller treats it as "grow from nothing".
+    """
+    try:
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return 0
+    return len(_HEADER_RE.findall(text))
+
+
+def emit(meetings, utts, zoom_dir, cutoff, dry_run=False, allow_grow=False,
+         written_counts=None, grow_from_disk=False):
     """Write caption files for in-window meetings. Returns ``(written, skipped)``.
 
-    ``written``/``skipped`` are lists of ``(dir_name, count_or_reason)`` tuples
-    (skipped carries why: "exists-ours" or "exists-foreign").
+    ``written`` entries are ``(dir_name, count)``; a third element ``"grew"`` is
+    appended when an existing caption WE own was rewritten larger (vs a fresh
+    write, which has no third element). ``skipped`` entries are
+    ``(dir_name, reason)`` where reason is "exists-ours" or "exists-foreign".
     ``cutoff`` is a ``date``; meetings whose start date is before it are ignored.
 
-    ``allow_grow`` (watch mode only) permits REWRITING a caption file we own when
-    the freshly accumulated bucket is strictly larger than what we last wrote;
-    ``written_counts`` is the mutable ``{dir_name: count}`` state that tracks it.
-    With ``allow_grow=False`` (single-shot) an existing caption — ours or
-    foreign — is always skipped, preserving the never-overwrite contract.
+    Two independent grow paths, never combined:
+
+    - ``allow_grow`` (watch mode only) permits REWRITING a caption file we own
+      when the freshly accumulated in-memory union is strictly larger than what
+      we last wrote THIS process; ``written_counts`` is the mutable
+      ``{dir_name: count}`` state tracking that (first-poll baseline 0).
+    - ``grow_from_disk`` (single-shot only) has no cross-invocation memory, so
+      the on-disk caption IS the baseline: it counts the utterances already in
+      our existing caption and rewrites only when the fresh carve is STRICTLY
+      larger, never shrinking it. This supersedes a partial mid-meeting carve
+      with a later fuller one, while leaving the big cloud-backfilled captions
+      (which dwarf any freelist carve) untouched.
+
+    A foreign caption (no sentinel) is NEVER overwritten in any mode, preserving
+    the never-clobber-a-real-Zoom-caption contract.
     """
     parsed = []
     for mid, title in meetings.items():
@@ -307,6 +351,20 @@ def emit(meetings, utts, zoom_dir, cutoff, dry_run=False, allow_grow=False, writ
             if not ours:
                 # A real Zoom caption — never clobber it, in any mode.
                 skipped.append((dname, "exists-foreign"))
+                continue
+            if grow_from_disk:
+                # Single-shot: the on-disk caption is the baseline (no in-memory
+                # state survives between scheduled runs). Grow only if the fresh
+                # carve has strictly more utterances than what is already there;
+                # never shrink (protects rich cloud-backfilled captions).
+                disk_count = _count_caption_utterances(cap)
+                if n <= disk_count:
+                    skipped.append((dname, "exists-ours"))
+                    continue
+                if not dry_run:
+                    with open(cap, "w", encoding="utf-8") as fh:
+                        fh.write(render_caption(lst))
+                written.append((dname, n, "grew"))
                 continue
             if not allow_grow:
                 skipped.append((dname, "exists-ours"))
@@ -454,7 +512,9 @@ def main(argv=None):
         "--watch", nargs="?", const=15, type=int, metavar="INTERVAL",
         help="backfill mode: poll the cache every INTERVAL seconds (default 15) "
              "accumulating a growing union, rewriting our caption files as they "
-             "grow; Ctrl-C to stop. Without this flag, runs once (never rewrites).",
+             "grow; Ctrl-C to stop. Without this flag, runs once and grows our "
+             "own captions if a larger carve is found (never shrinks, never "
+             "overwrites a real Zoom caption).",
     )
     args = ap.parse_args(argv)
 
@@ -479,12 +539,19 @@ def main(argv=None):
               f"transcripts (cache may have been recycled) — nothing to do", file=sys.stderr)
         return 0
 
-    written, skipped = emit(meetings, utts, args.zoom_dir, cutoff, dry_run=args.dry_run)
+    written, skipped = emit(
+        meetings, utts, args.zoom_dir, cutoff,
+        dry_run=args.dry_run, grow_from_disk=True,
+    )
 
-    verb = "would write" if args.dry_run else "wrote"
+    write_verb = "would write" if args.dry_run else "wrote"
+    grow_verb = "would grow" if args.dry_run else "grew"
     print(f"kb-zoom-extract: {len(meetings)} meetings / {len(utts)} utterances in cache; "
           f"window since {cutoff.isoformat()}")
-    for dname, n in written:
+    for entry in written:
+        dname, n = entry[0], entry[1]
+        grew = len(entry) > 2 and entry[2] == "grew"
+        verb = grow_verb if grew else write_verb
         print(f"  {verb}: {dname} ({n} utterances)")
     for dname, why in skipped:
         print(f"  skip ({why}): {dname}")
