@@ -131,7 +131,7 @@ packages:
     - name: font-monaspace
     - name: ghostty
     - name: claude-code
-    - name: stats
+    - name: menumeters
     - name: tailscale-app
     - name: lm-studio
     - name: obsidian
