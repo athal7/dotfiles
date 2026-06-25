@@ -20,7 +20,7 @@ echo "$(date): chezmoi re-add done"
 
 SOURCE_DIR="$(chezmoi source-path)"
 cd "$SOURCE_DIR" || exit 1
-if ! git diff --quiet; then
+if ! git diff --quiet || ! git diff --cached --quiet; then
   git add -A
   git commit -m "chore: sync NayaFlow DB [$(date '+%Y-%m-%d')]"
   echo "$(date): git commit done"
