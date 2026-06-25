@@ -11,7 +11,7 @@ TIMEOUT_SET=""
 AGENT=""
 MODEL=""
 
-usage() {
+print_usage() {
   cat >&2 <<'EOF'
 Usage: opencode-cmd [OPTIONS] COMMAND [ARGS...]
 
@@ -34,7 +34,20 @@ Commands:
   questions            List pending questions (JSON)
   reply QID ANSWER     Answer a pending question
   health               Exit 0 if server reachable, 1 otherwise
+  await ID             Block until session idle, print last assistant text
+                       (wait timeout: 300s default, override with -t)
+  ask ID TEXT          Send message to session, wait, print the reply
+                       (= msg + await; honors -a AGENT and -m MODEL)
+  peers                Live sessions sharing this repo/dir, with status (JSON)
+  move ID DIR          Relocate a session to another directory
+  wt-move ID BRANCH    Create a worktree and move session ID into it
+  help                 Print this usage text (also -h, --help)
 EOF
+}
+
+# Print usage and exit non-zero (unknown/empty command).
+usage() {
+  print_usage
   exit 1
 }
 
@@ -86,6 +99,89 @@ build_msg_body() {
   fi
   printf '%s' "$body"
 }
+
+# ── Wait / read-back helpers ───────────────────────────────────────────────────
+# Used by the await/ask verbs to block on a run and read the reply.
+
+# Fetch the full message list for a session. The v1 message endpoint returns the
+# actual conversation as an array of {info:{role,...}, parts:[{type,text}]} when
+# given a directory — unlike the v2 /api/.../message endpoint (used by the
+# transcript verb), which only returns meta-events (model-switched, etc.) in
+# this build. So await/ask read from v1 to get real assistant text.
+fetch_messages() {
+  xh --ignore-stdin GET "${API}/session/$1/message" "directory==${DIR}" 2>/dev/null
+}
+
+# Print the concatenated text parts of the latest assistant message.
+last_assistant_text() {
+  fetch_messages "$1" | jq -r '
+    [.[] | select(.info.role == "assistant")] | last
+    | (.parts // [] | map(select(.type == "text") | .text) | join(""))' 2>/dev/null
+}
+
+# Count COMPLETED assistant messages. The server creates an assistant record at
+# run start (with time.completed == null) before any text exists, so counting all
+# assistant messages would falsely signal a reply mid-run. Counting only
+# completed ones gives a race-free baseline for detecting a fresh reply.
+assistant_count() {
+  fetch_messages "$1" | jq '
+    [.[] | select(.info.role == "assistant" and .info.time.completed != null)]
+    | length' 2>/dev/null
+}
+
+# Resolve the effective wait timeout: 300s default for await/ask, overridable
+# with -t. (The global TIMEOUT default of 10 is for the short blocking verbs.)
+wait_timeout() {
+  if [ -n "$TIMEOUT_SET" ]; then printf '%s' "$TIMEOUT"; else printf '%s' 300; fi
+}
+
+# Read a session's status type, normalising the all-idle empty map (and missing
+# entries) to "idle". Values seen from the server: idle, busy, retry.
+status_type() {
+  xh --ignore-stdin GET "${API}/session/status" 2>/dev/null \
+    | jq -r --arg id "$1" '.[$id].type // "idle"' 2>/dev/null
+}
+
+# Block until the session is idle or the wait timeout elapses. Returns non-zero
+# on timeout. min_replies, if >0, additionally requires the assistant-message
+# count to reach that value before returning — this is how ask avoids the race
+# where status is still "idle" between firing a message and the run starting.
+wait_for_idle() {
+  sid="$1"; min_replies="${2:-0}"
+  wt=$(wait_timeout)
+  deadline=$(( $(date +%s) + wt ))
+  while :; do
+    st=$(status_type "$sid")
+    [ -n "$st" ] || st="idle"
+    if [ "$st" = "idle" ]; then
+      if [ "$min_replies" -le 0 ]; then
+        return 0
+      else
+        cur=$(assistant_count "$sid"); [ -n "$cur" ] || cur=0
+        [ "$cur" -ge "$min_replies" ] && return 0
+      fi
+    fi
+    [ "$(date +%s)" -ge "$deadline" ] && return 1
+    sleep 2
+  done
+}
+
+# POST to the move-session control-plane endpoint. Returns the HTTP status code
+# on stdout (the endpoint replies 204 No Content with an empty body).
+move_session() {
+  sid="$1"; dest="$2"
+  body=$(jq -n --arg sid "$sid" --arg dir "$dest" \
+    '{sessionID: $sid, destination: {directory: $dir}, moveChanges: true}')
+  printf '%s' "$body" \
+    | xh --print=hb POST "${API}/experimental/control-plane/move-session" 2>/dev/null \
+    | awk 'NR==1{print $2}'
+}
+
+# ── Help (intercept before getopts, which would reject the dash forms) ─────────
+
+case "${1:-}" in
+  help|-h|--help) print_usage; exit 0 ;;
+esac
 
 # ── Option parsing ───────────────────────────────────────────────────────────
 
@@ -242,6 +338,108 @@ case "$CMD" in
   # ── health: check server reachability (v2) ───────────────────────────────
   health)
     xh --ignore-stdin GET "${API}/api/health" >/dev/null 2>&1
+    ;;
+
+  # ── await: block until session idle, print last assistant text ────────────
+  # Default wait timeout is 300s, overridable with -t.
+  await)
+    [ $# -ge 1 ] || die "await requires ID argument"
+    SID="$1"
+    if wait_for_idle "$SID"; then
+      last_assistant_text "$SID"
+    else
+      die "timed out after $(wait_timeout)s waiting for session $SID to go idle"
+    fi
+    ;;
+
+  # ── ask: send a message to an existing session, wait, print the reply ──────
+  # Composes msg + await: fires the message in the background (so we drive the
+  # wait ourselves rather than relying on the blocking POST), then waits for the
+  # run to finish and prints the new assistant turn. Honors -a AGENT and -m
+  # MODEL via build_msg_body.
+  ask)
+    [ $# -ge 2 ] || die "ask requires ID and TEXT arguments"
+    SID="$1"; shift
+    TEXT="$*"
+
+    BASE=$(assistant_count "$SID"); [ -n "$BASE" ] || BASE=0
+    MSG_BODY=$(build_msg_body "$TEXT")
+    # Fire and forget: the POST blocks server-side for the whole run, so run it
+    # detached and let wait_for_idle observe completion independently. Requiring
+    # one more assistant message than the baseline avoids returning the previous
+    # turn during the brief idle window before the run spins up.
+    ( printf '%s' "$MSG_BODY" \
+        | xh POST "${API}/session/${SID}/message" "directory==${DIR}" \
+          >/dev/null 2>&1 ) &
+
+    if wait_for_idle "$SID" $((BASE + 1)); then
+      last_assistant_text "$SID"
+    else
+      die "timed out after $(wait_timeout)s waiting for reply from session $SID"
+    fi
+    ;;
+
+  # ── peers: live sessions that could collide in this repo ──────────────────
+  # Lists root sessions whose directory resolves to the same git repository as
+  # -d DIR (covers sibling worktrees of the same repo, not just the exact dir),
+  # each annotated with its current status. Falls back to exact-directory match
+  # when DIR is not inside a git repo. Output is a JSON array.
+  peers)
+    REPO_KEY=$(git -C "$DIR" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || REPO_KEY=""
+    STATUSES=$(xh --ignore-stdin GET "${API}/session/status" 2>/dev/null) || STATUSES='{}'
+    ALL=$(xh --ignore-stdin GET "${API}/api/session" "limit==1000" "order==desc" 2>/dev/null \
+      | jq -c '[.data[] | select(.parentID == null)
+               | {id, directory: .location.directory, title}]') \
+      || die "failed to list sessions"
+
+    printf '%s\n' "$ALL" | jq -c '.[]' | while IFS= read -r row; do
+      sdir=$(printf '%s' "$row" | jq -r '.directory // ""')
+      [ -n "$sdir" ] || continue
+      if [ -n "$REPO_KEY" ]; then
+        skey=$(git -C "$sdir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || skey=""
+        [ "$skey" = "$REPO_KEY" ] || continue
+      else
+        [ "$sdir" = "$DIR" ] || continue
+      fi
+      sid=$(printf '%s' "$row" | jq -r '.id')
+      st=$(printf '%s' "$STATUSES" | jq -r --arg id "$sid" '.[$id].type // "idle"')
+      printf '%s' "$row" | jq --arg st "$st" '{id, status: $st, directory, title}'
+    done | jq -s '.'
+    ;;
+
+  # ── move: relocate a session to another directory ─────────────────────────
+  move)
+    [ $# -ge 2 ] || die "move requires ID and DIR arguments"
+    SID="$1"; DEST="$2"
+    CODE=$(move_session "$SID" "$DEST")
+    case "$CODE" in
+      2*) printf 'moved %s -> %s\n' "$SID" "$DEST" ;;
+      *)  die "move failed (HTTP ${CODE:-?}) for session $SID" ;;
+    esac
+    ;;
+
+  # ── wt-move: create a worktree and move a session into it ──────────────────
+  # Convenience for the Desktop UI, which lacks first-class worktree support.
+  # Composes worktree-create + move; prints the new worktree directory.
+  wt-move)
+    [ $# -ge 2 ] || die "wt-move requires ID and BRANCH arguments"
+    SID="$1"; BRANCH="$2"
+    WT_BODY=$(jq -n --arg name "$BRANCH" '{"name": $name}')
+    NEWDIR=$(printf '%s' "$WT_BODY" \
+      | xh POST "${API}/experimental/worktree" "directory==${DIR}" 2>/dev/null \
+      | jq -r '.directory') || die "failed to create worktree '$BRANCH'"
+    [ -n "$NEWDIR" ] && [ "$NEWDIR" != "null" ] || die "worktree '$BRANCH' returned no directory"
+    CODE=$(move_session "$SID" "$NEWDIR")
+    case "$CODE" in
+      2*) printf '%s\n' "$NEWDIR" ;;
+      *)  die "worktree created at $NEWDIR but move failed (HTTP ${CODE:-?}) for session $SID" ;;
+    esac
+    ;;
+
+  # ── help: print usage (also handled pre-getopts for -h/--help) ────────────
+  help|-h|--help)
+    print_usage
+    exit 0
     ;;
 
   *)
