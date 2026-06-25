@@ -1,5 +1,4 @@
 import { tool, type Plugin } from "@opencode-ai/plugin"
-import { execFileSync } from "child_process"
 
 /**
  * Worktree-move plugin for OpenCode.
@@ -10,14 +9,39 @@ import { execFileSync } from "child_process"
  * the current session id deterministically via `context.sessionID`, so it acts
  * on "this session" without any template variable.
  *
- * The heavy lifting lives in the already-tested `opencode-cmd wt-move` verb,
- * which creates the worktree, moves the session into it, and prints the new
- * worktree directory. We resolve the session's current directory via the SDK
- * (`client.session.get` → Session.directory) so wt-move runs from the right
- * repo, falling back to process.cwd() if the SDK can't tell us.
+ * Everything runs through the injected SDK `client`, fully async. This is
+ * load-bearing: opencode plugins execute inside the server's single-threaded
+ * event loop, so any *blocking* call (e.g. execFileSync shelling out to
+ * `opencode-cmd`, which POSTs back to this same server) freezes the loop and
+ * deadlocks the server permanently. We must never block, and we must talk to
+ * OUR OWN server — never a hardcoded port — which `client` guarantees.
+ *
+ * The two endpoints we need (`/experimental/worktree`,
+ * `/experimental/control-plane/move-session`) are not in the generated SDK, so
+ * we reach them via the SDK's underlying request client (`_client`). That core
+ * client is already bound to this server instance's resolved base URL, so it
+ * targets the same server that loaded the plugin regardless of port (Desktop
+ * app on 4097, web on 4096, etc.).
  */
+
+/**
+ * Minimal shape of the SDK's underlying core request client. The OpencodeClient
+ * subresources (client.session, client.app, …) all delegate to this same
+ * `_client`; it carries the base URL of the server that created the client.
+ */
+type CoreRequestClient = {
+  post: (options: {
+    url: string
+    body?: unknown
+    query?: Record<string, unknown>
+  }) => Promise<{
+    data?: unknown
+    error?: unknown
+    response?: { ok: boolean; status: number }
+  }>
+}
+
 export const WorktreeMovePlugin: Plugin = async ({ client }) => {
-  const cmd = `${process.env.HOME}/.local/bin/opencode-cmd`
   return {
     tool: {
       move_to_worktree: tool({
@@ -31,21 +55,62 @@ export const WorktreeMovePlugin: Plugin = async ({ client }) => {
         async execute(args, context) {
           const sid = context.sessionID
           try {
-            const res = await client.session.get({ path: { id: sid } })
-            const dir = res.data?.directory ?? process.cwd()
-            const out = execFileSync(
-              cmd,
-              ["-d", dir, "wt-move", sid, args.branch],
-              { encoding: "utf8" },
-            ).trim()
-            return `Moved session into worktree: ${out}`
+            const session = await client.session.get({ path: { id: sid } })
+            const dir = session.data?.directory ?? process.cwd()
+
+            const core = (client as unknown as { _client: CoreRequestClient })
+              ._client
+
+            // 1. Create the git worktree for the branch, scoped to the session's
+            //    repo via the `directory` query param (matches `opencode-cmd
+            //    worktree`). Returns a Worktree whose `.directory` is the path.
+            const created = await core.post({
+              url: "/experimental/worktree",
+              query: { directory: dir },
+              body: { name: args.branch },
+            })
+            if (created.error) {
+              return `Failed to move session into worktree: worktree creation failed: ${describe(
+                created.error,
+              )}`
+            }
+            const newDir = (created.data as { directory?: string } | undefined)
+              ?.directory
+            if (!newDir) {
+              return `Failed to move session into worktree: worktree creation returned no directory`
+            }
+
+            // 2. Move this session into the new worktree directory.
+            const moved = await core.post({
+              url: "/experimental/control-plane/move-session",
+              body: {
+                sessionID: sid,
+                destination: { directory: newDir },
+                moveChanges: true,
+              },
+            })
+            if (moved.error || (moved.response && !moved.response.ok)) {
+              return `Failed to move session into worktree: worktree created at ${newDir} but move failed${
+                moved.response ? ` (HTTP ${moved.response.status})` : ""
+              }${moved.error ? `: ${describe(moved.error)}` : ""}`
+            }
+
+            return `Moved session into worktree: ${newDir}`
           } catch (err) {
-            return `Failed to move session into worktree: ${
-              err instanceof Error ? err.message : String(err)
-            }`
+            return `Failed to move session into worktree: ${describe(err)}`
           }
         },
       }),
     },
+  }
+}
+
+function describe(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (typeof err === "string") return err
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return String(err)
   }
 }
