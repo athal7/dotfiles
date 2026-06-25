@@ -168,10 +168,13 @@ wait_for_idle() {
 
 # POST to the move-session control-plane endpoint. Returns the HTTP status code
 # on stdout (the endpoint replies 204 No Content with an empty body).
+# moveChanges is false: we never move changes (worktrees are created before any
+# changes exist), and moveChanges:true would destructively clean the shared
+# source working tree, clobbering sibling sessions sharing the directory.
 move_session() {
   sid="$1"; dest="$2"
   body=$(jq -n --arg sid "$sid" --arg dir "$dest" \
-    '{sessionID: $sid, destination: {directory: $dir}, moveChanges: true}')
+    '{sessionID: $sid, destination: {directory: $dir}, moveChanges: false}')
   printf '%s' "$body" \
     | xh --print=hb POST "${API}/experimental/control-plane/move-session" 2>/dev/null \
     | awk 'NR==1{print $2}'

@@ -81,12 +81,15 @@ export const WorktreeMovePlugin: Plugin = async ({ client }) => {
             }
 
             // 2. Move this session into the new worktree directory.
+            // moveChanges is false: worktrees are created before any changes
+            // exist, and moveChanges:true would sweep/clean the shared source
+            // working tree, clobbering a sibling session sharing the directory.
             const moved = await core.post({
               url: "/experimental/control-plane/move-session",
               body: {
                 sessionID: sid,
                 destination: { directory: newDir },
-                moveChanges: true,
+                moveChanges: false,
               },
             })
             if (moved.error || (moved.response && !moved.response.ok)) {
