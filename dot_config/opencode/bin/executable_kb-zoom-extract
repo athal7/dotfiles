@@ -1,0 +1,497 @@
+#!/usr/bin/env python3
+"""kb-zoom-extract — carve recent Zoom transcripts from the "My Notes" cache.
+
+WHY THIS EXISTS / HOW IT WORKS (read before editing):
+
+- Zoom stopped writing local ``meeting_saved_closed_caption.txt`` files. The only
+  fresh source of transcripts is Zoom's "My Notes" WebKit IndexedDB SQLite cache
+  under ``~/Library/Application Support/zoom.us/data/UnifyWebView_Cache``.
+
+- TRANSCRIPT LIFECYCLE (why we carve freed pages, not query live rows): while a
+  meeting's "My Notes" panel is open, Zoom writes each utterance as a LIVE SQL
+  row in the ``notes:transcript:v1`` object store of the ``Records`` table. Once
+  Zoom syncs the notes to the cloud it DELETES those rows. The deleted rows then
+  survive in SQLite freelist (freed) pages for ~2-3 days before the pages are
+  recycled and overwritten. We therefore CARVE the raw file bytes by pattern: a
+  live SQL query catches only meetings whose panel is still open, but byte-
+  carving the freelist also recovers the recently-deleted ones. Run on a frequent
+  cadence (every 15 min) the freed pages always outlive the interval, so nothing
+  is missed. (Meeting metadata lives in the ``file:node:v1`` store, not
+  ``notes:meetings:v1``, which is empty.)
+
+- THE WAL HOLDS THE FRESHEST DATA: the primary ``IndexedDB.sqlite3`` has a
+  ``IndexedDB.sqlite3-wal`` sidecar that buffers recent writes before checkpoint.
+  Freshly clicked / live transcript rows land in the WAL first and may dwarf the
+  checkpointed main DB. We therefore read BOTH the main DB and (if present and
+  non-empty) the ``-wal`` sidecar, copying main-then-wal for a consistent
+  snapshot, and carve EACH buffer SEPARATELY (never concatenated — a clone record
+  could straddle the join). Carving is pure byte-pattern matching, so the WAL's
+  frame headers are irrelevant: the clone-serialized records in page payloads are
+  recovered directly from the raw WAL bytes.
+
+- BACKFILL / PAGE RECYCLING (``--watch``): clicking a meeting in My Notes pulls
+  its transcript from the cloud into the cache, but opening the NEXT meeting
+  reuses the freed pages that held the previous one's just-deleted rows. A single
+  carve after a click-through catches only the last 2-3 meetings. ``--watch``
+  defeats this by polling on an interval and accumulating a UNION of everything
+  ever seen across polls into persistent ``meetings``/``utts`` accumulators, so a
+  meeting captured in poll N survives even after its pages are recycled in poll
+  N+1. In watch mode (and ONLY there) caption files we own may be REWRITTEN when
+  the accumulated transcript grows; the scheduled single-shot run never rewrites.
+
+- The stored values are WebKit CloneSerialization, NOT V8. Field names are plain
+  ASCII and string values are Latin1, so stdlib byte-scanning decodes them — no
+  V8 deserializer and no third-party deps (sqlite3 is unused because carving the
+  freelist reaches deleted rows that SQL cannot). Each utterance object carries:
+  ``messageId``, ``message``, ``timeStampContent`` (HH:MM:SS wall clock),
+  ``startTimeMsec`` (epoch-ms), ``username``, plus fields we ignore. Meeting
+  metadata records carry an ``i`` (id) and ``n`` (title); the title embeds
+  ``<Title> YYYY-MM-DD HH:MM(GMT...)``.
+
+- Utterances carry no note-id, so they are associated to a meeting by TIME: each
+  utterance's ``startTimeMsec`` is bucketed to the nearest preceding meeting
+  start. The host timezone is assumed to match the meeting's (verified: the
+  embedded GMT offset matched the machine local time).
+
+- Freed pages hold MANY stale copies of the same utterance; dedup by
+  ``messageId`` collapses them, and we sort by ``startTimeMsec`` for strict
+  chronological order (``timeStampContent`` lacks a date, so it would mis-sort a
+  meeting crossing midnight).
+
+IDEMPOTENCY: a sibling ``.kb-zoom-extract`` sentinel is written next to every
+caption file this tool creates. A Zoom-authored caption (no sentinel) is NEVER
+overwritten, in any mode. ``absent -> write + sentinel``; ``present-foreign ->
+skip``. In single-shot mode ``present-ours -> skip`` too: a later one-off run may
+carve FEWER utterances (freed pages get reused), so rewriting could lose data.
+In ``--watch`` mode the data source is a growing UNION, never shrinking, so a
+caption WE own may be rewritten — but only when the accumulated transcript is
+strictly larger than what we last wrote. The sentinel records provenance so a
+human can tell synthetic captions from real Zoom ones.
+
+Usage:
+  kb-zoom-extract [--since YYYY-MM-DD | --days N] [--zoom-dir DIR]
+                  [--cache-glob GLOB] [--dry-run] [--watch [INTERVAL]]
+
+  Single-shot (default, and what the scheduled LaunchAgent runs): carve once,
+  write any new in-window caption files, never overwrite. Now WAL-aware, so it
+  surfaces more than before.
+
+  Backfill (operator-driven, manual): to pull a batch of older meetings out of
+  the cloud into local captions, run:
+
+      kb-zoom-extract --watch --since YYYY-MM-DD
+
+  then open Zoom's "My Notes" panel and click each meeting ONE AT A TIME. After
+  each click, wait for the ``captured: <dir> (<n> utterances)`` line to print
+  before moving to the next meeting (that line confirms the just-clicked
+  transcript landed in the accumulated union). The union grows across polls, so
+  a meeting stays captured even after its cache pages are recycled by the next
+  click. Press Ctrl-C when done; a final summary of everything captured prints.
+  ``--watch`` polls every 15s by default; ``--watch 20`` polls every 20s.
+
+Exit codes: 0 on success AND on benign no-ops (Zoom closed / cache missing /
+nothing in window) and on Ctrl-C out of ``--watch``. Non-zero only on a hard
+failure (a located DB unreadable in single-shot mode).
+"""
+
+import argparse
+import datetime
+import glob
+import os
+import re
+import shutil
+import struct
+import sys
+import tempfile
+import time
+
+# WebKit clone tags we care about.
+_STR_TAG = 0x10  # Latin1/UTF-16 string value
+_DBL_TAG = 0x0A  # IEEE-754 double value (\n)
+
+# Meeting record anchor: object-start + key "i" + string tag.
+_MEETING_ANCHOR = b"\x0f\x00\x00\x00\x02\x01\x00\x00\x80i\x10"
+
+_TITLE_RE = re.compile(
+    r"^(?P<name>.*?)\s+(?P<d>\d{4}-\d{2}-\d{2})\s+(?P<h>\d{2}):(?P<m>\d{2})\(GMT"
+)
+
+
+def _key_marker(name):
+    """The on-disk bytes that introduce object key ``name`` (length|Latin1 flag)."""
+    return struct.pack("<I", len(name) | 0x80000000) + name.encode("latin1")
+
+
+def decode_clone_string(buf, pos):
+    """Decode a WebKit clone string value at ``pos``.
+
+    Returns ``(text, new_pos)`` or ``(None, pos)`` if there is no string tag.
+    The length word's high bit (0x80000000) marks a Latin1 (8-bit) string;
+    otherwise it is UTF-16LE.
+    """
+    if pos < 0 or pos + 5 > len(buf) or buf[pos] != _STR_TAG:
+        return None, pos
+    word = struct.unpack_from("<I", buf, pos + 1)[0]
+    pos += 5
+    length = word & 0x7FFFFFFF
+    if word & 0x80000000:
+        end = pos + length
+        return buf[pos:end].decode("latin1", "replace"), end
+    end = pos + length * 2
+    return buf[pos:end].decode("utf-16-le", "replace"), end
+
+
+def _find_string_field(record, key):
+    """Find key ``key`` inside ``record`` and decode its string value, or None."""
+    anchor = _key_marker(key) + bytes([_STR_TAG])
+    i = record.find(anchor)
+    if i < 0:
+        return None
+    # decode_clone_string expects to start at the string tag itself.
+    s, _ = decode_clone_string(record, i + len(anchor) - 1)
+    return s
+
+
+def _find_double_field(record, key):
+    anchor = _key_marker(key) + bytes([_DBL_TAG])
+    i = record.find(anchor)
+    if i < 0 or i + len(anchor) + 8 > len(record):
+        return None
+    return struct.unpack_from("<d", record, i + len(anchor))[0]
+
+
+def parse_title(title):
+    """Split a meeting title into ``(clean_title, start_datetime)`` or None.
+
+    Meeting titles are stored as ``"<Title> YYYY-MM-DD HH:MM(GMT...)"``. Records
+    without that suffix (e.g. "My notes", a person's name) are not meetings.
+    """
+    m = _TITLE_RE.match(title)
+    if not m:
+        return None
+    name = m.group("name").strip()
+    if not name:
+        return None
+    dt = datetime.datetime.strptime(
+        f"{m.group('d')} {m.group('h')}:{m.group('m')}", "%Y-%m-%d %H:%M"
+    )
+    return name, dt
+
+
+def carve_meetings(data):
+    """Carve meeting metadata from raw bytes -> ``{meeting_id: title}`` (deduped)."""
+    out = {}
+    for m in re.finditer(re.escape(_MEETING_ANCHOR), data):
+        pos = m.end() - 1  # back up to the string tag of the "i" value
+        mid, pos = decode_clone_string(data, pos)
+        if not mid:
+            continue
+        # The next key should be "n" (title).
+        nkey = _key_marker("n")
+        if data[pos : pos + len(nkey)] != nkey:
+            continue
+        title, _ = decode_clone_string(data, pos + len(nkey))
+        if title:
+            out[mid] = title
+    return out
+
+
+def carve_utterances(data):
+    """Carve transcript utterances -> ``{messageId: {...}}`` (deduped by id).
+
+    Records are sliced between consecutive ``messageId`` anchors; ``messageId``
+    is the first field of each utterance object, so each slice holds exactly one
+    record's fields. The last record is bounded by an 8 KiB cap.
+    """
+    anchor = _key_marker("messageId") + bytes([_STR_TAG])
+    starts = [m.start() for m in re.finditer(re.escape(anchor), data)]
+    out = {}
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else min(start + 8192, len(data))
+        record = data[start:end]
+        mid, _ = decode_clone_string(record, len(anchor) - 1)
+        if not mid:
+            continue
+        ts = _find_string_field(record, "timeStampContent")
+        if not ts:
+            continue
+        out[mid] = {
+            "ts": ts,
+            "message": _find_string_field(record, "message") or "",
+            "username": _find_string_field(record, "username") or "Unknown",
+            "start_ms": _find_double_field(record, "startTimeMsec"),
+        }
+    return out
+
+
+def bucket_utterances(utts, meetings, slack_seconds=300):
+    """Group utterances under the nearest preceding meeting start.
+
+    ``meetings`` is a list of ``(start_datetime, clean_title, meeting_id)``.
+    An utterance joins the latest meeting whose start (minus ``slack_seconds``,
+    to tolerate captions that begin a touch before the scheduled time) is at or
+    before the utterance's ``startTimeMsec``. Utterances with no usable timestamp
+    or no preceding meeting are dropped.
+    """
+    ordered = sorted(meetings, key=lambda t: t[0])
+    buckets = {}
+    for u in utts.values():
+        if not u.get("start_ms"):
+            continue
+        when = u["start_ms"] / 1000.0
+        chosen = None
+        for meeting in ordered:
+            if meeting[0].timestamp() - slack_seconds <= when:
+                chosen = meeting
+            else:
+                break
+        if chosen is not None:
+            buckets.setdefault(chosen, []).append(u)
+    return buckets
+
+
+def render_caption(utterances):
+    """Render utterances into the kb-distill chunker caption format, sorted
+    chronologically by ``startTimeMsec``."""
+    lines = []
+    for u in sorted(utterances, key=lambda x: (x.get("start_ms") or 0, x["ts"])):
+        msg = (u.get("message") or "").strip()
+        lines.append(f"[{u['username']} {u['ts']}]\n{msg}\n")
+    return "\n".join(lines)
+
+
+def dir_name(dt, title):
+    """Build the ``YYYY-MM-DD HH.MM.SS <Title>`` dir name Zoom would use.
+
+    Start time is known only to the minute, so seconds are ``00``. Zoom replaces
+    ``/`` with ``_`` in titles (e.g. "Andrew / Joe" -> "Andrew _ Joe")."""
+    safe = title.replace("/", "_")
+    return f"{dt.strftime('%Y-%m-%d %H.%M')}.00 {safe}"
+
+
+_SENTINEL = ".kb-zoom-extract"
+
+
+def emit(meetings, utts, zoom_dir, cutoff, dry_run=False, allow_grow=False, written_counts=None):
+    """Write caption files for in-window meetings. Returns ``(written, skipped)``.
+
+    ``written``/``skipped`` are lists of ``(dir_name, count_or_reason)`` tuples
+    (skipped carries why: "exists-ours" or "exists-foreign").
+    ``cutoff`` is a ``date``; meetings whose start date is before it are ignored.
+
+    ``allow_grow`` (watch mode only) permits REWRITING a caption file we own when
+    the freshly accumulated bucket is strictly larger than what we last wrote;
+    ``written_counts`` is the mutable ``{dir_name: count}`` state that tracks it.
+    With ``allow_grow=False`` (single-shot) an existing caption — ours or
+    foreign — is always skipped, preserving the never-overwrite contract.
+    """
+    parsed = []
+    for mid, title in meetings.items():
+        pt = parse_title(title)
+        if pt is None:
+            continue
+        name, dt = pt
+        parsed.append((dt, name, mid))
+
+    buckets = bucket_utterances(utts, parsed)
+    written, skipped = [], []
+    for (dt, name, _mid), lst in buckets.items():
+        if dt.date() < cutoff:
+            continue
+        dname = dir_name(dt, name)
+        ddir = os.path.join(zoom_dir, dname)
+        cap = os.path.join(ddir, "meeting_saved_closed_caption.txt")
+        n = len(lst)
+        if os.path.exists(cap):
+            ours = os.path.exists(os.path.join(ddir, _SENTINEL))
+            if not ours:
+                # A real Zoom caption — never clobber it, in any mode.
+                skipped.append((dname, "exists-foreign"))
+                continue
+            if not allow_grow:
+                skipped.append((dname, "exists-ours"))
+                continue
+            # Watch mode: rewrite only if the accumulated union has grown.
+            # First poll baseline is 0 (not the existing file's line count) so an
+            # existing-ours caption is always refreshed from the fresh union.
+            prev = written_counts.get(dname, 0)
+            if n <= prev:
+                skipped.append((dname, "exists-ours"))
+                continue
+            if not dry_run:
+                with open(cap, "w", encoding="utf-8") as fh:
+                    fh.write(render_caption(lst))
+            written_counts[dname] = n
+            written.append((dname, n))
+            continue
+        # No caption yet — write fresh.
+        if dry_run:
+            written.append((dname, n))
+            if written_counts is not None:
+                written_counts[dname] = n
+            continue
+        os.makedirs(ddir, exist_ok=True)
+        with open(cap, "w", encoding="utf-8") as fh:
+            fh.write(render_caption(lst))
+        with open(os.path.join(ddir, _SENTINEL), "w", encoding="utf-8") as fh:
+            fh.write("synthetic caption carved from Zoom My Notes IndexedDB cache\n")
+        if written_counts is not None:
+            written_counts[dname] = n
+        written.append((dname, n))
+    return written, skipped
+
+
+# ---- cache location + driver ---------------------------------------------
+_CACHE_GLOB = (
+    "{home}/Library/Application Support/zoom.us/data/UnifyWebView_Cache/WebKit/"
+    "UnSigned/Default/MyNotes/Origins/**/IndexedDB.sqlite3"
+)
+
+
+def _read_db_buffers(path):
+    """Copy the (possibly Zoom-locked) DB and its WAL sidecar; return raw buffers.
+
+    Returns a list of byte buffers: the main ``IndexedDB.sqlite3`` always, plus
+    its ``IndexedDB.sqlite3-wal`` sidecar when present and non-empty. They are
+    copied main-then-wal for a consistent snapshot and returned SEPARATELY (not
+    concatenated) so a clone record cannot be lost straddling the join — each
+    buffer is carved on its own by the caller.
+    """
+    fd, tmp = tempfile.mkstemp(prefix="kb-zoom-", suffix=".sqlite3")
+    os.close(fd)
+    fd_wal, tmp_wal = tempfile.mkstemp(prefix="kb-zoom-", suffix=".sqlite3-wal")
+    os.close(fd_wal)
+    wal_path = path + "-wal"
+    try:
+        shutil.copy2(path, tmp)  # main DB first
+        have_wal = os.path.exists(wal_path) and os.path.getsize(wal_path) > 0
+        if have_wal:
+            shutil.copy2(wal_path, tmp_wal)
+        buffers = []
+        with open(tmp, "rb") as fh:
+            buffers.append(fh.read())
+        if have_wal:
+            with open(tmp_wal, "rb") as fh:
+                buffers.append(fh.read())
+        return buffers
+    finally:
+        for t in (tmp, tmp_wal):
+            try:
+                os.remove(t)
+            except OSError:
+                pass
+
+
+def _scan_into(dbs, meetings, utts):
+    """Carve every located DB + WAL into the ``meetings``/``utts`` accumulators.
+
+    Each buffer (main and WAL) is carved separately and merged; dedup keeps the
+    first-seen record per id (``setdefault``). Raises ``OSError`` if a DB cannot
+    be copied/read — the caller decides whether that is fatal.
+    """
+    for db in dbs:
+        for data in _read_db_buffers(db):
+            meetings.update(carve_meetings(data))
+            for mid, u in carve_utterances(data).items():
+                utts.setdefault(mid, u)
+
+
+def _resolve_cutoff(args):
+    if args.since:
+        return datetime.datetime.strptime(args.since, "%Y-%m-%d").date()
+    return datetime.date.today() - datetime.timedelta(days=args.days)
+
+
+def _watch(dbs, args, cutoff, interval):
+    """Backfill loop: poll the cache, accumulate a growing union, emit on growth.
+
+    Persistent accumulators (``meetings``/``utts``/``written_counts``) are NEVER
+    reset across iterations — that union is what defeats page recycling. Prints a
+    ``captured:`` line only when a meeting is newly written or grown, so the
+    operator can pace their click-through. Ctrl-C prints a final summary.
+    """
+    meetings, utts = {}, {}
+    written_counts = {}
+    print(f"kb-zoom-extract: watching {len(dbs)} cache DB(s) every {interval}s; "
+          f"window since {cutoff.isoformat()}. Click each My Notes meeting, wait "
+          f"for its 'captured:' line, then Ctrl-C when done.", file=sys.stderr)
+    try:
+        while True:
+            try:
+                _scan_into(dbs, meetings, utts)
+            except OSError as exc:
+                print(f"kb-zoom-extract: cache read failed this poll: {exc}", file=sys.stderr)
+            written, _skipped = emit(
+                meetings, utts, args.zoom_dir, cutoff,
+                dry_run=args.dry_run, allow_grow=True, written_counts=written_counts,
+            )
+            verb = "would capture" if args.dry_run else "captured"
+            for dname, n in written:
+                print(f"{verb}: {dname} ({n} utterances)")
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        total_utts = sum(written_counts.values())
+        print(file=sys.stderr)
+        print(f"kb-zoom-extract: done. {len(written_counts)} meeting(s) / "
+              f"{total_utts} utterance(s) captured; {len(utts)} utterances seen "
+              f"in cache union.", file=sys.stderr)
+        for dname in sorted(written_counts):
+            print(f"  {dname} ({written_counts[dname]} utterances)", file=sys.stderr)
+        if not written_counts:
+            print("  (nothing captured)", file=sys.stderr)
+        return 0
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="Carve recent Zoom transcripts from My Notes cache.")
+    grp = ap.add_mutually_exclusive_group()
+    grp.add_argument("--since", help="only meetings on/after this YYYY-MM-DD")
+    grp.add_argument("--days", type=int, default=7, help="lookback window in days (default 7)")
+    ap.add_argument("--zoom-dir", default=os.path.expanduser("~/Documents/Zoom"))
+    ap.add_argument("--cache-glob", default=_CACHE_GLOB.format(home=os.path.expanduser("~")))
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument(
+        "--watch", nargs="?", const=15, type=int, metavar="INTERVAL",
+        help="backfill mode: poll the cache every INTERVAL seconds (default 15) "
+             "accumulating a growing union, rewriting our caption files as they "
+             "grow; Ctrl-C to stop. Without this flag, runs once (never rewrites).",
+    )
+    args = ap.parse_args(argv)
+
+    cutoff = _resolve_cutoff(args)
+    dbs = glob.glob(args.cache_glob, recursive=True)
+    if not dbs:
+        print("kb-zoom-extract: no My Notes cache found (Zoom never ran here?) — nothing to do", file=sys.stderr)
+        return 0
+
+    if args.watch is not None:
+        return _watch(dbs, args, cutoff, args.watch)
+
+    meetings, utts = {}, {}
+    try:
+        _scan_into(dbs, meetings, utts)
+    except OSError as exc:
+        print(f"kb-zoom-extract: cannot read cache DB: {exc}", file=sys.stderr)
+        return 1
+
+    if not utts:
+        print(f"kb-zoom-extract: scanned {len(dbs)} cache DB(s), found no carvable "
+              f"transcripts (cache may have been recycled) — nothing to do", file=sys.stderr)
+        return 0
+
+    written, skipped = emit(meetings, utts, args.zoom_dir, cutoff, dry_run=args.dry_run)
+
+    verb = "would write" if args.dry_run else "wrote"
+    print(f"kb-zoom-extract: {len(meetings)} meetings / {len(utts)} utterances in cache; "
+          f"window since {cutoff.isoformat()}")
+    for dname, n in written:
+        print(f"  {verb}: {dname} ({n} utterances)")
+    for dname, why in skipped:
+        print(f"  skip ({why}): {dname}")
+    if not written and not skipped:
+        print("  (no meetings in window had carvable transcripts)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
