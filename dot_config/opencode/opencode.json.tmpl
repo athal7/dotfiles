@@ -6,13 +6,14 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - Bash permissions: default-allow with curated ask/deny guardrails. Guardrails (system-destructive commands) and named allow-lists live in `.chezmoidata/bash-permissions.yaml`, rendered per-agent via the `opencode-bash` template partial; package-specific gates still live per-tool in packages.yaml. The `lead` agent defaults to `deny` (forcing delegation) with a read-only diagnostics allow-list; other subagents inherit the permissive global block
   - MCP server connections
   - Plugin wiring (skill injection, custom commands)
-  - Agent-specific permission and skill overrides (lead, plan, qa, build, explore, scout, general, title)
+  - Agent-specific permission and skill overrides (lead, plan, qa, build, explore, scout, general)
 
 Local model setup: LM Studio serves the non-thinking MLX Mixture-of-Experts
 model Qwen3-30B-A3B-Instruct-2507 (4-bit MLX) for agentic coding and the kb
 meeting pipeline. It is also wired as opencode's `small_model`, so it powers
-session-title generation (via the custom title.md prompt) and project-copy
-naming. It never emits <think> blocks, so no thinking-suppression is
+session-title generation, the `/rename` command (commands/rename.md +
+plugins/session-rename.ts), and project-copy naming. It never emits <think>
+blocks, so no thinking-suppression is
 needed. Install the cask via chezmoi, run `npx lmstudio install-cli`, enable
 "Run server on login", and download via the full HF URL (the LM Studio catalog
 slug does not resolve): `lms get https://huggingface.co/mlx-community/Qwen3-30B-A3B-Instruct-2507-4bit -y`.
@@ -157,10 +158,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     },
     "general": {
       "model": "anthropic/claude-sonnet-4-6"
-    },
-    "title": {
-      "prompt": "{file:./prompts/title.md}",
-      "temperature": 0.5
     }
   },
   "model": "anthropic/claude-opus-4-8",
