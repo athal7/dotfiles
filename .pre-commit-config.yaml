@@ -47,6 +47,11 @@ repos:
         entry: scripts/validate-skills.sh
         language: script
         files: dot_agents/skills/.*/SKILL\.md$
+      - id: validate-opencode-plugins
+        name: no blocking calls in opencode plugins
+        entry: scripts/validate-opencode-plugins.sh
+        language: script
+        files: ^dot_config/opencode/plugins/.*\.ts$
 
   # Talisman (secrets scanning) - already configured, keep it
   - repo: https://github.com/thoughtworks/talisman

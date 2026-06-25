@@ -1,5 +1,8 @@
 import type { Plugin } from "@opencode-ai/plugin"
-import { execFileSync } from "child_process"
+import { execFile } from "child_process"
+import { promisify } from "util"
+
+const execFileAsync = promisify(execFile)
 
 /**
  * Direnv plugin for OpenCode.
@@ -31,14 +34,14 @@ export const DirenvPlugin: Plugin = async ({ client }) => {
         // Silence direnv's own status messages on stderr.
         env.DIRENV_LOG_FORMAT = ""
 
-        const stdout = execFileSync("direnv", ["export", "json"], {
+        // Async execFile captures stdout AND stderr into its result (it does
+        // not inherit them to the parent), so direnv messages never leak onto
+        // the parent process's stderr (visible in the TUI).
+        const { stdout } = await execFileAsync("direnv", ["export", "json"], {
           cwd: input.cwd,
           encoding: "utf8",
           timeout: 5000,
           env,
-          // Capture stderr instead of inheriting it, so direnv messages never
-          // leak onto the parent process's stderr (visible in the TUI).
-          stdio: ["ignore", "pipe", "pipe"],
         })
 
         if (!stdout || !stdout.trim()) return
