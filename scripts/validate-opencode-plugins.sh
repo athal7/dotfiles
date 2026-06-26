@@ -10,7 +10,7 @@
 # `client`.
 #
 # Comment lines are stripped before scanning so files may *document* the
-# forbidden patterns (e.g. worktree-move.ts explains what to avoid) without
+# forbidden patterns (e.g. a plugin may explain what to avoid) without
 # tripping this guard. Pre-commit passes the matched files as arguments.
 
 set -euo pipefail

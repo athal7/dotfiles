@@ -6,7 +6,7 @@ agent: lead
 Workflow: implement.
 
 **Use TodoWrite to track this workflow. Create these items before starting:**
-- Workspace setup — branch/worktree if needed per repo conventions; set up `openspec/` (real dir + narrow store symlinks)
+- Workspace setup — branch if needed per repo conventions; set up `openspec/` (real dir + narrow store symlinks)
 - Plan — dispatch the `explore`/`scout` subagents (`task` tool, `subagent_type: explore` / `subagent_type: scout`) to gather, dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), create proposal, present for approval
 - Build — implement tasks via openspec-apply-change, present changeset for approval
 - Review — run QA (dispatch the `qa` subagent via `task` tool, `subagent_type: qa`) if UI is touched; route findings, present for approval
@@ -14,9 +14,9 @@ Workflow: implement.
 
 ## Workspace setup
 
-Check the repo's AGENTS.md for branch conventions. If the repo uses feature branches / pull requests and the session is on `main` (not already in a worktree or on a feature branch): call the `move_to_worktree` tool with a short, descriptive, kebab-case branch name derived from the work (or the issue/ticket id, if given) — don't ask, just do it. The implementation must happen in an isolated worktree, never on main. If the repo commits directly to main and doesn't use pull requests (e.g., dotfiles), skip the worktree step and work in place. If the session is already in a worktree or on a feature branch, don't create another — proceed in place.
+Check the repo's AGENTS.md for branch conventions. Worktree isolation is handled by opencode desktop, which creates the worktree when the session starts — this workflow never creates one itself. If the repo uses feature branches / pull requests: when the session is already in a worktree or on a feature branch, proceed in place. Only if the session is still on `main` with no feature branch, create one off `origin/main` with a short, descriptive, kebab-case name derived from the work (or the issue/ticket id, if given) — don't ask, just do it. The implementation must never happen directly on main. If the repo commits directly to main and doesn't use pull requests (e.g., dotfiles), work in place.
 
-**Spec-store link — run this BEFORE the Plan phase reads `openspec/specs/`.** `/implement` often runs in ephemeral worktrees, but the accumulated `specs/` and archived `changes/` are durable per-repo memory that must survive teardown and be shared across all worktrees of the repo. The layout is a REAL `openspec/` directory in the worktree with only two NARROW symlinks into a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/`: `openspec/specs` → `$store/specs` and `openspec/changes/archive` → `$store/changes/archive`. In-flight change docs at `openspec/changes/<name>/` are REAL worktree files (so they surface in the opencode review UI for inline comments); only the specs and archive leaves point outside the worktree. Run from the worktree root:
+**Spec-store link — run this BEFORE the Plan phase reads `openspec/specs/`.** `/implement` often runs in a desktop-created worktree, but the accumulated `specs/` and archived `changes/` are durable per-repo memory that must survive worktree teardown and be shared across all worktrees of the repo. The layout is a REAL `openspec/` directory in the worktree with only two NARROW symlinks into a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/`: `openspec/specs` → `$store/specs` and `openspec/changes/archive` → `$store/changes/archive`. In-flight change docs at `openspec/changes/<name>/` are REAL worktree files (so they surface in the opencode review UI for inline comments); only the specs and archive leaves point outside the worktree. Run from the worktree root:
 
 ```bash
 # Derive a STABLE repo slug from the git common dir — NEVER the worktree basename
