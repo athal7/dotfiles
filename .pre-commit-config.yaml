@@ -4,6 +4,7 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-json
+        exclude: (^|/)modify_[^/]*\.json$
       - id: check-toml
       - id: check-yaml
       - id: end-of-file-fixer

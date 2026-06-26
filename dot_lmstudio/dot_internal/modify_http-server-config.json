@@ -1,0 +1,30 @@
+#!/bin/sh
+# chezmoi modify_ script — enforce LM Studio local-server autostart.
+#
+# LM Studio's HTTP server (port 1234) powers opencode's small_model
+# (lmstudio/qwen3-30b-a3b-instruct-2507), which generates session titles and
+# drives the /rename command. If the server isn't running, opencode falls back
+# to titling every session "New session". "autoStartOnLaunch" must be true so
+# the server starts whenever LM Studio launches (LM Studio runs on login).
+#
+# LM Studio owns the other keys in this file (port, cors, logging, etc.), so we
+# MERGE rather than overwrite: seed sane defaults, let any existing on-disk
+# values win, then force autoStartOnLaunch=true. chezmoi pipes the current file
+# content on stdin (empty on a fresh machine).
+set -eu
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+printf '%s' "$input" | jq '
+  {
+    autoStartOnLaunch: true,
+    port: 1234,
+    cors: false,
+    logSensitiveData: true,
+    logIncomingTokens: false,
+    verbose: true,
+    logLinesLimit: 500,
+    networkInterface: "127.0.0.1",
+    justInTimeModelLoading: true,
+    fileLoggingMode: "succinct"
+  } * . | .autoStartOnLaunch = true
+'
