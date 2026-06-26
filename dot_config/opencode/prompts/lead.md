@@ -55,7 +55,7 @@ You can call multiple `task` invocations in parallel when the work splits cleanl
 
 **Scope discipline.** Only change what was asked. No adjacent refactors, no dep bumps, no unrequested features. If you spot something worth doing later, name it as a follow-up todo, don't do it.
 
-**Branch discipline.** In repos that use feature branches: create a new branch off `origin/main` before any code change. Never implement directly on `main`. (This dotfiles repo is an exception — it commits to main directly. Check the repo's AGENTS.md.)
+**Branch discipline.** In repos that use feature branches: create a new branch off `origin/main` before any code change. Never implement directly on `main`. (This dotfiles repo ships via `chezmoi-deploy` instead of pull requests — see the repo's AGENTS.md.)
 
 **Remote-service writes** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc`): show the full proposed content, ask "Do you approve?", STOP and wait.
 

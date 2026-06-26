@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# chezmoi-deploy <branch>
+# Agent-invoked deploy: fast-forward-merge a feature branch into the primary
+# dotfiles checkout's main, apply to ~, and push main to origin as a mirror.
+# Serialized with a lockf lock so concurrent deploys can't collide.
+set -u
+
+PRIMARY="$(chezmoi source-path)"
+LOCKFILE="${TMPDIR:-/tmp}/chezmoi-deploy.lock"
+
+usage() { echo "usage: chezmoi-deploy <branch>" >&2; exit 2; }
+
+main() {
+  local branch="${1:-}"
+  [ -n "$branch" ] || usage
+
+  git -C "$PRIMARY" rev-parse --verify --quiet "refs/heads/$branch" >/dev/null \
+    || { echo "chezmoi-deploy: no such local branch: $branch" >&2; exit 1; }
+
+  local cur
+  cur="$(git -C "$PRIMARY" symbolic-ref --short HEAD 2>/dev/null || true)"
+  [ "$cur" = "main" ] || { echo "chezmoi-deploy: primary checkout is on '$cur', expected 'main'" >&2; exit 1; }
+
+  if ! git -C "$PRIMARY" diff --quiet || ! git -C "$PRIMARY" diff --cached --quiet; then
+    echo "chezmoi-deploy: primary checkout has uncommitted changes; aborting" >&2
+    exit 1
+  fi
+
+  echo "chezmoi-deploy: fast-forward merging '$branch' into main…"
+  git -C "$PRIMARY" merge --ff-only "$branch" \
+    || { echo "chezmoi-deploy: '$branch' is not a fast-forward of main; rebase it onto main and retry" >&2; exit 1; }
+
+  echo "chezmoi-deploy: applying to ~ (chezmoi apply --force)…"
+  chezmoi apply --force \
+    || { echo "chezmoi-deploy: chezmoi apply failed; primary main has the merge but ~ may be partially applied" >&2; exit 1; }
+
+  echo "chezmoi-deploy: pushing main to origin…"
+  git -C "$PRIMARY" push origin main \
+    || { echo "chezmoi-deploy: push failed (deploy succeeded locally); push main manually" >&2; exit 1; }
+
+  echo "chezmoi-deploy: done."
+}
+
+# Acquire the deploy lock, then re-exec once under it.
+if [ "${_CHEZMOI_DEPLOY_LOCKED:-}" != "1" ]; then
+  export _CHEZMOI_DEPLOY_LOCKED=1
+  exec /usr/bin/lockf -k -t 30 "$LOCKFILE" "$0" "$@"
+fi
+
+main "$@"

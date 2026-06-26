@@ -16,6 +16,7 @@ packages:
     - name: chezmoi
       permissions:
         "chezmoi apply*": ask
+        "chezmoi-deploy*": ask
         "chezmoi destroy*": ask
         "chezmoi init*": ask
         "chezmoi purge*": ask

@@ -7,6 +7,14 @@ compatibility: opencode
 
 `chezmoi apply` deploys source files to `~` and runs `run_onchange` scripts (brew bundle, skill sync, etc.).
 
+## Deploy workflow
+
+Changes land via `chezmoi-deploy`, not pull requests. The source dir is pinned to the primary checkout, so a bare `chezmoi apply` always reads `main` — work is verified render-only until deployed.
+
+- **Verify render-only — never a bare `chezmoi apply` from a worktree.** Pass `-S "$(pwd)"` with no-mutation verbs: `chezmoi diff -S "$(pwd)"`, `chezmoi apply -n -v -S "$(pwd)"` (dry-run; also shows which scripts would fire), `chezmoi cat -S "$(pwd)" <target>`.
+- **Deploy with `chezmoi-deploy <branch>`.** It locks, fast-forward-merges the branch into the primary checkout's `main`, runs `chezmoi apply --force`, and pushes `main` to origin. Safe from a hosted agent session: the LaunchAgent generator defers the `opencode-web` restart until after apply completes, and the deploy process outlives that restart. Gated by an `ask` permission.
+- **Escape hatch** — to exercise one deployed file's runtime behavior without a full deploy: `chezmoi apply -S "$(pwd)" --exclude=scripts --persistent-state "${TMPDIR:-/tmp}/branch-state.boltdb" <target>` — mutates only that path, runs no scripts, leaves global state untouched.
+
 LaunchAgents are **not** reloaded automatically. After changing a plist template, apply first, then reload manually:
 
 ```sh

@@ -2,9 +2,7 @@
 
 This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` to deploy.
 
-**This repo does not use feature branches.** Commit directly to `main` and push. Skip the branch-creation step from the global workflow.
-
-**Test changes before committing: run `chezmoi apply` first.** Applying is how you verify changes work in this repo — deployed files under `~/.agents/`, `~/.config/`, etc. won't update until applied. Apply, confirm the change is correct, then commit.
+**No pull requests — deploy is the ship step.** Land changes with `chezmoi-deploy <branch>`: it fast-forward-merges the branch into the primary checkout's `main`, runs `chezmoi apply`, and pushes `main` to origin as a mirror. Only `chezmoi apply` mutates your live `~`. Load the chezmoi skill for verify-render-only and deploy mechanics.
 
 **`chezmoi apply` auto-deploys and reloads changed LaunchAgents.** The `run_onchange_after_aa-launch-agents.sh` generator renders every plist from `.chezmoidata/launchd.yaml` (yq → plutil), then reloads only agents whose plist content actually changed and prunes agents deleted from the YAML — so unchanged agents (notably the session-hosting opencode-web) are never restarted. The individual plists are NOT chezmoi-managed; the generator owns them. To force-run a scheduled job for testing, you can still kickstart it manually: `launchctl kickstart -k gui/$(id -u)/<label>`.
 
