@@ -15,7 +15,7 @@ Changes land via `chezmoi-deploy`, not pull requests. The source dir is pinned t
 - **Deploy with `chezmoi-deploy <branch>`.** It locks, fast-forward-merges the branch into the primary checkout's `main`, runs `chezmoi apply --force`, and pushes `main` to origin. Safe from a hosted agent session: the LaunchAgent generator defers the `opencode-web` restart until after apply completes, and the deploy process outlives that restart. Gated by an `ask` permission.
 - **Escape hatch** — to exercise one deployed file's runtime behavior without a full deploy: `chezmoi apply -S "$(pwd)" --exclude=scripts --persistent-state "${TMPDIR:-/tmp}/branch-state.boltdb" <target>` — mutates only that path, runs no scripts, leaves global state untouched.
 
-LaunchAgents are **not** reloaded automatically. After changing a plist template, apply first, then reload manually:
+`chezmoi apply` reloads changed LaunchAgents automatically — the `run_onchange_after_aa-launch-agents.sh` generator renders plists from `.chezmoidata/launchd.yaml` and reloads only what changed. To force-reload an agent manually during testing:
 
 ```sh
 # Restart a running agent (picks up plist changes):
