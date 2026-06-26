@@ -1,0 +1,448 @@
+#!/usr/bin/env bash
+# opencode-cleanup — deterministic weekly maintenance for the opencode workspace.
+# Replaces the former LLM-driven /cleanup command with tested shell. Every area
+# is WAL-safe / zero-downtime: nothing here stops the live opencode-web service.
+# (The one-time downtime compaction lives separately in opencode-db-compact.)
+#
+# Areas:
+#   --worktrees  classify & remove stale/leftover git worktrees (never dirty ones)
+#   --postgres   drop dev databases whose owning worktree is gone
+#   --db         retention + orphan purge + incremental vacuum (via db-maintain)
+#   --tmp        remove user scratch files left in the tmp dir
+#   --qa         prune QA reports / demo decks older than 90 days
+# No area flag => all of the above.
+#
+# --dry-run  count/list only, mutate nothing (the human inspection path).
+# --force    no prompts (what the LaunchAgent passes). Without it, interactive
+#            runs prompt once per area before mutating.
+# --older-than=N  worktree staleness window (default 7). QA and DB retention have
+#            their own independent 90-day defaults and are NOT changed by this.
+#
+# Sourceable as a library with CLEANUP_LIB=1 (defines functions, skips main) so
+# the test suite can unit-test compute_pg_drop_set and friends.
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Config (env-overridable so tests never touch real data).
+# ---------------------------------------------------------------------------
+OPENCODE_DB="${OPENCODE_DB:-$HOME/.local/share/opencode/opencode.db}"
+OPENCODE_WORKTREE_BASE="${OPENCODE_WORKTREE_BASE:-$HOME/.local/share/opencode/worktree}"
+OPENCODE_QA_DIR="${OPENCODE_QA_DIR:-$HOME/.local/share/qa}"
+CLEANUP_TMP_DIR="${CLEANUP_TMP_DIR:-/private/tmp}"
+OPENCODE_CODE_DIR="${OPENCODE_CODE_DIR:-$HOME/code}"
+
+QA_RETAIN_DAYS=90   # independent of --older-than
+DB_RETAIN_DAYS=90   # independent of --older-than
+
+# Sibling db-maintain; overridable so tests can point at the source-tree name.
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DB_MAINTAIN="${OPENCODE_DB_MAINTAIN:-$SELF_DIR/opencode-db-maintain}"
+
+ME="$(id -un)"
+
+# ===========================================================================
+# Postgres: pure drop-set computation (the unit-testable core).
+# ===========================================================================
+trunc63() { printf '%.63s' "$1"; }
+
+# is_dev_db <db> <app> -> 0 if <db> is a *_<app>_development[ _cable|_cache|_queue ]
+# database (the per-worktree dev databases), else 1.
+is_dev_db() {
+	local db="$1" app="$2" stem="$1"
+	case "$db" in
+		*_cable) stem="${db%_cable}" ;;
+		*_cache) stem="${db%_cache}" ;;
+		*_queue) stem="${db%_queue}" ;;
+	esac
+	[ "$stem" = "${app}_development" ] && return 0          # base, no prefix
+	case "$stem" in *_"${app}_development") return 0 ;; esac # prefixed
+	return 1
+}
+
+# compute_pg_drop_set <app> <keep_raw_newline> <all_dbs_newline>
+# Echoes (one per line) the databases that should be dropped: dev databases for
+# <app> whose 63-char-truncated name is NOT in the keep-set and which are not the
+# protected base dev databases. Postgres truncates identifiers at 63 chars, so a
+# long branch name can COLLIDE with another — truncation is applied on both sides
+# before comparison to honor that.
+compute_pg_drop_set() {
+	local app="$1" keep_raw="$2" all_dbs="$3"
+	local keep db stem prefix line
+
+	# Build the truncated keep-set (newline-delimited, surrounded by newlines so
+	# a substring grep is an exact-line match).
+	keep=$'\n'
+	while IFS= read -r line; do
+		[ -n "$line" ] || continue
+		keep+="$(trunc63 "$line")"$'\n'
+	done <<<"$keep_raw"
+
+	while IFS= read -r db; do
+		[ -n "$db" ] || continue
+		is_dev_db "$db" "$app" || continue
+		# Protected: the base dev databases (no worktree prefix) are never dropped.
+		stem="$db"
+		case "$db" in
+			*_cable) stem="${db%_cable}" ;;
+			*_cache) stem="${db%_cache}" ;;
+			*_queue) stem="${db%_queue}" ;;
+		esac
+		if [ "$stem" = "${app}_development" ]; then
+			continue
+		fi
+		# Keep if its (truncated) name is in the live keep-set.
+		prefix="$(trunc63 "$db")"
+		case "$keep" in
+			*$'\n'"$prefix"$'\n'*) continue ;;
+		esac
+		printf '%s\n' "$db"
+	done <<<"$all_dbs"
+}
+
+# Derive the app token (e.g. "myapp") from a checkout's config/database.yml by
+# reading the development database name and stripping the _development suffix.
+pg_app_for_repo() {
+	local repo="$1" yml="$1/config/database.yml" base
+	[ -f "$yml" ] || return 1
+	# Read the token only from the `database:` value line(s); a YAML anchor/key
+	# like `&primary_development` would otherwise win over the real db name. The
+	# ERB DATABASE_PREFIX never contains `_development`, so it can't false-match.
+	base="$(grep -E '^[[:space:]]*database:' "$yml" 2>/dev/null | grep -oE '[A-Za-z0-9-]+_development' | head -1 || true)"
+	[ -n "$base" ] || return 1
+	printf '%s' "${base%_development}"
+}
+
+# Replicate the per-worktree DATABASE_PREFIX convention for a checkout: empty for a main
+# checkout (.git is a directory), "<branch-with-slashes-as-dashes>_" for a git
+# worktree (.git is a file).
+pg_prefix_for_checkout() {
+	local wt="$1" name
+	if [ -f "$wt/.git" ]; then
+		name="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null | tr '/' '-' || true)"
+		[ -n "$name" ] && printf '%s_' "$name"
+	fi
+	# main checkout (.git dir) => empty prefix
+}
+
+# ===========================================================================
+# Worktrees
+# ===========================================================================
+
+# Resolve the main repo path for a project id, preferring the DB project row and
+# falling back to git-common-dir of any registered on-disk worktree.
+wt_main_repo_for_project() {
+	local pid="$1" base="$OPENCODE_WORKTREE_BASE/$1" repo dir common
+	if [ -f "$OPENCODE_DB" ]; then
+		repo="$(sqlite3 "$OPENCODE_DB" "SELECT worktree FROM project WHERE id='$pid' LIMIT 1;" 2>/dev/null || true)"
+		if [ -n "$repo" ] && [ -d "$repo" ]; then
+			printf '%s' "$repo"
+			return 0
+		fi
+	fi
+	for dir in "$base"/*/; do
+		[ -d "$dir" ] || continue
+		common="$(git -C "$dir" rev-parse --git-common-dir 2>/dev/null || true)"
+		if [ -n "$common" ]; then
+			( cd "$dir" && cd "$(dirname "$common")" && pwd )
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Is there a session row for this directory updated at/after the cutoff?
+wt_has_recent_session() {
+	local dir_noslash="${1%/}" cutoff_ms="$2" n
+	[ -f "$OPENCODE_DB" ] || return 1
+	n="$(sqlite3 "$OPENCODE_DB" "SELECT COUNT(*) FROM session WHERE directory='$dir_noslash' AND time_updated >= $cutoff_ms;" 2>/dev/null || echo 0)"
+	[ "${n:-0}" -gt 0 ]
+}
+
+# True if a path's mtime is strictly older than N days.
+older_than_days() {
+	[ -n "$(find "$1" -maxdepth 0 -mtime +"$2" 2>/dev/null)" ]
+}
+
+# Classify and (optionally) act on every worktree of every project.
+clean_worktrees() {
+	local dry="$1" force="$2" older="$3"
+	local cutoff_ms now_sec
+	now_sec=$(date +%s)
+	cutoff_ms=$(( (now_sec - older * 86400) * 1000 ))
+
+	echo "=== Worktrees (base=$OPENCODE_WORKTREE_BASE, older-than=${older}d) ==="
+	[ -d "$OPENCODE_WORKTREE_BASE" ] || { echo "(no worktree base; skipping)"; return 0; }
+
+	local pdir pid main_repo dir name state action
+	declare -a removes_wt=() removes_rm=() prunes=()
+
+	for pdir in "$OPENCODE_WORKTREE_BASE"/*/; do
+		[ -d "$pdir" ] || continue
+		pid="$(basename "$pdir")"
+		[ "$pid" = "global" ] && continue
+		main_repo="$(wt_main_repo_for_project "$pid" || true)"
+
+		# Pass 1: on-disk dirs.
+		for dir in "$pdir"*/; do
+			[ -d "$dir" ] || continue
+			name="$(basename "$dir")"
+			if git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+				if [ -n "$(git -C "$dir" status --porcelain 2>/dev/null)" ]; then
+					state="dirty-skip"; action="KEEP (uncommitted changes — never delete)"
+				elif older_than_days "$dir" "$older" && ! wt_has_recent_session "$dir" "$cutoff_ms"; then
+					state="active-remove"; action="git worktree remove --force"
+					removes_wt+=("$main_repo|$dir")
+				else
+					state="active-keep"; action="KEEP (recent or active sessions)"
+				fi
+			else
+				# Not git-registered: dead scratch (typically only a tmp/ subdir).
+				# Stale session rows are EXPECTED here and do NOT block removal.
+				if older_than_days "$dir" "$older"; then
+					state="stub-remove"; action="rm -rf"
+					removes_rm+=("$dir")
+				else
+					state="stub-keep"; action="KEEP (modified recently — maybe mid-creation)"
+				fi
+			fi
+			printf '  %-13s %s\n      -> %s\n' "$state" "$dir" "$action"
+		done
+
+		# Pass 2: registered worktrees whose path is gone (prunable).
+		if [ -n "$main_repo" ] && [ -d "$main_repo" ]; then
+			local wpath
+			while IFS= read -r wpath; do
+				[ -n "$wpath" ] || continue
+				[ "$wpath" = "$main_repo" ] && continue
+				if [ ! -d "$wpath" ]; then
+					printf '  %-13s %s\n      -> %s\n' "stale-prune" "$wpath" "git worktree prune"
+					prunes+=("$main_repo")
+				fi
+			done < <(git -C "$main_repo" worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p')
+		fi
+	done
+
+	if [ "$dry" -eq 1 ]; then
+		echo "(dry-run) worktree removals: ${#removes_wt[@]} registered, ${#removes_rm[@]} stubs, ${#prunes[@]} prunes — nothing removed."
+		return 0
+	fi
+	if ! confirm "$force" "remove ${#removes_wt[@]} worktrees + ${#removes_rm[@]} stubs"; then
+		echo "skipped worktree mutations."; return 0
+	fi
+	local entry repo path
+	for entry in "${removes_wt[@]}"; do
+		repo="${entry%%|*}"; path="${entry#*|}"
+		if [ -n "$repo" ]; then
+			git -C "$repo" worktree remove --force "$path" 2>/dev/null || true
+		fi
+	done
+	for path in "${removes_rm[@]}"; do rm -rf "$path"; done
+	for repo in "${prunes[@]}"; do git -C "$repo" worktree prune 2>/dev/null || true; done
+	# Prune dangling registrations left by the registered-worktree removals.
+	for entry in "${removes_wt[@]}"; do
+		repo="${entry%%|*}"
+		if [ -n "$repo" ]; then
+			git -C "$repo" worktree prune 2>/dev/null || true
+		fi
+	done
+}
+
+# ===========================================================================
+# Postgres orchestration
+# ===========================================================================
+clean_postgres() {
+	local dry="$1" force="$2"
+	echo "=== PostgreSQL ==="
+	if ! command -v psql >/dev/null 2>&1; then
+		echo "(psql not found; skipping)"; return 0
+	fi
+	local all_dbs
+	if ! all_dbs="$(psql -lqt 2>/dev/null | cut -d'|' -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$')"; then
+		echo "(postgres unreachable; skipping)"; return 0
+	fi
+	[ -n "$all_dbs" ] || { echo "(no databases; skipping)"; return 0; }
+
+	# Build per-app keep-sets from every project that has a database.yml.
+	local workdir; workdir="$(mktemp -d)"
+	local apps_file="$workdir/apps"; : >"$apps_file"
+
+	local pid repo app prefix wpath
+	if [ -f "$OPENCODE_DB" ]; then
+		while IFS='|' read -r pid repo; do
+			[ -n "$repo" ] || continue
+			[ -d "$repo" ] || continue
+			app="$(pg_app_for_repo "$repo" 2>/dev/null || true)"
+			[ -n "$app" ] || continue
+			grep -qxF "$app" "$apps_file" 2>/dev/null || printf '%s\n' "$app" >>"$apps_file"
+			# main checkout contributes empty-prefix dev dbs.
+			pg_emit_keep "$workdir" "$app" "" "$repo"
+			# live registered worktrees contribute their branch-prefixed dbs.
+			while IFS= read -r wpath; do
+				[ -n "$wpath" ] || continue
+				[ "$wpath" = "$repo" ] && continue
+				[ -d "$wpath" ] || continue
+				prefix="$(pg_prefix_for_checkout "$wpath")"
+				pg_emit_keep "$workdir" "$app" "$prefix" "$repo"
+			done < <(git -C "$repo" worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p')
+		done < <(sqlite3 "$OPENCODE_DB" "SELECT id, worktree FROM project;" 2>/dev/null || true)
+	fi
+
+	if [ ! -s "$apps_file" ]; then
+		echo "(no projects with a config/database.yml; skipping)"
+		rm -rf "$workdir"; return 0
+	fi
+
+	local drop_all="$workdir/drop"; : >"$drop_all"
+	while IFS= read -r app; do
+		local keep_raw=""
+		[ -f "$workdir/keep.$app" ] && keep_raw="$(cat "$workdir/keep.$app")"
+		echo "  app '$app' keep-set (${app} dev dbs for live checkouts):"
+		printf '%s\n' "$keep_raw" | sed '/^$/d;s/^/      keep  /'
+		compute_pg_drop_set "$app" "$keep_raw" "$all_dbs" >>"$drop_all"
+	done <"$apps_file"
+
+	local ndrop; ndrop="$(grep -cv '^$' "$drop_all" || true)"
+	echo "  drop-set ($ndrop databases):"
+	sed '/^$/d;s/^/      DROP  /' "$drop_all"
+
+	if [ "$dry" -eq 1 ]; then
+		echo "(dry-run) would drop $ndrop databases — nothing dropped."
+		rm -rf "$workdir"; return 0
+	fi
+	if ! confirm "$force" "drop $ndrop postgres databases"; then
+		echo "skipped postgres drops."; rm -rf "$workdir"; return 0
+	fi
+	local db
+	while IFS= read -r db; do
+		[ -n "$db" ] || continue
+		dropdb "$db" 2>/dev/null || true
+	done <"$drop_all"
+	rm -rf "$workdir"
+}
+
+# Append the four dev-db names for <app>/<prefix> to the per-app keep file.
+pg_emit_keep() {
+	local workdir="$1" app="$2" prefix="$3"
+	local f="$workdir/keep.$app" suffix
+	for suffix in "" "_cable" "_cache" "_queue"; do
+		printf '%s%s_development%s\n' "$prefix" "$app" "$suffix" >>"$f"
+	done
+}
+
+# ===========================================================================
+# tmp + qa (ported verbatim from cleanup.md steps 9-10)
+# ===========================================================================
+clean_tmp() {
+	local dry="$1" force="$2"
+	echo "=== tmp scratch ($CLEANUP_TMP_DIR) ==="
+	[ -d "$CLEANUP_TMP_DIR" ] || { echo "(no tmp dir; skipping)"; return 0; }
+	local listing count
+	listing="$(find "$CLEANUP_TMP_DIR" -maxdepth 1 -type f -user "$ME" \
+		-not -name '.*' \
+		-not -name 'LCK.*' \
+		-not -name '*.lock' \
+		-not -name 'MozillaUpdateLock-*' \
+		-not -name 'com.apple.*' \
+		-not -name 'oc_web.pid' \
+		-not -name 'TemporaryDirectory.*' \
+		2>/dev/null || true)"
+	count="$(printf '%s\n' "$listing" | grep -cv '^$' || true)"
+	printf '%s\n' "$listing" | sed '/^$/d;s/^/      rm  /'
+	echo "  $count scratch file(s)."
+	if [ "$dry" -eq 1 ]; then echo "(dry-run) would remove $count files — nothing removed."; return 0; fi
+	[ "$count" -eq 0 ] && return 0
+	if ! confirm "$force" "remove $count tmp scratch files"; then echo "skipped tmp."; return 0; fi
+	find "$CLEANUP_TMP_DIR" -maxdepth 1 -type f -user "$ME" \
+		-not -name '.*' -not -name 'LCK.*' -not -name '*.lock' \
+		-not -name 'MozillaUpdateLock-*' -not -name 'com.apple.*' \
+		-not -name 'oc_web.pid' -not -name 'TemporaryDirectory.*' \
+		-delete 2>/dev/null || true
+}
+
+clean_qa() {
+	local dry="$1" force="$2"
+	echo "=== QA artifacts ($OPENCODE_QA_DIR, older than ${QA_RETAIN_DAYS}d) ==="
+	[ -d "$OPENCODE_QA_DIR" ] || { echo "(no qa dir; skipping)"; return 0; }
+	local sessions decks count
+	sessions="$(find "$OPENCODE_QA_DIR" -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +"$QA_RETAIN_DAYS" 2>/dev/null || true)"
+	decks="$(find "$OPENCODE_QA_DIR/demos" -maxdepth 1 -type f -name 'demo-*.html' -mtime +"$QA_RETAIN_DAYS" 2>/dev/null || true)"
+	printf '%s\n%s\n' "$sessions" "$decks" | sed '/^$/d;s/^/      rm  /'
+	count="$(printf '%s\n%s\n' "$sessions" "$decks" | grep -cv '^$' || true)"
+	echo "  $count QA artifact(s)."
+	if [ "$dry" -eq 1 ]; then echo "(dry-run) would remove $count artifacts — nothing removed."; return 0; fi
+	[ "$count" -eq 0 ] && return 0
+	if ! confirm "$force" "remove $count QA artifacts"; then echo "skipped qa."; return 0; fi
+	find "$OPENCODE_QA_DIR" -mindepth 2 -maxdepth 2 -type d -name 'qa-*' -mtime +"$QA_RETAIN_DAYS" -exec rm -rf {} + 2>/dev/null || true
+	find "$OPENCODE_QA_DIR/demos" -maxdepth 1 -type f -name 'demo-*.html' -mtime +"$QA_RETAIN_DAYS" -delete 2>/dev/null || true
+}
+
+# ===========================================================================
+# DB area (delegates to db-maintain library)
+# ===========================================================================
+clean_db() {
+	local dry="$1"
+	echo "=== OpenCode DB ==="
+	if [ ! -f "$DB_MAINTAIN" ]; then
+		echo "db-maintain not found at $DB_MAINTAIN; skipping" >&2; return 0
+	fi
+	# shellcheck source=/dev/null
+	CLEANUP_LIB=1 . "$DB_MAINTAIN"
+	db_maintain_run "$dry" "$DB_RETAIN_DAYS" 0 5000
+}
+
+# ===========================================================================
+# Shared
+# ===========================================================================
+confirm() {
+	local force="$1" what="$2" ans
+	[ "$force" -eq 1 ] && return 0
+	if [ ! -t 0 ]; then
+		echo "non-interactive and --force not given; skipping: $what" >&2
+		return 1
+	fi
+	read -r -p "Proceed to $what? [y/N] " ans
+	case "$ans" in y|Y|yes|YES) return 0 ;; *) return 1 ;; esac
+}
+
+usage() {
+	cat <<'EOF'
+usage: opencode-cleanup [--dry-run] [--force] [--older-than=N]
+                        [--worktrees] [--postgres] [--db] [--tmp] [--qa]
+No area flag => all areas. --dry-run lists only. --force skips prompts.
+EOF
+}
+
+cleanup_main() {
+	local dry=0 force=0 older=7
+	local want_wt=0 want_pg=0 want_db=0 want_tmp=0 want_qa=0 any=0 arg
+	for arg in "$@"; do
+		case "$arg" in
+			--dry-run) dry=1 ;;
+			--force) force=1 ;;
+			--older-than=*) older="${arg#*=}" ;;
+			--worktrees) want_wt=1; any=1 ;;
+			--postgres) want_pg=1; any=1 ;;
+			--db) want_db=1; any=1 ;;
+			--tmp) want_tmp=1; any=1 ;;
+			--qa) want_qa=1; any=1 ;;
+			-h|--help) usage; return 0 ;;
+			*) echo "cleanup: unknown argument: $arg" >&2; usage; return 2 ;;
+		esac
+	done
+	if [ "$any" -eq 0 ]; then
+		want_wt=1; want_pg=1; want_db=1; want_tmp=1; want_qa=1
+	fi
+
+	echo "### opencode-cleanup $(date '+%Y-%m-%d %H:%M:%S') (dry-run=$dry force=$force) ###"
+	[ "$want_wt" -eq 1 ]  && clean_worktrees "$dry" "$force" "$older"
+	[ "$want_pg" -eq 1 ]  && clean_postgres "$dry" "$force"
+	[ "$want_db" -eq 1 ]  && clean_db "$dry"
+	[ "$want_tmp" -eq 1 ] && clean_tmp "$dry" "$force"
+	[ "$want_qa" -eq 1 ]  && clean_qa "$dry" "$force"
+	echo "### cleanup complete ###"
+}
+
+if [ "${CLEANUP_LIB:-0}" != "1" ]; then
+	cleanup_main "$@"
+fi

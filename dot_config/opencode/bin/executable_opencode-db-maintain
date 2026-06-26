@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# opencode-db-maintain — WAL-safe retention + orphan purge + incremental vacuum
+# for the live opencode SQLite DB. Runs against a RUNNING opencode server: every
+# write is batched into short lock windows (busy_timeout + LIMIT loops with a
+# brief sleep) so the live web service is never starved into "database is locked".
+#
+# This file is BOTH an executable and a sourceable library. The orchestrator
+# (opencode-cleanup --db) and the test suite source it with CLEANUP_LIB=1 to
+# reuse db_maintain_run without triggering the CLI main().
+#
+# Schema facts this relies on (verified against the live DB, do not assume):
+#   session.time_updated / time_created : epoch MILLISECONDS
+#   session.parent_id                   : self-FK for child sessions
+#   session.share_url                   : NULL unless the session was shared
+#   message.session_id  -> session.id   : ON DELETE CASCADE (but see below)
+#   part.message_id     -> message.id   : ON DELETE CASCADE
+#   part.session_id                     : NO foreign key at all
+#   PRAGMA foreign_keys is OFF at runtime => NO cascade actually fires, so every
+#   delete MUST be issued explicitly children-first: part -> message -> session.
+#
+# Usage: opencode-db-maintain [--dry-run] [--older-than=N] [--no-vacuum] [--batch=5000]
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Config (env-overridable so tests never touch real data).
+# ---------------------------------------------------------------------------
+OPENCODE_DB="${OPENCODE_DB:-$HOME/.local/share/opencode/opencode.db}"
+DB_BUSY_TIMEOUT_MS=30000
+BATCH_SLEEP="${CLEANUP_BATCH_SLEEP:-0.1}"   # pause between write batches
+
+# ---------------------------------------------------------------------------
+# Low-level SQLite helpers. Each call is its own connection; busy_timeout makes
+# it wait politely for the live server's writes rather than failing fast.
+# ---------------------------------------------------------------------------
+# NOTE: we set the busy timeout via the `.timeout` dot-command, NOT
+# `PRAGMA busy_timeout=N` — the PRAGMA form echoes its value as a result row,
+# which would corrupt every scalar count / changes() we read back.
+db_one() {
+	# Run a single read query, echo the scalar result.
+	printf '.timeout %s\n%s\n' "$DB_BUSY_TIMEOUT_MS" "$1" | sqlite3 "$OPENCODE_DB"
+}
+
+# Delete in bounded batches from a table, looping until no rows remain. The
+# WHERE body is supplied as a fragment that selects rowids to delete. Echoes the
+# total number of rows deleted. Short lock windows keep the live server happy.
+db_delete_batched() {
+	local table="$1" where="$2" batch="$3"
+	local total=0 n
+	while :; do
+		n=$(printf '.timeout %s\nDELETE FROM %s WHERE rowid IN (SELECT rowid FROM %s WHERE %s LIMIT %s);\nSELECT changes();\n' \
+			"$DB_BUSY_TIMEOUT_MS" "$table" "$table" "$where" "$batch" | sqlite3 "$OPENCODE_DB")
+		n=${n:-0}
+		total=$((total + n))
+		[ "$n" -eq 0 ] && break
+		sleep "$BATCH_SLEEP"
+	done
+	printf '%s' "$total"
+}
+
+# ---------------------------------------------------------------------------
+# The recursive doomed-session set: sessions older than the cutoff (by
+# time_updated, epoch ms) that are NOT shared, plus all their non-shared
+# descendant child sessions. Shared sessions (share_url IS NOT NULL) are exempt
+# regardless of age, and they shield their subtree too.
+# ---------------------------------------------------------------------------
+doomed_cte() {
+	local cutoff_ms="$1"
+	cat <<SQL
+WITH RECURSIVE doomed(id) AS (
+  SELECT id FROM session
+   WHERE time_updated < $cutoff_ms AND share_url IS NULL
+  UNION
+  SELECT s.id FROM session s
+    JOIN doomed d ON s.parent_id = d.id
+   WHERE s.share_url IS NULL
+)
+SQL
+}
+
+# ---------------------------------------------------------------------------
+# Main routine. Returns 0 on success. Honors $DRY_RUN, $OLDER_THAN, $NO_VACUUM,
+# $BATCH set by the caller (CLI main or the orchestrator).
+# ---------------------------------------------------------------------------
+db_maintain_run() {
+	local dry_run="${1:-0}" older_than="${2:-90}" no_vacuum="${3:-0}" batch="${4:-5000}"
+
+	if [ ! -f "$OPENCODE_DB" ]; then
+		echo "db-maintain: database not found: $OPENCODE_DB (skipping)" >&2
+		return 0
+	fi
+
+	local now_sec cutoff_ms
+	now_sec=$(date +%s)
+	cutoff_ms=$(( (now_sec - older_than * 86400) * 1000 ))
+
+	echo "=== DB maintain: $OPENCODE_DB ==="
+	echo "retention: $older_than days (cutoff_ms=$cutoff_ms), batch=$batch, dry-run=$dry_run"
+
+	# --- (a) retention: count doomed sessions and their children.
+	local cte n_sessions n_msgs n_parts
+	cte="$(doomed_cte "$cutoff_ms")"
+	n_sessions=$(db_one "$cte SELECT COUNT(*) FROM doomed;")
+	n_msgs=$(db_one "$cte SELECT COUNT(*) FROM message WHERE session_id IN (SELECT id FROM doomed);")
+	n_parts=$(db_one "$cte SELECT COUNT(*) FROM part WHERE session_id IN (SELECT id FROM doomed);")
+
+	# --- (b) orphan counts (independent of retention).
+	local o_parts_nosess o_msgs_nosess o_parts_nomsg
+	o_parts_nosess=$(db_one "SELECT COUNT(*) FROM part WHERE session_id NOT IN (SELECT id FROM session);")
+	o_msgs_nosess=$(db_one "SELECT COUNT(*) FROM message WHERE session_id NOT IN (SELECT id FROM session);")
+	# Counted AFTER message-orphan removal in the mutate path; here it is a pre-count.
+	o_parts_nomsg=$(db_one "SELECT COUNT(*) FROM part WHERE message_id NOT IN (SELECT id FROM message);")
+
+	echo "retention would delete: sessions=$n_sessions messages=$n_msgs parts=$n_parts"
+	echo "orphans would delete:   parts(no session)=$o_parts_nosess messages(no session)=$o_msgs_nosess parts(no message)=$o_parts_nomsg"
+
+	if [ "$dry_run" -eq 1 ]; then
+		echo "(dry-run) no rows mutated."
+		return 0
+	fi
+
+	# --- Mutate path. Materialize the doomed id set into a helper table so the
+	# parent->child chain is captured BEFORE we start deleting sessions (which
+	# would otherwise break the recursive walk mid-flight).
+	printf '.timeout %s\nDROP TABLE IF EXISTS _cleanup_doomed;\nCREATE TABLE _cleanup_doomed AS %s SELECT id FROM doomed;\n' \
+		"$DB_BUSY_TIMEOUT_MS" "$cte" | sqlite3 "$OPENCODE_DB"
+
+	# Children-first: parts -> messages -> sessions (no cascade fires).
+	local d_parts d_msgs d_sessions
+	d_parts=$(db_delete_batched "part" "session_id IN (SELECT id FROM _cleanup_doomed)" "$batch")
+	d_msgs=$(db_delete_batched "message" "session_id IN (SELECT id FROM _cleanup_doomed)" "$batch")
+	d_sessions=$(db_delete_batched "session" "id IN (SELECT id FROM _cleanup_doomed)" "$batch")
+	printf '.timeout %s\nDROP TABLE IF EXISTS _cleanup_doomed;\n' "$DB_BUSY_TIMEOUT_MS" | sqlite3 "$OPENCODE_DB"
+	echo "retention deleted: sessions=$d_sessions messages=$d_msgs parts=$d_parts"
+
+	# --- Orphan purge (always). Parts before messages so removing a message
+	# never strands its parts. session-less first, then message-less.
+	local p1 m1 p2
+	p1=$(db_delete_batched "part" "session_id NOT IN (SELECT id FROM session)" "$batch")
+	m1=$(db_delete_batched "message" "session_id NOT IN (SELECT id FROM session)" "$batch")
+	p2=$(db_delete_batched "part" "message_id NOT IN (SELECT id FROM message)" "$batch")
+	echo "orphans deleted: parts(no session)=$p1 messages(no session)=$m1 parts(no message)=$p2"
+
+	# --- (c) incremental vacuum. No-op (not an error) until auto_vacuum is
+	# INCREMENTAL; opencode-db-compact flips that one time. WAL-safe.
+	if [ "$no_vacuum" -eq 1 ]; then
+		echo "vacuum: skipped (--no-vacuum)"
+	else
+		db_one "PRAGMA incremental_vacuum;" >/dev/null
+		echo "vacuum: incremental_vacuum issued"
+	fi
+
+	return 0
+}
+
+# ---------------------------------------------------------------------------
+# CLI entrypoint (skipped when sourced as a library).
+# ---------------------------------------------------------------------------
+db_maintain_main() {
+	local dry_run=0 older_than=90 no_vacuum=0 batch=5000
+	local arg
+	for arg in "$@"; do
+		case "$arg" in
+			--dry-run) dry_run=1 ;;
+			--no-vacuum) no_vacuum=1 ;;
+			--older-than=*) older_than="${arg#*=}" ;;
+			--batch=*) batch="${arg#*=}" ;;
+			-h|--help)
+				echo "usage: opencode-db-maintain [--dry-run] [--older-than=N] [--no-vacuum] [--batch=5000]"
+				return 0 ;;
+			*) echo "db-maintain: unknown argument: $arg" >&2; return 2 ;;
+		esac
+	done
+	db_maintain_run "$dry_run" "$older_than" "$no_vacuum" "$batch"
+}
+
+if [ "${CLEANUP_LIB:-0}" != "1" ]; then
+	db_maintain_main "$@"
+fi

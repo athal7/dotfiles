@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# opencode-db-compact — ONE-TIME, standalone, DOWNTIME compaction of the opencode
+# SQLite DB. This is the only script here that stops the live service: it flips
+# auto_vacuum to INCREMENTAL and runs a full VACUUM (which requires exclusive
+# access and rewrites the whole file). After this runs once, the recurring
+# opencode-cleanup --db can reclaim space cheaply via PRAGMA incremental_vacuum.
+#
+# NEVER scheduled as a recurring agent and NEVER called by the orchestrator.
+# Run it by hand, once, when you want to physically shrink the file.
+#
+# Procedure:
+#   0. idempotent guard — already INCREMENTAL with a small freelist => exit 0
+#   1. refuse if the opencode Desktop app ("opencode serve") is running — we
+#      cannot safely bootout a GUI child; the human must quit Desktop first
+#   2. bootout the opencode-web LaunchAgent (the headless service)
+#   3. wait until no opencode process holds the DB open (lsof poll, ~30s)
+#   4. wal_checkpoint(TRUNCATE) + auto_vacuum=INCREMENTAL + VACUUM
+#   5. bootstrap opencode-web back
+#   6. report before/after page_count
+#
+# Usage: opencode-db-compact [--dry-run] [--force]
+
+set -euo pipefail
+
+OPENCODE_DB="${OPENCODE_DB:-$HOME/.local/share/opencode/opencode.db}"
+WEB_LABEL="com.$(id -un).opencode-web"
+WEB_PLIST="${OPENCODE_WEB_PLIST:-$HOME/Library/LaunchAgents/$(id -un).opencode-web.plist}"
+# The generator deploys plists as <name>.plist (name = "opencode-web"); the
+# label inside is com.<user>.opencode-web. Resolve the actual deployed file.
+if [ ! -f "$WEB_PLIST" ]; then
+	WEB_PLIST="$HOME/Library/LaunchAgents/opencode-web.plist"
+fi
+UID_NUM="$(id -u)"
+FREELIST_OK_MAX="${COMPACT_FREELIST_OK_MAX:-1000}"
+# Pattern identifying the opencode Desktop process we must not bootout. Override
+# in tests to exercise the refusal path without a real Desktop running.
+DESKTOP_PATTERN="${COMPACT_DESKTOP_PATTERN:-opencode serve}"
+
+db_pragma() { sqlite3 "$OPENCODE_DB" "PRAGMA $1;" 2>/dev/null || echo ""; }
+
+dry_run=0 force=0
+for arg in "$@"; do
+	case "$arg" in
+		--dry-run) dry_run=1 ;;
+		--force) force=1 ;;
+		-h|--help) echo "usage: opencode-db-compact [--dry-run] [--force]"; exit 0 ;;
+		*) echo "db-compact: unknown argument: $arg" >&2; exit 2 ;;
+	esac
+done
+
+[ -f "$OPENCODE_DB" ] || { echo "db-compact: database not found: $OPENCODE_DB" >&2; exit 1; }
+
+auto_vacuum="$(db_pragma auto_vacuum)"      # 0=NONE 1=FULL 2=INCREMENTAL
+freelist="$(db_pragma freelist_count)"
+page_count="$(db_pragma page_count)"
+page_size="$(db_pragma page_size)"
+freelist="${freelist:-0}"; auto_vacuum="${auto_vacuum:-0}"
+page_count="${page_count:-0}"; page_size="${page_size:-0}"
+
+echo "db-compact: $OPENCODE_DB"
+echo "  auto_vacuum=$auto_vacuum freelist_count=$freelist page_count=$page_count page_size=$page_size"
+
+# --- (0) idempotent guard.
+if [ "$auto_vacuum" = "2" ] && [ "$freelist" -le "$FREELIST_OK_MAX" ]; then
+	echo "Already INCREMENTAL with a small freelist ($freelist <= $FREELIST_OK_MAX). Nothing to do."
+	exit 0
+fi
+
+if [ "$dry_run" -eq 1 ]; then
+	echo "(dry-run) Plan:"
+	echo "  1. ensure Desktop ('opencode serve') is NOT running"
+	echo "  2. launchctl bootout gui/$UID_NUM/$WEB_LABEL"
+	echo "  3. poll lsof until no opencode process holds the DB (~30s)"
+	echo "  4. sqlite3: wal_checkpoint(TRUNCATE); auto_vacuum=INCREMENTAL; VACUUM"
+	echo "  5. launchctl bootstrap gui/$UID_NUM $WEB_PLIST"
+	echo "  6. report before/after page_count"
+	echo "  current: auto_vacuum=$auto_vacuum freelist=$freelist page_count=$page_count"
+	exit 0
+fi
+
+# --- (1) refuse if Desktop is running.
+if pgrep -f "$DESKTOP_PATTERN" >/dev/null 2>&1; then
+	echo "ERROR: opencode Desktop ('$DESKTOP_PATTERN') is running. Quit it (Cmd+Q) and re-run." >&2
+	echo "       We will not bootout a GUI child process." >&2
+	exit 1
+fi
+
+if [ "$force" -ne 1 ]; then
+	if [ -t 0 ]; then
+		read -r -p "This stops opencode-web and VACUUMs the DB (downtime). Proceed? [y/N] " ans
+		case "$ans" in y|Y|yes|YES) ;; *) echo "aborted."; exit 0 ;; esac
+	else
+		echo "non-interactive and --force not given; aborting." >&2; exit 1
+	fi
+fi
+
+# --- (2) bootout the headless service.
+echo "Stopping $WEB_LABEL ..."
+launchctl bootout "gui/$UID_NUM/$WEB_LABEL" 2>/dev/null || true
+
+# --- (3) wait for the DB to be released.
+echo "Waiting for the DB to be released ..."
+released=0
+for _ in $(seq 1 30); do
+	if ! lsof "$OPENCODE_DB" 2>/dev/null | grep -qi opencode; then
+		released=1; break
+	fi
+	sleep 1
+done
+if [ "$released" -ne 1 ]; then
+	echo "WARNING: an opencode process still holds $OPENCODE_DB after 30s; re-bootstrapping and aborting." >&2
+	launchctl bootstrap "gui/$UID_NUM" "$WEB_PLIST" 2>/dev/null || true
+	exit 1
+fi
+
+# --- (4) compact.
+before="$page_count"
+echo "Compacting (wal_checkpoint TRUNCATE; auto_vacuum=INCREMENTAL; VACUUM) ..."
+sqlite3 "$OPENCODE_DB" "PRAGMA wal_checkpoint(TRUNCATE); PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"
+after="$(db_pragma page_count)"; after="${after:-0}"
+
+# --- (5) restart the service.
+echo "Restarting $WEB_LABEL ..."
+launchctl bootstrap "gui/$UID_NUM" "$WEB_PLIST" 2>/dev/null || true
+
+# --- (6) report.
+echo "Done. page_count: $before -> $after (auto_vacuum now $(db_pragma auto_vacuum))."

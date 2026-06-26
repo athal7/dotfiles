@@ -52,6 +52,12 @@ repos:
         entry: scripts/validate-opencode-plugins.sh
         language: script
         files: ^dot_config/opencode/plugins/.*\.ts$
+      - id: test-opencode-cleanup
+        name: opencode cleanup tooling tests
+        entry: scripts/test-opencode-cleanup.sh
+        language: script
+        always_run: true
+        pass_filenames: false
 
   # Talisman (secrets scanning) - already configured, keep it
   - repo: https://github.com/thoughtworks/talisman

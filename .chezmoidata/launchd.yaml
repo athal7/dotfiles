@@ -63,22 +63,17 @@ launchagents:
   cleanup:
     Label: com.$USER.cleanup
     ProgramArguments:
-      - $HOME/.local/bin/opencode-cmd
-      - -d
-      - $HOME/code/dotfiles
-      - -t
-      - "1800"
-      - send
-      - /cleanup
+      - $HOME/.config/opencode/bin/opencode-cleanup
       - --force
     StartCalendarInterval:
       Weekday: 0
-      Hour: 9
+      Hour: 4
       Minute: 0
     StandardOutPath: $HOME/Library/Logs/cleanup.log
     StandardErrorPath: $HOME/Library/Logs/cleanup.log
     EnvironmentVariables:
       PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      HOME: $HOME
 
   family-scheduler:
     Label: com.$USER.family-scheduler
