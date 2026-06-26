@@ -10,13 +10,24 @@
 #
 # Procedure:
 #   0. idempotent guard — already INCREMENTAL with a small freelist => exit 0
-#   1. refuse if the opencode Desktop app ("opencode serve") is running — we
-#      cannot safely bootout a GUI child; the human must quit Desktop first
+#   1. refuse if a FOREIGN process holds the DB. We inspect the actual holders
+#      of opencode.db via lsof and classify each by its full command line: the
+#      launchd web server ("opencode web") is the only holder we are allowed to
+#      stop and restart ourselves. Anything else — the OpenCode Desktop app
+#      (an Electron "OpenCode Helper" whose argv does NOT contain "opencode web"
+#      or "opencode serve"), a standalone "opencode serve", etc. — is foreign:
+#      we cannot bootout a GUI/foreign process, and proceeding would either make
+#      VACUUM fail or hang the lsof-release poll forever. The human must quit it.
 #   2. bootout the opencode-web LaunchAgent (the headless service)
 #   3. wait until no opencode process holds the DB open (lsof poll, ~30s)
 #   4. wal_checkpoint(TRUNCATE) + auto_vacuum=INCREMENTAL + VACUUM
 #   5. bootstrap opencode-web back
 #   6. report before/after page_count
+#
+# This file is BOTH an executable and a sourceable library: the test suite
+# sources it with CLEANUP_LIB=1 to unit-test the foreign-holder classifier
+# (db_foreign_holders) by overriding db_holder_pids / db_pid_command — without a
+# live server — mirroring how opencode-db-maintain is made sourceable.
 #
 # Usage: opencode-db-compact [--dry-run] [--force]
 
@@ -32,96 +43,149 @@ if [ ! -f "$WEB_PLIST" ]; then
 fi
 UID_NUM="$(id -u)"
 FREELIST_OK_MAX="${COMPACT_FREELIST_OK_MAX:-1000}"
-# Pattern identifying the opencode Desktop process we must not bootout. Override
-# in tests to exercise the refusal path without a real Desktop running.
-DESKTOP_PATTERN="${COMPACT_DESKTOP_PATTERN:-opencode serve}"
+# Substring that identifies the managed launchd web server among the DB holders.
+# This is the ONLY holder db-compact may stop/restart itself. Overridable for
+# tests. (The launchd invocation is literally `opencode web --port 4096`.)
+MANAGED_WEB_PATTERN="${COMPACT_MANAGED_WEB_PATTERN:-opencode web}"
 
 db_pragma() { sqlite3 "$OPENCODE_DB" "PRAGMA $1;" 2>/dev/null || echo ""; }
 
-dry_run=0 force=0
-for arg in "$@"; do
-	case "$arg" in
-		--dry-run) dry_run=1 ;;
-		--force) force=1 ;;
-		-h|--help) echo "usage: opencode-db-compact [--dry-run] [--force]"; exit 0 ;;
-		*) echo "db-compact: unknown argument: $arg" >&2; exit 2 ;;
-	esac
-done
+# Enumerate the PIDs that currently hold the DB file open. Overridable in tests
+# (redefine after sourcing with CLEANUP_LIB=1) to feed synthetic holders.
+db_holder_pids() {
+	lsof -t -- "$OPENCODE_DB" 2>/dev/null || true
+}
 
-[ -f "$OPENCODE_DB" ] || { echo "db-compact: database not found: $OPENCODE_DB" >&2; exit 1; }
+# Echo the full command line for a PID. Overridable in tests.
+db_pid_command() {
+	ps -o command= -p "$1" 2>/dev/null || true
+}
 
-auto_vacuum="$(db_pragma auto_vacuum)"      # 0=NONE 1=FULL 2=INCREMENTAL
-freelist="$(db_pragma freelist_count)"
-page_count="$(db_pragma page_count)"
-page_size="$(db_pragma page_size)"
-freelist="${freelist:-0}"; auto_vacuum="${auto_vacuum:-0}"
-page_count="${page_count:-0}"; page_size="${page_size:-0}"
+# Classify the DB holders. Reads holder PIDs from db_holder_pids and, for each,
+# its command line from db_pid_command. Echoes one "<pid>\t<command>" line for
+# every FOREIGN holder — any holder whose command line does NOT contain
+# $MANAGED_WEB_PATTERN. The managed web server(s) and already-gone PIDs (empty
+# command) are omitted. Empty output => safe to proceed.
+db_foreign_holders() {
+	local pid cmd
+	while IFS= read -r pid; do
+		[ -n "$pid" ] || continue
+		cmd="$(db_pid_command "$pid")"
+		[ -n "$cmd" ] || continue
+		case "$cmd" in
+			*"$MANAGED_WEB_PATTERN"*) ;;                 # managed web server — OK
+			*) printf '%s\t%s\n' "$pid" "$cmd" ;;        # foreign holder
+		esac
+	done < <(db_holder_pids)
+}
 
-echo "db-compact: $OPENCODE_DB"
-echo "  auto_vacuum=$auto_vacuum freelist_count=$freelist page_count=$page_count page_size=$page_size"
+db_compact_main() {
+	local dry_run=0 force=0 arg
+	for arg in "$@"; do
+		case "$arg" in
+			--dry-run) dry_run=1 ;;
+			--force) force=1 ;;
+			-h|--help) echo "usage: opencode-db-compact [--dry-run] [--force]"; return 0 ;;
+			*) echo "db-compact: unknown argument: $arg" >&2; return 2 ;;
+		esac
+	done
 
-# --- (0) idempotent guard.
-if [ "$auto_vacuum" = "2" ] && [ "$freelist" -le "$FREELIST_OK_MAX" ]; then
-	echo "Already INCREMENTAL with a small freelist ($freelist <= $FREELIST_OK_MAX). Nothing to do."
-	exit 0
-fi
+	[ -f "$OPENCODE_DB" ] || { echo "db-compact: database not found: $OPENCODE_DB" >&2; return 1; }
 
-if [ "$dry_run" -eq 1 ]; then
-	echo "(dry-run) Plan:"
-	echo "  1. ensure Desktop ('opencode serve') is NOT running"
-	echo "  2. launchctl bootout gui/$UID_NUM/$WEB_LABEL"
-	echo "  3. poll lsof until no opencode process holds the DB (~30s)"
-	echo "  4. sqlite3: wal_checkpoint(TRUNCATE); auto_vacuum=INCREMENTAL; VACUUM"
-	echo "  5. launchctl bootstrap gui/$UID_NUM $WEB_PLIST"
-	echo "  6. report before/after page_count"
-	echo "  current: auto_vacuum=$auto_vacuum freelist=$freelist page_count=$page_count"
-	exit 0
-fi
+	local auto_vacuum freelist page_count page_size
+	auto_vacuum="$(db_pragma auto_vacuum)"      # 0=NONE 1=FULL 2=INCREMENTAL
+	freelist="$(db_pragma freelist_count)"
+	page_count="$(db_pragma page_count)"
+	page_size="$(db_pragma page_size)"
+	freelist="${freelist:-0}"; auto_vacuum="${auto_vacuum:-0}"
+	page_count="${page_count:-0}"; page_size="${page_size:-0}"
 
-# --- (1) refuse if Desktop is running.
-if pgrep -f "$DESKTOP_PATTERN" >/dev/null 2>&1; then
-	echo "ERROR: opencode Desktop ('$DESKTOP_PATTERN') is running. Quit it (Cmd+Q) and re-run." >&2
-	echo "       We will not bootout a GUI child process." >&2
-	exit 1
-fi
+	echo "db-compact: $OPENCODE_DB"
+	echo "  auto_vacuum=$auto_vacuum freelist_count=$freelist page_count=$page_count page_size=$page_size"
 
-if [ "$force" -ne 1 ]; then
-	if [ -t 0 ]; then
-		read -r -p "This stops opencode-web and VACUUMs the DB (downtime). Proceed? [y/N] " ans
-		case "$ans" in y|Y|yes|YES) ;; *) echo "aborted."; exit 0 ;; esac
-	else
-		echo "non-interactive and --force not given; aborting." >&2; exit 1
+	# --- (0) idempotent guard.
+	if [ "$auto_vacuum" = "2" ] && [ "$freelist" -le "$FREELIST_OK_MAX" ]; then
+		echo "Already INCREMENTAL with a small freelist ($freelist <= $FREELIST_OK_MAX). Nothing to do."
+		return 0
 	fi
-fi
 
-# --- (2) bootout the headless service.
-echo "Stopping $WEB_LABEL ..."
-launchctl bootout "gui/$UID_NUM/$WEB_LABEL" 2>/dev/null || true
+	# Classify the live holders of the DB once, up front.
+	local foreign
+	foreign="$(db_foreign_holders)"
 
-# --- (3) wait for the DB to be released.
-echo "Waiting for the DB to be released ..."
-released=0
-for _ in $(seq 1 30); do
-	if ! lsof "$OPENCODE_DB" 2>/dev/null | grep -qi opencode; then
-		released=1; break
+	if [ "$dry_run" -eq 1 ]; then
+		echo "(dry-run) Plan:"
+		echo "  1. ensure no FOREIGN process holds the DB (Desktop app / standalone serve)"
+		echo "  2. launchctl bootout gui/$UID_NUM/$WEB_LABEL"
+		echo "  3. poll lsof until no opencode process holds the DB (~30s)"
+		echo "  4. sqlite3: wal_checkpoint(TRUNCATE); auto_vacuum=INCREMENTAL; VACUUM"
+		echo "  5. launchctl bootstrap gui/$UID_NUM $WEB_PLIST"
+		echo "  6. report before/after page_count"
+		if [ -n "$foreign" ]; then
+			echo "  WOULD REFUSE: foreign holder(s) of $OPENCODE_DB detected (will NOT bootout):"
+			printf '%s\n' "$foreign" | while IFS=$'\t' read -r p c; do echo "    pid $p: $c"; done
+			echo "  -> quit the OpenCode Desktop app (Cmd-Q) / stop other opencode servers and retry."
+		else
+			echo "  holders: only the managed web server (or none) — would proceed."
+		fi
+		echo "  current: auto_vacuum=$auto_vacuum freelist=$freelist page_count=$page_count"
+		return 0
 	fi
-	sleep 1
-done
-if [ "$released" -ne 1 ]; then
-	echo "WARNING: an opencode process still holds $OPENCODE_DB after 30s; re-bootstrapping and aborting." >&2
+
+	# --- (1) refuse if any FOREIGN process holds the DB.
+	if [ -n "$foreign" ]; then
+		echo "ERROR: Desktop app / another opencode server is holding $OPENCODE_DB — quit the" >&2
+		echo "       OpenCode Desktop app (Cmd-Q) and retry. We will not bootout a foreign holder." >&2
+		echo "       Foreign holder(s):" >&2
+		printf '%s\n' "$foreign" | while IFS=$'\t' read -r p c; do echo "         pid $p: $c" >&2; done
+		return 1
+	fi
+
+	if [ "$force" -ne 1 ]; then
+		if [ -t 0 ]; then
+			local ans
+			read -r -p "This stops opencode-web and VACUUMs the DB (downtime). Proceed? [y/N] " ans
+			case "$ans" in y|Y|yes|YES) ;; *) echo "aborted."; return 0 ;; esac
+		else
+			echo "non-interactive and --force not given; aborting." >&2; return 1
+		fi
+	fi
+
+	# --- (2) bootout the headless service.
+	echo "Stopping $WEB_LABEL ..."
+	launchctl bootout "gui/$UID_NUM/$WEB_LABEL" 2>/dev/null || true
+
+	# --- (3) wait for the DB to be released.
+	echo "Waiting for the DB to be released ..."
+	local released=0 _
+	for _ in $(seq 1 30); do
+		if ! lsof "$OPENCODE_DB" 2>/dev/null | grep -qi opencode; then
+			released=1; break
+		fi
+		sleep 1
+	done
+	if [ "$released" -ne 1 ]; then
+		echo "WARNING: an opencode process still holds $OPENCODE_DB after 30s; re-bootstrapping and aborting." >&2
+		launchctl bootstrap "gui/$UID_NUM" "$WEB_PLIST" 2>/dev/null || true
+		return 1
+	fi
+
+	# --- (4) compact.
+	local before after
+	before="$page_count"
+	echo "Compacting (wal_checkpoint TRUNCATE; auto_vacuum=INCREMENTAL; VACUUM) ..."
+	sqlite3 "$OPENCODE_DB" "PRAGMA wal_checkpoint(TRUNCATE); PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"
+	after="$(db_pragma page_count)"; after="${after:-0}"
+
+	# --- (5) restart the service.
+	echo "Restarting $WEB_LABEL ..."
 	launchctl bootstrap "gui/$UID_NUM" "$WEB_PLIST" 2>/dev/null || true
-	exit 1
+
+	# --- (6) report.
+	echo "Done. page_count: $before -> $after (auto_vacuum now $(db_pragma auto_vacuum))."
+}
+
+# CLI entrypoint (skipped when sourced as a library with CLEANUP_LIB=1).
+if [ "${CLEANUP_LIB:-0}" != "1" ]; then
+	db_compact_main "$@"
 fi
-
-# --- (4) compact.
-before="$page_count"
-echo "Compacting (wal_checkpoint TRUNCATE; auto_vacuum=INCREMENTAL; VACUUM) ..."
-sqlite3 "$OPENCODE_DB" "PRAGMA wal_checkpoint(TRUNCATE); PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"
-after="$(db_pragma page_count)"; after="${after:-0}"
-
-# --- (5) restart the service.
-echo "Restarting $WEB_LABEL ..."
-launchctl bootstrap "gui/$UID_NUM" "$WEB_PLIST" 2>/dev/null || true
-
-# --- (6) report.
-echo "Done. page_count: $before -> $after (auto_vacuum now $(db_pragma auto_vacuum))."

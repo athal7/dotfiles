@@ -279,24 +279,52 @@ test_compact() {
 	if grep -q 'dry-run) Plan' <<<"$out"; then ok "dry-run reports plan"; else bad "compact dry-run"; printf '%s\n' "$out"; fi
 	if grep -q 'VACUUM' <<<"$out"; then ok "plan mentions VACUUM"; else bad "plan missing VACUUM"; fi
 
-	# Refusal: a process matching the Desktop pattern must abort before any bootout.
-	local sentinel="cleanup-test-sentinel-$$"
-	sleep 30 &
-	SENTINEL_PID=$!
-	# Launch a process whose argv contains the sentinel pattern.
-	perl -e 'sleep 30' "$sentinel" &
-	local perl_pid=$!
-	sleep 0.3
-	set +e
-	OPENCODE_DB="$db" COMPACT_DESKTOP_PATTERN="$sentinel" bash "$DB_COMPACT" --force >"$WORK/compact.out" 2>&1
-	local rc=$?
-	set -e
-	kill "$perl_pid" 2>/dev/null || true
-	if [ "$rc" -ne 0 ] && grep -qi 'Desktop' "$WORK/compact.out"; then
-		ok "refuses when Desktop pattern matches"
-	else
-		bad "compact did not refuse (rc=$rc)"; cat "$WORK/compact.out"
-	fi
+	# Foreign-holder classification (white-box, injected fixtures). Source the
+	# script as a library (CLEANUP_LIB=1) and override the lsof PID enumeration
+	# and the per-PID `ps` lookup with synthetic data so we can exercise the
+	# classifier without any live server. A holder is FOREIGN unless its command
+	# line contains the managed-web pattern ("opencode web", the launchd server).
+	# shellcheck source=/dev/null
+	(
+		CLEANUP_LIB=1 OPENCODE_DB="$db" . "$DB_COMPACT"
+		set +e   # the sourced lib enables `set -e`; grep/test guards below need it off
+
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		db_pid_command() {
+			case "$1" in
+				101) echo "/opt/homebrew/bin/opencode web --port 4096" ;;
+				102) echo "/Users/u/Applications/OpenCode.app/Contents/Frameworks/OpenCode Helper.app/Contents/MacOS/OpenCode Helper --type=utility --utility-sub-type=node.mojom.NodeService --user-data-dir=/x" ;;
+				103) echo "/usr/local/bin/opencode serve --hostname 127.0.0.1" ;;
+				*)   echo "" ;;
+			esac
+		}
+
+		# Only the managed launchd web server holds it -> no foreign holders.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		db_holder_pids() { printf '%s\n' 101; }
+		[ -z "$(db_foreign_holders)" ] && echo MANAGED_ONLY_OK
+
+		# Desktop Electron helper present alongside the managed server.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		db_holder_pids() { printf '%s\n' 101 102; }
+		db_foreign_holders | grep -q '^102' && echo DESKTOP_FOREIGN_OK
+		db_foreign_holders | grep -q '^101' || echo MANAGED_NOT_FOREIGN_OK
+
+		# A standalone `opencode serve` is also a foreign holder.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		db_holder_pids() { printf '%s\n' 103; }
+		db_foreign_holders | grep -q '^103' && echo SERVE_FOREIGN_OK
+
+		# No holders at all -> nothing foreign.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		db_holder_pids() { :; }
+		[ -z "$(db_foreign_holders)" ] && echo NONE_OK
+	) >"$WORK/compact.cls" 2>&1
+	check "managed web not foreign"     "$(grep -c MANAGED_ONLY_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "desktop helper is foreign"   "$(grep -c DESKTOP_FOREIGN_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "managed web excluded"        "$(grep -c MANAGED_NOT_FOREIGN_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "standalone serve is foreign" "$(grep -c SERVE_FOREIGN_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "no holders -> none foreign"  "$(grep -c NONE_OK "$WORK/compact.cls" | tr -d ' ')" 1
 }
 test_compact
 
