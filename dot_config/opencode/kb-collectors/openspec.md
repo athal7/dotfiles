@@ -1,6 +1,5 @@
 ---
 name: openspec
-enabled: true
 priority: 0
 authoritative_for: [implement-work, design-decisions, rejected-alternatives]
 description: OpenSpec durable store — authoritative source for /implement work; read BEFORE other collectors to build the session exclusion set

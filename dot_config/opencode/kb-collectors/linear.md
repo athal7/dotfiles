@@ -1,30 +1,46 @@
 ---
 name: linear
-enabled: true
 priority: 3
 authoritative_for: [tickets, completed-work]
 description: Linear issues you touched in the enrichment window
-# workspace: the Linear workspace slug passed to the `linear` CLI.
-# Leave empty to use whatever workspace the CLI is already authenticated to.
-workspace: ""
 ---
+
+## Enabled check
+
+Load the `linear` skill. If no Linear API token is available (the skill cannot authenticate), skip this collector and log "linear: no auth, skipping".
 
 ## How to query
 
-If `workspace` is set in frontmatter, pass it with `--workspace`:
+Use the Linear GraphQL API (endpoint `https://api.linear.app/graphql`) via the `linear` skill. Query issues assigned to or created by you that were updated within the enrichment window:
 
-```bash
-linear issue mine --updated-after YYYY-MM-DD --all-states --no-pager
-# (the CLI uses the default workspace; --workspace flag is not supported by the
-#  current linear CLI — workspace selection is via `linear auth` at setup time)
+```graphql
+{
+  issues(
+    filter: {
+      updatedAt: { gte: "YYYY-MM-DDT00:00:00Z" }
+      or: [
+        { assignee: { isMe: { eq: true } } }
+        { creator: { isMe: { eq: true } } }
+      ]
+    }
+    first: 50
+  ) {
+    nodes {
+      identifier
+      title
+      state { name }
+      updatedAt
+      description
+      url
+    }
+  }
+}
 ```
-
-The workspace this collector targets is `{{ frontmatter.workspace }}` (set in frontmatter; update there if you switch orgs).
 
 ## What to extract
 
 - Newly created tickets
-- Status changes
+- Status changes (especially to Done/Completed)
 - Decisions captured in descriptions or comments
 - Any ticket closed in the window (signals completed work not otherwise visible in git)
 

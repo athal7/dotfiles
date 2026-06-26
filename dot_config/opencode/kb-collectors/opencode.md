@@ -1,6 +1,5 @@
 ---
 name: opencode
-enabled: true
 priority: 5
 authoritative_for: [coding-sessions]
 description: opencode coding sessions from the local session store

@@ -1,6 +1,5 @@
 ---
 name: slack
-enabled: true
 priority: 2
 authoritative_for: [informal-decisions, action-items, contact-info]
 description: Slack messages — your sent messages and mentions, in the enrichment window

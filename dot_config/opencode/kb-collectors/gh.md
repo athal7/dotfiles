@@ -1,23 +1,26 @@
 ---
 name: gh
-enabled: true
 priority: 4
 authoritative_for: [shipped-code, reviews]
 description: GitHub PRs you authored or reviewed in the enrichment window
-# orgs: GitHub orgs to scope searches to. When set, each org is added as
-# `org:NAME` to the search query. Leave empty for no org filter (searches
-# across all repos you have access to).
-orgs: []
 # skip_bots: commit authors / PR actors to ignore
 skip_bots: [dependabot]
 ---
 
-## How to query
+## Enabled check
 
-Scope to the orgs listed in `orgs` frontmatter. Build the org filter by joining each as `org:NAME`:
+Read GitHub orgs from chezmoi data:
 
 ```bash
-# PRs you opened or updated (add org filters if orgs list is non-empty)
+ORGS=$(chezmoi data --format json | jq -r '[.orgs | keys[]] | join(" ")')
+```
+
+If `ORGS` is empty, search across all repos you have access to (no org filter). If non-empty, scope searches with an `org:NAME` filter per org.
+
+## How to query
+
+```bash
+# PRs you opened or updated
 gh search prs --author "@me" --state all --updated ">=YYYY-MM-DD" \
   --json number,title,repository,state,updatedAt,body
 
@@ -26,7 +29,7 @@ gh search prs --review-requested "@me" --updated ">=YYYY-MM-DD" \
   --json number,title,repository,state,updatedAt
 ```
 
-If the `orgs` list in frontmatter is empty, omit the org filter and search across all repos.
+Add `org:NAME` to each query for every org in `ORGS` (run one query per org, or combine with multiple `org:` terms in a single search string).
 
 ## What to extract
 
