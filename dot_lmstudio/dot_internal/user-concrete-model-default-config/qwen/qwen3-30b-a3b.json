@@ -1,0 +1,18 @@
+{
+    "preset": "",
+    "operation": {
+        "fields": []
+    },
+    "load": {
+        "fields": [
+            {
+                "key": "llm.load.contextLength",
+                "value": 40960
+            },
+            {
+                "key": "llm.load.numParallelSessions",
+                "value": 2
+            }
+        ]
+    }
+}
