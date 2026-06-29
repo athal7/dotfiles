@@ -158,7 +158,12 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       }
     },
     "general": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "description": "Multi-step research and read-only work that doesn't fit explore/scout/plan/qa — the reads catch-all.",
+      "model": "anthropic/claude-sonnet-4-6",
+      "permission": {
+        "edit": "deny",
+        "write": "deny"
+      }
     }
   },
   "model": "anthropic/claude-sonnet-4-6",

@@ -176,7 +176,11 @@ WHERE json_extract(data,'$.role')='assistant' AND json_extract(data,'$.agent')='
 GROUP BY day ORDER BY day DESC;
 SQL
 
-# Per-agent/model latency & output — speed regressions (build is tuned for speed)
+# Per-agent/model latency & output — speed regressions (build is tuned for speed).
+# Turns with latency >= 30 min (1,800,000 ms) are excluded: they represent suspended
+# sessions (laptop closed mid-turn), not slow model responses, and would otherwise
+# dominate the average (e.g. 14 frozen turns accounted for 93.5% of raw general-agent
+# latency in one window).
 sqlite3 -readonly "$DB" <<SQL
 SELECT json_extract(data,'$.agent') AS agent, json_extract(data,'$.modelID') AS model,
        COUNT(*) AS msgs,
@@ -186,6 +190,7 @@ FROM message
 WHERE json_extract(data,'$.role')='assistant'
   AND json_extract(data,'$.time.completed') IS NOT NULL
   AND json_extract(data,'$.tokens.output') > 0
+  AND (json_extract(data,'$.time.completed')-json_extract(data,'$.time.created')) < 1800000
   AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
 GROUP BY agent, model HAVING msgs > 50 ORDER BY agent, model;
 SQL
@@ -279,6 +284,12 @@ WHERE json_extract(data,'$.role')='assistant'
   AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000);
 SQL
 
+# NOTE — local_turn_pct EXCLUDES session auto-titling (the local model's primary job).
+# Session titling fires as an internal OpenCode runtime call per top-level session and
+# never writes a message row, so near-0% local_turn_pct is EXPECTED and does not mean
+# the local model is idle. The providerID query above = "local model used as a session
+# agent"; query (d) below = "local model used for titling" (the dominant workload).
+
 # (c) Estimated Claude $ avoided (DIRECTIONAL — local cost=0, so estimate from each
 # agent's historical Anthropic $/turn). Agents that run ONLY on local have no
 # Anthropic baseline -> est shows 0/null; for title (not attributed to agent='title')
@@ -302,6 +313,22 @@ SELECT l.agent, l.local_turns, ROUND(a.avg_cost,4) AS anthro_avg_cost,
        ROUND(l.local_turns*COALESCE(a.avg_cost,0),2) AS est_usd_avoided
 FROM local l LEFT JOIN anthro a ON a.agent=l.agent
 ORDER BY est_usd_avoided DESC;
+SQL
+
+# (d) Local-model titling throughput — the primary local-utilization signal.
+# Counts top-level sessions (parent_id IS NULL; subagent sessions excluded) with a
+# real (non-default) title vs total. A high titled_pct confirms LM Studio is up and
+# serving requests even when message-table local_turn_pct rounds to ~0. A sudden DROP
+# in titled_pct (many sessions getting default titles) means the LM Studio server is
+# down — the failure mode the 2026-06-26 autoStartOnLaunch fix addressed.
+sqlite3 -readonly "$DB" <<SQL
+SELECT
+  SUM(CASE WHEN title NOT IN ('New Session','New session','Untitled','') AND title IS NOT NULL THEN 1 ELSE 0 END) AS titled_sessions,
+  COUNT(*) AS total_sessions,
+  ROUND(100.0*SUM(CASE WHEN title NOT IN ('New Session','New session','Untitled','') AND title IS NOT NULL THEN 1 ELSE 0 END)/COUNT(*),1) AS titled_pct
+FROM session
+WHERE time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+  AND parent_id IS NULL;
 SQL
 ```
 
