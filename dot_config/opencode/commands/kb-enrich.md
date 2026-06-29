@@ -1,50 +1,38 @@
 ---
-description: Daily knowledge base enrichment — enrich profiles, journal, and decisions for each date since the last run
+description: Knowledge base enrichment — enrich profiles, journal, and decisions for each date since the last run
 subtask: true
 ---
 
-Run the daily knowledge base enrichment. By default enrich every date since the last run (see **Date range** below), not just today; honor an explicit date or range given in arguments instead.
+Enrich the knowledge base for every date since the last run. An explicit date or range given in arguments overrides.
 
 $ARGUMENTS
 
-## Sources
+## Step 1 — Resolve date range
 
-Check activity across all available sources:
+The most recent `~/.local/share/kb/journal/YYYY-MM-DD.md` is the last-run marker: enrich each date from (last journal date + 1) through today, inclusive. This makes a Monday run sweep the trailing weekend and lets a skipped run self-heal on the next run. If no prior journal exists, default to today. An explicit date or range in arguments overrides this.
 
-- **opencode** coding sessions
-- **slack** chat messages and threads
-- **zoom** meeting transcripts — captions live at `~/Documents/Zoom/YYYY-MM-DD HH.MM.SS <Title>/meeting_saved_closed_caption.txt`. For each transcript whose dir-date falls in the enrich window, distill it with the local on-device model first (see Extract step) instead of reading the full raw caption text.
-- **linear** issues and comments
-- **gh** code reviews, PRs, and issues
-- **openspec durable store (AUTHORITATIVE for `/implement` work)** — each worktree's `openspec/` carries two narrow symlinks into a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/` (`openspec/specs` → store `specs/`, `openspec/changes/archive` → store `changes/archive/`). At Ship, `openspec archive` moves a completed change through the `changes/archive` symlink into the store, so its artifacts persist regardless of when work shipped. For each date being enriched, read `~/.local/share/kb/openspec/*/changes/archive/<date>-*/design.md` for decisions, the "why", and rejected alternatives, and read each store's durable `specs/` for the standing requirements. These structured artifacts are the source of truth for the reasoning behind completed `/implement` work — use them instead of reconstructing it from full (token-expensive, lossy) session transcripts.
+## Step 2 — Load collectors
 
-### Session exclusion — the core token-saving dedup
+Collectors live at `~/.config/kb/collectors/*.md`. Which collectors run is determined by the enabled list in chezmoi local config:
 
-The openspec store is authoritative for `/implement` work, so the sessions that PRODUCED an archived change must be EXCLUDED from transcript reads. Build the exclusion set and skip those sessions:
+```
+chezmoi data --format json | jq -r '.kb.collectors[]'
+```
 
-1. **Collect excluded worktrees.** For each date being enriched, read every `~/.local/share/kb/openspec/*/changes/archive/<date>-*/kb-meta.yaml` and collect its `worktree:` value (the absolute repo/worktree root, stamped at archive). That set is the exclusion list.
-2. **Skip those sessions.** When scanning **opencode** sessions, a session is identified by its `directory` column in the `session` table of `~/.local/share/opencode/opencode.db`. SKIP any session whose `directory` is in the exclusion set — for those, narrate from the change's `design.md`/specs, not the transcript. Only sessions NOT covered by an archived change get a transcript read.
-3. **Filter at query time.** Pass the collected worktrees as the `NOT IN (...)` list and bound by the date window (`time_updated` is epoch-ms):
+Run only the listed collectors. If the key is absent, log "kb.collectors not configured" and stop.
 
-   ```sql
-   SELECT id, directory, title, time_updated
-   FROM session
-   WHERE time_updated BETWEEN :start_ms AND :end_ms
-     AND directory NOT IN ('/abs/worktree/a', '/abs/worktree/b');
-   -- returned sessions are the ONLY ones that need a transcript read;
-   -- excluded directories are covered by the durable change artifacts instead.
-   ```
+## Step 3 — Run each collector
 
-**Benign failure modes** (neither loses correctness): a missed match (stale/absent `kb-meta.yaml`) just wastes one transcript read; an over-match (a session in an excluded worktree that wasn't really part of the change) just relies on the better, distilled artifact instead of the transcript.
+For each enabled collector, apply its embedded query recipe and triage/extraction rules against the resolved date window. Collectors are independent — run them in any order. The opencode collector handles its own internal openspec→exclusion→sessions sequencing.
 
-## Enrichment Steps
+## Step 4 — Write outputs
 
-1. **Extract** people facts, project updates, and decisions from each source.
-   - **Zoom transcripts:** for each in-window transcript, run `~/.config/opencode/bin/kb-distill <caption-file> "<title>" <date>` and use the returned JSON facts (participants, topics, decisions, action_items, open_questions, summary) in place of the raw caption text when extracting people facts, decisions, and action items. The raw transcript is sent only to the on-device local model (privacy positive); the authoritative do-not-store privacy filter below still applies at the WRITE step. **If `kb-distill` exits non-zero, read the raw transcript yourself instead and note the fallback in the journal.**
-2. **Journal** — write one cross-project rollup journal file per enriched date, each with diff stats. By construction each is THIN: feed it only from the NON-excluded sessions (those not covered by an archived change) plus git diff-stats. For `/implement` work, do NOT re-narrate the openspec change — reference the durable store artifacts (`design.md`/specs already in the kb via the symlink). The journal's role is the cross-project rollup + non-`/implement` activity, not a reconstruction of openspec work. Keep it; just don't duplicate the store.
-3. **Profiles** — merge new facts into knowledge-base people and project profiles
-4. **Decisions** — add any decisions to the decisions log. Pull key design decisions and rejected alternatives from the durable store's `~/.local/share/kb/openspec/*/changes/archive/<date>-*/design.md` (READ, don't copy — the artifacts are already in the kb). The decisions log is a distilled record anchored to its product/project, not a dump of the design files.
-5. **Action items** — extract action items from the enriched window's activity. Cross-reference within the same activity data — if the activity shows you already took the action (replied to the thread, reviewed the PR, closed the issue), skip the reminder. Only create reminders for items that were not resolved within the enriched window.
+After all collectors have run, write the enrichment outputs:
+
+1. **Journal** — write one cross-project rollup journal file per enriched date at `~/.local/share/kb/journal/YYYY-MM-DD.md`, each with diff stats. By construction each is THIN: feed it only from the NON-excluded sessions (those not covered by an archived change) plus git diff-stats. For `/implement` work, do NOT re-narrate the openspec change — reference the durable store artifacts (`design.md`/specs already in the kb via the symlink). The journal's role is the cross-project rollup + non-`/implement` activity, not a reconstruction of openspec work.
+2. **Profiles** — merge new facts into knowledge-base people and project profiles at `~/.local/share/kb/people/` and `~/.local/share/kb/projects/`.
+3. **Decisions** — add any decisions to the decisions log. Pull key design decisions and rejected alternatives from the durable store's `~/.local/share/kb/openspec/*/changes/archive/YYYY-MM-DD-*/design.md` (READ, don't copy — the artifacts are already in the kb via the symlink). The decisions log is a distilled record anchored to its product/project, not a dump of the design files.
+4. **Action items** — extract action items from the enriched window's activity. Cross-reference within the same activity data — if the activity shows you already took the action (replied to the thread, reviewed the PR, closed the issue), skip the reminder. Only create reminders for items that were not resolved within the enriched window.
 
 ## Privacy
 
@@ -54,7 +42,3 @@ Do not extract or store:
 - Performance evaluations
 - Legal or attorney-client privileged content
 - Content from HR-related discussions
-
-## Date range
-
-Enrich the gap since the last run, not a hard single day. The most recent `~/.local/share/kb/journal/YYYY-MM-DD.md` is the last-run marker: enrich each date from (last journal date + 1) through today, inclusive. This makes a Monday run sweep the trailing weekend and lets a skipped run self-heal on the next run. If no prior journal exists, default to today. An explicit date or range in arguments overrides this.

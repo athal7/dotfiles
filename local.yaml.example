@@ -22,6 +22,12 @@ prod_services:
   your-api-service: your-api-repo
   your-worker-service: your-worker-repo
 
+# Knowledge-base collectors to run during /kb-enrich. Each name maps to a recipe
+# file at ~/.config/kb/collectors/<name>.md. Only listed collectors run; omit one
+# to disable it without deleting its recipe.
+kb:
+  collectors: [opencode, slack, zoom, linear, gh]
+
 # Secrets manifest — each entry declares a name. Values are stored in the macOS
 # Keychain under service "chezmoi" with account = the name. Populate them via:
 #   security add-generic-password -U -s "chezmoi" -a "<name>" -w "<value>"
