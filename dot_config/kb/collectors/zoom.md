@@ -7,11 +7,13 @@ Dispatch the `connectors` subagent to retrieve Zoom meeting data for the enrichm
 
 ## Dispatch step
 
+Before dispatching, resolve the local IANA timezone: `readlink /etc/localtime | sed 's#.*/zoneinfo/##'` (e.g. `America/Chicago`).
+
 Dispatch the `connectors` subagent (`task` tool, `subagent_type: connectors`) with a prompt like:
 
-> Search Zoom meetings from `<FROM>` to `<TO>` (ISO-8601 UTC). For each meeting with a summary or transcript available, fetch its assets. Return a distilled summary: participants, decisions, action items (next_steps[]), and open questions. Do not dump raw transcripts.
+> Search Zoom meetings from `<FROM>` to `<TO>` (ISO-8601 UTC). User timezone: `<TZ>`. For each meeting with a summary or transcript available, fetch its assets. Return a distilled summary: participants, decisions, action items (next_steps[]), and open questions. Do not dump raw transcripts.
 
-The connectors subagent will call `searchMeetings` over the window and `get_meeting_assets` per qualifying meeting, applying content priority (`summary_markdown` → `my_notes.content_markdown` → transcript items) internally.
+The connectors subagent will call `search_meetings` over the window and `get_meeting_assets` per qualifying meeting, applying content priority (`summary_markdown` → `my_notes.content_markdown` → transcript items) internally.
 
 ## Triage rules
 
