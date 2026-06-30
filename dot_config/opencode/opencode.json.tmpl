@@ -96,7 +96,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "lead": {
       "mode": "primary",
       "model": "anthropic/claude-sonnet-5",
-      "variant": "high",
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
         "task": "allow",
@@ -129,7 +128,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-5",
-      "variant": "high",
       "prompt": "{file:./prompts/build.md}",
       "steps": 30,
       "permission": {
@@ -196,6 +194,17 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
             "thinking": {
               "type": "adaptive",
               "display": "summarized"
+            }
+          }
+        },
+        "claude-sonnet-5": {
+          "options": {
+            "thinking": {
+              "type": "adaptive",
+              "display": "summarized"
+            },
+            "output_config": {
+              "effort": "high"
             }
           }
         }
