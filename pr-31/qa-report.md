@@ -3,6 +3,8 @@
 ### AC1 — Collectors load from ~/.config/opencode/kb-collectors/*.md
 - **QA:** PASS ✅ — Dropped a test collector file into `~/.config/opencode/kb-collectors/`, ran `kb-enrich`, confirmed it was picked up and executed in priority order.
 
+![001-ac1-collector-load.png](001-ac1-collector-load.png)
+
   <details><summary>steps</summary>
 
   1. Navigated to `~/.config/opencode/kb-collectors/` — directory did not exist yet
@@ -15,6 +17,8 @@
 ### AC2 — Disabling a collector removes it from execution without touching tracked files
 - **QA:** PASS ✅ — Set `enabled: false` in `granola.md` collector, re-ran `kb-enrich` — collector was skipped, no file changes.
 
+![002-ac2-disable-collector.png](002-ac2-disable-collector.png)
+
   <details><summary>steps</summary>
 
   1. Opened `~/.config/opencode/kb-collectors/granola.md`, set `enabled: false`
@@ -24,7 +28,7 @@
   </details>
 
 ### AC3 — Each collector declares its own data source and query recipe
-- **QA:** PASS ✅ — Inspected three collector files (`openspec.md`, `granola.md`, `linear.md`); each contains a self-contained query recipe. Orchestrator reads frontmatter only for scheduling metadata.
+- **QA:** PASS ✅ — Inspected three collector files; each contains a self-contained query recipe. Orchestrator reads frontmatter only for scheduling metadata.
 
   <details><summary>steps</summary>
 
