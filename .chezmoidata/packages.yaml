@@ -85,6 +85,7 @@ packages:
         "gh api graphql*mutation*": ask
         "gh api graphql*": allow
         "gh *": ask
+    - name: athal7/tap/git-worktree-sync
     - name: git-spice
     - name: jc
     - name: jq
