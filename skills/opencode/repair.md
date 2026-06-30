@@ -149,7 +149,7 @@ for key in ('layout.page', web_key):
 open(path, 'w').write(json.dumps(data))
 ```
 
-Then reopen Desktop (`open -a OpenCode`). **Do NOT restart `opencode-web`** — it is the session-hosting service (may host live sessions) and reads `workspaceName` on demand, so the pruned file takes effect without a restart.
+Then reopen Desktop (`open -a OpenCode`). **Do NOT restart `opencode-web`** — it may host live mobile/automated-job sessions and reads `workspaceName` on demand, so the pruned file takes effect without a restart.
 
 ---
 
