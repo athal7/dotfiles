@@ -162,11 +162,11 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
         "write": "deny"
       }
     },
-    "connectors": {
-      "description": "Reaches remote services via Runlayer MCP (currently Zoom). Dispatched to fetch meeting summaries, transcripts, recordings, and other connector data. Returns a tight distilled summary, never raw dumps.",
+    "zoom": {
+      "description": "Reaches Zoom via Runlayer MCP (OAuth). Dispatched to fetch meeting summaries, transcripts, recordings. Returns a tight distilled summary, never raw dumps.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-4-6",
-      "prompt": "{file:./prompts/connectors.md}",
+      "prompt": "{file:./prompts/zoom.md}",
       "tools": {
         "runlayer-zoom_*": false,
         "runlayer-zoom_search_meetings": true,
