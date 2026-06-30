@@ -28,6 +28,9 @@ prod_services:
 kb:
   collectors: [opencode, slack, zoom, linear, gh]
 
+runlayer:
+  zoom_mcp_url: ""  # Runlayer MCP proxy URL for the Zoom connector
+
 # Secrets manifest — each entry declares a name. Values are stored in the macOS
 # Keychain under service "chezmoi" with account = the name. Populate them via:
 #   security add-generic-password -U -s "chezmoi" -a "<name>" -w "<value>"

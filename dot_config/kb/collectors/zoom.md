@@ -1,32 +1,30 @@
 ---
 name: zoom
-description: Zoom meeting transcripts — distilled via kb-distill on-device model
+description: Zoom meeting summaries and transcripts — fetched by dispatching the connectors subagent
 ---
 
-Use the `zoom` skill to locate caption files for meetings whose date prefix falls within the enrichment window. For each in-window meeting, run the distillation step below.
+Dispatch the `connectors` subagent to retrieve Zoom meeting data for the enrichment window, then extract kb facts from its returned summary.
 
-## Distillation step
+## Dispatch step
 
-For each in-window transcript, run:
+Dispatch the `connectors` subagent (`task` tool, `subagent_type: connectors`) with a prompt like:
 
-```
-~/.config/opencode/bin/kb-distill <caption-file> "<title>" YYYY-MM-DD
-```
+> Search Zoom meetings from `<FROM>` to `<TO>` (ISO-8601 UTC). For each meeting with a summary or transcript available, fetch its assets. Return a distilled summary: participants, decisions, action items (next_steps[]), and open questions. Do not dump raw transcripts.
 
-Use the returned JSON facts (fields: `participants`, `topics`, `decisions`, `action_items`, `open_questions`, `summary`) in place of the raw caption text when extracting people facts, decisions, and action items. Only the on-device local model sees the raw transcript.
-
-If `kb-distill` exits non-zero, read the raw transcript yourself instead and note the fallback in the journal.
+The connectors subagent will call `searchMeetings` over the window and `get_meeting_assets` per qualifying meeting, applying content priority (`summary_markdown` → `my_notes.content_markdown` → transcript items) internally.
 
 ## Triage rules
 
-Extract from the distilled JSON:
-- Meeting participants and any contact info surfaced (new names, roles, team membership)
-- Decisions recorded under the `decisions` field
-- Action items from the `action_items` field
-- Open questions from `open_questions` that remain unresolved at the end of the enrichment window
+From the connectors subagent's returned summary, extract:
+
+- Meeting participants and any contact info surfaced (names, roles, team membership)
+- Decisions recorded in the summary — anchor each to the project or product it concerns
+- Action items from `next_steps[]` — note the meeting topic and `meeting_start_time` for cross-reference
+- Open questions that remain unresolved at the end of the enrichment window
 
 ## Extraction rules
 
-- Map participants to people facts.
+- Map participants from `attendees[]` and any speaker lines to people facts.
 - Anchor decisions to the project or product they concern.
-- For action items, note the meeting title and date so the item can be cross-referenced at write time.
+- For action items, note the meeting topic and date for cross-reference.
+- No local distillation step is needed — Zoom AI Companion summaries are already distilled. Use the connectors subagent's summary directly.

@@ -1,30 +1,23 @@
 ---
 name: zoom
-description: Zoom meeting captions — file locations and format
+description: Zoom meeting summaries, transcripts, recordings, and meeting search — dispatch the connectors subagent
 license: MIT
 metadata:
   provides:
     - zoom
 ---
 
-Zoom saves meeting captions to `~/Documents/Zoom/`. Each meeting gets a timestamped directory.
+Zoom meeting data is available by dispatching the **`connectors` subagent** (`task` tool, `subagent_type: connectors`). The connectors subagent holds the Runlayer Zoom MCP tools and returns a distilled summary — never raw dumps.
 
-## File layout
+## What connectors can retrieve
 
-```
-~/Documents/Zoom/
-  YYYY-MM-DD HH.MM.SS <Meeting Title>/
-    meeting_saved_closed_caption.txt
-```
+- **Meeting summaries** — AI Companion summaries and quick recaps for a date range
+- **Transcripts** — timestamped transcript items when no AI summary is available
+- **Action items** — `next_steps[]` from AI Companion meeting summaries
+- **Participants and attendees** — names, emails, roles
+- **Recordings** — cloud recording listings with file types (MP4, transcript, summary)
+- **Semantic search** — search across chat or Zoom AI meeting notes
 
-## Caption format
+## How to dispatch
 
-```
-[Speaker Name HH:MM:SS]
-Spoken text from that speaker.
-
-[Another Speaker HH:MM:SS]
-Their spoken text.
-```
-
-Speaker names come from Zoom display names and may not match canonical names.
+Give the connectors subagent a date window (ISO-8601 UTC) and your question. It will search for meetings, fetch assets for qualifying ones, and return a tight summary with decisions, action items, and participants extracted.

@@ -74,7 +74,6 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "~/code/**": "allow",
       "~/.local/share/**": "allow",
       "~/.agents/skills/**": "allow",
-      "~/Documents/Zoom/**": "allow",
       "/tmp/**": "allow"
     },
     "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.global "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 4 | trim }}
@@ -164,6 +163,24 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
         "edit": "deny",
         "write": "deny"
       }
+    },
+    "connectors": {
+      "description": "Reaches remote services via Runlayer MCP (currently Zoom). Dispatched to fetch meeting summaries, transcripts, recordings, and other connector data. Returns a tight distilled summary, never raw dumps.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/connectors.md}",
+      "tools": {
+        "runlayer-zoom_*": false,
+        "runlayer-zoom_searchMeetings": true,
+        "runlayer-zoom_get_meeting_assets": true,
+        "runlayer-zoom_recordings_list": true,
+        "runlayer-zoom_get_recording_resource": true,
+        "runlayer-zoom_search_zoom": true,
+        "runlayer-zoom_create_file_with_content": true
+      },
+      "permission": {
+        "runlayer-zoom_create_file_with_content": "ask"
+      }
     }
   },
   "model": "anthropic/claude-sonnet-4-6",
@@ -201,6 +218,9 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       }
     }
   },
+  "tools": {
+    "runlayer-zoom_*": false
+  },
   "mcp": {
     "context7": {
       "type": "remote",
@@ -215,6 +235,10 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
         "/Applications/Firefox.app/Contents/MacOS/firefox",
         "--enable-script"
       ]
+    },
+    "runlayer-zoom": {
+      "type": "remote",
+      "url": "{{ .runlayer.zoom_mcp_url }}"
     }
   },
   "formatter": {

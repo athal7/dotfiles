@@ -184,20 +184,6 @@ launchagents:
     EnvironmentVariables:
       PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-  kb-zoom-capture:
-    Label: com.$USER.kb-zoom-capture
-    ProgramArguments:
-      - /opt/homebrew/bin/python3
-      - $HOME/.config/opencode/bin/kb-zoom-extract
-      - --days
-      - "3"
-    StartInterval: 900
-    RunAtLoad: true
-    StandardOutPath: $HOME/Library/Logs/kb-zoom-capture.log
-    StandardErrorPath: $HOME/Library/Logs/kb-zoom-capture.error.log
-    EnvironmentVariables:
-      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-
   lmstudio-qwen-load:
     Label: com.$USER.lmstudio-qwen-load
     ProgramArguments:
