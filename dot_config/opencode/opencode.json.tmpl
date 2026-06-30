@@ -95,7 +95,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
   "agent": {
     "lead": {
       "mode": "primary",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-sonnet-5",
       "variant": "high",
       "prompt": "{file:./prompts/lead.md}",
       "permission": {
@@ -118,7 +118,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "qa": {
       "description": "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior. Read-only re: code.",
       "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-sonnet-5",
       "prompt": "{file:./prompts/qa.md}",
       "permission": {
         "edit": "deny",
@@ -128,7 +128,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "build": {
       "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done.",
       "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-sonnet-5",
       "variant": "high",
       "prompt": "{file:./prompts/build.md}",
       "steps": 30,
@@ -139,7 +139,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       }
     },
     "explore": {
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-sonnet-5",
       "prompt": "{file:./prompts/explore.md}",
       "permission": {
         "edit": "deny",
@@ -149,7 +149,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "scout": {
       "description": "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7.",
       "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-sonnet-5",
       "prompt": "{file:./prompts/scout.md}",
       "permission": {
         "edit": "deny",
@@ -158,7 +158,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     },
     "general": {
       "description": "Multi-step research and read-only work that doesn't fit explore/scout/plan/qa — the reads catch-all.",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-sonnet-5",
       "permission": {
         "edit": "deny",
         "write": "deny"
@@ -183,7 +183,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       }
     }
   },
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "anthropic/claude-sonnet-5",
   "small_model": "lmstudio/qwen3-30b-a3b-instruct-2507",
   "compaction": {
     "prune": true
