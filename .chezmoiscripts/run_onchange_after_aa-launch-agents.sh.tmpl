@@ -1,11 +1,8 @@
 #!/bin/sh
 # LaunchAgent generator — delegates to launchd-yaml.
-# Re-runs whenever launchd.yaml changes.
+# Re-runs whenever agents.yaml changes.
 #
-# launchd.yaml hash: {{ include ".chezmoidata/launchd.yaml" | sha256sum }}
+# agents.yaml hash: {{ include "dot_config/launchd-yaml/agents.yaml" | sha256sum }}
 
 set -eu
-
-launchd-yaml apply \
-  --file "{{ .chezmoi.sourceDir }}/.chezmoidata/launchd.yaml" \
-  --self-agent opencode-web
+launchd-yaml apply --self-agent opencode-web
