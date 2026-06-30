@@ -221,7 +221,8 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     }
   },
   "tools": {
-    "runlayer-zoom_*": false
+    "runlayer-zoom_*": false,
+    "runlayer-self_*": false
   },
   "mcp": {
     "context7": {
@@ -241,6 +242,10 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-zoom": {
       "type": "remote",
       "url": "{{ .runlayer.zoom_mcp_url }}"
+    },
+    "runlayer-self": {
+      "type": "remote",
+      "url": "{{ .runlayer.self_mcp_url }}"
     }
   },
   "formatter": {
