@@ -15,13 +15,18 @@ import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta
 
-from cal.util import chezmoi_data, ical, ical_write, is_eligible, local_tz, log
+from cal.util import chezmoi_data, ical, ical_write, is_eligible, local_tz, log, to_local
 
 MARKER = "Managed by family-scheduler"
 LOOKAHEAD_DAYS = 14
 EVENING_START = 17  # 5pm weekday evenings
 
 TAG = "family-scheduler"
+
+
+def events_overlap(a_start, a_end, b_start, b_end):
+    """Return True if two time intervals overlap."""
+    return a_start < b_end and b_start < a_end
 
 
 def fetch_ics(name, url, tz):
@@ -210,16 +215,16 @@ STRATEGIES = {
 }
 
 
-def occupied_slots(calendars, from_date, to_date):
-    """Return set of start_date strings for busy events across all calendars."""
-    occupied = set()
+def occupied_slots(calendars, from_date, to_date, tz):
+    """Return list of (start_dt, end_dt) tuples for busy events across all calendars."""
+    occupied = []
     for cal in calendars.values():
         if not isinstance(cal, dict):
             continue
         events = ical("list", "-c", cal["name"], "--from", from_date, "--to", to_date, "-o", "json")
         for e in events:
             if not e.get("all_day") and e.get("availability") != "free":
-                occupied.add(e["start_date"][:16])  # YYYY-MM-DDTHH:MM
+                occupied.append((to_local(e["start_date"], tz), to_local(e["end_date"], tz)))
     return occupied
 
 
@@ -276,7 +281,7 @@ def main():
         log("No candidate events found", TAG)
         return
 
-    occupied = occupied_slots(calendars, from_date, to_date)
+    occupied = occupied_slots(calendars, from_date, to_date, tz)
     added = already_added(family_cal, from_date, to_date)
 
     added_count = 0
@@ -284,9 +289,10 @@ def main():
         if e["title"] in added:
             continue
 
-        start_str = e["start"].strftime("%Y-%m-%dT%H:%M")
-        if start_str[:16] in occupied:
-            log(f"Skipping '{e['title']}' — conflict at {start_str[:16]}", TAG)
+        if any(events_overlap(e["start"], e["end"], busy_start, busy_end)
+               for busy_start, busy_end in occupied):
+            start_str = e["start"].strftime("%Y-%m-%dT%H:%M")
+            log(f"Skipping '{e['title']}' — conflict at {start_str}", TAG)
             continue
 
         start_iso = e["start"].strftime("%Y-%m-%d %H:%M")
