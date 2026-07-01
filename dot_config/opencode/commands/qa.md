@@ -20,6 +20,8 @@ Optional argument: a focus string describing what to verify (e.g. `the checkout 
 
 3. **Relay the result.** Report the qa verdict (PASS/FAIL), the `$SESSION_DIR` path, and that `report.md`/`report.html` are ready.
 
+4. **Publish if HEAD has an open request.** Load the `qa-report-publish` skill and follow it — host the report, register a deployment status. Never touch the description.
+
 ## Non-goals
 
-Fully standalone. No PR interaction, no publishing, no `qa-report.*` files, no OpenSpec coupling, no remote writes.
+Fully standalone. No PR interaction beyond publishing the report, no OpenSpec coupling, no description edits.
