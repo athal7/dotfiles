@@ -132,6 +132,9 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
         "edit": "allow",
         "write": "allow",
         "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.build "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 8 | trim }}
+      },
+      "tools": {
+        "figma-desktop_*": true
       }
     },
     "explore": {
@@ -309,7 +312,8 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-zoom_*": false,
     "runlayer-self_*": false,
     "runlayer-slack_*": false,
-    "runlayer-atlassian_*": false
+    "runlayer-atlassian_*": false,
+    "figma-desktop_*": false
   },
   "mcp": {
     "context7": {
@@ -341,6 +345,11 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-atlassian": {
       "type": "remote",
       "url": "{{ .runlayer.atlassian_mcp_url }}"
+    },
+    "figma-desktop": {
+      "type": "remote",
+      "url": "http://127.0.0.1:3845/mcp",
+      "enabled": false
     }
   },
   "formatter": {

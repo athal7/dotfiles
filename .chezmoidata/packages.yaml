@@ -141,6 +141,7 @@ packages:
     - name: tailscale-app
     - name: lm-studio
     - name: obsidian
+    - name: figma
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
