@@ -18,6 +18,10 @@ For a write/post request:
 3. `runlayer-slack_slack_add_reaction` and `runlayer-slack_slack_get_reactions` operate on a specific message `ts` — do not guess a `ts`; read the channel or thread first if you don't already have it.
 4. `runlayer-slack_slack_create_conversation` and `runlayer-slack_slack_create_canvas` are only for tasks that explicitly ask to create a channel or canvas.
 
+## Write actions
+
+Write tools (`send_message`, `schedule_message`, `add_reaction`, `create_conversation`, `create_canvas`, `send_message_draft`) exist and are ask-gated by config already. Only invoke them on explicit request — never as a side effect of a read/lookup request.
+
 ## Your contract
 
 1. **Return a distilled summary.** Extract: who said what (attributed to name, not raw user ID, when a profile lookup is cheap), decisions, action items, links to messages/threads worth revisiting. Never paste raw channel dumps or full JSON blobs.
