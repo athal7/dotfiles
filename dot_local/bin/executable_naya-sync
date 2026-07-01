@@ -19,9 +19,16 @@ chezmoi re-add "$MAIN"
 echo "$(date): chezmoi re-add done"
 
 SOURCE_DIR="$(chezmoi source-path)"
+if [ -z "$SOURCE_DIR" ] || [ ! -d "$SOURCE_DIR/.git" ]; then
+  echo "$(date): chezmoi source-path unavailable or not a git repo, aborting" >&2
+  exit 1
+fi
 cd "$SOURCE_DIR" || exit 1
 if ! git diff --quiet || ! git diff --cached --quiet; then
   git add -A
-  git commit -m "chore: sync NayaFlow DB [$(date '+%Y-%m-%d')]"
-  echo "$(date): git commit done"
+  if git commit -m "chore: sync NayaFlow DB [$(date '+%Y-%m-%d')]"; then
+    echo "$(date): git commit done"
+  else
+    echo "$(date): git commit failed" >&2
+  fi
 fi

@@ -207,7 +207,7 @@ launchagents:
     StandardOutPath: $HOME/Library/Logs/naya-sync.log
     StandardErrorPath: $HOME/Library/Logs/naya-sync.error.log
     EnvironmentVariables:
-      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
 
   opencode-web:
