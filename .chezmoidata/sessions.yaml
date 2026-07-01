@@ -1,8 +1,4 @@
 xh_sessions:
-  slack_user_token:
-    host: slack.com
-    header: authorization
-    format: "Bearer {value}"
   linear_api_key:
     host: api.linear.app
     header: authorization
@@ -18,10 +14,6 @@ xh_sessions:
     host: api.figma.com
     header: x-figma-token
     format: "{value}"
-  confluence_api_token:
-    host_data: confluenceHost
-    auth_type: basic
-    username_from: confluence_email
   es_api_key:
     host_data: esHost
     header: authorization

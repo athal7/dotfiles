@@ -31,6 +31,8 @@ kb:
 runlayer:
   zoom_mcp_url: ""  # Runlayer MCP proxy URL for the Zoom connector
   self_mcp_url: ""  # Runlayer MCP proxy URL for the self/discovery server
+  slack_mcp_url: ""  # Runlayer MCP proxy URL for the Slack connector
+  atlassian_mcp_url: ""  # Runlayer MCP proxy URL for the Confluence/Jira connector
 
 # Secrets manifest — each entry declares a name. Values are stored in the macOS
 # Keychain under service "chezmoi" with account = the name. Populate them via:
@@ -38,16 +40,12 @@ runlayer:
 # Agents read values via `security find-generic-password -s chezmoi -a <name> -w` —
 # this works non-interactively, including from remote sessions, with no biometric prompts.
 secrets:
-  slack_user_token: {}
   slack_token: {}
   slack_user_id: {}
   figma_access_token: {}
   es_api_key: {}
   es_url: {}
   linear_api_key: {}
-  confluence_base_url: {}
-  confluence_email: {}
-  confluence_api_token: {}
   pagerduty_api_token: {}
 # Calendar configuration
 calendars:

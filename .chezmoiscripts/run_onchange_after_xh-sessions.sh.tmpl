@@ -1,7 +1,7 @@
 #!/bin/sh
 # Generate xh session files from committed session metadata and Keychain secrets.
 # Re-runs when sessions.yaml or dynamic host config changes.
-# config hash: {{ include ".chezmoidata/sessions.yaml" | sha256sum }}-{{ .confluenceHost }}-{{ .esHost }}
+# config hash: {{ include ".chezmoidata/sessions.yaml" | sha256sum }}-{{ .esHost }}
 
 set -eu
 
@@ -21,8 +21,6 @@ fetch_secret() {
 {{   $host := "" -}}
 {{   if hasKey $cfg "host" -}}
 {{     $host = $cfg.host -}}
-{{   else if eq $name "confluence_api_token" -}}
-{{     $host = $.confluenceHost -}}
 {{   else if eq $name "es_api_key" -}}
 {{     $host = $.esHost -}}
 {{   end -}}

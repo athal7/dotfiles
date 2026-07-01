@@ -12,17 +12,15 @@ Integration skills self-register their provided capabilities via `provides` in f
 |---------------------|----------|
 | **branching** — Stacked branch management via git-spice | **architecture** — Architecture decisions, design prerequisite check, ADR template |
 | **chezmoi** — Manage dotfiles via chezmoi | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
-| **confluence** — Wiki pages, spaces, and search | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
-| **elasticsearch** — Query ES logs, APM traces, and errors | **commit** — Semantic commit format and pre-commit checks |
-| **figma** — Read Figma files, components, and assets | **communication** — Human-facing prose style and AI-authorship markers |
-| **gh** — GitHub CLI: source control, CI, code review, issues | **observability** — Investigate production issues using logs and traces |
-| **gws** — Google Workspace: email, docs, drive, sheets | **push** — Push approval protocol and CI watching |
-| **knowledge-base** — Look up people, projects, and decisions locally | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
-| **linear** — Linear issue tracker | **thinking-tools** — Structured frameworks for decisions and problem framing |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | |
+| **elasticsearch** — Query ES logs, APM traces, and errors | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
+| **figma** — Read Figma files, components, and assets | **commit** — Semantic commit format and pre-commit checks |
+| **gh** — GitHub CLI: source control, CI, code review, issues | **communication** — Human-facing prose style and AI-authorship markers |
+| **gws** — Google Workspace: email, docs, drive, sheets | **observability** — Investigate production issues using logs and traces |
+| **knowledge-base** — Look up people, projects, and decisions locally | **push** — Push approval protocol and CI watching |
+| **linear** — Linear issue tracker | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **thinking-tools** — Structured frameworks for decisions and problem framing |
 | **pagerduty** — Incidents, on-call schedules, escalation policies | |
 | **reminders** — macOS Reminders via remindctl | |
-| **slack** — Messaging, search, and channel management | |
 | **xh** — HTTPie-compatible HTTP client for REST APIs | |
 | **zoom** — Zoom meeting captions | |
 
