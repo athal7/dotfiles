@@ -27,8 +27,19 @@ main() {
   fi
 
   echo "chezmoi-deploy: fast-forward merging '$branch' into main…"
-  git -C "$PRIMARY" merge --ff-only "$branch" \
-    || { echo "chezmoi-deploy: '$branch' is not a fast-forward of main; rebase it onto main and retry" >&2; exit 1; }
+  if ! git -C "$PRIMARY" merge --ff-only "$branch"; then
+    echo "chezmoi-deploy: '$branch' is not a fast-forward of main; attempting to rebase '$branch' onto main…"
+    if git -C "$PRIMARY" rebase main "$branch"; then
+      git -C "$PRIMARY" checkout main \
+        || { echo "chezmoi-deploy: failed to check out main after rebasing '$branch'" >&2; exit 1; }
+      git -C "$PRIMARY" merge --ff-only "$branch" \
+        || { echo "chezmoi-deploy: '$branch' is still not a fast-forward of main after rebase" >&2; exit 1; }
+    else
+      git -C "$PRIMARY" rebase --abort >/dev/null 2>&1
+      echo "chezmoi-deploy: rebase of '$branch' onto main failed due to conflicts; resolve manually" >&2
+      exit 1
+    fi
+  fi
 
   echo "chezmoi-deploy: applying to ~ (chezmoi apply --force)…"
   chezmoi apply --force \
