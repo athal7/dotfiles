@@ -112,11 +112,6 @@ packages:
         "xh *query*": allow
         "xh *": ask
     - name: yq
-    - name: googleworkspace-cli
-      permissions:
-        "gws * list*": allow
-        "gws * get*": allow
-        "gws *": ask
     - name: athal7/tap/opencode-cmd
     - name: steipete/tap/remindctl
       permissions:

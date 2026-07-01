@@ -10,10 +10,6 @@ xh_sessions:
         format: "Token token={value}"
       - name: accept
         value: "application/vnd.pagerduty+json;version=2"
-  figma_access_token:
-    host: api.figma.com
-    header: x-figma-token
-    format: "{value}"
   es_api_key:
     host_data: esHost
     header: authorization
