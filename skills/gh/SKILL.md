@@ -124,6 +124,8 @@ for i in {1..24}; do
 done
 ```
 
+If the loop times out (no review lands within the ~120s window) and the PR is still a draft, treat that as "this repo's automated review doesn't run on drafts" — stop polling, move on, not a failure. If the PR is not a draft and the loop times out, that's a genuine stall worth flagging normally.
+
 ## Checking repo visibility
 
 ```bash
@@ -139,6 +141,23 @@ gh run list --branch <branch> --limit 1
 # Failed step logs
 gh run view <run-id> --log-failed
 ```
+
+### Wait for CI to start
+
+Not every repo runs CI on draft PRs. Before waiting on CI, confirm it started at all: poll for whether any check run exists yet for the current head SHA — existence, not completion. Much shorter timeout than the review poll (~30s) since check runs typically register within seconds of push if they're going to run at all.
+
+Before that poll, rule out merge conflicts first: `gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus`. A zero-count poll is ambiguous — it means either "this repo skips CI on drafts" or "CI can't run at all because of a conflict." If the status is `DIRTY`, that's the real blocker (same field as the `mergeStateStatus` table above) — resolve the conflict (rebase/merge the base branch in) before anything else, and don't run the poll or conclude anything about draft-CI policy from it. Only proceed to the existence poll below once `mergeStateStatus` is not `DIRTY`.
+
+```bash
+TARGET_SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
+for i in {1..6}; do
+  COUNT=$(gh api "repos/$OWNER/$REPO/commits/$TARGET_SHA/check-runs" --jq '.total_count')
+  [[ "$COUNT" -gt 0 ]] && break
+  sleep 5
+done
+```
+
+If `COUNT` stays 0 after the loop, no CI triggered for this push — treat as "this repo's CI doesn't run on drafts" and move on, not a failure. If `COUNT > 0`, CI did start — proceed with normal watch-to-completion (`gh run list`/`gh run view` above).
 
 ## Inline Review Comments
 
