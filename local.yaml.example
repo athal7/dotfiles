@@ -33,6 +33,11 @@ runlayer:
   self_mcp_url: ""  # Runlayer MCP proxy URL for the self/discovery server
   slack_mcp_url: ""  # Runlayer MCP proxy URL for the Slack connector
   atlassian_mcp_url: ""  # Runlayer MCP proxy URL for the Confluence/Jira connector
+  gmail_mcp_url: ""  # Runlayer MCP proxy URL for the Gmail connector
+  gcalendar_mcp_url: ""  # Runlayer MCP proxy URL for the Google Calendar connector
+  gdrive_mcp_url: ""  # Runlayer MCP proxy URL for the Google Drive connector
+  gdocs_mcp_url: ""  # Runlayer MCP proxy URL for the Google Docs connector
+  gsheets_mcp_url: ""  # Runlayer MCP proxy URL for the Google Sheets connector
 
 # Secrets manifest — each entry declares a name. Values are stored in the macOS
 # Keychain under service "chezmoi" with account = the name. Populate them via:

@@ -199,6 +199,26 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
         "runlayer-atlassian_add*": "ask"
       }
     },
+    "google": {
+      "description": "Reaches Gmail, Calendar, Drive, Docs, and Sheets via Runlayer MCP (OAuth). Dispatched to search and read messages, events, and files; write actions (send/create/update/delete) require explicit confirmation. Returns a tight distilled summary, never raw dumps.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/google.md}",
+      "tools": {
+        "runlayer-gmail_*": true,
+        "runlayer-gcalendar_*": true,
+        "runlayer-gdrive_*": true,
+        "runlayer-gdocs_*": true,
+        "runlayer-gsheets_*": true
+      },
+      "permission": {
+        "runlayer-g*send*": "ask",
+        "runlayer-g*create*": "ask",
+        "runlayer-g*update*": "ask",
+        "runlayer-g*delete*": "ask",
+        "runlayer-g*schedule*": "ask"
+      }
+    },
     "linear": {
       "description": "Reaches Linear via its official remote MCP (OAuth). Dispatched to search and read issues, projects, and documents; write actions (create/update issues, projects, documents) require explicit confirmation. Returns a tight distilled summary, never raw dumps.",
       "mode": "subagent",
@@ -260,6 +280,11 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-self_*": false,
     "runlayer-slack_*": false,
     "runlayer-atlassian_*": false,
+    "runlayer-gmail_*": false,
+    "runlayer-gcalendar_*": false,
+    "runlayer-gdrive_*": false,
+    "runlayer-gdocs_*": false,
+    "runlayer-gsheets_*": false,
     "linear_*": false,
     "figma-desktop_*": false
   },
@@ -293,6 +318,26 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-atlassian": {
       "type": "remote",
       "url": "{{ .runlayer.atlassian_mcp_url }}"
+    },
+    "runlayer-gmail": {
+      "type": "remote",
+      "url": "{{ .runlayer.gmail_mcp_url }}"
+    },
+    "runlayer-gcalendar": {
+      "type": "remote",
+      "url": "{{ .runlayer.gcalendar_mcp_url }}"
+    },
+    "runlayer-gdrive": {
+      "type": "remote",
+      "url": "{{ .runlayer.gdrive_mcp_url }}"
+    },
+    "runlayer-gdocs": {
+      "type": "remote",
+      "url": "{{ .runlayer.gdocs_mcp_url }}"
+    },
+    "runlayer-gsheets": {
+      "type": "remote",
+      "url": "{{ .runlayer.gsheets_mcp_url }}"
     },
     "linear": {
       "type": "remote",
