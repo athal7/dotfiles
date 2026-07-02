@@ -1,8 +1,4 @@
 xh_sessions:
-  linear_api_key:
-    host: api.linear.app
-    header: authorization
-    format: "{value}"
   pagerduty_api_token:
     host: api.pagerduty.com
     headers:

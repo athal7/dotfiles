@@ -40,11 +40,8 @@ runlayer:
 # Agents read values via `security find-generic-password -s chezmoi -a <name> -w` —
 # this works non-interactively, including from remote sessions, with no biometric prompts.
 secrets:
-  slack_token: {}
-  slack_user_id: {}
   es_api_key: {}
   es_url: {}
-  linear_api_key: {}
   pagerduty_api_token: {}
 # Calendar configuration
 calendars:

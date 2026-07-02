@@ -47,15 +47,14 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
   },
   "plugin": [
     ["./lib/skill-inject.ts", {
-      "architecture": ["gh", "linear", "code-quality"],
-      "attention": ["opencode", "ical-cli", "reminders", "gh", "linear"],
+      "architecture": ["gh", "code-quality"],
+      "attention": ["opencode", "ical-cli", "reminders", "gh"],
       "communication": ["knowledge-base"],
       "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
       "gh": ["communication"],
-      "linear": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}, "communication"],
       "observability": ["elasticsearch"],
       "pagerduty": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
-      "push": ["commit", "gh", "branching", "linear"],
+      "push": ["commit", "gh", "branching"],
       "qa-report-publish": ["gh"]
     }],
     "@tarquinen/opencode-dcp@3.1.12"

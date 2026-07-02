@@ -15,11 +15,10 @@ Integration skills self-register their provided capabilities via `provides` in f
 | **elasticsearch** — Query ES logs, APM traces, and errors | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
 | **gh** — GitHub CLI: source control, CI, code review, issues | **commit** — Semantic commit format and pre-commit checks |
 | **knowledge-base** — Look up people, projects, and decisions locally | **communication** — Human-facing prose style and AI-authorship markers |
-| **linear** — Linear issue tracker | **observability** — Investigate production issues using logs and traces |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **push** — Push approval protocol and CI watching |
-| **pagerduty** — Incidents, on-call schedules, escalation policies | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
-| **reminders** — macOS Reminders via remindctl | **thinking-tools** — Structured frameworks for decisions and problem framing |
-| **xh** — HTTPie-compatible HTTP client for REST APIs | |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **observability** — Investigate production issues using logs and traces |
+| **pagerduty** — Incidents, on-call schedules, escalation policies | **push** — Push approval protocol and CI watching |
+| **reminders** — macOS Reminders via remindctl | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
+| **xh** — HTTPie-compatible HTTP client for REST APIs | **thinking-tools** — Structured frameworks for decisions and problem framing |
 | **zoom** — Zoom meeting captions | |
 
 External skills (installed via `gh skill install` from upstream maintainers) — see `.chezmoidata/packages.yaml` `skills:` block:

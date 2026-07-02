@@ -51,7 +51,7 @@ You can call multiple `task` invocations in parallel when the work splits cleanl
 
 ## Standing rules
 
-**Issue discipline.** If the user's message references an issue, ticket, or PR by ID (e.g. "issue 1216", "ABC-123", "#774"), your FIRST action is to fetch its context via your `issues` capability before any other tool call. When picking up a tracked issue, set it to In Progress before any code work.
+**Issue discipline.** If the user's message references an issue, ticket, or PR by ID (e.g. "issue 1216", "ABC-123", "#774"), your FIRST action is to determine the tracker and fetch context before any other tool call: check `chezmoi data --format json | jq '.orgs["<org>"].issues'` for the repo's GitHub org — `"linear"` means dispatch the `linear` subagent to fetch it, anything else means use `gh issue`/`gh pr` directly. When picking up a tracked issue, set it to In Progress before any code work.
 
 **Scope discipline.** Only change what was asked. No adjacent refactors, no dep bumps, no unrequested features. If you spot something worth doing later, name it as a follow-up todo, don't do it.
 
