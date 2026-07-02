@@ -166,12 +166,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/zoom.md}",
       "tools": {
-        "runlayer-zoom_*": false,
-        "runlayer-zoom_search_meetings": true,
-        "runlayer-zoom_get_meeting_assets": true,
-        "runlayer-zoom_recordings_list": true,
-        "runlayer-zoom_get_recording_resource": true,
-        "runlayer-zoom_search_zoom": true
+        "runlayer-zoom_*": true
       }
     },
     "slack": {
@@ -180,33 +175,13 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/slack.md}",
       "tools": {
-        "runlayer-slack_*": false,
-        "runlayer-slack_slack_send_message": true,
-        "runlayer-slack_slack_schedule_message": true,
-        "runlayer-slack_slack_add_reaction": true,
-        "runlayer-slack_slack_create_conversation": true,
-        "runlayer-slack_slack_create_canvas": true,
-        "runlayer-slack_slack_search_public": true,
-        "runlayer-slack_slack_search_public_and_private": true,
-        "runlayer-slack_slack_search_channels": true,
-        "runlayer-slack_slack_search_users": true,
-        "runlayer-slack_slack_read_channel": true,
-        "runlayer-slack_slack_read_thread": true,
-        "runlayer-slack_slack_read_canvas": true,
-        "runlayer-slack_slack_read_user_profile": true,
-        "runlayer-slack_slack_list_channel_members": true,
-        "runlayer-slack_slack_read_file": true,
-        "runlayer-slack_slack_send_message_draft": true,
-        "runlayer-slack_slack_search_emojis": true,
-        "runlayer-slack_slack_get_reactions": true
+        "runlayer-slack_*": true
       },
       "permission": {
-        "runlayer-slack_slack_send_message": "ask",
-        "runlayer-slack_slack_schedule_message": "ask",
-        "runlayer-slack_slack_add_reaction": "ask",
-        "runlayer-slack_slack_create_conversation": "ask",
-        "runlayer-slack_slack_create_canvas": "ask",
-        "runlayer-slack_slack_send_message_draft": "ask"
+        "runlayer-slack_slack_send_*": "ask",
+        "runlayer-slack_slack_schedule_*": "ask",
+        "runlayer-slack_slack_add_*": "ask",
+        "runlayer-slack_slack_create_*": "ask"
       }
     },
     "atlassian": {
@@ -215,50 +190,26 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/atlassian.md}",
       "tools": {
-        "runlayer-atlassian_*": false,
-        "runlayer-atlassian_atlassianUserInfo": true,
-        "runlayer-atlassian_getAccessibleAtlassianResources": true,
-        "runlayer-atlassian_getConfluencePage": true,
-        "runlayer-atlassian_searchConfluenceUsingCql": true,
-        "runlayer-atlassian_getConfluenceSpaces": true,
-        "runlayer-atlassian_getPagesInConfluenceSpace": true,
-        "runlayer-atlassian_getConfluencePageFooterComments": true,
-        "runlayer-atlassian_getConfluencePageInlineComments": true,
-        "runlayer-atlassian_getConfluenceCommentChildren": true,
-        "runlayer-atlassian_getConfluencePageDescendants": true,
-        "runlayer-atlassian_createConfluencePage": true,
-        "runlayer-atlassian_updateConfluencePage": true,
-        "runlayer-atlassian_createConfluenceFooterComment": true,
-        "runlayer-atlassian_createConfluenceInlineComment": true,
-        "runlayer-atlassian_getJiraIssue": true,
-        "runlayer-atlassian_editJiraIssue": true,
-        "runlayer-atlassian_createJiraIssue": true,
-        "runlayer-atlassian_getTransitionsForJiraIssue": true,
-        "runlayer-atlassian_getJiraIssueRemoteIssueLinks": true,
-        "runlayer-atlassian_getVisibleJiraProjects": true,
-        "runlayer-atlassian_getJiraProjectIssueTypesMetadata": true,
-        "runlayer-atlassian_getJiraIssueTypeMetaWithFields": true,
-        "runlayer-atlassian_addCommentToJiraIssue": true,
-        "runlayer-atlassian_transitionJiraIssue": true,
-        "runlayer-atlassian_searchJiraIssuesUsingJql": true,
-        "runlayer-atlassian_lookupJiraAccountId": true,
-        "runlayer-atlassian_addWorklogToJiraIssue": true,
-        "runlayer-atlassian_getIssueLinkTypes": true,
-        "runlayer-atlassian_createIssueLink": true,
-        "runlayer-atlassian_search": true,
-        "runlayer-atlassian_fetch": true
+        "runlayer-atlassian_*": true
       },
       "permission": {
-        "runlayer-atlassian_createConfluencePage": "ask",
-        "runlayer-atlassian_updateConfluencePage": "ask",
-        "runlayer-atlassian_createConfluenceFooterComment": "ask",
-        "runlayer-atlassian_createConfluenceInlineComment": "ask",
-        "runlayer-atlassian_createJiraIssue": "ask",
-        "runlayer-atlassian_editJiraIssue": "ask",
-        "runlayer-atlassian_transitionJiraIssue": "ask",
-        "runlayer-atlassian_addCommentToJiraIssue": "ask",
-        "runlayer-atlassian_addWorklogToJiraIssue": "ask",
-        "runlayer-atlassian_createIssueLink": "ask"
+        "runlayer-atlassian_create*": "ask",
+        "runlayer-atlassian_update*": "ask",
+        "runlayer-atlassian_edit*": "ask",
+        "runlayer-atlassian_transition*": "ask",
+        "runlayer-atlassian_add*": "ask"
+      }
+    },
+    "linear": {
+      "description": "Reaches Linear via its official remote MCP (OAuth). Dispatched to search and read issues, projects, and documents; write actions (create/update issues, projects, documents) require explicit confirmation. Returns a tight distilled summary, never raw dumps.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/linear.md}",
+      "tools": {
+        "linear_*": true
+      },
+      "permission": {
+        "linear_save_*": "ask"
       }
     }
   },
@@ -310,6 +261,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-self_*": false,
     "runlayer-slack_*": false,
     "runlayer-atlassian_*": false,
+    "linear_*": false,
     "figma-desktop_*": false
   },
   "mcp": {
@@ -342,6 +294,10 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-atlassian": {
       "type": "remote",
       "url": "{{ .runlayer.atlassian_mcp_url }}"
+    },
+    "linear": {
+      "type": "remote",
+      "url": "https://mcp.linear.app/mcp"
     },
     "figma-desktop": {
       "type": "remote",
