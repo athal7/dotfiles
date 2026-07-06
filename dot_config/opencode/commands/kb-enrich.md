@@ -38,6 +38,8 @@ After all collectors have run, write the enrichment outputs:
 
    For each surviving item, use your own judgement about where it belongs rather than following a fixed rule: a reminder, a tracked issue, a message to the relevant person or channel, or nothing at all if it's already tracked at its source (e.g. an open issue surfaced by a collector — filing a duplicate would be worse than a reminder). Weigh the item's nature, which collector surfaced it, and where similar items already live. Default to a reminder when nothing more fitting applies. Preserve the item's source URL in whatever gets filed so it stays traceable back to its origin. Creating a tracked issue or sending a message are remote-system writes — list what you intend to file and where, and confirm before creating them; a reminder is local and can be created directly. Respect the Privacy rules below — never route privacy-excluded content to a shared destination.
 
+Before finishing, account for every discrete fact or item any collector extracted: each one needs an explicit disposition, either filed (journal/profile/decision/action item) or deliberately skipped with a stated reason (privacy exclusion, genuine duplicate, or triviality). Don't let an item fall through with no disposition. Apply this especially to single-source facts with no corroborating collector — a new contact, an informal one-off decision surfaced only in Slack — lack of corroboration is not itself a reason to skip.
+
 ## Privacy
 
 Do not extract or store:
