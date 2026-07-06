@@ -106,6 +106,9 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "permission": {
         "edit": "deny",
         "write": "deny"
+      },
+      "tools": {
+        "context7_*": true
       }
     },
     "qa": {
@@ -116,6 +119,9 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "permission": {
         "edit": "deny",
         "write": "deny"
+      },
+      "tools": {
+        "firefox-devtools_*": true
       }
     },
     "build": {
@@ -130,7 +136,8 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
         "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.build "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 8 | trim }}
       },
       "tools": {
-        "figma-desktop_*": true
+        "figma-desktop_*": true,
+        "context7_*": true
       }
     },
     "explore": {
@@ -149,6 +156,9 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
       "permission": {
         "edit": "deny",
         "write": "deny"
+      },
+      "tools": {
+        "context7_*": true
       }
     },
     "general": {
@@ -286,7 +296,9 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-gdocs_*": false,
     "runlayer-gsheets_*": false,
     "linear_*": false,
-    "figma-desktop_*": false
+    "figma-desktop_*": false,
+    "context7_*": false,
+    "firefox-devtools_*": false
   },
   "mcp": {
     "context7": {
