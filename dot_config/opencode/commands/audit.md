@@ -377,4 +377,4 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | `~/.config/opencode/commands/*.md` | `dot_config/opencode/commands/*.md` |
 | `~/.agents/skills/*` | `skills/*` |
 
-Run `/audit` quarterly or after structural changes.
+Run `/audit` monthly or after structural changes.

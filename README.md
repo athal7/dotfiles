@@ -15,7 +15,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)
   - [Homebridge](dot_homebridge/)
-  - [LaunchAgents](.chezmoidata/launchd.yaml) — scheduled macOS tasks defined declaratively in [`.chezmoidata/launchd.yaml`](.chezmoidata/launchd.yaml) (generated to plists via yq + plutil), including a daily 7am production-error triage (`fix-prod-errors`) that dispatches worktree fix sessions, a weekly Sunday spec-compliance audit (`audit`), a weekly Sunday disk-space cleanup (`cleanup`), and a 15-minute `kb-zoom-capture` that carves recent Zoom meeting transcripts out of the ephemeral "My Notes" cache into `~/Documents/Zoom` so the daily `kb-enrich` job can distill them
+  - [LaunchAgents](dot_config/launchd-yaml/agents.yaml) — scheduled macOS tasks defined declaratively in [`dot_config/launchd-yaml/agents.yaml`](dot_config/launchd-yaml/agents.yaml) (generated to plists via yq + plutil), including a daily 7am production-error triage (`fix-prod-errors`) that dispatches worktree fix sessions, a monthly spec-compliance audit (`audit`), a weekly Sunday cross-repo friction-hotspot refactor dispatcher (`refactor-hotspots`) that tracks dispatches in [`dot_config/opencode/create_hotspot-dispatch-log.json`](dot_config/opencode/create_hotspot-dispatch-log.json) to dedup repeat proposals, a weekly Sunday disk-space cleanup (`cleanup`), and a 15-minute `kb-zoom-capture` that carves recent Zoom meeting transcripts out of the ephemeral "My Notes" cache into `~/Documents/Zoom` so the daily `kb-enrich` job can distill them
 - [Packages](.chezmoidata/packages.yaml)
 
 ## Quick start

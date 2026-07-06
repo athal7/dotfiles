@@ -24,7 +24,7 @@ launchagents:
       - send
       - /audit
     StartCalendarInterval:
-      Weekday: 0
+      Day: 1
       Hour: 8
       Minute: 0
     StandardOutPath: $HOME/Library/Logs/audit.log
@@ -224,6 +224,25 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/opencode-web.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  refactor-hotspots:
+    Label: com.$USER.refactor-hotspots
+    ProgramArguments:
+      - $HOME/.local/bin/opencode-cmd
+      - -d
+      - $HOME/code/dotfiles
+      - -t
+      - "1800"
+      - send
+      - /refactor-hotspots
+    StartCalendarInterval:
+      Weekday: 0
+      Hour: 8
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/refactor-hotspots.log
+    StandardErrorPath: $HOME/Library/Logs/refactor-hotspots.log
+    EnvironmentVariables:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   setenv-gui-path:
     Label: com.$USER.setenv-gui-path
