@@ -31,6 +31,9 @@ bashPermissions:
     lead:
       "ls*": allow
       "pwd": allow
+    build:
+      "git commit*": deny
+      "git -C * commit*": deny
     # readonly: non-package read commands for future read-only-subagent use.
     # (Package-tool reads — git/chezmoi/etc. — come via the packages set, not here.)
     readonly:
@@ -53,4 +56,4 @@ bashPermissions:
   agents:
     global: { base: allow, lists: [],     guardrails: true, packages: true }  # top-level permission.bash
     lead:   { base: allow, lists: [lead], guardrails: true, packages: true }
-    build:  { base: allow, lists: [],     guardrails: true, packages: true }
+    build:  { base: allow, lists: [build], guardrails: true, packages: true }
