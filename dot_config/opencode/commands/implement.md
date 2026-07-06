@@ -6,15 +6,26 @@ agent: lead
 Workflow: implement.
 
 **Use TodoWrite to track this workflow. Create these items before starting:**
+- Issue — ensure a tracked issue exists for this work: use the one referenced, otherwise search the tracker, otherwise create one
 - Workspace setup — branch if needed per repo conventions; set up `openspec/` (real dir + narrow store symlinks)
 - Plan — dispatch the `explore`/`scout` subagents (`task` tool, `subagent_type: explore` / `subagent_type: scout`) to gather, dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), create proposal, present for approval
 - Build — implement tasks via openspec-apply-change, present changeset for approval
 - Review — run QA (dispatch the `qa` subagent via `task` tool, `subagent_type: qa`) if UI is touched; route findings, present for approval
 - Ship — commit, push, watch CI, merge delta specs into the durable store
 
+## Issue
+
+Every `/implement` run must be tied to a tracked issue before Workspace setup — the issue id anchors the branch name, the OpenSpec proposal, and the eventual commit/PR.
+
+1. **Determine the tracker.** `ORG=$(gh repo view --json owner -q '.owner.login')` then `chezmoi data --format json | jq -r ".orgs[\"$ORG\"].issues // empty"` — `"linear"` means Linear (dispatch the `linear` subagent for all Linear reads/writes below), anything else (including empty) means GitHub Issues (`gh issue` directly).
+2. **Referenced issue.** If the user's message already names an issue/ticket/PR by ID (e.g. "issue 1216", "ABC-123", "#774"), fetch it per the lead's Issue-discipline standing rule and skip to step 5.
+3. **No reference — search first.** Derive a handful of keywords from the request and search the tracker for an existing open (or recently closed) issue covering the same work: `gh issue list --search "<keywords>" --state all` for GitHub, or dispatch the `linear` subagent to search for Linear. If a clear match turns up, confirm with the user before adopting it in place of creating a new one.
+4. **No match — create one.** Draft a title and a short body (what/why, drawn from the user's request and anything already gathered) and present it verbatim with "Do you approve?" — creating an issue is a remote-service write and needs explicit approval before it's created. On approval, create it (`gh issue create --title ... --body ...` for GitHub; dispatch the `linear` subagent to create for Linear). If the repo has issue tracking disabled entirely (`gh repo view --json hasIssuesEnabled` is `false` and the org isn't on Linear), flag this to the user and ask whether to proceed untracked — don't silently skip.
+5. **Set it In Progress** and carry its id/URL forward into the branch name, the OpenSpec proposal, and Ship's commit/PR.
+
 ## Workspace setup
 
-Check the repo's AGENTS.md for branch conventions. Worktree isolation is handled by opencode desktop, which creates the worktree when the session starts — this workflow never creates one itself. If the repo uses feature branches / pull requests: when the session is already in a worktree or on a feature branch, proceed in place. Only if the session is still on `main` with no feature branch, create one off `origin/main` with a short, descriptive, kebab-case name derived from the work (or the issue/ticket id, if given) — don't ask, just do it. The implementation must never happen directly on main. If the repo commits directly to main and doesn't use pull requests (e.g., dotfiles), work in place.
+Check the repo's AGENTS.md for branch conventions. Worktree isolation is handled by opencode desktop, which creates the worktree when the session starts — this workflow never creates one itself. If the repo uses feature branches / pull requests: when the session is already in a worktree or on a feature branch, proceed in place. Only if the session is still on `main` with no feature branch, create one off `origin/main` with a short, descriptive, kebab-case name that incorporates the issue id established in the Issue phase above — don't ask, just do it. The implementation must never happen directly on main. If the repo commits directly to main and doesn't use pull requests (e.g., dotfiles), work in place.
 
 **Spec-store link — run this BEFORE the Plan phase reads `openspec/specs/`.** `/implement` often runs in a desktop-created worktree, but the accumulated `specs/` and archived `changes/` are durable per-repo memory that must survive worktree teardown and be shared across all worktrees of the repo. The layout is a REAL `openspec/` directory in the worktree with only two NARROW symlinks into a durable per-repo store at `~/.local/share/kb/openspec/<repo-slug>/`: `openspec/specs` → `$store/specs` and `openspec/changes/archive` → `$store/changes/archive`. In-flight change docs at `openspec/changes/<name>/` are REAL worktree files (so they surface in the opencode review UI for inline comments); only the specs and archive leaves point outside the worktree. Run from the worktree root:
 
