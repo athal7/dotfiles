@@ -12,6 +12,7 @@ packages:
     - steipete/tap
 
   brews:
+    - name: aoe
     - name: autojump
     - name: bat
     - name: chezmoi
