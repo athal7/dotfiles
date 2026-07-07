@@ -5,5 +5,9 @@
 [session]
 default_tool = "opencode"
 
+[diff]
+split_view = true
+
 [worktree]
 enabled = true
+delete_branch_on_cleanup = true
