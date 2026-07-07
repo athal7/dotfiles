@@ -1,0 +1,8 @@
+{{- /* Global tool deny-list: deny every MCP namespace by default; each
+       wrapping agent (or plan/qa/build/scout) re-enables its own.
+       ctx: servers (list). */ -}}
+{{- $out := dict -}}
+{{- range $s := .servers -}}
+  {{- $_ := set $out (printf "%s_*" $s.name) false -}}
+{{- end -}}
+{{- $out | toPrettyJson -}}

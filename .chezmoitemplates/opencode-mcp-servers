@@ -1,0 +1,23 @@
+{{- /* Render the opencode "mcp" server map from the registry.
+       ctx: servers (list of descriptors), runlayer (secret URL map).
+       remote url: literal `url`, `runlayer:<svc>` (→ .runlayer.<svc>_mcp_url),
+       or `auth: gh-token` (computed Bearer header). local: `command` list.
+       Optional passthrough: oauth, enabled. */ -}}
+{{- $out := dict -}}
+{{- range $s := .servers -}}
+  {{- $obj := dict "type" $s.type -}}
+  {{- if eq $s.type "local" -}}
+    {{- $_ := set $obj "command" $s.command -}}
+  {{- else if hasKey $s "runlayer" -}}
+    {{- $_ := set $obj "url" (index $.runlayer (printf "%s_mcp_url" $s.runlayer)) -}}
+  {{- else -}}
+    {{- $_ := set $obj "url" $s.url -}}
+  {{- end -}}
+  {{- if hasKey $s "oauth" -}}{{- $_ := set $obj "oauth" $s.oauth -}}{{- end -}}
+  {{- if hasKey $s "enabled" -}}{{- $_ := set $obj "enabled" $s.enabled -}}{{- end -}}
+  {{- if eq (default "" (index $s "auth")) "gh-token" -}}
+    {{- $_ := set $obj "headers" (dict "Authorization" (printf "Bearer %s" (output "gh" "auth" "token" | trim))) -}}
+  {{- end -}}
+  {{- $_ := set $out $s.name $obj -}}
+{{- end -}}
+{{- $out | toPrettyJson -}}

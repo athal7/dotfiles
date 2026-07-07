@@ -13,6 +13,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 - **`skills/`** — agent skills deployed to `~/.agents/skills/`
 - **`.chezmoidata/launchd.yaml`** — macOS services (opencode-web on port 4096, for mobile access and automated/background jobs — not the Desktop app's daily-driver session) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
+- **`.chezmoidata/mcp.yaml`** — MCP server connections and their optional wrapping subagents, rendered into `opencode.json` via the `opencode-mcp-{servers,tools,agents}` template partials (in `.chezmoitemplates/`). `servers[]` drives both the `mcp` block and the global tool deny-list; `agents[]` (optional per server) drives the wrapping subagent definitions. Adding a "reach service X via MCP" subagent is a registry entry here plus a hand-authored prompt at `dot_config/opencode/prompts/<agent>.md`.
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
 - **`.chezmoiscripts/`** — run on apply: brew bundle, skill sync
 
