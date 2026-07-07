@@ -3,7 +3,7 @@ description: Daily production error triage — query APM errors and dispatch wor
 subtask: true
 ---
 
-Triage production errors from Elastic APM and dispatch a fix session for the top recurring error groups.
+Triage production errors from Elastic APM and dispatch a fix session for the top recurring error groups **in repos we own**.
 
 $ARGUMENTS
 
@@ -16,12 +16,12 @@ Optional argument: a time-range override (e.g. `48h`). Default: last 24h.
 
 ## Steps
 
-1. **Find the top error groups.** Query APM errors over the window, aggregate by `error.grouping_key` ranked by occurrence count, and take the **top 3** — all recurring errors qualify, no minimum threshold. For each, capture `service.name`, `error.exception.type`, `error.exception.message`, the occurrence count, and a sample `trace.id`.
+1. **Map service → repo first.** Run `chezmoi data | jq -r '.prod_services'` for the `service.name → repo` map; the repo lives at `~/code/<repo>`. Match on the **exact `service.name` key** only — do not infer a mapping from hostnames, URLs, prior branch names, or a same/similar-named directory under `~/code/`.
 
-2. **Map service → repo.** Run `chezmoi data | jq -r '.prod_services'` for the `service.name → repo` map; the repo lives at `~/code/<repo>`. Skip any service with no mapping and note it in the report.
+2. **Find the top error groups among mapped services.** Query APM errors over the window, aggregate by `error.grouping_key` ranked by occurrence count, and take the **top 3 groups whose `service.name` has an exact key in `prod_services`** — all recurring errors qualify, no minimum threshold. Unmapped-service groups (e.g. scanner/bot noise) do not consume one of the 3 slots — exclude them from the ranking entirely, even if they have a far higher raw count than any mapped group. For each of the top 3 mapped groups, capture `service.name`, `error.exception.type`, `error.exception.message`, the occurrence count, and a sample `trace.id`.
 
-   Match on the **exact `service.name` key** only. Do not infer a mapping from hostnames, URLs, prior branch names, or a same/similar-named directory under `~/code/` — a local repo existing does not imply it's in scope. If `service.name` has no exact key in the map, it is unmapped: skip and note it, full stop.
+   Separately, note in the report the highest-volume *unmapped* service/group seen in the same window (name + count only) so scanner/bot noise stays visible without ever triggering a fix session.
 
-3. **Dispatch a triage + fix session** for each mapped group: create a worktree on a `fix/apm-<date>-<service>` branch, then dispatch a prompt carrying the error context (service, exception type + message, occurrence count, sample `trace.id`, and the request URL/transaction if available). Instruct the session to **first determine whether the error is a genuine defect or expected noise** — e.g. a 404 from a bot or bad slug, a deleted record, a probe — by reading the relevant code path and reproducing if feasible. Only if it is a real defect should it run `Workflow: implement.` to propose a fix; otherwise it should report the error as expected noise and, where appropriate, suggest an APM ignore rule (`transaction_ignore_urls` or error filtering) rather than a code change. Note that an error surfacing as a 404 may still be a real bug (e.g. our own broken asset/link causing the request) — do not dismiss by status code alone. Fire-and-forget.
+3. **Dispatch a triage + fix session** for each of the top 3 mapped groups: create a worktree on a `fix/apm-<date>-<service>` branch (append a short slug if multiple groups share a service, to keep branch names distinct), then dispatch a prompt carrying the error context (service, exception type + message, occurrence count, sample `trace.id`, and the request URL/transaction if available). Instruct the session to **first determine whether the error is a genuine defect or expected noise** — e.g. a 404 from a bot or bad slug, a deleted record, a probe — by reading the relevant code path and reproducing if feasible. Only if it is a real defect should it run `Workflow: implement.` to propose a fix; otherwise it should report the error as expected noise and, where appropriate, suggest an APM ignore rule (`transaction_ignore_urls` or error filtering) rather than a code change. Note that an error surfacing as a 404 may still be a real bug (e.g. our own broken asset/link causing the request) — do not dismiss by status code alone. Fire-and-forget.
 
-4. **Report** — error groups found, sessions dispatched (worktree paths + branch names), and services skipped for lack of a `prod_services` mapping.
+4. **Report** — error groups found (with counts), sessions dispatched (worktree paths + branch names), and the top unmapped noise service/group noted for awareness.
