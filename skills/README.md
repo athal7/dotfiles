@@ -13,13 +13,12 @@ Integration skills self-register their provided capabilities via `provides` in f
 | **branching** — Stacked branch management via git-spice | **architecture** — Architecture decisions, design prerequisite check, ADR template |
 | **chezmoi** — Manage dotfiles via chezmoi | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
 | **elasticsearch** — Query ES logs, APM traces, and errors | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
-| **gh** — GitHub CLI: source control, CI, code review, issues | **commit** — Semantic commit format and pre-commit checks |
-| **knowledge-base** — Look up people, projects, and decisions locally | **communication** — Human-facing prose style and AI-authorship markers |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **observability** — Investigate production issues using logs and traces |
-| **pagerduty** — Incidents, on-call schedules, escalation policies | **push** — Push approval protocol and CI watching |
-| **reminders** — macOS Reminders via remindctl | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
-| **xh** — HTTPie-compatible HTTP client for REST APIs | **thinking-tools** — Structured frameworks for decisions and problem framing |
-| **zoom** — Zoom meeting captions | |
+| **knowledge-base** — Look up people, projects, and decisions locally | **commit** — Semantic commit format and pre-commit checks |
+| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **communication** — Human-facing prose style and AI-authorship markers |
+| **pagerduty** — Incidents, on-call schedules, escalation policies | **observability** — Investigate production issues using logs and traces |
+| **reminders** — macOS Reminders via remindctl | **push** — Push approval protocol and CI watching |
+| **xh** — HTTPie-compatible HTTP client for REST APIs | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
+| **zoom** — Zoom meeting captions | **thinking-tools** — Structured frameworks for decisions and problem framing |
 
 External skills (installed via `gh skill install` from upstream maintainers) — see `.chezmoidata/packages.yaml` `skills:` block:
 

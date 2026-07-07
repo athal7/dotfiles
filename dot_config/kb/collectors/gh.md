@@ -3,7 +3,7 @@ name: gh
 description: GitHub PRs, reviews, and issues
 ---
 
-## Query recipe
+Dispatch the `github` subagent (`task` tool, `subagent_type: github`) with a prompt asking it to find, within the enrichment window: pull requests authored by the authenticated user, pull requests where the user left a review, and issues opened or updated by the user. Extract kb facts from its returned summary.
 
 ### Discover orgs
 
@@ -13,15 +13,7 @@ Read GitHub orgs from chezmoi data:
 chezmoi data --format json | jq -r '[.orgs | keys[]] | join(" ")'
 ```
 
-If the result is empty, run without an org filter.
-
-### Fetch activity
-
-Use the `gh` skill to find the user's PRs and code reviews in the enrichment window:
-- PRs authored by the authenticated user
-- PRs where the user left a review
-
-Use the `gh` skill to find issues opened or updated by the user in the window.
+If the result is empty, ask the subagent to search without an org filter.
 
 ### Bot filter
 

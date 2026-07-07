@@ -47,15 +47,13 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
   },
   "plugin": [
     ["./lib/skill-inject.ts", {
-      "architecture": ["gh", "code-quality"],
-      "attention": ["opencode", "ical-cli", "reminders", "gh"],
+      "architecture": ["code-quality"],
+      "attention": ["opencode", "ical-cli", "reminders"],
       "communication": ["knowledge-base"],
       "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
-      "gh": ["communication"],
       "observability": ["elasticsearch"],
       "pagerduty": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
-      "push": ["commit", "gh", "branching"],
-      "qa-report-publish": ["gh"]
+      "push": ["commit", "branching"]
     }],
     "@tarquinen/opencode-dcp@3.1.12"
   ],
@@ -209,6 +207,33 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
         "runlayer-atlassian_add*": "ask"
       }
     },
+    "github": {
+      "description": "Reaches GitHub via its official remote MCP server. Dispatched to search and read issues, pull requests, and repos; write actions (create/update/merge/comment) require explicit confirmation. Returns a tight distilled summary, never raw dumps.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/github.md}",
+      "tools": {
+        "github_*": true
+      },
+      "permission": {
+        "github_create_*": "ask",
+        "github_update_*": "ask",
+        "github_delete_*": "ask",
+        "github_merge_*": "ask",
+        "github_push_*": "ask",
+        "github_fork_*": "ask",
+        "github_add_*": "ask",
+        "github_assign_*": "ask",
+        "github_request_*": "ask",
+        "github_dismiss_*": "ask",
+        "github_mark_*": "ask",
+        "github_manage_*": "ask",
+        "github_star_repository": "ask",
+        "github_unstar_repository": "ask",
+        "github_actions_run_trigger": "ask",
+        "github_*_write": "ask"
+      }
+    },
     "google": {
       "description": "Reaches Gmail, Calendar, Drive, Docs, and Sheets via Runlayer MCP (OAuth). Dispatched to search and read messages, events, and files; write actions (send/create/update/delete) require explicit confirmation. Returns a tight distilled summary, never raw dumps.",
       "mode": "subagent",
@@ -290,6 +315,7 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-self_*": false,
     "runlayer-slack_*": false,
     "runlayer-atlassian_*": false,
+    "github_*": false,
     "runlayer-gmail_*": false,
     "runlayer-gcalendar_*": false,
     "runlayer-gdrive_*": false,
@@ -330,6 +356,14 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "runlayer-atlassian": {
       "type": "remote",
       "url": "{{ .runlayer.atlassian_mcp_url }}"
+    },
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {{ output "gh" "auth" "token" | trim }}"
+      }
     },
     "runlayer-gmail": {
       "type": "remote",

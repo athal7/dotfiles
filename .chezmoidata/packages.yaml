@@ -69,23 +69,9 @@ packages:
         "git remote get-url*": allow
     - name: gh
       permissions:
-        "gh * list*": allow
-        "gh * view*": allow
-        "gh * diff*": allow
-        "gh * checks*": allow
-        "gh * status*": allow
-        "gh run watch*": allow
-        "gh run rerun*": allow
-        "gh search*": allow
-        "gh api -X GET *": allow
-        "gh api */review-comments*": allow
-        "gh api */reviews*": allow
-        "gh api */comments*": allow
-        "gh api */pulls/*/files*": allow
-        "gh api user*": allow
-        "gh api graphql*mutation*": ask
-        "gh api graphql*": allow
-        "gh *": ask
+        # Single pathway for GitHub interaction is the `github` MCP subagent (see
+        # dot_config/opencode/prompts/github.md) — no bash gh exceptions, not even reads.
+        "gh *": deny
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
     - name: git-spice
