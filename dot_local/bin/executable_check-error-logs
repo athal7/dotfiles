@@ -27,6 +27,7 @@ EXCLUDE_PATTERNS="
 opencode-web|Could not find 'bundler'
 homebridge|Rate limited for the GetDevice API
 homebridge|bonjour-hap: send EADDRNOTAVAIL
+homebridge|request to https://oauth2\.googleapis\.com/token failed
 "
 
 # Return the exclusion pattern for a service name, or empty string if none.
