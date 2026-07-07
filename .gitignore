@@ -7,6 +7,9 @@
 # Allow .sql files (skill query scripts)
 !*.sql
 
+# Allow .talismanrc (overrides global gitignore) — threshold config, not secrets
+!.talismanrc
+
 # opencode plugin lock file (generated, not committed)
 .opencode/package-lock.json
 
