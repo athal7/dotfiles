@@ -1,0 +1,9 @@
+# Agent of Empires - Global Configuration
+# This file configures aoe's default behavior across all repos.
+# See: https://github.com/agent-of-empires/agent-of-empires
+
+[session]
+default_tool = "opencode"
+
+[worktree]
+enabled = true
