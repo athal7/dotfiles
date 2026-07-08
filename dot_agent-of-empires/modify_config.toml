@@ -10,7 +10,7 @@
   aoe's multi-line arrays and indentation on every apply).
 
   chezmoi-managed keys (nothing else is enforced):
-    [session]  default_tool = "opencode"
+    [session]  default_tool = "opencode", new_session_attach_mode = "live_send"
     [diff]     split_view   = true
     [worktree] enabled = true, delete_branch_on_cleanup = true
 
@@ -27,6 +27,7 @@
 */ -}}
 {{- $c := .chezmoi.stdin -}}
 {{- $c = $c | replaceAllRegex "(?s)(\\[session\\][^\\[]*?)default_tool = \"[^\"]*\"" "${1}default_tool = \"opencode\"" -}}
+{{- $c = $c | replaceAllRegex "(?s)(\\[session\\][^\\[]*?)new_session_attach_mode = \"[^\"]*\"" "${1}new_session_attach_mode = \"live_send\"" -}}
 {{- $c = $c | replaceAllRegex "(?s)(\\[diff\\][^\\[]*?)split_view = \\w+" "${1}split_view = true" -}}
 {{- $c = $c | replaceAllRegex "(?s)(\\[worktree\\][^\\[]*?)enabled = \\w+" "${1}enabled = true" -}}
 {{- $c = $c | replaceAllRegex "(?s)(\\[worktree\\][^\\[]*?)delete_branch_on_cleanup = \\w+" "${1}delete_branch_on_cleanup = true" -}}
