@@ -1,0 +1,43 @@
+#!/bin/bash
+# Install/update declared aoe (Agent of Empires) plugins.
+# Rerun triggers (chezmoi reruns run_onchange_* scripts whenever their
+# rendered content changes):
+# aoe_plugins: {{ .packages.aoe_plugins | toJson | sha256sum }}
+{{- range .packages.aoe_plugins }}
+# plugin-present: {{ .id }}={{ if (joinPath (env "HOME") ".agent-of-empires/plugins" .id | stat) }}1{{ else }}0{{ end }}
+{{- end }}
+
+# Deliberately not -e: individual plugin install/update failures (missing
+# host capability, incompatible aoe version, upstream re-consent requirement)
+# must never abort the rest of chezmoi apply. See design.md Decision 2/4.
+set -uo pipefail
+
+{{ template "brewenv" . }}
+# Prepend mise shims so the python3 aoe shells out to for its build step is
+# the repo-managed mise one, not a stray system Python.
+export PATH="{{ .chezmoi.homeDir }}/.local/share/mise/shims:$PATH"
+
+if ! command -v aoe >/dev/null 2>&1; then
+  echo "aoe not found on PATH — skipping aoe plugin install/update" >&2
+  exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "python3 not found on PATH — skipping aoe plugin install/update" >&2
+  exit 0
+fi
+
+{{ range .packages.aoe_plugins -}}
+PLUGIN_DIR="$HOME/.agent-of-empires/plugins/{{ .id }}"
+if [ -d "$PLUGIN_DIR" ]; then
+  echo "updating aoe plugin {{ .id }}..."
+  if ! aoe plugin update {{ .id }} < /dev/null; then
+    echo "WARN: aoe plugin update {{ .id }} failed" >&2
+  fi
+else
+  echo "installing aoe plugin {{ .id }} from {{ .source }}..."
+  if ! aoe plugin install {{ .source }} --yes < /dev/null; then
+    echo "WARN: aoe plugin install {{ .source }} failed" >&2
+  fi
+fi
+{{ end -}}

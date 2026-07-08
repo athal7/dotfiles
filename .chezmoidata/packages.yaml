@@ -114,6 +114,14 @@ packages:
     - name: bash-language-server
     - name: yaml-language-server
 
+  # aoe (Agent of Empires) plugins — installed/updated via
+  # run_onchange_after_plugins-aoe.sh.tmpl. A list from day one (even with a
+  # single entry) so adding another aoe plugin later is a one-line registry
+  # edit, matching the idiom of every other registry key here.
+  aoe_plugins:
+    - source: "gh:agent-of-empires/plugin-github"
+      id: "agent-of-empires.github"
+
   casks:
     - name: gcloud-cli
     - name: font-monaspace
