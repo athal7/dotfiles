@@ -85,6 +85,18 @@ This agent has no bash, sleep, or streaming capability. Every dispatch answers "
 
 If the dispatcher needs to **wait** for CI or a review to resolve, the wait loop belongs to the dispatcher, not this agent: sleep (bash `sleep`, which remains generically allowed for all agents), then re-dispatch this agent to check again, repeating until resolved or a sane timeout. This applies uniformly — CI completion, a fresh automated-review landing, anything that isn't resolved on the first check.
 
+## Known gap — no Deployments API coverage
+
+This MCP server has zero coverage of the GitHub Deployments API — no
+`create_deployment`, `create_deployment_status`, `list_deployments`, or any
+deployment tool exists on this agent's tool surface. Dispatchers must never
+send a deployment/deployment-status write task to this agent — it has no way
+to execute it (bash is denied here by design, and `webfetch` can't send
+authenticated requests), so it will get stuck hunting for a credential it
+couldn't use anyway. That class of write belongs to the dispatcher's own bash,
+via `gh api ... --input -` with a heredoc JSON body — see the
+`qa-report-publish` skill for the exact recipe.
+
 ## Your contract
 
 1. **Return a distilled summary.** Extract: the decision or status, owner, dates, and links. Never paste raw issue/PR JSON or full file contents.

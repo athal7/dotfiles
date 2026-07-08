@@ -103,14 +103,37 @@ The verdict is read from `qa-report.md` by parsing the `## 🧪 QA` first line a
     checked-out branch are never disturbed. The committed `.md` renders natively in
    the file view with its **relative** images resolving — no URL rewriting.
 
-2. **Register the deployment.** Using the source-control integration, create a
-   deployment on the merge request's head commit for environment `qa-report`,
-   then post a `success` deployment status with the hosted report's blob URL as
-   the `environment_url` and the parsed verdict as the `description` (e.g.
-   `QA — PASS ✅`). Pass `auto_merge: false` and `required_contexts: []` to
-   prevent blocking on required status checks. This surfaces a **"View
-   deployment"** button in the request's timeline and environments panel — no
-   description editing required.
+2. **Register the deployment.** This write MUST be performed by lead directly
+   via bash — never dispatched to the `github` subagent or any other
+   source-control MCP wrapping-subagent. The source-control MCP server has no
+   Deployments API coverage (no create-deployment/create-deployment-status
+   tool exists on its surface), and the wrapping-subagent is bash-denied by
+   design — dispatching this write there sends it hunting for credentials it
+   couldn't use even if it found them, and it gets stuck indefinitely. Use the
+   `gh` CLI directly, passing the JSON body via `--input -` and a heredoc —
+   never `-f`/`-F` flag syntax for the `required_contexts` array field
+   (`-f required_contexts[]=` breaks on zsh glob expansion, not the API).
+   Create the deployment on the merge request's head commit for environment
+   `qa-report`:
+
+   ```
+   gh api repos/<owner>/<repo>/deployments -X POST --input - << 'EOF'
+   {"ref": "<head-sha>", "environment": "qa-report", "auto_merge": false, "required_contexts": []}
+   EOF
+   ```
+
+   Then post a `success` deployment status with the hosted report's blob URL
+   as the `environment_url` and the parsed verdict as the `description` (e.g.
+   `QA — PASS ✅`):
+
+   ```
+   gh api repos/<owner>/<repo>/deployments/<id>/statuses -X POST --input - << 'EOF'
+   {"state": "success", "environment": "qa-report", "environment_url": "<blob-url>", "description": "<verdict>"}
+   EOF
+   ```
+
+   This surfaces a **"View deployment"** button in the request's timeline and
+   environments panel — no description editing required.
 
 ## Re-review
 
@@ -119,6 +142,8 @@ re-opens the HTML form locally. Then refresh the deliverable: re-host the Markdo
 form (overwritten wholesale, so the blob URL is unchanged), then post a new
 `success` deployment status on the existing deployment with the updated
 `description` field reflecting the new verdict — no new deployment object needed.
+Post this status via direct bash as in the Publish procedure — never dispatch
+this to the `github` subagent.
 
 ## Approval gate
 
@@ -128,5 +153,6 @@ approval. Only then perform the push and register the deliverable. The analysis
 agents never write to the remote.
 
 When a merge request is merged or closed, post a final `inactive` deployment
-status on the existing deployment, then delete its `pr-<n>/` dir from the hosting
+status on the existing deployment — via direct bash as above, never dispatched
+to the `github` subagent — then delete its `pr-<n>/` dir from the hosting
 branch as cheap cleanup.

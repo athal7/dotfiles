@@ -31,6 +31,13 @@ bashPermissions:
     lead:
       "ls*": allow
       "pwd": allow
+      # Sole exception to the packages.yaml `gh *: deny` retirement (see
+      # bd5e983): the Deployments API has no `github` MCP tool coverage, so
+      # lead runs `gh api .../deployments` directly per
+      # skills/qa-report-publish/SKILL.md. Scoped to lead only, ask (not
+      # allow) since it's a remote write — matches the curl -X POST* etc.
+      # guardrails above.
+      "gh api */deployments*": ask
     build:
       "git commit*": deny
       "git -C * commit*": deny
