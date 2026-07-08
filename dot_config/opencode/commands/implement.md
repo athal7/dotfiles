@@ -39,14 +39,14 @@ mkdir -p "$store/specs" "$store/changes/archive"   # both symlink targets must e
 
 # Ensure a path is a symlink to $target: create if absent, no-op if correct,
 # REFUSE (don't clobber) if it exists as anything else.
-ensure_link() {  # $1=link path  $2=target
-  if [ -L "$1" ]; then
-    [ "$(readlink "$1")" = "$2" ] && return 0
-    echo "FLAG: $PWD/$1 → $(readlink "$1") but expected $2. Left untouched."; return 1
-  elif [ -e "$1" ]; then
-    echo "FLAG: $PWD/$1 exists and is not a symlink (expected → $2). Left untouched."; return 1
+ensure_link() {  # ${1}=link path  ${2}=target
+  if [ -L "${1}" ]; then
+    [ "$(readlink "${1}")" = "${2}" ] && return 0
+    echo "FLAG: $PWD/${1} → $(readlink "${1}") but expected ${2}. Left untouched."; return 1
+  elif [ -e "${1}" ]; then
+    echo "FLAG: $PWD/${1} exists and is not a symlink (expected → ${2}). Left untouched."; return 1
   fi
-  ln -s "$2" "$1"
+  ln -s "${2}" "${1}"
 }
 
 if [ -L openspec ]; then
