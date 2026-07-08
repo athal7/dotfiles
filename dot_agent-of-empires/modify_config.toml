@@ -1,0 +1,33 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /*
+  aoe ("Agent of Empires") rewrites ~/.agent-of-empires/config.toml IN FULL on
+  every run, persisting the entire resolved schema (~150 lines of defaults)
+  plus pure runtime/UI state ([app_state], [auth], [telemetry], [logging],
+  the aoe-web-settings JSON blob, etc). A static chezmoi source file would
+  fight that on every apply, so instead this modify_ template point-patches
+  only the keys we actually own into whatever aoe last wrote, leaving every
+  other byte untouched (no full TOML parse/reserialize, which would reformat
+  aoe's multi-line arrays and indentation on every apply).
+
+  chezmoi-managed keys (nothing else is enforced):
+    [session]  default_tool = "opencode"
+    [diff]     split_view   = true
+    [worktree] enabled = true, delete_branch_on_cleanup = true
+
+  Each replaceAllRegex is scoped to its section via a "(?s)(\[section\][^\[]*?)"
+  capture group — [^\[] stops the lazy match at the next section header, so
+  same-named keys in other sections (e.g. worktree.enabled vs.
+  sandbox.enabled_by_default, telemetry.enabled, status_hooks.enabled) are
+  never touched.
+
+  This only patches an existing file — it does not bootstrap one from scratch.
+  If aoe hasn't run yet and ~/.agent-of-empires/config.toml doesn't exist, the
+  regexes below match nothing, stdin passes through empty, and chezmoi leaves
+  the file absent until aoe creates it on first run.
+*/ -}}
+{{- $c := .chezmoi.stdin -}}
+{{- $c = $c | replaceAllRegex "(?s)(\\[session\\][^\\[]*?)default_tool = \"[^\"]*\"" "${1}default_tool = \"opencode\"" -}}
+{{- $c = $c | replaceAllRegex "(?s)(\\[diff\\][^\\[]*?)split_view = \\w+" "${1}split_view = true" -}}
+{{- $c = $c | replaceAllRegex "(?s)(\\[worktree\\][^\\[]*?)enabled = \\w+" "${1}enabled = true" -}}
+{{- $c = $c | replaceAllRegex "(?s)(\\[worktree\\][^\\[]*?)delete_branch_on_cleanup = \\w+" "${1}delete_branch_on_cleanup = true" -}}
+{{- $c -}}
