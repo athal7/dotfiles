@@ -54,6 +54,9 @@ Thumbs.db
 # visible so it surfaces in the review UI. No-op in repos without an openspec/.
 /openspec/specs
 /openspec/changes/archive
+# Local OpenSpec tooling scaffolding (1-line `schema: spec-driven` marker), not
+# project code — kept out of commits per-repo convention, like .talismanrc above.
+/openspec/config.yaml
 .screencast/
 favicon.svg
 
