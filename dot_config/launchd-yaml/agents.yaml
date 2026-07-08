@@ -29,7 +29,7 @@ launchagents:
     StandardOutPath: $HOME/Library/Logs/audit.log
     StandardErrorPath: $HOME/Library/Logs/audit.log
     EnvironmentVariables:
-      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   babysitter-check:
     Label: com.$USER.babysitter-check
@@ -121,7 +121,7 @@ launchagents:
     StandardOutPath: $HOME/Library/Logs/fix-prod-errors.log
     StandardErrorPath: $HOME/Library/Logs/fix-prod-errors.log
     EnvironmentVariables:
-      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   git-worktree-sync:
     Label: com.$USER.git-worktree-sync
@@ -179,7 +179,7 @@ launchagents:
     StandardOutPath: $HOME/Library/Logs/kb-enrich.log
     StandardErrorPath: $HOME/Library/Logs/kb-enrich.log
     EnvironmentVariables:
-      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   lmstudio-qwen-load:
     Label: com.$USER.lmstudio-qwen-load
@@ -256,7 +256,7 @@ launchagents:
     StandardOutPath: $HOME/Library/Logs/refactor-hotspots.log
     StandardErrorPath: $HOME/Library/Logs/refactor-hotspots.log
     EnvironmentVariables:
-      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   setenv-gui-path:
     Label: com.$USER.setenv-gui-path
