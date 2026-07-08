@@ -43,6 +43,18 @@
 # sleep and one send. Retrying or verifying delivery via capture-pane would
 # overcomplicate a fire-and-forget tool.
 #
+# `aoe send` gets the message with a trailing space appended. All 4 real
+# scheduled jobs send a slash command (e.g. `/audit`); opencode's TUI treats
+# a leading `/` as the start of its slash-command autocomplete dropdown, and
+# `aoe send`'s trailing Enter keystroke gets consumed by that dropdown
+# (dismissing/accepting it) instead of submitting the message — so the
+# command sits typed-but-unsubmitted forever while `aoe send` still reports
+# success. A trailing space closes the dropdown as it's typed, so the Enter
+# that follows submits normally. Live-tested against the real `audit`
+# LaunchAgent: without the trailing space `/audit` was typed but stuck in
+# the dropdown indefinitely; with it, `/audit` submitted immediately and the
+# workflow ran. Harmless for plain-text messages too.
+#
 # Usage:
 #   aoe-cmd -d DIR -n NAME MESSAGE...
 #
@@ -100,7 +112,7 @@ fi
 
 sleep "${AOE_CMD_STARTUP_SLEEP:-5}"
 
-if ! send_output=$(aoe send "$id" "$message" 2>&1); then
+if ! send_output=$(aoe send "$id" "$message " 2>&1); then
   echo "aoe-cmd: 'aoe send' failed for session '$title' (id $id)" >&2
   printf '%s\n' "$send_output" >&2
   exit 1

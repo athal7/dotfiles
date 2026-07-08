@@ -114,7 +114,10 @@ test_happy_path() {
   esac
 
   check "aoe session start called with parsed ID" "$session_start_line" "session	start	24777d8e72f2416c"
-  check "aoe send called with parsed ID and message" "$send_line" "send	24777d8e72f2416c	/audit"
+  # Trailing space is intentional: it dismisses opencode's TUI slash-command
+  # autocomplete dropdown before aoe send's Enter keystroke, so slash-command
+  # messages (all 4 real scheduled jobs) actually submit. See executable_aoe-cmd.
+  check "aoe send called with parsed ID and message plus trailing space" "$send_line" "send	24777d8e72f2416c	/audit "
 
   local add_lineno session_start_lineno send_lineno
   add_lineno="$(grep -n '^add' "$AOE_LOG" | cut -d: -f1)"
