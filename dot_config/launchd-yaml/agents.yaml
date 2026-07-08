@@ -16,12 +16,11 @@ launchagents:
   audit:
     Label: com.$USER.audit
     ProgramArguments:
-      - $HOME/.local/bin/opencode-cmd
+      - $HOME/.local/bin/aoe-cmd
       - -d
       - $HOME/code/dotfiles
-      - -t
-      - "1800"
-      - send
+      - -n
+      - audit
       - /audit
     StartCalendarInterval:
       Day: 1
@@ -95,12 +94,11 @@ launchagents:
   fix-prod-errors:
     Label: com.$USER.fix-prod-errors
     ProgramArguments:
-      - $HOME/.local/bin/opencode-cmd
+      - $HOME/.local/bin/aoe-cmd
       - -d
       - $HOME/code/dotfiles
-      - -t
-      - "1800"
-      - send
+      - -n
+      - fix-prod-errors
       - /fix-prod-errors
     # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
     # by then, so each run simply covers that same day's errors.
@@ -154,12 +152,11 @@ launchagents:
   kb-enrich:
     Label: com.$USER.kb-enrich
     ProgramArguments:
-      - $HOME/.local/bin/opencode-cmd
+      - $HOME/.local/bin/aoe-cmd
       - -d
       - $HOME/code/dotfiles
-      - -t
-      - "3600"
-      - send
+      - -n
+      - kb-enrich
       - /kb-enrich
     # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
     # by then, so each run simply enriches that same day's activity.
@@ -246,12 +243,11 @@ launchagents:
   refactor-hotspots:
     Label: com.$USER.refactor-hotspots
     ProgramArguments:
-      - $HOME/.local/bin/opencode-cmd
+      - $HOME/.local/bin/aoe-cmd
       - -d
       - $HOME/code/dotfiles
-      - -t
-      - "1800"
-      - send
+      - -n
+      - refactor-hotspots
       - /refactor-hotspots
     StartCalendarInterval:
       Weekday: 0

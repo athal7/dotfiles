@@ -1,0 +1,72 @@
+#!/bin/sh
+# aoe-cmd — dispatch a scheduled opencode session through aoe (Agent of
+# Empires) instead of hitting the opencode HTTP API directly, so the session
+# shows up in aoe's session list/TUI/`aoe serve` dashboard like an
+# interactively-created one.
+#
+# Fire-and-forget by design: creates an `--agent opencode` (ACP structured-
+# view) session and posts a prompt to it, then exits. There is no blocking
+# "wait for the agent's reply" verb for these sessions — the point of moving
+# to aoe is that the session persists and is reviewable later via
+# `aoe`/`aoe serve`, unlike blocking on an HTTP call ever did.
+#
+# ACP-mode sessions (--agent opencode) have no tmux pane, so `aoe send`
+# (which sends to a tmux pane) fails with "Acp-mode sessions have no tmux
+# pane; send is not supported" — confirmed by live testing. The correct verb
+# for these sessions is `aoe acp prompt SESSION_ID TEXT`.
+#
+# `aoe add` does not error or dedupe on a repeated --title — repeated runs
+# with the same NAME would produce multiple sessions sharing a title. So the
+# title always gets a timestamp suffix, and the numeric session ID (parsed
+# from `aoe add`'s output) is what's used for the follow-up prompt — never
+# the title.
+#
+# Usage:
+#   aoe-cmd -d DIR -n NAME MESSAGE...
+
+set -eu
+
+usage() {
+  echo "Usage: aoe-cmd -d DIR -n NAME MESSAGE..." >&2
+}
+
+dir=""
+name=""
+
+while getopts "d:n:" opt; do
+  case "$opt" in
+    d) dir="$OPTARG" ;;
+    n) name="$OPTARG" ;;
+    *) usage; exit 1 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+message="$*"
+
+if [ -z "$dir" ] || [ -z "$name" ] || [ -z "$message" ]; then
+  usage
+  exit 1
+fi
+
+title="${name}-$(date +%Y%m%d-%H%M%S)"
+
+if ! add_output=$(aoe add "$dir" --agent opencode --title "$title"); then
+  echo "aoe-cmd: 'aoe add' failed for session '$title'" >&2
+  exit 1
+fi
+
+id=$(printf '%s\n' "$add_output" | awk '/^  ID:/ {print $2}')
+
+if [ -z "$id" ]; then
+  echo "aoe-cmd: could not parse session ID from 'aoe add' output for '$title':" >&2
+  printf '%s\n' "$add_output" >&2
+  exit 1
+fi
+
+if ! aoe acp prompt "$id" "$message"; then
+  echo "aoe-cmd: 'aoe acp prompt' failed for session '$title' (id $id)" >&2
+  exit 1
+fi
+
+echo "aoe-cmd: dispatched '$title' (id $id)"
