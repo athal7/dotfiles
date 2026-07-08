@@ -36,7 +36,7 @@ repos:
     hooks:
       - id: chezmoi-templates
         name: validate chezmoi templates
-        entry: bash -c 'for f in "$@"; do chezmoi execute-template < "$f" > /dev/null || exit 1; done' --
+        entry: bash -c 'src="$(git rev-parse --show-toplevel)"; for f in "$@"; do chezmoi execute-template -S "$src" < "$f" > /dev/null || exit 1; done' --
         language: system
         files: \.tmpl$
         exclude: ^\.chezmoi\.toml\.tmpl$
