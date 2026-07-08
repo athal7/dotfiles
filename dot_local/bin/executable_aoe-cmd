@@ -4,25 +4,53 @@
 # shows up in aoe's session list/TUI/`aoe serve` dashboard like an
 # interactively-created one.
 #
-# Fire-and-forget by design: creates an `--agent opencode` (ACP structured-
-# view) session and posts a prompt to it, then exits. There is no blocking
-# "wait for the agent's reply" verb for these sessions — the point of moving
-# to aoe is that the session persists and is reviewable later via
-# `aoe`/`aoe serve`, unlike blocking on an HTTP call ever did.
+# Fire-and-forget by design: creates a terminal-view session (opencode
+# running inside a tmux pane, same mode a plain `aoe add` produces) and types
+# a message into it, then exits. There is no blocking "wait for the agent's
+# reply" verb for these sessions — the point of moving to aoe is that the
+# session persists and is reviewable later via `aoe`/`aoe serve`, unlike
+# blocking on an HTTP call ever did.
 #
-# ACP-mode sessions (--agent opencode) have no tmux pane, so `aoe send`
-# (which sends to a tmux pane) fails with "Acp-mode sessions have no tmux
-# pane; send is not supported" — confirmed by live testing. The correct verb
-# for these sessions is `aoe acp prompt SESSION_ID TEXT`.
+# Launching is two calls, not one: `aoe add DIR --tool opencode --title
+# TITLE` to create the session record, then `aoe session start ID` to
+# actually start the tmux pane running opencode. This is deliberately NOT
+# `aoe add ... -l/--launch`, which tries to interactively attach to the new
+# tmux session right after creating it — in the non-TTY context this script
+# always runs in (a LaunchAgent has no controlling terminal), that attach
+# attempt fails and `aoe add` exits 1 even though the session, tmux pane, and
+# opencode process were all created successfully. Live-tested: `aoe add ...
+# -l` reliably returns exit 1 in this environment despite fully succeeding,
+# which would make every scheduled run look like a failure and abort before
+# ever sending a message. Splitting into `aoe add` (no -l, just creates the
+# record, exits 0) + `aoe session start` (starts the tmux process without
+# attaching, exits 0) avoids the spurious failure and gives a reliable exit
+# code at each step.
 #
 # `aoe add` does not error or dedupe on a repeated --title — repeated runs
 # with the same NAME would produce multiple sessions sharing a title. So the
 # title always gets a timestamp suffix, and the numeric session ID (parsed
-# from `aoe add`'s output) is what's used for the follow-up prompt — never
-# the title.
+# from `aoe add`'s output) is what's used for the follow-up `session start`
+# and `send` calls — never the title.
+#
+# opencode's TUI takes a few seconds to boot inside the fresh tmux pane.
+# `aoe send` types straight into the pane with no readiness check and no ACK:
+# a message sent before opencode is ready is silently dropped — `aoe send`
+# still prints its "Sent message" confirmation and exits 0, so there's no
+# error signal to retry on. The fix is a fixed sleep after `aoe session
+# start` returns, before calling `aoe send` once. This is a real,
+# live-tested race (immediate and 3s-delayed sends were both dropped; 5s was
+# delivered), not a transient error — so there's no retry loop here, just one
+# sleep and one send. Retrying or verifying delivery via capture-pane would
+# overcomplicate a fire-and-forget tool.
 #
 # Usage:
 #   aoe-cmd -d DIR -n NAME MESSAGE...
+#
+# Env:
+#   AOE_CMD_STARTUP_SLEEP  Seconds to sleep after `aoe session start` before
+#                          calling `aoe send`, to let opencode's TUI finish
+#                          booting in the tmux pane (default 5). Override to
+#                          0 in tests.
 
 set -eu
 
@@ -51,7 +79,7 @@ fi
 
 title="${name}-$(date +%Y%m%d-%H%M%S)"
 
-if ! add_output=$(aoe add "$dir" --agent opencode --title "$title"); then
+if ! add_output=$(aoe add "$dir" --tool opencode --title "$title"); then
   echo "aoe-cmd: 'aoe add' failed for session '$title'" >&2
   exit 1
 fi
@@ -64,8 +92,17 @@ if [ -z "$id" ]; then
   exit 1
 fi
 
-if ! aoe acp prompt "$id" "$message"; then
-  echo "aoe-cmd: 'aoe acp prompt' failed for session '$title' (id $id)" >&2
+if ! start_output=$(aoe session start "$id" 2>&1); then
+  echo "aoe-cmd: 'aoe session start' failed for session '$title' (id $id)" >&2
+  printf '%s\n' "$start_output" >&2
+  exit 1
+fi
+
+sleep "${AOE_CMD_STARTUP_SLEEP:-5}"
+
+if ! send_output=$(aoe send "$id" "$message" 2>&1); then
+  echo "aoe-cmd: 'aoe send' failed for session '$title' (id $id)" >&2
+  printf '%s\n' "$send_output" >&2
   exit 1
 fi
 

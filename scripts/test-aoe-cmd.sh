@@ -20,7 +20,8 @@ check(){ if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2'
 
 # Fake `aoe` binary: records every invocation (one line per call, tab-joined
 # args) to $AOE_LOG, then behaves per the AOE_STUB_* env vars so each test
-# can control `aoe add` / `aoe acp prompt` outcomes independently.
+# can control `aoe add` / `aoe session start` / `aoe send` outcomes
+# independently.
 STUB_BIN="$WORK/bin"
 mkdir -p "$STUB_BIN"
 cat > "$STUB_BIN/aoe" <<'STUB'
@@ -29,8 +30,14 @@ cat > "$STUB_BIN/aoe" <<'STUB'
 if [ "$1" = "add" ]; then
   [ -n "${AOE_STUB_ADD_OUTPUT:-}" ] && printf '%s\n' "$AOE_STUB_ADD_OUTPUT"
   exit "${AOE_STUB_ADD_EXIT:-0}"
-elif [ "$1" = "acp" ] && [ "$2" = "prompt" ]; then
-  exit "${AOE_STUB_PROMPT_EXIT:-0}"
+elif [ "$1" = "session" ] && [ "$2" = "start" ]; then
+  [ -n "${AOE_STUB_SESSION_START_EXIT:-0}" ] && [ "${AOE_STUB_SESSION_START_EXIT:-0}" != "0" ] && \
+    echo "fake aoe: session start failing on purpose" >&2
+  exit "${AOE_STUB_SESSION_START_EXIT:-0}"
+elif [ "$1" = "send" ]; then
+  [ -n "${AOE_STUB_SEND_EXIT:-0}" ] && [ "${AOE_STUB_SEND_EXIT:-0}" != "0" ] && \
+    echo "fake aoe: send failing on purpose" >&2
+  exit "${AOE_STUB_SEND_EXIT:-0}"
 fi
 echo "fake aoe: unexpected invocation: $*" >&2
 exit 99
@@ -42,10 +49,16 @@ AOE_LOG="$WORK/aoe.log"
 run_aoe_cmd() {
   : > "$AOE_LOG"
   PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" \
+    AOE_CMD_STARTUP_SLEEP="${AOE_CMD_STARTUP_SLEEP:-0}" \
     AOE_STUB_ADD_OUTPUT="${AOE_STUB_ADD_OUTPUT:-}" \
     AOE_STUB_ADD_EXIT="${AOE_STUB_ADD_EXIT:-0}" \
-    AOE_STUB_PROMPT_EXIT="${AOE_STUB_PROMPT_EXIT:-0}" \
+    AOE_STUB_SESSION_START_EXIT="${AOE_STUB_SESSION_START_EXIT:-0}" \
+    AOE_STUB_SEND_EXIT="${AOE_STUB_SEND_EXIT:-0}" \
     sh "$AOE_CMD" "$@"
+}
+
+send_call_count() {
+  grep -c '^send' "$AOE_LOG"
 }
 
 canonical_add_output='✓ Added session: audit-20260101-000000
@@ -80,13 +93,19 @@ test_happy_path() {
     run_aoe_cmd -d /tmp/proj -n audit /audit >/dev/null 2>&1 && status=0 || status=$?
   check "exits 0 on success" "$status" 0
 
-  local add_line prompt_line
+  local add_line session_start_line send_line
   add_line="$(grep '^add' "$AOE_LOG")"
-  prompt_line="$(grep '^acp' "$AOE_LOG")"
+  session_start_line="$(grep '^session' "$AOE_LOG")"
+  send_line="$(grep '^send' "$AOE_LOG")"
 
   case "$add_line" in
-    *"add	/tmp/proj	--agent	opencode	--title	audit-"*) ok "aoe add called with --agent opencode and prefixed title" ;;
+    *"add	/tmp/proj	--tool	opencode	--title	audit-"*) ok "aoe add called with --tool opencode (no -l) and prefixed title" ;;
     *) bad "aoe add args (got: $add_line)" ;;
+  esac
+
+  case "$add_line" in
+    *"-l"*) bad "aoe add should not be called with -l (got: $add_line)" ;;
+    *) ok "aoe add called without -l" ;;
   esac
 
   case "$add_line" in
@@ -94,7 +113,18 @@ test_happy_path() {
     *) bad "title timestamp suffix (got: $add_line)" ;;
   esac
 
-  check "aoe acp prompt called with parsed ID and message" "$prompt_line" "acp	prompt	24777d8e72f2416c	/audit"
+  check "aoe session start called with parsed ID" "$session_start_line" "session	start	24777d8e72f2416c"
+  check "aoe send called with parsed ID and message" "$send_line" "send	24777d8e72f2416c	/audit"
+
+  local add_lineno session_start_lineno send_lineno
+  add_lineno="$(grep -n '^add' "$AOE_LOG" | cut -d: -f1)"
+  session_start_lineno="$(grep -n '^session' "$AOE_LOG" | cut -d: -f1)"
+  send_lineno="$(grep -n '^send' "$AOE_LOG" | cut -d: -f1)"
+  if [ "$add_lineno" -lt "$session_start_lineno" ] && [ "$session_start_lineno" -lt "$send_lineno" ]; then
+    ok "aoe add, session start, send called in order"
+  else
+    bad "aoe add, session start, send call order (got log: $(cat "$AOE_LOG"))"
+  fi
 }
 test_happy_path
 
@@ -105,7 +135,7 @@ test_add_failure() {
   local out status
   out="$(AOE_STUB_ADD_EXIT=1 AOE_STUB_ADD_OUTPUT="" run_aoe_cmd -d /tmp/proj -n audit /audit 2>&1)" && status=0 || status=$?
   check "exits non-zero when aoe add fails" "$status" 1
-  if grep -qc '^acp' "$AOE_LOG"; then bad "acp prompt should not be called when add fails"; else ok "acp prompt not called when add fails"; fi
+  if grep -qc '^send' "$AOE_LOG"; then bad "aoe send should not be called when add fails"; else ok "aoe send not called when add fails"; fi
 }
 test_add_failure
 
@@ -117,20 +147,43 @@ test_unparseable_id() {
   out="$(AOE_STUB_ADD_OUTPUT='✓ Added session: audit-x
   Profile: main' run_aoe_cmd -d /tmp/proj -n audit /audit 2>&1)" && status=0 || status=$?
   check "exits non-zero when ID cannot be parsed" "$status" 1
-  if grep -qc '^acp' "$AOE_LOG"; then bad "acp prompt should not be called when ID missing"; else ok "acp prompt not called when ID missing"; fi
+  if grep -qc '^send' "$AOE_LOG"; then bad "aoe send should not be called when ID missing"; else ok "aoe send not called when ID missing"; fi
 }
 test_unparseable_id
 
 # ---------------------------------------------------------------------------
-echo "== aoe acp prompt failure =="
+echo "== aoe session start failure =="
 
-test_prompt_failure() {
+test_session_start_failure() {
   local out status
-  out="$(AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_STUB_PROMPT_EXIT=1 \
+  out="$(AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_STUB_SESSION_START_EXIT=1 \
     run_aoe_cmd -d /tmp/proj -n audit /audit 2>&1)" && status=0 || status=$?
-  check "exits non-zero when aoe acp prompt fails" "$status" 1
+  check "exits non-zero when aoe session start fails" "$status" 1
+  if grep -qc '^send' "$AOE_LOG"; then bad "aoe send should not be called when session start fails"; else ok "aoe send not called when session start fails"; fi
+  if printf '%s' "$out" | grep -q "'aoe session start' failed for session"; then
+    ok "prints fail-loud message with session title/id"
+  else
+    bad "prints fail-loud message with session title/id (got: $out)"
+  fi
 }
-test_prompt_failure
+test_session_start_failure
+
+# ---------------------------------------------------------------------------
+echo "== aoe send failure =="
+
+test_send_failure() {
+  local out status
+  out="$(AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_STUB_SEND_EXIT=1 \
+    run_aoe_cmd -d /tmp/proj -n audit /audit 2>&1)" && status=0 || status=$?
+  check "exits non-zero when aoe send fails" "$status" 1
+  check "aoe send called exactly once" "$(send_call_count)" 1
+  if printf '%s' "$out" | grep -q "'aoe send' failed for session"; then
+    ok "prints fail-loud message with session title/id"
+  else
+    bad "prints fail-loud message with session title/id (got: $out)"
+  fi
+}
+test_send_failure
 
 # ---------------------------------------------------------------------------
 echo
