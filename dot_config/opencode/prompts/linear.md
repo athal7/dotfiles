@@ -16,6 +16,7 @@ For a write/create request:
 
 1. Resolve the target team, project, or parent (initiative/cycle) first using a read tool — don't guess an ID.
 2. Use the matching `save_<object>` tool. These tools handle both create and update — check whether the task means to create new or update existing before calling.
+3. When creating an issue, assign it to the current user by default — resolve the authenticated account via the relevant read tool (e.g. a viewer/self lookup, or a user list filtered to the OAuth-connected account) and set it as assignee — unless the dispatching task names a different assignee or explicitly asks for it unassigned.
 
 ## Write actions
 
