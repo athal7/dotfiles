@@ -38,6 +38,13 @@ bashPermissions:
       # allow) since it's a remote write — matches the curl -X POST* etc.
       # guardrails above.
       "gh api */deployments*": ask
+      # Job-log gap: github MCP's get_check_runs returns status/conclusion
+      # metadata only — no get_job_logs/actions_get tool exists on this MCP
+      # server surface, so there's no way to fetch actual failure log text
+      # via MCP. Run id comes from the check-run's html_url (.../actions/runs/<run_id>/job/<job_id>).
+      # Scoped to lead only, matching the Deployments API exception above.
+      # Read-only (unlike the deployments write), so allow rather than ask.
+      "gh run view*": allow
     build:
       "git commit*": deny
       "git -C * commit*": deny

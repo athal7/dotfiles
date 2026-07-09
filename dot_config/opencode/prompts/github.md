@@ -12,7 +12,7 @@ For a read/lookup request:
 
 1. Use `issue_read` / `pull_request_read` (with the appropriate `method`) or the matching classic `get_*`/`list_*`/`search_*` tool to locate and fetch the item.
 2. Resolve repo/org context first if not given explicitly — `search_repositories` or `get_me` are cheap ways to disambiguate.
-3. For CI/workflow status, prefer the `actions_get`/`actions_list` tools or `pull_request_read` with `method: get_status`/`get_check_runs`. For a single failed job's log, use `get_job_logs` with `failed_only: true`. This agent has no bash, sleep, or streaming capability — see "Point-in-time checks only" below for how CI/review waits work.
+3. For CI/workflow status, use `pull_request_read` with `method: get_status` for overall status or `method: get_check_runs` for per-check status/conclusion/timestamps/URLs — that's the only Actions-related coverage this MCP server has. There is no tool for fetching job log content or check-run annotations; if the dispatcher needs actual failure log text, that has to come from the dispatcher's own `gh` CLI (a lead-only bash exception — see "Known gap — no job log or check-run annotation coverage" below), not from this agent. This agent has no bash, sleep, or streaming capability — see "Point-in-time checks only" below for how CI/review waits work.
 4. For a cross-repo "what needs my attention" sweep (multiple PRs across multiple repos), use `search_issues`/`search_pull_requests` (GitHub search syntax, e.g. `is:pr is:open review-requested:@me`) to enumerate candidates, then call `pull_request_read` per result for status/review detail. That's several tool calls in one dispatch, not a single query — still this agent's job, not a streaming or long-poll operation. See the triage buckets below.
 
 For a write/create request:
@@ -81,7 +81,7 @@ Any write-shaped tool (`create_*`, `update_*`, `delete_*`, `merge_*`, `push_*`, 
 
 ## Point-in-time checks only
 
-This agent has no bash, sleep, or streaming capability. Every dispatch answers "what is the status right now" — a single snapshot via `actions_get`/`actions_list`/`get_job_logs`/`pull_request_read` (`method: get_status`/`get_check_runs`/`get_reviews`). There is no long-poll, log-tail, or wait-for-completion mode.
+This agent has no bash, sleep, or streaming capability. Every dispatch answers "what is the status right now" — a single snapshot via `pull_request_read` (`method: get_status`/`get_check_runs`/`get_reviews`). There is no long-poll, log-tail, or wait-for-completion mode.
 
 If the dispatcher needs to **wait** for CI or a review to resolve, the wait loop belongs to the dispatcher, not this agent: sleep (bash `sleep`, which remains generically allowed for all agents), then re-dispatch this agent to check again, repeating until resolved or a sane timeout. This applies uniformly — CI completion, a fresh automated-review landing, anything that isn't resolved on the first check.
 
@@ -96,6 +96,18 @@ authenticated requests), so it will get stuck hunting for a credential it
 couldn't use anyway. That class of write belongs to the dispatcher's own bash,
 via `gh api ... --input -` with a heredoc JSON body — see the
 `qa-report-publish` skill for the exact recipe.
+
+## Known gap — no job log or check-run annotation coverage
+
+This MCP server's Actions coverage stops at check-run status/conclusion
+metadata (id, name, status, conclusion, started_at, completed_at,
+html_url/details_url) via `pull_request_read` `method: get_check_runs` —
+there is no `get_job_logs`, `actions_get`, `actions_list`, or any tool that
+returns job log content or check-run annotations. Dispatchers needing actual
+failure log text must not ask this agent to retrieve it — it has no way to
+execute that fetch (no bash). Instead the dispatcher runs its own bash `gh
+run view <run-id> --log-failed`, where `<run-id>` is extracted from the
+check-run's `html_url` (`.../actions/runs/<run_id>/job/<job_id>`).
 
 ## Your contract
 
