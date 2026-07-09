@@ -41,9 +41,9 @@ main() {
     fi
   fi
 
-  echo "chezmoi-deploy: applying to ~ (chezmoi apply --force)…"
-  chezmoi apply --force \
-    || { echo "chezmoi-deploy: chezmoi apply failed; primary main has the merge but ~ may be partially applied" >&2; exit 1; }
+  echo "chezmoi-deploy: applying to ~ (chezmoi apply --error-on-conflict)…"
+  chezmoi apply --error-on-conflict \
+    || { echo "chezmoi-deploy: chezmoi apply failed; primary main has the merge but ~ may be partially applied. A conflict means a managed target changed outside chezmoi since the last apply — run 'chezmoi diff' to inspect the drift, then update the source or resolve manually and retry." >&2; exit 1; }
 
   echo "chezmoi-deploy: pushing main to origin…"
   git -C "$PRIMARY" push origin main \
