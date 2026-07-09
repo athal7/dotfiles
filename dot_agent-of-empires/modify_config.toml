@@ -10,9 +10,10 @@
   aoe's multi-line arrays and indentation on every apply).
 
   chezmoi-managed keys (nothing else is enforced):
-    [session]  default_tool = "opencode", new_session_attach_mode = "live_send"
-    [diff]     split_view   = true
-    [worktree] enabled = true, delete_branch_on_cleanup = true
+    [session]     default_tool = "opencode", new_session_attach_mode = "live_send"
+    [diff]        split_view   = true
+    [worktree]    enabled = true, delete_branch_on_cleanup = true
+    [tools.lumen] command = "lumen diff --stacked", hotkey = "Alt+l"
 
   Each replaceAllRegex is scoped to its section via a "(?s)(\[section\][^\[]*?)"
   capture group — [^\[] stops the lazy match at the next section header, so
@@ -20,10 +21,19 @@
   sandbox.enabled_by_default, telemetry.enabled, status_hooks.enabled) are
   never touched.
 
+  [tools.lumen] is a tool-session block, not a scalar-key patch — aoe never
+  writes this section on its own, so there's nothing to point-patch until we
+  create it once. If the section is already present (a prior apply created
+  it, or the user hand-edited it), we patch its command/hotkey values in
+  place like the sections above; otherwise we append a new section, keeping
+  the whole thing idempotent across repeated applies.
+
   This only patches an existing file — it does not bootstrap one from scratch.
   If aoe hasn't run yet and ~/.agent-of-empires/config.toml doesn't exist, the
   regexes below match nothing, stdin passes through empty, and chezmoi leaves
-  the file absent until aoe creates it on first run.
+  the file absent until aoe creates it on first run. The [tools.lumen] append
+  is likewise guarded on $c being non-empty, so it can't bootstrap a file
+  either.
 */ -}}
 {{- $c := .chezmoi.stdin -}}
 {{- $c = $c | replaceAllRegex "(?s)(\\[session\\][^\\[]*?)default_tool = \"[^\"]*\"" "${1}default_tool = \"opencode\"" -}}
@@ -31,4 +41,12 @@
 {{- $c = $c | replaceAllRegex "(?s)(\\[diff\\][^\\[]*?)split_view = \\w+" "${1}split_view = true" -}}
 {{- $c = $c | replaceAllRegex "(?s)(\\[worktree\\][^\\[]*?)enabled = \\w+" "${1}enabled = true" -}}
 {{- $c = $c | replaceAllRegex "(?s)(\\[worktree\\][^\\[]*?)delete_branch_on_cleanup = \\w+" "${1}delete_branch_on_cleanup = true" -}}
+{{- if ne $c "" -}}
+  {{- if regexMatch "(?s)\\[tools\\.lumen\\]" $c -}}
+    {{- $c = $c | replaceAllRegex "(?s)(\\[tools\\.lumen\\][^\\[]*?)command = \"[^\"]*\"" "${1}command = \"lumen diff --stacked\"" -}}
+    {{- $c = $c | replaceAllRegex "(?s)(\\[tools\\.lumen\\][^\\[]*?)hotkey = \"[^\"]*\"" "${1}hotkey = \"Alt+l\"" -}}
+  {{- else -}}
+    {{- $c = printf "%s\n[tools.lumen]\ncommand = \"lumen diff --stacked\"\nhotkey = \"Alt+l\"\n" $c -}}
+  {{- end -}}
+{{- end -}}
 {{- $c -}}
