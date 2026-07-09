@@ -13,7 +13,7 @@
     [session]     default_tool = "opencode", new_session_attach_mode = "live_send"
     [diff]        split_view   = true
     [worktree]    enabled = true, delete_branch_on_cleanup = true
-    [tools.lumen] command = "lumen diff --stacked", hotkey = "Alt+l"
+    [tools.lumen] command = "lumen diff --watch main...HEAD", hotkey = "Alt+l"
 
   Each replaceAllRegex is scoped to its section via a "(?s)(\[section\][^\[]*?)"
   capture group — [^\[] stops the lazy match at the next section header, so
@@ -27,6 +27,12 @@
   it, or the user hand-edited it), we patch its command/hotkey values in
   place like the sections above; otherwise we append a new section, keeping
   the whole thing idempotent across repeated applies.
+
+  command uses `main...HEAD` (three dots): lumen diffs from
+  merge-base(main, HEAD), so commits landing on main after the branch
+  diverged don't show up as drift, and --watch's per-file reload only
+  un-marks files that actually changed — "viewed" state survives across
+  review passes on a long-running branch.
 
   This only patches an existing file — it does not bootstrap one from scratch.
   If aoe hasn't run yet and ~/.agent-of-empires/config.toml doesn't exist, the
@@ -43,10 +49,10 @@
 {{- $c = $c | replaceAllRegex "(?s)(\\[worktree\\][^\\[]*?)delete_branch_on_cleanup = \\w+" "${1}delete_branch_on_cleanup = true" -}}
 {{- if ne $c "" -}}
   {{- if regexMatch "(?s)\\[tools\\.lumen\\]" $c -}}
-    {{- $c = $c | replaceAllRegex "(?s)(\\[tools\\.lumen\\][^\\[]*?)command = \"[^\"]*\"" "${1}command = \"lumen diff --stacked\"" -}}
+    {{- $c = $c | replaceAllRegex "(?s)(\\[tools\\.lumen\\][^\\[]*?)command = \"[^\"]*\"" "${1}command = \"lumen diff --watch main...HEAD\"" -}}
     {{- $c = $c | replaceAllRegex "(?s)(\\[tools\\.lumen\\][^\\[]*?)hotkey = \"[^\"]*\"" "${1}hotkey = \"Alt+l\"" -}}
   {{- else -}}
-    {{- $c = printf "%s\n[tools.lumen]\ncommand = \"lumen diff --stacked\"\nhotkey = \"Alt+l\"\n" $c -}}
+    {{- $c = printf "%s\n[tools.lumen]\ncommand = \"lumen diff --watch main...HEAD\"\nhotkey = \"Alt+l\"\n" $c -}}
   {{- end -}}
 {{- end -}}
 {{- $c -}}
