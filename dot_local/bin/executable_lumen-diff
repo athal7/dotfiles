@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# lumen-diff — pick the right lumen invocation for the current branch
+#
+# lumen's --detect-pr mode gives real viewed-state persistence tied to the
+# PR (survives across machines/sessions), but it hard-exits if the current
+# branch has no open PR. This repo has no PR workflow — changes land via
+# chezmoi-deploy — so most branches never have one. Fall back to a local
+# --watch diff against main in that case, which still gets per-file
+# viewed-state tracking, just scoped to this checkout.
+set -u
+
+if gh pr view >/dev/null 2>&1; then
+  exec lumen diff --detect-pr
+else
+  exec lumen diff --watch main...HEAD
+fi
