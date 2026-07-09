@@ -1,6 +1,0 @@
-# Agent of Empires - Repository Configuration
-# This file configures aoe behavior for this repository.
-# See: https://github.com/agent-of-empires/agent-of-empires
-
-[worktree]
-enabled = true

@@ -1,0 +1,192 @@
+# aoe ("Agent of Empires") global user config, deployed to
+# ~/.agent-of-empires/config.toml. This is now under full static chezmoi
+# management (no template logic) — a previous approach point-patched a
+# handful of keys into the live file via a modify_ template; that was
+# replaced by snapshotting the whole file here instead.
+#
+# aoe rewrites this file when settings change via its TUI/web UI — not on
+# every run or continuously. So drift against this snapshot is expected to
+# be infrequent and meaningful, not constant noise. Because chezmoi-deploy
+# runs `chezmoi apply --error-on-conflict` (not --force), drift now
+# surfaces as a conflict on the next deploy instead of being silently
+# patched around (old modify_ behavior) or silently overwritten. Resolve a
+# conflict by re-snapshotting this file to match the current live state,
+# or reconciling by hand.
+default_profile = ""
+
+[acp]
+allow_agent_install = false
+auto_stop_idle_secs = 0
+default_agent = "aoe-agent"
+force_end_turn_threshold_secs = 30
+max_concurrent_resumes = 4
+max_concurrent_workers = 5
+node_path = ""
+queue_drain_mode = "combined"
+rate_limit_auto_resume = false
+rate_limit_auto_resume_grace_secs = 15
+replay_bytes = 5242880
+replay_events = 0
+show_tool_durations = true
+silent_orphan_fast_grace_secs = 20
+silent_orphan_grace_secs = 120
+
+[app_state]
+archived_section_collapsed = true
+group_by = "project"
+has_acknowledged_agent_hooks = false
+has_acknowledged_volume_ignores_globs = false
+has_responded_to_telemetry = true
+has_seen_custom_instruction_warning = false
+has_seen_non_git_project_warning = false
+has_seen_web_tour = true
+has_seen_welcome = true
+last_seen_version = "1.12.1"
+new_session_with_selection_count = 4
+show_preview_info = false
+sort_order = "attention"
+tips_seen = [
+    "tui-core-views",
+    "tui-triage",
+    "tui-power",
+    "install-dashboard-pwa",
+]
+used_new_from_selection = true
+
+[app_state.web_ui_state]
+aoe-web-settings = '{"mobileFontSize":8,"desktopFontSize":14,"autoOpenKeyboard":true,"persistentTerminals":false,"maxPersistentTerminals":5,"diffViewMode":"tree","diffViewLayout":"unified","collapsedDiffDirs":[]}'
+aoe-welcome-seen = "1"
+
+[auth]
+persist_sessions = true
+
+[diff]
+context_lines = 3
+split_view = true
+
+[hooks]
+
+[host_hooks]
+
+[logging]
+default_level = "info"
+file_path = "debug.log"
+keep_count = 5
+max_size_mib = 50
+output = "file"
+rotation = "size"
+show_spans = false
+
+[logging.targets]
+
+[plugins."agent-of-empires.github"]
+enabled = true
+source = "gh:agent-of-empires/plugin-github"
+
+[plugins."agent-of-empires.github".grant]
+capabilities = [
+    "net",
+    "runtime.worker",
+    "session.read",
+    "notifications",
+    "browser_open",
+]
+granted_at = "2026-07-08T19:43:58.777548Z"
+manifest_hash = "sha256:96c3746a11e23975725ffd089e0f57430d97ca605399d3651bc23a402c092aa0"
+
+[plugins."aoe.web"]
+enabled = true
+
+[sandbox]
+auto_cleanup = true
+container_runtime = "docker"
+default_image = "ghcr.io/agent-of-empires/aoe-sandbox:latest"
+default_terminal_mode = "host"
+enabled_by_default = false
+environment = [
+    "TERM",
+    "COLORTERM",
+    "FORCE_COLOR",
+    "NO_COLOR",
+]
+extra_volumes = []
+mount_ssh = false
+selinux_relabel = false
+volume_ignores = []
+volume_ignores_strategy = "anonymous"
+
+[session]
+agent_status_hooks = true
+auto_resume_on_restart = true
+auto_stop_idle_secs = 0
+click_action = "live_send"
+confirm_before_quit = true
+confirm_delete = false
+default_attach_mode = "tmux"
+default_tool = "opencode"
+delete_to_trash = false
+live_send_exit_chord = "C-q"
+live_send_leader = "C-b"
+merge_hooks_into_selected_agent = true
+mouse_capture = true
+new_session_attach_mode = "live_send"
+restart_wake_message = "wake up: pick up what you were doing"
+row_tag = "none"
+session_id_poller_max_threads = 50
+show_tips = true
+smart_rename = true
+smart_rename_agent = ""
+snooze_duration_minutes = 30
+strict_hotkeys = false
+tie_workdir_to_name = true
+trash_retention_days = 30
+unread_indicator = true
+yolo_mode_default = false
+
+[sound]
+enabled = false
+mode = "random"
+
+[status_hooks]
+debounce_ms = 100
+enabled = false
+
+[telemetry]
+enabled = false
+
+[theme]
+color_mode = "truecolor"
+idle_decay_minutes = 0
+name = ""
+
+[tmux]
+clipboard = "auto"
+mouse = "auto"
+status_bar = "auto"
+
+[tools.lumen]
+command = "lumen-diff"
+hotkey = "Alt+l"
+
+[updates]
+auto_update_plugins = false
+check_interval_hours = 24
+notify_in_cli = true
+update_check_mode = "notify"
+web_poll_interval_minutes = 60
+
+[web]
+notifications_enabled = true
+notify_on_error = true
+notify_on_idle = false
+notify_on_waiting = true
+notify_on_wake_fire = true
+
+[worktree]
+auto_cleanup = true
+bare_repo_path_template = "./{branch}"
+delete_branch_on_cleanup = true
+enabled = true
+init_submodules = true
+path_template = "../{repo-name}-worktrees/{branch}"
+workspace_path_template = "../{branch}-workspace-{session-id}"
