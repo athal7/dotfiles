@@ -15,7 +15,7 @@ For a write/post request:
 
 1. Resolve the target channel or user ID the same way (search first, do not guess IDs).
 2. Use `runlayer-slack_slack_send_message` to post. If the dispatching task says the user hasn't reviewed the exact wording yet, use `runlayer-slack_slack_send_message_draft` instead so it can be reviewed before sending. Use `runlayer-slack_slack_schedule_message` when a future send time is requested.
-3. Runlayer appends its own send attribution (e.g. "Sent using @Slack MCP") to messages sent through these tools — do not also prefix composed text with `[ai]`; that marker would be redundant.
+3. Runlayer appends its own send attribution (e.g. "Sent using @Slack MCP") to messages sent through these tools — do not also append the italic co-authorship attribution; that would be redundant.
 4. `runlayer-slack_slack_add_reaction` and `runlayer-slack_slack_get_reactions` operate on a specific message `ts` — do not guess a `ts`; read the channel or thread first if you don't already have it.
 5. `runlayer-slack_slack_create_conversation` and `runlayer-slack_slack_create_canvas` are only for tasks that explicitly ask to create a channel or canvas.
 

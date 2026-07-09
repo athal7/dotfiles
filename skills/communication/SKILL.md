@@ -20,4 +20,6 @@ Before sending: would the recipient learn something? Is anything in here padding
 
 ## AI-authorship marker
 
-Prefix with `[ai]` when the prose is composed by you. Omit when relaying the user's words verbatim. Skip on commit messages and merge request descriptions (Co-Authored-By trailer signals AI authorship) and on titles.
+When posting composed prose through an integration on the user's behalf, append an italicized attribution line at the very end naming the model that composed it: `*Co-authored with <model id>*` (e.g. `*Co-authored with anthropic/claude-sonnet-4-6*`).
+
+Omit when relaying the user's words verbatim. Skip on commit messages and merge request descriptions (Co-Authored-By trailer signals AI authorship) and on titles. Skip on Slack — its own send attribution already covers it.
