@@ -14,11 +14,11 @@ license: MIT
 
 Create or update a draft merge request. If none exists, create one from the branch commits. If one exists, update title/body only when the change is material (new feature scope, different fix, renamed component, changed API) — skip minor additions like tests/docs/formatting. Never change draft↔ready state.
 
-**Description format:** 1-2 sentence summary, only add detail if non-obvious. Link the issue when the tracker is visible to the repo's audience (e.g., `Closes #123`). Skip headers, bullet lists, and implementation details obvious from the diff. **Never reference internal/private issue keys in public repos** — instead, update the issue with a link to the merge request. Check repo visibility before linking.
+**Description format:** 1-2 sentence summary, only add detail if non-obvious. When the tracker is visible to the repo's audience, link the issue with an explicit closing verb the tracker recognizes for auto-close — `Resolves`, `Fixes`, or `Closes` followed by the issue identifier. A bare reference like `#123` with no verb doesn't trigger auto-close — always state the verb. Skip headers, bullet lists, and implementation details obvious from the diff. **Never reference internal/private issue keys in public repos** — instead, update the issue with a link to the merge request. Check repo visibility before linking.
 
 Example:
 ```
-Adds retry logic for flaky external API calls. Closes #123
+Adds retry logic for flaky external API calls. Resolves #123
 ```
 
 ## After draft merge request — watch CI and code review
