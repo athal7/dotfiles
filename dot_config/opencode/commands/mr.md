@@ -8,7 +8,7 @@ Workflow: merge-request. You are maintaining your own merge request. Each phase 
 **Use TodoWrite to track this workflow. Create these items before starting:**
 - Reopen issue — if the MR references a tracked issue, set it back to In Progress
 - Triage — fetch threads + top-level comments, categorize, present for approval
-- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD); run QA (dispatch the `qa` subagent) before commit/push when UI is touched; resolve fixed threads, and seek deterministic fitness functions for repo conventions
+- Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD) for all actionable threads first; run QA (dispatch the `qa` subagent) before the one batched commit/push when UI is touched; resolve all fixed threads together and batch non-fix replies into one approval; seek deterministic fitness functions for repo conventions
 - Conflicts — resolve if present, run tests
 - Re-request — present summary, re-request review
 
@@ -24,9 +24,13 @@ Dispatch the `github` subagent (`task` tool, `subagent_type: github`) to fetch b
 
 ## Fix
 
-For each actionable thread, dispatch the `build` subagent (`task` tool, `subagent_type: build`, strict TDD).
+For each actionable thread, dispatch the `build` subagent (`task` tool, `subagent_type: build`, strict TDD) — batch the whole cycle across all actionable threads: fix every thread first, then commit and push once, then resolve every fixed thread together.
 
-**Run QA before committing or pushing any fix that touches UI.** When a fix changes views, templates, CSS, or frontend, dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows *before* the commit/push gate. Route findings as `/implement`'s Review does: build-level (bug, style, missing test) → re-dispatch the `build` subagent for a targeted fix, then re-verify; plan-level (wrong approach, missing requirement) → reconsider the fix with the human; human judgment (tradeoff, scope) → present and wait. Only once QA passes do you proceed to commit/push; skip QA for non-UI fixes. After the fix commits and pushes, dispatch the `github` subagent to **resolve the thread silently — do not post a reply** (`pull_request_review_write method:resolve_thread`). The resolution *is* the acknowledgment; a "Fixed in abc123" reply is noise. Reply only when you are *not* simply fixing it — declining, deferring, questioning, or adding context — and always get approval before dispatching the `github` subagent to post any reply.
+**Run QA before the batched commit/push if any fix touches UI.** When any fix changes views, templates, CSS, or frontend, dispatch the `qa` subagent (`task` tool, `subagent_type: qa`) for browser functional verification of the affected flows *before* the commit/push gate — once, covering every UI-touching fix together. Route findings as `/implement`'s Review does: build-level (bug, style, missing test) → re-dispatch the `build` subagent for a targeted fix, then re-verify; plan-level (wrong approach, missing requirement) → reconsider the fix with the human; human judgment (tradeoff, scope) → present and wait. Only once QA passes do you proceed to the one commit/push covering every fix; skip QA entirely when no fix touches UI.
+
+**One push, one resolution pass.** Once all fixes have landed in that single commit/push, dispatch the `github` subagent to **resolve every fixed thread silently, without a reply** (`pull_request_review_write method:resolve_thread`), one dispatch covering all of them — the resolution is the acknowledgment.
+
+**Batch the non-fix replies too.** For threads you are *not* simply fixing — declining, deferring, questioning, or adding context — draft all of their replies together and present them as one approval showing every reply's full text (content-bearing writes are shown in full for steering, per remote-operations). After approval, post them consecutively to the `github` subagent.
 
 **Seek deterministic fitness functions.** Repetition is hard to see inside a single changeset, so don't wait to spot an issue twice. Ask instead whether the feedback expresses a *convention* the repo should hold everywhere — a naming rule, an architectural boundary, a banned pattern. The strongest signal is feedback that points at guidance already written down — a documented convention or an agent instruction that keeps getting missed; a soft nudge that isn't being followed is a prime candidate to replace with something deterministic rather than restate. When the feedback names a convention, look for the opportunity to encode it as a deterministic check (a custom lint rule such as a custom RuboCop cop, a test, or a CI gate) so it self-enforces and no reviewer has to flag it again. A genuine one-off just gets fixed. Propose the rule as a follow-up and get approval before adding it; if it is out of scope for the current MR, capture it as a follow-up todo rather than expanding the diff.
 
@@ -40,6 +44,6 @@ Present a summary of what changed. After approval, re-request review from every 
 
 **Refresh the QA-evidence report in your description.** This assumes a prior `/implement` ship already created the marked block and the `qa-<ts>` session dir. After fixes land and with (or before) re-requesting review, refresh the `<sub>` provenance over the standing QA evidence, then upsert the refreshed block into your MR description — an in-place read-modify-write of the whole marked block between the `<!-- qa:start -->` / `<!-- qa:end -->` markers, never a new comment. Load the `qa-report-publish` skill for the mechanics.
 
-All remote writes (posting replies, pushing, re-requesting review) require explicit approval — use the `commit` and `push` skills for shipping.
+Push using the `commit` and `push` skills. Reply and re-request-review content is shown in full for steering. Batch same-turn replies (declines, deferrals, the re-request comment) into one presentation.
 
 $ARGUMENTS

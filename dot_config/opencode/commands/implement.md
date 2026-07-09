@@ -9,19 +9,19 @@ Workflow: implement.
 - Issue — ensure a tracked issue exists for this work: use the one referenced, otherwise search the tracker, otherwise create one
 - Workspace setup — branch if needed per repo conventions; set up `openspec/` (real dir + narrow store symlinks)
 - Plan — dispatch the `explore`/`scout` subagents (`task` tool, `subagent_type: explore` / `subagent_type: scout`) to gather, dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), create proposal, present for approval
-- Build — implement tasks via openspec-apply-change, present changeset for approval
-- Review — run QA (dispatch the `qa` subagent via `task` tool, `subagent_type: qa`) if UI is touched; route findings, present for approval
-- Ship — commit, push, watch CI, merge delta specs into the durable store
+- Build — implement tasks via openspec-apply-change (TDD); for PR-repos, push the draft PR once green
+- Review — run QA (dispatch `qa`) if UI touched; route findings, pushing fixes as updates to the draft PR; present the combined changeset+QA approval gate
+- Ship — settle any post-approval push; watch CI; reviewed delta-spec merge → archive → kb-meta; publish QA report
 
 ## Issue
 
 Every `/implement` run must be tied to a tracked issue before Workspace setup — the issue id anchors the branch name, the OpenSpec proposal, and the eventual commit/PR.
 
-1. **Determine the tracker.** `ORG=$(gh repo view --json owner -q '.owner.login')` then `chezmoi data --format json | jq -r ".orgs[\"$ORG\"].issues // empty"` — `"linear"` means Linear (dispatch the `linear` subagent for all Linear reads/writes below), anything else (including empty) means GitHub Issues (`gh issue` directly).
-2. **Referenced issue.** If the user's message already names an issue/ticket/PR by ID (e.g. "issue 1216", "ABC-123", "#774"), fetch it per the lead's Issue-discipline standing rule and skip to step 5.
-3. **No reference — search first.** Derive a handful of keywords from the request and search the tracker for an existing open (or recently closed) issue covering the same work: `gh issue list --search "<keywords>" --state all` for GitHub, or dispatch the `linear` subagent to search for Linear. If a clear match turns up, confirm with the user before adopting it in place of creating a new one.
-4. **No match — create one.** Draft a title and a short body (what/why, drawn from the user's request and anything already gathered) and present it verbatim with "Do you approve?" — creating an issue is a remote-service write and needs explicit approval before it's created. On approval, create it (`gh issue create --title ... --body ...` for GitHub; dispatch the `linear` subagent to create for Linear). If the repo has issue tracking disabled entirely (`gh repo view --json hasIssuesEnabled` is `false` and the org isn't on Linear), flag this to the user and ask whether to proceed untracked — don't silently skip.
-5. **Set it In Progress** and carry its id/URL forward into the branch name, the OpenSpec proposal, and Ship's commit/PR.
+1. **Determine the tracker.** Parse the org from the origin remote: `ORG=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+)/[^/]+(\.git)?$#\1#')`, then `chezmoi data --format json | jq -r ".orgs[\"$ORG\"].issues // empty"` — `"linear"` means Linear (dispatch the `linear` subagent for all Linear reads/writes below), anything else (including empty) means GitHub Issues (dispatch the `github` subagent, `task` tool, `subagent_type: github` — the sole GitHub pathway per `.chezmoidata/packages.yaml`, which denies bash `gh` entirely).
+2. **Referenced issue.** If the user's message already names an issue/ticket/PR by ID (e.g. "issue 1216", "ABC-123", "#774"), fetch it per the lead's Issue-discipline standing rule (dispatch `github` or `linear` per the tracker determined above) and skip to step 5.
+3. **No reference — search first.** Derive a handful of keywords from the request and search the tracker for an existing open (or recently closed) issue covering the same work: dispatch the `github` subagent to search (GitHub search syntax, e.g. `is:issue <keywords>`) for GitHub, or dispatch the `linear` subagent to search for Linear. If a clear match turns up, confirm with the user before adopting it in place of creating a new one.
+4. **No match — create one.** Draft a title and a short body (what/why, drawn from the user's request and anything already gathered) and show it in full. Dispatch the `github` subagent to create it for GitHub, or the `linear` subagent to create it for Linear already `In Progress` in that one `save_issue` call. If the repo has issue tracking disabled entirely (the `github` subagent reports `hasIssuesEnabled: false` and the org isn't on Linear), flag this to the user and ask whether to proceed untracked.
+5. **Set it In Progress** (dispatch `github`/`linear` per the tracker; a no-op for a Linear issue just created via step 4, which is already In Progress) and carry its id/URL forward into the branch name, the OpenSpec proposal, and Ship's commit/PR.
 
 ## Workspace setup
 
@@ -92,7 +92,9 @@ Create an OpenSpec proposal to persist the plan: dispatch the `build` subagent (
 
 Load `openspec-apply-change` and work through the tasks. For each task, dispatch the `build` subagent (`task` tool, `subagent_type: build`) with strict TDD scope. Track progress via task checkboxes.
 
-**Present the changeset for approval. Wait before proceeding.**
+**PR-using repos — push a draft PR once tasks are done and tests are green.** Load `commit` (keeps in-flight `openspec/changes/<name>/` files out of the code commit) and `push` (opens the draft merge request). Pushing here, as soon as the code exists, maximizes the window to review incrementally in lumen while Review (QA) runs — the draft PR is what makes `gh pr view` succeed, so `lumen-diff` runs in `--detect-pr` mode with per-file viewed-state persisted on the PR instead of the local `--watch` fallback. Skip this for direct-to-main repos (e.g. dotfiles).
+
+The single changeset+QA approval gate is at the end of Review, after QA and any fixes have landed, covering the complete final changeset in one pass.
 
 ## Review
 
@@ -100,18 +102,22 @@ When the changeset touches UI (views, templates, CSS, frontend), dispatch the `q
 
 Static and blast-radius review (in-diff correctness/security/performance and out-of-diff what-breaks-elsewhere) is not performed inline — it happens automatically on the pushed merge request.
 
-**Route findings:**
-- **Build-level** (bug, style, missing test) → dispatch the `build` subagent (`task` tool, `subagent_type: build`) for a targeted fix, then re-verify the fix
-- **Plan-level** (wrong approach, missing requirement) → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), update the proposal
-- **Human judgment** (tradeoff, scope question) → present to the user and wait
+**Route findings before the gate:**
+- **Build-level** (bug, style, missing test) → dispatch the `build` subagent (`task` tool, `subagent_type: build`) for a targeted fix, re-verify, then push the fix as an update to the draft PR (PR-repos).
+- **Plan-level** (wrong approach, missing requirement) → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), update the proposal.
+- **Human judgment** (tradeoff, scope question) → carry forward into the single gate below.
 
-**Present the review for approval before proceeding.**
+**Changeset + QA approval gate.** Present, in one turn: (1) the changeset for review — for PR-repos the draft-PR link (review in lumen; viewed-state persists), for direct-to-main repos the local diff; (2) the QA report/verdict when QA ran; (3) any carried-forward human-judgment findings. Wait for approval or steering before Ship.
 
 ## Ship
 
-Commit and push the code FIRST; the OpenSpec store steps (reviewed spec merge → archive → kb-meta stamp) run AFTER a successful push. The commit-skill guard already unstages in-flight `openspec/changes/<name>/` files, so the code commit stays clean without needing the change archived out of the worktree first. Archiving before push would prematurely finalize the durable store — moving the change to archive and folding its specs — for code that may not pass CI or get push approval; so archive runs after, not before, the push.
+By the time Ship runs, PR-using repos already have a pushed (and possibly QA-fix-updated) draft PR from Build/Review — the changeset just approved; direct-to-main repos have an approved local diff and no push yet. Ship finalizes: settle any post-approval push, then the OpenSpec store steps (reviewed spec merge → archive → kb-meta stamp), then publish the QA report — store steps run after the push settles, since archiving prematurely would finalize the durable store for code that may still change under CI/review.
 
-**Commit, push, watch CI (FIRST).** Load `commit` skill for staging, test verification, and commit message format — its in-flight-change `git reset` guard keeps `openspec/changes/<name>/` paths out of the code commit even though they're un-ignored and visible in review. Then load `push` skill for branch naming, merge request creation, and watching both post-push signals — CI and the automated code review. All remote actions require explicit approval. **A long-pending approval does not mean Ship is done.** If commit/push approval sits for hours or into the next day (e.g. an unattended background job), approval clearing is not the finish line — the remaining steps below (reviewed spec merge → archive → kb-meta stamp) still must run in the same pass. **CI failure → diagnose and route:** code fix → dispatch the `build` subagent (`task` tool, `subagent_type: build`); approach problem → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`); flaky test → re-run. Do not treat CI failure as terminal. **Automated code review** (where configured) lands on the pushed change after CI; triage its findings and route them the same way — build-level fix → dispatch `build`; approach problem → re-dispatch `plan` — fixing through the commit → push cycle and resolving addressed threads.
+**Settle the push.**
+- **PR-using repos:** the draft PR already exists. If the approval gate produced steering commits, load `commit` then `push` to update it. If approval was clean, there's nothing to push here.
+- **Direct-to-main repos (e.g. dotfiles):** this is the sole commit/push — load `commit` then `push` now.
+
+Load `push` skill's CI + automated-code-review watch (if not already running from an earlier push in this run). **A long-pending approval does not mean Ship is done.** If commit/push approval sits for hours or into the next day (e.g. an unattended background job), approval clearing is not the finish line — the remaining steps below (reviewed spec merge → archive → kb-meta stamp) still must run in the same pass. **CI failure → diagnose and route:** code fix → dispatch the `build` subagent (`task` tool, `subagent_type: build`); approach problem → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`); flaky test → re-run. Do not treat CI failure as terminal. **Automated code review** (where configured) lands on the pushed change after CI — note it typically does not run while the PR is a draft; triage its findings and route them the same way — build-level fix → dispatch `build`; approach problem → re-dispatch `plan` — fixing through the commit → push cycle and resolving addressed threads.
 
 **Merge delta specs into the durable store (after a successful commit and push, before archiving).** The change's delta specs under `openspec/changes/<name>/specs/` must be folded into the durable `openspec/specs/` (through the symlink) so the accumulated requirements compound. Do this as a **reviewed, non-lossy LLM merge**: read BOTH sides — the existing durable requirement and the delta — and integrate them, preserving existing scenarios and flagging any conflicts or supersession to the human for resolution. This reviewed merge is SEPARATE from archiving and is NOT performed by `openspec archive` — do it FIRST, before archive.
 

@@ -337,6 +337,8 @@ SQL
 - Were findings verified against the diff? (code-review R2)
 - Did triage happen before code fixes? (merge-request R1)
 - Was full content shown before remote writes? (remote-operations R3)
+- Did /implement present exactly two workflow gates — plan, then one combined changeset+QA — not a third separate review gate? (agent-workflow: Human approval gates)
+- Did independent write approvals cluster within a phase rather than scatter across the session? (remote-operations: Independent write approvals are clustered)
 
 ## Step 4 — Report
 
@@ -363,6 +365,7 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Agent emits empty/zero-cost turns | Verify the model is available, not access/retention-gated | Leaving a silently-broken model configured |
 | Local-model turn-share flat / not expanding vs prior audit | Take the next bounded crawl→walk step (title done → kb-summarization: bulk text, no tools, latency-tolerant, privacy-positive) | Moving agentic/high-stakes roles (build/plan/lead) to local — quality regression + qwen3 tool-call XML-leak risk |
 | Local model shows high empty-turn rate or latency blowup | Raise its LM Studio load-context, or revert that role to Claude — empty/timed-out turns are fake savings | Counting broken local turns as displacement |
+| Independent write approvals scattered across a session | Sequence independent writes to cluster their approvals | Interleaving unrelated work between required approvals |
 
 ---
 
