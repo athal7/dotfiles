@@ -7,10 +7,17 @@
 # chezmoi-deploy — so most branches never have one. Fall back to a local
 # --watch diff against main in that case, which still gets per-file
 # viewed-state tracking, just scoped to this checkout.
+#
+# Use `main..-` (lumen's range+working-tree union syntax), not the more
+# obvious `main...HEAD`. `main..-` deliberately includes uncommitted
+# working-tree changes, which is the whole point of this wrapper during an
+# in-progress agent session that hasn't committed yet. `main...HEAD` alone
+# is a committed-only range — it would silently show nothing until a
+# commit is made.
 set -u
 
 if gh pr view >/dev/null 2>&1; then
   exec lumen diff --detect-pr
 else
-  exec lumen diff --watch main...HEAD
+  exec lumen diff --watch main..-
 fi
