@@ -1,17 +1,19 @@
 #!/bin/sh
 # check-error-logs — daily scan of LaunchAgent error logs
 # When any services have new errors, dispatches an opencode session (via
-# opencode-cmd) to triage and self-heal them — running the /fix-launchagent-errors
-# command in the dotfiles repo. Dispatch-only: no reminder is filed.
+# aoe-cmd, same fire-and-forget pattern as the audit/fix-prod-errors/kb-enrich/
+# refactor-hotspots scheduled jobs) to triage and self-heal them — running the
+# /fix-launchagent-errors command in the dotfiles repo. Dispatch-only: no
+# reminder is filed.
 #
 # State file tracks byte offsets per log file so only new content is read.
 # First run establishes a baseline and exits silently.
 #
 # Offset invariant: a log's byte offset is advanced only after its new errors
-# have been handed off. If the dispatch does not happen (opencode server
-# unreachable, or the dispatch command fails), offsets for logs that
-# contributed errors are NOT advanced, so the next run retries them and no
-# error is silently lost. Logs with no new errors always advance normally.
+# have been handed off. If the dispatch does not happen (the aoe-cmd dispatch
+# fails), offsets for logs that contributed errors are NOT advanced, so the
+# next run retries them and no error is silently lost. Logs with no new
+# errors always advance normally.
 
 LOG_DIR="$HOME/Library/Logs"
 STATE_FILE="$LOG_DIR/.check-error-logs-state"
@@ -24,7 +26,6 @@ SELF_LOG="check-error-logs.error.log"
 # Format: one entry per line, "service_name|pattern"
 # The service_name matches the basename of the .error.log file (without extension).
 EXCLUDE_PATTERNS="
-opencode-web|Could not find 'bundler'
 homebridge|Rate limited for the GetDevice API
 homebridge|bonjour-hap: send EADDRNOTAVAIL
 homebridge|request to https://oauth2\.googleapis\.com/token failed
@@ -173,24 +174,16 @@ if [ -n "$services_with_errors" ]; then
   # lines/file; keep the dispatch text similarly bounded.
   context=$(printf '%s' "$error_context" | head -c 8000)
 
-  # Gate on server reachability. If the server is down, leave the error logs'
-  # offsets unadvanced (they were deferred above) so the next run retries them.
-  if ! opencode-cmd health >/dev/null 2>&1; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') opencode server unreachable — skipping dispatch."
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Offsets for error logs NOT advanced; will retry next run. Services: $service_list"
-    exit 0
-  fi
-
   prompt="/fix-launchagent-errors
 
 Services with new errors: $service_list
 
 $context"
 
-  # Short timeout: 'send' blocks for the run, but the session keeps running
-  # server-side after the client disconnects (see dispatch.md) — so a short
-  # timeout just fires the dispatch and returns. Non-fatal to this script.
-  if opencode-cmd -d "$HOME/code/dotfiles" -t 15 send "$prompt" >/dev/null 2>&1; then
+  # aoe-cmd is fire-and-forget: it creates the session, starts the tmux pane,
+  # and sends the prompt, then exits — matching the dispatch pattern used by
+  # the audit/fix-prod-errors/kb-enrich/refactor-hotspots LaunchAgent triggers.
+  if aoe-cmd -d "$HOME/code/dotfiles" -n fix-launchagent-errors "$prompt" >/dev/null 2>&1; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched /fix-launchagent-errors for: $service_list"
     # Dispatch succeeded — now advance the deferred offsets for error logs.
     printf '%s\n' "$pending_offsets" | while IFS="$TAB" read -r size logfile; do

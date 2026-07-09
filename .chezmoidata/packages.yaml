@@ -101,7 +101,6 @@ packages:
         "xh *query*": allow
         "xh *": ask
     - name: yq
-    - name: athal7/tap/opencode-cmd
     - name: steipete/tap/remindctl
       permissions:
         "remindctl show*": allow
@@ -149,14 +148,6 @@ packages:
         "opencode session *": allow
         "opencode export *": allow
         "opencode *": ask
-
-    - name: opencode-desktop
-      repo: anomalyco/opencode
-      target: Applications
-      app: OpenCode.app
-      asset: opencode-desktop-mac-arm64.app.tar.gz
-      type: archive
-      refresh_period: 24h
 
     # Note: com.apple.provenance on Apple Silicon prevents chezmoi's atomic
     # rename from updating files inside this bundle. On version updates, run:

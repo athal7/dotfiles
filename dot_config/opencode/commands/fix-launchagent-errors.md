@@ -11,7 +11,7 @@ The argument carries the flagged service name(s) and the new error log lines the
 
 ## Skills
 
-- **opencode** — for stale-worktree / session DB failures, follow `repair.md` (especially "Fix B"). For dispatch mechanics, see `dispatch.md`.
+- **opencode** — for stale-worktree / session DB failures, follow `repair.md` (especially "Fix B"). For dispatch mechanics, see `SKILL.md`.
 - **chezmoi** — this repo manages `~`; load the chezmoi skill for the deploy workflow.
 
 ## Steps

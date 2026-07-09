@@ -428,17 +428,6 @@ require("lazy").setup({
         { "<leader>gp", desc = "Open PR" },
         { "<leader>gq", desc = "Close diff" },
 
-        -- Execute / AI
-        { "<leader>xo", desc = "OpenCode" },
-        { "<leader>xt", desc = "Terminal" },
-        { "<leader>xa", desc = "Ask AI" },
-        { "<leader>xe", desc = "Explain cursor" },
-        { "<leader>xr", desc = "Review file" },
-        { "<leader>xf", desc = "Fix diagnostics" },
-        { "<leader>xp", desc = "Optimize selection", mode = "v" },
-        { "<leader>xd", desc = "Document selection", mode = "v" },
-        { "<leader>xs", desc = "Test selection", mode = "v" },
-
         -- Comments
         { "gc", desc = "Comment (motion/visual)" },
         { "gcc", desc = "Comment line" },
@@ -480,45 +469,6 @@ require("lazy").setup({
       vim.g["test#neovim#start_normal"] = 1
       -- Use binstubs (bin/rspec, bin/rails) if present, otherwise bundle exec
       vim.g["test#ruby#use_binstubs"] = 1
-    end,
-  },
-
-  -- OpenCode AI integration
-  {
-    "NickvanDyke/opencode.nvim",
-    dependencies = {
-      { "folke/snacks.nvim", opts = { input = {}, picker = {}, terminal = {} } },
-    },
-    init = function()
-      -- Use the app bundle CLI since ~/.opencode/bin/opencode crashes with SIGKILL
-      vim.g.opencode_opts = {
-        provider = {
-          cmd = "/Applications/OpenCode.app/Contents/MacOS/opencode-cli --port",
-        },
-      }
-    end,
-    config = function()
-      vim.o.autoread = true
-      local oc = require("opencode")
-
-      -- Toggle and terminal
-      vim.keymap.set({ "n", "t" }, "<leader>xo", oc.toggle, { desc = "OpenCode" })
-      vim.keymap.set("n", "<leader>xt", function() Snacks.terminal() end, { desc = "Terminal" })
-      vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
-
-      -- AI code actions (normal mode)
-      vim.keymap.set("n", "<leader>xa", function() oc.ask() end, { desc = "Ask AI" })
-      vim.keymap.set("n", "<leader>xe", function() oc.prompt("Explain @cursor and its context") end, { desc = "Explain cursor" })
-      vim.keymap.set("n", "<leader>xr", function() oc.prompt("Review @file for correctness and readability") end, { desc = "Review file" })
-      vim.keymap.set("n", "<leader>xf", function() oc.prompt("Fix these @diagnostics") end, { desc = "Fix diagnostics" })
-
-      -- AI code actions (visual mode - on selection)
-      vim.keymap.set("v", "<leader>xa", function() oc.ask() end, { desc = "Ask AI about selection" })
-      vim.keymap.set("v", "<leader>xe", function() oc.prompt("Explain @selection") end, { desc = "Explain selection" })
-      vim.keymap.set("v", "<leader>xr", function() oc.prompt("Review @selection for correctness and readability") end, { desc = "Review selection" })
-      vim.keymap.set("v", "<leader>xp", function() oc.prompt("Optimize @selection for performance and readability") end, { desc = "Optimize selection" })
-      vim.keymap.set("v", "<leader>xd", function() oc.prompt("Add documentation comments for @selection") end, { desc = "Document selection" })
-      vim.keymap.set("v", "<leader>xs", function() oc.prompt("Add tests for @selection") end, { desc = "Test selection" })
     end,
   },
 })

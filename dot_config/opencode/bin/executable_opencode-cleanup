@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # opencode-cleanup — deterministic weekly maintenance for the opencode workspace.
 # Replaces the former LLM-driven /cleanup command with tested shell. Every area
-# is WAL-safe / zero-downtime: nothing here stops the live opencode-web service.
+# is WAL-safe / zero-downtime, safe to run while an opencode session is live.
 # (The one-time downtime compaction lives separately in opencode-db-compact.)
 #
 # Areas:
@@ -344,7 +344,6 @@ clean_tmp() {
 		-not -name '*.lock' \
 		-not -name 'MozillaUpdateLock-*' \
 		-not -name 'com.apple.*' \
-		-not -name 'oc_web.pid' \
 		-not -name 'TemporaryDirectory.*' \
 		2>/dev/null || true)"
 	count="$(printf '%s\n' "$listing" | grep -cv '^$' || true)"
@@ -356,7 +355,7 @@ clean_tmp() {
 	find "$CLEANUP_TMP_DIR" -maxdepth 1 -type f -user "$ME" \
 		-not -name '.*' -not -name 'LCK.*' -not -name '*.lock' \
 		-not -name 'MozillaUpdateLock-*' -not -name 'com.apple.*' \
-		-not -name 'oc_web.pid' -not -name 'TemporaryDirectory.*' \
+		-not -name 'TemporaryDirectory.*' \
 		-delete 2>/dev/null || true
 }
 

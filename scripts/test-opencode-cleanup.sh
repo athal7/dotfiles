@@ -244,14 +244,14 @@ echo "== tmp scratch (dry-run + exclusions) =="
 test_tmp() {
 	local tmp="$WORK/tmpdir"; mkdir -p "$tmp"
 	: >"$tmp/scratch1.md"; : >"$tmp/scratch2.json"
-	: >"$tmp/keep.lock"; : >"$tmp/LCK.x"; : >"$tmp/oc_web.pid"; : >"$tmp/com.apple.foo"
+	: >"$tmp/keep.lock"; : >"$tmp/LCK.x"; : >"$tmp/com.apple.foo"
 	mkdir -p "$tmp/TemporaryDirectory.abc"
 	local out
 	out="$(CLEANUP_TMP_DIR="$tmp" bash "$CLEANUP" --tmp --dry-run 2>&1)"
 	if grep -q '2 scratch file' <<<"$out"; then ok "counts only non-excluded files"; else bad "tmp count"; printf '%s\n' "$out"; fi
-	if grep -qE 'keep.lock|LCK|oc_web.pid|com.apple|TemporaryDirectory' <<<"$out"; then bad "excluded file listed"; else ok "exclusions honored"; fi
+	if grep -qE 'keep.lock|LCK|com.apple|TemporaryDirectory' <<<"$out"; then bad "excluded file listed"; else ok "exclusions honored"; fi
 	# nothing actually deleted
-	check "tmp dry-run deletes nothing" "$(find "$tmp" -maxdepth 1 -type f | wc -l | tr -d ' ')" 6
+	check "tmp dry-run deletes nothing" "$(find "$tmp" -maxdepth 1 -type f | wc -l | tr -d ' ')" 5
 }
 test_tmp
 
@@ -279,52 +279,49 @@ test_compact() {
 	if grep -q 'dry-run) Plan' <<<"$out"; then ok "dry-run reports plan"; else bad "compact dry-run"; printf '%s\n' "$out"; fi
 	if grep -q 'VACUUM' <<<"$out"; then ok "plan mentions VACUUM"; else bad "plan missing VACUUM"; fi
 
-	# Foreign-holder classification (white-box, injected fixtures). Source the
+	# Live-holder classification (white-box, injected fixtures). Source the
 	# script as a library (CLEANUP_LIB=1) and override the lsof PID enumeration
 	# and the per-PID `ps` lookup with synthetic data so we can exercise the
-	# classifier without any live server. A holder is FOREIGN unless its command
-	# line contains the managed-web pattern ("opencode web", the launchd server).
+	# classifier without any live process. Every resolved PID is a live holder —
+	# no exemptions (no daemon, no Desktop app to special-case anymore).
 	# shellcheck source=/dev/null
 	(
 		CLEANUP_LIB=1 OPENCODE_DB="$db" . "$DB_COMPACT"
 		set +e   # the sourced lib enables `set -e`; grep/test guards below need it off
 
-		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_live_holders
 		db_pid_command() {
 			case "$1" in
-				101) echo "/opt/homebrew/bin/opencode web --port 4096" ;;
-				102) echo "/Users/u/Applications/OpenCode.app/Contents/Frameworks/OpenCode Helper.app/Contents/MacOS/OpenCode Helper --type=utility --utility-sub-type=node.mojom.NodeService --user-data-dir=/x" ;;
+				101) echo "/opt/homebrew/bin/opencode" ;;
 				103) echo "/usr/local/bin/opencode serve --hostname 127.0.0.1" ;;
 				*)   echo "" ;;
 			esac
 		}
 
-		# Only the managed launchd web server holds it -> no foreign holders.
-		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		# A live opencode TUI process is a holder.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_live_holders
 		db_holder_pids() { printf '%s\n' 101; }
-		[ -z "$(db_foreign_holders)" ] && echo MANAGED_ONLY_OK
+		db_live_holders | grep -q '^101' && echo TUI_LIVE_OK
 
-		# Desktop Electron helper present alongside the managed server.
-		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
-		db_holder_pids() { printf '%s\n' 101 102; }
-		db_foreign_holders | grep -q '^102' && echo DESKTOP_FOREIGN_OK
-		db_foreign_holders | grep -q '^101' || echo MANAGED_NOT_FOREIGN_OK
-
-		# A standalone `opencode serve` is also a foreign holder.
-		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		# A hand-started `opencode serve` is also a holder — no exemption.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_live_holders
 		db_holder_pids() { printf '%s\n' 103; }
-		db_foreign_holders | grep -q '^103' && echo SERVE_FOREIGN_OK
+		db_live_holders | grep -q '^103' && echo SERVE_LIVE_OK
 
-		# No holders at all -> nothing foreign.
-		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_foreign_holders
+		# An already-gone PID (empty resolved command) is NOT a holder.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_live_holders
+		db_holder_pids() { printf '%s\n' 999; }
+		[ -z "$(db_live_holders)" ] && echo GONE_PID_NOT_HOLDER_OK
+
+		# No holders at all -> nothing live.
+		# shellcheck disable=SC2329,SC2317  # invoked indirectly via db_live_holders
 		db_holder_pids() { :; }
-		[ -z "$(db_foreign_holders)" ] && echo NONE_OK
+		[ -z "$(db_live_holders)" ] && echo NONE_OK
 	) >"$WORK/compact.cls" 2>&1
-	check "managed web not foreign"     "$(grep -c MANAGED_ONLY_OK "$WORK/compact.cls" | tr -d ' ')" 1
-	check "desktop helper is foreign"   "$(grep -c DESKTOP_FOREIGN_OK "$WORK/compact.cls" | tr -d ' ')" 1
-	check "managed web excluded"        "$(grep -c MANAGED_NOT_FOREIGN_OK "$WORK/compact.cls" | tr -d ' ')" 1
-	check "standalone serve is foreign" "$(grep -c SERVE_FOREIGN_OK "$WORK/compact.cls" | tr -d ' ')" 1
-	check "no holders -> none foreign"  "$(grep -c NONE_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "TUI process is a holder"      "$(grep -c TUI_LIVE_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "opencode serve is a holder"   "$(grep -c SERVE_LIVE_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "gone PID is not a holder"     "$(grep -c GONE_PID_NOT_HOLDER_OK "$WORK/compact.cls" | tr -d ' ')" 1
+	check "no holders -> none live"      "$(grep -c NONE_OK "$WORK/compact.cls" | tr -d ' ')" 1
 }
 test_compact
 

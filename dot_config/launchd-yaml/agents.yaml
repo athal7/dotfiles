@@ -207,21 +207,6 @@ launchagents:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
 
-  opencode-web:
-    Label: com.$USER.opencode-web
-    ProgramArguments:
-      - $HOME/.local/bin/opencode
-      - web
-      - --port
-      - "4096"
-    RunAtLoad: true
-    KeepAlive: true
-    WorkingDirectory: $HOME
-    StandardOutPath: $HOME/Library/Logs/opencode-web.log
-    StandardErrorPath: $HOME/Library/Logs/opencode-web.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-
   refactor-hotspots:
     Label: com.$USER.refactor-hotspots
     ProgramArguments:
@@ -264,15 +249,3 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       PYTHONPATH: $HOME/.local/lib
-
-  tailscale-serve:
-    Label: com.$USER.tailscale-serve
-    ProgramArguments:
-      - /Applications/Tailscale.app/Contents/MacOS/Tailscale
-      - serve
-      - --bg
-      - --https=4096
-      - http://127.0.0.1:4096
-    RunAtLoad: true
-    StandardOutPath: $HOME/Library/Logs/tailscale-serve.log
-    StandardErrorPath: $HOME/Library/Logs/tailscale-serve.error.log

@@ -6,14 +6,14 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 **No tracked issues required.** This is a personal dotfiles repo with no team to coordinate with — skip the `/implement` workflow's Issue phase and go straight to Workspace setup.
 
-**`chezmoi apply` auto-deploys and reloads changed LaunchAgents.** The `run_onchange_after_aa-launch-agents.sh` generator renders every plist from `.chezmoidata/launchd.yaml` (yq → plutil), then reloads only agents whose plist content actually changed and prunes agents deleted from the YAML — so unchanged agents (notably opencode-web, which hosts mobile/automated-job sessions) are never restarted. The individual plists are NOT chezmoi-managed; the generator owns them. To force-run a scheduled job for testing, you can still kickstart it manually: `launchctl kickstart -k gui/$(id -u)/<label>`.
+**`chezmoi apply` auto-deploys and reloads changed LaunchAgents.** The `run_onchange_after_aa-launch-agents.sh` generator renders every plist from `dot_config/launchd-yaml/agents.yaml` (yq → plutil), then reloads only agents whose plist content actually changed and prunes agents deleted from the YAML — so unchanged agents are never restarted. The individual plists are NOT chezmoi-managed; the generator owns them. To force-run a scheduled job for testing, you can still kickstart it manually: `launchctl kickstart -k gui/$(id -u)/<label>`.
 
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
 - **`dot_config/opencode/`** — OpenCode config: model, MCPs, plugins, permissions, agent instructions
 - **`skills/`** — agent skills deployed to `~/.agents/skills/`
-- **`.chezmoidata/launchd.yaml`** — macOS services (opencode-web on port 4096, for mobile access and automated/background jobs — not the Desktop app's daily-driver session) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed.
+- **`dot_config/launchd-yaml/agents.yaml`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed. Phone/remote access to sessions is handled outside this registry by `aoe serve` (port 4097), not a LaunchAgent.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
 - **`.chezmoidata/mcp.yaml`** — MCP server connections and their optional wrapping subagents, rendered into `opencode.json` via the `opencode-mcp-{servers,tools,agents}` template partials (in `.chezmoitemplates/`). `servers[]` drives both the `mcp` block and the global tool deny-list; `agents[]` (optional per server) drives the wrapping subagent definitions. Adding a "reach service X via MCP" subagent is a registry entry here plus a hand-authored prompt at `dot_config/opencode/prompts/<agent>.md`.
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads

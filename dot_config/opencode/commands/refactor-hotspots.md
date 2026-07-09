@@ -11,7 +11,7 @@ Optional argument: a repo name or path to scope detection to a single repo. Defa
 
 ## Skills
 
-- **opencode** — worktree / session-create / dispatch verbs (`worktree`, `create`, `msg`) for the fire-and-forget dispatch flow.
+- **opencode** — aoe dispatch verbs (`aoe add --worktree`, `aoe session start`, `aoe send`) for the fire-and-forget dispatch flow.
 
 ## Step 1 — Repo orientation
 
@@ -101,18 +101,20 @@ For each file-hotspot candidate, resolve its `repo` (`project.worktree`) and ver
 
 Read `~/.config/opencode/hotspot-dispatch-log.json`, tolerating absence (treat missing file as "no prior dispatches"). Skip a candidate if it has a `dispatches[]` entry with matching `repo` + `rel_file` and `dispatch_date` within the last 180 days, UNLESS `edit_calls` has risen ≥50% versus the logged `signal.edit_calls` (the friction regressed — worth re-dispatching).
 
-Also run `opencode-cmd -d "<repo>" peers` and `git -C "<repo>" branch --list 'refactor/hotspot-*'` — if a live session or branch already targets that file, mark **"in flight — skip"**.
+Also run `aoe list` (matching titles against the `hotspot-<slug>-*` naming convention used below) and `git -C "<repo>" branch --list 'refactor/hotspot-<slug>'` — if a live session or branch already targets that file, mark **"in flight — skip"**.
 
 ## Step 5 — Dispatch (autonomous, fire-and-forget)
 
-For each surviving candidate, dispatch a refactor session. Use `create` + `msg`, not `send` — `send` blocks until the run finishes, which would blow this command's timeout budget across multiple hotspots. `create` + `msg` fires the prompt into a new session without waiting.
+For each surviving candidate, dispatch a refactor session. `aoe send` is fire-and-forget — it fires the prompt into the new session's tmux pane without waiting for the run to finish, which would blow this command's timeout budget across multiple hotspots.
 
-`<slug>` is a deterministic slugification of `rel_file` (slashes and dots → dashes), used identically in both the branch name and the log entry so the Step-4 `git branch --list` dedup check matches on future runs.
+`<slug>` is a deterministic slugification of `rel_file` (slashes and dots → dashes), used identically in the worktree branch name, the session title, and the log entry so the Step-4 `git branch --list`/`aoe list` dedup checks match on future runs.
 
 ```bash
-WT=$(opencode-cmd -d "<repo>" worktree "refactor/hotspot-<slug>")
-SID=$(opencode-cmd -d "$WT" -a plan create)
-opencode-cmd -d "$WT" -a plan msg "$SID" "As your first action, before anything else, read this repo's own AGENTS.md and any openspec/ specs. Determine whether <rel_file>'s high edit/error volume reflects genuine structural friction (agents keep getting stuck) versus intentional by-design churn (e.g. actively hand-tuned configuration, or a file whose spec mandates frequent change). If by-design, report 'not a refactor target' and stop — do not implement anything. Only if it's genuine friction: Workflow: implement. Propose a refactor of <rel_file> that reduces edit friction (split up, clarify structure, add missing docs/tests) WITHOUT changing external behavior. Evidence: <edit_calls> edit/write calls across <sessions_touched> sessions, <errors> tool errors (<pct_error>% where computable)."
+add_output=$(aoe add "<repo>" --tool opencode --worktree "refactor/hotspot-<slug>" --new-branch --title "hotspot-<slug>-$(date +%Y%m%d-%H%M%S)")
+SID=$(printf '%s\n' "$add_output" | awk '/^  ID:/ {print $2}')
+aoe session start "$SID"
+sleep 5   # let opencode's TUI finish booting in the fresh tmux pane before sending
+aoe send "$SID" "As your first action, before anything else, read this repo's own AGENTS.md and any openspec/ specs. Determine whether <rel_file>'s high edit/error volume reflects genuine structural friction (agents keep getting stuck) versus intentional by-design churn (e.g. actively hand-tuned configuration, or a file whose spec mandates frequent change). If by-design, report 'not a refactor target' and stop — do not implement anything. Only if it's genuine friction: Workflow: implement. Propose a refactor of <rel_file> that reduces edit friction (split up, clarify structure, add missing docs/tests) WITHOUT changing external behavior. Evidence: <edit_calls> edit/write calls across <sessions_touched> sessions, <errors> tool errors (<pct_error>% where computable)."
 ```
 
 After a successful dispatch, this command itself (not a human) appends to the log:

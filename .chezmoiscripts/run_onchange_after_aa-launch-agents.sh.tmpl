@@ -5,4 +5,4 @@
 # agents.yaml hash: {{ include "dot_config/launchd-yaml/agents.yaml" | sha256sum }}
 
 set -eu
-launchd-yaml apply --self-agent opencode-web
+launchd-yaml apply

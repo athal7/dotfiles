@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # opencode-db-maintain — WAL-safe retention + orphan purge + incremental vacuum
-# for the live opencode SQLite DB. Runs against a RUNNING opencode server: every
-# write is batched into short lock windows (busy_timeout + LIMIT loops with a
-# brief sleep) so the live web service is never starved into "database is locked".
+# for the opencode SQLite DB. Operates directly against the on-disk DB file —
+# there is no persistent server to coordinate with, just whatever opencode
+# process (if any) happens to have it open. Every write is batched into short
+# lock windows (busy_timeout + LIMIT loops with a brief sleep) so it stays
+# WAL-mode safe and never starves a concurrent opencode session sharing the DB
+# into "database is locked".
 #
 # This file is BOTH an executable and a sourceable library. The orchestrator
 # (opencode-cleanup --db) and the test suite source it with CLEANUP_LIB=1 to
@@ -31,7 +34,8 @@ BATCH_SLEEP="${CLEANUP_BATCH_SLEEP:-0.1}"   # pause between write batches
 
 # ---------------------------------------------------------------------------
 # Low-level SQLite helpers. Each call is its own connection; busy_timeout makes
-# it wait politely for the live server's writes rather than failing fast.
+# it wait politely for a concurrent opencode session's writes rather than
+# failing fast.
 # ---------------------------------------------------------------------------
 # NOTE: we set the busy timeout via the `.timeout` dot-command, NOT
 # `PRAGMA busy_timeout=N` — the PRAGMA form echoes its value as a result row,
@@ -43,7 +47,8 @@ db_one() {
 
 # Delete in bounded batches from a table, looping until no rows remain. The
 # WHERE body is supplied as a fragment that selects rowids to delete. Echoes the
-# total number of rows deleted. Short lock windows keep the live server happy.
+# total number of rows deleted. Short lock windows keep a concurrent opencode
+# session's writes unblocked.
 db_delete_batched() {
 	local table="$1" where="$2" batch="$3"
 	local total=0 n

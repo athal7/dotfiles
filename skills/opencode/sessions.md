@@ -1,4 +1,4 @@
-OpenCode session history lives in a SQLite database. Use `opencode session list` for a quick human-readable list, or query the DB directly with `sqlite3` for anything more specific.
+Read-only history supplement to aoe: aoe owns live session creation and interaction, this file is for looking up past sessions — searching, exporting, and resuming conversations after the fact. OpenCode session history lives in a SQLite database. Use `opencode session list` for a quick human-readable list, or query the DB directly with `sqlite3` for anything more specific.
 
 **DB path:** `~/.local/share/opencode/opencode.db`
 

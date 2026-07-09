@@ -1,52 +1,41 @@
 #!/usr/bin/env bash
-# opencode-db-compact — ONE-TIME, standalone, DOWNTIME compaction of the opencode
-# SQLite DB. This is the only script here that stops the live service: it flips
-# auto_vacuum to INCREMENTAL and runs a full VACUUM (which requires exclusive
-# access and rewrites the whole file). After this runs once, the recurring
+# opencode-db-compact — ONE-TIME, standalone, exclusive-lock compaction of the
+# opencode SQLite DB. This is the only script here that requires exclusive
+# access: it flips auto_vacuum to INCREMENTAL and runs a full VACUUM (which
+# rewrites the whole file). After this runs once, the recurring
 # opencode-cleanup --db can reclaim space cheaply via PRAGMA incremental_vacuum.
 #
 # NEVER scheduled as a recurring agent and NEVER called by the orchestrator.
 # Run it by hand, once, when you want to physically shrink the file.
 #
+# There is no persistent daemon and no Desktop app anymore, so there is no
+# "managed" process this script is allowed to stop on your behalf. Any
+# opencode process holding the DB open — a TUI running in an aoe tmux pane, a
+# hand-started `opencode`, a hand-started `opencode serve`, whatever — is
+# treated uniformly as a live holder that blocks compaction. This script never
+# stops anything itself; it refuses and asks the human to stop the session.
+#
 # Procedure:
 #   0. idempotent guard — already INCREMENTAL with a small freelist => exit 0
-#   1. refuse if a FOREIGN process holds the DB. We inspect the actual holders
-#      of opencode.db via lsof and classify each by its full command line: the
-#      launchd web server ("opencode web") is the only holder we are allowed to
-#      stop and restart ourselves. Anything else — the OpenCode Desktop app
-#      (an Electron "OpenCode Helper" whose argv does NOT contain "opencode web"
-#      or "opencode serve"), a standalone "opencode serve", etc. — is foreign:
-#      we cannot bootout a GUI/foreign process, and proceeding would either make
-#      VACUUM fail or hang the lsof-release poll forever. The human must quit it.
-#   2. bootout the opencode-web LaunchAgent (the headless service)
-#   3. wait until no opencode process holds the DB open (lsof poll, ~30s)
-#   4. wal_checkpoint(TRUNCATE) + auto_vacuum=INCREMENTAL + VACUUM
-#   5. bootstrap opencode-web back
-#   6. report before/after page_count
+#   1. refuse if ANY process holds the DB open. We inspect the actual holders
+#      of opencode.db via lsof and resolve each PID's command line — every
+#      resolved PID is a live holder, no exemptions. Proceeding while
+#      something holds the file open would either make VACUUM fail or hang.
+#      The human must stop the session (Ctrl-C the TUI / quit the process).
+#   2. wal_checkpoint(TRUNCATE) + auto_vacuum=INCREMENTAL + VACUUM
+#   3. report before/after page_count
 #
 # This file is BOTH an executable and a sourceable library: the test suite
-# sources it with CLEANUP_LIB=1 to unit-test the foreign-holder classifier
-# (db_foreign_holders) by overriding db_holder_pids / db_pid_command — without a
-# live server — mirroring how opencode-db-maintain is made sourceable.
+# sources it with CLEANUP_LIB=1 to unit-test the live-holder classifier
+# (db_live_holders) by overriding db_holder_pids / db_pid_command — without a
+# live process — mirroring how opencode-db-maintain is made sourceable.
 #
 # Usage: opencode-db-compact [--dry-run] [--force]
 
 set -euo pipefail
 
 OPENCODE_DB="${OPENCODE_DB:-$HOME/.local/share/opencode/opencode.db}"
-WEB_LABEL="com.$(id -un).opencode-web"
-WEB_PLIST="${OPENCODE_WEB_PLIST:-$HOME/Library/LaunchAgents/$(id -un).opencode-web.plist}"
-# The generator deploys plists as <name>.plist (name = "opencode-web"); the
-# label inside is com.<user>.opencode-web. Resolve the actual deployed file.
-if [ ! -f "$WEB_PLIST" ]; then
-	WEB_PLIST="$HOME/Library/LaunchAgents/opencode-web.plist"
-fi
-UID_NUM="$(id -u)"
 FREELIST_OK_MAX="${COMPACT_FREELIST_OK_MAX:-1000}"
-# Substring that identifies the managed launchd web server among the DB holders.
-# This is the ONLY holder db-compact may stop/restart itself. Overridable for
-# tests. (The launchd invocation is literally `opencode web --port 4096`.)
-MANAGED_WEB_PATTERN="${COMPACT_MANAGED_WEB_PATTERN:-opencode web}"
 
 db_pragma() { sqlite3 "$OPENCODE_DB" "PRAGMA $1;" 2>/dev/null || echo ""; }
 
@@ -63,19 +52,16 @@ db_pid_command() {
 
 # Classify the DB holders. Reads holder PIDs from db_holder_pids and, for each,
 # its command line from db_pid_command. Echoes one "<pid>\t<command>" line for
-# every FOREIGN holder — any holder whose command line does NOT contain
-# $MANAGED_WEB_PATTERN. The managed web server(s) and already-gone PIDs (empty
-# command) are omitted. Empty output => safe to proceed.
-db_foreign_holders() {
+# every live holder — every PID that resolves to a non-empty command line.
+# Already-gone PIDs (empty command) are omitted. Empty output => safe to
+# proceed.
+db_live_holders() {
 	local pid cmd
 	while IFS= read -r pid; do
 		[ -n "$pid" ] || continue
 		cmd="$(db_pid_command "$pid")"
 		[ -n "$cmd" ] || continue
-		case "$cmd" in
-			*"$MANAGED_WEB_PATTERN"*) ;;                 # managed web server — OK
-			*) printf '%s\t%s\n' "$pid" "$cmd" ;;        # foreign holder
-		esac
+		printf '%s\t%s\n' "$pid" "$cmd"
 	done < <(db_holder_pids)
 }
 
@@ -110,78 +96,52 @@ db_compact_main() {
 	fi
 
 	# Classify the live holders of the DB once, up front.
-	local foreign
-	foreign="$(db_foreign_holders)"
+	local holders
+	holders="$(db_live_holders)"
 
 	if [ "$dry_run" -eq 1 ]; then
 		echo "(dry-run) Plan:"
-		echo "  1. ensure no FOREIGN process holds the DB (Desktop app / standalone serve)"
-		echo "  2. launchctl bootout gui/$UID_NUM/$WEB_LABEL"
-		echo "  3. poll lsof until no opencode process holds the DB (~30s)"
-		echo "  4. sqlite3: wal_checkpoint(TRUNCATE); auto_vacuum=INCREMENTAL; VACUUM"
-		echo "  5. launchctl bootstrap gui/$UID_NUM $WEB_PLIST"
-		echo "  6. report before/after page_count"
-		if [ -n "$foreign" ]; then
-			echo "  WOULD REFUSE: foreign holder(s) of $OPENCODE_DB detected (will NOT bootout):"
-			printf '%s\n' "$foreign" | while IFS=$'\t' read -r p c; do echo "    pid $p: $c"; done
-			echo "  -> quit the OpenCode Desktop app (Cmd-Q) / stop other opencode servers and retry."
+		echo "  1. refuse if ANY process holds the DB open (TUI / opencode serve / etc.)"
+		echo "  2. sqlite3: wal_checkpoint(TRUNCATE); auto_vacuum=INCREMENTAL; VACUUM"
+		echo "  3. report before/after page_count"
+		if [ -n "$holders" ]; then
+			echo "  WOULD REFUSE: live holder(s) of $OPENCODE_DB detected:"
+			printf '%s\n' "$holders" | while IFS=$'\t' read -r p c; do echo "    pid $p: $c"; done
+			echo "  -> stop the opencode session (Ctrl-C the TUI / quit the process) and retry."
 		else
-			echo "  holders: only the managed web server (or none) — would proceed."
+			echo "  holders: none — would proceed."
 		fi
 		echo "  current: auto_vacuum=$auto_vacuum freelist=$freelist page_count=$page_count"
 		return 0
 	fi
 
-	# --- (1) refuse if any FOREIGN process holds the DB.
-	if [ -n "$foreign" ]; then
-		echo "ERROR: Desktop app / another opencode server is holding $OPENCODE_DB — quit the" >&2
-		echo "       OpenCode Desktop app (Cmd-Q) and retry. We will not bootout a foreign holder." >&2
-		echo "       Foreign holder(s):" >&2
-		printf '%s\n' "$foreign" | while IFS=$'\t' read -r p c; do echo "         pid $p: $c" >&2; done
+	# --- (1) refuse if any process holds the DB.
+	if [ -n "$holders" ]; then
+		echo "ERROR: an opencode process is holding $OPENCODE_DB open — stop it (Ctrl-C the" >&2
+		echo "       TUI / quit the process) and retry. We will not stop it for you." >&2
+		echo "       Live holder(s):" >&2
+		printf '%s\n' "$holders" | while IFS=$'\t' read -r p c; do echo "         pid $p: $c" >&2; done
 		return 1
 	fi
 
 	if [ "$force" -ne 1 ]; then
 		if [ -t 0 ]; then
 			local ans
-			read -r -p "This stops opencode-web and VACUUMs the DB (downtime). Proceed? [y/N] " ans
+			read -r -p "This VACUUMs the DB exclusively (brief unavailability while it runs). Proceed? [y/N] " ans
 			case "$ans" in y|Y|yes|YES) ;; *) echo "aborted."; return 0 ;; esac
 		else
 			echo "non-interactive and --force not given; aborting." >&2; return 1
 		fi
 	fi
 
-	# --- (2) bootout the headless service.
-	echo "Stopping $WEB_LABEL ..."
-	launchctl bootout "gui/$UID_NUM/$WEB_LABEL" 2>/dev/null || true
-
-	# --- (3) wait for the DB to be released.
-	echo "Waiting for the DB to be released ..."
-	local released=0 _
-	for _ in $(seq 1 30); do
-		if ! lsof "$OPENCODE_DB" 2>/dev/null | grep -qi opencode; then
-			released=1; break
-		fi
-		sleep 1
-	done
-	if [ "$released" -ne 1 ]; then
-		echo "WARNING: an opencode process still holds $OPENCODE_DB after 30s; re-bootstrapping and aborting." >&2
-		launchctl bootstrap "gui/$UID_NUM" "$WEB_PLIST" 2>/dev/null || true
-		return 1
-	fi
-
-	# --- (4) compact.
+	# --- (2) compact.
 	local before after
 	before="$page_count"
 	echo "Compacting (wal_checkpoint TRUNCATE; auto_vacuum=INCREMENTAL; VACUUM) ..."
 	sqlite3 "$OPENCODE_DB" "PRAGMA wal_checkpoint(TRUNCATE); PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"
 	after="$(db_pragma page_count)"; after="${after:-0}"
 
-	# --- (5) restart the service.
-	echo "Restarting $WEB_LABEL ..."
-	launchctl bootstrap "gui/$UID_NUM" "$WEB_PLIST" 2>/dev/null || true
-
-	# --- (6) report.
+	# --- (3) report.
 	echo "Done. page_count: $before -> $after (auto_vacuum now $(db_pragma auto_vacuum))."
 }
 
