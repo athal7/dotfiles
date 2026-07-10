@@ -4,12 +4,12 @@
 #
 # lumen's --watch mode has no built-in persistence — quit the TUI and the
 # viewed-file marks are gone. We roll our own: a per-repo, per-branch JSON
-# file at $HOME/.local/state/lumen-diff/<repo-slug>/<branch>.json (hardcoded,
-# not $XDG_STATE_HOME — that's pointed elsewhere in this environment)
-# mapping each changed file's path to the `git hash-object` of its
-# working-tree content at last review. Content-hash-keyed (not
-# diff-hash-keyed) means it's rebase-stable: if main advances but a file's
-# bytes haven't changed, it stays marked-reviewed. Only files whose current
+# file at $XDG_STATE_HOME/lumen-diff/<repo-slug>/<branch>.json (XDG Base
+# Directory convention) mapping each changed file's path to the
+# `git hash-object` of its working-tree content at last review.
+# Content-hash-keyed (not diff-hash-keyed) means it's rebase-stable: if
+# main advances but a file's bytes haven't changed, it stays
+# marked-reviewed. Only files whose current
 # hash differs from the stored one get passed to lumen; if nothing
 # qualifies, we skip launching lumen entirely. This tracking is intentionally
 # local-only and does not sync to GitHub's PR-viewed-state — deliberately
@@ -40,7 +40,7 @@ if [[ "${LUMEN_DIFF_FULL:-}" == "1" ]]; then
   full=1
 fi
 
-state_root="$HOME/.local/state/lumen-diff"
+state_root="${XDG_STATE_HOME:-$HOME/.local/state}/lumen-diff"
 
 # host/owner/repo, normalized so every worktree of the same remote
 # shares one state directory regardless of clone URL scheme.

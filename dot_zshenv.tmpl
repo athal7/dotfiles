@@ -1,5 +1,17 @@
 {{ template "brewenv" . }}
 
+# XDG Base Directory paths — asserted unconditionally, not defaulted with
+# ${VAR:-...}. Sandboxed parent processes (e.g. the OpenCode desktop app)
+# export their own XDG_* overrides for their own subprocess isolation, and
+# those can leak into and persist in long-lived shells (e.g. a tmux server
+# started years ago under such a process) long after that process is gone.
+# Always reasserting here means no inherited value can silently redirect
+# this user's shells.
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_STATE_HOME="$HOME/.local/state"
+
 # GitHub token — always fresh from gh auth, available in all shells including PTY
 command -v gh >/dev/null 2>&1 && export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
 
