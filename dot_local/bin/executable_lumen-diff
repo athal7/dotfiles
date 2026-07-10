@@ -4,9 +4,17 @@
 # lumen's --detect-pr mode gives real viewed-state persistence tied to the
 # PR (survives across machines/sessions), but it hard-exits if the current
 # branch has no open PR. This repo has no PR workflow — changes land via
-# chezmoi-deploy — so most branches never have one. Fall back to a local
-# --watch diff against main in that case, which still gets per-file
-# viewed-state tracking, just scoped to this checkout.
+# chezmoi-deploy — so most branches never have one.
+#
+# For that local case, we roll our own viewed-state tracking: a per-repo,
+# per-branch JSON file at $HOME/.local/state/lumen-diff/<repo-slug>/<branch>.json
+# (hardcoded, not $XDG_STATE_HOME — that's pointed elsewhere in this
+# environment) mapping each changed file's path to the `git hash-object`
+# of its working-tree content at last review. Content-hash-keyed (not
+# diff-hash-keyed) means it's rebase-stable: if main advances but a file's
+# bytes haven't changed, it stays marked-reviewed. Only files whose current
+# hash differs from the stored one get passed to lumen; if nothing
+# qualifies, we skip launching lumen entirely.
 #
 # Use `main..-` (lumen's range+working-tree union syntax), not the more
 # obvious `main...HEAD`. `main..-` deliberately includes uncommitted
@@ -16,8 +24,226 @@
 # commit is made.
 set -u
 
-if gh pr view >/dev/null 2>&1; then
+full=0
+reset=0
+extra_args=()
+for arg in "$@"; do
+  case "$arg" in
+    --full) full=1 ;;
+    --reset) reset=1 ;;
+    *) extra_args+=("$arg") ;;
+  esac
+done
+if [[ "${LUMEN_DIFF_FULL:-}" == "1" ]]; then
+  full=1
+fi
+
+state_root="$HOME/.local/state/lumen-diff"
+
+# host/owner/repo, normalized so every worktree of the same remote
+# shares one state directory regardless of clone URL scheme.
+repo_slug() {
+  local url
+  url="$(git remote get-url origin 2>/dev/null)" || return 1
+  url="${url%.git}"
+  case "$url" in
+    git@*:*)
+      url="${url#git@}"
+      url="${url/:/\/}"
+      ;;
+    ssh://git@*)
+      url="${url#ssh://git@}"
+      ;;
+    https://*)
+      url="${url#https://}"
+      ;;
+    http://*)
+      url="${url#http://}"
+      ;;
+  esac
+  printf '%s' "$url"
+}
+
+# branch names can contain `/`; sanitize for use as a single filename.
+sanitize_branch() { printf '%s' "${1//\//__}"; }
+
+# Locate this branch's state file without any of the local-mode side
+# effects (pruning, fallback-to-watch) — used only by PR-mode seeding.
+resolve_state_file() {
+  local root slug branch
+  root="$(git rev-parse --show-toplevel 2>/dev/null)" || return 1
+  slug="$(repo_slug)" || return 1
+  branch="$(git branch --show-current 2>/dev/null)"
+  [[ -n "$branch" ]] || return 1
+  printf '%s' "$state_root/$slug/$(sanitize_branch "$branch").json"
+}
+
+# Write/refresh the seeded_pr_number marker, preserving existing schema/files.
+write_seed_marker() {
+  local state_file="$1" pr_number="$2" tmp base
+  mkdir -p "$(dirname "$state_file")"
+  base='{"schema":1,"files":{}}'
+  [[ -f "$state_file" ]] && base="$(jq -c '.' "$state_file" 2>/dev/null || printf '%s' "$base")"
+  tmp="$state_file.tmp.$$"
+  if jq -c --argjson n "$pr_number" '. + {seeded_pr_number:$n}' <<<"$base" >"$tmp"; then
+    mv "$tmp" "$state_file"
+  else
+    rm -f "$tmp" 2>/dev/null || true
+  fi
+}
+
+# One-time bridge from local hash-tracking to GitHub's PR-viewed-state:
+# for every file already reviewed locally whose content at the PR's head
+# commit matches what was reviewed, mark it viewed on GitHub. Runs once
+# per PR (tracked via seeded_pr_number in the state file) so steady-state
+# --detect-pr invocations make zero extra API calls. Never blocks entry
+# into PR mode — every path here returns normally, not exit.
+seed_pr_viewed_state() {
+  local pr_number="$1" state_file seeded files_count meta node_id head_sha pr_paths
+  state_file="$(resolve_state_file)" || return 0
+
+  if [[ -f "$state_file" ]]; then
+    seeded="$(jq -r '.seeded_pr_number // empty' "$state_file" 2>/dev/null)"
+    [[ "$seeded" == "$pr_number" ]] && return 0
+  fi
+
+  files_count=0
+  [[ -f "$state_file" ]] && files_count="$(jq -r '.files|length' "$state_file" 2>/dev/null || echo 0)"
+  if [[ "$files_count" -eq 0 ]]; then
+    write_seed_marker "$state_file" "$pr_number"
+    return 0
+  fi
+
+  meta="$(gh pr view --json id,headRefOid,files 2>/dev/null)" || {
+    echo "lumen-diff: couldn't fetch PR metadata to seed viewed-state; entering PR mode unseeded" >&2
+    return 0
+  }
+  node_id="$(jq -r '.id // empty' <<<"$meta")"
+  head_sha="$(jq -r '.headRefOid // empty' <<<"$meta")"
+  if [[ -z "$node_id" || -z "$head_sha" ]]; then
+    echo "lumen-diff: incomplete PR metadata; entering PR mode unseeded" >&2
+    return 0
+  fi
+
+  pr_paths="$(jq -r '.files[].path' <<<"$meta")"
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    local h_local h_head
+    h_local="$(jq -r --arg p "$path" '.files[$p] // empty' "$state_file" 2>/dev/null)"
+    [[ -n "$h_local" ]] || continue
+    h_head="$(git rev-parse "$head_sha:$path" 2>/dev/null)" || continue
+    [[ "$h_head" == "$h_local" ]] || continue
+    # shellcheck disable=SC2016 # GraphQL $id/$path are server-side variables, not bash — must stay single-quoted
+    gh api graphql \
+      -f query='mutation($id: ID!, $path: String!) { markFileAsViewed(input: {pullRequestId: $id, path: $path}) { clientMutationId } }' \
+      -f id="$node_id" -f path="$path" >/dev/null 2>&1 \
+      || echo "lumen-diff: failed to mark '$path' viewed on GitHub (will show in PR mode)" >&2
+  done <<<"$pr_paths"
+
+  write_seed_marker "$state_file" "$pr_number"
+}
+
+pr_number="$(gh pr view --json number -q .number 2>/dev/null)"
+if [[ -n "$pr_number" ]]; then
+  seed_pr_viewed_state "$pr_number"
   exec lumen diff --detect-pr
 else
-  exec lumen diff --watch main..-
+  # branch names can contain `/`; desanitize for comparison against refs.
+  desanitize_branch() { printf '%s' "${1//__/\/}"; }
+
+  fallback_watch() {
+    echo "lumen-diff: $1" >&2
+    exec lumen diff --watch main..- "${extra_args[@]}"
+  }
+
+  root="$(git rev-parse --show-toplevel 2>/dev/null)" || fallback_watch "not in a git repo, no persistent state"
+  slug="$(repo_slug)" || fallback_watch "no 'origin' remote, no persistent state"
+  repo_dir="$state_root/$slug"
+
+  # Prune state files for branches that no longer exist, best-effort.
+  if [[ -d "$repo_dir" ]]; then
+    shopt -s nullglob
+    stale_candidates=("$repo_dir"/*.json)
+    shopt -u nullglob
+    for f in "${stale_candidates[@]}"; do
+      b="$(desanitize_branch "$(basename "$f" .json)")"
+      if ! git -C "$root" show-ref --verify --quiet "refs/heads/$b" 2>/dev/null; then
+        rm -f "$f" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  branch="$(git branch --show-current)"
+  [[ -n "$branch" ]] || fallback_watch "detached HEAD, no persistent state"
+
+  state_file="$repo_dir/$(sanitize_branch "$branch").json"
+
+  if (( reset )); then
+    rm -f "$state_file" 2>/dev/null || true
+  fi
+
+  state_json='{"schema":1,"files":{}}'
+  if [[ -f "$state_file" ]]; then
+    if parsed="$(jq -c '.' "$state_file" 2>/dev/null)" && \
+       [[ "$(jq -r '.schema // empty' <<<"$parsed" 2>/dev/null)" == "1" ]]; then
+      state_json="$parsed"
+    else
+      echo "lumen-diff: ignoring unreadable or incompatible state file: $state_file" >&2
+    fi
+  fi
+
+  base="$(git -C "$root" merge-base main HEAD 2>/dev/null)" || fallback_watch "can't find merge-base with main, no persistent state"
+
+  # Walk the NUL-delimited name-status stream; rename/copy entries carry an
+  # extra old-path field before the path we actually care about (the new one).
+  changed_paths=()
+  declare -A cur_hash=()
+  while IFS= read -r -d '' status && IFS= read -r -d '' path; do
+    case "$status" in
+      R*|C*) IFS= read -r -d '' path || break ;;
+    esac
+    changed_paths+=("$path")
+    cur_hash["$path"]="$(git -C "$root" hash-object -- "$path" 2>/dev/null)" || cur_hash["$path"]="__deleted__"
+  done < <(git -C "$root" diff --name-status -z "$base")
+
+  show_set=()
+  for path in "${changed_paths[@]}"; do
+    if (( full )); then
+      show_set+=("$path")
+      continue
+    fi
+    stored="$(jq -r --arg p "$path" '.files[$p] // ""' <<<"$state_json")"
+    if [[ "${cur_hash[$path]}" != "$stored" ]]; then
+      show_set+=("$path")
+    fi
+  done
+
+  if [[ ${#show_set[@]} -eq 0 ]]; then
+    echo "lumen-diff: no unreviewed changes on '$branch' (all reviewed). Use --full to re-review."
+    exit 0
+  fi
+
+  file_args=()
+  for path in "${show_set[@]}"; do
+    file_args+=(--file "$path")
+  done
+
+  lumen diff --watch main..- "${extra_args[@]}" "${file_args[@]}"
+  rc=$?
+
+  if [[ $rc -eq 0 ]]; then
+    mkdir -p "$repo_dir"
+    files_json='{}'
+    for path in "${changed_paths[@]}"; do
+      files_json="$(jq -c --arg p "$path" --arg h "${cur_hash[$path]}" '. + {($p): $h}' <<<"$files_json")"
+    done
+    tmp="$state_file.tmp.$$"
+    if jq -n --argjson files "$files_json" '{schema: 1, files: $files}' > "$tmp"; then
+      mv "$tmp" "$state_file"
+    else
+      rm -f "$tmp" 2>/dev/null || true
+    fi
+  fi
+
+  exit "$rc"
 fi
