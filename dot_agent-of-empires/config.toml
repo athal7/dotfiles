@@ -32,7 +32,7 @@ silent_orphan_fast_grace_secs = 20
 silent_orphan_grace_secs = 120
 
 [app_state]
-archived_section_collapsed = true
+archived_section_collapsed = false
 group_by = "project"
 has_acknowledged_agent_hooks = false
 has_acknowledged_volume_ignores_globs = false
@@ -44,7 +44,7 @@ has_seen_welcome = true
 last_seen_version = "1.12.1"
 new_session_with_selection_count = 4
 show_preview_info = false
-sort_order = "attention"
+sort_order = "z_a"
 tips_seen = [
     "tui-core-views",
     "tui-triage",
