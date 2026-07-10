@@ -6,15 +6,15 @@ agent: lead
 Workflow: merge-request. You are maintaining your own merge request. Each phase below names what to dispatch or which skill to use — the methodology lives in the dispatched agents and skills.
 
 **Use TodoWrite to track this workflow. Create these items before starting:**
-- Reopen issue — if the MR references a tracked issue, set it back to In Progress
+- Draft PR — if the MR references a tracked issue, mark the PR as draft (linked issue status updates automatically)
 - Triage — fetch threads + top-level comments, categorize, present for approval
 - Fix — dispatch the `build` subagent (`task` tool, `subagent_type: build`, TDD) for all actionable threads first; run QA (dispatch the `qa` subagent) before the one batched commit/push when UI is touched; resolve all fixed threads together and batch non-fix replies into one approval; seek deterministic fitness functions for repo conventions
 - Conflicts — resolve if present, run tests
-- Re-request — present summary, re-request review
+- Re-request — present summary, mark ready for review, re-request review
 
-## Reopen issue
+## Draft
 
-If the merge request references a tracked issue/ticket (check the MR title, branch name, or description), set that issue back to In Progress before doing anything else — a returning MR's issue may be sitting in a review or done state. Use the appropriate issue-tracker skill for the org.
+If the merge request references a tracked issue/ticket (check the MR title, branch name, or description), mark the pull request as a draft before doing anything else — a returning MR's PR may still be marked ready for review from a previous pass. Dispatch the `github` subagent (`task` tool, `subagent_type: github`) to convert the PR to draft. If the org's issue tracker syncs status from PR state (e.g. Linear's GitHub integration), the linked issue's status updates automatically from this alone — do not also write to the issue tracker directly.
 
 ## Triage
 
@@ -40,7 +40,7 @@ If the merge request conflicts with the target branch, resolve preserving both s
 
 ## Re-request
 
-Present a summary of what changed. After approval, re-request review from every reviewer who previously reviewed, with a comment summarizing what was addressed.
+Present a summary of what changed. After approval, dispatch the `github` subagent to mark the pull request ready for review again (undo draft status — the linked issue's status updates automatically), then re-request review from every reviewer who previously reviewed, with a comment summarizing what was addressed.
 
 **Refresh the QA-evidence report in your description.** This assumes a prior `/implement` ship already created the marked block and the `qa-<ts>` session dir. After fixes land and with (or before) re-requesting review, refresh the `<sub>` provenance over the standing QA evidence, then upsert the refreshed block into your MR description — an in-place read-modify-write of the whole marked block between the `<!-- qa:start -->` / `<!-- qa:end -->` markers, never a new comment. Load the `qa-report-publish` skill for the mechanics.
 
