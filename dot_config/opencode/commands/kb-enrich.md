@@ -43,6 +43,14 @@ After all collectors have run, write the enrichment outputs:
 
    Respect the Privacy rules below — never route privacy-excluded content to a shared destination.
 
+   **APM fix-ledger write-back.** Items surfaced from `fix/apm-*` worktree sessions are governed by `~/.local/share/kb/apm-fix-ledger.jsonl`, not by the general filing rules above. They ride in the same batched action-item approval gate used for other remote writes — but once the human decides, resolve them by appending ONE new line to the ledger (same `worktree` value as the pending line; never edit or remove a prior line):
+
+   - Approved/filed — `jq -nc --arg wt "$WT" --arg url "$TICKET_URL" --arg dec "$(date -Iseconds)" '{worktree:$wt, disposition:"filed", ticket_url:$url, decided:$dec}' >> ~/.local/share/kb/apm-fix-ledger.jsonl`
+   - Declined — same shape with `disposition:"declined"` and a required `reason` field instead of `ticket_url`.
+   - Session self-classified as noise (per the collector's `noise-confirmed` marking) — same shape with `disposition:"noise-confirmed"`; no human gate needed for this case.
+
+   This ledger line **is** the item's explicit disposition record for APM-fix items — it satisfies the "every extracted item needs an explicit disposition" rule above — and it prevents a stale session from being re-proposed as a fresh draft if it's ever re-scanned by a later run.
+
 Before finishing, account for every discrete fact or item any collector extracted: each one needs an explicit disposition, either filed (journal/profile/decision/action item) or deliberately skipped with a stated reason (privacy exclusion, genuine duplicate, or triviality). Don't let an item fall through with no disposition. Apply this especially to single-source facts with no corroborating collector — a new contact, an informal one-off decision surfaced only in Slack — lack of corroboration is not itself a reason to skip.
 
 ## Privacy
