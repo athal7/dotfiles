@@ -61,6 +61,23 @@ gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode 
 {{ end -}}
 {{- end }}
 
+# Runlayer-managed skills — the wholesale rebuild above deletes any skill
+# previously installed via `runlayer skills add` (Runlayer skills live in
+# the same global SKILLS_DEST). `skills add` alone trusts its local lockfile
+# and skips files it thinks are already installed even when they were just
+# deleted, so force a clean remove-then-add every time this script runs.
+# No-op if uvx isn't available or the user has never run `runlayer login`
+# (e.g. other users of this public dotfiles repo without a Runlayer account).
+if command -v uvx >/dev/null 2>&1 && [ -f "$HOME/.runlayer/config.yaml" ]; then
+  echo "resyncing runlayer-managed skills..."
+  uvx runlayer skills remove --all --global --client opencode --yes >/dev/null 2>&1 || true
+  if ! uvx runlayer skills add --all --global --client opencode; then
+    echo "WARN: runlayer skill resync failed — continuing" >&2
+  fi
+else
+  echo "runlayer not configured — skipping runlayer skill resync"
+fi
+
 # Host-local private skill installs — for skills in PRIVATE repos that must not
 # be referenced in this public repo. The file is untracked and host-specific
 # (same spirit as ~/.config/zsh/private.zsh). It receives SKILLS_DEST and runs
