@@ -44,7 +44,7 @@ has_seen_welcome = true
 last_seen_version = "1.12.1"
 new_session_with_selection_count = 5
 show_preview_info = false
-sort_order = "z_a"
+sort_order = "attention"
 tips_seen = [
     "tui-core-views",
     "tui-triage",
