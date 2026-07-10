@@ -9,9 +9,9 @@ Workflow: implement.
 - Issue — ensure a tracked issue exists for this work: use the one referenced, otherwise search the tracker, otherwise create one
 - Workspace setup — branch if needed per repo conventions; set up `openspec/` (real dir + narrow store symlinks)
 - Plan — dispatch the `explore`/`scout` subagents (`task` tool, `subagent_type: explore` / `subagent_type: scout`) to gather, dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), create proposal, present for approval
-- Build — implement tasks via openspec-apply-change (TDD); for PR-repos, push the draft PR once green
-- Review — run QA (dispatch `qa`) if UI touched; route findings, pushing fixes as updates to the draft PR; present the combined changeset+QA approval gate
-- Ship — settle any post-approval push; watch CI; reviewed delta-spec merge → archive → kb-meta; publish QA report
+- Build — implement tasks via openspec-apply-change (TDD)
+- Review — run QA (dispatch `qa`) if UI touched; route findings; present the combined changeset+QA approval gate
+- Ship — commit and push; watch CI; reviewed delta-spec merge → archive → kb-meta; publish QA report
 
 ## Issue
 
@@ -92,9 +92,7 @@ Create an OpenSpec proposal to persist the plan: dispatch the `build` subagent (
 
 Load `openspec-apply-change` and work through the tasks. For each task, dispatch the `build` subagent (`task` tool, `subagent_type: build`) with strict TDD scope. Track progress via task checkboxes.
 
-**PR-using repos — push a draft PR once tasks are done and tests are green.** Load `commit` (keeps in-flight `openspec/changes/<name>/` files out of the code commit) and `push` (opens the draft merge request). Pushing here, as soon as the code exists, maximizes the window to review incrementally in lumen while Review (QA) runs — the draft PR is what makes `gh pr view` succeed, so `lumen-diff` runs in `--detect-pr` mode with per-file viewed-state persisted on the PR instead of the local `--watch` fallback. Skip this for direct-to-main repos (e.g. dotfiles).
-
-The single changeset+QA approval gate is at the end of Review, after QA and any fixes have landed, covering the complete final changeset in one pass.
+The single changeset+QA approval gate follows in Review, after QA and any fixes have landed, covering the complete final changeset in one pass.
 
 ## Review
 
@@ -103,21 +101,19 @@ When the changeset touches UI (views, templates, CSS, frontend), dispatch the `q
 Static and blast-radius review (in-diff correctness/security/performance and out-of-diff what-breaks-elsewhere) is not performed inline — it happens automatically on the pushed merge request.
 
 **Route findings before the gate:**
-- **Build-level** (bug, style, missing test) → dispatch the `build` subagent (`task` tool, `subagent_type: build`) for a targeted fix, re-verify, then push the fix as an update to the draft PR (PR-repos).
+- **Build-level** (bug, style, missing test) → dispatch the `build` subagent (`task` tool, `subagent_type: build`) for a targeted fix, then re-verify.
 - **Plan-level** (wrong approach, missing requirement) → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), update the proposal.
 - **Human judgment** (tradeoff, scope question) → carry forward into the single gate below.
 
-**Changeset + QA approval gate.** Present, in one turn: (1) the changeset for review — for PR-repos the draft-PR link (review in lumen; viewed-state persists), for direct-to-main repos the local diff; (2) the QA report/verdict when QA ran; (3) any carried-forward human-judgment findings. Wait for approval or steering before Ship.
+**Changeset + QA approval gate.** Ask for approval before Ship: review the diff (`lumen-diff` persists per-file viewed-state locally, independent of PR status) and the QA report when QA ran, along with any carried-forward human-judgment findings. Wait for approval or steering.
 
 ## Ship
 
-By the time Ship runs, PR-using repos already have a pushed (and possibly QA-fix-updated) draft PR from Build/Review — the changeset just approved; direct-to-main repos have an approved local diff and no push yet. Ship finalizes: settle any post-approval push, then the OpenSpec store steps (reviewed spec merge → archive → kb-meta stamp), then publish the QA report — store steps run after the push settles, since archiving prematurely would finalize the durable store for code that may still change under CI/review.
+By the time Ship runs, the changeset has been approved but not yet pushed. Ship finalizes: commit and push, then the OpenSpec store steps (reviewed spec merge → archive → kb-meta stamp), then publish the QA report — store steps run after the push, since archiving prematurely would finalize the durable store for code that may still change under CI/review.
 
-**Settle the push.**
-- **PR-using repos:** the draft PR already exists. If the approval gate produced steering commits, load `commit` then `push` to update it. If approval was clean, there's nothing to push here.
-- **Direct-to-main repos (e.g. dotfiles):** this is the sole commit/push — load `commit` then `push` now.
+**Commit and push.** Load `commit` (keeps in-flight `openspec/changes/<name>/` files out of the code commit) then `push` — for PR-using repos this opens the merge request (as a draft, per the `push` skill); for direct-to-main repos (e.g. dotfiles) this is the sole commit/push.
 
-Load `push` skill's CI + automated-code-review watch (if not already running from an earlier push in this run). **A long-pending approval does not mean Ship is done.** If commit/push approval sits for hours or into the next day (e.g. an unattended background job), approval clearing is not the finish line — the remaining steps below (reviewed spec merge → archive → kb-meta stamp) still must run in the same pass. **CI failure → diagnose and route:** code fix → dispatch the `build` subagent (`task` tool, `subagent_type: build`); approach problem → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`); flaky test → re-run. Do not treat CI failure as terminal. **Automated code review** (where configured) lands on the pushed change after CI — note it typically does not run while the PR is a draft; triage its findings and route them the same way — build-level fix → dispatch `build`; approach problem → re-dispatch `plan` — fixing through the commit → push cycle and resolving addressed threads.
+Load `push` skill's CI + automated-code-review watch. **A long-pending approval does not mean Ship is done.** If commit/push approval sits for hours or into the next day (e.g. an unattended background job), approval clearing is not the finish line — the remaining steps below (reviewed spec merge → archive → kb-meta stamp) still must run in the same pass. **CI failure → diagnose and route:** code fix → dispatch the `build` subagent (`task` tool, `subagent_type: build`); approach problem → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`); flaky test → re-run. Do not treat CI failure as terminal. **Automated code review** (where configured) lands on the pushed change after CI — note it typically does not run while the PR is a draft; triage its findings and route them the same way — build-level fix → dispatch `build`; approach problem → re-dispatch `plan` — fixing through the commit → push cycle and resolving addressed threads.
 
 **Merge delta specs into the durable store (after a successful commit and push, before archiving).** The change's delta specs under `openspec/changes/<name>/specs/` must be folded into the durable `openspec/specs/` (through the symlink) so the accumulated requirements compound. Do this as a **reviewed, non-lossy LLM merge**: read BOTH sides — the existing durable requirement and the delta — and integrate them, preserving existing scenarios and flagging any conflicts or supersession to the human for resolution. This reviewed merge is SEPARATE from archiving and is NOT performed by `openspec archive` — do it FIRST, before archive.
 
