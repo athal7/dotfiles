@@ -64,9 +64,18 @@ Reference in opencode as lmstudio/qwen3-30b-a3b-instruct-2507.
     "external_directory": {
       "*": "ask",
       "~/code/**": "allow",
-      "~/.local/share/**": "allow",
+      "~/.local/**": "allow",
       "~/.agents/skills/**": "allow",
-      "/tmp/**": "allow"
+      "~/.config/**": "allow",
+      "~/.cache/**": "allow",
+      "~/.agent-of-empires/**": "allow",
+      "~/Downloads/**": "allow",
+      "~/Library/LaunchAgents/**": "allow",
+      "~/Library/Logs/**": "allow",
+      "/tmp/**": "allow",
+      "/private/tmp/**": "allow",
+      "/var/folders/*/*/T/**": "allow",
+      "/private/var/folders/*/*/T/**": "allow"
     },
     "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.global "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 4 | trim }}
   },
