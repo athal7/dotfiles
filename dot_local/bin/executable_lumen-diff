@@ -24,6 +24,15 @@
 # in-progress agent session that hasn't committed yet. `main...HEAD` alone
 # is a committed-only range — it would silently show nothing until a
 # commit is made.
+#
+# This script is typically launched as the command inside a tmux tool pane
+# with `remain-on-exit on` (aoe's pattern). The moment the foreground process
+# actually exits, that pane goes dead/tombstoned. `lumen` treats Ctrl+C the
+# same as a clean quit (rc=0), so a Ctrl+C bail-out marks everything reviewed
+# and the very next launch finds nothing unreviewed — if either exit point
+# below used bare `exit`, the pane would die immediately, every retry, with
+# no way back in. Both exit `exec "${SHELL:-bash}"` instead, landing at a
+# live shell prompt in the repo so the pane stays usable.
 set -u
 
 full=0
@@ -141,7 +150,7 @@ done
 
 if [[ ${#show_set[@]} -eq 0 ]]; then
   echo "lumen-diff: no unreviewed changes on '$branch' (all reviewed). Use --full to re-review."
-  exit 0
+  exec "${SHELL:-bash}"
 fi
 
 file_args=()
@@ -166,4 +175,4 @@ if [[ $rc -eq 0 ]]; then
   fi
 fi
 
-exit "$rc"
+exec "${SHELL:-bash}"
