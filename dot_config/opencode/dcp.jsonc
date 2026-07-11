@@ -8,6 +8,12 @@
   // of measured spend. Leaving subagents out avoids confounding attribution.
   "experimental": {
     "allowSubAgents": false
+  },
+  // Raised from the 100000 default: lead's post-DCP avg_ctx_tok (87,231) has
+  // ample headroom under the ratcheted R3 floor (140,372), so firing less
+  // often here cuts compress-triggered cache-write-amplification cost.
+  "compress": {
+    "maxContextLimit": 150000
   }
   // All other settings inherit DCP's documented defaults (deduplication +
   // purgeErrors on, model-directed `compress` tool, native prune coexists).

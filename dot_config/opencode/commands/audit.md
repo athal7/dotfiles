@@ -213,6 +213,68 @@ GROUP BY agent, model HAVING total_turns > 20 AND empty_pct > 30 ORDER BY empty_
 SQL
 ```
 
+**Subagent fan-out cost** — the invisible half of spend. The per-agent query above groups messages by `agent` alone, so a subagent (child) session's cost is attributed to `build`/`explore`/etc. and never rolled up to the `lead` session that dispatched it via `task`. A recursive CTE over `session.parent_id` walks every descendant session (however deeply nested — subagents can themselves dispatch subagents) back to its top-level lead, so the true cost of a lead-driven unit of work — not just its visible thread — is comparable window-over-window; fan-out routinely runs 40-50%+ of total spend.
+
+```bash
+# Subagent fan-out cost — per-lead breakdown. Recursive CTE walks session.parent_id
+# to attribute every descendant (subagent) session's cost, however deeply nested,
+# back to its top-level lead session. fanout_x > 1 means the visible lead-only cost
+# undercounts true spend; subagent_dispatches is the count of descendant sessions rolled up.
+sqlite3 -readonly "$DB" <<SQL
+WITH RECURSIVE roots AS (
+  SELECT id FROM session
+  WHERE agent='lead' AND parent_id IS NULL
+    AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+),
+descendants AS (
+  SELECT id AS session_id, id AS root_id FROM roots
+  UNION ALL
+  SELECT s.id, d.root_id
+  FROM session s JOIN descendants d ON s.parent_id = d.session_id
+)
+SELECT d.root_id AS lead_session,
+       ROUND(rl.cost,2) AS lead_own_cost,
+       ROUND(SUM(s.cost),2) AS total_rolled_up_cost,
+       COUNT(*)-1 AS subagent_dispatches,
+       ROUND(SUM(s.cost)/rl.cost,2) AS fanout_x
+FROM descendants d
+JOIN session s ON s.id = d.session_id
+JOIN session rl ON rl.id = d.root_id
+GROUP BY d.root_id
+ORDER BY total_rolled_up_cost DESC LIMIT 10;
+SQL
+
+# Subagent fan-out cost — window aggregate. subagent_pct_of_total answers the framing
+# question directly: what share of true spend is invisible if you only look at lead's
+# own message cost?
+sqlite3 -readonly "$DB" <<SQL
+WITH RECURSIVE roots AS (
+  SELECT id FROM session
+  WHERE agent='lead' AND parent_id IS NULL
+    AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
+),
+descendants AS (
+  SELECT id FROM roots
+  UNION ALL
+  SELECT s.id FROM session s JOIN descendants d ON s.parent_id = d.id
+)
+SELECT ROUND(SUM(CASE WHEN d.id IN (SELECT id FROM roots) THEN s.cost ELSE 0 END),2) AS lead_own_total,
+       ROUND(SUM(s.cost),2) AS rolled_up_total,
+       ROUND(100.0*(SUM(s.cost)-SUM(CASE WHEN d.id IN (SELECT id FROM roots) THEN s.cost ELSE 0 END))/SUM(s.cost),1) AS subagent_pct_of_total
+FROM descendants d JOIN session s ON s.id = d.id;
+SQL
+```
+
+**Anthropic extended-cache (1h TTL) firing signal (fail-open).** `plugins/anthropic-extended-cache.ts` rewrites opencode's hardcoded 5-minute ephemeral `cache_control` markers to Anthropic's 1-hour extended TTL on the request path, since opencode's stable Anthropic path has no config for this. opencode's own `message.tokens.cache` only stores an undifferentiated read/write total — confirmed by inspecting real rows (`sqlite3 -readonly ~/.local/share/opencode/opencode.db "SELECT json_extract(data,'\$.tokens') FROM message WHERE json_extract(data,'\$.providerID')='anthropic' AND json_extract(data,'\$.role')='assistant' ORDER BY time_created DESC LIMIT 3"`) — there's no TTL breakdown to read from the DB. So the plugin peeks at the (unmodified, passed-through) response for `usage.cache_creation.ephemeral_1h_input_tokens` and appends `{timestamp, ephemeral_1h_input_tokens, ephemeral_5m_input_tokens}` to a rolling per-UTC-day sidecar (`~/.local/share/opencode/storage/plugin/anthropic-extended-cache/<date>.json`, mirroring DCP's own sidecar pattern above). This check reads that sidecar and reports whether the rewrite is actually taking effect on Anthropic's side — a nonzero `firing_entries` count means the 1h TTL is confirmed appearing in live responses; an empty sidecar reports "firing signal absent" rather than erroring (the plugin may simply not have run yet). If entries exist but none show a nonzero 1h count, that's a **silent regression** signal: an opencode/`@ai-sdk/anthropic` upgrade likely moved or renamed the `cache_control` marker so the plugin's key-name match no longer finds it — inspect `plugins/anthropic-extended-cache.ts`'s `upgradeEphemeralCacheControl` before assuming the TTL upgrade is simply unused.
+
+```bash
+# Anthropic extended-cache firing aggregate. Single jq pass flattens the per-day sidecar arrays
+# and aggregates to 5 scalars (no bodies into context). Fail-open: absent/empty dir => glob yields
+# nothing => aggregate over [] ("firing signal absent"); stdin redirected from /dev/null so a
+# no-file run never blocks on a TTY.
+jq -n '[inputs[]] as $rows | {entries: ($rows|length), firing_entries: ($rows|map(select((.ephemeral_1h_input_tokens // 0)>0))|length), total_1h_tok: ($rows|map(.ephemeral_1h_input_tokens // 0)|add // 0), total_5m_tok: ($rows|map(.ephemeral_5m_input_tokens // 0)|add // 0), verdict: (if ($rows|length)==0 then "firing signal absent" elif ($rows|map(select((.ephemeral_1h_input_tokens // 0)>0))|length)>0 then "firing: 1h TTL confirmed in live responses" else "not firing: rewrite may be desynced from the current request/response shape - inspect plugins/anthropic-extended-cache.ts" end)}' $(ls ~/.local/share/opencode/storage/plugin/anthropic-extended-cache/*.json 2>/dev/null) </dev/null
+```
+
 **DCP firing signal + segmented R3 grade + re-derived floor.** These snippets surface (1) the firing aggregate, (2) the DB compress lower bound, (3) the segmented pre/post reduction, (4) the candidate floor under the work-intensity guard, and (5) the committed-floor R3 grade. The two *refusal guards* (boundary-straddle refusal, ratchet refusal) come FIRST — they constrain the grades that follow.
 
 ```bash
