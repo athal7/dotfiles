@@ -1,17 +1,3 @@
-# aoe ("Agent of Empires") global user config, deployed to
-# ~/.agent-of-empires/config.toml. This is now under full static chezmoi
-# management (no template logic) — a previous approach point-patched a
-# handful of keys into the live file via a modify_ template; that was
-# replaced by snapshotting the whole file here instead.
-#
-# aoe rewrites this file when settings change via its TUI/web UI — not on
-# every run or continuously. So drift against this snapshot is expected to
-# be infrequent and meaningful, not constant noise. Because chezmoi-deploy
-# runs `chezmoi apply --error-on-conflict` (not --force), drift now
-# surfaces as a conflict on the next deploy instead of being silently
-# patched around (old modify_ behavior) or silently overwritten. Resolve a
-# conflict by re-snapshotting this file to match the current live state,
-# or reconciling by hand.
 default_profile = ""
 
 [acp]
@@ -45,7 +31,7 @@ has_seen_welcome = true
 last_seen_version = "1.12.1"
 new_session_with_selection_count = 6
 project_group_collapsed = ["odin"]
-show_preview_info = false
+show_preview_info = true
 sort_order = "attention"
 tips_seen = [
     "tui-core-views",
@@ -129,6 +115,7 @@ default_tool = "opencode"
 delete_to_trash = false
 live_send_exit_chord = "C-q"
 live_send_leader = "C-b"
+live_send_on_view_switch = false
 merge_hooks_into_selected_agent = true
 mouse_capture = true
 new_session_attach_mode = "live_send"
