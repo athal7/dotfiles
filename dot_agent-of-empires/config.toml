@@ -33,6 +33,7 @@ silent_orphan_grace_secs = 120
 
 [app_state]
 archived_section_collapsed = false
+diff_file_list_width = 65
 group_by = "project"
 has_acknowledged_agent_hooks = false
 has_acknowledged_volume_ignores_globs = false
@@ -42,7 +43,8 @@ has_seen_non_git_project_warning = false
 has_seen_web_tour = true
 has_seen_welcome = true
 last_seen_version = "1.12.1"
-new_session_with_selection_count = 5
+new_session_with_selection_count = 6
+project_group_collapsed = ["odin"]
 show_preview_info = false
 sort_order = "attention"
 tips_seen = [
@@ -165,7 +167,7 @@ mouse = "auto"
 status_bar = "auto"
 
 [tools.lumen]
-command = "lumen-diff"
+command = "lumen diff --watch --save-viewed main..-"
 hotkey = "Alt+l"
 
 [updates]

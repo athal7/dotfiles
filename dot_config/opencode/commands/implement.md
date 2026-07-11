@@ -105,7 +105,7 @@ Static and blast-radius review (in-diff correctness/security/performance and out
 - **Plan-level** (wrong approach, missing requirement) → re-dispatch the `plan` subagent (`task` tool, `subagent_type: plan`), update the proposal.
 - **Human judgment** (tradeoff, scope question) → carry forward into the single gate below.
 
-**Changeset + QA approval gate.** Ask for approval before Ship: review the diff (`lumen-diff` persists per-file viewed-state locally, independent of PR status) and the QA report when QA ran, along with any carried-forward human-judgment findings. Wait for approval or steering.
+**Changeset + QA approval gate.** Ask for approval before Ship: review the diff (`lumen diff --save-viewed` persists per-file viewed-state locally, independent of PR status) and the QA report when QA ran, along with any carried-forward human-judgment findings. Wait for approval or steering.
 
 ## Ship
 
