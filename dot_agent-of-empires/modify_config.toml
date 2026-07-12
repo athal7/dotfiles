@@ -1,4 +1,19 @@
-default_profile = ""
+{{- /* chezmoi:modify-template */ -}}
+{{- /*
+aoe (Agent of Empires) rewrites [app_state] and [app_state.web_ui_state] live
+as transient UI/session state (collapsed groups, tips seen, selection counts,
+etc.) — it is not user-authored config. Managing the whole file as a plain
+chezmoi-managed file makes every apply a conflict against that live drift, and
+risks committing internal project names (e.g. project_group_collapsed) into
+this public repo.
+
+So: every section below except [app_state]/[app_state.web_ui_state] is static,
+chezmoi-managed content. The app_state tables are always taken from whatever
+is currently live (.chezmoi.stdin, empty on a machine's first-ever apply) and
+re-injected verbatim — they never get baked into this template's literal
+content, so no live app-state value can ever land in git history.
+*/ -}}
+{{- $static := fromToml `default_profile = ""
 
 [acp]
 allow_agent_install = false
@@ -16,34 +31,6 @@ replay_events = 0
 show_tool_durations = true
 silent_orphan_fast_grace_secs = 20
 silent_orphan_grace_secs = 120
-
-[app_state]
-archived_section_collapsed = false
-diff_file_list_width = 65
-group_by = "project"
-has_acknowledged_agent_hooks = false
-has_acknowledged_volume_ignores_globs = false
-has_responded_to_telemetry = true
-has_seen_custom_instruction_warning = false
-has_seen_non_git_project_warning = false
-has_seen_web_tour = true
-has_seen_welcome = true
-last_seen_version = "1.12.1"
-new_session_with_selection_count = 6
-project_group_collapsed = ["odin"]
-show_preview_info = true
-sort_order = "attention"
-tips_seen = [
-    "tui-core-views",
-    "tui-triage",
-    "tui-power",
-    "install-dashboard-pwa",
-]
-used_new_from_selection = true
-
-[app_state.web_ui_state]
-aoe-web-settings = '{"mobileFontSize":8,"desktopFontSize":14,"autoOpenKeyboard":true,"persistentTerminals":false,"maxPersistentTerminals":5,"diffViewMode":"tree","diffViewLayout":"unified","collapsedDiffDirs":[]}'
-aoe-welcome-seen = "1"
 
 [auth]
 persist_sessions = true
@@ -179,3 +166,12 @@ enabled = true
 init_submodules = true
 path_template = "../{repo-name}-worktrees/{branch}"
 workspace_path_template = "../{branch}-workspace-{session-id}"
+` -}}
+{{- $liveAppState := dict -}}
+{{- if .chezmoi.stdin -}}
+{{-   $live := fromToml .chezmoi.stdin -}}
+{{-   if hasKey $live "app_state" -}}
+{{-     $liveAppState = index $live "app_state" -}}
+{{-   end -}}
+{{- end -}}
+{{- $static | setValueAtPath "app_state" $liveAppState | toToml -}}
