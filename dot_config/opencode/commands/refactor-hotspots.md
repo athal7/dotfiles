@@ -27,6 +27,7 @@ WITH tool_calls AS (
   FROM part p JOIN session s ON s.id = p.session_id
   WHERE json_extract(p.data,'$.type') = 'tool'
     AND json_extract(p.data,'$.tool') IN ('edit','write','bash')
+    AND s.time_created >= (strftime('%s','now') - $WINDOW_DAYS*86400)*1000
 )
 SELECT pr.worktree AS repo, COUNT(*) AS tool_calls,
        SUM(CASE WHEN tc.status='error' THEN 1 ELSE 0 END) AS errors,
@@ -42,6 +43,9 @@ SQL
 The **dispatchable tier**: `edit_calls >= 20 AND sessions_touched >= 5` — cross-session breadth is what makes friction durable, not one session's thrash. Normalizes worktree-branch-suffixed paths to a repo-relative file so the same file across worktrees collapses to one row.
 
 ```bash
+WINDOW_DAYS=30
+DB=~/.local/share/opencode/opencode.db
+
 sqlite3 -readonly "$DB" <<SQL
 WITH edits AS (
   SELECT p.session_id, pr.worktree AS repo,
@@ -50,6 +54,7 @@ WITH edits AS (
   FROM part p JOIN session s ON s.id=p.session_id JOIN project pr ON pr.id=s.project_id
   WHERE json_extract(p.data,'$.tool') IN ('edit','write')
     AND json_extract(p.data,'$.state.input.filePath') IS NOT NULL
+    AND s.time_created >= (strftime('%s','now') - $WINDOW_DAYS*86400)*1000
 ),
 steps AS (SELECT *, instr(file,'/worktree/') AS pos_wt FROM edits),
 steps2 AS (SELECT *, CASE WHEN pos_wt>0 THEN substr(file,pos_wt+10) END AS after_wt FROM steps),
@@ -75,12 +80,16 @@ SQL
 **Single-session thrash (watch-only, NOT a dispatch signal):** 3+ edit/write touches to the SAME file within ONE session. Report as FYI in Step 6 — it isn't durable cross-repo friction, and this command doesn't act on it.
 
 ```bash
+WINDOW_DAYS=30
+DB=~/.local/share/opencode/opencode.db
+
 sqlite3 -readonly "$DB" <<SQL
 WITH edits AS (
   SELECT p.session_id, json_extract(p.data,'$.state.input.filePath') AS file
-  FROM part p
+  FROM part p JOIN session s ON s.id = p.session_id
   WHERE json_extract(p.data,'$.tool') IN ('edit','write')
     AND json_extract(p.data,'$.state.input.filePath') IS NOT NULL
+    AND s.time_created >= (strftime('%s','now') - $WINDOW_DAYS*86400)*1000
 )
 SELECT session_id, file, COUNT(*) AS touches
 FROM edits GROUP BY session_id, file
