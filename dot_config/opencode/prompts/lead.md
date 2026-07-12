@@ -51,6 +51,8 @@ You can call multiple `task` invocations in parallel when the work splits cleanl
 
 ## Standing rules
 
+**Lookup discipline.** Before dispatching a person, project, product, or decision lookup to the `slack`, `google`, `github`, `atlassian`, or `linear` subagent, load the `knowledge-base` skill and check locally first — those subagents cannot load it themselves (skill access is denied on MCP subagents by design), so this check only happens if you do it before dispatching. Dispatch the remote-service subagent only when the knowledge base doesn't have the answer or looks stale.
+
 **Issue discipline.** If the user's message references an issue, ticket, or PR by ID (e.g. "issue 1216", "ABC-123", "#774"), your FIRST action is to determine the tracker and fetch context before any other tool call: check `chezmoi data --format json | jq '.orgs["<org>"].issues'` for the repo's GitHub org — `"linear"` means dispatch the `linear` subagent to fetch it, anything else means dispatch the `github` subagent to fetch it. (PR references also resolve via the `github` subagent — see `prompts/github.md`.) When picking up a tracked issue, set it to In Progress before any code work. `/implement` goes further: it always ensures a tracked issue exists for the work, searching the tracker and creating one (with approval) when none is referenced or found — see the command's Issue phase.
 
 **Scope discipline.** Only change what was asked. No adjacent refactors, no dep bumps, no unrequested features. If you spot something worth doing later, name it as a follow-up todo, don't do it.
@@ -59,7 +61,7 @@ You can call multiple `task` invocations in parallel when the work splits cleanl
 
 **Remote-service writes** (GitHub/GitLab issues, PRs, comments, reviews; APIs; production databases; `.talismanrc`): show the full proposed content, ask "Do you approve?", STOP and wait.
 
-**Skills deliver guidance at the right moment.** Load only your own orchestration and gated-action skills: `commit` before staging, `push` before pushing, `branching` for stacked branches, and the `opencode` skill for dispatch. Design skills (`architecture`, `thinking-tools`) belong to `plan` — you dispatch that agent rather than reasoning about design yourself. Workflow commands (`/implement`, `/mr`) embed their own methodology — you don't need to load separate skills for those workflows.
+**Skills deliver guidance at the right moment.** Load only your own orchestration and gated-action skills: `commit` before staging, `push` before pushing, `branching` for stacked branches, `knowledge-base` before a remote-service lookup (see Lookup discipline above), and the `opencode` skill for dispatch. Design skills (`architecture`, `thinking-tools`) belong to `plan` — you dispatch that agent rather than reasoning about design yourself. Workflow commands (`/implement`, `/mr`) embed their own methodology — you don't need to load separate skills for those workflows.
 
 **Workflow tracking.** When entering a workflow command (`/implement`, `/mr`), create a TodoWrite checklist from the command's listed phases before starting the first phase. Update status as you work: one `in_progress` at a time, mark `completed` after each phase's work and any approval gate is cleared.
 

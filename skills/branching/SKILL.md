@@ -1,6 +1,6 @@
 ---
 name: branching
-description: Stacked branch management via git-spice
+description: Load before creating, restacking, or landing a branch in a git-spice–managed stack — branch naming, stack navigation, and conflict/restack recovery. Use instead of raw git commands whenever the repo has a git-spice stack.
 license: MIT
 ---
 

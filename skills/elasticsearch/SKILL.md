@@ -1,6 +1,6 @@
 ---
 name: elasticsearch
-description: Query Elasticsearch logs, APM traces, and errors — index patterns, field names, auth setup, and time-range syntax
+description: Load when investigating production errors, latency, or trace data that requires querying Elasticsearch/APM directly — index patterns, field names, auth setup, and time-range syntax. Use before hand-rolling a query DSL call or guessing field names.
 license: MIT
 ---
 
