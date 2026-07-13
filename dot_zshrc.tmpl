@@ -11,6 +11,7 @@ export EDITOR="nvim"
 export GPG_TTY=$(tty)
 export DOCKER_HOST="unix:///${HOME}/.colima/default/docker.sock"
 export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
+_brew_prefix="$(brew --prefix)"
 
 # aliases
   alias cat='bat'
@@ -24,12 +25,20 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
   alias less="less -R"
   alias lf="less +F"
   alias ll="ls -la"
+  # macos-trash's `trash` doesn't understand rm flags, so strip them and
+  # trash whatever paths are left — covers plain `rm` and `rm -rf` alike.
+  rm() {
+    local args=()
+    for arg in "$@"; do
+      [[ "$arg" == -* ]] || args+=("$arg")
+    done
+    "$_brew_prefix/opt/macos-trash/bin/trash" "${args[@]}"
+  }
   alias tf='tofu'
   alias watch='watch -c '
 
 # completions
   autoload -Uz compinit && compinit -d "$ZSH_COMPDUMP"
-  _brew_prefix="$(brew --prefix)"
   # gcloud SDK shell integration (completions + PATH)
   [[ -f "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc" ]] && source "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc"
   [[ -f "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc" ]] && source "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc"
