@@ -1,0 +1,113 @@
+#!/bin/bash
+# Keep Terminal.app's profile background in sync with the active aoe theme.
+#
+# aoe's theme backgrounds (e.g. zinc's #1c1c1f) don't exactly match
+# Terminal.app's own window canvas background, so unpainted cells (scrollbar
+# gutters, layout rounding at pane edges) show a faint seam of Terminal.app's
+# background against aoe's theme-painted content. Fix: whenever aoe's active
+# theme changes, re-push that theme's background color onto Terminal.app's
+# profile(s).
+#
+# Named "zz-" so it sorts after run_onchange_after_plugins-aoe (which
+# installs/updates aoe itself): chezmoi runs after_ scripts alphabetically by
+# stripped target name, and aoe must exist before this can query it.
+#
+# The theme name lives in a live, non-chezmoi-tracked file
+# (~/.agent-of-empires/config.toml), so chezmoi has nothing to diff against.
+# Embed the current theme name into this comment via `output` so chezmoi
+# reruns this script whenever the theme changes. Must not error when the
+# config file doesn't exist yet (fresh machine, aoe not installed) — the
+# `2>/dev/null | ... || true` keeps output empty instead of failing the
+# whole template render.
+# aoe theme name: {{ output "bash" "-c" "sed -n '/^\\[theme\\]/,/^\\[/p' \"$HOME/.agent-of-empires/config.toml\" 2>/dev/null | awk -F'\"' '/name = /{print $2; exit}' || true" | trim }}
+
+# Deliberately not -e: this is a cosmetic sync. Any individual failure
+# (config missing, aoe/osascript missing, export failing, malformed theme,
+# osascript refused) should warn and exit 0, never abort chezmoi apply.
+set -uo pipefail
+
+CONFIG_FILE="$HOME/.agent-of-empires/config.toml"
+if [ ! -f "$CONFIG_FILE" ]; then
+  exit 0
+fi
+
+# com.apple.Terminal.plist is owned by cfprefsd, which caches in memory and
+# flushes to disk on its own schedule — mutating it directly (e.g. via
+# PlistBuddy or a raw chezmoi modify_ overwrite) risks being silently
+# clobbered. AppleScript/osascript goes through Terminal.app's own APIs
+# instead, which is why this whole script exists as an imperative
+# run_onchange_ rather than a modify_ template.
+PLIST="$HOME/Library/Preferences/com.apple.Terminal.plist"
+if [ ! -f "$PLIST" ]; then
+  exit 0
+fi
+
+if ! command -v aoe >/dev/null 2>&1; then
+  exit 0
+fi
+
+if ! command -v osascript >/dev/null 2>&1; then
+  exit 0
+fi
+
+# `tell application "Terminal"` auto-launches Terminal.app via Apple Events
+# if it isn't already running — an unwanted side effect during a possibly
+# headless/background chezmoi apply. Skip for now; this sync will naturally
+# fire again next time the trigger comment changes while Terminal is open.
+if ! pgrep -x Terminal >/dev/null 2>&1; then
+  exit 0
+fi
+
+THEME_NAME=$(sed -n '/^\[theme\]/,/^\[/p' "$CONFIG_FILE" 2>/dev/null | awk -F'"' '/name = /{print $2; exit}')
+
+if [ -z "$THEME_NAME" ]; then
+  echo "terminal-theme-sync: WARN: could not determine active aoe theme name from $CONFIG_FILE" >&2
+  exit 0
+fi
+
+TMPFILE=$(mktemp /tmp/aoe-theme-sync-XXXXXX.toml)
+trap 'rm -f "$TMPFILE"' EXIT
+
+# Always pass -o with an explicit temp path: without it, `aoe theme export`
+# writes into ~/.agent-of-empires/themes/custom-<name>.toml and registers a
+# spurious "custom-<name>" theme in aoe's theme selector.
+if ! aoe theme export "$THEME_NAME" -o "$TMPFILE" >/dev/null 2>&1; then
+  echo "terminal-theme-sync: WARN: aoe theme export '$THEME_NAME' failed" >&2
+  exit 0
+fi
+
+BACKGROUND_HEX=$(awk -F'"' '/^background = /{print $2; exit}' "$TMPFILE")
+
+if [ -z "$BACKGROUND_HEX" ]; then
+  echo "terminal-theme-sync: WARN: no background field in exported theme '$THEME_NAME'" >&2
+  exit 0
+fi
+
+HEX="${BACKGROUND_HEX#\#}"
+R=$((16#${HEX:0:2}))
+G=$((16#${HEX:2:2}))
+B=$((16#${HEX:4:2}))
+
+# Terminal.app's AppleScript color scale is 16-bit (0-65535); 255*257=65535,
+# so this is an exact scale with no rounding error.
+R16=$((R * 257))
+G16=$((G * 257))
+B16=$((B * 257))
+
+# Default and Startup window settings can point at different profiles, and
+# neither is reliably "Basic" — sync whatever the user actually has active.
+profiles="$(
+  {
+    defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null
+    defaults read com.apple.Terminal "Startup Window Settings" 2>/dev/null
+  } | sort -u
+)"
+
+while IFS= read -r profile; do
+  [ -n "$profile" ] || continue
+  if osascript -e "tell application \"Terminal\" to set background color of settings set \"$profile\" to {$R16, $G16, $B16}" >/dev/null 2>&1; then
+    echo "terminal-theme-sync: set Terminal.app profile '$profile' background to #$HEX (matching aoe theme '$THEME_NAME')"
+  else
+    echo "terminal-theme-sync: WARN: osascript failed to set Terminal.app profile '$profile' background" >&2
+  fi
+done <<< "$profiles"
