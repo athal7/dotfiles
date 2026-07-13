@@ -8,7 +8,6 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - Shell — [zshrc](dot_zshrc.tmpl), [zshenv](dot_zshenv.tmpl), [zprofile](dot_zprofile.tmpl)
   - [Editor](dot_config/nvim/)
   - [Git](dot_config/git/)
-  - [Terminal](dot_config/ghostty/)
 - **AI tooling**
   - [OpenCode config](dot_config/opencode/opencode.json.tmpl)
   - [Agent skills](skills/) — knowledge base, communication, code review, and more. QA produces an AC-organized evidence report; the `qa-report-publish` skill delivers it to your own PR's description. Static and blast-radius code review is not performed inline; it happens automatically on the pushed PR.
