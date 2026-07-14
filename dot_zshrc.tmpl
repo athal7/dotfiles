@@ -9,16 +9,10 @@ mkdir -p "$(dirname "$ZSH_COMPDUMP")"
 
 export EDITOR="nvim"
 export GPG_TTY=$(tty)
-export DOCKER_HOST="unix:///${HOME}/.colima/default/docker.sock"
-export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 _brew_prefix="$(brew --prefix)"
 
 # aliases
   alias cat='bat'
-  alias d="docker"
-  alias dc="docker-compose"
-  alias dcr="docker-compose run --rm"
-  alias docker_cleanup="docker system prune"
   alias e=$EDITOR
   alias g='git'
   alias k="kubectl"
