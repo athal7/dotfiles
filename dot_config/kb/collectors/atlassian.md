@@ -3,7 +3,7 @@ name: atlassian
 description: Confluence decisions/status and wiki-hygiene flags — fetched by dispatching the atlassian subagent
 ---
 
-Dispatch the `atlassian` subagent (`task` tool, `subagent_type: atlassian`) with a prompt asking it to run a CQL search scoped to whatever Confluence space(s) the team's wiki presence lives in (discoverable via `getConfluenceSpaces` if not already known — a natural candidate for a per-workspace config value alongside the other local settings this repo already keeps, rather than a value assumed here) with `lastmodified` inside the enrichment window, prioritizing sections organized like retrospectives, demos, PRDs, and proposals; sections like sales/prospect notes are lower priority and worth a pull only if the page shows an explicit decision or status change, not routine meeting-note traffic. Exclude pages carrying the `decision-log` label (e.g. `AND label != "decision-log"`) — those are the write-back target of the Decision Log feature, not source material, and re-ingesting them here would echo-loop the two features against each other. Extract kb facts from its returned summary.
+Dispatch the `atlassian` subagent (`task` tool, `subagent_type: atlassian`) with a prompt asking it to run a CQL search scoped to whatever Confluence space(s) the team's wiki presence lives in (discoverable via `getConfluenceSpaces` if not already known — a natural candidate for a per-workspace config value alongside the other local settings this repo already keeps, rather than a value assumed here) with `lastmodified` inside the enrichment window, prioritizing sections organized like retrospectives, demos, meeting notes, PRDs, and proposals; sections like sales/prospect notes are lower priority and worth a pull only if the page shows an explicit decision or status change, not routine meeting-note traffic. Exclude pages carrying the `decision-log` label (e.g. `AND label != "decision-log"`) — those are the write-back target of the Decision Log feature, not source material, and re-ingesting them here would echo-loop the two features against each other. Extract kb facts from its returned summary.
 
 ## Triage rules
 
@@ -22,6 +22,7 @@ Extract:
 - Anchor each decision or status update to the project or product it concerns.
 - Cite the Confluence page URL for every extracted fact so it can be cross-referenced at write time.
 - For demo-page transcripts, prefer the page's own summary/notes over the raw transcript; only extract what is distilled there.
+- Meeting-notes and retrospective pages take the same distillation approach: they're typically freeform prose with no structured metadata (no Page Properties fields), so extract directly from the narrative content under headings like "what went well," "action items," or "decisions," rather than expecting a structured block.
 
 ## Wiki-hygiene flagging
 
