@@ -63,8 +63,22 @@
 # the dropdown indefinitely; with it, `/audit` submitted immediately and the
 # workflow ran. Harmless for plain-text messages too.
 #
+# `-w WORKTREE_BRANCH` / `-b` pass straight through to `aoe add --worktree
+# ... --new-branch`, and the raw `aoe add` output (its `  ID:` / `  Path:`
+# lines) is relayed to stdout the moment the session ID is successfully
+# parsed — before `aoe session start` is even attempted, well before the
+# readiness poll. Both were added so a caller that needs a git-worktree
+# session with a custom prompt (e.g. fix-prod-errors.md dispatching a fix
+# session per top APM error group into its own worktree+branch) can capture
+# the session id and worktree path via `$(...)` and use this wrapper for the
+# whole add→start→poll→send sequence, instead of re-implementing that same
+# race-prone poll loop a second time. Relaying before the poll also means a
+# caller still gets the id/worktree path even if the readiness poll below
+# times out and the send never happens — the exit code alone tells the
+# caller whether the send actually landed.
+#
 # Usage:
-#   aoe-cmd -d DIR -n NAME MESSAGE...
+#   aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE...
 #
 # Env:
 #   AOE_CMD_READY_TIMEOUT   Max seconds to poll the pane for the ready marker
@@ -79,16 +93,20 @@
 set -eu
 
 usage() {
-  echo "Usage: aoe-cmd -d DIR -n NAME MESSAGE..." >&2
+  echo "Usage: aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE..." >&2
 }
 
 dir=""
 name=""
+worktree=""
+new_branch=0
 
-while getopts "d:n:" opt; do
+while getopts "d:n:w:b" opt; do
   case "$opt" in
     d) dir="$OPTARG" ;;
     n) name="$OPTARG" ;;
+    w) worktree="$OPTARG" ;;
+    b) new_branch=1 ;;
     *) usage; exit 1 ;;
   esac
 done
@@ -103,7 +121,15 @@ fi
 
 title="${name}-$(date +%Y%m%d-%H%M%S)"
 
-if ! add_output=$(aoe add "$dir" --tool opencode --title "$title"); then
+set -- "$dir" --tool opencode --title "$title"
+if [ -n "$worktree" ]; then
+  set -- "$@" --worktree "$worktree"
+fi
+if [ "$new_branch" -eq 1 ]; then
+  set -- "$@" --new-branch
+fi
+
+if ! add_output=$(aoe add "$@"); then
   echo "aoe-cmd: 'aoe add' failed for session '$title'" >&2
   exit 1
 fi
@@ -115,6 +141,12 @@ if [ -z "$id" ]; then
   printf '%s\n' "$add_output" >&2
   exit 1
 fi
+
+# Relay `aoe add`'s raw output (its `  ID:` / `  Path:` lines) to stdout now,
+# before `aoe session start` or the readiness poll below — so a caller
+# capturing this script's stdout via `$(...)` gets the session id and
+# worktree path regardless of whether the later poll times out.
+printf '%s\n' "$add_output"
 
 if ! start_output=$(aoe session start "$id" 2>&1); then
   echo "aoe-cmd: 'aoe session start' failed for session '$title' (id $id)" >&2

@@ -43,7 +43,7 @@ After all collectors have run, write the enrichment outputs:
 
    Respect the Privacy rules below — never route privacy-excluded content to a shared destination.
 
-   **APM fix-ledger write-back.** Items surfaced from `fix/apm-*` worktree sessions are governed by `~/.local/share/kb/apm-fix-ledger.jsonl`, not by the general filing rules above. They ride in the same batched action-item approval gate used for other remote writes — but once the human decides, resolve them by appending ONE new line to the ledger (same `worktree` value as the pending line; never edit or remove a prior line):
+   **APM fix-ledger write-back.** Items surfaced from `fix/apm-*` worktree sessions are governed by `~/.local/share/kb/apm-fix-ledger.jsonl`, not by the general filing rules above. Only `pending` lines are candidates for review — skip `send_failed` lines entirely: those sessions never received their prompt, so there's no session output to reconcile and no write-back to make; the `send_failed` line is already terminal as written by `fix-prod-errors`. For `pending` lines, ride the same batched action-item approval gate used for other remote writes — but once the human decides, resolve them by appending ONE new line to the ledger (same `worktree` value as the pending line; never edit or remove a prior line):
 
    - Approved/filed — `jq -nc --arg wt "$WT" --arg url "$TICKET_URL" --arg dec "$(date -Iseconds)" '{worktree:$wt, disposition:"filed", ticket_url:$url, decided:$dec}' >> ~/.local/share/kb/apm-fix-ledger.jsonl`
    - Declined — same shape with `disposition:"declined"` and a required `reason` field instead of `ticket_url`.

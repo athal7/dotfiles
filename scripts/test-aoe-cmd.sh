@@ -66,6 +66,24 @@ send_call_count() {
   grep -c '^send' "$AOE_LOG"
 }
 
+# Variant of run_aoe_cmd that keeps stdout and stderr split, for assertions
+# that need to check stdout specifically (the relayed `aoe add` output).
+# Writes stdout to $1 and stderr to $2; returns aoe-cmd's exit status.
+run_aoe_cmd_split() {
+  local stdout_file="$1" stderr_file="$2"
+  shift 2
+  : > "$AOE_LOG"
+  PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" \
+    AOE_CMD_READY_TIMEOUT="${AOE_CMD_READY_TIMEOUT:-5}" \
+    AOE_CMD_POLL_INTERVAL="${AOE_CMD_POLL_INTERVAL:-0}" \
+    AOE_STUB_ADD_OUTPUT="${AOE_STUB_ADD_OUTPUT:-}" \
+    AOE_STUB_ADD_EXIT="${AOE_STUB_ADD_EXIT:-0}" \
+    AOE_STUB_SESSION_START_EXIT="${AOE_STUB_SESSION_START_EXIT:-0}" \
+    AOE_STUB_CAPTURE_OUTPUT="${AOE_STUB_CAPTURE_OUTPUT:-Ask anything...}" \
+    AOE_STUB_SEND_EXIT="${AOE_STUB_SEND_EXIT:-0}" \
+    sh "$AOE_CMD" "$@" > "$stdout_file" 2> "$stderr_file"
+}
+
 canonical_add_output='✓ Added session: audit-20260101-000000
   Profile: main
   Path:    /tmp/proj
@@ -117,6 +135,16 @@ test_happy_path() {
   esac
 
   case "$add_line" in
+    *"--worktree"*) bad "aoe add should not be called with --worktree when -w is unset (got: $add_line)" ;;
+    *) ok "aoe add called without --worktree when -w is unset" ;;
+  esac
+
+  case "$add_line" in
+    *"--new-branch"*) bad "aoe add should not be called with --new-branch when -b is unset (got: $add_line)" ;;
+    *) ok "aoe add called without --new-branch when -b is unset" ;;
+  esac
+
+  case "$add_line" in
     *"--title	audit-"[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]*) ok "title has YYYYMMDD-HHMMSS timestamp suffix" ;;
     *) bad "title timestamp suffix (got: $add_line)" ;;
   esac
@@ -141,6 +169,77 @@ test_happy_path() {
   fi
 }
 test_happy_path
+
+# ---------------------------------------------------------------------------
+echo "== worktree/new-branch passthrough =="
+
+test_worktree_passthrough() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -d /tmp/proj -n audit -w "fix/apm-20260101-audit" -b /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -w/-b" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+
+  case "$add_line" in
+    *"--tool	opencode	--title	audit-"*) ok "aoe add still called with --tool opencode and prefixed title when -w/-b set" ;;
+    *) bad "aoe add args with -w/-b (got: $add_line)" ;;
+  esac
+
+  case "$add_line" in
+    *"--worktree	fix/apm-20260101-audit"*) ok "aoe add called with --worktree BRANCH" ;;
+    *) bad "aoe add --worktree passthrough (got: $add_line)" ;;
+  esac
+
+  case "$add_line" in
+    *"--new-branch"*) ok "aoe add called with --new-branch" ;;
+    *) bad "aoe add --new-branch passthrough (got: $add_line)" ;;
+  esac
+}
+test_worktree_passthrough
+
+# ---------------------------------------------------------------------------
+echo "== stdout relay of aoe add output =="
+
+test_stdout_relay_happy_path() {
+  local status out_file err_file
+  out_file="$WORK/stdout.happy"
+  err_file="$WORK/stderr.happy"
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd_split "$out_file" "$err_file" -d /tmp/proj -n audit /audit && status=0 || status=$?
+  check "exits 0 on success" "$status" 0
+
+  if grep -q 'ID:      24777d8e72f2416c' "$out_file" && grep -q 'Path:    /tmp/proj' "$out_file"; then
+    ok "stdout contains relayed aoe add output (ID + Path)"
+  else
+    bad "stdout contains relayed aoe add output (got: $(cat "$out_file"))"
+  fi
+}
+test_stdout_relay_happy_path
+
+test_stdout_relay_on_ready_timeout() {
+  local status out_file err_file
+  out_file="$WORK/stdout.timeout"
+  err_file="$WORK/stderr.timeout"
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    AOE_STUB_CAPTURE_OUTPUT="booting..." \
+    AOE_CMD_READY_TIMEOUT=1 AOE_CMD_POLL_INTERVAL=0 \
+    run_aoe_cmd_split "$out_file" "$err_file" -d /tmp/proj -n audit /audit && status=0 || status=$?
+  check "exits non-zero when TUI never becomes ready" "$status" 1
+
+  if grep -q 'ID:      24777d8e72f2416c' "$out_file"; then
+    ok "stdout still contains relayed aoe add ID even when readiness poll times out"
+  else
+    bad "stdout still contains relayed aoe add ID on timeout (got: $(cat "$out_file"))"
+  fi
+
+  if grep -q "never became ready" "$err_file"; then
+    ok "stderr (not stdout) carries the never-became-ready diagnostic"
+  else
+    bad "stderr carries never-became-ready diagnostic (got: $(cat "$err_file"))"
+  fi
+}
+test_stdout_relay_on_ready_timeout
 
 # ---------------------------------------------------------------------------
 echo "== aoe add failure =="
