@@ -74,7 +74,7 @@ enabled = true
 
 [sandbox]
 auto_cleanup = true
-container_runtime = "docker"
+container_runtime = "apple_container"
 default_image = "ghcr.io/agent-of-empires/aoe-sandbox:latest"
 default_terminal_mode = "host"
 enabled_by_default = false

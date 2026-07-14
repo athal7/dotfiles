@@ -32,10 +32,8 @@ packages:
         "chezmoi cat*": allow
         "chezmoi managed*": allow
         "chezmoi source-path*": allow
-    - name: colima
+    - name: container
     - name: direnv
-    - name: docker
-    - name: docker-compose
     - name: ffmpeg
     - name: git
       permissions:
