@@ -26,7 +26,12 @@ prod_services:
 # file at ~/.config/kb/collectors/<name>.md. Only listed collectors run; omit one
 # to disable it without deleting its recipe.
 kb:
-  collectors: [opencode, slack, zoom, linear, gh]
+  collectors: [opencode, slack, zoom, linear, gh, atlassian]
+  # Confluence page ID of the Decision Log container page (the page running the
+  # Page Properties Report macro that auto-lists its children). Leave unset/empty
+  # to skip Decision Log write-back in /kb-enrich entirely — no Confluence write
+  # of any kind happens until you fill this in with your own page ID.
+  decision_log_container_page_id: ""
 
 runlayer:
   zoom_mcp_url: ""  # Runlayer MCP proxy URL for the Zoom connector

@@ -51,6 +51,19 @@ After all collectors have run, write the enrichment outputs:
 
    This ledger line **is** the item's explicit disposition record for APM-fix items — it satisfies the "every extracted item needs an explicit disposition" rule above — and it prevents a stale session from being re-proposed as a fresh draft if it's ever re-scanned by a later run.
 
+   **Decision Log write-back.** Governed by `~/.local/share/kb/decision-log-sync.jsonl`, not the general filing rules above. This step is opt-in: it runs only if `chezmoi data --format json | jq -r '.kb.decision_log_container_page_id'` resolves to a real page ID. If the key is absent or empty, log "kb.decision_log_container_page_id not configured" and skip this step entirely — no Confluence write happens.
+
+   Candidates are `## Key Decisions` entries from `~/.local/share/kb/projects/*.md` and `~/.local/share/kb/products/*.md` only (never `decisions/cross-cutting.md` or `decisions/archive.md` — out of scope for this feature). For each candidate, check the ledger first: a last-line disposition of `declined` for that decision means skip it, already ruled out on a prior run. Otherwise dispatch the atlassian subagent to search by the `decision-log` label plus a title/date match — one page per decision, so no in-page fuzzy matching is needed — and skip any candidate that already has a matching page.
+
+   For each surviving candidate, stage one new child page: title is the decision statement (or a short slug of it), body is a Page Properties block with Decision / Date / Product-Project / Source / Contributed-by (e.g. "kb-enrich automation") filled in, destined as a child of the configured container page and stamped with the `decision-log` label. Ride the same batched remote-write approval gate used for other action items above — show the full content and destination for each, then create them all.
+
+   On approval, dispatch the atlassian subagent to create each approved page as a child of the container page with the label applied. Then resolve every candidate — approved or declined — by appending one line to the ledger (keyed by product/project slug + decision text, last line wins):
+
+   - Created — disposition `created` plus the resulting Confluence page URL.
+   - Declined — disposition `declined` plus a required `reason`.
+
+   This ledger line is the decision's explicit disposition record and is what suppresses re-proposing an already-declined decision on a future run.
+
 Before finishing, account for every discrete fact or item any collector extracted: each one needs an explicit disposition, either filed (journal/profile/decision/action item) or deliberately skipped with a stated reason (privacy exclusion, genuine duplicate, or triviality). Don't let an item fall through with no disposition. Apply this especially to single-source facts with no corroborating collector — a new contact, an informal one-off decision surfaced only in Slack — lack of corroboration is not itself a reason to skip.
 
 ## Privacy
