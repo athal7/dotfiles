@@ -36,12 +36,20 @@
 # `aoe send` types straight into the pane with no readiness check and no ACK:
 # a message sent before opencode is ready is silently dropped — `aoe send`
 # still prints its "Sent message" confirmation and exits 0, so there's no
-# error signal to retry on. The fix is a fixed sleep after `aoe session
-# start` returns, before calling `aoe send` once. This is a real,
-# live-tested race (immediate and 3s-delayed sends were both dropped; 5s was
-# delivered), not a transient error — so there's no retry loop here, just one
-# sleep and one send. Retrying or verifying delivery via capture-pane would
-# overcomplicate a fire-and-forget tool.
+# error signal to retry on. This used to be handled with a fixed sleep after
+# `aoe session start` returns, before calling `aoe send` once — that design
+# was falsified by real evidence: under unattended 20:00 weekday LaunchAgent
+# runs (kb-enrich, fix-prod-errors), the fixed 5s sleep silently dropped the
+# send in 4/4 recent runs (tmux panes still showed opencode's pristine
+# welcome screen; zero opencode sessions were created in
+# ~/.local/share/opencode/opencode.db for those runs), because boot time
+# under real unattended conditions isn't reliably bounded by a guessed
+# constant. The fix is a bounded poll: after `aoe session start` returns,
+# repeatedly capture the pane (`aoe session capture`) and check for
+# opencode's input placeholder text, sending only once that marker appears
+# (or failing loudly if it never does within a timeout). Retrying the send
+# itself would overcomplicate a fire-and-forget tool, so there's still just
+# one `aoe send` call — only the wait before it is adaptive now.
 #
 # `aoe send` gets the message with a trailing space appended. All 4 real
 # scheduled jobs send a slash command (e.g. `/audit`); opencode's TUI treats
@@ -59,10 +67,14 @@
 #   aoe-cmd -d DIR -n NAME MESSAGE...
 #
 # Env:
-#   AOE_CMD_STARTUP_SLEEP  Seconds to sleep after `aoe session start` before
-#                          calling `aoe send`, to let opencode's TUI finish
-#                          booting in the tmux pane (default 5). Override to
-#                          0 in tests.
+#   AOE_CMD_READY_TIMEOUT   Max seconds to poll the pane for the ready marker
+#                           after `aoe session start` before giving up
+#                           (default 30).
+#   AOE_CMD_POLL_INTERVAL   Seconds to sleep between poll attempts (default
+#                           1). Override to 0 in tests.
+#   AOE_CMD_READY_MARKER    Text to look for in the captured pane that
+#                           indicates opencode's TUI is ready for input
+#                           (default "Ask anything...").
 
 set -eu
 
@@ -110,7 +122,37 @@ if ! start_output=$(aoe session start "$id" 2>&1); then
   exit 1
 fi
 
-sleep "${AOE_CMD_STARTUP_SLEEP:-5}"
+# Wait for opencode's TUI to be ready for input before sending. `aoe send`
+# has no delivery ACK — a send into a still-booting pane is silently dropped
+# (proven under unattended 20:00 LaunchAgent runs: 4/4 recent dispatches left
+# the pane on opencode's untouched welcome screen and never created an
+# opencode session, despite `aoe send` reporting success every time). Poll
+# the pane for opencode's input placeholder instead of guessing a fixed sleep.
+ready_timeout="${AOE_CMD_READY_TIMEOUT:-30}"
+poll_interval="${AOE_CMD_POLL_INTERVAL:-1}"
+ready_marker="${AOE_CMD_READY_MARKER:-Ask anything...}"
+
+waited=0
+ready=0
+pane=""
+while [ "$waited" -lt "$ready_timeout" ]; do
+  sleep "$poll_interval"
+  # `+ (poll_interval == 0)` guards against an infinite loop when
+  # AOE_CMD_POLL_INTERVAL=0 (used in tests to keep the suite fast): without
+  # it, a zero interval would never advance `waited` and this loop would
+  # never hit the timeout bound. No-op for the real default of 1.
+  waited=$((waited + poll_interval + (poll_interval == 0)))
+  pane=$(aoe session capture "$id" --lines 50 --strip-ansi 2>/dev/null) || pane=""
+  case "$pane" in
+    *"$ready_marker"*) ready=1; break ;;
+  esac
+done
+
+if [ "$ready" -ne 1 ]; then
+  echo "aoe-cmd: opencode TUI never became ready (no '$ready_marker' after ${ready_timeout}s) for session '$title' (id $id); not sending" >&2
+  printf '%s\n' "$pane" >&2
+  exit 1
+fi
 
 if ! send_output=$(aoe send "$id" "$message " 2>&1); then
   echo "aoe-cmd: 'aoe send' failed for session '$title' (id $id)" >&2

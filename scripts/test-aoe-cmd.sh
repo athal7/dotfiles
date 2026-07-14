@@ -34,6 +34,9 @@ elif [ "$1" = "session" ] && [ "$2" = "start" ]; then
   [ -n "${AOE_STUB_SESSION_START_EXIT:-0}" ] && [ "${AOE_STUB_SESSION_START_EXIT:-0}" != "0" ] && \
     echo "fake aoe: session start failing on purpose" >&2
   exit "${AOE_STUB_SESSION_START_EXIT:-0}"
+elif [ "$1" = "session" ] && [ "$2" = "capture" ]; then
+  printf '%s\n' "${AOE_STUB_CAPTURE_OUTPUT:-Ask anything...}"
+  exit 0
 elif [ "$1" = "send" ]; then
   [ -n "${AOE_STUB_SEND_EXIT:-0}" ] && [ "${AOE_STUB_SEND_EXIT:-0}" != "0" ] && \
     echo "fake aoe: send failing on purpose" >&2
@@ -49,10 +52,12 @@ AOE_LOG="$WORK/aoe.log"
 run_aoe_cmd() {
   : > "$AOE_LOG"
   PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" \
-    AOE_CMD_STARTUP_SLEEP="${AOE_CMD_STARTUP_SLEEP:-0}" \
+    AOE_CMD_READY_TIMEOUT="${AOE_CMD_READY_TIMEOUT:-5}" \
+    AOE_CMD_POLL_INTERVAL="${AOE_CMD_POLL_INTERVAL:-0}" \
     AOE_STUB_ADD_OUTPUT="${AOE_STUB_ADD_OUTPUT:-}" \
     AOE_STUB_ADD_EXIT="${AOE_STUB_ADD_EXIT:-0}" \
     AOE_STUB_SESSION_START_EXIT="${AOE_STUB_SESSION_START_EXIT:-0}" \
+    AOE_STUB_CAPTURE_OUTPUT="${AOE_STUB_CAPTURE_OUTPUT:-Ask anything...}" \
     AOE_STUB_SEND_EXIT="${AOE_STUB_SEND_EXIT:-0}" \
     sh "$AOE_CMD" "$@"
 }
@@ -95,7 +100,10 @@ test_happy_path() {
 
   local add_line session_start_line send_line
   add_line="$(grep '^add' "$AOE_LOG")"
-  session_start_line="$(grep '^session' "$AOE_LOG")"
+  # Anchor on the "start" subcommand specifically — "session capture" lines
+  # (from the readiness poll) also start with "session" and would otherwise
+  # match too.
+  session_start_line="$(grep '^session\tstart' "$AOE_LOG")"
   send_line="$(grep '^send' "$AOE_LOG")"
 
   case "$add_line" in
@@ -119,14 +127,17 @@ test_happy_path() {
   # messages (all 4 real scheduled jobs) actually submit. See executable_aoe-cmd.
   check "aoe send called with parsed ID and message plus trailing space" "$send_line" "send	24777d8e72f2416c	/audit "
 
-  local add_lineno session_start_lineno send_lineno
+  local add_lineno session_start_lineno capture_lineno send_lineno
   add_lineno="$(grep -n '^add' "$AOE_LOG" | cut -d: -f1)"
-  session_start_lineno="$(grep -n '^session' "$AOE_LOG" | cut -d: -f1)"
+  session_start_lineno="$(grep -n '^session\tstart' "$AOE_LOG" | cut -d: -f1)"
+  capture_lineno="$(grep -n '^session\tcapture' "$AOE_LOG" | head -1 | cut -d: -f1)"
   send_lineno="$(grep -n '^send' "$AOE_LOG" | cut -d: -f1)"
-  if [ "$add_lineno" -lt "$session_start_lineno" ] && [ "$session_start_lineno" -lt "$send_lineno" ]; then
-    ok "aoe add, session start, send called in order"
+  if [ "$add_lineno" -lt "$session_start_lineno" ] && \
+     [ "$session_start_lineno" -lt "$capture_lineno" ] && \
+     [ "$capture_lineno" -lt "$send_lineno" ]; then
+    ok "aoe add, session start, capture poll, send called in order"
   else
-    bad "aoe add, session start, send call order (got log: $(cat "$AOE_LOG"))"
+    bad "aoe add, session start, capture poll, send call order (got log: $(cat "$AOE_LOG"))"
   fi
 }
 test_happy_path
@@ -187,6 +198,25 @@ test_send_failure() {
   fi
 }
 test_send_failure
+
+# ---------------------------------------------------------------------------
+echo "== readiness poll timeout =="
+
+test_ready_timeout() {
+  local out status
+  out="$(AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    AOE_STUB_CAPTURE_OUTPUT="booting..." \
+    AOE_CMD_READY_TIMEOUT=1 AOE_CMD_POLL_INTERVAL=0 \
+    run_aoe_cmd -d /tmp/proj -n audit /audit 2>&1)" && status=0 || status=$?
+  check "exits non-zero when TUI never becomes ready" "$status" 1
+  if grep -qc '^send' "$AOE_LOG"; then bad "aoe send should not be called when TUI never ready"; else ok "aoe send not called when TUI never ready"; fi
+  if printf '%s' "$out" | grep -q "never became ready"; then
+    ok "prints never-became-ready message"
+  else
+    bad "prints never-became-ready message (got: $out)"
+  fi
+}
+test_ready_timeout
 
 # ---------------------------------------------------------------------------
 echo
