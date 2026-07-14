@@ -181,17 +181,25 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-  lmstudio-qwen-load:
-    Label: com.$USER.lmstudio-qwen-load
+  mlx-qwen-server:
+    Label: com.$USER.mlx-qwen-server
     ProgramArguments:
-      - /bin/sh
-      - -c
-      - "for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do curl -sf http://127.0.0.1:1234/v1/models >/dev/null 2>&1 && break; sleep 3; done; $HOME/.lmstudio/bin/lms load qwen3-30b-a3b-instruct-2507 --context-length 40960 --parallel 2 -y 2>/dev/null; exit 0"
+      - $HOME/.local/share/mise/shims/mlx_lm.server
+      - --model
+      - mlx-community/Qwen3-30B-A3B-Instruct-2507-4bit
+      - --host
+      - 127.0.0.1
+      - --port
+      - "1234"
+      - --log-level
+      - INFO
     RunAtLoad: true
-    StandardOutPath: $HOME/Library/Logs/lmstudio-qwen-load.log
-    StandardErrorPath: $HOME/Library/Logs/lmstudio-qwen-load.error.log
+    KeepAlive: true
+    ProcessType: Interactive
+    StandardOutPath: $HOME/Library/Logs/mlx-qwen-server.log
+    StandardErrorPath: $HOME/Library/Logs/mlx-qwen-server.error.log
     EnvironmentVariables:
-      PATH: $HOME/.lmstudio/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
 
   naya-sync:

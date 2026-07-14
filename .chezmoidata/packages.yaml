@@ -130,7 +130,6 @@ packages:
     - name: claude-code
     - name: menumeters
     - name: tailscale-app
-    - name: lm-studio
     - name: obsidian
     - name: figma
 
@@ -219,4 +218,6 @@ packages:
     - name: pipx:grip
       version: latest
     - name: pipx:skills-ref
+      version: latest
+    - name: pipx:mlx-lm
       version: latest
