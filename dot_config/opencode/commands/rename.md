@@ -1,7 +1,7 @@
 ---
 description: Rename the current session with a more semantic title based on everything learned so far, using the small model
 agent: general
-model: mlx/qwen3-30b-a3b-instruct-2507
+model: mlx/default_model
 ---
 
 Rename THIS session with a title that reflects the actual work, now that more context exists than when the session was first auto-titled.

@@ -18,7 +18,11 @@ needed. mlx-lm is installed via the `pipx:mlx-lm` mise entry in packages.yaml
 and served directly by `mlx_lm.server`, managed by the `mlx-qwen-server`
 LaunchAgent (agents.yaml). The model is auto-downloaded from the HF hub cache
 on first server start — no manual download step needed.
-Reference in opencode as mlx/qwen3-30b-a3b-instruct-2507.
+Reference in opencode as mlx/default_model. Bare mlx_lm.server (0.31.3) ignores
+custom model-name aliases in requests — it only recognizes the literal string
+"default_model" (mapped to whatever --model CLI arg was passed) or the exact
+HF repo id, so the provider's model key must be "default_model", not a
+cosmetic alias.
 */ -}}
 {{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
        NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
@@ -180,7 +184,7 @@ Reference in opencode as mlx/qwen3-30b-a3b-instruct-2507.
     {{ includeTemplate "opencode-mcp-agents" (dict "agents" .mcp.agents) | indent 4 | trim }}
   },
   "model": "anthropic/claude-sonnet-5",
-  "small_model": "mlx/qwen3-30b-a3b-instruct-2507",
+  "small_model": "mlx/default_model",
   "compaction": {
     "prune": true
   },
@@ -212,7 +216,7 @@ Reference in opencode as mlx/qwen3-30b-a3b-instruct-2507.
         "baseURL": "http://127.0.0.1:1234/v1"
       },
       "models": {
-        "qwen3-30b-a3b-instruct-2507": {
+        "default_model": {
           "name": "qwen3-30b-a3b-instruct-2507",
           "limit": {
             "context": 40960,
