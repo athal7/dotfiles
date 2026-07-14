@@ -141,7 +141,7 @@ mouse = "auto"
 status_bar = "auto"
 
 [tools.lumen]
-command = "$HOME/.local/bin/lumen diff --watch --save-viewed main..-"
+command = "$HOME/.local/bin/lumen diff --watch --save-viewed --guide main..-"
 hotkey = "Alt+l"
 
 [updates]
