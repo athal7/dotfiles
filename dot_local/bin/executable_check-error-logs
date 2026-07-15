@@ -31,6 +31,20 @@ homebridge|bonjour-hap: send EADDRNOTAVAIL
 homebridge|request to https://oauth2\.googleapis\.com/token failed
 "
 
+# mlx-qwen-server: benign startup race — a previous mlx_lm.server process is
+# still slowly releasing port 1234 (unloading a 30B-param model) while
+# launchd's KeepAlive respawns a new instance every ~10s. The race self-heals
+# within ~90s once the old process fully exits, with zero service disruption
+# (RunAtLoad+KeepAlive guarantees eventual success). Confirmed no recurrence
+# in 29+ hours of normal operation since the one occurrence on 2026-07-14
+# (day this LaunchAgent was first deployed).
+EXCLUDE_PATTERNS="$EXCLUDE_PATTERNS
+mlx-qwen-server|OSError: \[Errno 48\] Address already in use
+mlx-qwen-server|RuntimeError: cannot schedule new futures after interpreter shutdown
+mlx-qwen-server|raise RuntimeError\('cannot schedule new futures after '
+mlx-qwen-server|Exception in thread Thread-1 \(_generate\):
+"
+
 # Return the exclusion pattern for a service name, or empty string if none.
 exclude_pattern_for() {
   svc="$1"
