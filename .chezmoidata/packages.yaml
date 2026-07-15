@@ -173,6 +173,8 @@ packages:
   skills:
     - repo: BRO3886/ical
       skill: ical-cli
+    - repo: athal7/opencode-permission-audit
+      skill: permission-audit
     - source: .opencode/skills
       match: openspec-*
 

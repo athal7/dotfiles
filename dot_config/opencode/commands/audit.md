@@ -75,18 +75,6 @@ LEFT JOIN edits e ON e.session_id=b.id
 LEFT JOIN tasks t ON t.session_id=b.id;
 SQL
 
-# Permission denials (friction vs enforcement)
-sqlite3 -readonly "$DB" <<SQL
-SELECT json_extract(data, '$.tool') AS tool,
-       SUBSTR(json_extract(data, '$.state.input.command'), 1, 80) AS command,
-       COUNT(*) AS denials
-FROM part
-WHERE json_extract(data, '$.type') = 'tool'
-  AND json_extract(data, '$.state.error') LIKE '%permission%'
-  AND time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
-GROUP BY tool, command ORDER BY denials DESC LIMIT 20;
-SQL
-
 # Interrupt rate by agent
 sqlite3 -readonly "$DB" <<SQL
 WITH interrupts AS (
@@ -113,6 +101,8 @@ FROM interrupts i LEFT JOIN totals t ON COALESCE(i.agent,'') = COALESCE(t.agent,
 GROUP BY i.agent ORDER BY pct DESC;
 SQL
 ```
+
+**Permission audit** — the `opencode-permission-log` plugin logs every permission-prompt reply to per-day JSON sidecar files. Load the `permission-audit` skill and run it for this project; fold its loosening-candidate, denial, friction, and policy-concern findings into this audit's report. Never auto-suggest loosening a policy-concern or ambiguous finding — confirm with the human first.
 
 **Config checks:**
 

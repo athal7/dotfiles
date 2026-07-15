@@ -23,6 +23,7 @@ Integration skills self-register their provided capabilities via `provides` in f
 External skills (installed via `gh skill install` from upstream maintainers) — see `.chezmoidata/packages.yaml` `skills:` block:
 
 - **ical-cli** ([BRO3886/ical](https://github.com/BRO3886/ical)) — macOS Calendar from the terminal
+- **permission-audit** ([athal7/opencode-permission-audit](https://github.com/athal7/opencode-permission-audit)) — detection-only audit of opencode permission-prompt replies, paired with the `opencode-permission-log` plugin
 
 The `openspec` CLI generates its skills (`openspec-explore`, `openspec-propose`, `openspec-apply-change`, `openspec-archive-change`) project-locally into `.opencode/skills/`. The skill-sync script mirrors them into the global skill dir so they're available outside this repo, version-matched to the installed CLI. Skills only — openspec slash-commands are not mirrored.
 
