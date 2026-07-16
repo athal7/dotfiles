@@ -33,6 +33,7 @@ Heuristics for what's hygiene-worthy:
 - A page whose title contains "(superseded)" or similar but that still exists in the tree rather than being deleted or archived.
 - Two top-level containers covering the same topic (e.g. two goals containers, two retrospectives containers) — a sign one is a stale duplicate that should be merged or removed.
 - A page that's obviously mis-parented — its content topic doesn't match its parent container (e.g. a meeting-agenda page filed under a policies/procedures container).
+- Before filing a hygiene candidate as a reminder to the user, check whether they plausibly have edit/delete authority over the page (are they the creator, or does the page sit in a section/space they own?). A page the user didn't create and doesn't own isn't an actionable reminder for them — filing it anyway just produces noise they can't act on. If ownership is unclear or the page belongs to someone else, skip filing it as a personal action item.
 
 This is not an exhaustive checklist — apply the heuristics to whatever the current page tree looks like rather than checking only for previously-found instances.
 

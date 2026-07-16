@@ -15,6 +15,8 @@ Dispatch the `zoom` subagent (`task` tool, `subagent_type: zoom`) with a prompt 
 
 The zoom subagent will call `search_meetings` over the window and `get_meeting_assets` per qualifying meeting, applying content priority (`summary_markdown` → `my_notes.content_markdown` → transcript items) internally.
 
+**Gotcha:** a default `search_meetings` call can silently miss real meetings that have no AI-generated summary but DO have substantive `my_notes` content — the search must be run (or re-run) with `include_zoom_my_notes: true` to surface these. A host-only, summary-only search will report "no actionable content" for a day that actually had real meetings with decisions/action items recorded only in My Notes. Always include this flag.
+
 ## Triage rules
 
 From the zoom subagent's returned summary, extract:
