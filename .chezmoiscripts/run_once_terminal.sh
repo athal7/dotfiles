@@ -21,6 +21,17 @@
 #    settings API rather than a raw plist edit, since com.apple.Terminal.plist
 #    is cfprefsd-managed and a direct write risks being silently clobbered;
 #    this requires Terminal.app to actually be running.
+#
+# 3. Nerd-Font-patch any Monaspace font a profile is set to. Terminal's font
+#    is user-configured to a plain Monaspace variant (e.g.
+#    MonaspaceNeon-Regular), but Starship's prompt icons and nvim-web-devicons'
+#    file-tree glyphs both render through Terminal's own font and need the
+#    Nerd-Font-patched glyph set to display correctly — neither dependent is
+#    Neovim-side config, both are downstream of whatever font Terminal itself
+#    uses. Non-destructive: only rewrites font names that already match the
+#    Monaspace family and aren't already NF-patched, so unrelated fonts
+#    (AndaleMono, Monaco, Courier, ...) and already-patched fonts are left
+#    alone. Implemented via osascript for the same reason as point 2 above.
 set -euo pipefail
 
 PLIST="$HOME/Library/Preferences/com.apple.Terminal.plist"
@@ -53,6 +64,37 @@ set_background_black() {
   fi
 }
 
+set_nerd_font() {
+  local profile="$1"
+
+  if [ "$can_set_background" != true ]; then
+    return 0
+  fi
+
+  local font
+  font="$(osascript -e "tell application \"Terminal\" to get font name of settings set \"$profile\"" 2>/dev/null)" || {
+    echo "terminal-nerd-font: WARN: osascript failed to read Terminal.app profile '$profile' font" >&2
+    return 0
+  }
+
+  # Only rewrite fonts that are plain (unpatched) Monaspace variants — leave
+  # already-NF fonts and unrelated fonts (AndaleMono, Monaco, Courier, ...)
+  # untouched.
+  if [[ ! "$font" =~ ^Monaspace([A-Za-z]+)-(.+)$ ]] || [[ "$font" == *NF* ]]; then
+    return 0
+  fi
+
+  local variant="${BASH_REMATCH[1]}"
+  local style="${BASH_REMATCH[2]}"
+  local new_font="Monaspace${variant}NF-${style}"
+
+  if osascript -e "tell application \"Terminal\" to set font name of settings set \"$profile\" to \"$new_font\"" >/dev/null 2>&1; then
+    echo "terminal-nerd-font: set Terminal.app profile '$profile' font to '$new_font'"
+  else
+    echo "terminal-nerd-font: WARN: osascript failed to set Terminal.app profile '$profile' font to '$new_font'" >&2
+  fi
+}
+
 # `tell application "Terminal"` auto-launches Terminal.app via Apple Events if
 # it isn't already running — an unwanted side effect during a possibly
 # headless/background chezmoi apply. Only attempt the background-color fix
@@ -78,4 +120,5 @@ while IFS= read -r profile; do
   [ -n "$profile" ] || continue
   set_meta_key "$profile"
   set_background_black "$profile"
+  set_nerd_font "$profile"
 done <<< "$profiles"

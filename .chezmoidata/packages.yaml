@@ -124,7 +124,7 @@ packages:
 
   casks:
     - name: gcloud-cli
-    - name: font-monaspace
+    - name: font-monaspace-nf
     - name: claude-code
     - name: menumeters
     - name: tailscale-app
