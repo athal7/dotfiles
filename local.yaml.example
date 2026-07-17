@@ -6,16 +6,12 @@
 # (GitHub Issues for issue tracking; no automated code review).
 #
 # Per-org keys:
-#   issues            : "linear" if the org uses Linear (anything else → default GitHub Issues)
-#   linear_workspace  : Linear workspace slug (from `linear auth list`) to use for this org's repos, if issues: linear
-#   linear_team       : Linear team key (from `linear team list --workspace <slug>`) to use for this org's repos
-#   automated_review  : config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
+#   issues           : "linear" if the org uses Linear (anything else → default GitHub Issues)
+#   automated_review : config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login : the GitHub user.login the bot posts as (used to filter PR review comments)
 orgs:
   your-work-org:
     issues: linear
-    linear_workspace: your-workspace-slug
-    linear_team: YOUR_TEAM
     automated_review:
       bot_login: copilot-pull-request-reviewer
 
