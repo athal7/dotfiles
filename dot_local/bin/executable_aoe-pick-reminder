@@ -1,15 +1,71 @@
 #!/usr/bin/env bash
-# aoe-pick-reminder — fuzzy-pick an open macOS Reminder via gum and copy a
-# formatted payload (including the exact `remindctl complete <id>` command to
-# mark it done) to the clipboard for pasting into a new aoe session.
+# aoe-pick-reminder — narrow to a scope (today/overdue/week/all-open/a
+# specific list), fuzzy-pick an open macOS Reminder within that scope via
+# gum, and copy a formatted payload (including the exact `remindctl complete
+# <id>` command to mark it done) to the clipboard for pasting into a new aoe
+# session.
 
 set -euo pipefail
 
-reminders_json=$(remindctl show open --json)
+# Stage 1: narrow scope down to a JSON array of reminders before handing off
+# to the existing fuzzy-picker stage below. Keeps "just search everything"
+# available as "All open" without making it the only option. Written flat
+# (not as functions returning JSON via command substitution) because `exit`
+# inside a `$(...)` subshell only kills the subshell, not this script — the
+# cancellation short-circuits below rely on running at top level.
+scope=$(gum choose --header "Pick a scope…" \
+  "Today" "Overdue" "This week" "All open" "By list…") || {
+  echo "aoe-pick-reminder: cancelled."
+  exit 0
+}
+
+if [ -z "$scope" ]; then
+  echo "aoe-pick-reminder: cancelled."
+  exit 0
+fi
+
+case "$scope" in
+  "Today")
+    reminders_json=$(remindctl show today --json)
+    ;;
+  "Overdue")
+    reminders_json=$(remindctl show overdue --json)
+    ;;
+  "This week")
+    reminders_json=$(remindctl show week --json)
+    ;;
+  "All open")
+    reminders_json=$(remindctl show open --json)
+    ;;
+  "By list…")
+    lists_json=$(remindctl list --json)
+    list_count=$(jq 'length' <<<"$lists_json")
+    if [ "$list_count" -eq 0 ]; then
+      echo "aoe-pick-reminder: no reminder lists found."
+      exit 0
+    fi
+
+    list_lines=$(jq -r '.[] | "\(.title) (\(.reminderCount) open)"' <<<"$lists_json")
+
+    list_selection=$(printf '%s\n' "$list_lines" | gum choose --header "Pick a list…") || {
+      echo "aoe-pick-reminder: cancelled."
+      exit 0
+    }
+
+    if [ -z "$list_selection" ]; then
+      echo "aoe-pick-reminder: cancelled."
+      exit 0
+    fi
+
+    list_title=$(sed -E 's/ \([0-9]+ open\)$//' <<<"$list_selection")
+
+    reminders_json=$(remindctl show open --list "$list_title" --json)
+    ;;
+esac
 
 count=$(jq 'length' <<<"$reminders_json")
 if [ "$count" -eq 0 ]; then
-  echo "aoe-pick-reminder: no open reminders."
+  echo "aoe-pick-reminder: no reminders in that scope."
   exit 0
 fi
 

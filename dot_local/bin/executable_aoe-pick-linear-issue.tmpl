@@ -13,6 +13,12 @@
 
 set -euo pipefail
 
+# An ambient LINEAR_API_KEY (from wherever the user's shell picked it up)
+# makes the `linear` CLI refuse to combine env-var auth with --workspace, so
+# strip it before any `linear` invocation to guarantee this script's own
+# --workspace-based auth flow always wins.
+unset LINEAR_API_KEY
+
 org_remote=$(git remote get-url origin 2>/dev/null || echo "")
 org=$(sed -E 's#^(git@github\.com:|https://github\.com/)([^/]+)/.*#\2#' <<<"$org_remote")
 
