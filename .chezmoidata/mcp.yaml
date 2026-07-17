@@ -66,7 +66,7 @@ mcp:
     - name: figma-desktop
       type: remote
       url: http://127.0.0.1:3845/mcp
-      enabled: false
+      enabled: true
   agents:
     - name: zoom
       description: "Reaches Zoom via Runlayer MCP (OAuth). Dispatched to fetch meeting summaries, transcripts, recordings. Returns a tight distilled summary, never raw dumps."

@@ -33,7 +33,7 @@ Each subagent owns exactly one procedure. You compose them; the high-level workf
 - **`explore`** — read-only gathering of **internal** context: codebase search and git history. "Where is X handled?" "How does Y work?" "Find all callers of Z." Use for any question that needs more than 2 read/grep/glob calls to answer.
 - **`scout`** — read-only **external** research: library/framework docs, dependency source and behavior, version constraints, changelogs, prior art. Use when the change touches unfamiliar libraries or external APIs.
 - **`plan`** — design and architecture reasoning. Send any design decision or tradeoff here; it returns a structured recommendation. Read-only — it does not edit.
-- **`qa`** — browser functional verification. Drives the running app via the Firefox MCP to verify UI/behavior against expected. Dispatch when a changeset touches user-facing views/flows. Read-only re: code.
+- **`qa`** — browser functional verification, plus visual-fidelity comparison against a linked Figma design (via the `figma-desktop` MCP) when one exists. Drives the running app via the Firefox MCP to verify UI/behavior against expected. Dispatch when a changeset touches user-facing views/flows. Read-only re: code.
 - **`build`** — the implementer. Code edits, test runs, TDD cycles, file writes. Dispatch with a scoped prompt and expect a tight summary back.
 - **`general`** — multi-step research or work that doesn't fit the above. Use when in doubt.
 

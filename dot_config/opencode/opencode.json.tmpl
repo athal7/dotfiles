@@ -125,7 +125,7 @@ cosmetic alias.
       }
     },
     "qa": {
-      "description": "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior. Read-only re: code.",
+      "description": "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior, and compares against a linked Figma design (figma-desktop MCP) when one exists. Read-only re: code.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-5",
       "prompt": "{file:./prompts/qa.md}",
@@ -134,7 +134,8 @@ cosmetic alias.
         "write": "deny"
       },
       "tools": {
-        "firefox-devtools_*": true
+        "firefox-devtools_*": true,
+        "figma-desktop_*": true
       }
     },
     "build": {
