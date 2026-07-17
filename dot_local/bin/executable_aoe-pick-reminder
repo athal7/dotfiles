@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# aoe-pick-reminder — fuzzy-pick an open macOS Reminder via gum and copy a
+# formatted payload (including the exact `remindctl complete <id>` command to
+# mark it done) to the clipboard for pasting into a new aoe session.
+
+set -euo pipefail
+
+reminders_json=$(remindctl show open --json)
+
+count=$(jq 'length' <<<"$reminders_json")
+if [ "$count" -eq 0 ]; then
+  echo "aoe-pick-reminder: no open reminders."
+  exit 0
+fi
+
+# Each picker line embeds an 8-char id prefix in brackets so the full record
+# can be recovered after gum hands back only the plain-text selection.
+picker_lines=$(jq -r '
+  .[] | "\(.title)  — due \(.dueDate // "no date")  [\(.id[0:8])]"
+' <<<"$reminders_json")
+
+selection=$(printf '%s\n' "$picker_lines" | gum filter --placeholder "Pick a reminder…") || {
+  echo "aoe-pick-reminder: cancelled."
+  exit 0
+}
+
+if [ -z "$selection" ]; then
+  echo "aoe-pick-reminder: cancelled."
+  exit 0
+fi
+
+prefix=$(sed -E 's/.*\[([0-9A-Fa-f]{8})\]$/\1/' <<<"$selection")
+
+record=$(jq --arg p "$prefix" '.[] | select(.id | startswith($p))' <<<"$reminders_json")
+
+if [ -z "$record" ]; then
+  echo "aoe-pick-reminder: could not find a reminder matching selection."
+  exit 0
+fi
+
+id=$(jq -r '.id' <<<"$record")
+title=$(jq -r '.title' <<<"$record")
+list_name=$(jq -r '.listName' <<<"$record")
+due_date=$(jq -r '.dueDate // "none"' <<<"$record")
+notes=$(jq -r '.notes // "" | if . == "" then "(none)" else . end' <<<"$record")
+
+payload=$(cat <<EOF
+Reminder: ${title}
+List: ${list_name}
+Due: ${due_date}
+Notes: ${notes}
+Reminder ID: ${id}
+
+When this work is complete, mark it done by running: remindctl complete ${id}
+EOF
+)
+
+printf '%s' "$payload" | pbcopy
+
+echo "Copied reminder \"${title}\" to clipboard."
+read -n 1 -s -r -p "Copied to clipboard. Press any key to close..."
+echo

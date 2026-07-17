@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# aoe-pick-linear-issue — fuzzy-pick an active-cycle Linear issue assigned to
+# you via gum and copy a formatted payload (including the exact `linear issue
+# update <id> --state Done` command) to the clipboard for pasting into a new
+# aoe session.
+#
+# Global config's team/sort defaults do NOT auto-resolve from an arbitrary
+# working directory, so --workspace/--cycle/--assignee/--team are passed
+# explicitly. Workspace/team are resolved per-repo from the GitHub org (this
+# repo is public — no personal/work Linear identifiers are hardcoded here;
+# see orgs.<org>.linear_workspace / orgs.<org>.linear_team in
+# .chezmoidata/local.yaml, documented in local.yaml.example).
+
+set -euo pipefail
+
+org_remote=$(git remote get-url origin 2>/dev/null || echo "")
+org=$(sed -E 's#^(git@github\.com:|https://github\.com/)([^/]+)/.*#\2#' <<<"$org_remote")
+
+case "$org" in
+{{- if hasKey . "orgs" }}
+{{- range $orgName, $cfg := .orgs }}
+{{- if and $cfg (kindIs "map" $cfg) (hasKey $cfg "linear_workspace") (hasKey $cfg "linear_team") }}
+  "{{ $orgName }}")
+    workspace="{{ $cfg.linear_workspace }}"
+    team="{{ $cfg.linear_team }}"
+    ;;
+{{- end }}
+{{- end }}
+{{- end }}
+  *)
+    echo "aoe-pick-linear-issue: no Linear workspace/team configured for GitHub org '${org:-<none>}'." >&2
+    echo "Add 'linear_workspace' and 'linear_team' under orgs.$org in your local .chezmoidata/local.yaml (see local.yaml.example)." >&2
+    exit 1
+    ;;
+esac
+
+assignee=$(linear auth whoami --workspace "$workspace" | awk -F': ' '/Display name/{print $2}')
+
+issues_json=$(linear issue query --workspace "$workspace" --cycle active --assignee "$assignee" --team "$team" --json --limit 50)
+
+# The query returns every state including completed/canceled; filter on the
+# stable state.type enum rather than the customizable state.name text.
+open_issues=$(jq '[.nodes[] | select(.state.type != "completed" and .state.type != "canceled")]' <<<"$issues_json")
+
+count=$(jq 'length' <<<"$open_issues")
+if [ "$count" -eq 0 ]; then
+  echo "aoe-pick-linear-issue: no open issues in the active cycle."
+  exit 0
+fi
+
+# identifier (e.g. 0DIN-1763) has no spaces, so it's safely recoverable as
+# the first whitespace-delimited token of the selected line.
+picker_lines=$(jq -r '.[] | "\(.identifier)  — \(.title)  — \(.state.name)"' <<<"$open_issues")
+
+selection=$(printf '%s\n' "$picker_lines" | gum filter --placeholder "Pick a Linear issue…") || {
+  echo "aoe-pick-linear-issue: cancelled."
+  exit 0
+}
+
+if [ -z "$selection" ]; then
+  echo "aoe-pick-linear-issue: cancelled."
+  exit 0
+fi
+
+identifier=$(awk '{print $1}' <<<"$selection")
+
+# The query's JSON output does not include description — fetch full detail.
+detail=$(linear issue view "$identifier" --workspace "$workspace" --json --no-comments)
+
+title=$(jq -r '.title' <<<"$detail")
+state_name=$(jq -r '.state.name' <<<"$detail")
+url=$(jq -r '.url' <<<"$detail")
+description=$(jq -r '.description // "" | if . == "" then "(none)" else . end' <<<"$detail")
+
+payload=$(cat <<EOF
+Linear Issue: ${identifier} — ${title}
+State: ${state_name}
+URL: ${url}
+Description:
+${description}
+
+When this work is complete, update status by running: linear issue update ${identifier} --workspace ${workspace} --state Done
+EOF
+)
+
+printf '%s' "$payload" | pbcopy
+
+echo "Copied issue \"${identifier}\" to clipboard."
+read -n 1 -s -r -p "Copied to clipboard. Press any key to close..."
+echo

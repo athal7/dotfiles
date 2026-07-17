@@ -10,6 +10,7 @@ packages:
     - athal7/tap
     - github/gh
     - jnsahaj/lumen
+    - schpet/tap
     - steipete/tap
 
   brews:
@@ -75,10 +76,20 @@ packages:
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
     - name: git-spice
+    - name: gum
     - name: jc
     - name: jq
     - name: k9s
     - name: kubernetes-cli
+    - name: schpet/tap/linear
+      permissions:
+        "linear issue list*": allow
+        "linear issue query*": allow
+        "linear issue view*": allow
+        "linear cycle*": allow
+        "linear team*": allow
+        "linear auth list*": allow
+        "linear *": ask
     - name: jnsahaj/lumen/lumen
     - name: macos-trash
     - name: mas

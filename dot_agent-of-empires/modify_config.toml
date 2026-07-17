@@ -142,7 +142,15 @@ status_bar = "auto"
 
 [tools.lumen]
 command = "ANTHROPIC_API_KEY=$(security find-generic-password -s chezmoi -a anthropic_api_key -w 2>/dev/null) $HOME/.local/bin/lumen --provider claude diff --watch --save-viewed --guide main..-"
-hotkey = "Alt+l"
+hotkey = "Alt+d"
+
+[tools.reminders]
+command = "$HOME/.local/bin/aoe-pick-reminder"
+hotkey = "Alt+r"
+
+[tools.linear]
+command = "$HOME/.local/bin/aoe-pick-linear-issue"
+hotkey = "Alt+i"
 
 [updates]
 auto_update_plugins = false

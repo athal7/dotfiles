@@ -27,8 +27,11 @@ repos:
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
-        # Exclude zsh scripts (shellcheck doesn't support zsh) and direnvrc
-        exclude: (direnvrc|reload-shell\.sh)$
+        # Exclude zsh scripts (shellcheck doesn't support zsh), direnvrc, and
+        # .tmpl files (raw Go-template control-flow syntax isn't valid bash
+        # pre-render; the chezmoi-templates hook below shellchecks the
+        # rendered output instead).
+        exclude: (direnvrc|reload-shell\.sh|\.tmpl)$
         args: [--shell=bash]
 
   # Chezmoi template validation
@@ -36,7 +39,12 @@ repos:
     hooks:
       - id: chezmoi-templates
         name: validate chezmoi templates
-        entry: bash -c 'src="$(git rev-parse --show-toplevel)"; for f in "$@"; do chezmoi execute-template -S "$src" < "$f" > /dev/null || exit 1; done' --
+        # Renders each .tmpl, then — since Go-template control-flow syntax
+        # embedded in a shell script isn't valid bash/sh/zsh pre-render, and
+        # the raw shellcheck hook above therefore excludes .tmpl files
+        # entirely — shellchecks the *rendered* output when it starts with a
+        # sh/bash/zsh shebang, so template-driven scripts still get linted.
+        entry: bash -c 'src="$(git rev-parse --show-toplevel)"; status=0; for f in "$@"; do rendered=$(chezmoi execute-template -S "$src" < "$f") || { status=1; continue; }; if head -1 <<<"$rendered" | grep -qE "^#!.*\b(ba|z)?sh\b"; then shellcheck --shell=bash --severity=error <(printf "%s\n" "$rendered") || status=1; fi; done; exit $status' --
         language: system
         files: \.tmpl$
         exclude: ^\.chezmoi\.toml\.tmpl$
