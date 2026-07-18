@@ -77,8 +77,16 @@
 # times out and the send never happens — the exit code alone tells the
 # caller whether the send actually landed.
 #
+# `-p PROFILE` selects which aoe profile (separate workspace with its own
+# sessions) the whole add→start→poll→send sequence runs against. All four
+# `aoe` subcommands this script calls (`add`, `session start`, `session
+# capture`, `send`) document `-p`/`--profile` with `[env:
+# AGENT_OF_EMPIRES_PROFILE=]` identically in their own --help output, so one
+# `export AGENT_OF_EMPIRES_PROFILE` near the top covers every call below —
+# no need to thread an explicit `-p` flag onto each one individually.
+#
 # Usage:
-#   aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE...
+#   aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] [-p PROFILE] MESSAGE...
 #
 # Env:
 #   AOE_CMD_READY_TIMEOUT   Max seconds to poll the pane for the ready marker
@@ -93,20 +101,22 @@
 set -eu
 
 usage() {
-  echo "Usage: aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE..." >&2
+  echo "Usage: aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] [-p PROFILE] MESSAGE..." >&2
 }
 
 dir=""
 name=""
 worktree=""
 new_branch=0
+profile=""
 
-while getopts "d:n:w:b" opt; do
+while getopts "d:n:w:bp:" opt; do
   case "$opt" in
     d) dir="$OPTARG" ;;
     n) name="$OPTARG" ;;
     w) worktree="$OPTARG" ;;
     b) new_branch=1 ;;
+    p) profile="$OPTARG" ;;
     *) usage; exit 1 ;;
   esac
 done
@@ -117,6 +127,14 @@ message="$*"
 if [ -z "$dir" ] || [ -z "$name" ] || [ -z "$message" ]; then
   usage
   exit 1
+fi
+
+# Applied via env var, not a per-call `-p`, per the confirmation above: all
+# four `aoe` subcommands called below honor AGENT_OF_EMPIRES_PROFILE
+# identically, so exporting it once here covers `aoe add`, `aoe session
+# start`, `aoe session capture`, and `aoe send` alike.
+if [ -n "$profile" ]; then
+  export AGENT_OF_EMPIRES_PROFILE="$profile"
 fi
 
 title="${name}-$(date +%Y%m%d-%H%M%S)"

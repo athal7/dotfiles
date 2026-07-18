@@ -19,14 +19,19 @@ bad()  { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 check(){ if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2')"; fi; }
 
 # Fake `aoe` binary: records every invocation (one line per call, tab-joined
-# args) to $AOE_LOG, then behaves per the AOE_STUB_* env vars so each test
-# can control `aoe add` / `aoe session start` / `aoe send` outcomes
-# independently.
+# args) to $AOE_LOG, and the value of AGENT_OF_EMPIRES_PROFILE seen at call
+# time (one line per call, in the same order — line N of $AOE_ENV_LOG
+# corresponds to line N of $AOE_LOG) to $AOE_ENV_LOG, so tests can assert
+# aoe-cmd's `-p PROFILE` handling reaches every `aoe` invocation without
+# disturbing the existing arg-based assertions on $AOE_LOG. Then behaves per
+# the AOE_STUB_* env vars so each test can control `aoe add` / `aoe session
+# start` / `aoe send` outcomes independently.
 STUB_BIN="$WORK/bin"
 mkdir -p "$STUB_BIN"
 cat > "$STUB_BIN/aoe" <<'STUB'
 #!/bin/sh
 { IFS='	'; echo "$*" >> "$AOE_LOG"; }
+printf '%s\n' "${AGENT_OF_EMPIRES_PROFILE:-}" >> "$AOE_ENV_LOG"
 if [ "$1" = "add" ]; then
   [ -n "${AOE_STUB_ADD_OUTPUT:-}" ] && printf '%s\n' "$AOE_STUB_ADD_OUTPUT"
   exit "${AOE_STUB_ADD_EXIT:-0}"
@@ -48,10 +53,12 @@ STUB
 chmod +x "$STUB_BIN/aoe"
 
 AOE_LOG="$WORK/aoe.log"
+AOE_ENV_LOG="$WORK/aoe-env.log"
 
 run_aoe_cmd() {
   : > "$AOE_LOG"
-  PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" \
+  : > "$AOE_ENV_LOG"
+  PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" AOE_ENV_LOG="$AOE_ENV_LOG" \
     AOE_CMD_READY_TIMEOUT="${AOE_CMD_READY_TIMEOUT:-5}" \
     AOE_CMD_POLL_INTERVAL="${AOE_CMD_POLL_INTERVAL:-0}" \
     AOE_STUB_ADD_OUTPUT="${AOE_STUB_ADD_OUTPUT:-}" \
@@ -73,7 +80,8 @@ run_aoe_cmd_split() {
   local stdout_file="$1" stderr_file="$2"
   shift 2
   : > "$AOE_LOG"
-  PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" \
+  : > "$AOE_ENV_LOG"
+  PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" AOE_ENV_LOG="$AOE_ENV_LOG" \
     AOE_CMD_READY_TIMEOUT="${AOE_CMD_READY_TIMEOUT:-5}" \
     AOE_CMD_POLL_INTERVAL="${AOE_CMD_POLL_INTERVAL:-0}" \
     AOE_STUB_ADD_OUTPUT="${AOE_STUB_ADD_OUTPUT:-}" \
@@ -316,6 +324,37 @@ test_ready_timeout() {
   fi
 }
 test_ready_timeout
+
+# ---------------------------------------------------------------------------
+echo "== profile flag (-p) =="
+
+test_profile_flag_applies_to_every_aoe_call() {
+  local status env_lines call_count
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -d /tmp/proj -n audit -p personal /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -p" "$status" 0
+
+  call_count="$(wc -l < "$AOE_LOG" | tr -d ' ')"
+  env_lines="$(sort -u "$AOE_ENV_LOG")"
+  check "AGENT_OF_EMPIRES_PROFILE is the only distinct value seen across all aoe calls" "$env_lines" "personal"
+
+  local set_count
+  set_count="$(grep -c '^personal$' "$AOE_ENV_LOG" || true)"
+  check "every aoe call (add, session start, capture, send) saw the profile env var" "$set_count" "$call_count"
+}
+test_profile_flag_applies_to_every_aoe_call
+
+test_no_profile_flag_leaves_env_unset_for_every_call() {
+  local status call_count unset_count
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -d /tmp/proj -n audit /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success without -p" "$status" 0
+
+  call_count="$(wc -l < "$AOE_LOG" | tr -d ' ')"
+  unset_count="$(grep -c '^$' "$AOE_ENV_LOG" || true)"
+  check "AGENT_OF_EMPIRES_PROFILE stays unset for every aoe call when -p is omitted" "$unset_count" "$call_count"
+}
+test_no_profile_flag_leaves_env_unset_for_every_call
 
 # ---------------------------------------------------------------------------
 echo

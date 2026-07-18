@@ -1,0 +1,21 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /*
+This is the profile-scoped config for aoe's "personal" profile (see
+openspec/changes/aoe-personal-work-profile-split). It only overrides
+[session].default_tool; every other setting falls back to aoe's own
+defaults/global config.
+
+The global config (dot_agent-of-empires/modify_config.toml) uses a
+modify-template so that live [app_state] drift written by aoe's runtime never
+gets baked into git history. The investigation in that change's tasks.md
+(1.1) found no config.toml at the profile level on this machine and no
+profile-scoped drift recorded anywhere — so there is nothing to pass through
+here today. This file is still a modify-template, rather than a plain
+chezmoi-managed file, purely to keep that seam available: if profile-level
+drift ever shows up, add a .chezmoi.stdin passthrough block here mirroring the
+one in the global config.
+*/ -}}
+{{- $static := fromToml `[session]
+default_tool = "pi"
+` -}}
+{{- $static | toToml -}}
