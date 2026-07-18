@@ -45,6 +45,27 @@ mlx-qwen-server|raise RuntimeError\('cannot schedule new futures after '
 mlx-qwen-server|Exception in thread Thread-1 \(_generate\):
 "
 
+# mlx-qwen-server: two classes of upstream/library noise from mlx_lm.server,
+# neither indicating a defect in this repo.
+#
+# 1. "tool text was likely truncated mid-generation" — raised by
+#    ToolCallFormatter.__call__ in mlx_lm/server.py (lines 74-91, from the
+#    mlx-lm pip package). It deliberately catches (ValueError,
+#    JSONDecodeError) from the tool parser, logs a warning, and continues —
+#    graceful degradation when a client's tool-call generation gets truncated
+#    (e.g. a request-level max_tokens cutoff). Not fatal.
+# 2. "Exception occurred during processing of request..." /
+#    "BrokenPipeError: [Errno 32] Broken pipe" — Python stdlib
+#    socketserver.BaseServer.handle_error's default handler ("print a
+#    traceback and continue"), triggered whenever an HTTP client disconnects
+#    mid-response. Standard library boilerplate, not mlx_lm-specific. Server
+#    keeps running.
+EXCLUDE_PATTERNS="$EXCLUDE_PATTERNS
+mlx-qwen-server|tool text was likely truncated mid-generation
+mlx-qwen-server|Exception occurred during processing of request from
+mlx-qwen-server|BrokenPipeError: \[Errno 32\] Broken pipe
+"
+
 # Return the exclusion pattern for a service name, or empty string if none.
 exclude_pattern_for() {
   svc="$1"
