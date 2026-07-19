@@ -13,6 +13,48 @@
 # <true/>/<false/>. ProgramArguments are always strings, so numeric args
 # (timeouts, ports) must be quoted.
 launchagents:
+  aoe-serve-personal:
+    Label: com.$USER.aoe-serve-personal
+    ProgramArguments:
+      - /opt/homebrew/bin/aoe
+      - serve
+      - -p
+      - personal
+      - --host
+      - 127.0.0.1
+      - --port
+      - "4098"
+      - --no-auth
+    RunAtLoad: true
+    KeepAlive: true
+    ProcessType: Interactive
+    StandardOutPath: $HOME/Library/Logs/aoe-serve-personal.log
+    StandardErrorPath: $HOME/Library/Logs/aoe-serve-personal.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      HOME: $HOME
+
+  aoe-serve-work:
+    Label: com.$USER.aoe-serve-work
+    ProgramArguments:
+      - /opt/homebrew/bin/aoe
+      - serve
+      - -p
+      - work
+      - --host
+      - 127.0.0.1
+      - --port
+      - "4097"
+      - --no-auth
+    RunAtLoad: true
+    KeepAlive: true
+    ProcessType: Interactive
+    StandardOutPath: $HOME/Library/Logs/aoe-serve-work.log
+    StandardErrorPath: $HOME/Library/Logs/aoe-serve-work.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      HOME: $HOME
+
   audit:
     Label: com.$USER.audit
     ProgramArguments:
