@@ -23,3 +23,13 @@ brew {{ .name | quote }}
 cask {{ .name | quote }}
 {{ end -}}
 EOF
+
+# Install every tool declared in the mise: list (rendered into
+# ~/.config/mise/config.toml by dot_config/mise/config.toml.tmpl). Listing
+# versions here as comments makes this script's rendered content change
+# whenever the mise: list changes, which is what makes chezmoi re-run it.
+{{ range .packages.mise -}}
+# - {{ .name }}@{{ .version }}
+{{ end -}}
+mise install
+mise reshim
