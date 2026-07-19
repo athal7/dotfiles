@@ -2,9 +2,14 @@
 {{- /*
 This is the profile-scoped config for aoe's "personal" profile (see
 openspec/changes/aoe-personal-work-profile-split). It overrides
-[session].default_tool and [session].agent_extra_args (pi launches with
---no-skills by default here); every other setting falls back to aoe's own
-defaults/global config.
+[session].default_tool and [session].agent_command_override (pi launches
+with --no-skills by default here); every other setting falls back to aoe's
+own defaults/global config.
+
+agent_command_override, not agent_extra_args, is what makes --no-skills
+apply in structured/ACP-view sessions: agent_extra_args is a terminal-view-
+only mechanism in aoe and is silently ignored in structured/ACP-view
+sessions, whereas agent_command_override is honored in both view modes.
 
 The global config (dot_agent-of-empires/modify_config.toml) uses a
 modify-template so that live [app_state] drift written by aoe's runtime never
@@ -18,6 +23,6 @@ one in the global config.
 */ -}}
 {{- $static := fromToml `[session]
 default_tool = "pi"
-agent_extra_args = { pi = "--no-skills" }
+agent_command_override = { pi = "pi --no-skills" }
 ` -}}
 {{- $static | toToml -}}
