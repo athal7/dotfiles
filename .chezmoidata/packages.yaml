@@ -211,6 +211,12 @@ packages:
     # plugin array; declared here for the repo's package-registry convention).
     - name: npm:@tarquinen/opencode-dcp
       version: "3.1.12"
+    # ACP adapter + coding agent needed for the `personal` aoe profile's
+    # default tool (`pi`) to render in aoe's structured view.
+    - name: npm:pi-acp
+      version: latest
+    - name: npm:@earendil-works/pi-coding-agent
+      version: latest
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema
