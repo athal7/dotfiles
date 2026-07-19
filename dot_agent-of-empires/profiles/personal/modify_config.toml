@@ -1,8 +1,9 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- /*
 This is the profile-scoped config for aoe's "personal" profile (see
-openspec/changes/aoe-personal-work-profile-split). It only overrides
-[session].default_tool; every other setting falls back to aoe's own
+openspec/changes/aoe-personal-work-profile-split). It overrides
+[session].default_tool and [session].agent_extra_args (pi launches with
+--no-skills by default here); every other setting falls back to aoe's own
 defaults/global config.
 
 The global config (dot_agent-of-empires/modify_config.toml) uses a
@@ -17,5 +18,6 @@ one in the global config.
 */ -}}
 {{- $static := fromToml `[session]
 default_tool = "pi"
+agent_extra_args = { pi = "--no-skills" }
 ` -}}
 {{- $static | toToml -}}
