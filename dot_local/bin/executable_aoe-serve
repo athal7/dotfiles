@@ -1,0 +1,19 @@
+#!/bin/sh
+# aoe serve launcher. No passphrase: the access boundary is tailnet
+# membership itself — only devices on the owner's tailnet can reach the
+# tailscale-serve-aoe LaunchAgent's endpoint at all, so an app-level auth
+# wall on top of that is redundant. The tailnet MagicDNS hostname is derived
+# live via the tailscale CLI rather than prompted for and cached, so this
+# script needs no chezmoi templating (plain script, not a .tmpl) and no
+# internal hostname is committed to this public repo. If tailscale is
+# down/logged-out, TSHOST comes back empty and the daemon still starts
+# fine for local use — it just won't be tailnet-reachable.
+TSHOST=$(/opt/homebrew/bin/tailscale status --json | /opt/homebrew/bin/jq -r '.Self.DNSName // empty')
+TSHOST=${TSHOST%.}
+
+set -- --host 127.0.0.1 --port 4097 --no-auth --behind-proxy
+if [ -n "$TSHOST" ]; then
+  set -- "$@" --allowed-host "$TSHOST" --allowed-origin "https://$TSHOST:4097"
+fi
+
+exec /opt/homebrew/bin/aoe serve -p personal "$@"

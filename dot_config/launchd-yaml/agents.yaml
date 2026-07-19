@@ -16,23 +16,26 @@ launchagents:
   aoe-serve:
     Label: com.$USER.aoe-serve
     ProgramArguments:
-      - /opt/homebrew/bin/aoe
-      - serve
-      - -p
-      - personal
-      - --host
-      - 127.0.0.1
-      - --port
-      - "4097"
-      - --no-auth
+      - $HOME/.local/bin/aoe-serve
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
     StandardOutPath: $HOME/Library/Logs/aoe-serve.log
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
     EnvironmentVariables:
-      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
+
+  tailscale-serve-aoe:
+    Label: com.$USER.tailscale-serve-aoe
+    ProgramArguments:
+      - /Applications/Tailscale.app/Contents/MacOS/Tailscale
+      - serve
+      - --bg
+      - --https=4097
+      - http://127.0.0.1:4097
+    RunAtLoad: true
+    StandardOutPath: $HOME/Library/Logs/tailscale-serve-aoe.log
+    StandardErrorPath: $HOME/Library/Logs/tailscale-serve-aoe.error.log
 
   audit:
     Label: com.$USER.audit
