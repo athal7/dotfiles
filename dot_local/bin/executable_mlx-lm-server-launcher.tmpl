@@ -1,0 +1,57 @@
+#!{{ .chezmoi.homeDir }}/.local/share/mise/installs/pipx-mlx-lm/latest/mlx-lm/bin/python
+"""Launcher for mlx_lm.server that works around the IOGPUFamily residency-race
+kernel panic (IOGPUMemory.cpp:550) seen on M4 Pro/48GB under mlx-lm's default
+wired-memory pinning.
+
+mlx_lm.server (and mlx_lm.generate) call mx.set_wired_limit() to pin ~75% of
+RAM as non-swappable GPU working set, then keep re-touching that pin during
+batched serving. That continuous residency churn is the leading theory for
+the panic. Monkeypatching set_wired_limit to a no-op before mlx_lm.server is
+imported disables the pinning without touching mlx-lm's (pipx-installed,
+third-party) source.
+
+Also runs a background thread that periodically logs GPU memory stats, as a
+diagnostic aid for correlating memory trends with future panics. This is
+NOT the admission-control patch from stalled mlx-lm PR #948
+(--max-active-kv-bytes / --max-active-memory-bytes via mx.get_active_memory()
+checks per-request) — that patches mlx-lm internals directly, and mlx-lm is
+pipx-installed third-party code here, not vendored, so patching its admission
+logic in place would be fragile against every version upgrade. This is just
+observability: log the same underlying mx.get_active_memory()/
+get_peak_memory() numbers on a timer so a panic can be correlated after the
+fact with the memory trend that preceded it.
+"""
+import logging
+import threading
+import time
+
+import mlx.core as mx
+
+mx.set_wired_limit = lambda *a, **k: 0  # no-op: disable wired-memory pinning (workaround for IOGPUFamily panic)
+
+MEMORY_LOG_INTERVAL_SECONDS = 30
+
+
+def _log_memory_forever():
+    logger = logging.getLogger("mlx-lm-server-launcher")
+    while True:
+        time.sleep(MEMORY_LOG_INTERVAL_SECONDS)
+        active_bytes = mx.get_active_memory()
+        peak_bytes = mx.get_peak_memory()
+        logger.info(
+            "MEMORY_TREND active_bytes=%d peak_bytes=%d",
+            active_bytes,
+            peak_bytes,
+        )
+
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    threading.Thread(target=_log_memory_forever, daemon=True).start()
+
+    from mlx_lm.server import main
+
+    main()

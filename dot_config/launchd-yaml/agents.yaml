@@ -214,7 +214,16 @@ launchagents:
   mlx-qwen-server:
     Label: com.$USER.mlx-qwen-server
     ProgramArguments:
-      - $HOME/.local/share/mise/shims/mlx_lm.server
+      # Runs through a launcher shim (dot_local/bin/executable_mlx-lm-server-launcher.tmpl)
+      # instead of the bare mlx_lm.server mise shim: it monkeypatches
+      # mx.set_wired_limit() to a no-op before importing mlx_lm.server, to
+      # work around a recurring IOGPUFamily residency-race kernel panic
+      # (IOGPUMemory.cpp:550) — mlx_lm.server pins ~75% of RAM as
+      # non-swappable GPU working set via set_wired_limit() and keeps
+      # re-touching that pin during batched serving, the leading theory for
+      # the panic. It also logs periodic GPU memory stats for correlating
+      # future panics with the memory trend leading up to them.
+      - $HOME/.local/bin/mlx-lm-server-launcher
       - --model
       - mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit
       - --host
@@ -223,16 +232,14 @@ launchagents:
       - "1234"
       - --log-level
       - INFO
-      # Concurrency: cap at 2 concurrent requests so multiple pi sessions
-      # don't starve each other (and the rest of the system) during Zoom.
+      # Concurrency: dropped to 1 (was 2) as a diagnostic/mitigation for the
+      # same IOGPUFamily panic. mlx#3866 implicates mid-batch admission of
+      # varying-length requests as a reliable trigger; serializing to 1
+      # concurrent request avoids that admission path entirely.
       - --decode-concurrency
-      - "2"
+      - "1"
       - --prompt-concurrency
-      - "2"
-      # KV cache: cap total cache at 8 GB to prevent runaway memory growth
-      # when multiple sessions pile up context.
-      - --prompt-cache-bytes
-      - "8589934592"
+      - "1"
       # Cap generation length to prevent runaway output.
       - --max-tokens
       - "2048"
