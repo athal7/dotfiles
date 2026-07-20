@@ -223,6 +223,19 @@ launchagents:
       - "1234"
       - --log-level
       - INFO
+      # Concurrency: cap at 2 concurrent requests so multiple pi sessions
+      # don't starve each other (and the rest of the system) during Zoom.
+      - --decode-concurrency
+      - "2"
+      - --prompt-concurrency
+      - "2"
+      # KV cache: cap total cache at 8 GB to prevent runaway memory growth
+      # when multiple sessions pile up context.
+      - --prompt-cache-bytes
+      - "8589934592"
+      # Cap generation length to prevent runaway output.
+      - --max-tokens
+      - "2048"
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
