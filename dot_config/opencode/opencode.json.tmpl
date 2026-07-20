@@ -7,22 +7,6 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   - MCP server connections and their optional wrapping subagents (zoom, slack, atlassian, github, google, linear) — registry-driven from `.chezmoidata/mcp.yaml`, rendered via the `opencode-mcp-servers` / `opencode-mcp-tools` / `opencode-mcp-agents` template partials. Adding a "reach service X via MCP" subagent is a registry entry plus a hand-authored prompt at prompts/<agent>.md
   - Plugin wiring (skill injection, custom commands)
   - Agent-specific permission and skill overrides (lead, plan, qa, build, explore, scout, general)
-
-Local model setup: mlx-lm serves the non-thinking MLX Mixture-of-Experts
-model Qwen3-30B-A3B-Instruct-2507 (4-bit MLX) for agentic coding and the kb
-meeting pipeline. It is also wired as opencode's `small_model`, so it powers
-session-title generation, the `/rename` command (commands/rename.md +
-plugins/session-rename.ts), and project-copy naming. It never emits <think>
-blocks, so no thinking-suppression is
-needed. mlx-lm is installed via the `pipx:mlx-lm` mise entry in packages.yaml
-and served directly by `mlx_lm.server`, managed by the `mlx-qwen-server`
-LaunchAgent (agents.yaml). The model is auto-downloaded from the HF hub cache
-on first server start — no manual download step needed.
-Reference in opencode as mlx/default_model. Bare mlx_lm.server (0.31.3) ignores
-custom model-name aliases in requests — it only recognizes the literal string
-"default_model" (mapped to whatever --model CLI arg was passed) or the exact
-HF repo id, so the provider's model key must be "default_model", not a
-cosmetic alias.
 */ -}}
 {{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
        NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
@@ -219,7 +203,7 @@ cosmetic alias.
       },
       "models": {
         "default_model": {
-          "name": "qwen3-30b-a3b-instruct-2507",
+          "name": "qwen3.6-35b-a3b-optiq",
           "limit": {
             "context": 40960,
             "output": 8192
