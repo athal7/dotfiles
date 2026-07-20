@@ -1,0 +1,13 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $token := (output "gh" "auth" "token" | trim) -}}
+{
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer {{ $token }}"
+      }
+    }
+  }
+}
