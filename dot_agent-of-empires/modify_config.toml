@@ -37,7 +37,7 @@ persist_sessions = true
 
 [diff]
 context_lines = 3
-split_view = true
+split_view = false
 
 [hooks]
 
@@ -141,7 +141,7 @@ mouse = "auto"
 status_bar = "auto"
 
 [tools.lumen]
-command = "ANTHROPIC_API_KEY=$(security find-generic-password -s chezmoi -a anthropic_api_key -w 2>/dev/null) $HOME/.local/bin/lumen --provider claude diff --watch --save-viewed --guide main..-"
+command = "ANTHROPIC_API_KEY=$(security find-generic-password -s chezmoi -a anthropic_api_key -w 2>/dev/null) $HOME/.local/bin/lumen --provider claude diff --watch --save-viewed --guide --wrap main..-"
 hotkey = "Alt+l"
 
 [updates]
