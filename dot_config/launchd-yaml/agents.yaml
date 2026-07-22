@@ -13,30 +13,6 @@
 # <true/>/<false/>. ProgramArguments are always strings, so numeric args
 # (timeouts, ports) must be quoted.
 launchagents:
-  aoe-serve:
-    Label: com.$USER.aoe-serve
-    ProgramArguments:
-      - $HOME/.local/bin/aoe-serve
-    RunAtLoad: true
-    KeepAlive: true
-    ProcessType: Interactive
-    StandardOutPath: $HOME/Library/Logs/aoe-serve.log
-    StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
-    EnvironmentVariables:
-      HOME: $HOME
-
-  tailscale-serve-aoe:
-    Label: com.$USER.tailscale-serve-aoe
-    ProgramArguments:
-      - /Applications/Tailscale.app/Contents/MacOS/Tailscale
-      - serve
-      - --bg
-      - --https=4097
-      - http://127.0.0.1:4097
-    RunAtLoad: true
-    StandardOutPath: $HOME/Library/Logs/tailscale-serve-aoe.log
-    StandardErrorPath: $HOME/Library/Logs/tailscale-serve-aoe.error.log
-
   audit:
     Label: com.$USER.audit
     ProgramArguments:
