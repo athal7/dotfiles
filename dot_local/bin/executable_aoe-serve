@@ -16,4 +16,4 @@ if [ -n "$TSHOST" ]; then
   set -- "$@" --allowed-host "$TSHOST" --allowed-origin "https://$TSHOST:4097"
 fi
 
-exec /opt/homebrew/bin/aoe serve -p personal "$@"
+exec /opt/homebrew/bin/aoe serve "$@"

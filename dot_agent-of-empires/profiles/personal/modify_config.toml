@@ -1,5 +1,0 @@
-{{- /* chezmoi:modify-template */ -}}
-{{- $static := fromToml `[session]
-default_tool = "pi"
-` -}}
-{{- $static | toToml -}}

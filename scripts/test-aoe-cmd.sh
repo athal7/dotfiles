@@ -331,15 +331,15 @@ echo "== profile flag (-p) =="
 test_profile_flag_applies_to_every_aoe_call() {
   local status env_lines call_count
   AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
-    run_aoe_cmd -d /tmp/proj -n audit -p personal /audit >/dev/null 2>&1 && status=0 || status=$?
+    run_aoe_cmd -d /tmp/proj -n audit -p test-profile /audit >/dev/null 2>&1 && status=0 || status=$?
   check "exits 0 on success with -p" "$status" 0
 
   call_count="$(wc -l < "$AOE_LOG" | tr -d ' ')"
   env_lines="$(sort -u "$AOE_ENV_LOG")"
-  check "AGENT_OF_EMPIRES_PROFILE is the only distinct value seen across all aoe calls" "$env_lines" "personal"
+  check "AGENT_OF_EMPIRES_PROFILE is the only distinct value seen across all aoe calls" "$env_lines" "test-profile"
 
   local set_count
-  set_count="$(grep -c '^personal$' "$AOE_ENV_LOG" || true)"
+  set_count="$(grep -c '^test-profile$' "$AOE_ENV_LOG" || true)"
   check "every aoe call (add, session start, capture, send) saw the profile env var" "$set_count" "$call_count"
 }
 test_profile_flag_applies_to_every_aoe_call
