@@ -1,0 +1,48 @@
+{{- $bp := .bashPermissions -}}
+{{- $spec := $bp.agents.global -}}
+{{- $bash := dict "*" $spec.base -}}
+{{- range $name := $spec.lists -}}
+  {{- range $k, $v := (index $bp.lists $name) -}}
+    {{- if not (hasKey $bash $k) }}{{ $_ := set $bash $k $v }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- if $spec.guardrails -}}
+  {{- range $k, $v := $bp.guardrails -}}{{ if not (hasKey $bash $k) }}{{ $_ := set $bash $k $v }}{{ end }}{{- end -}}
+{{- end -}}
+{{- if $spec.packages -}}
+  {{- range $list := .packages -}}
+    {{- if kindIs "slice" $list -}}
+      {{- range $entry := $list -}}
+        {{- if kindIs "map" $entry -}}
+          {{- $perms := index $entry "permissions" -}}
+          {{- if $perms -}}
+            {{- range $pattern, $action := $perms -}}
+              {{- if not (hasKey $bash $pattern) }}{{ $_ := set $bash $pattern $action }}{{ end -}}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{
+  "permission": {
+    "*": {{ .permissions.default | quote }},
+    "skill": {{ .permissions.skill | quote }},
+    "external_directory": {{ .permissions.external_directory | toPrettyJson | indent 4 | trim }},
+    "bash": {{ $bash | toPrettyJson | indent 4 | trim }},
+    "mcp": {
+      "*": "ask",
+      "mcp_status": "allow",
+      "mcp_list": "allow",
+      "mcp_search": "allow",
+      "mcp_describe": "allow"
+    },
+    "path": {
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.pem": "deny",
+      "id_rsa*": "deny"
+    }
+  }
+}

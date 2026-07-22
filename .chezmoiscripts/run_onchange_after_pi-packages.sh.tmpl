@@ -1,0 +1,16 @@
+#!/bin/bash
+# pi_packages: {{ .packages.pi_packages | toJson | sha256sum }}
+
+set -uo pipefail
+
+if ! command -v pi >/dev/null 2>&1; then
+  echo "pi not found on PATH — skipping pi package install/update" >&2
+  exit 0
+fi
+
+{{ range .packages.pi_packages -}}
+echo "installing/updating pi package {{ .id }} ({{ .source }})..."
+if ! pi install {{ .source }} < /dev/null; then
+  echo "WARN: pi install {{ .source }} failed" >&2
+fi
+{{ end -}}

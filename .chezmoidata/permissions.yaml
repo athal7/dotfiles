@@ -1,0 +1,18 @@
+permissions:
+  default: ask
+  skill: allow
+  external_directory:
+    "*": ask
+    "~/code/**": allow
+    "~/.local/**": allow
+    "~/.agents/skills/**": allow
+    "~/.config/**": allow
+    "~/.cache/**": allow
+    "~/.agent-of-empires/**": allow
+    "~/Downloads/**": allow
+    "~/Library/LaunchAgents/**": allow
+    "~/Library/Logs/**": allow
+    "/tmp/**": allow
+    "/private/tmp/**": allow
+    "/var/folders/*/*/T/**": allow
+    "/private/var/folders/*/*/T/**": allow

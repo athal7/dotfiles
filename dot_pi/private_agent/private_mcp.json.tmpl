@@ -1,0 +1,22 @@
+{{- $out := dict -}}
+{{- range $s := .mcp.servers -}}
+  {{- $targets := default (list "opencode" "pi") (index $s "targets") -}}
+  {{- if has "pi" $targets -}}
+    {{- $obj := dict "lifecycle" "lazy" -}}
+    {{- if eq $s.type "local" -}}
+      {{- $_ := set $obj "command" (first $s.command) -}}
+      {{- $_ := set $obj "args" (rest $s.command) -}}
+    {{- else if hasKey $s "runlayer" -}}
+      {{- $_ := set $obj "url" (index $.runlayer (printf "%s_mcp_url" $s.runlayer)) -}}
+    {{- else -}}
+      {{- $_ := set $obj "url" $s.url -}}
+    {{- end -}}
+    {{- if eq (default "" (index $s "auth")) "gh-token" -}}
+      {{- $_ := set $obj "headers" (dict "Authorization" (printf "Bearer %s" (output "gh" "auth" "token" | trim))) -}}
+    {{- end -}}
+    {{- $_ := set $out $s.name $obj -}}
+  {{- end -}}
+{{- end -}}
+{
+  "mcpServers": {{ $out | toPrettyJson | indent 2 | trim }}
+}

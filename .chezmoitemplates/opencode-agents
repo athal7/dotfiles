@@ -1,0 +1,50 @@
+{{- $items := list -}}
+{{- range $a := .agents -}}
+  {{- if has "opencode" $a.enabled -}}
+    {{- if hasKey $a "namespaces" -}}
+      {{- $obj := dict
+            "description" $a.description
+            "mode" "subagent"
+            "model" (default "anthropic/claude-sonnet-4-6" (index $a "model"))
+            "prompt" (printf "{file:~/.agents/prompts/%s.md}" $a.name) -}}
+      {{- $tools := dict -}}
+      {{- range $ns := $a.namespaces -}}{{- $_ := set $tools (printf "%s_*" $ns) true -}}{{- end -}}
+      {{- $_ := set $obj "tools" $tools -}}
+      {{- $perm := dict -}}
+      {{- range $ns := $a.namespaces -}}
+        {{- range $vb := (default (list) (index $a "write_verbs")) -}}
+          {{- $_ := set $perm (printf "%s_%s*" $ns $vb) "ask" -}}
+        {{- end -}}
+      {{- end -}}
+      {{- range $p := (default (list) (index $a "write_patterns")) -}}
+        {{- $_ := set $perm $p "ask" -}}
+      {{- end -}}
+      {{- $_ := set $perm "bash" "deny" -}}
+      {{- $_ := set $perm "skill" "deny" -}}
+      {{- $_ := set $obj "permission" $perm -}}
+      {{- $items = append $items (printf "%s: %s" ($a.name | quote) ($obj | toPrettyJson)) -}}
+    {{- else -}}
+      {{- $obj := dict -}}
+      {{- if hasKey $a "description" -}}{{- $_ := set $obj "description" $a.description -}}{{- end -}}
+      {{- if hasKey $a "mode" -}}{{- $_ := set $obj "mode" $a.mode -}}{{- end -}}
+      {{- $_ := set $obj "model" $a.model -}}
+      {{- if hasKey $a "prompt" -}}{{- $_ := set $obj "prompt" $a.prompt -}}{{- end -}}
+      {{- if hasKey $a "steps" -}}{{- $_ := set $obj "steps" $a.steps -}}{{- end -}}
+      {{- if hasKey $a "permission" -}}
+        {{- $perm := dict -}}
+        {{- range $k, $v := $a.permission -}}
+          {{- if and (kindIs "map" $v) (hasKey $v "compose") -}}
+            {{- $bashJson := includeTemplate "opencode-bash" (dict "spec" (index $.bp.agents $v.compose) "lists" $.bp.lists "guardrails" $.bp.guardrails "packages" $.packages) -}}
+            {{- $_ := set $perm $k ($bashJson | fromJson) -}}
+          {{- else -}}
+            {{- $_ := set $perm $k $v -}}
+          {{- end -}}
+        {{- end -}}
+        {{- $_ := set $obj "permission" $perm -}}
+      {{- end -}}
+      {{- if hasKey $a "tools" -}}{{- $_ := set $obj "tools" $a.tools -}}{{- end -}}
+      {{- $items = append $items (printf "%s: %s" ($a.name | quote) ($obj | toPrettyJson)) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- join ",\n" $items -}}

@@ -1,13 +1,3 @@
-{{- /*
-opencode.json — OpenCode agent configuration.
-
-Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
-  - Model selection (cloud and local via mlx-lm)
-  - Bash permissions: default-allow with curated ask/deny guardrails. Guardrails (system-destructive commands) and named allow-lists live in `.chezmoidata/bash-permissions.yaml`, rendered per-agent via the `opencode-bash` template partial; package-specific gates still live per-tool in packages.yaml. The `lead` agent defaults to `deny` (forcing delegation) with a read-only diagnostics allow-list; other subagents inherit the permissive global block
-  - MCP server connections and their optional wrapping subagents (zoom, slack, atlassian, github, google, linear) — registry-driven from `.chezmoidata/mcp.yaml`, rendered via the `opencode-mcp-servers` / `opencode-mcp-tools` / `opencode-mcp-agents` template partials. Adding a "reach service X via MCP" subagent is a registry entry plus a hand-authored prompt at prompts/<agent>.md
-  - Plugin wiring (skill injection, custom commands)
-  - Agent-specific permission and skill overrides (lead, plan, qa, build, explore, scout, general)
-*/ -}}
 {{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
        NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
        from .chezmoidata/bash-permissions.yaml via the opencode-bash partial. */ -}}
@@ -48,25 +38,10 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
     "opencode-permission-log"
   ],
   "permission": {
-    "skill": "allow",
+    "skill": {{ .permissions.skill | quote }},
     "lsp": "allow",
     "websearch": "allow",
-    "external_directory": {
-      "*": "ask",
-      "~/code/**": "allow",
-      "~/.local/**": "allow",
-      "~/.agents/skills/**": "allow",
-      "~/.config/**": "allow",
-      "~/.cache/**": "allow",
-      "~/.agent-of-empires/**": "allow",
-      "~/Downloads/**": "allow",
-      "~/Library/LaunchAgents/**": "allow",
-      "~/Library/Logs/**": "allow",
-      "/tmp/**": "allow",
-      "/private/tmp/**": "allow",
-      "/var/folders/*/*/T/**": "allow",
-      "/private/var/folders/*/*/T/**": "allow"
-    },
+    "external_directory": {{ .permissions.external_directory | toPrettyJson | indent 4 | trim }},
     "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.global "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 4 | trim }}
   },
   {{- /*
@@ -84,90 +59,7 @@ Generates ~/.config/opencode/opencode.json via chezmoi. Covers:
   the top-level default is opus.
   */ -}}
   "agent": {
-    "lead": {
-      "mode": "primary",
-      "model": "anthropic/claude-sonnet-5",
-      "prompt": "{file:./prompts/lead.md}",
-      "permission": {
-        "task": "allow",
-        "edit": "deny",
-        "write": "deny",
-        "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.lead "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 8 | trim }}
-      }
-    },
-    "plan": {
-      "description": "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only.",
-      "mode": "subagent",
-      "model": "anthropic/claude-opus-4-8",
-      "prompt": "{file:./prompts/plan.md}",
-      "permission": {
-        "edit": "deny",
-        "write": "deny"
-      },
-      "tools": {
-        "context7_*": true
-      }
-    },
-    "qa": {
-      "description": "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior, and compares against a linked Figma design (figma-desktop MCP) when one exists. Read-only re: code.",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-5",
-      "prompt": "{file:./prompts/qa.md}",
-      "permission": {
-        "edit": "deny",
-        "write": "deny"
-      },
-      "tools": {
-        "firefox-devtools_*": true,
-        "figma-desktop_*": true
-      }
-    },
-    "build": {
-      "description": "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done.",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-5",
-      "prompt": "{file:./prompts/build.md}",
-      "steps": 30,
-      "permission": {
-        "edit": "allow",
-        "write": "allow",
-        "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.build "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 8 | trim }}
-      },
-      "tools": {
-        "figma-desktop_*": true,
-        "context7_*": true
-      }
-    },
-    "explore": {
-      "model": "anthropic/claude-sonnet-5",
-      "prompt": "{file:./prompts/explore.md}",
-      "permission": {
-        "edit": "deny",
-        "write": "deny"
-      }
-    },
-    "scout": {
-      "description": "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7.",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-5",
-      "prompt": "{file:./prompts/scout.md}",
-      "permission": {
-        "edit": "deny",
-        "write": "deny"
-      },
-      "tools": {
-        "context7_*": true
-      }
-    },
-    "general": {
-      "description": "Multi-step research and read-only work that doesn't fit explore/scout/plan/qa — the reads catch-all.",
-      "model": "anthropic/claude-sonnet-5",
-      "permission": {
-        "edit": "deny",
-        "write": "deny"
-      }
-    },
-    {{ includeTemplate "opencode-mcp-agents" (dict "agents" .mcp.agents) | indent 4 | trim }}
+    {{ includeTemplate "opencode-agents" (dict "agents" .agents "bp" $bp "packages" $globalBash) | indent 4 | trim }}
   },
   "model": "anthropic/claude-sonnet-5",
   "small_model": "mlx/default_model",

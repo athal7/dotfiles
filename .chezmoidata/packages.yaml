@@ -122,6 +122,14 @@ packages:
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
 
+  pi_packages:
+    - source: "npm:@gotgenes/pi-subagents"
+      id: "@gotgenes/pi-subagents"
+    - source: "npm:@gotgenes/pi-permission-system"
+      id: "@gotgenes/pi-permission-system"
+    - source: "npm:pi-mcp-adapter"
+      id: "pi-mcp-adapter"
+
   casks:
     - name: gcloud-cli
     - name: font-monaspace-nf

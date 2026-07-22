@@ -1,20 +1,3 @@
-# MCP server registry + wrapping-subagent definitions.
-# Rendered into ~/.config/opencode/opencode.json by opencode.json.tmpl via the
-# opencode-mcp-servers / opencode-mcp-tools / opencode-mcp-agents template
-# partials. Adding a "reach service X via MCP" subagent is a data edit here plus
-# a hand-authored prompt at dot_config/opencode/prompts/<agent>.md.
-#
-#   servers[] — one MCP connection each. The global tool deny-list is derived
-#     from this list ("<name>_*": false for every server); agents re-enable
-#     their own namespaces. Remote url source is one of: literal `url:`,
-#     `runlayer: <svc>` (→ .runlayer.<svc>_mcp_url), or `auth: gh-token`
-#     (adds a computed Bearer header). Local servers use `command: []`.
-#     Optional passthrough flags: `oauth`, `enabled`.
-#   agents[] — OPTIONAL wrapping subagents; a server needs no agent entry.
-#     `namespaces` may list more than one server (google spans five). Write
-#     gates: `write_verbs` (→ "<ns>_<verb>*": ask, for regular naming) and/or
-#     `write_patterns` (verbatim globs, for irregular naming). `model` defaults
-#     to anthropic/claude-sonnet-4-6.
 mcp:
   servers:
     - name: context7
@@ -22,6 +5,7 @@ mcp:
       url: https://mcp.context7.com/mcp
     - name: firefox-devtools
       type: local
+      targets: [opencode]
       command:
         - npx
         - "@mozilla/firefox-devtools-mcp@0.9.7"
@@ -30,15 +14,19 @@ mcp:
         - --enable-script
     - name: runlayer-zoom
       type: remote
+      targets: [opencode]
       runlayer: zoom
     - name: runlayer-self
       type: remote
+      targets: [opencode]
       runlayer: self
     - name: runlayer-slack
       type: remote
+      targets: [opencode]
       runlayer: slack
     - name: runlayer-atlassian
       type: remote
+      targets: [opencode]
       runlayer: atlassian
     - name: github
       type: remote
@@ -47,73 +35,30 @@ mcp:
       auth: gh-token
     - name: runlayer-gmail
       type: remote
+      targets: [opencode]
       runlayer: gmail
     - name: runlayer-gcalendar
       type: remote
+      targets: [opencode]
       runlayer: gcalendar
     - name: runlayer-gdrive
       type: remote
+      targets: [opencode]
       runlayer: gdrive
     - name: runlayer-gdocs
       type: remote
+      targets: [opencode]
       runlayer: gdocs
     - name: runlayer-gsheets
       type: remote
+      targets: [opencode]
       runlayer: gsheets
     - name: linear
       type: remote
+      targets: [opencode]
       url: https://mcp.linear.app/mcp
     - name: figma-desktop
       type: remote
+      targets: [opencode]
       url: http://127.0.0.1:3845/mcp
       enabled: true
-  agents:
-    - name: zoom
-      description: "Reaches Zoom via Runlayer MCP (OAuth). Dispatched to fetch meeting summaries, transcripts, recordings. Returns a tight distilled summary, never raw dumps."
-      namespaces: [runlayer-zoom]
-    - name: slack
-      description: "Reaches Slack via Runlayer MCP (OAuth). Dispatched to search, read, and post messages, threads, canvases, and files. Returns a tight distilled summary, never raw dumps."
-      namespaces: [runlayer-slack]
-      write_patterns:
-        - "runlayer-slack_slack_send_*"
-        - "runlayer-slack_slack_schedule_*"
-        - "runlayer-slack_slack_add_*"
-        - "runlayer-slack_slack_create_*"
-    - name: atlassian
-      description: "Reaches Confluence and Jira via Runlayer MCP (OAuth). Dispatched to search and read pages, spaces, and issues; write actions (create/update/transition/comment) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
-      namespaces: [runlayer-atlassian]
-      write_verbs: [create, update, edit, transition, add]
-    - name: github
-      description: "Reaches GitHub via its official remote MCP server. Dispatched to search and read issues, pull requests, and repos; write actions (create/update/merge/comment) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
-      namespaces: [github]
-      write_patterns:
-        - "github_create_*"
-        - "github_update_*"
-        - "github_delete_*"
-        - "github_merge_*"
-        - "github_push_*"
-        - "github_fork_*"
-        - "github_add_*"
-        - "github_assign_*"
-        - "github_request_*"
-        - "github_dismiss_*"
-        - "github_mark_*"
-        - "github_manage_*"
-        - "github_star_repository"
-        - "github_unstar_repository"
-        - "github_actions_run_trigger"
-        - "github_*_write"
-    - name: google
-      description: "Reaches Gmail, Calendar, Drive, Docs, and Sheets via Runlayer MCP (OAuth). Dispatched to search and read messages, events, and files; write actions (send/create/update/delete) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
-      namespaces: [runlayer-gmail, runlayer-gcalendar, runlayer-gdrive, runlayer-gdocs, runlayer-gsheets]
-      write_patterns:
-        - "runlayer-g*send*"
-        - "runlayer-g*create*"
-        - "runlayer-g*update*"
-        - "runlayer-g*delete*"
-        - "runlayer-g*schedule*"
-    - name: linear
-      description: "Reaches Linear via its official remote MCP (OAuth). Dispatched to search and read issues, projects, and documents; write actions (create/update issues, projects, documents) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
-      namespaces: [linear]
-      write_patterns:
-        - "linear_save_*"

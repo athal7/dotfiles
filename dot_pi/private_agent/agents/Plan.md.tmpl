@@ -1,0 +1,9 @@
+---
+description: Deep analysis and architectural thinking. Read-only — no edit/write/bash, tightened from the global default via a per-agent permission override. Proves the @gotgenes/pi-subagents + pi-permission-system frontmatter-override mechanism; mirrors opencode's `plan` agent (dot_config/opencode/opencode.json.tmpl), which is also edit/write-deny.
+tools: read, grep, find, ls
+permission:
+  edit: deny
+  write: deny
+  bash: deny
+  mcp: deny
+---

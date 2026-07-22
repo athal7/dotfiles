@@ -26,6 +26,8 @@ index.html
 # Skills are synced to ~/.agents/skills/ by the sync-and-validate script, not chezmoi directly
 skills
 
+openspec
+
 # Python bytecode caches — regenerated at runtime, never managed config
 **/__pycache__
 **/__pycache__/**
