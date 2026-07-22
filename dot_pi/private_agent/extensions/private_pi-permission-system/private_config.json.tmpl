@@ -29,6 +29,10 @@
   "permission": {
     "*": {{ .permissions.default | quote }},
     "skill": {{ .permissions.skill | quote }},
+    "read": {{ .permissions.read | quote }},
+    "grep": {{ .permissions.grep | quote }},
+    "find": {{ .permissions.find | quote }},
+    "ls": {{ .permissions.ls | quote }},
     "external_directory": {{ .permissions.external_directory | toPrettyJson | indent 4 | trim }},
     "bash": {{ $bash | toPrettyJson | indent 4 | trim }},
     "mcp": {

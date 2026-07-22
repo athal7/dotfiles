@@ -39,6 +39,9 @@
   ],
   "permission": {
     "skill": {{ .permissions.skill | quote }},
+    "read": {{ .permissions.read | quote }},
+    "grep": {{ .permissions.grep | quote }},
+    "glob": {{ .permissions.find | quote }},
     "lsp": "allow",
     "websearch": "allow",
     "external_directory": {{ .permissions.external_directory | toPrettyJson | indent 4 | trim }},

@@ -1,6 +1,10 @@
 permissions:
   default: ask
   skill: allow
+  read: allow
+  grep: allow
+  find: allow
+  ls: allow
   external_directory:
     "*": ask
     "~/code/**": allow
