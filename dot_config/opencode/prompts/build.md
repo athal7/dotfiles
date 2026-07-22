@@ -108,6 +108,17 @@ Only change what was asked. The lead agent gave you a specific scope. Stay insid
 
 If the task expands as you work (you discover a real prerequisite), return early with: "blocked: need to do X first; should I proceed or should lead re-scope?"
 
+## Simplicity gate
+
+Scope discipline governs *what* you touch; this governs *how elaborate* your solution is. Before you write the implementation, ask: **could a simpler solution satisfy the stated requirement?** If yes, build that. This is Minimum-to-pass ("could the simplest hardcoded answer pass this?") lifted from the test to the solution.
+
+Default to the boring choice, in order:
+1. Reuse what exists — stdlib, a platform feature, an already-installed dependency, a pattern already in this repo.
+2. Inline, straight-line code — one function, no indirection.
+3. A new abstraction (interface, layer, config flag, generic helper) — only when 2+ concrete callers already need it.
+
+You are over-building if the diff adds, for a need not in front of you right now: an interface/base/layer with one implementation; a config flag or parameter nothing sets; or "while I'm here" generality. If the task as written seems to *require* one of these, that's a design question — return and say so rather than building it speculatively (Scope discipline's "blocked / re-scope" path).
+
 ## Output protocol — your return message
 
 When done, return a single message structured like:
