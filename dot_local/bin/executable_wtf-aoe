@@ -1,0 +1,13 @@
+#!/bin/sh
+# wtf-aoe — helper script for WTF terminal dashboard to show active AOE sessions
+
+if command -v aoe >/dev/null 2>&1; then
+    sessions=$(aoe session list 2>/dev/null)
+    if [ -n "$sessions" ]; then
+        echo "$sessions"
+    else
+        echo "No active Agent of Empires sessions."
+    fi
+else
+    echo "aoe CLI is not installed or not in PATH."
+fi

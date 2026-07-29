@@ -1,0 +1,102 @@
+wtf:
+  colors:
+    background: "black"
+    border:
+      focusable: "darkslateblue"
+      focused: "orange"
+      normal: "gray"
+    text: "white"
+    title: "white"
+  grid:
+    # 4 columns, each 40 terminal characters wide
+    columns: [40, 40, 40, 40]
+    # 3 rows, each 12 lines high
+    rows: [12, 12, 12]
+  navigation:
+    shortcuts: true
+
+  # WTF modules must be nested under the `mods` block
+  mods:
+    # Build-in GitHub Module
+    github:
+      enabled: true
+      apiKey: "" # Falls back to WTF_GITHUB_TOKEN or GITHUB_TOKEN env var
+      repositories:
+        - "athal7/dotfiles"
+        - "athal7/kb"
+      refreshInterval: 15m
+      position:
+        top: 0
+        left: 0
+        height: 1
+        width: 2
+
+    # Calendar Widget via cmdrunner
+    calendar:
+      enabled: true
+      type: "cmdrunner"
+      title: "📅 Calendar"
+      cmd: "wtf-calendar"
+      args: []
+      refreshInterval: 5m
+      position:
+        top: 0
+        left: 2
+        height: 1
+        width: 2
+
+    # Linear Widget via cmdrunner
+    linear:
+      enabled: true
+      type: "cmdrunner"
+      title: "🎯 Linear"
+      cmd: "wtf-linear"
+      args: []
+      refreshInterval: 5m
+      position:
+        top: 1
+        left: 0
+        height: 1
+        width: 2
+
+    # Reminders Widget via cmdrunner
+    reminders:
+      enabled: true
+      type: "cmdrunner"
+      title: "📝 Reminders"
+      cmd: "wtf-reminders"
+      args: []
+      refreshInterval: 5m
+      position:
+        top: 1
+        left: 2
+        height: 1
+        width: 2
+
+    # AOE (Agent of Empires) Widget via cmdrunner
+    aoe:
+      enabled: true
+      type: "cmdrunner"
+      title: "👑 Agent of Empires"
+      cmd: "wtf-aoe"
+      args: []
+      refreshInterval: 1m
+      position:
+        top: 2
+        left: 0
+        height: 1
+        width: 2
+
+    # Jules (AI Assistant Activity) Widget via cmdrunner
+    jules:
+      enabled: true
+      type: "cmdrunner"
+      title: "🤖 Jules AI Activity"
+      cmd: "wtf-jules"
+      args: []
+      refreshInterval: 1m
+      position:
+        top: 2
+        left: 2
+        height: 1
+        width: 2

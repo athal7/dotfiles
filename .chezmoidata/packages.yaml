@@ -92,6 +92,7 @@ packages:
     - name: talisman
     - name: watch
     - name: worktrunk
+    - name: wtfutil
     - name: xh
       permissions:
         "xh *GET *": allow

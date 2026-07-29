@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+import glob
+import os
+from pathlib import Path
+
+def main():
+    journal_dir = Path.home() / ".local/share/kb/journal"
+    if not journal_dir.exists():
+        print("No Jules activity journal found.")
+        return
+
+    # Find all journal markdown files
+    md_files = glob.glob(str(journal_dir / "*.md"))
+    if not md_files:
+        print("No Jules activity journal entries.")
+        return
+
+    # Sort files by name to get the latest YYYY-MM-DD.md
+    md_files.sort(reverse=True)
+    latest_file = Path(md_files[0])
+
+    print(f"Latest Activity ({latest_file.stem}):")
+    try:
+        with open(latest_file, "r") as f:
+            lines = f.readlines()
+
+        # Output first 10 non-empty lines of the journal to summarize
+        count = 0
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            # Skip YAML frontmatter if any
+            if stripped == "---":
+                continue
+            print(line.rstrip())
+            count += 1
+            if count >= 10:
+                break
+    except Exception as e:
+        print(f"Error reading activity: {e}")
+
+if __name__ == "__main__":
+    main()
