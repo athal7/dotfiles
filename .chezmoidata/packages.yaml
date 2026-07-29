@@ -235,3 +235,6 @@ packages:
       version: latest
     - name: pipx:mlx-lm
       version: latest
+    # Personal knowledge base engine, interactive Textual TUI dashboard, and CLI
+    - name: pipx:git+https://github.com/athal7/kb.git
+      version: latest

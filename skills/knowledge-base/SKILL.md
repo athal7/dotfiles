@@ -150,7 +150,16 @@ Daily coding activity per project, with diff stats:
     - Update knowledge base skill
     - *2 sessions, 3 files changed, +87/-40 lines*
 
-Coding-stats source: opencode's local session store (`~/.local/share/opencode/storage/session`) is pruned to roughly the last few months, so it cannot supply older session counts or diff stats — derive journal stats from git instead. Beware that `git log --all` double-counts pre-squash and merged copies of the same work and includes bot commits (e.g. `reg_actions`, `argocd-image-updater`); filter to the human author and dedupe so the stats stay honest.
+Coding-stats source: opencode's local session store (`~/.local/share/opencode/storage/session`) is pruned to roughly the last few months, so it cannot supply older session counts or diff stats.
+Instead, use the `kb-git-activity` tool to automatically parse git history and append stats:
+```bash
+# Analyze a parent directory of repos and write to daily journal under "Git Activity"
+kb-git-activity --dir ~/code --date 2026-05-22
+
+# Analyze a specific repository
+kb-git-activity --repo . --date 2026-05-22
+```
+If executing manually, beware that `git log --all` double-counts pre-squash and merged copies of the same work and includes bot commits (e.g. `reg_actions`, `argocd-image-updater`); filter to the human author and dedupe so the stats stay honest.
 
 ## Name resolution
 
@@ -164,8 +173,17 @@ Each profile's `aliases` frontmatter property mirrors the variants from these ma
 
 When you encounter new contact info (email, chat handle, GitHub handle, title, team) from any source — calendar attendees, chat messages, email headers, commit authors — update the person's profile.
 
+## Searching and Querying via kb CLI
+
+While direct file reads and grep searches work, you can query and manage people, projects, and journal entries programmatically using the `kb` CLI:
+
+- List all people in the vault as JSON: `kb people list`
+- Show a person's parsed record as JSON (looked up by name or alias): `kb people show "Jane Smith"`
+- List open or in-progress action items: `kb action-items list`
+- Append content under a specific journal section: `kb journal append --date YYYY-MM-DD --section "Git Activity" --content "Fixed Middlewares"`
+
 ## Searching
-- Find a person: `cat ~/.local/share/kb/people/<slug>.md`
+- Find a person: `cat ~/.local/share/kb/people/<slug>.md` (or `kb people show <name>`)
 - Find a product: `cat ~/.local/share/kb/products/<slug>.md`
 - Find a project: `cat ~/.local/share/kb/projects/<slug>.md`
 - Find a decision: check the relevant product/project `## Key Decisions` first, then `cat ~/.local/share/kb/decisions/cross-cutting.md`; older context is in `decisions/archive.md`
