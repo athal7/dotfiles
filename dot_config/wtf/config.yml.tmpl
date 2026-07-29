@@ -41,7 +41,7 @@ wtf:
         {{ $key }}:
           title: "{{ $value.title }}"
           filter: "{{ $value.filter }}"
-          enabled: {{ default true $value.enabled }}
+          enabled: {{ if hasKey $value "enabled" }}{{ $value.enabled }}{{ else }}true{{ end }}
         {{- end }}
       {{- else }}
       customQueries:

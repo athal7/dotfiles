@@ -9,9 +9,11 @@ def get_token():
     try:
         res = subprocess.run(
             ["security", "find-generic-password", "-s", "chezmoi", "-a", "linear_api_token", "-w"],
-            capture_output=True, text=True, check=True
+            capture_output=True, text=True, check=True, timeout=10
         )
         return res.stdout.strip()
+    except subprocess.TimeoutExpired:
+        return os.environ.get("LINEAR_API_TOKEN") or os.environ.get("LINEAR_TOKEN")
     except Exception:
         return os.environ.get("LINEAR_API_TOKEN") or os.environ.get("LINEAR_TOKEN")
 
@@ -33,10 +35,10 @@ def main():
         return
 
     # Fully customizable GraphQL query via chezmoi data (wtf.linear.query)
-    query = """
     {{- if and (hasKey . "wtf") (hasKey .wtf "linear") (hasKey .wtf.linear "query") }}
-    {{ .wtf.linear.query }}
+    query = {{ .wtf.linear.query | toJson }}
     {{- else }}
+    query = """
     query {
       viewer {
         assignedIssues(filter: { state: { name: { neq: "Done" } } }) {
@@ -50,8 +52,8 @@ def main():
         }
       }
     }
-    {{- end }}
     """
+    {{- end }}
 
     req = urllib.request.Request(
         "https://api.linear.app/graphql",
