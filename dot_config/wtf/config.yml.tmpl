@@ -10,8 +10,8 @@ wtf:
   grid:
     # 4 columns, each 40 terminal characters wide
     columns: [40, 40, 40, 40]
-    # 3 rows, each 12 lines high
-    rows: [12, 12, 12]
+    # 2 rows, each 12 lines high
+    rows: [12, 12]
   navigation:
     shortcuts: true
 
@@ -21,9 +21,39 @@ wtf:
     github:
       enabled: true
       apiKey: "" # Falls back to WTF_GITHUB_TOKEN or GITHUB_TOKEN env var
+      username: "{{- if and (hasKey . "wtf") (hasKey .wtf "github") (hasKey .wtf.github "username") }}{{ .wtf.github.username }}{{- else if hasKey . "githubUsername" }}{{ .githubUsername }}{{- else if hasKey . "email" }}{{ .email | splitList "@" | first }}{{- else }}athal7{{- end }}"
       repositories:
+        {{- if and (hasKey . "wtf") (hasKey .wtf "github") (hasKey .wtf.github "repositories") }}
+        {{- range .wtf.github.repositories }}
+        - "{{ . }}"
+        {{- end }}
+        {{- else if hasKey . "githubRepositories" }}
+        {{- range .githubRepositories }}
+        - "{{ . }}"
+        {{- end }}
+        {{- else }}
         - "athal7/dotfiles"
         - "athal7/kb"
+        {{- end }}
+      {{- if and (hasKey . "wtf") (hasKey .wtf "github") (hasKey .wtf.github "customQueries") }}
+      customQueries:
+        {{- range $key, $value := .wtf.github.customQueries }}
+        {{ $key }}:
+          title: "{{ $value.title }}"
+          filter: "{{ $value.filter }}"
+          enabled: {{ default true $value.enabled }}
+        {{- end }}
+      {{- else }}
+      customQueries:
+        openPRs:
+          title: "My PRs"
+          filter: "is:open is:pr author:{{- if and (hasKey . "wtf") (hasKey .wtf "github") (hasKey .wtf.github "username") }}{{ .wtf.github.username }}{{- else if hasKey . "githubUsername" }}{{ .githubUsername }}{{- else if hasKey . "email" }}{{ .email | splitList "@" | first }}{{- else }}athal7{{- end }}"
+          enabled: true
+        myIssues:
+          title: "Assigned Issues"
+          filter: "is:open is:issue assignee:{{- if and (hasKey . "wtf") (hasKey .wtf "github") (hasKey .wtf.github "username") }}{{ .wtf.github.username }}{{- else if hasKey . "githubUsername" }}{{ .githubUsername }}{{- else if hasKey . "email" }}{{ .email | splitList "@" | first }}{{- else }}athal7{{- end }}"
+          enabled: true
+      {{- end }}
       refreshInterval: 15m
       position:
         top: 0
@@ -69,34 +99,6 @@ wtf:
       refreshInterval: 5m
       position:
         top: 1
-        left: 2
-        height: 1
-        width: 2
-
-    # AOE (Agent of Empires) Widget via cmdrunner
-    aoe:
-      enabled: true
-      type: "cmdrunner"
-      title: "👑 Agent of Empires"
-      cmd: "wtf-aoe"
-      args: []
-      refreshInterval: 1m
-      position:
-        top: 2
-        left: 0
-        height: 1
-        width: 2
-
-    # Jules (AI Assistant Activity) Widget via cmdrunner
-    jules:
-      enabled: true
-      type: "cmdrunner"
-      title: "🤖 Jules AI Activity"
-      cmd: "wtf-jules"
-      args: []
-      refreshInterval: 1m
-      position:
-        top: 2
         left: 2
         height: 1
         width: 2

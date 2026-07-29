@@ -15,13 +15,28 @@ def get_token():
     except Exception:
         return os.environ.get("LINEAR_API_TOKEN") or os.environ.get("LINEAR_TOKEN")
 
+def find_issue_nodes(data):
+    if isinstance(data, list):
+        for item in data:
+            yield from find_issue_nodes(item)
+    elif isinstance(data, dict):
+        if "identifier" in data and "title" in data:
+            yield data
+        else:
+            for val in data.values():
+                yield from find_issue_nodes(val)
+
 def main():
     token = get_token()
     if not token:
         print("Linear token not set in keychain or env.")
         return
 
+    # Fully customizable GraphQL query via chezmoi data (wtf.linear.query)
     query = """
+    {{- if and (hasKey . "wtf") (hasKey .wtf "linear") (hasKey .wtf.linear "query") }}
+    {{ .wtf.linear.query }}
+    {{- else }}
     query {
       viewer {
         assignedIssues(filter: { state: { name: { neq: "Done" } } }) {
@@ -35,6 +50,7 @@ def main():
         }
       }
     }
+    {{- end }}
     """
 
     req = urllib.request.Request(
@@ -53,14 +69,16 @@ def main():
             if "errors" in res_data:
                 print("Linear API Error:", res_data["errors"][0].get("message"))
                 return
-            nodes = res_data.get("data", {}).get("viewer", {}).get("assignedIssues", {}).get("nodes", [])
+
+            # Recursively find any issue nodes in the response payload
+            nodes = list(find_issue_nodes(res_data.get("data", {})))
             if not nodes:
-                print("No active Linear issues.")
+                print("No active Linear issues found.")
                 return
             for node in nodes:
                 identifier = node.get("identifier")
                 title = node.get("title")
-                state = node.get("state", {}).get("name", "Unknown")
+                state = node.get("state", {}).get("name", "Unknown") if isinstance(node.get("state"), dict) else "Unknown"
                 print(f"[{identifier}] {title} ({state})")
     except urllib.error.URLError as e:
         print(f"Linear service unavailable: {e.reason}")

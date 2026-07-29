@@ -13,6 +13,12 @@ def main():
         return
 
     target_lists = []
+    # Fully customizable reminders list filtering via chezmoi data (wtf.reminders.lists)
+    {{- if and (hasKey . "wtf") (hasKey .wtf "reminders") (hasKey .wtf.reminders "lists") }}
+    {{- range .wtf.reminders.lists }}
+    target_lists.append("{{ . }}")
+    {{- end }}
+    {{- else }}
     for k, v in reminders_config.items():
         if isinstance(v, dict) and v.get("attention_check"):
             target_lists.append(v.get("name"))
@@ -22,6 +28,7 @@ def main():
         for k, v in reminders_config.items():
             if isinstance(v, dict) and "name" in v:
                 target_lists.append(v["name"])
+    {{- end }}
 
     if not target_lists:
         print("No reminders lists configured.")
@@ -42,7 +49,6 @@ def main():
     # Filter to incomplete reminders belonging to target lists
     open_reminders = []
     for r in all_reminders:
-        # Check if complete or status is not completed
         if r.get("completed"):
             continue
         list_name = r.get("list")
@@ -53,8 +59,6 @@ def main():
         print("No open reminders.")
         return
 
-    # Sort open reminders (optional, overdue first, then by priority/date)
-    # Priority values: high, medium, low, none
     priority_order = {"high": 1, "medium": 2, "low": 3, "none": 4}
 
     def sort_key(rem):

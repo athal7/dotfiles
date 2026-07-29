@@ -25,9 +25,16 @@ def main():
         return
 
     cal_names = []
+    # Fully customizable calendars via chezmoi data (wtf.calendar.names)
+    {{- if and (hasKey . "wtf") (hasKey .wtf "calendar") (hasKey .wtf.calendar "names") }}
+    {{- range .wtf.calendar.names }}
+    cal_names.append("{{ . }}")
+    {{- end }}
+    {{- else }}
     for k, v in calendars.items():
         if isinstance(v, dict) and "name" in v:
             cal_names.append(v["name"])
+    {{- end }}
 
     if not cal_names:
         print("No calendars configured.")
@@ -45,7 +52,6 @@ def main():
             if res.returncode == 0 and res.stdout.strip():
                 cal_events = json.loads(res.stdout)
                 for e in cal_events:
-                    # Avoid duplicate instances
                     if e.get("status") == "cancelled" or e.get("availability") == "free":
                         continue
                     events.append(e)
@@ -66,7 +72,6 @@ def main():
             time_str = "All Day"
         else:
             start_str = e.get("start_date", "")
-            # e.g., "2026-03-28T10:00:00Z"
             try:
                 dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
                 time_str = dt.strftime("%H:%M")
