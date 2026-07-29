@@ -13,7 +13,7 @@ agents:
     enabled: [opencode]
     description: "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only."
     mode: subagent
-    model: anthropic/claude-opus-4-8
+    model: anthropic/claude-opus-5
     prompt: "{file:~/.agents/prompts/plan.md}"
     permission:
       edit: deny
