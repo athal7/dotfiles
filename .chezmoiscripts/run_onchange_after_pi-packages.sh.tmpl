@@ -3,14 +3,25 @@
 
 set -uo pipefail
 
-if ! command -v pi >/dev/null 2>&1; then
-  echo "pi not found on PATH — skipping pi package install/update" >&2
+if [[ {{ len .packages.pi_packages }} -eq 0 ]]; then
+  echo "No third-party pi packages configured — skipping"
+  exit 0
+fi
+
+if ! command -v pi >/dev/null 2>&1 && ! command -v omp >/dev/null 2>&1; then
+  echo "pi or omp not found on PATH — skipping pi package install/update" >&2
   exit 0
 fi
 
 {{ range .packages.pi_packages -}}
 echo "installing/updating pi package {{ .id }} ({{ .source }})..."
-if ! pi install {{ .source }} < /dev/null; then
-  echo "WARN: pi install {{ .source }} failed" >&2
+if command -v pi >/dev/null 2>&1; then
+  if ! pi install {{ .source }} < /dev/null; then
+    echo "WARN: pi install {{ .source }} failed" >&2
+  fi
+else
+  if ! omp install {{ .source }} < /dev/null; then
+    echo "WARN: omp install {{ .source }} failed" >&2
+  fi
 fi
 {{ end -}}

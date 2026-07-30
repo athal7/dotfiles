@@ -11,8 +11,10 @@ packages:
     - github/gh
     - jnsahaj/lumen
     - steipete/tap
+    - can1357/tap
 
   brews:
+    - name: can1357/tap/omp
     - name: aoe
     - name: autojump
     - name: bat
@@ -122,13 +124,7 @@ packages:
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
 
-  pi_packages:
-    - source: "npm:@gotgenes/pi-subagents"
-      id: "@gotgenes/pi-subagents"
-    - source: "npm:@gotgenes/pi-permission-system"
-      id: "@gotgenes/pi-permission-system"
-    - source: "npm:pi-mcp-adapter"
-      id: "pi-mcp-adapter"
+  pi_packages: []
 
   casks:
     - name: gcloud-cli
@@ -219,11 +215,9 @@ packages:
     # plugin array; declared here for the repo's package-registry convention).
     - name: npm:@tarquinen/opencode-dcp
       version: "3.1.12"
-    # ACP adapter + coding agent needed for the `personal` aoe profile's
-    # default tool (`pi`) to render in aoe's structured view.
-    - name: npm:pi-acp
-      version: latest
-    - name: npm:@earendil-works/pi-coding-agent
+    # Coding agent needed for the `personal` aoe profile's default tool
+    # (`omp`/`pi`) to render in aoe's structured view natively.
+    - name: npm:@oh-my-pi/pi-coding-agent
       version: latest
     - name: npm:@google/jules
       version: latest

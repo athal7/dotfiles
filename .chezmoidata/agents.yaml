@@ -1,6 +1,6 @@
 agents:
   - name: lead
-    enabled: [opencode]
+    enabled: [opencode, pi]
     mode: primary
     model: anthropic/claude-sonnet-5
     prompt: "{file:~/.agents/prompts/lead.md}"
@@ -10,7 +10,7 @@ agents:
       write: deny
       bash: { compose: lead }
   - name: plan
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only."
     mode: subagent
     model: anthropic/claude-opus-5
@@ -21,7 +21,7 @@ agents:
     tools:
       "context7_*": true
   - name: qa
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior, and compares against a linked Figma design (figma-desktop MCP) when one exists. Read-only re: code."
     mode: subagent
     model: anthropic/claude-sonnet-5
@@ -33,7 +33,7 @@ agents:
       "firefox-devtools_*": true
       "figma-desktop_*": true
   - name: build
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done."
     mode: subagent
     model: anthropic/claude-sonnet-5
@@ -47,14 +47,14 @@ agents:
       "figma-desktop_*": true
       "context7_*": true
   - name: explore
-    enabled: [opencode]
+    enabled: [opencode, pi]
     model: anthropic/claude-sonnet-5
     prompt: "{file:~/.agents/prompts/explore.md}"
     permission:
       edit: deny
       write: deny
   - name: scout
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7."
     mode: subagent
     model: anthropic/claude-sonnet-5
@@ -65,18 +65,18 @@ agents:
     tools:
       "context7_*": true
   - name: general
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Multi-step research and read-only work that doesn't fit explore/scout/plan/qa — the reads catch-all."
     model: anthropic/claude-sonnet-5
     permission:
       edit: deny
       write: deny
   - name: zoom
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Reaches Zoom via Runlayer MCP (OAuth). Dispatched to fetch meeting summaries, transcripts, recordings. Returns a tight distilled summary, never raw dumps."
     namespaces: [runlayer-zoom]
   - name: slack
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Reaches Slack via Runlayer MCP (OAuth). Dispatched to search, read, and post messages, threads, canvases, and files. Returns a tight distilled summary, never raw dumps."
     namespaces: [runlayer-slack]
     write_patterns:
@@ -85,12 +85,12 @@ agents:
       - "runlayer-slack_slack_add_*"
       - "runlayer-slack_slack_create_*"
   - name: atlassian
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Reaches Confluence and Jira via Runlayer MCP (OAuth). Dispatched to search and read pages, spaces, and issues; write actions (create/update/transition/comment) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
     namespaces: [runlayer-atlassian]
     write_verbs: [create, update, edit, transition, add]
   - name: github
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Reaches GitHub via its official remote MCP server. Dispatched to search and read issues, pull requests, and repos; write actions (create/update/merge/comment) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
     namespaces: [github]
     write_patterns:
@@ -111,7 +111,7 @@ agents:
       - "github_actions_run_trigger"
       - "github_*_write"
   - name: google
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Reaches Gmail, Calendar, Drive, Docs, and Sheets via Runlayer MCP (OAuth). Dispatched to search and read messages, events, and files; write actions (send/create/update/delete) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
     namespaces: [runlayer-gmail, runlayer-gcalendar, runlayer-gdrive, runlayer-gdocs, runlayer-gsheets]
     write_patterns:
@@ -121,7 +121,7 @@ agents:
       - "runlayer-g*delete*"
       - "runlayer-g*schedule*"
   - name: linear
-    enabled: [opencode]
+    enabled: [opencode, pi]
     description: "Reaches Linear via its official remote MCP (OAuth). Dispatched to search and read issues, projects, and documents; write actions (create/update issues, projects, documents) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
     namespaces: [linear]
     write_patterns:
