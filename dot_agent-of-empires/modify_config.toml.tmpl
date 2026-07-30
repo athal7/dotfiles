@@ -118,17 +118,13 @@ tie_workdir_to_name = true
 trash_retention_days = 30
 unread_indicator = true
 yolo_mode_default = false
-{{- if .enableJules }}
+{{- if .julesApiKey }}
 
 [session.custom_agents]
-{{- if .julesHost }}
-jules = "ssh -t {{ .julesHost }} {{ .julesCommand }}"
-{{- else }}
-jules = "{{ .julesCommand }}"
-{{- end }}
+jules = "JULES_API_KEY={{ .julesApiKey }} jules"
 
 [session.agent_acp_cmd]
-jules = "{{ .julesAcpCommand }}"
+jules = "jules-agent-acp"
 
 [session.agent_detect_as]
 jules = "claude"
