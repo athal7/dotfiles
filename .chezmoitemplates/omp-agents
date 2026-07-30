@@ -21,6 +21,8 @@
       {{- end -}}
       {{- $_ := set $perm "bash" "deny" -}}
       {{- $_ := set $perm "skill" "deny" -}}
+      {{- $_ := set $perm "edit" "deny" -}}
+      {{- $_ := set $perm "write" "deny" -}}
       {{- $_ := set $obj "permission" $perm -}}
       {{- $items = append $items (printf "%s: %s" ($a.name | quote) ($obj | toPrettyJson)) -}}
     {{- else -}}
