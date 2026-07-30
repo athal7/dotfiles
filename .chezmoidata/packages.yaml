@@ -225,6 +225,8 @@ packages:
       version: latest
     - name: npm:@earendil-works/pi-coding-agent
       version: latest
+    - name: npm:@google/jules
+      version: latest
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema
