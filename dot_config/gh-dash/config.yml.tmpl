@@ -1,0 +1,60 @@
+# gh-dash configuration template
+#
+# Custom interactive terminal dashboard for GitHub. Managed by chezmoi.
+
+# Custom repo path mapping to resolve {{.RepoPath}} dynamically
+repoPaths:
+  {{- if and (hasKey . "wtf") (hasKey .wtf "github") (hasKey .wtf.github "repositories") }}
+  {{- range .wtf.github.repositories }}
+  {{- $repoName := . | splitList "/" | last }}
+  "{{ . }}": "{{ $.codeDir }}/{{ $repoName }}"
+  {{- end }}
+  {{- else if hasKey . "githubRepositories" }}
+  {{- range .githubRepositories }}
+  {{- $repoName := . | splitList "/" | last }}
+  "{{ . }}": "{{ $.codeDir }}/{{ $repoName }}"
+  {{- end }}
+  {{- else }}
+  "athal7/dotfiles": "{{ .codeDir }}/dotfiles"
+  "athal7/kb": "{{ .codeDir }}/kb"
+  {{- end }}
+
+prSections:
+  - title: "My Pull Requests"
+    filters: "is:open is:pr author:@me"
+  - title: "Review Requests"
+    filters: "is:open is:pr review-requested:@me"
+
+issueSections:
+  - title: "Assigned Issues"
+    filters: "is:open is:issue assignee:@me"
+
+keybindings:
+  # Universal Keybindings (working in any view)
+  universal:
+    # Run lazygit on the selected repository
+    - key: g
+      name: "lazygit"
+      command: "cd {{.RepoPath}} && lazygit"
+
+  # PR View Keybindings
+  prs:
+    # Trigger lumen to review the selected PR
+    - key: l
+      name: "review with lumen"
+      command: "lumen review --repo {{.RepoName}} --pr {{.PrNumber}}"
+    # Approve the PR directly from TUI
+    - key: A
+      name: "approve PR"
+      command: "gh pr review --approve {{.PrNumber}} --repo {{.RepoName}}"
+    # Merge the PR using squash
+    - key: M
+      name: "merge PR (squash)"
+      command: "gh pr merge --squash --delete-branch {{.PrNumber}} --repo {{.RepoName}}"
+
+  # Issue View Keybindings
+  issues:
+    # Start a git-worktree-based Agent of Empires (aoe) session for the issue!
+    - key: s
+      name: "start agent session"
+      command: "aoe-cmd -d {{.RepoPath}} -n issue-{{.IssueNumber}} -b -w issue-{{.IssueNumber}} 'Work on issue {{.IssueNumber}} in this repo'"

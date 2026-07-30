@@ -61,3 +61,27 @@ bindkey '^R' history-incremental-search-backward
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Interactive reminders complete & triage via fzf
+reminders() {
+  local selected
+  # Authoritative reminder dump, filtering out completed ones, and piping to fzf
+  selected=$(remindctl show all --json 2>/dev/null | jq -r '.[] | select(.completed == false) | "\(.id)\t[\(.list)] \(.title)"' | fzf --ansi --header "Select a reminder to complete" --with-nth 2..)
+  if [[ -n "$selected" ]]; then
+    local id=$(echo "$selected" | cut -f1)
+    local title=$(echo "$selected" | cut -f2-)
+    echo "Completing: $title"
+    remindctl complete "$id"
+  fi
+}
+
+# Interactive calendar event copy via fzf
+calendar() {
+  local selected
+  # Fetch today's calendar events using ical and pipe to fzf to copy to clipboard
+  selected=$(ical list --from today --to tomorrow -o json 2>/dev/null | jq -r '.[] | "\(.start_date[11:16]) \(.title)"' | fzf --header "Today's Events (Press Enter to copy to clipboard)")
+  if [[ -n "$selected" ]]; then
+    echo "$selected" | pbcopy
+    echo "Copied to clipboard: $selected"
+  fi
+}

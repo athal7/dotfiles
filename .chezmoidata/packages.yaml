@@ -11,6 +11,7 @@ packages:
     - github/gh
     - jnsahaj/lumen
     - steipete/tap
+    - markmarkoh/lt
 
   brews:
     - name: aoe
@@ -35,6 +36,8 @@ packages:
     - name: container
     - name: direnv
     - name: ffmpeg
+    - name: fzf
+    - name: gh-dash
     - name: git
       permissions:
         "git commit*": ask
@@ -79,6 +82,7 @@ packages:
     - name: jq
     - name: k9s
     - name: kubernetes-cli
+    - name: lt
     - name: jnsahaj/lumen/lumen
     - name: macos-trash
     - name: mas
@@ -92,7 +96,6 @@ packages:
     - name: talisman
     - name: watch
     - name: worktrunk
-    - name: wtfutil
     - name: xh
       permissions:
         "xh *GET *": allow
