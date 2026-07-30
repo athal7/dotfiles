@@ -42,15 +42,12 @@ def get_linear_token():
 # Parallel/Sequential data fetching
 def fetch_calendar(calendars_config):
     cal_names = []
-    # Query calendars that have attention_check=true or fall back to all configured names
+    # Query calendars that have attention_check=true
     for k, v in calendars_config.items():
         if isinstance(v, dict) and v.get("attention_check"):
-            cal_names.append(v.get("name"))
-
-    if not cal_names:
-        for k, v in calendars_config.items():
-            if isinstance(v, dict) and "name" in v:
-                cal_names.append(v["name"])
+            name = v.get("name")
+            if name:  # Only append if name is non-empty/non-null
+                cal_names.append(name)
 
     if not cal_names:
         return []
@@ -76,15 +73,12 @@ def fetch_calendar(calendars_config):
 
 def fetch_reminders(reminders_config):
     target_lists = []
-    # Query lists that have attention_check=true or fall back to all configured lists
+    # Query lists that have attention_check=true
     for k, v in reminders_config.items():
         if isinstance(v, dict) and v.get("attention_check"):
-            target_lists.append(v.get("name"))
-
-    if not target_lists:
-        for k, v in reminders_config.items():
-            if isinstance(v, dict) and "name" in v:
-                target_lists.append(v["name"])
+            name = v.get("name")
+            if name:  # Only append if name is non-empty/non-null
+                target_lists.append(name)
 
     if not target_lists:
         return []
