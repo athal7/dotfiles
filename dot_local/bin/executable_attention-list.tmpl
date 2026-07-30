@@ -42,12 +42,22 @@ def get_linear_token():
 # Parallel/Sequential data fetching
 def fetch_calendar(calendars_config):
     cal_names = []
-    # Query calendars that have attention_check=true
-    for k, v in calendars_config.items():
-        if isinstance(v, dict) and v.get("attention_check"):
-            name = v.get("name")
-            if name:  # Only append if name is non-empty/non-null
-                cal_names.append(name)
+    # Fully customizable calendars via chezmoi data (wtf.calendar.names)
+{{- if hasKey . "wtf" }}
+  {{- if hasKey .wtf "calendar" }}
+    {{- if hasKey .wtf.calendar "names" }}
+      {{- range .wtf.calendar.names }}
+    cal_names.append("{{ . }}")
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+    # Fallback if not custom configured
+    if not cal_names:
+        for k, v in calendars_config.items():
+            if isinstance(v, dict) and "name" in v:
+                cal_names.append(v["name"])
 
     if not cal_names:
         return []
@@ -73,12 +83,28 @@ def fetch_calendar(calendars_config):
 
 def fetch_reminders(reminders_config):
     target_lists = []
-    # Query lists that have attention_check=true
-    for k, v in reminders_config.items():
-        if isinstance(v, dict) and v.get("attention_check"):
-            name = v.get("name")
-            if name:  # Only append if name is non-empty/non-null
-                target_lists.append(name)
+    # Fully customizable reminders list filtering via chezmoi data (wtf.reminders.lists)
+{{- if hasKey . "wtf" }}
+  {{- if hasKey .wtf "reminders" }}
+    {{- if hasKey .wtf.reminders "lists" }}
+      {{- range .wtf.reminders.lists }}
+    target_lists.append("{{ . }}")
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+    # Fallback if not custom configured
+    if not target_lists:
+        for k, v in reminders_config.items():
+            if isinstance(v, dict) and v.get("attention_check"):
+                target_lists.append(v.get("name"))
+
+        # Fallback to all configured list names if none are explicitly marked for attention check
+        if not target_lists:
+            for k, v in reminders_config.items():
+                if isinstance(v, dict) and "name" in v:
+                    target_lists.append(v["name"])
 
     if not target_lists:
         return []
@@ -122,23 +148,33 @@ def fetch_linear():
     if not token:
         return []
 
+    # Fully customizable GraphQL query via chezmoi data (wtf.linear.query)
+    # Correct template logic with fallback to default query even if .wtf is present
     query = """
-    query {
-      viewer {
-        assignedIssues(filter: { state: { name: { neq: "Done" } } }) {
-          nodes {
-            id
-            identifier
-            title
-            url
-            state {
-              name
-            }
-          }
+{{- if hasKey . "wtf" }}
+  {{- if hasKey .wtf "linear" }}
+    {{- if hasKey .wtf.linear "query" }}
+{{ .wtf.linear.query }}
+    {{- end }}
+  {{- end }}
+{{- else }}
+query {
+  viewer {
+    assignedIssues(filter: { state: { name: { neq: "Done" } } }) {
+      nodes {
+        id
+        identifier
+        title
+        url
+        state {
+          name
         }
       }
     }
-    """
+  }
+}
+{{- end }}
+"""
 
     req = urllib.request.Request(
         "https://api.linear.app/graphql",
@@ -178,10 +214,18 @@ def get_list():
     calendars_config = data.get("calendars", {})
     reminders_config = data.get("reminders", {})
 
-    items = []
+    cal_raw = fetch_calendar(calendars_config)
+    rem_raw = fetch_reminders(reminders_config)
+    gh_raw = fetch_github()
+    lin_raw = fetch_linear()
 
-    # 1. Calendar
-    for e in fetch_calendar(calendars_config):
+    cal_items = []
+    rem_items = []
+    gh_items = []
+    lin_items = []
+
+    # 1. Parse Calendar
+    for e in cal_raw:
         title = e.get("title", "Untitled").strip()
         all_day = e.get("all_day", False)
         start_str = e.get("start_date", "")
@@ -203,7 +247,7 @@ def get_list():
             except Exception:
                 time_tag = start_str[:16].replace("T", " ")
 
-        items.append({
+        cal_items.append({
             "type": "CAL",
             "weight": weight,
             "title": title,
@@ -214,9 +258,9 @@ def get_list():
             "repo_path": ""
         })
 
-    # 2. Reminders
+    # 2. Parse Reminders
     priority_order = {"high": 1, "medium": 2, "low": 3, "none": 4}
-    for r in fetch_reminders(reminders_config):
+    for r in rem_raw:
         title = r.get("title", "Untitled").strip()
         prio = r.get("priority", "none").lower()
         due = r.get("due_date", "")
@@ -241,7 +285,7 @@ def get_list():
             else:
                 weight = 15
 
-        items.append({
+        rem_items.append({
             "type": "REM",
             "weight": weight,
             "title": title,
@@ -252,8 +296,8 @@ def get_list():
             "repo_path": ""
         })
 
-    # 3. GitHub
-    for g in fetch_github():
+    # 3. Parse GitHub
+    for g in gh_raw:
         title = g.get("title", "Untitled").strip()
         repo_name = g.get("repository", {}).get("nameWithOwner", "unknown")
 
@@ -272,7 +316,7 @@ def get_list():
         if repo_name:
             repo_path = os.path.join(code_dir, repo_name.split("/")[-1])
 
-        items.append({
+        gh_items.append({
             "type": "GH",
             "weight": weight,
             "title": f"#{g.get('number')} {title}",
@@ -283,8 +327,8 @@ def get_list():
             "repo_path": repo_path
         })
 
-    # 4. Linear
-    for l in fetch_linear():
+    # 4. Parse Linear
+    for l in lin_raw:
         title = l.get("title", "Untitled").strip()
         identifier = l.get("identifier", "unknown")
         state = l.get("state", {}).get("name", "Unknown") if isinstance(l.get("state"), dict) else "Unknown"
@@ -293,7 +337,7 @@ def get_list():
         if state.lower() == "in progress":
             weight = 80
 
-        items.append({
+        lin_items.append({
             "type": "LIN",
             "weight": weight,
             "title": f"[{identifier}] {title}",
@@ -304,15 +348,78 @@ def get_list():
             "repo_path": ""
         })
 
+    # ==========================================
+    # Cross-association and De-duplication Logic
+    # ==========================================
+
+    # Deduplicate 1: Linear Issues vs GitHub Issues/PRs
+    # Map from Linear issue key (e.g. LIN-123) to corresponding GH item
+    github_linear_map = {}
+    for g in gh_items:
+        # Scan for Linear identifiers matching pattern (e.g. LIN-123)
+        found_keys = re.findall(r"([A-Z]+-\d+)", g["title"].upper())
+        for k in found_keys:
+            github_linear_map[k] = g
+
+    final_lin_items = []
+    for l in lin_items:
+        key = l["id"].upper()
+        if key in github_linear_map:
+            # Match found! Merge Linear item into GitHub item
+            g = github_linear_map[key]
+            g["details"] += f" | 🎯 Linear: {key} ({l['details']})"
+            # Boost the weight of the merged item
+            g["weight"] = max(g["weight"], l["weight"]) + 5
+            # Associate the Linear Database ID and URL to the GitHub item
+            g["linear_db_id"] = l["database_id"]
+            g["linear_url"] = l["url"]
+        else:
+            final_lin_items.append(l)
+
+    # Deduplicate 2: Calendar Events vs Reminders
+    # Map from lowercase calendar event titles to calendar items
+    cal_titles = {c["title"].lower().strip(): c for c in cal_items}
+
+    final_rem_items = []
+    for r in rem_items:
+        title_lower = r["title"].lower()
+        matched_cal = None
+        for cal_title in cal_titles:
+            # e.g., Reminder: "Book babysitter for Team Dinner" or "Prep for Team Dinner" matches "Team Dinner" event
+            if cal_title in title_lower:
+                matched_cal = cal_titles[cal_title]
+                break
+
+        if matched_cal:
+            # Match found! Merge Reminder into Calendar event
+            matched_cal["details"] += f" | 📝 Reminder: {r['title']}"
+            # Boost weight
+            matched_cal["weight"] = max(matched_cal["weight"], r["weight"]) + 5
+            # Associate reminder ID to complete it from Calendar actions
+            matched_cal["reminder_id"] = r["id"]
+        else:
+            final_rem_items.append(r)
+
+    # Re-combine all surviving de-duplicated items
+    items = cal_items + final_rem_items + gh_items + final_lin_items
+
     # Sort items by weight descending
     items.sort(key=lambda x: x["weight"], reverse=True)
 
     # Format for fzf
-    # Format: [TYPE] (WEIGHT) Title | DETAILS: <details> | ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path>
+    # Format: [TYPE] (WEIGHT) Title - DETAILS \t| ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path> | LINEAR_DB_ID:<linear_db_id> | LINEAR_URL:<linear_url> | REMINDER_ID:<reminder_id>
     for item in items:
-        # Use simple icons for terminal beauty
         icon = "📅" if item["type"] == "CAL" else "📝" if item["type"] == "REM" else "🐙" if item["type"] == "GH" else "🎯"
-        line = f"{icon} [{item['type']}] ({item['weight']}) {item['title']} - {item['details']} \t| ID:{item['id']} | DATABASE_ID:{item['database_id']} | URL:{item['url']} | REPO_PATH:{item['repo_path']}"
+        line = (
+            f"{icon} [{item['type']}] ({item['weight']}) {item['title']} - {item['details']} \t"
+            f"| ID:{item['id']} "
+            f"| DATABASE_ID:{item['database_id']} "
+            f"| URL:{item['url']} "
+            f"| REPO_PATH:{item['repo_path']} "
+            f"| LINEAR_DB_ID:{item.get('linear_db_id', '')} "
+            f"| LINEAR_URL:{item.get('linear_url', '')} "
+            f"| REMINDER_ID:{item.get('reminder_id', '')}"
+        )
         print(line)
 
 # Action execution
@@ -322,11 +429,17 @@ def act(line):
     match_db_id = re.search(r"\| DATABASE_ID:([^\s|]*)", line)
     match_url = re.search(r"\| URL:([^\s|]*)", line)
     match_path = re.search(r"\| REPO_PATH:([^\s|]*)", line)
+    match_lin_db_id = re.search(r"\| LINEAR_DB_ID:([^\s|]*)", line)
+    match_lin_url = re.search(r"\| LINEAR_URL:([^\s|]*)", line)
+    match_rem_id = re.search(r"\| REMINDER_ID:([^\s|]*)", line)
 
     item_id = match_id.group(1) if match_id else ""
     db_id = match_db_id.group(1) if match_db_id else ""
     item_url = match_url.group(1) if match_url else ""
     repo_path = match_path.group(1) if match_path else ""
+    lin_db_id = match_lin_db_id.group(1) if match_lin_db_id else ""
+    lin_url = match_lin_url.group(1) if match_lin_url else ""
+    rem_id = match_rem_id.group(1) if match_rem_id else ""
 
     item_type = ""
     if "[CAL]" in line:
@@ -348,6 +461,10 @@ def act(line):
         options = [
             ("Copy event details to clipboard", lambda: copy_to_clipboard(line.split('\t')[0]))
         ]
+        if rem_id:
+            options.append(
+                ("Complete associated Reminder", lambda: run_cmd(["remindctl", "complete", rem_id]))
+            )
     elif item_type == "REM":
         options = [
             ("Complete reminder", lambda: run_cmd(["remindctl", "complete", item_id]))
@@ -362,6 +479,13 @@ def act(line):
             ("Comment on PR/Issue", lambda: run_cmd(["gh", "issue", "comment", item_id, "-R", get_repo_from_url(item_url), "-b", input("\nEnter comment body: ").strip()]) if item_url else print("No URL.")),
             ("Add Label to PR/Issue", lambda: run_cmd(["gh", "issue", "edit", item_id, "-R", get_repo_from_url(item_url), "--add-label", input("\nEnter label name: ").strip()]) if item_url else print("No URL."))
         ]
+        # Linear cross-association actions
+        if lin_db_id:
+            options.extend([
+                ("Open linked Linear issue in Browser", lambda: run_cmd(["open", lin_url]) if lin_url else print("No Linear URL.")),
+                ("Comment on linked Linear Issue", lambda: linear_comment(lin_db_id)),
+                ("Transition linked Linear Issue (Change State)", lambda: linear_transition(lin_db_id))
+            ])
     elif item_type == "LIN":
         options = [
             ("Open in Browser", lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")),
