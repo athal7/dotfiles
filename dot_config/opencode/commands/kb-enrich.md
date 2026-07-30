@@ -3,13 +3,13 @@ description: Knowledge base enrichment — enrich profiles, journal, and decisio
 subtask: true
 ---
 
-Enrich the knowledge base for every date since the last run. An explicit date or range given in arguments overrides.
+Enrich the knowledge base for every date since the last run using the `kb` CLI and `kb-git-activity` CLI tools. An explicit date or range given in arguments overrides.
 
 $ARGUMENTS
 
 ## Step 1 — Resolve date range
 
-The most recent `~/.local/share/kb/journal/YYYY-MM-DD.md` is the last-run marker: enrich each date from (last journal date + 1) through today, inclusive. This makes a Monday run sweep the trailing weekend and lets a skipped run self-heal on the next run. If no prior journal exists, default to today. An explicit date or range in arguments overrides this.
+To determine the last-run marker, query the daily journals. Work from the last-recorded journal date + 1 through today, inclusive. This makes a Monday run sweep the trailing weekend and lets a skipped run self-heal on the next run. If no prior journals are found, default to today. An explicit date or range in arguments overrides this.
 
 ## Step 2 — Load collectors
 
@@ -27,46 +27,37 @@ For each enabled collector, apply its embedded query recipe and triage/extractio
 
 ## Step 4 — Write outputs
 
-After all collectors have run, write the enrichment outputs:
+After all collectors have run, write the enrichment outputs exclusively using the `kb` and `kb-git-activity` CLI interfaces:
 
-1. **Journal** — write one cross-project rollup journal file per enriched date at `~/.local/share/kb/journal/YYYY-MM-DD.md`, each with diff stats. By construction each is THIN: feed it only from the NON-excluded sessions (those not covered by an archived change) plus git diff-stats. Rather than running manual git queries, automatically derive and append the daily git coding stats by executing `kb-git-activity --dir ~/code --date <date>` for each enriched date. For `/implement` work, do NOT re-narrate the openspec change — reference the durable store artifacts (`design.md`/specs already in the kb via the symlink). The journal's role is the cross-project rollup + non-`/implement` activity, not a reconstruction of openspec work.
-2. **Profiles** — merge new facts into knowledge-base people and project profiles at `~/.local/share/kb/people/` and `~/.local/share/kb/projects/`.
-3. **Decisions** — add any decisions to the decisions log. Pull key design decisions and rejected alternatives from the durable store's `~/.local/share/kb/openspec/*/changes/archive/YYYY-MM-DD-*/design.md` (READ, don't copy — the artifacts are already in the kb via the symlink). The decisions log is a distilled record anchored to its product/project, not a dump of the design files.
-4. **Action items** — extract action items from the enriched window's activity, then dedup against that same activity: if it shows you already took the action (replied to the thread, reviewed the PR, closed the issue), drop it. Only items still open at window end proceed.
+1. **Journal Rollup**: For each enriched date, automatically derive and append the daily git coding statistics by executing the command:
+   ```bash
+   kb-git-activity --dir ~/code --date <date>
+   ```
+   For non-git rollup and non-`/implement` activity, append rollup highlights under the correct daily section using:
+   ```bash
+   kb journal append --date <date> --section <section_name> --content <content>
+   ```
+   For `/implement` work, do NOT re-narrate the openspec change — reference the durable store artifacts (`design.md`/specs).
 
-   Before filing anything, check for pre-existing duplicates against the likely destination's actual current state — not just this window's activity. A prior run, or activity outside this window, may have already resolved or already filed the same item. For a reminder, this means checking all reminders (open and completed), not only open ones — a completed item won't appear under "open" but still means it's already handled. Match by the item's source URL first, falling back to a close title match. Skip filing anything for a matched item.
+2. **Profiles**: Merge new facts (contact updates, project changes) into the knowledge-base people and project profiles. Query existing profile data using `kb people list` and `kb people show <name>` first to merge and update facts.
 
-   This check must reach past the destination itself to the *source* of the action item: re-verify the underlying thing is still true (a PR still unreviewed, a message still unsent, a config still unset) immediately before presenting for approval — not just whether a matching reminder exists. Collector data is a snapshot; hours can pass between collection and the approval/write phase, during which the user may have resolved the item through a channel the collector never checked.
+3. **Decisions**: Add key architectural decisions to the relevant product/project profiles.
 
-   For each surviving item, use your own judgement about where it belongs rather than following a fixed rule: a reminder, a tracked issue, a message to the relevant person or channel, or nothing at all if it's already tracked at its source (e.g. an open issue surfaced by a collector — filing a duplicate would be worse than a reminder). Weigh the item's nature, which collector surfaced it, and where similar items already live. Default to a reminder when nothing more fitting applies. Preserve the item's source URL in whatever gets filed so it stays traceable back to its origin.
+4. **Action items**: Query the current list of action items using:
+   ```bash
+   kb action-items list
+   ```
+   Extract any newly identified action items from the enriched window's activity, then dedup against the active action items from `kb action-items list`. If the activity shows you already took the action (replied, reviewed, closed), drop it. Only items still open at window end proceed.
 
-   - **Reminder** — local; create directly.
-   - **Tracked issue or message** — remote-system writes. Batch multiple items: show the full content and destination for each, then create them all.
+   Before filing any new items, check for pre-existing duplicates (both open and completed) using `kb action-items list` first. Match by the item's source URL first, falling back to a close title match. Skip filing anything for a matched item.
 
-   Respect the Privacy rules below — never route privacy-excluded content to a shared destination.
+   For each surviving item, use your own judgement about where it belongs: a reminder, a tracked issue, a message to the relevant person or channel, or nothing at all if it's already tracked at its source. Default to creating a local reminder when nothing more fitting applies.
 
-   **APM fix-ledger write-back.** Items surfaced from `fix/apm-*` worktree sessions are governed by `~/.local/share/kb/apm-fix-ledger.jsonl`, not by the general filing rules above. Only `pending` lines are candidates for review — skip `send_failed` lines entirely: those sessions never received their prompt, so there's no session output to reconcile and no write-back to make; the `send_failed` line is already terminal as written by `fix-prod-errors`. For `pending` lines, ride the same batched action-item approval gate used for other remote writes — but once the human decides, resolve them by appending ONE new line to the ledger (same `worktree` value as the pending line; never edit or remove a prior line):
+   **APM fix-ledger write-back.** Items surfaced from `fix/apm-*` worktree sessions are governed by `apm-fix-ledger.jsonl`. Only `pending` lines are candidates for review — skip `send_failed` lines entirely. For `pending` lines, ride the same batched action-item approval gate used for other remote writes — but once decided, resolve them by appending ONE new line to the ledger (keyed by `worktree` value).
 
-   - Approved/filed — `jq -nc --arg wt "$WT" --arg url "$TICKET_URL" --arg dec "$(date -Iseconds)" '{worktree:$wt, disposition:"filed", ticket_url:$url, decided:$dec}' >> ~/.local/share/kb/apm-fix-ledger.jsonl`
-   - Declined — same shape with `disposition:"declined"` and a required `reason` field instead of `ticket_url`.
-   - Session self-classified as noise (per the collector's `noise-confirmed` marking) — same shape with `disposition:"noise-confirmed"`; no human gate needed for this case.
+   **Decision Log write-back.** Sync key decisions to Confluence if `chezmoi data --format json | jq -r '.kb.decision_log_container_page_id'` is configured. Check the ledger `decision-log-sync.jsonl` first: if a candidate decision was already marked `declined` in the last-line disposition, skip it. Otherwise search Confluence using the atlassian subagent for existing pages matching the title/date/label and skip duplicates. Create one page per new approved decision as a child of the container page with the `decision-log` label, and append the resolution line to the sync ledger.
 
-   This ledger line **is** the item's explicit disposition record for APM-fix items — it satisfies the "every extracted item needs an explicit disposition" rule above — and it prevents a stale session from being re-proposed as a fresh draft if it's ever re-scanned by a later run. Re-read the ledger file fresh immediately before finalizing dispositions, not just from an earlier collector pass — `/fix-prod-errors` can dispatch new triage sessions asynchronously later in the same day, appending new `pending` lines after the window's initial scan.
-
-   **Decision Log write-back.** Governed by `~/.local/share/kb/decision-log-sync.jsonl`, not the general filing rules above. This step is opt-in: it runs only if `chezmoi data --format json | jq -r '.kb.decision_log_container_page_id'` resolves to a real page ID. If the key is absent or empty, log "kb.decision_log_container_page_id not configured" and skip this step entirely — no Confluence write happens.
-
-   Candidates are `## Key Decisions` entries from `~/.local/share/kb/projects/*.md` and `~/.local/share/kb/products/*.md` only (never `decisions/cross-cutting.md` or `decisions/archive.md` — out of scope for this feature). Apply a real bar before staging a candidate: it should be a genuinely significant product/architectural decision, ideally one reached by more than one person — routine solo policy or configuration choices (a CI gating rule, a scope-exclusion housekeeping call, a rollout-process tweak) belong in the profile's own `## Key Decisions` section but don't clear the bar for this external write-back. For each candidate, check the ledger first: a last-line disposition of `declined` for that decision means skip it, already ruled out on a prior run. Otherwise dispatch the atlassian subagent to search by the `decision-log` label plus a title/date match — one page per decision, so no in-page fuzzy matching is needed — and skip any candidate that already has a matching page.
-
-   For each surviving candidate, stage one new child page: title is the decision statement (or a short slug of it), body carries the fields Decision, Date, Product/Project, Source (link), and Contributed-by (e.g. "kb-enrich automation"). For how to lay those fields out, check whether a skill or other documentation describes this Confluence space's page-authoring conventions and follow that structure; if none is found, fall back to a plain labeled list of the same fields. The container page lists its children via a plain Child Items macro sorted by native Created date, so no further per-page structured metadata is needed. Destined as a child of the configured container page and stamped with the `decision-log` label. Ride the same batched remote-write approval gate used for other action items above — show the full content and destination for each, then create them all.
-
-   On approval, dispatch the atlassian subagent to create each approved page as a child of the container page with the label applied. Then resolve every candidate — approved or declined — by appending one line to the ledger (keyed by product/project slug + decision text, last line wins):
-
-   - Created — disposition `created` plus the resulting Confluence page URL.
-   - Declined — disposition `declined` plus a required `reason`.
-
-   This ledger line is the decision's explicit disposition record and is what suppresses re-proposing an already-declined decision on a future run.
-
-Before finishing, account for every discrete fact or item any collector extracted: each one needs an explicit disposition, either filed (journal/profile/decision/action item) or deliberately skipped with a stated reason (privacy exclusion, genuine duplicate, or triviality). Don't let an item fall through with no disposition. Apply this especially to single-source facts with no corroborating collector — a new contact, an informal one-off decision surfaced only in Slack — lack of corroboration is not itself a reason to skip.
+Before finishing, account for every discrete fact or item any collector extracted: each one needs an explicit disposition, either filed (journal/profile/decision/action item) or deliberately skipped with a stated reason. Don't let an item fall through with no disposition.
 
 ## Privacy
 
