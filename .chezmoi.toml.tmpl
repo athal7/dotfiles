@@ -10,4 +10,14 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
     email = {{ promptStringOnce . "email" "Work email" | quote }}
     codeDir = {{ promptStringOnce . "codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
     esHost = {{ promptStringOnce . "esHost" "Elasticsearch hostname (e.g. my-cluster.es.cloud.es.io)" "" | quote }}
-    julesHost = {{ promptStringOnce . "julesHost" "Jules remote host/connection (leave blank to disable)" "" | quote }}
+    {{- $enableJules := promptBoolOnce . "enableJules" "Enable Jules custom agent" false }}
+    enableJules = {{ $enableJules }}
+    {{- if $enableJules }}
+    julesCommand = {{ promptStringOnce . "julesCommand" "Command to run Jules" "JULES_API_KEY=$(security find-generic-password -s chezmoi -a jules_api_key -w 2>/dev/null) jules" | quote }}
+    julesAcpCommand = {{ promptStringOnce . "julesAcpCommand" "Jules Agent Client Protocol (ACP) command" "jules-agent-acp" | quote }}
+    julesHost = {{ promptStringOnce . "julesHost" "Jules SSH remote host (optional, leave blank to use API)" "" | quote }}
+    {{- else }}
+    julesCommand = ""
+    julesAcpCommand = ""
+    julesHost = ""
+    {{- end }}
