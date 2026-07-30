@@ -118,15 +118,17 @@ tie_workdir_to_name = true
 trash_retention_days = 30
 unread_indicator = true
 yolo_mode_default = false
+{{- if .julesHost }}
 
 [session.custom_agents]
-jules = "ssh -t your-remote-host command-to-run-jules"
+jules = "ssh -t {{ .julesHost }} command-to-run-jules"
 
 [session.agent_acp_cmd]
 jules = "jules-agent-acp"
 
 [session.agent_detect_as]
 jules = "claude"
+{{- end }}
 
 [sound]
 enabled = false
