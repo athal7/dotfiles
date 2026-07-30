@@ -129,7 +129,7 @@ test_happy_path() {
   # Anchor on the "start" subcommand specifically — "session capture" lines
   # (from the readiness poll) also start with "session" and would otherwise
   # match too.
-  session_start_line="$(grep '^session\tstart' "$AOE_LOG")"
+  session_start_line="$(grep '^session[[:space:]]start' "$AOE_LOG")"
   send_line="$(grep '^send' "$AOE_LOG")"
 
   case "$add_line" in
@@ -165,8 +165,8 @@ test_happy_path() {
 
   local add_lineno session_start_lineno capture_lineno send_lineno
   add_lineno="$(grep -n '^add' "$AOE_LOG" | cut -d: -f1)"
-  session_start_lineno="$(grep -n '^session\tstart' "$AOE_LOG" | cut -d: -f1)"
-  capture_lineno="$(grep -n '^session\tcapture' "$AOE_LOG" | head -1 | cut -d: -f1)"
+  session_start_lineno="$(grep -n '^session[[:space:]]start' "$AOE_LOG" | cut -d: -f1)"
+  capture_lineno="$(grep -n '^session[[:space:]]capture' "$AOE_LOG" | head -1 | cut -d: -f1)"
   send_lineno="$(grep -n '^send' "$AOE_LOG" | cut -d: -f1)"
   if [ "$add_lineno" -lt "$session_start_lineno" ] && \
      [ "$session_start_lineno" -lt "$capture_lineno" ] && \

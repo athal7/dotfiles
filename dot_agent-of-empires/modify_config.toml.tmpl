@@ -118,6 +118,17 @@ tie_workdir_to_name = true
 trash_retention_days = 30
 unread_indicator = true
 yolo_mode_default = false
+{{- if .julesApiKey }}
+
+[session.custom_agents]
+jules = "JULES_API_KEY={{ .julesApiKey }} jules"
+
+[session.agent_acp_cmd]
+jules = "jules"
+
+[session.agent_detect_as]
+jules = "claude"
+{{- end }}
 
 [sound]
 enabled = false
