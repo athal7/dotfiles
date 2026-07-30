@@ -42,18 +42,7 @@ def get_linear_token():
 # Parallel/Sequential data fetching
 def fetch_calendar(calendars_config):
     cal_names = []
-    # Fully customizable calendars via chezmoi data (wtf.calendar.names)
-{{- if hasKey . "wtf" }}
-  {{- if hasKey .wtf "calendar" }}
-    {{- if hasKey .wtf.calendar "names" }}
-      {{- range .wtf.calendar.names }}
-    cal_names.append("{{ . }}")
-      {{- end }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-
-    # Fallback if not custom configured
+    # Source calendar names from standardized chezmoi data (calendars_config)
     if not cal_names:
         for k, v in calendars_config.items():
             if isinstance(v, dict) and "name" in v:
@@ -83,18 +72,7 @@ def fetch_calendar(calendars_config):
 
 def fetch_reminders(reminders_config):
     target_lists = []
-    # Fully customizable reminders list filtering via chezmoi data (wtf.reminders.lists)
-{{- if hasKey . "wtf" }}
-  {{- if hasKey .wtf "reminders" }}
-    {{- if hasKey .wtf.reminders "lists" }}
-      {{- range .wtf.reminders.lists }}
-    target_lists.append("{{ . }}")
-      {{- end }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-
-    # Fallback if not custom configured
+    # Source reminder list names from standardized chezmoi data (reminders_config)
     if not target_lists:
         for k, v in reminders_config.items():
             if isinstance(v, dict) and v.get("attention_check"):
@@ -149,14 +127,10 @@ def fetch_linear():
         return []
 
     # Fully customizable GraphQL query via chezmoi data (wtf.linear.query)
-    # Correct template logic with fallback to default query even if .wtf is present
+    # Correct template logic with fallback to default query
     query = """
-{{- if hasKey . "wtf" }}
-  {{- if hasKey .wtf "linear" }}
-    {{- if hasKey .wtf.linear "query" }}
+{{- if and (hasKey . "wtf") (hasKey .wtf "linear") (hasKey .wtf.linear "query") }}
 {{ .wtf.linear.query }}
-    {{- end }}
-  {{- end }}
 {{- else }}
 query {
   viewer {
@@ -226,7 +200,8 @@ def get_list():
 
     # 1. Parse Calendar
     for e in cal_raw:
-        title = e.get("title", "Untitled").strip()
+        # Sanitize raw external title to remove tab/pipe characters
+        title = e.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
         all_day = e.get("all_day", False)
         start_str = e.get("start_date", "")
 
@@ -261,7 +236,9 @@ def get_list():
     # 2. Parse Reminders
     priority_order = {"high": 1, "medium": 2, "low": 3, "none": 4}
     for r in rem_raw:
-        title = r.get("title", "Untitled").strip()
+        # Sanitize raw external title and list name to remove tab/pipe characters
+        title = r.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
+        list_name = r.get('list', '').replace('\t', ' ').replace('|', '/')
         prio = r.get("priority", "none").lower()
         due = r.get("due_date", "")
 
@@ -289,7 +266,7 @@ def get_list():
             "type": "REM",
             "weight": weight,
             "title": title,
-            "details": f"List: {r.get('list')} | Prio: {prio.upper()}" + (f" | Due: {due[:10]}" if due else ""),
+            "details": f"List: {list_name} | Prio: {prio.upper()}" + (f" | Due: {due[:10]}" if due else ""),
             "id": r.get("id", ""),
             "database_id": "",
             "url": "",
@@ -298,8 +275,9 @@ def get_list():
 
     # 3. Parse GitHub
     for g in gh_raw:
-        title = g.get("title", "Untitled").strip()
-        repo_name = g.get("repository", {}).get("nameWithOwner", "unknown")
+        # Sanitize raw external title and repo name to remove tab/pipe characters
+        title = g.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
+        repo_name = g.get("repository", {}).get("nameWithOwner", "unknown").replace('\t', ' ').replace('|', '/')
 
         weight = 60
         gtype = g.get("type", "")
@@ -329,9 +307,11 @@ def get_list():
 
     # 4. Parse Linear
     for l in lin_raw:
-        title = l.get("title", "Untitled").strip()
-        identifier = l.get("identifier", "unknown")
-        state = l.get("state", {}).get("name", "Unknown") if isinstance(l.get("state"), dict) else "Unknown"
+        # Sanitize raw external title, identifier, and state to remove tab/pipe characters
+        title = l.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
+        identifier = l.get("identifier", "unknown").replace('\t', ' ').replace('|', '/')
+        state_raw = l.get("state", {}).get("name", "Unknown") if isinstance(l.get("state"), dict) else "Unknown"
+        state = state_raw.replace('\t', ' ').replace('|', '/')
 
         weight = 65
         if state.lower() == "in progress":
@@ -385,6 +365,9 @@ def get_list():
         title_lower = r["title"].lower()
         matched_cal = None
         for cal_title in cal_titles:
+            # Skip short or default/placeholder calendar titles to avoid spurious matches
+            if len(cal_title) < 4 or cal_title == "untitled":
+                continue
             # e.g., Reminder: "Book babysitter for Team Dinner" or "Prep for Team Dinner" matches "Team Dinner" event
             if cal_title in title_lower:
                 matched_cal = cal_titles[cal_title]
@@ -395,8 +378,8 @@ def get_list():
             matched_cal["details"] += f" | 📝 Reminder: {r['title']}"
             # Boost weight
             matched_cal["weight"] = max(matched_cal["weight"], r["weight"]) + 5
-            # Associate reminder ID to complete it from Calendar actions
-            matched_cal["reminder_id"] = r["id"]
+            # Associate reminder IDs to complete them from Calendar actions (support multiple reminders per event)
+            matched_cal.setdefault("reminder_ids", []).append(r["id"])
         else:
             final_rem_items.append(r)
 
@@ -410,28 +393,42 @@ def get_list():
     # Format: [TYPE] (WEIGHT) Title - DETAILS \t| ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path> | LINEAR_DB_ID:<linear_db_id> | LINEAR_URL:<linear_url> | REMINDER_ID:<reminder_id>
     for item in items:
         icon = "📅" if item["type"] == "CAL" else "📝" if item["type"] == "REM" else "🐙" if item["type"] == "GH" else "🎯"
+
+        # Safety net: strip any remaining tab characters (pipes are now intentional separators, don't touch them)
+        # Raw external data was already sanitized in the parsing loops above
+        safe_title = item['title'].replace('\t', ' ')
+        safe_details = item['details'].replace('\t', ' ')
+
+        # Join multiple reminder IDs with comma if present
+        reminder_ids_str = ','.join(item.get('reminder_ids', [])) if 'reminder_ids' in item else ''
+
         line = (
-            f"{icon} [{item['type']}] ({item['weight']}) {item['title']} - {item['details']} \t"
+            f"{icon} [{item['type']}] ({item['weight']}) {safe_title} - {safe_details} \t"
             f"| ID:{item['id']} "
             f"| DATABASE_ID:{item['database_id']} "
             f"| URL:{item['url']} "
             f"| REPO_PATH:{item['repo_path']} "
             f"| LINEAR_DB_ID:{item.get('linear_db_id', '')} "
             f"| LINEAR_URL:{item.get('linear_url', '')} "
-            f"| REMINDER_ID:{item.get('reminder_id', '')}"
+            f"| REMINDER_ID:{reminder_ids_str}"
         )
         print(line)
 
 # Action execution
 def act(line):
-    # Parse the line to retrieve metadata
-    match_id = re.search(r"\| ID:([^\s|]*)", line)
-    match_db_id = re.search(r"\| DATABASE_ID:([^\s|]*)", line)
-    match_url = re.search(r"\| URL:([^\s|]*)", line)
-    match_path = re.search(r"\| REPO_PATH:([^\s|]*)", line)
-    match_lin_db_id = re.search(r"\| LINEAR_DB_ID:([^\s|]*)", line)
-    match_lin_url = re.search(r"\| LINEAR_URL:([^\s|]*)", line)
-    match_rem_id = re.search(r"\| REMINDER_ID:([^\s|]*)", line)
+    # Split line into display portion and metadata tail at the first tab
+    parts = line.split('\t', 1)
+    display_portion = parts[0] if parts else line
+    metadata_tail = parts[1] if len(parts) > 1 else ""
+
+    # Parse metadata from the tail only (avoids false positives from display text)
+    match_id = re.search(r"\| ID:([^\s|]*)", metadata_tail)
+    match_db_id = re.search(r"\| DATABASE_ID:([^\s|]*)", metadata_tail)
+    match_url = re.search(r"\| URL:([^\s|]*)", metadata_tail)
+    match_path = re.search(r"\| REPO_PATH:([^\s|]*)", metadata_tail)
+    match_lin_db_id = re.search(r"\| LINEAR_DB_ID:([^\s|]*)", metadata_tail)
+    match_lin_url = re.search(r"\| LINEAR_URL:([^\s|]*)", metadata_tail)
+    match_rem_id = re.search(r"\| REMINDER_ID:([^\s|]*)", metadata_tail)
 
     item_id = match_id.group(1) if match_id else ""
     db_id = match_db_id.group(1) if match_db_id else ""
@@ -439,32 +436,36 @@ def act(line):
     repo_path = match_path.group(1) if match_path else ""
     lin_db_id = match_lin_db_id.group(1) if match_lin_db_id else ""
     lin_url = match_lin_url.group(1) if match_lin_url else ""
-    rem_id = match_rem_id.group(1) if match_rem_id else ""
+    rem_ids_str = match_rem_id.group(1) if match_rem_id else ""
+    rem_ids = [rid.strip() for rid in rem_ids_str.split(',') if rid.strip()] if rem_ids_str else []
 
+    # item_type detection uses display portion (which is fine, as [CAL]/[REM]/[GH]/[LIN] are known safe patterns)
     item_type = ""
-    if "[CAL]" in line:
+    if "[CAL]" in display_portion:
         item_type = "CAL"
-    elif "[REM]" in line:
+    elif "[REM]" in display_portion:
         item_type = "REM"
-    elif "[GH]" in line:
+    elif "[GH]" in display_portion:
         item_type = "GH"
-    elif "[LIN]" in line:
+    elif "[LIN]" in display_portion:
         item_type = "LIN"
 
     print("\n" + "=" * 50)
     print(f"Selected Item Type: {item_type}")
-    print(f"Details: {line.split('\t')[0]}")
+    print(f"Details: {display_portion}")
     print("=" * 50)
 
     options = []
     if item_type == "CAL":
         options = [
-            ("Copy event details to clipboard", lambda: copy_to_clipboard(line.split('\t')[0]))
+            ("Copy event details to clipboard", lambda: copy_to_clipboard(display_portion))
         ]
-        if rem_id:
-            options.append(
-                ("Complete associated Reminder", lambda: run_cmd(["remindctl", "complete", rem_id]))
-            )
+        if rem_ids:
+            # Support completing multiple associated reminders
+            for rid in rem_ids:
+                options.append(
+                    (f"Complete associated Reminder ({rid})", lambda r=rid: run_cmd(["remindctl", "complete", r]))
+                )
     elif item_type == "REM":
         options = [
             ("Complete reminder", lambda: run_cmd(["remindctl", "complete", item_id]))
