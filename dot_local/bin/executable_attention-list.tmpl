@@ -6,7 +6,7 @@ import sys
 import subprocess
 import urllib.request
 import urllib.error
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from pathlib import Path
 
 # Helper to find ical path
@@ -23,7 +23,7 @@ def get_ical_path():
 # Helper to load chezmoi data
 def load_chezmoi_data():
     try:
-        res = subprocess.run(["chezmoi", "data", "--format", "json"], capture_output=True, text=True, check=True)
+        res = subprocess.run(["chezmoi", "data", "--format", "json"], capture_output=True, text=True, check=True, timeout=10)
         return json.loads(res.stdout)
     except Exception:
         return {}
@@ -70,7 +70,7 @@ def fetch_calendar(calendars_config):
     for cal in cal_names:
         try:
             cmd = [ical_bin, "list", "-c", cal, "--from", today_str, "--to", tomorrow_str, "-o", "json"]
-            res = subprocess.run(cmd, capture_output=True, text=True)
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             if res.returncode == 0 and res.stdout.strip():
                 cal_events = json.loads(res.stdout)
                 for e in cal_events:
@@ -97,8 +97,8 @@ def fetch_reminders(reminders_config):
     # Fallback if not custom configured
     if not target_lists:
         for k, v in reminders_config.items():
-            if isinstance(v, dict) and v.get("attention_check"):
-                target_lists.append(v.get("name"))
+            if isinstance(v, dict) and v.get("attention_check") and "name" in v:
+                target_lists.append(v["name"])
 
         # Fallback to all configured list names if none are explicitly marked for attention check
         if not target_lists:
@@ -111,7 +111,7 @@ def fetch_reminders(reminders_config):
 
     try:
         cmd = ["remindctl", "show", "all", "--json"]
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         if res.returncode != 0:
             return []
         all_reminders = json.loads(res.stdout or "[]")
@@ -123,8 +123,8 @@ def fetch_github():
     try:
         # Fetch PRs where review is requested
         pr_res = subprocess.run(
-            ["gh", "pr", "list", "--search", "review-requested:@me", "--json", "number,title,repository,url"],
-            capture_output=True, text=True
+            ["gh", "search", "prs", "review-requested:@me", "--json", "number,title,repository,url"],
+            capture_output=True, text=True, timeout=10
         )
         prs = json.loads(pr_res.stdout) if pr_res.returncode == 0 else []
         for p in prs:
@@ -132,8 +132,8 @@ def fetch_github():
 
         # Fetch assigned issues
         issue_res = subprocess.run(
-            ["gh", "issue", "list", "--assignee", "@me", "--json", "number,title,repository,url"],
-            capture_output=True, text=True
+            ["gh", "search", "issues", "assignee:@me", "--json", "number,title,repository,url"],
+            capture_output=True, text=True, timeout=10
         )
         issues = json.loads(issue_res.stdout) if issue_res.returncode == 0 else []
         for i in issues:
@@ -258,8 +258,8 @@ def get_list():
         time_tag = "All Day"
         if not all_day and start_str:
             try:
-                dt = datetime.fromisoformat(start_str.replace("Z", "+00:00")).replace(tzinfo=None)
-                now = datetime.utcnow()
+                dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                now = datetime.now(timezone.utc)
                 diff_mins = (dt - now).total_seconds() / 60.0
                 time_tag = dt.strftime("%H:%M")
                 if 0 <= diff_mins <= 30:
@@ -338,7 +338,9 @@ def get_list():
         repo_path = ""
         code_dir = data.get("codeDir", str(Path.home() / "code"))
         if repo_name:
-            repo_path = os.path.join(code_dir, repo_name.split("/")[-1])
+            guessed_path = os.path.join(code_dir, repo_name.split("/")[-1])
+            if os.path.isdir(guessed_path):
+                repo_path = guessed_path
 
         items.append({
             "type": "GH",
@@ -348,7 +350,8 @@ def get_list():
             "id": str(g.get("number")),
             "database_id": "",
             "url": g.get("url", ""),
-            "repo_path": repo_path
+            "repo_path": repo_path,
+            "subtype": gtype
         })
 
     # 4. Linear
@@ -376,11 +379,12 @@ def get_list():
     items.sort(key=lambda x: x["weight"], reverse=True)
 
     # Format for fzf
-    # Format: [TYPE] (WEIGHT) Title | DETAILS: <details> | ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path>
+    # Format: [TYPE] (WEIGHT) Title | DETAILS: <details> | ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path> | SUBTYPE:<subtype>
     for item in items:
         # Use simple icons for terminal beauty
         icon = "📅" if item["type"] == "CAL" else "📝" if item["type"] == "REM" else "🐙" if item["type"] == "GH" else "🎯"
-        line = f"{icon} [{item['type']}] ({item['weight']}) {item['title']} - {item['details']} \t| ID:{item['id']} | DATABASE_ID:{item['database_id']} | URL:{item['url']} | REPO_PATH:{item['repo_path']}"
+        subtype = item.get("subtype", "")
+        line = f"{icon} [{item['type']}] ({item['weight']}) {item['title']} - {item['details']} \t| ID:{item['id']} | DATABASE_ID:{item['database_id']} | URL:{item['url']} | REPO_PATH:{item['repo_path']} | SUBTYPE:{subtype}"
         print(line)
 
 # Action execution
@@ -390,11 +394,13 @@ def act(line):
     match_db_id = re.search(r"\| DATABASE_ID:([^\s|]*)", line)
     match_url = re.search(r"\| URL:([^\s|]*)", line)
     match_path = re.search(r"\| REPO_PATH:([^\s|]*)", line)
+    match_subtype = re.search(r"\| SUBTYPE:([^\s|]*)", line)
 
     item_id = match_id.group(1) if match_id else ""
     db_id = match_db_id.group(1) if match_db_id else ""
     item_url = match_url.group(1) if match_url else ""
     repo_path = match_path.group(1) if match_path else ""
+    subtype = match_subtype.group(1) if match_subtype else ""
 
     item_type = ""
     if "[CAL]" in line:
@@ -406,15 +412,18 @@ def act(line):
     elif "[LIN]" in line:
         item_type = "LIN"
 
+    # Hoist split expression for Python <3.12 compatibility
+    line_display = line.split('\t')[0]
+
     print("\n" + "=" * 50)
     print(f"Selected Item Type: {item_type}")
-    print(f"Details: {line.split('\t')[0]}")
+    print(f"Details: {line_display}")
     print("=" * 50)
 
     options = []
     if item_type == "CAL":
         options = [
-            ("Copy event details to clipboard", lambda: copy_to_clipboard(line.split('\t')[0]))
+            ("Copy event details to clipboard", lambda: copy_to_clipboard(line_display))
         ]
     elif item_type == "REM":
         options = [
@@ -423,13 +432,24 @@ def act(line):
     elif item_type == "GH":
         options = [
             ("Open in Browser", lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")),
-            ("Start Agent session (aoe-cmd)", lambda: run_cmd(["aoe-cmd", "-d", repo_path, "-n", f"issue-{item_id}", "-b", "-w", f"issue-{item_id}", f"Work on issue {item_id} in this repo"]) if repo_path else print("No local repo path mapped.")),
-            ("Review with Lumen", lambda: run_cmd(["lumen", "review", "--repo", get_repo_from_url(item_url), "--pr", item_id]) if item_url else print("No URL.")),
-            ("Approve PR", lambda: run_cmd(["gh", "pr", "review", "--approve", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")),
-            ("Merge PR (Squash)", lambda: run_cmd(["gh", "pr", "merge", "--squash", "--delete-branch", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")),
-            ("Comment on PR/Issue", lambda: run_cmd(["gh", "issue", "comment", item_id, "-R", get_repo_from_url(item_url), "-b", input("\nEnter comment body: ").strip()]) if item_url else print("No URL.")),
-            ("Add Label to PR/Issue", lambda: run_cmd(["gh", "issue", "edit", item_id, "-R", get_repo_from_url(item_url), "--add-label", input("\nEnter label name: ").strip()]) if item_url else print("No URL."))
+            ("Start Agent session (aoe-cmd)", lambda: run_cmd(["aoe-cmd", "-d", repo_path, "-n", f"issue-{item_id}", "-b", "-w", f"issue-{item_id}", f"Work on issue {item_id} in this repo"]) if repo_path else print("No local repo path mapped."))
         ]
+
+        # Add PR-specific actions for review_request items
+        if subtype == "review_request":
+            options.extend([
+                ("Review with Lumen", lambda: run_cmd(["lumen", "review", "--repo", get_repo_from_url(item_url), "--pr", item_id]) if item_url else print("No URL.")),
+                ("Approve PR", lambda: run_cmd(["gh", "pr", "review", "--approve", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")),
+                ("Merge PR (Squash)", lambda: run_cmd(["gh", "pr", "merge", "--squash", "--delete-branch", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")),
+                ("Comment on PR", lambda: run_cmd(["gh", "pr", "comment", item_id, "-R", get_repo_from_url(item_url), "-b", input("\nEnter comment body: ").strip()]) if item_url else print("No URL.")),
+                ("Add Label to PR", lambda: run_cmd(["gh", "pr", "edit", item_id, "-R", get_repo_from_url(item_url), "--add-label", input("\nEnter label name: ").strip()]) if item_url else print("No URL."))
+            ])
+        # Add issue-specific actions for assigned_issue items
+        elif subtype == "assigned_issue":
+            options.extend([
+                ("Comment on Issue", lambda: run_cmd(["gh", "issue", "comment", item_id, "-R", get_repo_from_url(item_url), "-b", input("\nEnter comment body: ").strip()]) if item_url else print("No URL.")),
+                ("Add Label to Issue", lambda: run_cmd(["gh", "issue", "edit", item_id, "-R", get_repo_from_url(item_url), "--add-label", input("\nEnter label name: ").strip()]) if item_url else print("No URL."))
+            ])
     elif item_type == "LIN":
         options = [
             ("Open in Browser", lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")),
