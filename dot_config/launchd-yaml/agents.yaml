@@ -182,8 +182,8 @@ launchagents:
       - -n
       - kb-enrich
       - /kb-enrich
-    # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
-    # by then, so each run simply enriches that same day's activity.
+    # Weekday evenings only (1=Mon … 5=Fri) at 20:00. Orchestrates all collectors
+    # (Slack, Atlassian, Linear, Zoom, GH, OpenCode) via programmatic CLI tools and logging.
     StartCalendarInterval:
       - Weekday: 1
         Hour: 20
@@ -204,6 +204,7 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/kb-enrich.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      KB_ROOT: $HOME/.local/share/kb
 
   mlx-qwen-server:
     Label: com.$USER.mlx-qwen-server
