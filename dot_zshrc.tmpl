@@ -55,13 +55,6 @@ export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 # Enable reverse search (ctrl-r)
 bindkey '^R' history-incremental-search-backward
 
-# bun completions
-[ -s "{{ .chezmoi.homeDir }}/.bun/_bun" ] && source "{{ .chezmoi.homeDir }}/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
 # Prioritized interactive multi-service attention/inbox triage via fzf
 attention() {
   local selected
