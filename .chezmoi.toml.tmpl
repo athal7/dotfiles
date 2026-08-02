@@ -10,4 +10,3 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
     email = {{ promptStringOnce . "email" "Work email" | quote }}
     codeDir = {{ promptStringOnce . "codeDir" "Code directory" (joinPath .chezmoi.homeDir "code") | quote }}
     esHost = {{ promptStringOnce . "esHost" "Elasticsearch hostname (e.g. my-cluster.es.cloud.es.io)" "" | quote }}
-    julesApiKey = {{ promptStringOnce . "julesApiKey" "Jules API key (from jules.google.com/settings)" "" | quote }}

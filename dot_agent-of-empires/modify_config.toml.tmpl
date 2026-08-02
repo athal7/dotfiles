@@ -118,17 +118,15 @@ tie_workdir_to_name = true
 trash_retention_days = 30
 unread_indicator = true
 yolo_mode_default = false
-{{- if .julesApiKey }}
 
 [session.custom_agents]
-jules = "JULES_API_KEY={{ .julesApiKey }} jules"
+jules = "jules"
 
 [session.agent_acp_cmd]
 jules = "jules"
 
 [session.agent_detect_as]
 jules = "claude"
-{{- end }}
 
 [sound]
 enabled = false
@@ -179,7 +177,7 @@ path_template = "../{repo-name}-worktrees/{branch}"
 workspace_path_template = "../{branch}-workspace-{session-id}"
 ` -}}
 {{- $liveAppState := dict -}}
-{{- if .chezmoi.stdin -}}
+{{- if and (hasKey .chezmoi "stdin") .chezmoi.stdin -}}
 {{-   $live := fromToml .chezmoi.stdin -}}
 {{-   if hasKey $live "app_state" -}}
 {{-     $liveAppState = index $live "app_state" -}}
