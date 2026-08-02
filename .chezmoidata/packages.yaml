@@ -37,6 +37,7 @@ packages:
     - name: container
     - name: direnv
     - name: ffmpeg
+    - name: fzf
     - name: git
       permissions:
         "git commit*": ask

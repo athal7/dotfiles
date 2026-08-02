@@ -61,3 +61,14 @@ bindkey '^R' history-incremental-search-backward
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Prioritized interactive multi-service attention/inbox triage via fzf
+attention() {
+  local selected
+  # Fetch the unified, prioritized list and pipe to fzf, using tab as delimiter and hiding metadata tokens for display
+  selected=$(attention-list 2>/dev/null | fzf --ansi --header "Select an item to act (Press Enter for available actions)" -d '\t' --with-nth 1)
+  if [[ -n "$selected" ]]; then
+    attention-list act "$selected"
+  fi
+}
+alias att=attention
