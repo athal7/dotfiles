@@ -1,0 +1,35 @@
+{{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
+       NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
+       from .chezmoidata/bash-permissions.yaml via the opencode-bash partial. */ -}}
+{{- $globalBash := dict -}}
+{{- range $list := .packages -}}
+  {{- if kindIs "slice" $list -}}
+    {{- range $entry := $list -}}
+      {{- if kindIs "map" $entry -}}
+        {{- $perms := index $entry "permissions" -}}
+        {{- if $perms -}}
+          {{- range $pattern, $action := $perms -}}
+            {{- $_ := set $globalBash $pattern $action -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $bp := .bashPermissions -}}
+{
+  "default_agent": "lead",
+  "permission": {
+    "skill": {{ .permissions.skill | quote }},
+    "read": {{ .permissions.read | quote }},
+    "grep": {{ .permissions.grep | quote }},
+    "glob": {{ .permissions.find | quote }},
+    "find": {{ .permissions.find | quote }},
+    "ls": {{ .permissions.ls | quote }},
+    "external_directory": {{ .permissions.external_directory | toPrettyJson | indent 4 | trim }},
+    "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.global "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 4 | trim }}
+  },
+  "agent": {
+    {{ includeTemplate "omp-agents" (dict "agents" .agents "bp" $bp "packages" $globalBash) | indent 4 | trim }}
+  }
+}
