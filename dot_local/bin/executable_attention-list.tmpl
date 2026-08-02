@@ -1,0 +1,630 @@
+#!/usr/bin/env python3
+import json
+import os
+import re
+import sys
+import subprocess
+import urllib.request
+import urllib.error
+from datetime import datetime, date, timedelta
+from pathlib import Path
+
+# Helper to find ical path
+def get_ical_path():
+    try:
+        which = subprocess.run(["which", "ical"], capture_output=True, text=True)
+        if which.returncode == 0 and which.stdout.strip():
+            return which.stdout.strip()
+    except Exception:
+        pass
+    local_path = Path.home() / ".local/bin/ical"
+    return str(local_path) if local_path.exists() else "ical"
+
+# Helper to load chezmoi data
+def load_chezmoi_data():
+    try:
+        res = subprocess.run(["chezmoi", "data", "--format", "json"], capture_output=True, text=True, check=True)
+        return json.loads(res.stdout)
+    except Exception:
+        return {}
+
+# Linear token retrieval
+def get_linear_token():
+    try:
+        res = subprocess.run(
+            ["security", "find-generic-password", "-s", "chezmoi", "-a", "linear_api_token", "-w"],
+            capture_output=True, text=True, check=True
+        )
+        return res.stdout.strip()
+    except Exception:
+        return os.environ.get("LINEAR_API_TOKEN") or os.environ.get("LINEAR_TOKEN")
+
+# Parallel/Sequential data fetching
+def fetch_calendar(calendars_config):
+    cal_names = []
+    # Source calendar names from standardized chezmoi data (calendars_config)
+    if not cal_names:
+        for k, v in calendars_config.items():
+            if isinstance(v, dict) and "name" in v:
+                cal_names.append(v["name"])
+
+    if not cal_names:
+        return []
+
+    ical_bin = get_ical_path()
+    today_str = str(date.today())
+    tomorrow_str = str(date.today() + timedelta(days=1))
+
+    events = []
+    for cal in cal_names:
+        try:
+            cmd = [ical_bin, "list", "-c", cal, "--from", today_str, "--to", tomorrow_str, "-o", "json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout.strip():
+                cal_events = json.loads(res.stdout)
+                for e in cal_events:
+                    if e.get("status") == "cancelled" or e.get("availability") == "free":
+                        continue
+                    events.append(e)
+        except Exception:
+            continue
+    return events
+
+def fetch_reminders(reminders_config):
+    target_lists = []
+    # Source reminder list names from standardized chezmoi data (reminders_config)
+    if not target_lists:
+        for k, v in reminders_config.items():
+            if isinstance(v, dict) and v.get("attention_check"):
+                target_lists.append(v.get("name"))
+
+        # Fallback to all configured list names if none are explicitly marked for attention check
+        if not target_lists:
+            for k, v in reminders_config.items():
+                if isinstance(v, dict) and "name" in v:
+                    target_lists.append(v["name"])
+
+    if not target_lists:
+        return []
+
+    try:
+        cmd = ["remindctl", "show", "all", "--json"]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            return []
+        all_reminders = json.loads(res.stdout or "[]")
+        return [r for r in all_reminders if not r.get("completed") and r.get("list") in target_lists]
+    except Exception:
+        return []
+
+def fetch_github():
+    try:
+        # Fetch PRs where review is requested
+        pr_res = subprocess.run(
+            ["gh", "pr", "list", "--search", "review-requested:@me", "--json", "number,title,repository,url"],
+            capture_output=True, text=True
+        )
+        prs = json.loads(pr_res.stdout) if pr_res.returncode == 0 else []
+        for p in prs:
+            p["type"] = "review_request"
+
+        # Fetch assigned issues
+        issue_res = subprocess.run(
+            ["gh", "issue", "list", "--assignee", "@me", "--json", "number,title,repository,url"],
+            capture_output=True, text=True
+        )
+        issues = json.loads(issue_res.stdout) if issue_res.returncode == 0 else []
+        for i in issues:
+            i["type"] = "assigned_issue"
+
+        return prs + issues
+    except Exception:
+        return []
+
+def fetch_linear():
+    token = get_linear_token()
+    if not token:
+        return []
+
+    # Fully customizable GraphQL query via chezmoi data (wtf.linear.query)
+    # Correct template logic with fallback to default query
+    query = """
+{{- if and (hasKey . "wtf") (hasKey .wtf "linear") (hasKey .wtf.linear "query") }}
+{{ .wtf.linear.query }}
+{{- else }}
+query {
+  viewer {
+    assignedIssues(filter: { state: { name: { neq: "Done" } } }) {
+      nodes {
+        id
+        identifier
+        title
+        url
+        state {
+          name
+        }
+      }
+    }
+  }
+}
+{{- end }}
+"""
+
+    req = urllib.request.Request(
+        "https://api.linear.app/graphql",
+        data=json.dumps({"query": query}).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": token
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            if "errors" in res_data:
+                return []
+
+            # Helper to recursively extract Linear issues
+            def extract(data):
+                if isinstance(data, list):
+                    for item in data:
+                        yield from extract(item)
+                elif isinstance(data, dict):
+                    if "identifier" in data and "title" in data:
+                        yield data
+                    else:
+                        for val in data.values():
+                            yield from extract(val)
+
+            return list(extract(res_data.get("data", {})))
+    except Exception:
+        return []
+
+# Prioritization and output generation
+def get_list():
+    data = load_chezmoi_data()
+    calendars_config = data.get("calendars", {})
+    reminders_config = data.get("reminders", {})
+
+    cal_raw = fetch_calendar(calendars_config)
+    rem_raw = fetch_reminders(reminders_config)
+    gh_raw = fetch_github()
+    lin_raw = fetch_linear()
+
+    cal_items = []
+    rem_items = []
+    gh_items = []
+    lin_items = []
+
+    # 1. Parse Calendar
+    for e in cal_raw:
+        # Sanitize raw external title to remove tab/pipe characters
+        title = e.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
+        all_day = e.get("all_day", False)
+        start_str = e.get("start_date", "")
+
+        weight = 50
+        time_tag = "All Day"
+        if not all_day and start_str:
+            try:
+                dt = datetime.fromisoformat(start_str.replace("Z", "+00:00")).replace(tzinfo=None)
+                now = datetime.utcnow()
+                diff_mins = (dt - now).total_seconds() / 60.0
+                time_tag = dt.strftime("%H:%M")
+                if 0 <= diff_mins <= 30:
+                    weight = 100
+                elif 0 <= diff_mins <= 120:
+                    weight = 80
+                elif diff_mins < 0:
+                    weight = 20 # past
+            except Exception:
+                time_tag = start_str[:16].replace("T", " ")
+
+        cal_items.append({
+            "type": "CAL",
+            "weight": weight,
+            "title": title,
+            "details": f"Time: {time_tag}",
+            "id": e.get("id", ""),
+            "database_id": "",
+            "url": "",
+            "repo_path": ""
+        })
+
+    # 2. Parse Reminders
+    priority_order = {"high": 1, "medium": 2, "low": 3, "none": 4}
+    for r in rem_raw:
+        # Sanitize raw external title and list name to remove tab/pipe characters
+        title = r.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
+        list_name = r.get('list', '').replace('\t', ' ').replace('|', '/')
+        prio = r.get("priority", "none").lower()
+        due = r.get("due_date", "")
+
+        weight = 50
+        if due:
+            try:
+                due_date = date.fromisoformat(due[:10])
+                if due_date < date.today():
+                    weight = 95 # overdue
+                elif due_date == date.today():
+                    weight = 85 # due today
+            except Exception:
+                pass
+        else:
+            if prio == "high":
+                weight = 70
+            elif prio == "medium":
+                weight = 50
+            elif prio == "low":
+                weight = 30
+            else:
+                weight = 15
+
+        rem_items.append({
+            "type": "REM",
+            "weight": weight,
+            "title": title,
+            "details": f"List: {list_name} | Prio: {prio.upper()}" + (f" | Due: {due[:10]}" if due else ""),
+            "id": r.get("id", ""),
+            "database_id": "",
+            "url": "",
+            "repo_path": ""
+        })
+
+    # 3. Parse GitHub
+    for g in gh_raw:
+        # Sanitize raw external title and repo name to remove tab/pipe characters
+        title = g.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
+        repo_name = g.get("repository", {}).get("nameWithOwner", "unknown").replace('\t', ' ').replace('|', '/')
+
+        weight = 60
+        gtype = g.get("type", "")
+        if gtype == "review_request":
+            weight = 90
+            details = f"Review Requested | Repo: {repo_name}"
+        else:
+            weight = 75
+            details = f"Assigned Issue | Repo: {repo_name}"
+
+        # Resolve Repo Path if configured in chezmoi
+        repo_path = ""
+        code_dir = data.get("codeDir", str(Path.home() / "code"))
+        if repo_name:
+            repo_path = os.path.join(code_dir, repo_name.split("/")[-1])
+
+        gh_items.append({
+            "type": "GH",
+            "weight": weight,
+            "title": f"#{g.get('number')} {title}",
+            "details": details,
+            "id": str(g.get("number")),
+            "database_id": "",
+            "url": g.get("url", ""),
+            "repo_path": repo_path
+        })
+
+    # 4. Parse Linear
+    for l in lin_raw:
+        # Sanitize raw external title, identifier, and state to remove tab/pipe characters
+        title = l.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
+        identifier = l.get("identifier", "unknown").replace('\t', ' ').replace('|', '/')
+        state_raw = l.get("state", {}).get("name", "Unknown") if isinstance(l.get("state"), dict) else "Unknown"
+        state = state_raw.replace('\t', ' ').replace('|', '/')
+
+        weight = 65
+        if state.lower() == "in progress":
+            weight = 80
+
+        lin_items.append({
+            "type": "LIN",
+            "weight": weight,
+            "title": f"[{identifier}] {title}",
+            "details": f"State: {state}",
+            "id": identifier,
+            "database_id": l.get("id", ""),
+            "url": l.get("url", ""),
+            "repo_path": ""
+        })
+
+    # ==========================================
+    # Cross-association and De-duplication Logic
+    # ==========================================
+
+    # Deduplicate 1: Linear Issues vs GitHub Issues/PRs
+    # Map from Linear issue key (e.g. LIN-123) to corresponding GH item
+    github_linear_map = {}
+    for g in gh_items:
+        # Scan for Linear identifiers matching pattern (e.g. LIN-123)
+        found_keys = re.findall(r"([A-Z]+-\d+)", g["title"].upper())
+        for k in found_keys:
+            github_linear_map[k] = g
+
+    final_lin_items = []
+    for l in lin_items:
+        key = l["id"].upper()
+        if key in github_linear_map:
+            # Match found! Merge Linear item into GitHub item
+            g = github_linear_map[key]
+            g["details"] += f" | 🎯 Linear: {key} ({l['details']})"
+            # Boost the weight of the merged item
+            g["weight"] = max(g["weight"], l["weight"]) + 5
+            # Associate the Linear Database ID and URL to the GitHub item
+            g["linear_db_id"] = l["database_id"]
+            g["linear_url"] = l["url"]
+        else:
+            final_lin_items.append(l)
+
+    # Deduplicate 2: Calendar Events vs Reminders
+    # Map from lowercase calendar event titles to calendar items
+    cal_titles = {c["title"].lower().strip(): c for c in cal_items}
+
+    final_rem_items = []
+    for r in rem_items:
+        title_lower = r["title"].lower()
+        matched_cal = None
+        for cal_title in cal_titles:
+            # Skip short or default/placeholder calendar titles to avoid spurious matches
+            if len(cal_title) < 4 or cal_title == "untitled":
+                continue
+            # e.g., Reminder: "Book babysitter for Team Dinner" or "Prep for Team Dinner" matches "Team Dinner" event
+            if cal_title in title_lower:
+                matched_cal = cal_titles[cal_title]
+                break
+
+        if matched_cal:
+            # Match found! Merge Reminder into Calendar event
+            matched_cal["details"] += f" | 📝 Reminder: {r['title']}"
+            # Boost weight
+            matched_cal["weight"] = max(matched_cal["weight"], r["weight"]) + 5
+            # Associate reminder IDs to complete them from Calendar actions (support multiple reminders per event)
+            matched_cal.setdefault("reminder_ids", []).append(r["id"])
+        else:
+            final_rem_items.append(r)
+
+    # Re-combine all surviving de-duplicated items
+    items = cal_items + final_rem_items + gh_items + final_lin_items
+
+    # Sort items by weight descending
+    items.sort(key=lambda x: x["weight"], reverse=True)
+
+    # Format for fzf
+    # Format: [TYPE] (WEIGHT) Title - DETAILS \t| ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path> | LINEAR_DB_ID:<linear_db_id> | LINEAR_URL:<linear_url> | REMINDER_ID:<reminder_id>
+    for item in items:
+        icon = "📅" if item["type"] == "CAL" else "📝" if item["type"] == "REM" else "🐙" if item["type"] == "GH" else "🎯"
+
+        # Safety net: strip any remaining tab characters (pipes are now intentional separators, don't touch them)
+        # Raw external data was already sanitized in the parsing loops above
+        safe_title = item['title'].replace('\t', ' ')
+        safe_details = item['details'].replace('\t', ' ')
+
+        # Join multiple reminder IDs with comma if present
+        reminder_ids_str = ','.join(item.get('reminder_ids', [])) if 'reminder_ids' in item else ''
+
+        line = (
+            f"{icon} [{item['type']}] ({item['weight']}) {safe_title} - {safe_details} \t"
+            f"| ID:{item['id']} "
+            f"| DATABASE_ID:{item['database_id']} "
+            f"| URL:{item['url']} "
+            f"| REPO_PATH:{item['repo_path']} "
+            f"| LINEAR_DB_ID:{item.get('linear_db_id', '')} "
+            f"| LINEAR_URL:{item.get('linear_url', '')} "
+            f"| REMINDER_ID:{reminder_ids_str}"
+        )
+        print(line)
+
+# Action execution
+def act(line):
+    # Split line into display portion and metadata tail at the first tab
+    parts = line.split('\t', 1)
+    display_portion = parts[0] if parts else line
+    metadata_tail = parts[1] if len(parts) > 1 else ""
+
+    # Parse metadata from the tail only (avoids false positives from display text)
+    match_id = re.search(r"\| ID:([^\s|]*)", metadata_tail)
+    match_db_id = re.search(r"\| DATABASE_ID:([^\s|]*)", metadata_tail)
+    match_url = re.search(r"\| URL:([^\s|]*)", metadata_tail)
+    match_path = re.search(r"\| REPO_PATH:([^\s|]*)", metadata_tail)
+    match_lin_db_id = re.search(r"\| LINEAR_DB_ID:([^\s|]*)", metadata_tail)
+    match_lin_url = re.search(r"\| LINEAR_URL:([^\s|]*)", metadata_tail)
+    match_rem_id = re.search(r"\| REMINDER_ID:([^\s|]*)", metadata_tail)
+
+    item_id = match_id.group(1) if match_id else ""
+    db_id = match_db_id.group(1) if match_db_id else ""
+    item_url = match_url.group(1) if match_url else ""
+    repo_path = match_path.group(1) if match_path else ""
+    lin_db_id = match_lin_db_id.group(1) if match_lin_db_id else ""
+    lin_url = match_lin_url.group(1) if match_lin_url else ""
+    rem_ids_str = match_rem_id.group(1) if match_rem_id else ""
+    rem_ids = [rid.strip() for rid in rem_ids_str.split(',') if rid.strip()] if rem_ids_str else []
+
+    # item_type detection uses display portion (which is fine, as [CAL]/[REM]/[GH]/[LIN] are known safe patterns)
+    item_type = ""
+    if "[CAL]" in display_portion:
+        item_type = "CAL"
+    elif "[REM]" in display_portion:
+        item_type = "REM"
+    elif "[GH]" in display_portion:
+        item_type = "GH"
+    elif "[LIN]" in display_portion:
+        item_type = "LIN"
+
+    print("\n" + "=" * 50)
+    print(f"Selected Item Type: {item_type}")
+    print(f"Details: {display_portion}")
+    print("=" * 50)
+
+    options = []
+    if item_type == "CAL":
+        options = [
+            ("Copy event details to clipboard", lambda: copy_to_clipboard(display_portion))
+        ]
+        if rem_ids:
+            # Support completing multiple associated reminders
+            for rid in rem_ids:
+                options.append(
+                    (f"Complete associated Reminder ({rid})", lambda r=rid: run_cmd(["remindctl", "complete", r]))
+                )
+    elif item_type == "REM":
+        options = [
+            ("Complete reminder", lambda: run_cmd(["remindctl", "complete", item_id]))
+        ]
+    elif item_type == "GH":
+        options = [
+            ("Open in Browser", lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")),
+            ("Start Agent session (aoe-cmd)", lambda: run_cmd(["aoe-cmd", "-d", repo_path, "-n", f"issue-{item_id}", "-b", "-w", f"issue-{item_id}", f"Work on issue {item_id} in this repo"]) if repo_path else print("No local repo path mapped.")),
+            ("Review with Lumen", lambda: run_cmd(["lumen", "review", "--repo", get_repo_from_url(item_url), "--pr", item_id]) if item_url else print("No URL.")),
+            ("Approve PR", lambda: run_cmd(["gh", "pr", "review", "--approve", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")),
+            ("Merge PR (Squash)", lambda: run_cmd(["gh", "pr", "merge", "--squash", "--delete-branch", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")),
+            ("Comment on PR/Issue", lambda: run_cmd(["gh", "issue", "comment", item_id, "-R", get_repo_from_url(item_url), "-b", input("\nEnter comment body: ").strip()]) if item_url else print("No URL.")),
+            ("Add Label to PR/Issue", lambda: run_cmd(["gh", "issue", "edit", item_id, "-R", get_repo_from_url(item_url), "--add-label", input("\nEnter label name: ").strip()]) if item_url else print("No URL."))
+        ]
+        # Linear cross-association actions
+        if lin_db_id:
+            options.extend([
+                ("Open linked Linear issue in Browser", lambda: run_cmd(["open", lin_url]) if lin_url else print("No Linear URL.")),
+                ("Comment on linked Linear Issue", lambda: linear_comment(lin_db_id)),
+                ("Transition linked Linear Issue (Change State)", lambda: linear_transition(lin_db_id))
+            ])
+    elif item_type == "LIN":
+        options = [
+            ("Open in Browser", lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")),
+            ("Start Agent session (aoe-cmd)", lambda: run_cmd(["aoe-cmd", "-d", os.getcwd(), "-n", f"linear-{item_id}", f"Work on Linear issue {item_id}"])),
+            ("Comment on Issue", lambda: linear_comment(db_id)),
+            ("Transition Issue (Change State)", lambda: linear_transition(db_id))
+        ]
+
+    options.append(("Exit", lambda: sys.exit(0)))
+
+    for idx, (desc, _) in enumerate(options, 1):
+        print(f"{idx}) {desc}")
+
+    try:
+        choice = input("\nSelect action [1-%d]: " % len(options)).strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            options[int(choice) - 1][1]()
+        else:
+            print("Invalid choice. Exiting.")
+    except (KeyboardInterrupt, EOFError):
+        print("\nExiting.")
+
+def copy_to_clipboard(text):
+    try:
+        p = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+        p.communicate(input=text.encode("utf-8"))
+        print("Copied to clipboard!")
+    except Exception as e:
+        print(f"Failed to copy: {e}")
+
+def run_cmd(cmd):
+    try:
+        print(f"Running: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
+    except Exception as e:
+        print(f"Command failed: {e}")
+
+def get_repo_from_url(url):
+    # e.g., https://github.com/athal7/kb/pull/40 -> athal7/kb
+    m = re.search(r"github\.com/([^/]+/[^/]+)", url)
+    return m.group(1) if m else ""
+
+# Linear API Helper mutations
+def query_linear_graphql(query, variables=None):
+    token = get_linear_token()
+    if not token:
+        print("Linear token not available.")
+        return None
+    req = urllib.request.Request(
+        "https://api.linear.app/graphql",
+        data=json.dumps({"query": query, "variables": variables or {}}).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": token
+        },
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception as e:
+        print(f"Linear query failed: {e}")
+        return None
+
+def linear_comment(issue_uuid):
+    if not issue_uuid:
+        print("No issue database ID available to comment.")
+        return
+    body = input("\nEnter comment body: ").strip()
+    if not body:
+        print("Empty comment. Canceled.")
+        return
+    query = """
+    mutation($issueId: String!, $body: String!) {
+      commentCreate(input: { issueId: $issueId, body: $body }) {
+        success
+      }
+    }
+    """
+    res = query_linear_graphql(query, {"issueId": issue_uuid, "body": body})
+    if res and not res.get("errors"):
+        print("Comment created successfully!")
+    else:
+        print("Failed to create comment.")
+
+def linear_transition(issue_uuid):
+    if not issue_uuid:
+        print("No issue database ID available to transition.")
+        return
+    # First, fetch workflow states
+    query_states = """
+    query {
+      workflowStates {
+        nodes {
+          id
+          name
+        }
+      }
+    }
+    """
+    res_states = query_linear_graphql(query_states)
+    if not res_states or res_states.get("errors"):
+        print("Could not retrieve states.")
+        return
+    states = res_states.get("data", {}).get("workflowStates", {}).get("nodes", [])
+    if not states:
+        print("No workflow states found.")
+        return
+
+    print("\nAvailable States:")
+    for idx, s in enumerate(states, 1):
+        print(f"{idx}) {s['name']}")
+
+    try:
+        choice = input("\nSelect state to transition to [1-%d]: " % len(states)).strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(states):
+            target_state_id = states[int(choice) - 1]["id"]
+            target_state_name = states[int(choice) - 1]["name"]
+            # Perform transition
+            query_update = """
+            mutation($id: String!, $stateId: String!) {
+              issueUpdate(id: $id, input: { stateId: $stateId }) {
+                success
+              }
+            }
+            """
+            res_update = query_linear_graphql(query_update, {"id": issue_uuid, "stateId": target_state_id})
+            if res_update and not res_update.get("errors"):
+                print(f"Issue transitioned successfully to '{target_state_name}'!")
+            else:
+                print("Failed to transition issue.")
+        else:
+            print("Invalid choice.")
+    except (KeyboardInterrupt, EOFError):
+        print("\nCanceled.")
+
+if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "act":
+        act(sys.argv[2])
+    else:
+        get_list()
