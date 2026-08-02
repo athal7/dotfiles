@@ -196,6 +196,8 @@ packages:
       version: "3.4"
     - name: node
       version: lts
+    - name: bun
+      version: latest
     - name: python
       version: "3"
     - name: rust
