@@ -77,6 +77,8 @@ packages:
         "gh *": deny
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
+    - name: athal7/tap/kb
+    - name: athal7/tap/opencode-pilot
     - name: git-spice
     - name: jc
     - name: jq
