@@ -131,7 +131,6 @@ packages:
     - name: gcloud-cli
     - name: font-monaspace-nf
     - name: claude-code
-    - name: menumeters
     - name: tailscale-app
     - name: obsidian
     - name: figma
