@@ -316,17 +316,12 @@ test_declined_event_excluded() {
 test_declined_event_excluded
 
 # ---------------------------------------------------------------------------
-# Covers the multi-org bug where fetch_github() ANDed every configured org
-# into a single `org:a org:b` search qualifier, which GitHub's search
-# semantics can never match (a repo can't belong to two orgs at once) and so
-# always returned zero results. Correct behavior is one search per org,
-# merged together. The stub `gh` logs its argv (so the test can assert the
-# per-org invocation shape) and returns a distinct fixture PR/issue per org
-# (so the test can assert results from every org actually survive the merge).
+# fetch_github() never scopes its search by org: one unscoped @me search
+# per query type, full stop.
 echo
-echo "== gh org scoping regression (multi-org dedupe) =="
+echo "== gh search regression (no org/user scoping) =="
 
-GH_BIN="$WORK/bin-gh-scope"
+GH_BIN="$WORK/bin-gh-noorg-scoping"
 mkdir -p "$GH_BIN"
 GH_LOG="$WORK/gh-invocations.log"
 : > "$GH_LOG"
@@ -337,11 +332,7 @@ if [ "$1" = "data" ]; then
   cat <<'JSON'
 {
   "calendars": {},
-  "reminders": {},
-  "orgs": {
-    "acme": {"issues": "github"},
-    "example-corp": {"issues": "linear"}
-  }
+  "reminders": {}
 }
 JSON
   exit 0
@@ -351,38 +342,10 @@ exit 99
 STUB
 chmod +x "$GH_BIN/chezmoi"
 
-# Logs every invocation's argv, then returns a fixture item keyed off which
-# org: qualifier (if any) was passed, and which list type (pr/issue).
 cat > "$GH_BIN/gh" <<STUB
 #!/bin/sh
 echo "\$*" >> "$GH_LOG"
-list_type="\$1"
-org=""
-prev=""
-for a in "\$@"; do
-  case "\$prev \$a" in
-    *"org:acme"*) org="acme" ;;
-    *"org:example-corp"*) org="example-corp" ;;
-  esac
-  prev="\$a"
-done
-case "\$list_type-\$org" in
-  pr-acme)
-    echo '[{"number": 1, "title": "PR from acme", "repository": {"nameWithOwner": "acme/repo"}, "url": "https://github.com/acme/repo/pull/1"}]'
-    ;;
-  pr-example-corp)
-    echo '[{"number": 2, "title": "PR from example-corp", "repository": {"nameWithOwner": "example-corp/repo"}, "url": "https://github.com/example-corp/repo/pull/2"}]'
-    ;;
-  issue-acme)
-    echo '[{"number": 3, "title": "Issue from acme", "repository": {"nameWithOwner": "acme/repo"}, "url": "https://github.com/acme/repo/issues/3"}]'
-    ;;
-  issue-example-corp)
-    echo '[{"number": 4, "title": "Issue from example-corp", "repository": {"nameWithOwner": "example-corp/repo"}, "url": "https://github.com/example-corp/repo/issues/4"}]'
-    ;;
-  *)
-    echo "[]"
-    ;;
-esac
+echo "[]"
 exit 0
 STUB
 chmod +x "$GH_BIN/gh"
@@ -407,135 +370,41 @@ exit 1
 STUB
 chmod +x "$GH_BIN/security"
 
-test_gh_org_scoping() {
-  local out
-  out="$(HOME="$TEST_HOME" PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
-
-  local pr_calls issue_calls
-  pr_calls="$(grep -c 'pr list' "$GH_LOG" || true)"
-  issue_calls="$(grep -c 'issue list' "$GH_LOG" || true)"
-
-  check "gh invoked once per org for pr list" "$pr_calls" "2"
-  check "gh invoked once per org for issue list" "$issue_calls" "2"
-
-  # Each individual pr-list invocation must carry exactly one org: qualifier,
-  # never both ANDed together in the same search string.
-  if grep 'pr list' "$GH_LOG" | grep -q 'org:acme.*org:example-corp\|org:example-corp.*org:acme'; then
-    bad "no single pr list call ANDs both orgs together"
-  else
-    ok "no single pr list call ANDs both orgs together"
-  fi
-  if grep 'issue list' "$GH_LOG" | grep -q 'org:acme.*org:example-corp\|org:example-corp.*org:acme'; then
-    bad "no single issue list call ANDs both orgs together"
-  else
-    ok "no single issue list call ANDs both orgs together"
-  fi
-
-  if grep -q 'PR from acme' <<<"$out" && grep -q 'PR from example-corp' <<<"$out"; then
-    ok "PR results from both org-scoped calls are merged into output"
-  else
-    bad "PR results from both org-scoped calls are merged into output (got: $out)"
-  fi
-
-  if grep -q 'Issue from acme' <<<"$out" && grep -q 'Issue from example-corp' <<<"$out"; then
-    ok "issue results from both org-scoped calls are merged into output"
-  else
-    bad "issue results from both org-scoped calls are merged into output (got: $out)"
-  fi
-}
-test_gh_org_scoping
-
-# ---------------------------------------------------------------------------
-# Regression protection: solo-org (or no-org) users must still get the old
-# unscoped single-query behavior, not an org:-qualified search with no org.
-echo
-echo "== gh unscoped regression (zero configured orgs) =="
-
-GH_NOORG_BIN="$WORK/bin-gh-noorg"
-mkdir -p "$GH_NOORG_BIN"
-GH_NOORG_LOG="$WORK/gh-noorg-invocations.log"
-: > "$GH_NOORG_LOG"
-
-cat > "$GH_NOORG_BIN/chezmoi" <<'STUB'
-#!/bin/sh
-if [ "$1" = "data" ]; then
-  cat <<'JSON'
-{
-  "calendars": {},
-  "reminders": {},
-  "orgs": {}
-}
-JSON
-  exit 0
-fi
-echo "fake chezmoi: unexpected invocation: $*" >&2
-exit 99
-STUB
-chmod +x "$GH_NOORG_BIN/chezmoi"
-
-cat > "$GH_NOORG_BIN/gh" <<STUB
-#!/bin/sh
-echo "\$*" >> "$GH_NOORG_LOG"
-echo "[]"
-exit 0
-STUB
-chmod +x "$GH_NOORG_BIN/gh"
-
-cat > "$GH_NOORG_BIN/ical" <<'STUB'
-#!/bin/sh
-echo "[]"
-exit 0
-STUB
-chmod +x "$GH_NOORG_BIN/ical"
-
-cat > "$GH_NOORG_BIN/remindctl" <<'STUB'
-#!/bin/sh
-echo "[]"
-exit 0
-STUB
-chmod +x "$GH_NOORG_BIN/remindctl"
-
-cat > "$GH_NOORG_BIN/security" <<'STUB'
-#!/bin/sh
-exit 1
-STUB
-chmod +x "$GH_NOORG_BIN/security"
-
-test_gh_unscoped_no_orgs() {
-  HOME="$TEST_HOME" PATH="$GH_NOORG_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST" >/dev/null
+test_gh_no_org_scoping() {
+  HOME="$TEST_HOME" PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST" >/dev/null
 
   local pr_calls issue_calls pr_call issue_call
-  pr_calls="$(grep -c 'pr list' "$GH_NOORG_LOG" || true)"
-  issue_calls="$(grep -c 'issue list' "$GH_NOORG_LOG" || true)"
-  pr_call="$(grep 'pr list' "$GH_NOORG_LOG" || true)"
-  issue_call="$(grep 'issue list' "$GH_NOORG_LOG" || true)"
+  pr_calls="$(grep -c 'pr list' "$GH_LOG" || true)"
+  issue_calls="$(grep -c 'issue list' "$GH_LOG" || true)"
+  pr_call="$(grep 'pr list' "$GH_LOG" || true)"
+  issue_call="$(grep 'issue list' "$GH_LOG" || true)"
 
-  check "gh invoked exactly once for pr list with zero orgs" "$pr_calls" "1"
-  check "gh invoked exactly once for issue list with zero orgs" "$issue_calls" "1"
+  check "gh pr list invoked exactly once (no per-org loop)" "$pr_calls" "1"
+  check "gh issue list invoked exactly once (no per-org loop)" "$issue_calls" "1"
 
   case "$pr_call" in
-    *"review-requested:@me"*"--limit 50"*)
-      if grep -q 'org:' <<<"$pr_call"; then
-        bad "unscoped pr list search has no org: qualifier (got: $pr_call)"
+    *"--search review-requested:@me"*"--limit 50"*)
+      if grep -Eq 'org:|user:' <<<"$pr_call"; then
+        bad "pr list search has no org:/user: qualifier (got: $pr_call)"
       else
-        ok "unscoped pr list search has no org: qualifier"
+        ok "pr list search has no org:/user: qualifier"
       fi
       ;;
-    *) bad "unscoped pr list search shape (got: $pr_call)" ;;
+    *) bad "pr list search shape (got: $pr_call)" ;;
   esac
 
   case "$issue_call" in
-    *"assignee:@me"*"--limit 50"*)
-      if grep -q 'org:' <<<"$issue_call"; then
-        bad "unscoped issue list search has no org: qualifier (got: $issue_call)"
+    *"--search assignee:@me"*"--limit 50"*)
+      if grep -Eq 'org:|user:' <<<"$issue_call"; then
+        bad "issue list search has no org:/user: qualifier (got: $issue_call)"
       else
-        ok "unscoped issue list search has no org: qualifier"
+        ok "issue list search has no org:/user: qualifier"
       fi
       ;;
-    *) bad "unscoped issue list search shape (got: $issue_call)" ;;
+    *) bad "issue list search shape (got: $issue_call)" ;;
   esac
 }
-test_gh_unscoped_no_orgs
+test_gh_no_org_scoping
 
 # ---------------------------------------------------------------------------
 # Regression for get_ical_path() preferring `which ical` over the

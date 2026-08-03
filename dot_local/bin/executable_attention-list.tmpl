@@ -106,45 +106,32 @@ def fetch_reminders(reminders_config):
     except Exception:
         return []
 
-def fetch_github(orgs_config=None):
-    # Scope searches to configured orgs (chezmoi data: orgs.<key>) when present.
-    # GitHub's search qualifiers AND together, so multiple `org:` terms in a
-    # single query can never match (a repo can't belong to two orgs at once) —
-    # run one search per org instead and merge the results. Users without
-    # orgs configured get the old unscoped single-query behavior.
-    orgs = list((orgs_config or {}).keys())
+def fetch_github():
+    # No org/user scoping: GitHub's `org:` search qualifier only matches
+    # real Organizations, not personal user accounts, so scoping by a
+    # configured `orgs.<key>` silently drops results for any key that's
+    # actually someone's personal username. Simpler and correct: one
+    # unscoped @me search per query type.
+    try:
+        pr_res = subprocess.run(
+            ["gh", "pr", "list", "--search", "review-requested:@me", "--limit", "50", "--json", "number,title,repository,url"],
+            capture_output=True, text=True
+        )
+        prs = json.loads(pr_res.stdout) if pr_res.returncode == 0 else []
+        for p in prs:
+            p["type"] = "review_request"
 
-    def run_search(list_type, base_search, item_type):
-        searches = [f"{base_search} org:{org}" for org in orgs] if orgs else [base_search]
-        items = []
-        for search in searches:
-            try:
-                res = subprocess.run(
-                    ["gh", list_type, "list", "--search", search, "--limit", "50", "--json", "number,title,repository,url"],
-                    capture_output=True, text=True
-                )
-                if res.returncode == 0:
-                    for item in json.loads(res.stdout):
-                        item["type"] = item_type
-                        items.append(item)
-            except Exception:
-                continue
-        return items
+        issue_res = subprocess.run(
+            ["gh", "issue", "list", "--search", "assignee:@me", "--limit", "50", "--json", "number,title,repository,url"],
+            capture_output=True, text=True
+        )
+        issues = json.loads(issue_res.stdout) if issue_res.returncode == 0 else []
+        for i in issues:
+            i["type"] = "assigned_issue"
 
-    def dedupe(items):
-        seen = set()
-        result = []
-        for item in items:
-            key = item.get("url") or (item.get("number"), item.get("repository", {}).get("nameWithOwner"))
-            if key in seen:
-                continue
-            seen.add(key)
-            result.append(item)
-        return result
-
-    prs = dedupe(run_search("pr", "review-requested:@me", "review_request"))
-    issues = dedupe(run_search("issue", "assignee:@me", "assigned_issue"))
-    return prs + issues
+        return prs + issues
+    except Exception:
+        return []
 
 def fetch_linear():
     token = get_linear_token()
@@ -206,11 +193,10 @@ def get_list():
     data = load_chezmoi_data()
     calendars_config = data.get("calendars", {})
     reminders_config = data.get("reminders", {})
-    orgs_config = data.get("orgs", {})
 
     cal_raw = fetch_calendar(calendars_config)
     rem_raw = fetch_reminders(reminders_config)
-    gh_raw = fetch_github(orgs_config)
+    gh_raw = fetch_github()
     lin_raw = fetch_linear()
 
     cal_items = []
