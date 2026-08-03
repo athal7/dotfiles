@@ -32,7 +32,7 @@ def load_chezmoi_data():
 def get_linear_token():
     try:
         res = subprocess.run(
-            ["security", "find-generic-password", "-s", "chezmoi", "-a", "linear_api_token", "-w"],
+            ["security", "find-generic-password", "-s", "chezmoi", "-a", "linear_api_key", "-w"],
             capture_output=True, text=True, check=True
         )
         return res.stdout.strip()

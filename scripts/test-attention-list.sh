@@ -389,6 +389,60 @@ test_gh_org_scoping() {
 test_gh_org_scoping
 
 # ---------------------------------------------------------------------------
+# Regression for the get_linear_token() keychain account-name typo:
+# find-generic-password was called with -a linear_api_token, but the real
+# keychain item (set by chezmoi) is stored under linear_api_key, so the
+# lookup always failed and fetch_linear() always short-circuited to [].
+# Invokes get_linear_token() directly (via importlib, since main() is
+# guarded by __name__ == "__main__") rather than the whole script, so this
+# doesn't depend on stubbing the Linear GraphQL network call too.
+echo
+echo "== linear keychain account name regression =="
+
+SEC_BIN="$WORK/bin-security-account"
+mkdir -p "$SEC_BIN"
+SEC_LOG="$WORK/security-invocations.log"
+: > "$SEC_LOG"
+
+cat > "$SEC_BIN/security" <<STUB
+#!/bin/sh
+echo "\$*" >> "$SEC_LOG"
+if [ "\$1" = "find-generic-password" ]; then
+  echo "fake-linear-token"
+  exit 0
+fi
+exit 1
+STUB
+chmod +x "$SEC_BIN/security"
+
+test_linear_keychain_account_name() {
+  local token
+  token="$(PATH="$SEC_BIN:$PATH" python3 -c "
+import importlib.util
+from importlib.machinery import SourceFileLoader
+loader = SourceFileLoader('attention_list', '$ATTENTION_LIST')
+spec = importlib.util.spec_from_loader('attention_list', loader)
+m = importlib.util.module_from_spec(spec)
+loader.exec_module(m)
+print(m.get_linear_token())
+")"
+  check "get_linear_token() returns the keychain value" "$token" "fake-linear-token"
+
+  local sec_call
+  sec_call="$(cat "$SEC_LOG")"
+  case "$sec_call" in
+    *"-a linear_api_key"*) ok "security invoked with account name linear_api_key" ;;
+    *) bad "security invoked with account name linear_api_key (got: $sec_call)" ;;
+  esac
+
+  case "$sec_call" in
+    *"linear_api_token"*) bad "security must not use stale account name linear_api_token (got: $sec_call)" ;;
+    *) ok "security does not use stale account name linear_api_token" ;;
+  esac
+}
+test_linear_keychain_account_name
+
+# ---------------------------------------------------------------------------
 echo
 echo "== summary: $pass passed, $fail failed =="
 [ "$fail" -eq 0 ]
