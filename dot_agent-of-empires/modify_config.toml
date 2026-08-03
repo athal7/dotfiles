@@ -92,6 +92,7 @@ volume_ignores = []
 volume_ignores_strategy = "anonymous"
 
 [session]
+agent_command_override = { omp = "omp-billed" }
 agent_status_hooks = true
 auto_resume_on_restart = true
 auto_stop_idle_secs = 0
