@@ -42,11 +42,11 @@ def get_linear_token():
 # Parallel/Sequential data fetching
 def fetch_calendar(calendars_config):
     cal_names = []
-    # Source calendar names from standardized chezmoi data (calendars_config)
-    if not cal_names:
-        for k, v in calendars_config.items():
-            if isinstance(v, dict) and "name" in v:
-                cal_names.append(v["name"])
+    # Only calendars explicitly flagged for attention (attention_check: true)
+    # are included, matching the reminders filtering below.
+    for k, v in calendars_config.items():
+        if isinstance(v, dict) and v.get("attention_check") and "name" in v:
+            cal_names.append(v["name"])
 
     if not cal_names:
         return []
@@ -63,7 +63,11 @@ def fetch_calendar(calendars_config):
             if res.returncode == 0 and res.stdout.strip():
                 cal_events = json.loads(res.stdout)
                 for e in cal_events:
-                    if e.get("status") == "cancelled" or e.get("availability") == "free":
+                    if (
+                        e.get("status") == "cancelled"
+                        or e.get("availability") == "free"
+                        or e.get("self_status") == "declined"
+                    ):
                         continue
                     events.append(e)
         except Exception:
@@ -73,16 +77,15 @@ def fetch_calendar(calendars_config):
 def fetch_reminders(reminders_config):
     target_lists = []
     # Source reminder list names from standardized chezmoi data (reminders_config)
+    for k, v in reminders_config.items():
+        if isinstance(v, dict) and v.get("attention_check"):
+            target_lists.append(v.get("name"))
+
+    # Fallback to all configured list names if none are explicitly marked for attention check
     if not target_lists:
         for k, v in reminders_config.items():
-            if isinstance(v, dict) and v.get("attention_check"):
-                target_lists.append(v.get("name"))
-
-        # Fallback to all configured list names if none are explicitly marked for attention check
-        if not target_lists:
-            for k, v in reminders_config.items():
-                if isinstance(v, dict) and "name" in v:
-                    target_lists.append(v["name"])
+            if isinstance(v, dict) and "name" in v:
+                target_lists.append(v["name"])
 
     if not target_lists:
         return []
@@ -97,11 +100,16 @@ def fetch_reminders(reminders_config):
     except Exception:
         return []
 
-def fetch_github():
+def fetch_github(orgs_config=None):
+    # Scope searches to configured orgs (chezmoi data: orgs.<key>) when present;
+    # fall back to unscoped search for users without orgs configured.
+    org_scope = " ".join(f"org:{org}" for org in (orgs_config or {}).keys())
+
     try:
         # Fetch PRs where review is requested
+        pr_search = "review-requested:@me" + (f" {org_scope}" if org_scope else "")
         pr_res = subprocess.run(
-            ["gh", "pr", "list", "--search", "review-requested:@me", "--json", "number,title,repository,url"],
+            ["gh", "pr", "list", "--search", pr_search, "--limit", "50", "--json", "number,title,repository,url"],
             capture_output=True, text=True
         )
         prs = json.loads(pr_res.stdout) if pr_res.returncode == 0 else []
@@ -109,8 +117,9 @@ def fetch_github():
             p["type"] = "review_request"
 
         # Fetch assigned issues
+        issue_search = "assignee:@me" + (f" {org_scope}" if org_scope else "")
         issue_res = subprocess.run(
-            ["gh", "issue", "list", "--assignee", "@me", "--json", "number,title,repository,url"],
+            ["gh", "issue", "list", "--search", issue_search, "--limit", "50", "--json", "number,title,repository,url"],
             capture_output=True, text=True
         )
         issues = json.loads(issue_res.stdout) if issue_res.returncode == 0 else []
@@ -126,12 +135,7 @@ def fetch_linear():
     if not token:
         return []
 
-    # Fully customizable GraphQL query via chezmoi data (wtf.linear.query)
-    # Correct template logic with fallback to default query
     query = """
-{{- if and (hasKey . "wtf") (hasKey .wtf "linear") (hasKey .wtf.linear "query") }}
-{{ .wtf.linear.query }}
-{{- else }}
 query {
   viewer {
     assignedIssues(filter: { state: { name: { neq: "Done" } } }) {
@@ -147,7 +151,6 @@ query {
     }
   }
 }
-{{- end }}
 """
 
     req = urllib.request.Request(
@@ -187,10 +190,11 @@ def get_list():
     data = load_chezmoi_data()
     calendars_config = data.get("calendars", {})
     reminders_config = data.get("reminders", {})
+    orgs_config = data.get("orgs", {})
 
     cal_raw = fetch_calendar(calendars_config)
     rem_raw = fetch_reminders(reminders_config)
-    gh_raw = fetch_github()
+    gh_raw = fetch_github(orgs_config)
     lin_raw = fetch_linear()
 
     cal_items = []

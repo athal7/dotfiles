@@ -139,6 +139,256 @@ test_reminders() {
 test_reminders
 
 # ---------------------------------------------------------------------------
+# Covers the config-contract bug where fetch_calendar() collected every
+# calendar with a `name` key regardless of `attention_check`, unlike
+# fetch_reminders() which already filtered correctly. Two calendars are
+# configured, only one flagged `attention_check: true`; ical is stubbed to
+# return a distinct event per calendar so a leak is visible in the output.
+echo
+echo "== calendar attention_check regression =="
+
+CAL_BIN="$WORK/bin-cal-check"
+mkdir -p "$CAL_BIN"
+
+cat > "$CAL_BIN/chezmoi" <<'STUB'
+#!/bin/sh
+if [ "$1" = "data" ]; then
+  cat <<'JSON'
+{
+  "calendars": {
+    "work": {"attention_check": true, "name": "Work"},
+    "family": {"attention_check": false, "name": "Family"}
+  },
+  "reminders": {}
+}
+JSON
+  exit 0
+fi
+echo "fake chezmoi: unexpected invocation: $*" >&2
+exit 99
+STUB
+chmod +x "$CAL_BIN/chezmoi"
+
+cat > "$CAL_BIN/ical" <<'STUB'
+#!/bin/sh
+cal=""
+prev=""
+for a in "$@"; do
+  if [ "$prev" = "-c" ]; then cal="$a"; fi
+  prev="$a"
+done
+case "$cal" in
+  Work)
+    echo '[{"id": "e1", "title": "CALTEST-work-event", "status": "confirmed", "availability": "busy", "all_day": true}]'
+    ;;
+  Family)
+    echo '[{"id": "e2", "title": "CALTEST-family-event", "status": "confirmed", "availability": "busy", "all_day": true}]'
+    ;;
+  *)
+    echo "[]"
+    ;;
+esac
+STUB
+chmod +x "$CAL_BIN/ical"
+
+cat > "$CAL_BIN/remindctl" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$CAL_BIN/remindctl"
+
+cat > "$CAL_BIN/gh" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$CAL_BIN/gh"
+
+cat > "$CAL_BIN/security" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+chmod +x "$CAL_BIN/security"
+
+test_calendar_attention_check() {
+  local out
+  out="$(PATH="$CAL_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
+
+  if grep -q 'CALTEST-work-event' <<<"$out"; then
+    ok "event on attention_check calendar (Work) appears"
+  else
+    bad "event on attention_check calendar (Work) appears (got: $out)"
+  fi
+
+  if grep -q 'CALTEST-family-event' <<<"$out"; then
+    bad "event on non-attention_check calendar (Family) must not appear"
+  else
+    ok "event on non-attention_check calendar (Family) does not appear"
+  fi
+}
+test_calendar_attention_check
+
+# ---------------------------------------------------------------------------
+# Covers the config-contract bug where fetch_calendar() never excluded
+# declined events. `self_status` is the real ical JSON field for the user's
+# own RSVP (accepted/declined/tentative). A single attention_check calendar
+# carries one accepted and one declined event.
+echo
+echo "== declined calendar event regression =="
+
+DECLINE_BIN="$WORK/bin-cal-decline"
+mkdir -p "$DECLINE_BIN"
+
+cat > "$DECLINE_BIN/chezmoi" <<'STUB'
+#!/bin/sh
+if [ "$1" = "data" ]; then
+  cat <<'JSON'
+{
+  "calendars": {
+    "work": {"attention_check": true, "name": "Work"}
+  },
+  "reminders": {}
+}
+JSON
+  exit 0
+fi
+echo "fake chezmoi: unexpected invocation: $*" >&2
+exit 99
+STUB
+chmod +x "$DECLINE_BIN/chezmoi"
+
+cat > "$DECLINE_BIN/ical" <<'STUB'
+#!/bin/sh
+cat <<'JSON'
+[
+  {"id": "e1", "title": "DECLINETEST-attending", "status": "confirmed", "availability": "busy", "all_day": true, "self_status": "accepted"},
+  {"id": "e2", "title": "DECLINETEST-declined", "status": "confirmed", "availability": "busy", "all_day": true, "self_status": "declined"}
+]
+JSON
+exit 0
+STUB
+chmod +x "$DECLINE_BIN/ical"
+
+cat > "$DECLINE_BIN/remindctl" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$DECLINE_BIN/remindctl"
+
+cat > "$DECLINE_BIN/gh" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$DECLINE_BIN/gh"
+
+cat > "$DECLINE_BIN/security" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+chmod +x "$DECLINE_BIN/security"
+
+test_declined_event_excluded() {
+  local out
+  out="$(PATH="$DECLINE_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
+
+  if grep -q 'DECLINETEST-attending' <<<"$out"; then
+    ok "accepted event on attention_check calendar appears"
+  else
+    bad "accepted event on attention_check calendar appears (got: $out)"
+  fi
+
+  if grep -q 'DECLINETEST-declined' <<<"$out"; then
+    bad "declined event must not appear even on an attention_check calendar"
+  else
+    ok "declined event does not appear"
+  fi
+}
+test_declined_event_excluded
+
+# ---------------------------------------------------------------------------
+# Covers the config-contract bug where fetch_github()'s `gh pr list`/`gh issue
+# list` calls had no `--limit` and no org scoping from chezmoi data
+# (orgs.<key>). The stub `gh` logs its argv so the test can assert the actual
+# invocation shape rather than just the JSON it returns.
+echo
+echo "== gh org scoping and --limit regression =="
+
+GH_BIN="$WORK/bin-gh-scope"
+mkdir -p "$GH_BIN"
+GH_LOG="$WORK/gh-invocations.log"
+: > "$GH_LOG"
+
+cat > "$GH_BIN/chezmoi" <<'STUB'
+#!/bin/sh
+if [ "$1" = "data" ]; then
+  cat <<'JSON'
+{
+  "calendars": {},
+  "reminders": {},
+  "orgs": {
+    "acme": {"issues": "github"},
+    "example-corp": {"issues": "linear"}
+  }
+}
+JSON
+  exit 0
+fi
+echo "fake chezmoi: unexpected invocation: $*" >&2
+exit 99
+STUB
+chmod +x "$GH_BIN/chezmoi"
+
+cat > "$GH_BIN/gh" <<STUB
+#!/bin/sh
+echo "\$*" >> "$GH_LOG"
+echo "[]"
+exit 0
+STUB
+chmod +x "$GH_BIN/gh"
+
+cat > "$GH_BIN/ical" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$GH_BIN/ical"
+
+cat > "$GH_BIN/remindctl" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$GH_BIN/remindctl"
+
+cat > "$GH_BIN/security" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+chmod +x "$GH_BIN/security"
+
+test_gh_org_scoping() {
+  PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST" >/dev/null
+
+  local pr_call issue_call
+  pr_call="$(grep 'pr list' "$GH_LOG" || true)"
+  issue_call="$(grep 'issue list' "$GH_LOG" || true)"
+
+  case "$pr_call" in
+    *"review-requested:@me org:acme org:example-corp"*"--limit 50"*) ok "pr list scoped to orgs with --limit 50" ;;
+    *) bad "pr list scoped to orgs with --limit 50 (got: $pr_call)" ;;
+  esac
+
+  case "$issue_call" in
+    *"assignee:@me org:acme org:example-corp"*"--limit 50"*) ok "issue list scoped to orgs with --limit 50" ;;
+    *) bad "issue list scoped to orgs with --limit 50 (got: $issue_call)" ;;
+  esac
+}
+test_gh_org_scoping
+
+# ---------------------------------------------------------------------------
 echo
 echo "== summary: $pass passed, $fail failed =="
 [ "$fail" -eq 0 ]
