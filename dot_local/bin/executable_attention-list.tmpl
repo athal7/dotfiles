@@ -402,7 +402,12 @@ def get_list():
     items.sort(key=lambda x: x["weight"], reverse=True)
 
     # Format for fzf
-    # Format: [TYPE] (WEIGHT) Title - DETAILS \t| ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path> | LINEAR_DB_ID:<linear_db_id> | LINEAR_URL:<linear_url> | REMINDER_ID:<reminder_id>
+    # Format: [TYPE] (WEIGHT) Title - DETAILS \t| ID:<id> | DATABASE_ID:<database_id> | URL:<url> | REPO_PATH:<path> | LINEAR_DB_ID:<linear_db_id> | LINEAR_URL:<linear_url> | REMINDER_ID:<reminder_id> \tHINT
+    # The third (hint) field is never rendered as a list row (dashboard's
+    # --with-nth 1 hides fields 2+), only surfaced via a --bind
+    # transform-footer that reads {3} on cursor movement -- so moving the
+    # cursor to see an item's available hotkeys costs zero extra process
+    # spawns.
     for item in items:
         icon = "📅" if item["type"] == "CAL" else "📝" if item["type"] == "REM" else "🐙" if item["type"] == "GH" else "🎯"
 
@@ -414,6 +419,12 @@ def get_list():
         # Join multiple reminder IDs with comma if present
         reminder_ids_str = ','.join(item.get('reminder_ids', [])) if 'reminder_ids' in item else ''
 
+        hint = hint_for(
+            item["type"],
+            has_linear=bool(item.get("linear_db_id")),
+            rem_ids=item.get("reminder_ids", []),
+        )
+
         line = (
             f"{icon} [{item['type']}] ({item['weight']}) {safe_title} - {safe_details} \t"
             f"| ID:{item['id']} "
@@ -422,12 +433,149 @@ def get_list():
             f"| REPO_PATH:{item['repo_path']} "
             f"| LINEAR_DB_ID:{item.get('linear_db_id', '')} "
             f"| LINEAR_URL:{item.get('linear_url', '')} "
-            f"| REMINDER_ID:{reminder_ids_str}"
+            f"| REMINDER_ID:{reminder_ids_str}\t"
+            f"{hint}"
         )
         print(line)
 
+def actions_for(item_type, *, has_linear=False, rem_ids=None):
+    """Single source of truth for which hotkeys are available on an item
+    and their human-readable descriptions.
+
+    Consumed by both get_list() (to build the footer hint field) and
+    act() (to validate/dispatch a pressed key), so the two can never drift
+    out of sync.
+
+    Keys are alt-prefixed (fzf's `alt-X` --expect syntax) so plain letters
+    stay free for fzf's fuzzy-filter typing -- verified empirically that
+    Terminal.app's "Use Option as Meta Key" delivers these as a distinct
+    ESC-prefixed sequence fzf's --expect can bind directly, e.g. alt-o is
+    never confused with a literal `o` keystroke.
+
+    The Linear cross-link variants (O/C/T: same verb, but targets the
+    linked Linear issue instead of the GH item) stay plain uppercase
+    rather than alt-shift-prefixed: an empirical pty test showed `alt-O`
+    (ESC followed by a bare capital letter) collides with the terminal's
+    SS3 application-keypad escape prefix (`ESC O <letter>`, used for
+    function/arrow keys), so fzf's input parser waits indefinitely for a
+    third byte that never comes and the binding never fires. Plain
+    uppercase O/C/T has no such collision and costs only 3 of 26 letters
+    from query-filtering -- a much smaller tradeoff than the original
+    all-uppercase scheme this replaces.
+
+    CAL's digit-overflow reminder keys (beyond the first, which gets
+    alt-x) stay plain bare digits, unchanged from the original per-item
+    menu: decision was to keep that overflow mechanism exactly as-is
+    rather than invent new alt-digit bindings for an already-rare edge
+    case.
+    """
+    rem_ids = rem_ids or []
+    if item_type == "CAL":
+        actions = [("alt-y", "yank")]
+        # Multiple linked reminders share one verb (complete), so only the
+        # first gets the primary hotkey `alt-x` (matching REM's
+        # single-reminder case below); any additional ones fall back to
+        # digit keys 1, 2, 3... This keeps "type a number" as the overflow
+        # mechanism for the rare multi-reminder case instead of needing
+        # more letter keys that would have to be reserved everywhere just
+        # to cover this one edge case.
+        for idx, _ in enumerate(rem_ids):
+            key = "alt-x" if idx == 0 else str(idx)
+            label = "complete" if idx == 0 else "complete (extra)"
+            actions.append((key, label))
+        return actions
+    if item_type == "REM":
+        return [("alt-x", "complete")]
+    if item_type == "GH":
+        actions = [
+            ("alt-o", "open"),
+            ("alt-s", "session"),
+            ("alt-l", "lumen"),
+            ("alt-a", "approve"),
+            ("alt-m", "merge"),
+            ("alt-c", "comment"),
+            ("alt-g", "label"),
+        ]
+        # Linear cross-association actions, uppercased so the same verb
+        # letter (o/c/t) still applies to the linked Linear issue instead
+        # of the GH item itself.
+        if has_linear:
+            actions.extend([
+                ("O", "open linear"),
+                ("C", "comment linear"),
+                ("T", "transition linear"),
+            ])
+        return actions
+    if item_type == "LIN":
+        return [
+            ("alt-o", "open"),
+            ("alt-s", "session"),
+            ("alt-c", "comment"),
+            ("alt-t", "transition"),
+        ]
+    return []
+
+
+def expect_keys():
+    """Union of every hotkey actions_for() can ever produce, across all
+    item types and contexts.
+
+    There is no separate quit key: Esc is fzf's native "no selection" exit
+    (rc 130), which the dashboard loop already treats as "stop triaging" --
+    a second, redundant quit hotkey would just be one more way to do the
+    same thing.
+
+    CAL's digit-overflow reminder keys are enumerated up to 9 linked
+    reminders: overflow keys must be single characters (matching fzf's
+    --expect key syntax), so str(idx) for idx >= 10 was never a valid key
+    even in the original per-item menu -- this isn't a new cap, just the
+    same implicit one made explicit here.
+    """
+    contexts = [
+        actions_for("CAL", rem_ids=[f"r{i}" for i in range(1, 10)]),
+        actions_for("REM"),
+        actions_for("GH", has_linear=False),
+        actions_for("GH", has_linear=True),
+        actions_for("LIN"),
+    ]
+    keys = []
+    seen = set()
+    for actions in contexts:
+        for key, _ in actions:
+            if key not in seen:
+                seen.add(key)
+                keys.append(key)
+    return keys
+
+
+def hint_for(item_type, *, has_linear=False, rem_ids=None):
+    """Human-readable footer hint string for an item, e.g.
+    '⌥o open  ⌥s session  ⌥l lumen  ⌥a approve  ⌥m merge  ⌥c comment  ⌥g label'.
+
+    Built from the same actions_for() table act() dispatches against, so
+    the hint can never promise a hotkey act() doesn't actually honor.
+    """
+    parts = []
+    for key, desc in actions_for(item_type, has_linear=has_linear, rem_ids=rem_ids):
+        symbol = f"⌥{key[len('alt-'):]}" if key.startswith("alt-") else key
+        parts.append(f"{symbol} {desc}")
+    return "  ".join(parts)
+
+
 # Action execution
-def act(line):
+def act(key, line):
+    """Dispatch a single fzf --expect key press against the highlighted
+    dashboard row.
+
+    `key` is the literal --expect token fzf reported (e.g. "alt-o"), or ""
+    if the row was accepted with plain Enter. `line` is the full
+    tab-delimited dashboard row text (display portion + metadata tail),
+    exactly as fzf's --expect output's second line reports it.
+
+    One fzf process per dashboard render, not a nested submenu: this is
+    called once per keypress from the outer zsh loop in dot_zshrc.tmpl,
+    which re-invokes the dashboard fzf afterward.
+    """
     # Split line into display portion and metadata tail at the first tab
     parts = line.split('\t', 1)
     display_portion = parts[0] if parts else line
@@ -462,66 +610,56 @@ def act(line):
     elif "[LIN]" in display_portion:
         item_type = "LIN"
 
-    # Item banner folds into the fzf_menu() --header below rather than being
-    # printed separately: with --height (non-fullscreen), a banner printed
-    # above the picker would scroll awkwardly instead of staying pinned.
-    header = display_portion
-
-    options = []
+    # Per-key dispatch callables. Keys here must exactly match whatever
+    # actions_for() returns for this item_type/context -- that pairing (key
+    # + description from actions_for(), executable from this dict) is
+    # validated against `valid_keys` below before a press is ever honored.
+    lambdas = {}
     if item_type == "CAL":
-        options = [
-            ("y", "Copy event details to clipboard", lambda: copy_to_clipboard(display_portion))
-        ]
-        if rem_ids:
-            # Multiple linked reminders share one verb (complete), so only
-            # the first gets the primary hotkey `x` (matching REM's
-            # single-reminder case below); any additional ones fall back to
-            # digit keys 1, 2, 3... This keeps "type a number" as the
-            # overflow mechanism for the rare multi-reminder case instead of
-            # needing more letter keys that would have to be reserved
-            # everywhere just to cover this one edge case.
-            for idx, rid in enumerate(rem_ids):
-                key = "x" if idx == 0 else str(idx)
-                options.append(
-                    (key, f"Complete associated Reminder ({rid})", lambda r=rid: run_cmd(["remindctl", "complete", r]))
-                )
+        lambdas["alt-y"] = lambda: copy_to_clipboard(display_portion)
+        for idx, rid in enumerate(rem_ids):
+            rem_key = "alt-x" if idx == 0 else str(idx)
+            lambdas[rem_key] = (lambda r=rid: run_cmd(["remindctl", "complete", r]))
     elif item_type == "REM":
-        options = [
-            ("x", "Complete reminder", lambda: run_cmd(["remindctl", "complete", item_id]))
-        ]
+        lambdas["alt-x"] = lambda: run_cmd(["remindctl", "complete", item_id])
     elif item_type == "GH":
-        options = [
-            ("o", "Open in Browser", lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")),
-            ("s", "Start Agent session (aoe-cmd)", lambda: run_cmd(["aoe-cmd", "-d", repo_path, "-n", f"issue-{item_id}", "-b", "-w", f"issue-{item_id}", f"Work on issue {item_id} in this repo"]) if repo_path else print("No local repo path mapped.")),
-            ("l", "Review with Lumen", lambda: run_cmd(["lumen", "review", "--repo", get_repo_from_url(item_url), "--pr", item_id]) if item_url else print("No URL.")),
-            ("a", "Approve PR", lambda: run_cmd(["gh", "pr", "review", "--approve", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")),
-            ("m", "Merge PR (Squash)", lambda: confirm_and_merge(item_id, item_url)),
-            ("c", "Comment on PR/Issue", lambda: run_cmd(["gh", "issue", "comment", item_id, "-R", get_repo_from_url(item_url), "-b", input("\nEnter comment body: ").strip()]) if item_url else print("No URL.")),
-            ("g", "Add Label to PR/Issue", lambda: run_cmd(["gh", "issue", "edit", item_id, "-R", get_repo_from_url(item_url), "--add-label", input("\nEnter label name: ").strip()]) if item_url else print("No URL."))
-        ]
-        # Linear cross-association actions, uppercased so the same verb
-        # letter (o/c/t) still applies to the linked Linear issue instead of
-        # the GH item itself.
+        lambdas["alt-o"] = lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")
+        lambdas["alt-s"] = lambda: run_cmd(["aoe-cmd", "-d", repo_path, "-n", f"issue-{item_id}", "-b", "-w", f"issue-{item_id}", f"Work on issue {item_id} in this repo"]) if repo_path else print("No local repo path mapped.")
+        lambdas["alt-l"] = lambda: run_cmd(["lumen", "review", "--repo", get_repo_from_url(item_url), "--pr", item_id]) if item_url else print("No URL.")
+        lambdas["alt-a"] = lambda: run_cmd(["gh", "pr", "review", "--approve", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")
+        lambdas["alt-m"] = lambda: confirm_and_merge(item_id, item_url)
+        lambdas["alt-c"] = lambda: run_cmd(["gh", "issue", "comment", item_id, "-R", get_repo_from_url(item_url), "-b", input("\nEnter comment body: ").strip()]) if item_url else print("No URL.")
+        lambdas["alt-g"] = lambda: run_cmd(["gh", "issue", "edit", item_id, "-R", get_repo_from_url(item_url), "--add-label", input("\nEnter label name: ").strip()]) if item_url else print("No URL.")
         if lin_db_id:
-            options.extend([
-                ("O", "Open linked Linear issue in Browser", lambda: run_cmd(["open", lin_url]) if lin_url else print("No Linear URL.")),
-                ("C", "Comment on linked Linear Issue", lambda: linear_comment(lin_db_id)),
-                ("T", "Transition linked Linear Issue (Change State)", lambda: linear_transition(lin_db_id))
-            ])
+            # Plain (non-alt) uppercase, not alt-shift-prefixed: see
+            # actions_for()'s docstring for the empirical reason
+            # (Terminal's ESC-O SS3 prefix collision) alt-O isn't usable.
+            lambdas["O"] = lambda: run_cmd(["open", lin_url]) if lin_url else print("No Linear URL.")
+            lambdas["C"] = lambda: linear_comment(lin_db_id)
+            lambdas["T"] = lambda: linear_transition(lin_db_id)
     elif item_type == "LIN":
-        options = [
-            ("o", "Open in Browser", lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")),
-            ("s", "Start Agent session (aoe-cmd)", lambda: run_cmd(["aoe-cmd", "-d", os.getcwd(), "-n", f"linear-{item_id}", f"Work on Linear issue {item_id}"])),
-            ("c", "Comment on Issue", lambda: linear_comment(db_id)),
-            ("t", "Transition Issue (Change State)", lambda: linear_transition(db_id))
-        ]
+        lambdas["alt-o"] = lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")
+        lambdas["alt-s"] = lambda: run_cmd(["aoe-cmd", "-d", os.getcwd(), "-n", f"linear-{item_id}", f"Work on Linear issue {item_id}"])
+        lambdas["alt-c"] = lambda: linear_comment(db_id)
+        lambdas["alt-t"] = lambda: linear_transition(db_id)
 
-    # "Back to list" needs no explicit entry: Esc is fzf's native behavior
-    # and pick_action() already returns None for it, which act() treats as
-    # a plain return (exit code 0, so the zsh dashboard loop continues).
-    options.append(("q", "Quit attention", lambda: sys.exit(10)))
+    valid_keys = {k for k, _ in actions_for(item_type, has_linear=bool(lin_db_id), rem_ids=rem_ids)}
 
-    action = pick_action(header, options)
+    resolved_key = key
+    if resolved_key == "":
+        # Enter: the type's primary "read" action -- Open in Browser for
+        # GH/LIN, which have a natural target. CAL/REM have none, so Enter
+        # is a no-op that just returns to the dashboard.
+        if item_type in ("GH", "LIN"):
+            resolved_key = "alt-o"
+        else:
+            return
+
+    if resolved_key not in valid_keys:
+        print(f"No action bound to '{resolved_key}' for this item.")
+        return
+
+    action = lambdas.get(resolved_key)
     if action is None:
         return
 
@@ -530,72 +668,24 @@ def act(line):
     except (KeyboardInterrupt, EOFError):
         print("\nCanceled.")
 
-def fzf_menu(header, rows, expect_keys):
-    """Render a hotkey-driven fzf picker and report what was pressed.
-
-    `rows` is a list of (key, description) tuples rendered one per line with
-    the key as a visible column. `expect_keys` is the full set of keys fzf
-    should intercept as a selection (via --expect) rather than treating as
-    filter-query text.
-
-    Returns (pressed_key, highlighted_row):
-      - pressed_key is the literal --expect key that fired, or "" if Enter
-        was used on a highlighted row instead.
-      - highlighted_row is the full text of the row under the cursor at
-        exit, or None if Esc/no selection (fzf exit code 130).
-
-    Resolving these two into a single action is left to the caller (see
-    pick_action) since Esc-vs-invalid-key handling differs slightly by
-    context.
-    """
-    rendered = "\n".join(f"{key}   {desc}" for key, desc in rows)
-    res = subprocess.run(
-        ["fzf", f"--expect={','.join(expect_keys)}", "--height", "~40%", "--layout=reverse", "--header", header],
-        input=rendered, capture_output=True, text=True
-    )
-    if res.returncode == 130:
-        return (None, None)
-
-    lines = res.stdout.split("\n")
-    pressed_key = lines[0] if len(lines) > 0 else ""
-    highlighted_row = lines[1] if len(lines) > 1 and lines[1] else None
-    return (pressed_key, highlighted_row)
-
-def pick_action(header, options):
-    """Render `options` (key, description, action) triples via fzf_menu and
-    return the matching action callable, or None if nothing resolved: Esc,
-    or a key fzf didn't recognize as a selection (--expect keys are the only
-    ones that count; anything else is filter text with no resulting pick).
-    """
-    rows = [(key, desc) for key, desc, _ in options]
-    keys = [key for key, desc, _ in options]
-    pressed_key, highlighted_row = fzf_menu(header, rows, keys)
-
-    resolved_key = pressed_key or None
-    if not resolved_key and highlighted_row:
-        resolved_key = highlighted_row.split(None, 1)[0]
-    if not resolved_key:
-        return None
-
-    for key, _, action in options:
-        if key == resolved_key:
-            return action
-    return None
-
 def confirm_and_merge(item_id, item_url):
+    """Merge confirmation gate, run after fzf has already exited: a plain
+    input() y/n prompt on the bare terminal rather than a second fzf
+    process, matching the single-fzf-process design (see act()).
+    """
     if not item_url:
         print("No URL.")
         return
     repo = get_repo_from_url(item_url)
-    action = pick_action(
-        f"Merge {repo}#{item_id} (squash + delete branch)?",
-        [
-            ("y", "Yes, merge and delete branch", lambda: run_cmd(["gh", "pr", "merge", "--squash", "--delete-branch", item_id, "--repo", repo])),
-            ("n", "No, cancel", lambda: None),
-        ]
-    )
-    if action is not None:
-        action()
+    try:
+        choice = input(f"\nMerge {repo}#{item_id} (squash + delete branch)? [y/N]: ").strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\nCanceled.")
+        return
+    if choice == "y":
+        run_cmd(["gh", "pr", "merge", "--squash", "--delete-branch", item_id, "--repo", repo])
+    else:
+        print("Canceled.")
 
 def copy_to_clipboard(text):
     try:
@@ -712,7 +802,9 @@ def linear_transition(issue_uuid):
         print("\nCanceled.")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2 and sys.argv[1] == "act":
-        act(sys.argv[2])
+    if len(sys.argv) > 3 and sys.argv[1] == "act":
+        act(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) > 1 and sys.argv[1] == "expect-keys":
+        print(",".join(expect_keys()))
     else:
         get_list()

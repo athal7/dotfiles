@@ -541,61 +541,160 @@ print(m.get_linear_token())
 test_linear_keychain_account_name
 
 # ---------------------------------------------------------------------------
-# act()'s hotkey-driven fzf menu (fzf_menu()/pick_action() in the Python
-# script) replaces the old numbered input() menu. These tests stub `fzf`
-# itself, in addition to the already-stubbed downstream action commands
-# (open/remindctl/gh), to exercise dispatch and the dashboard's loop-back
-# exit-code contract:
-#   - exit 0  -> "back to list" (Esc, or any resolved non-quit action)
-#   - exit 10 -> "quit attention" (hotkey 'q'), so the zsh loop's
-#                `attention-list act "$selected" || break` fires
+# actions_for() is the single source of truth for which hotkeys exist per
+# item type/context, consumed by both get_list() (footer hints) and act()
+# (dispatch). These tests call it directly (via importlib) to pin down the
+# key set per context, and confirm expect_keys() is exactly the union of
+# every context's keys -- the property that keeps the --expect key set, the
+# footer hints, and the dispatch table in sync.
+#
+# Keys are alt-prefixed (fzf's `alt-X` --expect syntax, verified against a
+# real fzf binary via a pty probe: `ESC` followed by a literal character
+# reliably fires that exact `alt-<char>` binding). The Linear cross-link
+# variants (O/C/T) stay plain, non-alt, uppercase: the same pty probe showed
+# `alt-O` (ESC then a bare capital letter) never fires, because fzf's input
+# parser treats `ESC O <char>` exclusively as a VT100 SS3 escape sequence
+# (used for arrow/function keys) and silently drops any `ESC O` prefix it
+# doesn't recognize as one of those -- there is no generic `alt-O` event to
+# bind to, at least in this fzf release, regardless of arbitrary wait time.
 echo
-echo "== act() hotkey menu (loop-back exit codes, dispatch, merge gate) =="
+echo "== actions_for()/expect_keys() single-source-of-truth parity =="
+
+ACTIONS_FOR_HELPER() {
+  python3 -c "
+import importlib.util
+from importlib.machinery import SourceFileLoader
+loader = SourceFileLoader('attention_list', '$ATTENTION_LIST')
+spec = importlib.util.spec_from_loader('attention_list', loader)
+m = importlib.util.module_from_spec(spec)
+loader.exec_module(m)
+$1
+"
+}
+
+check_keys() {
+  local label="$1" expected="$2" py_call="$3"
+  local actual
+  actual="$(ACTIONS_FOR_HELPER "print(','.join(k for k, _ in $py_call))")"
+  check "$label" "$actual" "$expected"
+}
+
+check_keys "CAL (no linked reminders) keys" "alt-y" \
+  "m.actions_for('CAL')"
+check_keys "CAL (1 linked reminder) keys" "alt-y,alt-x" \
+  "m.actions_for('CAL', rem_ids=['r1'])"
+check_keys "CAL (3 linked reminders: alt-x + digit overflow) keys" "alt-y,alt-x,1,2" \
+  "m.actions_for('CAL', rem_ids=['r1', 'r2', 'r3'])"
+check_keys "REM keys" "alt-x" \
+  "m.actions_for('REM')"
+check_keys "GH (no Linear link) keys" "alt-o,alt-s,alt-l,alt-a,alt-m,alt-c,alt-g" \
+  "m.actions_for('GH')"
+check_keys "GH (with Linear cross-link) keys" "alt-o,alt-s,alt-l,alt-a,alt-m,alt-c,alt-g,O,C,T" \
+  "m.actions_for('GH', has_linear=True)"
+check_keys "LIN keys" "alt-o,alt-s,alt-c,alt-t" \
+  "m.actions_for('LIN')"
+check_keys "unknown item type keys" "" \
+  "m.actions_for('BOGUS')"
+
+test_expect_keys_is_union_of_actions_for() {
+  local expected actual
+  expected="$(ACTIONS_FOR_HELPER "
+contexts = [
+    m.actions_for('CAL', rem_ids=[f'r{i}' for i in range(1, 10)]),
+    m.actions_for('REM'),
+    m.actions_for('GH', has_linear=False),
+    m.actions_for('GH', has_linear=True),
+    m.actions_for('LIN'),
+]
+seen = set()
+keys = []
+for actions in contexts:
+    for key, _ in actions:
+        if key not in seen:
+            seen.add(key)
+            keys.append(key)
+print(','.join(keys))
+")"
+  actual="$(PATH="$STUB_BIN:$PATH" python3 "$ATTENTION_LIST" expect-keys)"
+  check "expect-keys output equals the union of all actions_for() keys" "$actual" "$expected"
+}
+test_expect_keys_is_union_of_actions_for
+
+test_no_quit_key() {
+  local keys
+  keys="$(PATH="$STUB_BIN:$PATH" python3 "$ATTENTION_LIST" expect-keys)"
+  case ",$keys," in
+    *,q,*) bad "expect-keys must not contain a 'q' quit key (got: $keys)" ;;
+    *) ok "expect-keys contains no 'q' quit key (Esc at the dashboard is the only quit path)" ;;
+  esac
+}
+test_no_quit_key
+
+test_no_duplicate_keys_per_context() {
+  local label="$1" py_call="$2"
+  local keys dup
+  keys="$(ACTIONS_FOR_HELPER "print(chr(10).join(k for k, _ in $py_call))")"
+  dup="$(printf '%s\n' "$keys" | sort | uniq -d)"
+  if [ -z "$dup" ]; then
+    ok "$label: no duplicate hotkeys"
+  else
+    bad "$label: no duplicate hotkeys (dupes: $dup)"
+  fi
+}
+test_no_duplicate_keys_per_context "CAL (3 linked reminders)" \
+  "m.actions_for('CAL', rem_ids=['r1', 'r2', 'r3'])"
+test_no_duplicate_keys_per_context "GH (with Linear cross-link)" \
+  "m.actions_for('GH', has_linear=True)"
+
+# ---------------------------------------------------------------------------
+# hint_for() renders the exact footer text get_list() emits as each row's
+# third (hidden) tab field. It must be built from actions_for() -- not a
+# separately maintained string -- so the footer can never promise a hotkey
+# act() doesn't actually honor.
+echo
+echo "== hint_for() footer text =="
+
+check_hint() {
+  local label="$1" expected="$2" py_call="$3"
+  local actual
+  actual="$(ACTIONS_FOR_HELPER "print($py_call)")"
+  check "$label" "$actual" "$expected"
+}
+
+check_hint "GH (no Linear link) hint" \
+  "⌥o open  ⌥s session  ⌥l lumen  ⌥a approve  ⌥m merge  ⌥c comment  ⌥g label" \
+  "m.hint_for('GH')"
+check_hint "REM hint" "⌥x complete" \
+  "m.hint_for('REM')"
+
+test_get_list_emits_hint_field() {
+  local out gh_line hint_field
+  out="$(HOME="$TEST_HOME" PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
+  gh_line="$(grep 'GHTEST-review-me' <<<"$out" || true)"
+  # Field 3 (after the second tab) is the hint; awk splits on literal tabs.
+  hint_field="$(awk -F'\t' '{print $3}' <<<"$gh_line")"
+  case "$hint_field" in
+    *"⌥o open"*"⌥m merge"*) ok "get_list() row carries a hint field with GH's hotkeys (got: $hint_field)" ;;
+    *) bad "get_list() row carries a hint field with GH's hotkeys (got: $hint_field)" ;;
+  esac
+}
+test_get_list_emits_hint_field
+
+# ---------------------------------------------------------------------------
+# act(key, line) dispatch: two positional args (fzf's --expect two-line
+# output split into pressed key + highlighted row), one fzf process per
+# dashboard render -- no nested action submenu, so these tests stub only
+# the downstream commands (open/remindctl/gh), never fzf itself.
+echo
+echo "== act(key, line) dispatch =="
 
 INTERACT_BIN="$WORK/bin-act-interact"
 mkdir -p "$INTERACT_BIN"
 
-FZF_QUEUE_DIR="$WORK/fzf-queue"
-mkdir -p "$FZF_QUEUE_DIR"
-echo 1 > "$FZF_QUEUE_DIR/.next"
-export FZF_QUEUE_DIR
-
-FZF_STDIN_LOG="$WORK/fzf-stdin.log"
-: > "$FZF_STDIN_LOG"
-export FZF_STUB_STDIN_FILE="$FZF_STDIN_LOG"
-
 OPEN_LOG="$WORK/open-invocations.log"; : > "$OPEN_LOG"
 REMINDCTL_ACT_LOG="$WORK/remindctl-act-invocations.log"; : > "$REMINDCTL_ACT_LOG"
 GH_ACT_LOG="$WORK/gh-act-invocations.log"; : > "$GH_ACT_LOG"
-
-# Canned-response stub for `fzf --expect`. Reads from $FZF_QUEUE_DIR/<n>,
-# where <n> advances via $FZF_QUEUE_DIR/.next across possibly-multiple fzf
-# calls within one act() invocation (top-level menu, then a merge-confirm
-# sub-menu). Each queued file: exit code on line 1, then 0-2 lines of stdout
-# exactly as real fzf's --expect emits (pressed key, then highlighted row).
-# Also captures its stdin (the rendered menu rows) to $FZF_STUB_STDIN_FILE
-# so tests can inspect what was actually offered, e.g. for the
-# no-duplicate-hotkeys check below.
-cat > "$INTERACT_BIN/fzf" <<'STUB'
-#!/bin/sh
-if [ -n "${FZF_STUB_STDIN_FILE:-}" ]; then
-  cat > "$FZF_STUB_STDIN_FILE"
-else
-  cat > /dev/null
-fi
-: "${FZF_QUEUE_DIR:?FZF_QUEUE_DIR not set}"
-idx="$(cat "$FZF_QUEUE_DIR/.next" 2>/dev/null || echo 1)"
-resp="$FZF_QUEUE_DIR/$idx"
-if [ ! -f "$resp" ]; then
-  echo "fake fzf: no queued response for call #$idx" >&2
-  exit 99
-fi
-echo $((idx + 1)) > "$FZF_QUEUE_DIR/.next"
-rc="$(head -n 1 "$resp")"
-tail -n +2 "$resp"
-exit "$rc"
-STUB
-chmod +x "$INTERACT_BIN/fzf"
+PBCOPY_LOG="$WORK/pbcopy-invocations.log"; : > "$PBCOPY_LOG"
 
 cat > "$INTERACT_BIN/open" <<STUB
 #!/bin/sh
@@ -618,116 +717,183 @@ exit 0
 STUB
 chmod +x "$INTERACT_BIN/gh"
 
-# Fixture lines matching get_list()'s real output shape (tab-delimited
-# display/metadata, pipe-delimited metadata tokens).
+cat > "$INTERACT_BIN/pbcopy" <<STUB
+#!/bin/sh
+cat >> "$PBCOPY_LOG"
+exit 0
+STUB
+chmod +x "$INTERACT_BIN/pbcopy"
+
+# Fixture lines matching get_list()'s real 3-field output shape
+# (display\tmetadata\thint). The hint field's exact content doesn't matter
+# to act() (it only reads the display portion and metadata tail), so a
+# placeholder is fine here.
 TAB=$'\t'
-FIX_GH_LINE="🐙 [GH] (90) #42 Test PR - Review Requested | Repo: athal7/kb ${TAB}| ID:42 | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:"
-FIX_GH_LINKED_LINE="🐙 [GH] (95) #42 Test PR - Review Requested | Repo: athal7/kb | 🎯 Linear: ABC-1 (State: Todo) ${TAB}| ID:42 | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID:db-uuid | LINEAR_URL:https://linear.app/abc/issue/ABC-1 | REMINDER_ID:"
-FIX_REM_LINE="📝 [REM] (85) Buy milk - List: Personal | Prio: HIGH ${TAB}| ID:r1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:"
-FIX_CAL_LINE="📅 [CAL] (50) Team Sync - Time: 10:00 ${TAB}| ID:e1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:"
-FIX_CAL_MULTI_LINE="📅 [CAL] (90) Team Sync - Time: 10:00 | 📝 Reminder: prep ${TAB}| ID:e1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:r1,r2,r3"
-FIX_LIN_LINE="🎯 [LIN] (65) [ABC-1] Fix bug - State: Todo ${TAB}| ID:ABC-1 | DATABASE_ID:db-uuid | URL:https://linear.app/abc/issue/ABC-1 | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:"
+FIX_GH_LINE="🐙 [GH] (90) #42 Test PR - Review Requested | Repo: athal7/kb ${TAB}| ID:42 | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
+FIX_GH_LINKED_LINE="🐙 [GH] (95) #42 Test PR - Review Requested | Repo: athal7/kb | 🎯 Linear: ABC-1 (State: Todo) ${TAB}| ID:42 | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID:db-uuid | LINEAR_URL:https://linear.app/abc/issue/ABC-1 | REMINDER_ID:${TAB}hint"
+FIX_REM_LINE="📝 [REM] (85) Buy milk - List: Personal | Prio: HIGH ${TAB}| ID:r1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
+FIX_CAL_LINE="📅 [CAL] (50) Team Sync - Time: 10:00 ${TAB}| ID:e1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
+FIX_CAL_MULTI_LINE="📅 [CAL] (90) Team Sync - Time: 10:00 | 📝 Reminder: prep ${TAB}| ID:e1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:r1,r2,r3${TAB}hint"
+FIX_LIN_LINE="🎯 [LIN] (65) [ABC-1] Fix bug - State: Todo ${TAB}| ID:ABC-1 | DATABASE_ID:db-uuid | URL:https://linear.app/abc/issue/ABC-1 | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
 
-reset_fzf_queue() {
-  rm -f "$FZF_QUEUE_DIR"/[0-9]*
-  echo 1 > "$FZF_QUEUE_DIR/.next"
-}
-
-# queue_fzf <call-number> <exit-code> [pressed-key] [highlighted-row]
-# Writes one queued response consumed by the fzf stub above, in call order.
-queue_fzf() {
-  local n="$1" rc="$2" key="${3-}" row="${4-}"
-  {
-    printf '%s\n' "$rc"
-    if [ -n "$key" ]; then printf '%s\n' "$key"; fi
-    if [ -n "$row" ]; then printf '%s\n' "$row"; fi
-  } > "$FZF_QUEUE_DIR/$n"
-}
-
-# run_act <fzf-menu-line> — invokes `attention-list act <line>` against the
-# interaction stubs, capturing combined output/exit code into ACT_OUTPUT/
-# ACT_RC (bypassing `set -e` via the &&/|| form, since a nonzero exit here
-# is an assertion target, not a script failure).
+# run_act <key> <line> [stdin] — invokes `attention-list act <key> <line>`,
+# optionally feeding <stdin> (for merge-confirm/comment/label prompts, which
+# now run as plain input() reads after fzf has already exited). Captures
+# combined output/exit code into ACT_OUTPUT/ACT_RC.
 run_act() {
-  local line="$1"
-  ACT_OUTPUT="$(HOME="$TEST_HOME" PATH="$INTERACT_BIN:$PATH" \
-    env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST" act "$line" 2>&1)" && ACT_RC=0 || ACT_RC=$?
-  if [ "$ACT_RC" -ne 0 ] && [ "$ACT_RC" -ne 10 ]; then
+  local key="$1" line="$2" stdin="${3-}"
+  ACT_OUTPUT="$(printf '%s' "$stdin" | HOME="$TEST_HOME" PATH="$INTERACT_BIN:$PATH" \
+    env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST" act "$key" "$line" 2>&1)" && ACT_RC=0 || ACT_RC=$?
+  if [ "$ACT_RC" -ne 0 ]; then
     printf '  (act output: %s)\n' "$ACT_OUTPUT" >&2
   fi
 }
 
 echo
-echo "-- loop-back exit codes --"
-
-reset_fzf_queue
-queue_fzf 1 130
-run_act "$FIX_GH_LINE"
-check "Esc (back to list) exits 0 so the zsh loop continues" "$ACT_RC" "0"
-
-reset_fzf_queue
-queue_fzf 1 0 "q" "q   Quit attention"
-run_act "$FIX_GH_LINE"
-check "q (quit attention) exits 10 so the zsh loop's || break fires" "$ACT_RC" "10"
-
-echo
-echo "-- hotkey dispatch invokes the correct downstream command --"
+echo "-- alt-key hotkey dispatch invokes the correct downstream command --"
 
 : > "$OPEN_LOG"
-reset_fzf_queue
-queue_fzf 1 0 "o" "o   Open in Browser"
-run_act "$FIX_GH_LINE"
-check "GH hotkey 'o' exits 0" "$ACT_RC" "0"
+run_act "alt-o" "$FIX_GH_LINE"
+check "GH alt-o exits 0" "$ACT_RC" "0"
 if grep -q 'https://github.com/athal7/kb/pull/42' "$OPEN_LOG"; then
-  ok "GH hotkey 'o' invokes open with the item URL"
+  ok "GH alt-o invokes open with the item URL"
 else
-  bad "GH hotkey 'o' invokes open with the item URL (got: $(cat "$OPEN_LOG"))"
+  bad "GH alt-o invokes open with the item URL (got: $(cat "$OPEN_LOG"))"
 fi
 
 : > "$REMINDCTL_ACT_LOG"
-reset_fzf_queue
-queue_fzf 1 0 "x" "x   Complete reminder"
-run_act "$FIX_REM_LINE"
-check "REM hotkey 'x' exits 0" "$ACT_RC" "0"
+run_act "alt-x" "$FIX_REM_LINE"
+check "REM alt-x exits 0" "$ACT_RC" "0"
 if grep -q 'complete r1' "$REMINDCTL_ACT_LOG"; then
-  ok "REM hotkey 'x' invokes remindctl complete on the item's own ID"
+  ok "REM alt-x invokes remindctl complete on the item's own ID"
 else
-  bad "REM hotkey 'x' invokes remindctl complete on the item's own ID (got: $(cat "$REMINDCTL_ACT_LOG"))"
+  bad "REM alt-x invokes remindctl complete on the item's own ID (got: $(cat "$REMINDCTL_ACT_LOG"))"
+fi
+
+: > "$PBCOPY_LOG"
+run_act "alt-y" "$FIX_CAL_LINE"
+check "CAL alt-y exits 0" "$ACT_RC" "0"
+if grep -q 'CAL' "$PBCOPY_LOG"; then
+  ok "CAL alt-y copies the row to the clipboard"
+else
+  bad "CAL alt-y copies the row to the clipboard (got: $(cat "$PBCOPY_LOG"))"
 fi
 
 echo
-echo "-- Esc and q never invoke a downstream action command --"
+echo "-- CAL multi-reminder overflow: alt-x is first reminder, digits are the rest --"
 
-: > "$OPEN_LOG"; : > "$GH_ACT_LOG"
-reset_fzf_queue
-queue_fzf 1 130
-run_act "$FIX_GH_LINE"
-check "Esc on GH item exits 0" "$ACT_RC" "0"
-if [ -s "$OPEN_LOG" ] || [ -s "$GH_ACT_LOG" ]; then
-  bad "Esc must not invoke any downstream action command (open: $(cat "$OPEN_LOG"); gh: $(cat "$GH_ACT_LOG"))"
+: > "$REMINDCTL_ACT_LOG"
+run_act "alt-x" "$FIX_CAL_MULTI_LINE"
+check "CAL alt-x (first reminder) exits 0" "$ACT_RC" "0"
+if grep -q 'complete r1' "$REMINDCTL_ACT_LOG"; then
+  ok "CAL alt-x completes the first linked reminder (r1)"
 else
-  ok "Esc does not invoke any downstream action command"
+  bad "CAL alt-x completes the first linked reminder (r1) (got: $(cat "$REMINDCTL_ACT_LOG"))"
 fi
 
-: > "$OPEN_LOG"; : > "$GH_ACT_LOG"
-reset_fzf_queue
-queue_fzf 1 0 "q" "q   Quit attention"
-run_act "$FIX_GH_LINE"
-check "q on GH item exits 10" "$ACT_RC" "10"
-if [ -s "$OPEN_LOG" ] || [ -s "$GH_ACT_LOG" ]; then
-  bad "q must not invoke any downstream action command (open: $(cat "$OPEN_LOG"); gh: $(cat "$GH_ACT_LOG"))"
+: > "$REMINDCTL_ACT_LOG"
+run_act "1" "$FIX_CAL_MULTI_LINE"
+check "CAL digit-overflow key '1' exits 0" "$ACT_RC" "0"
+if grep -q 'complete r2' "$REMINDCTL_ACT_LOG"; then
+  ok "CAL digit-overflow key '1' completes the second linked reminder (r2)"
 else
-  ok "q does not invoke any downstream action command"
+  bad "CAL digit-overflow key '1' completes the second linked reminder (r2) (got: $(cat "$REMINDCTL_ACT_LOG"))"
 fi
 
 echo
-echo "-- merge confirmation gate (hotkey 'm' then a y/n sub-confirm) --"
+echo "-- Linear cross-link plain-uppercase keys (O/C/T) --"
+
+: > "$OPEN_LOG"
+run_act "O" "$FIX_GH_LINKED_LINE"
+check "GH linked item, key 'O' exits 0" "$ACT_RC" "0"
+if grep -q 'https://linear.app/abc/issue/ABC-1' "$OPEN_LOG"; then
+  ok "key 'O' opens the linked Linear issue, not the GH item"
+else
+  bad "key 'O' opens the linked Linear issue, not the GH item (got: $(cat "$OPEN_LOG"))"
+fi
+
+: > "$OPEN_LOG"
+run_act "O" "$FIX_GH_LINE"
+check "GH item with no Linear link, key 'O' exits 0 (no-op, not a crash)" "$ACT_RC" "0"
+if [ -s "$OPEN_LOG" ]; then
+  bad "key 'O' with no Linear link must not invoke open (got: $(cat "$OPEN_LOG"))"
+else
+  ok "key 'O' with no Linear link is a no-op"
+fi
+
+echo
+echo "-- Enter (empty key): primary action for GH/LIN, no-op for CAL/REM --"
+
+: > "$OPEN_LOG"
+run_act "" "$FIX_GH_LINE"
+check "Enter on GH exits 0" "$ACT_RC" "0"
+if grep -q 'https://github.com/athal7/kb/pull/42' "$OPEN_LOG"; then
+  ok "Enter on GH opens in browser (same as alt-o)"
+else
+  bad "Enter on GH opens in browser (same as alt-o) (got: $(cat "$OPEN_LOG"))"
+fi
+
+: > "$OPEN_LOG"
+run_act "" "$FIX_LIN_LINE"
+check "Enter on LIN exits 0" "$ACT_RC" "0"
+if grep -q 'https://linear.app/abc/issue/ABC-1' "$OPEN_LOG"; then
+  ok "Enter on LIN opens in browser (same as alt-o)"
+else
+  bad "Enter on LIN opens in browser (same as alt-o) (got: $(cat "$OPEN_LOG"))"
+fi
+
+: > "$PBCOPY_LOG"; : > "$REMINDCTL_ACT_LOG"
+run_act "" "$FIX_CAL_LINE"
+check "Enter on CAL exits 0 (no-op)" "$ACT_RC" "0"
+if [ -s "$PBCOPY_LOG" ] || [ -s "$REMINDCTL_ACT_LOG" ]; then
+  bad "Enter on CAL must not invoke any action (pbcopy: $(cat "$PBCOPY_LOG"); remindctl: $(cat "$REMINDCTL_ACT_LOG"))"
+else
+  ok "Enter on CAL takes no action"
+fi
+
+: > "$REMINDCTL_ACT_LOG"
+run_act "" "$FIX_REM_LINE"
+check "Enter on REM exits 0 (no-op)" "$ACT_RC" "0"
+if [ -s "$REMINDCTL_ACT_LOG" ]; then
+  bad "Enter on REM must not invoke any action (got: $(cat "$REMINDCTL_ACT_LOG"))"
+else
+  ok "Enter on REM takes no action"
+fi
+
+echo
+echo "-- unmapped key for a row's type: brief note, exit 0, no traceback --"
+
+: > "$OPEN_LOG"
+run_act "alt-z" "$FIX_GH_LINE"
+check "unmapped key exits 0 (not an error)" "$ACT_RC" "0"
+case "$ACT_OUTPUT" in
+  *Traceback*) bad "unmapped key must not print a traceback (got: $ACT_OUTPUT)" ;;
+  *) ok "unmapped key prints a note instead of crashing (got: $ACT_OUTPUT)" ;;
+esac
+if [ -s "$OPEN_LOG" ]; then
+  bad "unmapped key must not invoke any downstream action command (got: $(cat "$OPEN_LOG"))"
+else
+  ok "unmapped key does not invoke any downstream action command"
+fi
+
+echo
+echo "-- no redundant quit key: 'q' is not a bound hotkey anywhere --"
+
+: > "$OPEN_LOG"
+run_act "q" "$FIX_GH_LINE"
+check "'q' exits 0 like any other unmapped key (no special quit exit code)" "$ACT_RC" "0"
+if [ -s "$OPEN_LOG" ]; then
+  bad "'q' must not invoke any downstream action command (got: $(cat "$OPEN_LOG"))"
+else
+  ok "'q' does not invoke any downstream action command"
+fi
+
+echo
+echo "-- merge gate (alt-m): confirm_and_merge() runs as a plain input() prompt, not a second fzf --"
 
 : > "$GH_ACT_LOG"
-reset_fzf_queue
-queue_fzf 1 0 "m" "m   Merge PR (Squash)"
-queue_fzf 2 0 "y" "y   Yes, merge and delete branch"
-run_act "$FIX_GH_LINE"
+run_act "alt-m" "$FIX_GH_LINE" "y
+"
 check "merge confirm 'y' exits 0" "$ACT_RC" "0"
 if grep -q 'pr merge --squash --delete-branch 42 --repo athal7/kb' "$GH_ACT_LOG"; then
   ok "merge confirm 'y' invokes gh pr merge --squash --delete-branch"
@@ -736,10 +902,8 @@ else
 fi
 
 : > "$GH_ACT_LOG"
-reset_fzf_queue
-queue_fzf 1 0 "m" "m   Merge PR (Squash)"
-queue_fzf 2 0 "n" "n   No, cancel"
-run_act "$FIX_GH_LINE"
+run_act "alt-m" "$FIX_GH_LINE" "n
+"
 check "merge confirm 'n' exits 0" "$ACT_RC" "0"
 if [ -s "$GH_ACT_LOG" ]; then
   bad "merge confirm 'n' must not invoke gh pr merge (got: $(cat "$GH_ACT_LOG"))"
@@ -748,60 +912,13 @@ else
 fi
 
 : > "$GH_ACT_LOG"
-reset_fzf_queue
-queue_fzf 1 0 "m" "m   Merge PR (Squash)"
-queue_fzf 2 130
-run_act "$FIX_GH_LINE"
-check "merge confirm Esc exits 0" "$ACT_RC" "0"
+run_act "alt-m" "$FIX_GH_LINE" ""
+check "merge confirm EOF (no stdin) exits 0, canceled gracefully" "$ACT_RC" "0"
 if [ -s "$GH_ACT_LOG" ]; then
-  bad "merge confirm Esc must not invoke gh pr merge (got: $(cat "$GH_ACT_LOG"))"
+  bad "merge confirm EOF must not invoke gh pr merge (got: $(cat "$GH_ACT_LOG"))"
 else
-  ok "merge confirm Esc does not invoke gh pr merge"
+  ok "merge confirm EOF does not invoke gh pr merge"
 fi
-
-echo
-echo "-- no duplicate hotkeys within any single item type's menu --"
-
-# Drives act() to Esc immediately (no side effects) but inspects what was
-# actually piped into fzf's stdin for the first (top-level) menu call, to
-# confirm the rendered key column has no repeats -- including the CAL
-# variable-length multi-reminder case, where digit-overflow keys (1, 2, ...)
-# must not collide with x/y/q or any other key already in that menu.
-check_no_duplicate_keys() {
-  local label="$1" line="$2"
-  : > "$FZF_STDIN_LOG"
-  reset_fzf_queue
-  queue_fzf 1 130
-  run_act "$line"
-
-  local keys_list="" row key
-  # `|| [ -n "$row" ]` picks up the final line even without a trailing
-  # newline: fzf_menu() pipes rows via "\n".join(), so the last row has no
-  # terminating newline and a plain `while read` would silently drop it.
-  while IFS= read -r row || [ -n "$row" ]; do
-    [ -z "$row" ] && continue
-    key="${row%% *}"
-    keys_list="${keys_list}${key}"$'\n'
-  done < "$FZF_STDIN_LOG"
-
-  local dup
-  dup="$(printf '%s' "$keys_list" | sort | uniq -d)"
-  if [ -z "$dup" ]; then
-    ok "$label: no duplicate hotkeys (keys: $(printf '%s' "$keys_list" | tr '\n' ' '))"
-  else
-    bad "$label: no duplicate hotkeys (dupes: $dup; all keys: $(printf '%s' "$keys_list" | tr '\n' ' '))"
-  fi
-}
-
-check_no_duplicate_keys "CAL (no linked reminders)" "$FIX_CAL_LINE"
-check_no_duplicate_keys "CAL (3 linked reminders: x + digit overflow)" "$FIX_CAL_MULTI_LINE"
-check_no_duplicate_keys "REM" "$FIX_REM_LINE"
-check_no_duplicate_keys "GH (no Linear link)" "$FIX_GH_LINE"
-check_no_duplicate_keys "GH (with Linear cross-link, upper/lowercase verbs)" "$FIX_GH_LINKED_LINE"
-check_no_duplicate_keys "LIN" "$FIX_LIN_LINE"
-
-unset FZF_STUB_STDIN_FILE
-unset FZF_QUEUE_DIR
 
 # ---------------------------------------------------------------------------
 echo
