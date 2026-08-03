@@ -32,7 +32,7 @@ homebridge|request to https://oauth2\.googleapis\.com/token failed
 "
 
 # mlx-qwen-server: benign startup race — a previous mlx_lm.server process is
-# still slowly releasing port 1234 (unloading a 30B-param model) while
+# still slowly releasing port 8091 (unloading a 30B-param model) while
 # launchd's KeepAlive respawns a new instance every ~10s. The race self-heals
 # within ~90s once the old process fully exits, with zero service disruption
 # (RunAtLoad+KeepAlive guarantees eventual success). Confirmed no recurrence

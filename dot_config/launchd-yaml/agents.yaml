@@ -199,7 +199,7 @@ launchagents:
       - --host
       - 127.0.0.1
       - --port
-      - "1234"
+      - "8091"
       - --log-level
       - INFO
       # Concurrency: dropped to 1 (was 2) as a diagnostic/mitigation for the
