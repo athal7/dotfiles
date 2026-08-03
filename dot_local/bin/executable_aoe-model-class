@@ -1,0 +1,59 @@
+#!/bin/sh
+# aoe-model-class — aoe host-level on_launch hook. Materializes this repo's
+# effective per-class model policy into the two gitignored, project-local files
+# opencode and omp each read natively: .opencode/opencode.json and
+# .omp/config.yml.
+#
+# WHY A HOOK, NOT A WRAPPER: the aoe-cli-defaults spec forbids any shell
+# function that injects flags into user-invoked `aoe` commands.
+#
+# WHY NO RENDERED LOOKUP FILE: org policy is read straight from `chezmoi
+# data`, the same way dot_config/opencode/commands/implement.md,
+# dot_agents/prompts/lead.md, and dot_config/kb/collectors/gh.md already read
+# orgs.<org>.issues. No derived artifact to drift; editing local.yaml takes
+# effect on the next launch with no `chezmoi apply` needed.
+#
+# ALWAYS EXITS 0 — aoe kills the whole session process tree if an on_launch
+# hook fails or times out. A lookup or write failure must never block a launch.
+#
+# PATH is set explicitly: aoe may run this hook under launchd/a restricted
+# PATH context; chezmoi/jq/yq/git must resolve.
+
+PATH="/opt/homebrew/bin:$PATH"; export PATH
+
+write() {
+  # $1 = path, $2 = content. Never clobber a file this repo legitimately tracks.
+  git ls-files --error-unmatch "$1" >/dev/null 2>&1 && return 0
+  [ -n "$2" ] || return 0
+  mkdir -p "$(dirname "$1")" 2>/dev/null || return 0
+  printf '%s\n' "$2" > "$1" 2>/dev/null || return 0
+}
+
+main() {
+  root=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+  cd "$root" || return 0
+
+  url=$(git remote get-url origin 2>/dev/null) || return 0
+  case "$url" in *github.com*) ;; *) return 0 ;; esac
+  org=$(printf '%s' "$url" | sed -E 's#.*[:/]([^/]+)/[^/]+(\.git)?$#\1#')
+  [ -n "$org" ] || return 0
+
+  data=$(chezmoi data --format json 2>/dev/null) || return 0
+
+  classes=$(printf '%s' "$data" | jq -c --arg org "$org" \
+    '(.model_class // {}) * (.orgs[$org].model_class // {})' 2>/dev/null) || return 0
+  [ -n "$classes" ] && [ "$classes" != "null" ] || return 0
+
+  write .opencode/opencode.json "$(printf '%s' "$data" | jq --argjson c "$classes" '{
+      model: $c.default,
+      small_model: $c.smol,
+      agent: (.agents
+        | map(select(has("class")) | {key: .name, value: {model: $c[.class]}})
+        | from_entries)
+    }' 2>/dev/null)"
+
+  write .omp/config.yml "$(printf '%s' "$classes" | jq '{modelRoles: .}' 2>/dev/null | yq -P 2>/dev/null)"
+}
+
+main
+exit 0

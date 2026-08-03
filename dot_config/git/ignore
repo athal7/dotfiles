@@ -45,6 +45,7 @@ Thumbs.db
 .talismanrc
 .opencode/
 .scratch/
+.omp/config.yml
 # OpenSpec: per-repo durable store is linked into the worktree (see /implement
 # Workspace setup). openspec/ is a REAL dir; only these two paths are symlinks
 # pointing OUTSIDE the worktree into ~/.local/share/kb/openspec/<slug>/ — ignore

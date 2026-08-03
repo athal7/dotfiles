@@ -9,11 +9,27 @@
 #   issues           : "linear" if the org uses Linear (anything else → default GitHub Issues)
 #   automated_review : config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login : the GitHub user.login the bot posts as (used to filter PR review comments)
+#   model_class      : per-org default models for coding-agent CLIs (opencode, omp), applied at
+#     aoe session-launch time by ~/.local/bin/aoe-model-class. Class names are omp's own native
+#     `modelRoles` vocabulary (default/smol/slow) — values are `provider/model` selector strings
+#     used verbatim by both tools. This is a PARTIAL override: any class you omit here falls back
+#     to .chezmoidata/agents.yaml's `model_class`. Two common patterns:
 orgs:
   your-work-org:
     issues: linear
     automated_review:
       bot_login: copilot-pull-request-reviewer
+    # All-cloud: real coding models for every class.
+    model_class:
+      default: anthropic/claude-sonnet-5
+      smol: anthropic/claude-haiku-4-5
+      slow: anthropic/claude-opus-5
+  your-personal-org:
+    # All-local: route every class to a locally-hosted model (no cloud spend).
+    model_class:
+      default: mlx/default_model
+      smol: mlx/default_model
+      slow: mlx/default_model
 
 # Production service → local repo mapping for the daily fix-prod-errors task.
 # Keys are Elastic APM service.name values; values are repo directory names under ~/code.

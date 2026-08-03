@@ -27,7 +27,9 @@
       {{- $obj := dict -}}
       {{- if hasKey $a "description" -}}{{- $_ := set $obj "description" $a.description -}}{{- end -}}
       {{- if hasKey $a "mode" -}}{{- $_ := set $obj "mode" $a.mode -}}{{- end -}}
-      {{- $_ := set $obj "model" $a.model -}}
+      {{- if hasKey $a "class" -}}
+        {{- $_ := set $obj "model" (index $.classes $a.class) -}}
+      {{- end -}}
       {{- if hasKey $a "prompt" -}}{{- $_ := set $obj "prompt" $a.prompt -}}{{- end -}}
       {{- if hasKey $a "steps" -}}{{- $_ := set $obj "steps" $a.steps -}}{{- end -}}
       {{- if hasKey $a "permission" -}}

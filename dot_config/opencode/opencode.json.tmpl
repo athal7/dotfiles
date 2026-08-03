@@ -62,10 +62,10 @@
   the top-level default is opus.
   */ -}}
   "agent": {
-    {{ includeTemplate "opencode-agents" (dict "agents" .agents "bp" $bp "packages" $globalBash) | indent 4 | trim }}
+    {{ includeTemplate "opencode-agents" (dict "agents" .agents "bp" $bp "packages" $globalBash "classes" .model_class) | indent 4 | trim }}
   },
-  "model": "anthropic/claude-sonnet-5",
-  "small_model": "mlx/default_model",
+  "model": {{ index .model_class "default" | quote }},
+  "small_model": {{ index .model_class "smol" | quote }},
   "compaction": {
     "prune": true
   },

@@ -13,6 +13,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Agent skills](skills/) — knowledge base, communication, code review, and more. QA produces an AC-organized evidence report; the `qa-report-publish` skill delivers it to your own PR's description. Static and blast-radius code review is not performed inline; it happens automatically on the pushed PR.
   - [MCP registry](.chezmoidata/mcp.yaml) — MCP servers and their optional wrapping subagents (Slack, GitHub, Linear, Google Workspace, Atlassian, Zoom), declared declaratively and rendered into `opencode.json` via the `opencode-mcp-{servers,tools,agents}` template partials.
   - [Agent of Empires config](dot_agent-of-empires/config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`.
+  - [Per-org model classes](.chezmoidata/agents.yaml) — agents declare a `class` (`default`/`smol`/`slow`, omp's native modelRoles vocabulary) resolved via `model_class`; a per-org override in `local.yaml`'s `orgs.<org>.model_class` is injected at aoe session launch by [`aoe-model-class`](dot_local/bin/executable_aoe-model-class) (an `on_launch` host hook) into gitignored, project-local `.opencode/opencode.json` and `.omp/config.yml`.
   - [omp model config](dot_omp/private_agent/models.json.tmpl) — points omp's local `mlx` provider at the same `mlx_lm.server` endpoint (`127.0.0.1:1234`) opencode uses; chezmoi-managed counterpart to opencode's `mlx` provider block.
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)

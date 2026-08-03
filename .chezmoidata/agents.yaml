@@ -1,8 +1,12 @@
+model_class:
+  default: anthropic/claude-sonnet-5
+  smol: mlx/default_model
+  slow: anthropic/claude-opus-5
 agents:
   - name: lead
     enabled: [opencode, pi]
     mode: primary
-    model: anthropic/claude-sonnet-5
+    class: default
     prompt: "{file:~/.agents/prompts/lead.md}"
     permission:
       task: allow
@@ -13,7 +17,7 @@ agents:
     enabled: [opencode, pi]
     description: "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only."
     mode: subagent
-    model: anthropic/claude-opus-5
+    class: slow
     prompt: "{file:~/.agents/prompts/plan.md}"
     permission:
       edit: deny
@@ -24,7 +28,7 @@ agents:
     enabled: [opencode, pi]
     description: "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior, and compares against a linked Figma design (figma-desktop MCP) when one exists. Read-only re: code."
     mode: subagent
-    model: anthropic/claude-sonnet-5
+    class: default
     prompt: "{file:~/.agents/prompts/qa.md}"
     permission:
       edit: deny
@@ -36,7 +40,7 @@ agents:
     enabled: [opencode, pi]
     description: "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done."
     mode: subagent
-    model: anthropic/claude-sonnet-5
+    class: default
     prompt: "{file:~/.agents/prompts/build.md}"
     steps: 30
     permission:
@@ -48,7 +52,7 @@ agents:
       "context7_*": true
   - name: explore
     enabled: [opencode, pi]
-    model: anthropic/claude-sonnet-5
+    class: default
     prompt: "{file:~/.agents/prompts/explore.md}"
     permission:
       edit: deny
@@ -57,7 +61,7 @@ agents:
     enabled: [opencode, pi]
     description: "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7."
     mode: subagent
-    model: anthropic/claude-sonnet-5
+    class: default
     prompt: "{file:~/.agents/prompts/scout.md}"
     permission:
       edit: deny
@@ -67,7 +71,7 @@ agents:
   - name: general
     enabled: [opencode, pi]
     description: "Multi-step research and read-only work that doesn't fit explore/scout/plan/qa — the reads catch-all."
-    model: anthropic/claude-sonnet-5
+    class: default
     permission:
       edit: deny
       write: deny

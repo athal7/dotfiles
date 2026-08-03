@@ -42,6 +42,7 @@ split_view = false
 [hooks]
 
 [host_hooks]
+on_launch = ["$HOME/.local/bin/aoe-model-class"]
 
 [logging]
 default_level = "info"
