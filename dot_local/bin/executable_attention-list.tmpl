@@ -107,6 +107,12 @@ def fetch_reminders(reminders_config):
         return []
 
 def fetch_github():
+    # `gh pr list`/`gh issue list` are repo-scoped: they resolve a single
+    # target repo from the cwd's git remote (or an explicit -R) and only
+    # filter *within* that repo, so --search never made them search across
+    # all of @me's repos. `gh search prs`/`gh search issues` are the actual
+    # global cross-repo search subcommands.
+    #
     # No org/user scoping: GitHub's `org:` search qualifier only matches
     # real Organizations, not personal user accounts, so scoping by a
     # configured `orgs.<key>` silently drops results for any key that's
@@ -114,7 +120,7 @@ def fetch_github():
     # unscoped @me search per query type.
     try:
         pr_res = subprocess.run(
-            ["gh", "pr", "list", "--search", "review-requested:@me", "--limit", "50", "--json", "number,title,repository,url"],
+            ["gh", "search", "prs", "--review-requested=@me", "--state=open", "--limit", "50", "--json", "number,title,repository,url"],
             capture_output=True, text=True
         )
         prs = json.loads(pr_res.stdout) if pr_res.returncode == 0 else []
@@ -122,7 +128,7 @@ def fetch_github():
             p["type"] = "review_request"
 
         issue_res = subprocess.run(
-            ["gh", "issue", "list", "--search", "assignee:@me", "--limit", "50", "--json", "number,title,repository,url"],
+            ["gh", "search", "issues", "--assignee=@me", "--state=open", "--limit", "50", "--json", "number,title,repository,url"],
             capture_output=True, text=True
         )
         issues = json.loads(issue_res.stdout) if issue_res.returncode == 0 else []

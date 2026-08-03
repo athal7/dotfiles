@@ -316,10 +316,15 @@ test_declined_event_excluded() {
 test_declined_event_excluded
 
 # ---------------------------------------------------------------------------
-# fetch_github() never scopes its search by org: one unscoped @me search
-# per query type, full stop.
+# fetch_github() must use the global-search subcommands (`gh search prs` /
+# `gh search issues`), not the repo-scoped `gh pr list` / `gh issue list`.
+# The latter resolve a single target repo from the cwd's git remote (or -R)
+# and only filter *within* that repo — --search never made them global.
+# Also covers: no org/user scoping (one unscoped @me search per query type),
+# and that the `{"name", "nameWithOwner"}` repository shape `gh search`
+# returns is parsed into weights/type tags identically to before.
 echo
-echo "== gh search regression (no org/user scoping) =="
+echo "== gh search regression (global search, not repo-scoped list) =="
 
 GH_BIN="$WORK/bin-gh-noorg-scoping"
 mkdir -p "$GH_BIN"
@@ -345,7 +350,21 @@ chmod +x "$GH_BIN/chezmoi"
 cat > "$GH_BIN/gh" <<STUB
 #!/bin/sh
 echo "\$*" >> "$GH_LOG"
-echo "[]"
+case "\$1 \$2" in
+  "search prs")
+    cat <<'JSON'
+[{"number": 1, "title": "GHTEST-review-me", "repository": {"name": "kb", "nameWithOwner": "athal7/kb"}, "url": "https://github.com/athal7/kb/pull/1"}]
+JSON
+    ;;
+  "search issues")
+    cat <<'JSON'
+[{"number": 2, "title": "GHTEST-assigned-me", "repository": {"name": "kb", "nameWithOwner": "athal7/kb"}, "url": "https://github.com/athal7/kb/issues/2"}]
+JSON
+    ;;
+  *)
+    echo "[]"
+    ;;
+esac
 exit 0
 STUB
 chmod +x "$GH_BIN/gh"
@@ -370,41 +389,53 @@ exit 1
 STUB
 chmod +x "$GH_BIN/security"
 
-test_gh_no_org_scoping() {
-  HOME="$TEST_HOME" PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST" >/dev/null
+test_gh_global_search_scope() {
+  local out
+  out="$(HOME="$TEST_HOME" PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
 
   local pr_calls issue_calls pr_call issue_call
-  pr_calls="$(grep -c 'pr list' "$GH_LOG" || true)"
-  issue_calls="$(grep -c 'issue list' "$GH_LOG" || true)"
-  pr_call="$(grep 'pr list' "$GH_LOG" || true)"
-  issue_call="$(grep 'issue list' "$GH_LOG" || true)"
+  pr_calls="$(grep -c '^search prs ' "$GH_LOG" || true)"
+  issue_calls="$(grep -c '^search issues ' "$GH_LOG" || true)"
+  pr_call="$(grep '^search prs ' "$GH_LOG" || true)"
+  issue_call="$(grep '^search issues ' "$GH_LOG" || true)"
 
-  check "gh pr list invoked exactly once (no per-org loop)" "$pr_calls" "1"
-  check "gh issue list invoked exactly once (no per-org loop)" "$issue_calls" "1"
+  check "gh search prs invoked exactly once" "$pr_calls" "1"
+  check "gh search issues invoked exactly once" "$issue_calls" "1"
 
-  case "$pr_call" in
-    *"--search review-requested:@me"*"--limit 50"*)
-      if grep -Eq 'org:|user:' <<<"$pr_call"; then
-        bad "pr list search has no org:/user: qualifier (got: $pr_call)"
-      else
-        ok "pr list search has no org:/user: qualifier"
-      fi
-      ;;
-    *) bad "pr list search shape (got: $pr_call)" ;;
+  # Repo-scoped `gh pr list`/`gh issue list` must never be used: they only
+  # filter within a single cwd-resolved repo, not across all of @me's repos.
+  if grep -Eq '^pr list|^issue list' "$GH_LOG"; then
+    bad "gh never invoked with repo-scoped 'pr list'/'issue list' (got: $(cat "$GH_LOG"))"
+  else
+    ok "gh never invoked with repo-scoped 'pr list'/'issue list'"
+  fi
+
+  check "gh search prs argv" "$pr_call" "search prs --review-requested=@me --state=open --limit 50 --json number,title,repository,url"
+  check "gh search issues argv" "$issue_call" "search issues --assignee=@me --state=open --limit 50 --json number,title,repository,url"
+
+  if grep -Eq 'org:|user:' <<<"$pr_call$issue_call"; then
+    bad "no org:/user: qualifier anywhere in gh invocations (got: $pr_call / $issue_call)"
+  else
+    ok "no org:/user: qualifier anywhere in gh invocations"
+  fi
+
+  # Confirm the {"name","nameWithOwner"} repository shape is parsed and
+  # priority weights/type tags still apply to the new subcommand's output.
+  local pr_line issue_line
+  pr_line="$(grep 'GHTEST-review-me' <<<"$out" || true)"
+  issue_line="$(grep 'GHTEST-assigned-me' <<<"$out" || true)"
+
+  case "$pr_line" in
+    *"(90)"*"Repo: athal7/kb"*) ok "review-requested PR weighted 90 with repository.nameWithOwner parsed (got: $pr_line)" ;;
+    *) bad "review-requested PR weighted 90 with repository.nameWithOwner parsed (got: $pr_line)" ;;
   esac
 
-  case "$issue_call" in
-    *"--search assignee:@me"*"--limit 50"*)
-      if grep -Eq 'org:|user:' <<<"$issue_call"; then
-        bad "issue list search has no org:/user: qualifier (got: $issue_call)"
-      else
-        ok "issue list search has no org:/user: qualifier"
-      fi
-      ;;
-    *) bad "issue list search shape (got: $issue_call)" ;;
+  case "$issue_line" in
+    *"(75)"*"Repo: athal7/kb"*) ok "assigned issue weighted 75 with repository.nameWithOwner parsed (got: $issue_line)" ;;
+    *) bad "assigned issue weighted 75 with repository.nameWithOwner parsed (got: $issue_line)" ;;
   esac
 }
-test_gh_no_org_scoping
+test_gh_global_search_scope
 
 # ---------------------------------------------------------------------------
 # Regression for get_ical_path() preferring `which ical` over the
