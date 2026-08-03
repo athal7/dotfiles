@@ -11,14 +11,20 @@ from pathlib import Path
 
 # Helper to find ical path
 def get_ical_path():
+    # Prefer the chezmoi-managed binary over PATH resolution: a stray dev
+    # build shadowing `ical` on PATH (e.g. a mise shim) is ad-hoc-signed
+    # separately from the managed release binary, so macOS TCC treats them
+    # as different app identities and Calendar access doesn't carry over.
+    local_path = Path.home() / ".local/bin/ical"
+    if local_path.exists():
+        return str(local_path)
     try:
         which = subprocess.run(["which", "ical"], capture_output=True, text=True)
         if which.returncode == 0 and which.stdout.strip():
             return which.stdout.strip()
     except Exception:
         pass
-    local_path = Path.home() / ".local/bin/ical"
-    return str(local_path) if local_path.exists() else "ical"
+    return "ical"
 
 # Helper to load chezmoi data
 def load_chezmoi_data():
@@ -101,34 +107,44 @@ def fetch_reminders(reminders_config):
         return []
 
 def fetch_github(orgs_config=None):
-    # Scope searches to configured orgs (chezmoi data: orgs.<key>) when present;
-    # fall back to unscoped search for users without orgs configured.
-    org_scope = " ".join(f"org:{org}" for org in (orgs_config or {}).keys())
+    # Scope searches to configured orgs (chezmoi data: orgs.<key>) when present.
+    # GitHub's search qualifiers AND together, so multiple `org:` terms in a
+    # single query can never match (a repo can't belong to two orgs at once) —
+    # run one search per org instead and merge the results. Users without
+    # orgs configured get the old unscoped single-query behavior.
+    orgs = list((orgs_config or {}).keys())
 
-    try:
-        # Fetch PRs where review is requested
-        pr_search = "review-requested:@me" + (f" {org_scope}" if org_scope else "")
-        pr_res = subprocess.run(
-            ["gh", "pr", "list", "--search", pr_search, "--limit", "50", "--json", "number,title,repository,url"],
-            capture_output=True, text=True
-        )
-        prs = json.loads(pr_res.stdout) if pr_res.returncode == 0 else []
-        for p in prs:
-            p["type"] = "review_request"
+    def run_search(list_type, base_search, item_type):
+        searches = [f"{base_search} org:{org}" for org in orgs] if orgs else [base_search]
+        items = []
+        for search in searches:
+            try:
+                res = subprocess.run(
+                    ["gh", list_type, "list", "--search", search, "--limit", "50", "--json", "number,title,repository,url"],
+                    capture_output=True, text=True
+                )
+                if res.returncode == 0:
+                    for item in json.loads(res.stdout):
+                        item["type"] = item_type
+                        items.append(item)
+            except Exception:
+                continue
+        return items
 
-        # Fetch assigned issues
-        issue_search = "assignee:@me" + (f" {org_scope}" if org_scope else "")
-        issue_res = subprocess.run(
-            ["gh", "issue", "list", "--search", issue_search, "--limit", "50", "--json", "number,title,repository,url"],
-            capture_output=True, text=True
-        )
-        issues = json.loads(issue_res.stdout) if issue_res.returncode == 0 else []
-        for i in issues:
-            i["type"] = "assigned_issue"
+    def dedupe(items):
+        seen = set()
+        result = []
+        for item in items:
+            key = item.get("url") or (item.get("number"), item.get("repository", {}).get("nameWithOwner"))
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(item)
+        return result
 
-        return prs + issues
-    except Exception:
-        return []
+    prs = dedupe(run_search("pr", "review-requested:@me", "review_request"))
+    issues = dedupe(run_search("issue", "assignee:@me", "assigned_issue"))
+    return prs + issues
 
 def fetch_linear():
     token = get_linear_token()
