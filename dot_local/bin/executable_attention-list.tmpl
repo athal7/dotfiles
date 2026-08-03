@@ -93,7 +93,7 @@ def fetch_reminders(reminders_config):
         if res.returncode != 0:
             return []
         all_reminders = json.loads(res.stdout or "[]")
-        return [r for r in all_reminders if not r.get("completed") and r.get("list") in target_lists]
+        return [r for r in all_reminders if not r.get("isCompleted") and r.get("listName") in target_lists]
     except Exception:
         return []
 
@@ -238,9 +238,9 @@ def get_list():
     for r in rem_raw:
         # Sanitize raw external title and list name to remove tab/pipe characters
         title = r.get("title", "Untitled").strip().replace('\t', ' ').replace('|', '/')
-        list_name = r.get('list', '').replace('\t', ' ').replace('|', '/')
+        list_name = r.get('listName', '').replace('\t', ' ').replace('|', '/')
         prio = r.get("priority", "none").lower()
-        due = r.get("due_date", "")
+        due = r.get("dueDate", "")
 
         weight = 50
         if due:
