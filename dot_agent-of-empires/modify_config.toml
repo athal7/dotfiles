@@ -40,9 +40,9 @@ context_lines = 3
 split_view = false
 
 [hooks]
+on_launch = ["$HOME/.local/bin/aoe-model-class"]
 
 [host_hooks]
-on_launch = ["$HOME/.local/bin/aoe-model-class"]
 
 [logging]
 default_level = "info"
