@@ -58,10 +58,16 @@ bindkey '^R' history-incremental-search-backward
 # Prioritized interactive multi-service attention/inbox triage via fzf
 attention() {
   local selected
-  # Fetch the unified, prioritized list and pipe to fzf, using tab as delimiter and hiding metadata tokens for display
-  selected=$(attention-list 2>/dev/null | fzf --ansi --header "Select an item to act (Press Enter for available actions)" -d '\t' --with-nth 1)
-  if [[ -n "$selected" ]]; then
-    attention-list act "$selected"
-  fi
+  # Loop back to the dashboard after each action so triage continues until
+  # the user explicitly quits (q in the action menu) or backs all the way
+  # out (Esc at the dashboard). --height/--layout=reverse keep fzf off the
+  # alt-screen so action output (e.g. "Copied to clipboard!") stays visible
+  # on the terminal instead of being wiped before the dashboard re-renders.
+  while true; do
+    selected=$(attention-list 2>/dev/null | fzf --ansi --height ~60% --layout=reverse \
+      --header "Select an item to act (enter = actions, esc = quit)" -d '\t' --with-nth 1)
+    [[ -z "$selected" ]] && break
+    attention-list act "$selected" || break
+  done
 }
 alias att=attention
