@@ -40,8 +40,25 @@ main() {
 
   data=$(chezmoi data --format json 2>/dev/null) || return 0
 
+  # SCRATCH SESSIONS SKIP THE ORG OVERRIDE: the local mlx backend org policies
+  # route through is occasionally overloaded and silently returns empty
+  # responses, with no visible error propagated to dispatched subagents. For
+  # throwaway/scratch work that's a bad tradeoff for the cost savings, so a
+  # branch named `scratch`, `scratch-*`, or `scratch/*` opts the session out
+  # of the org's model_class override and falls back to the global policy
+  # (still routing smol to mlx — this only avoids the org's blanket override,
+  # not mlx entirely).
+  # $org below is a jq variable bound via --arg further down, not a shell
+  # variable — it must stay unexpanded by the shell for jq to see the literal
+  # token.
+  # shellcheck disable=SC2016
+  case "$AOE_SESSION_BRANCH" in
+    scratch|scratch-*|scratch/*) filter='(.model_class // {})' ;;
+    *) filter='(.model_class // {}) * (.orgs[$org].model_class // {})' ;;
+  esac
+
   classes=$(printf '%s' "$data" | jq -c --arg org "$org" \
-    '(.model_class // {}) * (.orgs[$org].model_class // {})' 2>/dev/null) || return 0
+    "$filter" 2>/dev/null) || return 0
   [ -n "$classes" ] && [ "$classes" != "null" ] || return 0
 
   write .opencode/opencode.json "$(printf '%s' "$data" | jq --argjson c "$classes" '{
