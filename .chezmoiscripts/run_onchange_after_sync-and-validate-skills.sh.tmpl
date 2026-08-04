@@ -68,11 +68,30 @@ gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode 
 # deleted, so force a clean remove-then-add every time this script runs.
 # No-op if uvx isn't available or the user has never run `runlayer login`
 # (e.g. other users of this public dotfiles repo without a Runlayer account).
+# Run a command with a wall-clock timeout — no `timeout`/`gtimeout` binary is
+# assumed present on a bare macOS /bin/sh. Backgrounds the command, races it
+# against a sleep-then-kill watcher, and returns the command's exit status
+# (or the kill signal's status if the watcher won the race). Kills the
+# command's direct children first (e.g. uvx's spawned python interpreter)
+# so a two-level hang doesn't orphan the actual stuck process.
+run_with_timeout() {
+  secs=$1; shift
+  "$@" &
+  cmd_pid=$!
+  ( sleep "$secs"; pkill -9 -P "$cmd_pid" 2>/dev/null; kill -9 "$cmd_pid" 2>/dev/null ) &
+  watcher_pid=$!
+  wait "$cmd_pid" 2>/dev/null
+  status=$?
+  kill "$watcher_pid" 2>/dev/null
+  wait "$watcher_pid" 2>/dev/null
+  return "$status"
+}
+
 if command -v uvx >/dev/null 2>&1 && [ -f "$HOME/.runlayer/config.yaml" ]; then
   echo "resyncing runlayer-managed skills..."
-  uvx runlayer skills remove --all --global --client opencode --yes >/dev/null 2>&1 || true
-  if ! uvx runlayer skills add --all --global --client opencode; then
-    echo "WARN: runlayer skill resync failed — continuing" >&2
+  run_with_timeout 30 uvx runlayer skills remove --all --global --client opencode --yes >/dev/null 2>&1 || true
+  if ! run_with_timeout 30 uvx runlayer skills add --all --global --client opencode; then
+    echo "WARN: runlayer skill resync failed or timed out — continuing" >&2
   fi
 else
   echo "runlayer not configured — skipping runlayer skill resync"
