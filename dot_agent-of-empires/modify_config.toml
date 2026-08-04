@@ -155,6 +155,10 @@ status_bar = "auto"
 command = "ANTHROPIC_API_KEY=$(security find-generic-password -s chezmoi -a anthropic_api_key -w 2>/dev/null) $HOME/.local/bin/lumen --provider claude diff --watch --save-viewed --guide --wrap main..-"
 hotkey = "Alt+l"
 
+[tools.editor]
+command = "nvim ."
+hotkey = "e"
+
 [updates]
 auto_update_plugins = false
 check_interval_hours = 24
