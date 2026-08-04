@@ -22,7 +22,7 @@ Optional argument: a time-window override — e.g. `2w`, `10d`, or an explicit d
    - **KB journal** — entries in range at `~/.local/share/kb/journal/YYYY-MM-DD.md`, for per-project coding activity with diff stats.
    - **QA reports** — directories under `~/.local/share/qa/*/qa-*/` whose timestamp or mtime falls in the window. Each holds a `report.html` and numbered screenshots (`001-*.png`, …) — these are visual proof of features working. Some `qa-*` dirs may hold only `qa-report.*` (a no-QA review with no screenshots) — skip those when gathering slide proof.
    - **Project profiles** — `~/.local/share/kb/projects/<slug>.md` for framing and status.
-   - **Decisions log** — `~/.local/share/kb/decisions/log.md` for the "why" behind the work.
+   - **Decisions log** — `~/.local/share/kb/decisions/cross-cutting.md` for the "why" behind the work.
 
 3. **Synthesize the demo.** Group by project; order by impact, most demo-worthy first — not chronological. Lead each project with a one-line "why this matters" framing. For each demo item use **problem → shipped → proof**:
    - *Problem* — the user-facing pain or goal (pull from project status and decisions).
