@@ -157,7 +157,7 @@ hotkey = "Alt+l"
 
 [tools.editor]
 command = "nvim ."
-hotkey = "e"
+hotkey = "Alt+e"
 
 [updates]
 auto_update_plugins = false
