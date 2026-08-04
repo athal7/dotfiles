@@ -15,7 +15,7 @@ Changes land via `chezmoi-deploy`, not pull requests. The source dir is pinned t
 - **Deploy with `chezmoi-deploy <branch>`.** It locks, fast-forward-merges the branch into the primary checkout's `main`, runs `chezmoi apply --force`, and pushes `main` to origin. Safe from a hosted aoe session: the session runs in a tmux pane independent of any LaunchAgent, and the generator only reloads agents whose plist content actually changed — it never touches the tmux pane a deploy is running from. Gated by an `ask` permission.
 - **Escape hatch** — to exercise one deployed file's runtime behavior without a full deploy: `chezmoi apply -S "$(pwd)" --exclude=scripts --persistent-state "${TMPDIR:-/tmp}/branch-state.boltdb" <target>` — mutates only that path, runs no scripts, leaves global state untouched.
 
-`chezmoi apply` reloads changed LaunchAgents automatically — the `run_onchange_after_aa-launch-agents.sh` generator renders plists from `dot_config/launchd-yaml/agents.yaml` and reloads only what changed. To force-reload an agent manually during testing:
+`chezmoi apply` reloads changed LaunchAgents automatically — the `run_onchange_after_aa-launch-agents.sh` generator renders plists from `dot_config/launchd-yaml/agents.yaml.tmpl` and reloads only what changed. To force-reload an agent manually during testing:
 
 ```sh
 # Restart a running agent (picks up plist changes):

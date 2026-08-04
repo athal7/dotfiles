@@ -2,9 +2,11 @@ model_class:
   default: anthropic/claude-sonnet-5
   smol: mlx/default_model
   slow: anthropic/claude-opus-5
+  plan: anthropic/claude-opus-5
 agents:
   - name: lead
     enabled: [opencode, pi]
+    description: "Primary orchestrator — plans, decides, dispatches, and verifies. Does not edit files directly."
     mode: primary
     class: default
     prompt: "{file:~/.agents/prompts/lead.md}"

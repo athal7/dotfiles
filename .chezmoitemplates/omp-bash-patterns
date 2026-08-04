@@ -1,0 +1,29 @@
+{{- /* Render omp's bash.patterns array from the same composed permission map
+       opencode-bash produces (reuses it verbatim, no duplicated merge logic).
+       ctx: spec (base/lists/guardrails/packages), lists, guardrails, packages —
+       identical signature to opencode-bash.
+
+       opencode resolves permission.bash by specificity regardless of key
+       order; omp's bash.patterns is first-match-wins, so the composed map
+       must be turned into an ORDERED list, most-specific pattern first.
+       "Specific" = more non-`*` characters. Ties are broken by longer match
+       string, then lexicographically — both arbitrary but deterministic, so
+       the rendered JSON (and therefore the run_onchange hash) doesn't flap
+       between otherwise-identical renders. opencode's "ask" becomes omp's
+       "prompt"; allow/deny pass through unchanged. */ -}}
+{{- $composed := includeTemplate "opencode-bash" (dict "spec" .spec "lists" .lists "guardrails" .guardrails "packages" .packages) | fromJson -}}
+{{- $bySortKey := dict -}}
+{{- range $match, $action := $composed -}}
+  {{- $specificity := len (regexReplaceAll "[*]" $match "") -}}
+  {{- $sortKey := printf "%04d_%04d_%s" (sub 9999 $specificity) (sub 9999 (len $match)) $match -}}
+  {{- $_ := set $bySortKey $sortKey $match -}}
+{{- end -}}
+{{- $items := list -}}
+{{- range $sortKey := (keys $bySortKey | sortAlpha) -}}
+  {{- $match := index $bySortKey $sortKey -}}
+  {{- $action := index $composed $match -}}
+  {{- $approval := $action -}}
+  {{- if eq $action "ask" -}}{{- $approval = "prompt" -}}{{- end -}}
+  {{- $items = append $items (dict "match" $match "approval" $approval) -}}
+{{- end -}}
+{{- $items | toJson -}}

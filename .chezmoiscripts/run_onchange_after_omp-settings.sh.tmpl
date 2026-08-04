@@ -1,0 +1,55 @@
+#!/bin/sh
+# Pushes a small set of omp global settings via `omp config set`. omp's own
+# CLI does a safe read-modify-write on ~/.omp/agent/config.yml, so this is
+# idempotent and preserves TUI-authored keys (theme, modelRoles, etc.) that
+# aren't set here.
+#
+#   bash.patterns          — reuses the same composed permission map opencode
+#                             gets, rendered via the omp-bash-patterns partial
+#                             (batch 1), so the two tools stay in parity.
+#   tools.approvalMode      — yolo: this repo's guardrails live in
+#                             bash.patterns above, not in a second approval gate.
+#   task.disabledAgents     — omp's own bundled "reviewer"/"security-reviewer"
+#                             subagents: this repo runs no inline code-review
+#                             subagent by design, that happens automatically
+#                             post-push instead.
+#   compaction.strategy     — context-full: the locally-configured model
+#                             (mlx/default_model) is text-only, but omp's
+#                             "snapcompact" strategy requires vision, so
+#                             leaving it at the TUI default fires a warning
+#                             notice every compaction. Pinning it here
+#                             silences that.
+#
+# bash-permissions.yaml hash: {{ include ".chezmoidata/bash-permissions.yaml" | sha256sum }}
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# omp-bash-patterns hash: {{ include ".chezmoitemplates/omp-bash-patterns" | sha256sum }}
+# opencode-bash hash: {{ include ".chezmoitemplates/opencode-bash" | sha256sum }}
+
+set -eu
+
+if ! command -v omp >/dev/null 2>&1; then
+  echo "omp not found on PATH — skipping omp settings sync" >&2
+  exit 0
+fi
+
+{{- $globalBash := dict }}
+{{- range $list := .packages }}
+{{- if kindIs "slice" $list }}
+{{- range $entry := $list }}
+{{- if kindIs "map" $entry }}
+{{- $perms := index $entry "permissions" }}
+{{- if $perms }}
+{{- range $pattern, $action := $perms }}
+{{- $_ := set $globalBash $pattern $action }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $bp := .bashPermissions }}
+
+omp config set bash.patterns '{{ includeTemplate "omp-bash-patterns" (dict "spec" $bp.agents.global "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) }}'
+omp config set tools.approvalMode yolo
+omp config set task.disabledAgents '["reviewer","security-reviewer"]'
+omp config set compaction.strategy context-full

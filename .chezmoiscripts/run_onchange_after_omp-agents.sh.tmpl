@@ -1,0 +1,83 @@
+#!/bin/sh
+# Wholesale-rebuild generator for omp's global custom subagents.
+#
+# omp (the coding-agent CLI, @oh-my-pi/pi-coding-agent) discovers custom
+# subagents ONLY as individual files at ~/.omp/agent/agents/*.md — there is
+# no config-block equivalent of opencode's "agent": {...} JSON. chezmoi has
+# no native one-source-to-N-targets mapping either, so — same idiom as the
+# LaunchAgent plist generator (run_onchange_after_aa-launch-agents.sh.tmpl) —
+# this script is the materialization step, rebuilding the whole directory
+# from .chezmoidata/agents.yaml every time that registry (or any of the
+# source prompt bodies inlined below) changes. Rebuilding wholesale (rm then
+# regenerate) means an agent removed from the registry is pruned here too,
+# instead of leaking a stale file forever.
+#
+# Only 4 of the agents in agents.yaml become omp subagent files:
+#   - plan, qa, build, scout
+# Deliberately excluded:
+#   - lead: gets its persona via the APPEND_SYSTEM.md symlink (whole-session
+#     system prompt append), not a subagent file — shipping both would
+#     double-load lead's persona.
+#   - explore, general: intentionally opencode-only (explicit decision).
+#   - zoom, slack, atlassian, github, google, linear (the MCP-proxy agents):
+#     intentionally opencode-only — omp does lazy MCP tool loading itself,
+#     so it doesn't need dedicated per-service proxy subagents.
+#
+# NOTE: this generator's scout.md overrides omp's own BUILT-IN bundled
+# "scout" agent by name (global user-level agent files win over bundled ones
+# in omp's discovery order) — accepted/intentional: the contracts differ
+# (bundled scout does local codebase research; ours does external web/context7
+# research).
+#
+# agents.yaml hash: {{ include ".chezmoidata/agents.yaml" | sha256sum }}
+{{- range $a := .agents }}
+{{- if has $a.name (list "plan" "qa" "build" "scout") }}
+# prompt hash ({{ $a.name }}): {{ include (printf "dot_agents/prompts/%s.md" $a.name) | sha256sum }}
+{{- end }}
+{{- end }}
+
+set -eu
+
+if ! command -v omp >/dev/null 2>&1; then
+  echo "omp not found on PATH — skipping omp subagent generation" >&2
+  exit 0
+fi
+
+DEST="$HOME/.omp/agent/agents"
+mkdir -p "$DEST"
+rm -f "$DEST"/*.md
+
+{{ range $a := .agents -}}
+{{- if has $a.name (list "plan" "qa" "build" "scout") }}
+{{- $tools := list "read" "grep" "glob" "bash" "todo" "lsp" "web_search" "ast_grep" "inspect_image" }}
+{{- if and (hasKey $a "permission") (hasKey $a.permission "write") (eq $a.permission.write "allow") }}
+{{- $tools = append $tools "write" }}
+{{- end }}
+{{- if and (hasKey $a "permission") (hasKey $a.permission "edit") (eq $a.permission.edit "allow") }}
+{{- $tools = append $tools "edit" }}
+{{- $tools = append $tools "ast_edit" }}
+{{- end }}
+{{- if has $a.name (list "plan" "build" "scout") }}
+{{- $tools = append $tools "mcp__context_resolve_library_id" }}
+{{- $tools = append $tools "mcp__context_get_library_docs" }}
+{{- end }}
+{{- $spawns := false }}
+{{- if and (hasKey $a "permission") (hasKey $a.permission "task") (eq $a.permission.task "allow") }}
+{{- $spawns = true }}
+{{- end }}
+cat > "$DEST/{{ $a.name }}.md" <<'OMP_AGENT_EOF'
+---
+name: {{ $a.name }}
+description: {{ $a.description | quote }}
+tools: {{ $tools | join ", " }}
+{{- if $spawns }}
+spawns: "*"
+{{- end }}
+model: "@{{ $a.class }}"
+---
+
+{{ include (printf "dot_agents/prompts/%s.md" $a.name) }}
+OMP_AGENT_EOF
+chmod 600 "$DEST/{{ $a.name }}.md"
+{{ end -}}
+{{- end }}

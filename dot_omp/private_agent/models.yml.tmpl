@@ -1,0 +1,16 @@
+providers:
+  {{ .local_model.provider }}:
+    baseUrl: http://{{ .local_model.host }}:{{ .local_model.port }}/v1
+    api: {{ .local_model.api }}
+    apiKey: {{ .local_model.api_key }}
+    compat:
+      supportsDeveloperRole: false
+      supportsReasoningEffort: false
+    models:
+      - id: {{ .local_model.id }}
+        name: {{ .local_model.name }}
+        reasoning: true
+        input: [text]
+        contextWindow: {{ .local_model.context_window }}
+        maxTokens: {{ .local_model.max_tokens }}
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }

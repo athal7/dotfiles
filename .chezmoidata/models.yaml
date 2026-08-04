@@ -1,0 +1,17 @@
+# Single source of truth for the locally-hosted mlx model. Consumed by:
+#   - dot_config/launchd-yaml/agents.yaml.tmpl   (mlx-qwen-server ProgramArguments)
+#   - dot_omp/private_agent/models.yml.tmpl      (omp mlx provider)
+#   - dot_config/opencode/opencode.json.tmpl     (opencode mlx provider)
+# NOTE: unrelated to run_once_after_mlx-gpu-wired-limit.sh's
+# iogpu.wired_limit_mb=40960 — that is GPU wired MB, not a context window.
+local_model:
+  provider: mlx
+  host: 127.0.0.1
+  port: 8091
+  hf_repo: mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit
+  api: openai-completions
+  api_key: mlx-local
+  id: default_model
+  name: qwen3.6-35b-a3b-optiq
+  context_window: 128000
+  max_tokens: 8192

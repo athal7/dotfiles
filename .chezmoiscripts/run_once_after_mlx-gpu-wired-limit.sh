@@ -5,7 +5,7 @@
 # ordinary GPU OOM when running local models. This is NOT a fix for the
 # IOGPUFamily residency-race kernel panic (IOGPUMemory.cpp:550) seen with
 # mlx-qwen-server — those mitigations live in the launchd agent config
-# (dot_config/launchd-yaml/agents.yaml: wired-limit no-op shim, reduced
+# (dot_config/launchd-yaml/agents.yaml.tmpl: wired-limit no-op shim, reduced
 # concurrency) — this script just raises the size ceiling.
 set -euo pipefail
 

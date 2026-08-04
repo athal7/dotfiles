@@ -195,11 +195,11 @@ launchagents:
       # future panics with the memory trend leading up to them.
       - $HOME/.local/bin/mlx-lm-server-launcher
       - --model
-      - mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit
+      - {{ .local_model.hf_repo }}
       - --host
-      - 127.0.0.1
+      - {{ .local_model.host }}
       - --port
-      - "8091"
+      - "{{ .local_model.port }}"
       - --log-level
       - INFO
       # Concurrency: dropped to 1 (was 2) as a diagnostic/mitigation for the
