@@ -14,6 +14,7 @@
     {{- if eq (default "" (index $s "auth")) "gh-token" -}}
       {{- $_ := set $obj "headers" (dict "Authorization" (printf "Bearer %s" (output "gh" "auth" "token" | trim))) -}}
     {{- end -}}
+    {{- if hasKey $s "enabled" -}}{{- $_ := set $obj "enabled" $s.enabled -}}{{- end -}}
     {{- $_ := set $out $s.name $obj -}}
   {{- end -}}
 {{- end -}}

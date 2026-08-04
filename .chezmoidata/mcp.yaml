@@ -5,7 +5,6 @@ mcp:
       url: https://mcp.context7.com/mcp
     - name: firefox-devtools
       type: local
-      targets: [opencode]
       command:
         - npx
         - "@mozilla/firefox-devtools-mcp@0.9.7"
@@ -14,19 +13,15 @@ mcp:
         - --enable-script
     - name: runlayer-zoom
       type: remote
-      targets: [opencode]
       runlayer: zoom
     - name: runlayer-self
       type: remote
-      targets: [opencode]
       runlayer: self
     - name: runlayer-slack
       type: remote
-      targets: [opencode]
       runlayer: slack
     - name: runlayer-atlassian
       type: remote
-      targets: [opencode]
       runlayer: atlassian
     - name: github
       type: remote
@@ -35,30 +30,23 @@ mcp:
       auth: gh-token
     - name: runlayer-gmail
       type: remote
-      targets: [opencode]
       runlayer: gmail
     - name: runlayer-gcalendar
       type: remote
-      targets: [opencode]
       runlayer: gcalendar
     - name: runlayer-gdrive
       type: remote
-      targets: [opencode]
       runlayer: gdrive
     - name: runlayer-gdocs
       type: remote
-      targets: [opencode]
       runlayer: gdocs
     - name: runlayer-gsheets
       type: remote
-      targets: [opencode]
       runlayer: gsheets
     - name: linear
       type: remote
-      targets: [opencode]
       url: https://mcp.linear.app/mcp
     - name: figma-desktop
       type: remote
-      targets: [opencode]
       url: http://127.0.0.1:3845/mcp
       enabled: true
