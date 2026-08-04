@@ -25,6 +25,15 @@ The knowledge base at `~/.local/share/kb/` is a distilled, maintained view of pe
 - `apm-fix-ledger.jsonl` — append-only JSONL ledger of `/fix-prod-errors` dispatches and their disposition (`pending` / `filed`+`ticket_url` / `declined`+`reason` / `noise-confirmed`), keyed by `worktree` (== opencode session `directory`); last line per worktree wins. `/fix-prod-errors` writes the `pending` line; `/kb-enrich` surfaces pending drafts for approval and appends the resolving line. Runtime state, not chezmoi-managed.
 - `decision-log-sync.jsonl` — append-only JSONL ledger of Decision Log write-back candidates and their disposition (`created`+page URL / `declined`+`reason`), keyed by product/project slug + decision identity; last line per key wins. `/kb-enrich` appends a line each time it creates or declines a Decision Log candidate, and consults the ledger first so an already-declined decision isn't re-proposed on a later run. Runtime state, not chezmoi-managed.
 
+## CLI
+
+`kb` (installed via the `athal7/tap/kb` brew formula) is a growing CLI over this vault — still early (0.1.0). Prefer it where it covers the operation; fall back to the file/grep access below everywhere else:
+
+- `kb people list` / `kb people show <name>` — JSON of contact fields only (title, team, email, slack_id, aliases). Omits `github`, `projects`, and body content (Current/Style/Personal/Key Decisions) — `cat` the profile for those.
+- `kb journal append --date <YYYY-MM-DD> --section <heading> [--content <text>]` — the write path for journal entries (reads stdin if `--content` omitted); creates the `# <date>` header on first write, appends under the heading on repeat calls. Use this instead of hand-editing `journal/<date>.md`.
+- `kb action-items list` / `complete|progress|todo <line_no>` — query/update `action-items.md` if one exists in the vault. There's no `add`; new items still require hand-editing that file in its exact format (`## From <date> (source)` groups, `- [ ]`/`- [x]`/`- [-]` checkboxes). Not currently adopted here — action items are filed as reminders or tracked issues instead (see `/kb-enrich`).
+- Nothing yet for products, projects, decisions, or profile writes/relationship fields — those stay file-based per the conventions below.
+
 ## People profiles
 
 Distilled reference cards, not meeting logs. Omit any section with no information.
@@ -152,6 +161,8 @@ Daily coding activity per project, with diff stats:
 
 Coding-stats source: opencode's local session store (`~/.local/share/opencode/storage/session`) is pruned to roughly the last few months, so it cannot supply older session counts or diff stats — derive journal stats from git instead. Beware that `git log --all` double-counts pre-squash and merged copies of the same work and includes bot commits (e.g. `reg_actions`, `argocd-image-updater`); filter to the human author and dedupe so the stats stay honest.
 
+Write new entries via `kb journal append --date <date> --section <Project> --content <bullets>` (see CLI above) rather than hand-editing the file.
+
 ## Name resolution
 
 `names.json` maps display name variants to canonical names: `{"Joe": "Joseph Martinez", "J. Martinez": "Joseph Martinez"}`. Check before creating a new profile — the person may exist under a different name.
@@ -165,7 +176,7 @@ Each profile's `aliases` frontmatter property mirrors the variants from these ma
 When you encounter new contact info (email, chat handle, GitHub handle, title, team) from any source — calendar attendees, chat messages, email headers, commit authors — update the person's profile.
 
 ## Searching
-- Find a person: `cat ~/.local/share/kb/people/<slug>.md`
+- Find a person: `kb people show <name>` for contact fields (email/slack/title/team/aliases); `cat ~/.local/share/kb/people/<slug>.md` for the full profile (github, projects, Current/Style/Personal/Key Decisions)
 - Find a product: `cat ~/.local/share/kb/products/<slug>.md`
 - Find a project: `cat ~/.local/share/kb/projects/<slug>.md`
 - Find a decision: check the relevant product/project `## Key Decisions` first, then `cat ~/.local/share/kb/decisions/cross-cutting.md`; older context is in `decisions/archive.md`
