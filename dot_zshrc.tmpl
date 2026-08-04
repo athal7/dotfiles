@@ -55,26 +55,44 @@ export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 # Enable reverse search (ctrl-r)
 bindkey '^R' history-incremental-search-backward
 
-# Prioritized interactive multi-service attention/inbox triage via fzf.
-# Single fzf screen: hotkeys act immediately on the highlighted row, with
-# their availability shown live in the footer as the cursor moves.
+# 4-pane tmux dashboard composing dedicated, independently-maintained TUIs
+# for everything that needs triage: GitHub (gh dash), Linear (linear-tui),
+# Reminders (nag), and aoe's session view. Attaches to an existing session
+# if one's already running instead of rebuilding the layout every time.
 attention() {
-  local out key row
-  # Loop back to the dashboard after each action so triage continues until
-  # the user backs all the way out (Esc at the dashboard) -- that's the
-  # only quit path now. --height/--layout=reverse keep fzf off the
-  # alt-screen so action output (e.g. "Copied to clipboard!") stays visible
-  # on the terminal instead of being wiped before the dashboard re-renders.
-  while true; do
-    out=$(attention-list 2>/dev/null | fzf --ansi --height ~60% --layout=reverse \
-      --header "Hotkeys act immediately on this row · Enter = primary action · Esc = quit" \
-      -d '\t' --with-nth 1 \
-      --expect="$(attention-list expect-keys)" \
-      --footer-border=line --bind 'start,focus:transform-footer:printf "%s\n" {3}')
-    [[ -z "$out" ]] && break
-    key=${out%%$'\n'*}
-    row=${out#*$'\n'}
-    attention-list act "$key" "$row"
-  done
+  local session="attention"
+  # 2x2 grid split percentages, adjustable in one place. left_col_pct is the
+  # width of the gh-dash/nag column; top_row_pct is the height of the
+  # gh-dash/linear-tui row.
+  local left_col_pct=50
+  local top_row_pct=50
+
+  if tmux has-session -t "$session" 2>/dev/null; then
+    if [[ -n "$TMUX" ]]; then
+      tmux switch-client -t "$session"
+    else
+      tmux attach-session -t "$session"
+    fi
+    return
+  fi
+
+  # linear-tui reads LINEAR_API_KEY from its environment, so pull it from
+  # the keychain at launch time instead of requiring an interactive OAuth
+  # login (`linear-tui auth login`) on every fresh session.
+  local linear_cmd='export LINEAR_API_KEY=$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null); exec linear-tui'
+
+  # Capture pane IDs (not indices) from each split so later splits target
+  # the right pane regardless of how tmux renumbers panes as the grid fills in.
+  local gh_pane linear_pane
+  gh_pane=$(tmux new-session -d -s "$session" -n dashboard -P -F '#{pane_id}' "gh dash")
+  linear_pane=$(tmux split-window -h -t "$gh_pane" -p $((100 - left_col_pct)) -P -F '#{pane_id}' "$linear_cmd")
+  tmux split-window -v -t "$gh_pane" -p $((100 - top_row_pct)) "nag"
+  tmux split-window -v -t "$linear_pane" -p $((100 - top_row_pct)) "aoe"
+
+  if [[ -n "$TMUX" ]]; then
+    tmux switch-client -t "$session"
+  else
+    tmux attach-session -t "$session"
+  fi
 }
 alias att=attention

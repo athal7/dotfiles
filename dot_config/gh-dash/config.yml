@@ -1,0 +1,10 @@
+# gh-dash config for the attention tmux dashboard's GitHub pane.
+# Extension installed via .chezmoiscripts/run_onchange_after_gh-extensions.sh.tmpl
+# (gh extension install dlvhdr/gh-dash). See dot_zshrc.tmpl's attention().
+prSections:
+  - title: "Review Requested"
+    filters: "is:open review-requested:@me"
+
+issuesSections:
+  - title: "Assigned to Me"
+    filters: "is:open assignee:@me"
