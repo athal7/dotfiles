@@ -24,6 +24,35 @@
 SKILLS_SRC="{{ .chezmoi.sourceDir }}/skills"
 SKILLS_DEST="$HOME/.agents/skills"
 
+# Run a command with a timeout. Returns 124 if timeout fires.
+# Usage: run_with_timeout <seconds> <command-string> <description>
+# `set -m` puts the backgrounded job in its own process group so that on
+# timeout we can kill the whole tree (e.g. `uv` -> its `python` child) rather
+# than just the immediate child — a plain `kill -9 "$pid"` leaves grandchild
+# processes (like a hung `uvx`-spawned interpreter) running as orphans.
+set -m
+run_with_timeout() {
+  timeout_sec="$1"
+  cmd="$2"
+  desc="$3"
+  eval "$cmd" &
+  pid=$!
+  pgid=$(ps -o pgid= -p "$pid" | tr -d ' ')
+  waited=0
+  while [ "$waited" -lt "$timeout_sec" ]; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      wait "$pid" 2>/dev/null
+      return $?
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  echo "WARN: $desc timed out after ${timeout_sec}s — killing process group $pgid" >&2
+  kill -9 -- "-$pgid" 2>/dev/null
+  wait "$pid" 2>/dev/null
+  return 124
+}
+
 # Sync skills from repo to destination, replacing it wholesale to remove orphans.
 # AGENTS.md and README.md at the skills/ root are authoring/repo-meta docs —
 # only useful in the source tree, never in the deployed agent skill list.
@@ -68,29 +97,20 @@ gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode 
 # deleted, so force a clean remove-then-add every time this script runs.
 # No-op if uvx isn't available or the user has never run `runlayer login`
 # (e.g. other users of this public dotfiles repo without a Runlayer account).
-# Run a command with a wall-clock timeout — no `timeout`/`gtimeout` binary is
-# assumed present on a bare macOS /bin/sh. Backgrounds the command, races it
-# against a sleep-then-kill watcher, and returns the command's exit status
-# (or the kill signal's status if the watcher won the race). Kills the
-# command's direct children first (e.g. uvx's spawned python interpreter)
-# so a two-level hang doesn't orphan the actual stuck process.
-run_with_timeout() {
-  secs=$1; shift
-  "$@" &
-  cmd_pid=$!
-  ( sleep "$secs"; pkill -9 -P "$cmd_pid" 2>/dev/null; kill -9 "$cmd_pid" 2>/dev/null ) &
-  watcher_pid=$!
-  wait "$cmd_pid" 2>/dev/null
-  status=$?
-  kill "$watcher_pid" 2>/dev/null
-  wait "$watcher_pid" 2>/dev/null
-  return "$status"
-}
-
+#
+# Two independent hangs are guarded against here:
+#   1. `remove`'s exit-path telemetry probes the macOS Keychain via `keyring`;
+#      RUNLAYER_TELEMETRY_DISABLED=1 skips that telemetry wrapper entirely.
+#   2. `add` requires auth — if the stored credential is stale/missing, it
+#      falls into an interactive OAuth device-code login (opens a browser and
+#      polls for approval) that can never complete non-interactively. There's
+#      no CLI flag to suppress that fallback, so both calls are timeout-bounded
+#      as defense-in-depth on top of the telemetry-env-var fix.
 if command -v uvx >/dev/null 2>&1 && [ -f "$HOME/.runlayer/config.yaml" ]; then
   echo "resyncing runlayer-managed skills..."
-  run_with_timeout 30 uvx runlayer skills remove --all --global --client opencode --yes >/dev/null 2>&1 || true
-  if ! run_with_timeout 30 uvx runlayer skills add --all --global --client opencode; then
+  if ! run_with_timeout 30 "RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills remove --all --global --client opencode --yes >/dev/null 2>&1" "runlayer remove"; then
+    echo "WARN: runlayer remove failed or timed out — skipping runlayer skill resync" >&2
+  elif ! run_with_timeout 30 "RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills add --all --global --client opencode" "runlayer add"; then
     echo "WARN: runlayer skill resync failed or timed out — continuing" >&2
   fi
 else
