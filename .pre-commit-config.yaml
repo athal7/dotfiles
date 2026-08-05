@@ -44,7 +44,20 @@ repos:
         # the raw shellcheck hook above therefore excludes .tmpl files
         # entirely — shellchecks the *rendered* output when it starts with a
         # sh/bash/zsh shebang, so template-driven scripts still get linted.
-        entry: bash -c 'src="$(git rev-parse --show-toplevel)"; status=0; for f in "$@"; do rendered=$(chezmoi execute-template -S "$src" < "$f") || { status=1; continue; }; if head -1 <<<"$rendered" | grep -qE "^#!.*\b(ba|z)?sh\b"; then shellcheck --shell=bash --severity=error <(printf "%s\n" "$rendered") || status=1; fi; done; exit $status' --
+        # Renders with local.yaml.example layered on top via
+        # --override-data-file: `.chezmoidata/local.yaml` is gitignored, so
+        # git worktrees never receive it, and templates reading `.runlayer`,
+        # `.secrets`, or `.orgs` would otherwise fail this hook in every
+        # worktree but the primary checkout. The example file already ships
+        # placeholder values for every key those templates need.
+        # --override-data-file needs a real .yaml extension to autodetect
+        # format, hence the temp copy. Uses a PID-scoped path with `cp`
+        # (never `mktemp`): pre-commit launches this hook as several
+        # parallel processes for --all-files, and uutils coreutils'
+        # `mktemp` seeds its random suffix by wall-clock second, so
+        # concurrent invocations in the same second collide on the same
+        # "random" name and fail with EEXIST.
+        entry: bash -c 'src="$(git rev-parse --show-toplevel)"; overlay="${TMPDIR:-/tmp}/chezmoi-templates-local-example-$$.yaml"; trap "rm -f \"$overlay\"" EXIT; cp "$src/local.yaml.example" "$overlay"; status=0; for f in "$@"; do rendered=$(chezmoi execute-template -S "$src" --override-data-file "$overlay" < "$f") || { status=1; continue; }; if head -1 <<<"$rendered" | grep -qE "^#!.*\b(ba|z)?sh\b"; then shellcheck --shell=bash --severity=error <(printf "%s\n" "$rendered") || status=1; fi; done; exit $status' --
         language: system
         files: \.tmpl$
         exclude: ^\.chezmoi\.toml\.tmpl$
