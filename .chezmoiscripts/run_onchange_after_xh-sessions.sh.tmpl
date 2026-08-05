@@ -24,13 +24,14 @@ fetch_secret() {
 {{   else if eq $name "es_api_key" -}}
 {{     $host = $.esHost -}}
 {{   end -}}
+host="{{ $host }}"
 {{   if hasKey $cfg "auth_type" -}}
 # {{ $name }}: basic auth → {{ $host }}
 username=$(fetch_secret "{{ $cfg.username_from }}") || true
 password=$(fetch_secret "{{ $name }}") || true
-if [ -n "$password" ] && [ -n "$username" ] && [ -n "{{ $host }}" ]; then
-  mkdir -p "$SESSION_DIR/{{ $host }}"
-  cat > "$SESSION_DIR/{{ $host }}/agent.json" <<ENDSESSION
+if [ -n "$password" ] && [ -n "$username" ] && [ -n "$host" ]; then
+  mkdir -p "$SESSION_DIR/$host"
+  cat > "$SESSION_DIR/$host/agent.json" <<ENDSESSION
 {
     "__meta__": {
         "about": "xh session file",
@@ -41,16 +42,16 @@ if [ -n "$password" ] && [ -n "$username" ] && [ -n "{{ $host }}" ]; then
     "headers": []
 }
 ENDSESSION
-  chmod 600 "$SESSION_DIR/{{ $host }}/agent.json"
-  echo "xh session: {{ $host }} (basic auth)"
+  chmod 600 "$SESSION_DIR/$host/agent.json"
+  echo "xh session: $host (basic auth)"
 fi
 
 {{   else if hasKey $cfg "headers" -}}
 # {{ $name }}: multi-header → {{ $host }}
 token=$(fetch_secret "{{ $name }}") || true
-if [ -n "$token" ]; then
-  mkdir -p "$SESSION_DIR/{{ $host }}"
-  cat > "$SESSION_DIR/{{ $host }}/agent.json" <<ENDSESSION
+if [ -n "$token" ] && [ -n "$host" ]; then
+  mkdir -p "$SESSION_DIR/$host"
+  cat > "$SESSION_DIR/$host/agent.json" <<ENDSESSION
 {
     "__meta__": {
         "about": "xh session file",
@@ -69,17 +70,17 @@ if [ -n "$token" ]; then
     ]
 }
 ENDSESSION
-  chmod 600 "$SESSION_DIR/{{ $host }}/agent.json"
-  echo "xh session: {{ $host }}"
+  chmod 600 "$SESSION_DIR/$host/agent.json"
+  echo "xh session: $host"
 fi
 
 {{   else -}}
 # {{ $name }}: single header → {{ $host }}
 token=$(fetch_secret "{{ $name }}") || true
-if [ -n "$token" ] && [ -n "{{ $host }}" ]; then
+if [ -n "$token" ] && [ -n "$host" ]; then
   value="{{ $cfg.format | replace "{value}" "$token" }}"
-  mkdir -p "$SESSION_DIR/{{ $host }}"
-  cat > "$SESSION_DIR/{{ $host }}/agent.json" <<ENDSESSION
+  mkdir -p "$SESSION_DIR/$host"
+  cat > "$SESSION_DIR/$host/agent.json" <<ENDSESSION
 {
     "__meta__": {
         "about": "xh session file",
@@ -92,8 +93,8 @@ if [ -n "$token" ] && [ -n "{{ $host }}" ]; then
     ]
 }
 ENDSESSION
-  chmod 600 "$SESSION_DIR/{{ $host }}/agent.json"
-  echo "xh session: {{ $host }}"
+  chmod 600 "$SESSION_DIR/$host/agent.json"
+  echo "xh session: $host"
 fi
 
 {{   end -}}
