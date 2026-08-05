@@ -55,17 +55,10 @@ export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 # Enable reverse search (ctrl-r)
 bindkey '^R' history-incremental-search-backward
 
-# 4-pane tmux dashboard composing dedicated, independently-maintained TUIs
-# for everything that needs triage: GitHub (gh dash), Linear (linear-tui),
-# Reminders (nag), and aoe's session view. Attaches to an existing session
-# if one's already running instead of rebuilding the layout every time.
+# 4 tmux windows, one per TUI. Each window is independently switchable
+# with prefix-w (tmux built-in window navigation).
 attention() {
   local session="attention"
-  # 2x2 grid split percentages, adjustable in one place. left_col_pct is the
-  # width of the gh-dash/nag column; top_row_pct is the height of the
-  # gh-dash/linear-tui row.
-  local left_col_pct=50
-  local top_row_pct=50
 
   if tmux has-session -t "$session" 2>/dev/null; then
     if [[ -n "$TMUX" ]]; then
@@ -81,13 +74,12 @@ attention() {
   # login (`linear-tui auth login`) on every fresh session.
   local linear_cmd='export LINEAR_API_KEY=$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null); exec linear-tui'
 
-  # Capture pane IDs (not indices) from each split so later splits target
-  # the right pane regardless of how tmux renumbers panes as the grid fills in.
-  local gh_pane linear_pane
-  gh_pane=$(tmux new-session -d -s "$session" -n dashboard -P -F '#{pane_id}' "gh dash")
-  linear_pane=$(tmux split-window -h -t "$gh_pane" -p $((100 - left_col_pct)) -P -F '#{pane_id}' "$linear_cmd")
-  tmux split-window -v -t "$gh_pane" -p $((100 - top_row_pct)) "nag"
-  tmux split-window -v -t "$linear_pane" -p $((100 - top_row_pct)) "aoe"
+  tmux new-session -d -s "$session" -n github "gh dash"
+  tmux new-window -t "$session" -n linear "$linear_cmd"
+  tmux new-window -t "$session" -n reminders "nag"
+  tmux new-window -t "$session" -n aoe "aoe"
+
+  tmux select-window -t "$session:github"
 
   if [[ -n "$TMUX" ]]; then
     tmux switch-client -t "$session"
