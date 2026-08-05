@@ -30,6 +30,8 @@
 # research).
 #
 # agents.yaml hash: {{ include ".chezmoidata/agents.yaml" | sha256sum }}
+# mcp.yaml hash: {{ include ".chezmoidata/mcp.yaml" | sha256sum }}
+# omp-mcp-tool-ids hash: {{ include ".chezmoitemplates/omp-mcp-tool-ids" | sha256sum }}
 {{- range $a := .agents }}
 {{- if has $a.name (list "plan" "qa" "build" "scout") }}
 # prompt hash ({{ $a.name }}): {{ include (printf "dot_agents/prompts/%s.md" $a.name) | sha256sum }}
@@ -57,9 +59,17 @@ rm -f "$DEST"/*.md
 {{- $tools = append $tools "edit" }}
 {{- $tools = append $tools "ast_edit" }}
 {{- end }}
-{{- if has $a.name (list "plan" "build" "scout") }}
-{{- $tools = append $tools "mcp__context_resolve_library_id" }}
-{{- $tools = append $tools "mcp__context_get_library_docs" }}
+{{- range $pattern, $granted := (default (dict) $a.tools) }}
+{{- if $granted }}
+{{- $serverName := trimSuffix "_*" $pattern }}
+{{- range $s := $.mcp.servers }}
+{{- if eq $s.name $serverName }}
+{{- range $id := (includeTemplate "omp-mcp-tool-ids" (dict "server" $s) | fromJson) }}
+{{- $tools = append $tools $id }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- $spawns := false }}
 {{- if and (hasKey $a "permission") (hasKey $a.permission "task") (eq $a.permission.task "allow") }}

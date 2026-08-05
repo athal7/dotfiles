@@ -1,0 +1,40 @@
+{{- /* Render omp's global tools.approval map: "allow" for every MCP tool id
+       in a server's `tools` list (.chezmoidata/mcp.yaml), plus a short
+       built-in-tool allow-list (.chezmoidata/permissions.yaml top-level
+       ompToolsApproval.allow). Nothing else is listed here — there is no
+       "prompt" side to generate.
+
+       omp's tools.approvalMode is "always-ask" (set in
+       run_onchange_after_omp-settings.sh.tmpl): every write/exec-tier tool
+       prompts by default unless it has an explicit "allow" here (or, for
+       bash, its own bash.patterns-derived policy, which overrides
+       approvalMode entirely regardless of this list). MCP tools all
+       declare tier "write", so an unlisted MCP tool already prompts under
+       always-ask with zero bookkeeping — no need to enumerate every
+       non-allowed tool just to mark it "prompt".
+
+       Subagents (plan/qa/build/scout) always run tools.approvalMode: yolo
+       internally — not configurable — where an unset tool auto-allows
+       instead of prompting. That only matters for tools a subagent can
+       actually reach: mcp.yaml's `tools` list doubles as each subagent's
+       frontmatter visibility grant (run_onchange_after_omp-agents.sh.tmpl),
+       so every MCP tool any subagent can see is already listed "allow"
+       here by construction — never relying on that implicit yolo fallback.
+       Built-ins a subagent can reach but that aren't in ompToolsApproval
+       (read/grep/glob/lsp/web_search/todo/ask/hub/bash) are tier "read" (or
+       approval-exempt) and auto-approve in every mode regardless, verified
+       empirically — no entry needed for those either.
+
+       ctx: servers (.mcp.servers), builtinAllow (.ompToolsApproval.allow).
+       Emits a JSON object suitable for `omp config set tools.approval
+       '<result>'`. */ -}}
+{{- $out := dict -}}
+{{- range $s := .servers -}}
+  {{- range $id := (includeTemplate "omp-mcp-tool-ids" (dict "server" $s) | fromJson) -}}
+    {{- $_ := set $out $id "allow" -}}
+  {{- end -}}
+{{- end -}}
+{{- range $t := .builtinAllow -}}
+  {{- $_ := set $out $t "allow" -}}
+{{- end -}}
+{{- $out | toJson -}}
