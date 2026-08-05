@@ -1,27 +1,26 @@
 ---
 name: opencode
-description: OpenCode's own session history and runtime internals — query the SQLite session DB, repair DB/project/worktree-picker issues, and reset the stale "Modified Files" sidebar. For aoe session dispatch (creating, sending to, attaching a live session), see the aoe skill.
+description: Load when querying past opencode sessions from its SQLite DB, or when an opencode session DB or binary-path problem needs fixing.
 license: MIT
-compatibility: opencode
 ---
 
-Unified skill for all OpenCode agent runtime operations. Use the reference files below for each area.
+Applies to the opencode runtime only; omp has its own store.
 
-For creating, dispatching to, or attaching/capturing a live session (`aoe add`, `aoe send`, `aoe session attach`/`capture`), see the **aoe** skill instead — this skill covers only opencode's own session history, SQLite DB, and TUI-sidebar internals.
+`~/.local/share/opencode/opencode.db`, SQLite in WAL mode — safe to read while a session is live. Timestamps are Unix milliseconds. Subagent sessions have a non-null `parent_id`; top-level sessions don't.
 
-## Read-only history
+| Table | Columns |
+|---|---|
+| `session` | `id`, `title`, `slug`, `directory`, `project_id`, `workspace_id`, `parent_id`, `share_url`, `summary_additions`, `summary_deletions`, `summary_files`, `summary_diffs`, `time_created`, `time_updated`, `time_archived` |
+| `message` | `id`, `session_id`, `data` — JSON with `role`, `agent`, `model`, `providerID`, `cost`, `tokens` |
+| `part` | `id`, `message_id`, `session_id`, `data` — JSON with `type: "text"｜"tool"` |
 
-For anything that doesn't need a live session — looking up a past conversation, exporting it, or resuming it — use the plain `opencode` CLI or direct SQLite reads, never a daemon:
+## Session DB repair
 
-- `opencode session list` — list sessions
-- `opencode export <sessionID>` — export a session's full message/part history as JSON
-- `opencode -c` / `opencode -s <sessionID>` — resume the last (or a specific) session's conversation in a fresh interactive TUI
-- Direct reads against `~/.local/share/opencode/opencode.db` (SQLite, WAL mode — safe to read while a session is live)
+- **Never `DELETE` a `project` row.** Duplicate rows for one worktree are normal; deleting any of them breaks the FK on `session` and every future create fails with `FOREIGN KEY constraint failed`. `UPDATE sandboxes` on all rows for that worktree instead.
+- Paths in `session.directory` must be **real git worktrees** — `mkdir` alone leaves file-watching erroring on them.
 
-See [sessions.md](sessions.md) for the full query cookbook.
+## Binaries are not interchangeable
 
-## Reference files
+`/opt/homebrew/bin/opencode` is a **broken** Node wrapper — it walks `node_modules` from `bin/` and never finds the native binary in `libexec/`. `OPENCODE_BIN_PATH` bypasses the walk.
 
-- **[sessions.md](sessions.md)** — list, search, read, and continue past OpenCode sessions via the SQLite DB or CLI
-- **[repair.md](repair.md)** — fix blank sessions, missing worktrees, duplicate project rows, and DB issues
-- **[reset-diff.md](reset-diff.md)** — fix stale or noisy "Modified Files" sidebar after a commit, rebase, or merge
+Use `~/.local/bin/opencode` (the chezmoi-managed GitHub release, a native Mach-O Bun binary) for anything scripted or LaunchAgent-invoked. The curl-installer binary at `~/.opencode/bin/opencode` has been seen crashing with SIGKILL. The brew formula has no `service` stanza, so `brew services` can't manage it.

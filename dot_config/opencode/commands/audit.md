@@ -428,7 +428,7 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | `openspec/specs/*/spec.md` | Desired state — audit measures against these |
 | `~/.local/share/opencode/opencode.db` | Session data for compliance measurement |
 | `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json.tmpl` |
-| `~/.config/opencode/prompts/*.md` | `dot_config/opencode/prompts/*.md` |
+| `~/.agents/prompts/*.md` | `dot_agents/prompts/*.md` |
 | `~/.config/opencode/commands/*.md` | `dot_config/opencode/commands/*.md` |
 | `~/.agents/skills/*` | `skills/*` |
 

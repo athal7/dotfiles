@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Link this worktree's openspec/ to the durable per-repo store.
+#
+# Layout: a REAL openspec/ directory in the worktree with exactly two narrow
+# symlinks into ~/.local/share/kb/openspec/<repo-slug>/:
+#
+#   openspec/specs           -> $store/specs
+#   openspec/changes/archive -> $store/changes/archive
+#
+# In-flight change docs at openspec/changes/<name>/ stay REAL worktree files so
+# they surface in the review UI for inline comments. Only specs and the archive
+# leaf point outside the worktree, so accumulated requirements and completed
+# changes survive worktree teardown and are shared across every worktree.
+#
+# Idempotent and non-destructive: never rm's a real directory, never clobbers an
+# existing path. Refuses (exit 1) rather than guessing.
+
+set -euo pipefail
+
+git rev-parse --git-common-dir >/dev/null 2>&1 || {
+  echo "error: not inside a git repository" >&2; exit 1; }
+
+# Stable slug from the git common dir — NEVER the worktree basename, which is
+# branch-suffixed and would scatter the store. --path-format=absolute is
+# mandatory: the relative form returns a bare ".git".
+slug=$(basename "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")")
+store="$HOME/.local/share/kb/openspec/$slug"
+mkdir -p "$store/specs" "$store/changes/archive"
+
+ensure_link() {  # $1 = link path, $2 = target
+  if [ -L "$1" ]; then
+    [ "$(readlink "$1")" = "$2" ] && return 0
+    echo "FLAG: $PWD/$1 -> $(readlink "$1") but expected $2. Left untouched." >&2
+    return 1
+  elif [ -e "$1" ]; then
+    echo "FLAG: $PWD/$1 exists and is not a symlink (expected -> $2). Left untouched." >&2
+    return 1
+  fi
+  ln -s "$2" "$1"
+}
+
+if [ -L openspec ]; then
+  # A symlink AT openspec is the OLD whole-dir layout. Never auto-convert:
+  # in-flight changes in the store may belong to other worktrees.
+  echo "FLAG: $PWD/openspec is a whole-directory symlink -> $(readlink openspec)." >&2
+  echo "      Run the one-time OpenSpec migration to the real-dir + narrow-symlink" >&2
+  echo "      layout, then re-run. Left it untouched." >&2
+  exit 1
+elif [ -d openspec ]; then
+  mkdir -p openspec/changes
+  ensure_link openspec/specs           "$store/specs"
+  ensure_link openspec/changes/archive "$store/changes/archive"
+elif [ ! -e openspec ]; then
+  mkdir -p openspec/changes
+  ln -s "$store/specs"           openspec/specs
+  ln -s "$store/changes/archive" openspec/changes/archive
+else
+  echo "FLAG: $PWD/openspec is an unexpected path (a real file?). Left it untouched." >&2
+  exit 1
+fi
+
+echo "openspec linked to $store"

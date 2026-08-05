@@ -1,9 +1,9 @@
 ---
 name: atlassian
-description: Confluence decisions/status and wiki-hygiene flags — fetched by dispatching the atlassian subagent
+description: Confluence decisions/status and wiki-hygiene flags
 ---
 
-Dispatch the `atlassian` subagent (`task` tool, `subagent_type: atlassian`) with a prompt asking it to run a CQL search scoped to whatever Confluence space(s) the team's wiki presence lives in (discoverable via `getConfluenceSpaces` if not already known — a natural candidate for a per-workspace config value alongside the other local settings this repo already keeps, rather than a value assumed here) with `lastmodified` inside the enrichment window, prioritizing sections organized like retrospectives, demos, meeting notes, PRDs, and proposals; sections like sales/prospect notes are lower priority and worth a pull only if the page shows an explicit decision or status change, not routine meeting-note traffic. Exclude pages carrying the `decision-log` label (e.g. `AND label != "decision-log"`) — those are the write-back target of the Decision Log feature, not source material, and re-ingesting them here would echo-loop the two features against each other. Extract kb facts from its returned summary.
+Run a CQL search scoped to whatever Confluence space(s) the team's wiki presence lives in (discoverable via `getConfluenceSpaces` if not already known — a natural candidate for a per-workspace config value alongside the other local settings this repo already keeps, rather than a value assumed here) with `lastmodified` inside the enrichment window, prioritizing sections organized like retrospectives, demos, meeting notes, PRDs, and proposals; sections like sales/prospect notes are lower priority and worth a pull only if the page shows an explicit decision or status change, not routine meeting-note traffic. Exclude pages carrying the `decision-log` label (e.g. `AND label != "decision-log"`) — those are the write-back target of the Decision Log feature, not source material, and re-ingesting them here would echo-loop the two features against each other. Extract kb facts from the result.
 
 ## Triage rules
 
@@ -26,7 +26,7 @@ Extract:
 
 ## Wiki-hygiene flagging
 
-Separately from the window-scoped extraction above, periodically have the subagent scan the space's page tree (`getPagesInConfluenceSpace` / `getConfluencePageDescendants`) for hygiene issues and surface each as a candidate action item, filed through the same reminder/tracked-issue pipeline `/kb-enrich` uses for other collectors — subject to its existing dedup-against-current-state rule, which suppresses re-filing a flag already raised on a prior run.
+Separately from the window-scoped extraction above, periodically scan the space's page tree (`getPagesInConfluenceSpace` / `getConfluencePageDescendants`) for hygiene issues and surface each as a candidate action item, filed through the same reminder/tracked-issue pipeline `/kb-enrich` uses for other collectors — subject to its existing dedup-against-current-state rule, which suppresses re-filing a flag already raised on a prior run.
 
 Heuristics for what's hygiene-worthy:
 - A page unmodified for more than ~9 months that sits in an actively-referenced section (e.g. a roadmap, goals, or infra/architecture container) — stale content in a section people still consult is worse than stale content in an archive.

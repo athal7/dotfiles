@@ -1,9 +1,9 @@
 ---
 name: slack
-description: Slack messages and threads — fetched by dispatching the slack subagent
+description: Slack messages and threads
 ---
 
-Dispatch the `slack` subagent (`task` tool, `subagent_type: slack`) with a prompt asking it to find messages sent by the authenticated user in the enrichment window, and to fetch threads for any message that received replies. Extract kb facts from its returned summary.
+Find messages sent by the authenticated user in the enrichment window, and to fetch threads for any message that received replies. Extract kb facts from the result.
 
 ## Triage rules
 

@@ -1,12 +1,26 @@
 ---
 name: elasticsearch
-description: Load when investigating production errors, latency, or trace data that requires querying Elasticsearch/APM directly — index patterns, field names, auth setup, and time-range syntax. Use before hand-rolling a query DSL call or guessing field names.
+description: Load when investigating production errors, latency, or trace data — triage order, index patterns, field names, and time-range syntax. Use before hand-rolling a query DSL call or guessing field names.
 license: MIT
 ---
 
-Query application logs, APM traces, and errors using the Elasticsearch REST API directly.
+Query application logs, APM traces, and errors via the Elasticsearch REST API. Endpoint `$ES_URL` varies per environment.
 
-Endpoint: `$ES_URL` — base URL varies per environment.
+## Triage order
+
+State the hypothesis, bound the time window, and identify the scope (one service / one endpoint / one user / system-wide) before querying anything. Write down what a "confirmed" answer looks like — otherwise absence of evidence reads as evidence of absence.
+
+**Don't start with logs.** Work coarse to fine: error/rate spike (is it real?) → APM traces (which transaction) → APM errors (root-cause code path) → logs (raw context). `trace.id` links all three indices — pull it from an error or slow trace, then `{"term": {"trace.id": "<id>"}}` for the surrounding logs.
+
+| Symptom | Look first |
+|---|---|
+| Slow page loads | Traces, sort `transaction.duration.us` desc |
+| 500s spiking | Errors, group by `error.grouping_key` |
+| One user affected | Logs, filter by user/session id |
+| Periodic | Logs, time pattern in `@timestamp` |
+| After a deploy | Errors, filter `@timestamp` after deploy |
+
+**Escalate** rather than keep digging when: error rate stays above baseline >15min with no identified cause · a trace shows an external dependency timing out · errors reference a migration or schema change · you need production access you don't have.
 
 ## Time range syntax
 

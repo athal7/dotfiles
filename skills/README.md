@@ -1,64 +1,61 @@
 # Agent Skills
 
-[agentskills.io](https://agentskills.io)-compatible skills for AI agents. Works with [OpenCode](https://opencode.ai) and any compatible agent.
+[agentskills.io](https://agentskills.io)-compatible skills, deployed to `~/.agents/skills/`. Used by both harnesses in play here — [OpenCode](https://opencode.ai) and omp.
 
-The desired system behavior is defined in [workflow specs](../openspec/specs/) — four specs covering implementation, code review, merge request maintenance, and remote operations. Skills and commands implement those specs; [/audit](../dot_config/opencode/commands/audit.md) measures compliance. Static and blast-radius code review is not performed inline; it happens automatically on the pushed PR.
+Edit skills here, never in `~/.agents/skills/` — the sync script replaces that directory wholesale on `chezmoi apply`.
+
+See `AGENTS.md` for what earns a line and when something shouldn't be a skill at all.
 
 ## Skills
 
-Integration skills self-register their provided capabilities via `provides` in frontmatter — no manifest needed. Capabilities backed by a skill carry non-obvious usage knowledge that `--help` doesn't surface.
+**Workflow** — a process, loaded at a specific moment.
 
-| Integration (skill) | Workflow |
-|---------------------|----------|
-| **aoe** — Agent of Empires: session orchestration and worktree dispatch for opencode/omp | |
-| **branching** — Stacked branch management via git-spice | **architecture** — Architecture decisions, design prerequisite check, ADR template |
-| **chezmoi** — Manage dotfiles via chezmoi | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
-| **elasticsearch** — Query ES logs, APM traces, and errors | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
-| **knowledge-base** — Look up people, projects, and decisions locally | **commit** — Semantic commit format and pre-commit checks |
-| **opencode** — Session history, SQLite DB repair, and diff-sidebar reset for the OpenCode runtime | **communication** — Human-facing prose style and AI-authorship markers |
-| **pagerduty** — Incidents, on-call schedules, escalation policies | **observability** — Investigate production issues using logs and traces |
-| **reminders** — macOS Reminders via remindctl | **push** — Push approval protocol and CI watching |
-| **xh** — HTTPie-compatible HTTP client for REST APIs | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
-| **zoom** — Zoom meeting captions | **thinking-tools** — Structured frameworks for decisions and problem framing |
+| Skill | Fires when |
+|---|---|
+| **implement** | Starting or resuming a change: issue → plan → build → review → ship |
+| **merge-request** | Addressing review feedback or conflicts on a request you own |
+| **commit** | About to stage and commit |
+| **push** | About to push; owns the CI and automated-review watch |
+| **architecture** | A multi-option design decision appears |
+| **code-quality** | Grading review-finding severity; the mechanical sweeps |
+| **communication** | Composing human-facing prose through an integration |
+| **qa-report-publish** | Publishing an assembled QA report to a request |
 
-External skills (installed via `gh skill install` from upstream maintainers) — see `.chezmoidata/packages.yaml` `skills:` block:
+**Integration** — how to drive a specific tool or API.
 
-- **ical-cli** ([BRO3886/ical](https://github.com/BRO3886/ical)) — macOS Calendar from the terminal
-- **permission-audit** ([athal7/opencode-permission-audit](https://github.com/athal7/opencode-permission-audit)) — detection-only audit of opencode permission-prompt replies, paired with the `opencode-permission-log` plugin
+| Skill | Covers |
+|---|---|
+| **aoe** | Agent of Empires: session creation, worktrees, dispatch |
+| **opencode** | OpenCode runtime internals: session DB, repair, stale diff sidebar |
+| **chezmoi** | This repo's deploy workflow, LaunchAgents, template gotchas |
+| **knowledge-base** | `~/.local/share/kb/` — people, projects, decisions. Check before any remote lookup |
+| **elasticsearch** | Production triage: logs, APM traces, errors |
+| **pagerduty** | Incidents, on-call schedules, escalation policies |
+| **reminders** | macOS Reminders via `remindctl` |
+| **xh** | HTTPie-compatible HTTP client |
 
-The `openspec` CLI generates its skills (`openspec-explore`, `openspec-propose`, `openspec-apply-change`, `openspec-archive-change`) project-locally into `.opencode/skills/`. The skill-sync script mirrors them into the global skill dir so they're available outside this repo, version-matched to the installed CLI. Skills only — openspec slash-commands are not mirrored.
+External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical) and [permission-audit](https://github.com/athal7/opencode-permission-audit). The `openspec` CLI generates its own skills project-locally into `.opencode/skills/`; the sync script mirrors them globally, version-matched to the installed CLI. Skills only — its slash commands aren't mirrored.
 
-## Beyond skills
+## Other primitives
 
-Some workflow content uses different primitives — see `skills/AGENTS.md` for when to pick which.
+Not everything is a skill:
 
-- **Workflow commands** (`/implement`, `/mr`) embed methodology directly. QA verification, triage workflow, and conflict resolution are always-loaded for the active workflow.
-- **TDD** lives in `dot_config/opencode/prompts/build.md`. Continuous trigger → always-loaded in agent prompt.
-- **Plan** is a subagent with read-only permissions. Mode-restricted → agent boundary.
-- **Specs** (`openspec/specs/`) define desired state. `/audit` measures compliance.
+- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and what only that agent does. `lead` is the primary; `plan`/`qa`/`build`/`scout` are subagents in both harnesses. `general` and the MCP-service wrappers are opencode-only — omp loads MCP tools lazily and needs no per-service proxy. Registry: `.chezmoidata/agents.yaml`.
+- **Slash commands** live in `dot_config/opencode/commands/` and are opencode-only. The reusable workflows are thin wrappers over the `implement` and `merge-request` skills so omp reaches the same methodology.
+- **Scripts** carry anything too long or too exact to inline: `openspec-worktree-link`.
 
 ## Commands
 
-Slash commands. Workflow commands embed methodology directly — no skill loading needed.
-
-| Command | Type | Description |
-|---------|------|-------------|
-| **/implement** | Workflow | Plan/build/QA/ship with approval gates; static + blast-radius review happens automatically on the pushed PR |
-| **/mr** | Workflow | Merge request maintenance — triage, fix, conflicts, re-request review |
-| **/qa** | Utility | Functional QA on the locally running app — dispatches the qa subagent with an optional focus (diff-inferred when bare) and relays the PASS/FAIL verdict and report path |
-| **/audit** | Utility | Spec compliance audit — measures against `openspec/specs/` |
-| **/learn** | Utility | Capture discoveries into AGENTS.md or a new skill |
-| **/cleanup** | Utility | Reclaim disk space — worktrees, databases, temp files |
-
-## Upstream watchlist
-
-Skill dependencies are managed by config-driven injection (`skill-inject.ts`). Per-agent skill scoping is blocked on an upstream bug. Re-check during each `/audit`.
-
-| Issue | What it would change for us |
+| Command | What |
 |---|---|
-| [agentskills #110](https://github.com/agentskills/agentskills/issues/110) — Skill dependencies + version | Native `requires:` for inter-skill dependencies. Would replace the `requires:` half of our frontmatter `requires` declarations. |
-| [agentskills #330](https://github.com/agentskills/agentskills/issues/330) — Tool dependencies | Spec-level way to declare CLI/tool requirements per skill. Adjacent to our `provides:` + integration skill pattern. |
-| [agentskills #111](https://github.com/agentskills/agentskills/issues/111) — `agents:` field (closed) | Per-agent skill scoping in frontmatter. Would have replaced our (now-removed) per-agent permission scoping if it had landed. |
-| [agentskills #129](https://github.com/agentskills/agentskills/issues/129) — Sub-agent + skill interop (closed) | Strategic-direction thread on how subagents reference skills. Worth tracking even though closed. |
-| [anthropics/claude-code #44952](https://github.com/anthropics/claude-code/issues/44952) — Per-agent skill scoping | Same problem in Claude Code. If they ship something portable, we adopt. |
-| [anomalyco/opencode #21793](https://github.com/anomalyco/opencode/issues/21793) — `permission.skill` patterns not enforced | Open bug. If we ever re-add per-agent skill scoping, this needs to ship first. |
+| `/implement` | Loads the implement skill |
+| `/mr` | Loads the merge-request skill |
+| `/qa` | Functional QA on the running app; relays the verdict |
+| `/learn` | Capture discoveries into AGENTS.md or a skill |
+| `/rename` | Retitle the session from what it turned out to be about |
+| `/demo` | Build a demo deck from work since the last demo |
+| `/audit` | Spec-compliance and cost/latency audit (scheduled) |
+| `/kb-enrich` | Knowledge-base enrichment (scheduled) |
+| `/fix-prod-errors` | APM error triage and fix dispatch (scheduled) |
+| `/refactor-hotspots` | Hotspot detection and fix dispatch (scheduled) |
+| `/fix-launchagent-errors` | LaunchAgent error self-heal (watcher-dispatched) |

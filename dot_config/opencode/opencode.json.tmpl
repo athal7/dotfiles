@@ -33,12 +33,10 @@
   "plugin": [
     ["./lib/skill-inject.ts", {
       "architecture": ["code-quality"],
-      "attention": ["opencode", "ical-cli", "reminders"],
       "communication": ["knowledge-base"],
       "elasticsearch": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
-      "observability": ["elasticsearch"],
       "pagerduty": [{"skill": "xh", "context": "All requests use xh --ignore-stdin --session=agent for auth"}],
-      "push": ["commit", "branching"]
+      "push": ["commit"]
     }],
     "@tarquinen/opencode-dcp@3.1.12",
     "opencode-permission-log"
@@ -57,8 +55,8 @@
   Per-agent skill deny lists — blocked by sst/opencode#21793
   (permission.skill patterns not enforced). When fixed, add to each agent:
 
-  plan:  deny commit, push, branching, chezmoi
-  build: deny commit, push, branching, architecture, thinking-tools
+  plan:  deny commit, push, chezmoi
+  build: deny commit, push, architecture
   */ -}}
   {{- /*
   NOTE: always set `model` explicitly on each agent — never rely on top-level

@@ -1,29 +1,31 @@
 ---
 name: push
-description: Push approval protocol, branch naming, merge request descriptions, and post-push CI and code-review watching
+description: Load before pushing — merge request description rules and the post-push CI and automated-review watch loop.
 license: MIT
 ---
 
-## Before pushing
+Show unpushed commits in chat first — branch name, one subject per line. The full test suite already ran at commit time; don't re-run it.
 
-1. **Check the branch name.** Rename auto-generated worktree branches (e.g., `opencode/cosmic-wizard`) to `<type>/<short-description>` matching the commit type, 2-4 kebab-case words.
-2. **Run the full local test suite.** Fix failures before pushing.
-3. **Show a summary of unpushed commits in chat** — branch name, commit subjects, one per line.
+## Draft merge request
 
-## After push — draft merge request
+None exists → create one from the branch commits, as a draft. One exists → update title/body only on a material change (new scope, different fix, renamed component, changed API); skip for tests, docs, formatting. **Never flip draft↔ready.**
 
-Create or update a draft merge request. If none exists, create one from the branch commits. If one exists, update title/body only when the change is material (new feature scope, different fix, renamed component, changed API) — skip minor additions like tests/docs/formatting. Never change draft↔ready state.
+Description: 1-2 sentences. Skip headers, bullet lists, and anything obvious from the diff.
 
-**Description format:** 1-2 sentence summary, only add detail if non-obvious. When the tracker is visible to the repo's audience, link the issue with an explicit closing verb the tracker recognizes for auto-close — `Resolves`, `Fixes`, or `Closes` followed by the issue identifier. A bare reference like `#123` with no verb doesn't trigger auto-close — always state the verb. Skip headers, bullet lists, and implementation details obvious from the diff. **Never reference internal/private issue keys in public repos** — instead, update the issue with a link to the merge request. Check repo visibility before linking.
+**Auto-close needs an explicit verb** — `Resolves`, `Fixes`, or `Closes` plus the identifier. A bare `#123` does not close anything.
 
-Example:
+**Never reference private issue keys in public repos.** Check repo visibility first; instead put the merge-request link on the issue.
+
 ```
 Adds retry logic for flaky external API calls. Resolves #123
 ```
 
-## After draft merge request — watch CI and code review
+## Watch CI and automated review
 
-A push kicks off two asynchronous signals: CI, and — where the repo has it — an automated code review on the merge request. The push isn't settled until both have landed or been confirmed not applicable to a draft.
+Both are asynchronous; the push isn't settled until each has landed or been ruled out. Route GitHub reads through whatever GitHub pathway the harness provides.
 
-- **CI.** First rule out a merge conflict with the base branch: a conflicted merge request can't run CI at all, regardless of draft state, so a conflict has to be resolved before anything else — same commit → push cycle as any other fix. Only once there's no conflict does the rest apply: dispatch the `github` subagent (`task` tool, `subagent_type: github`) to check whether any check run has started for the current head. If none appear, there's nothing to wait for — the pre-push local full test suite already stands in for it; don't block on CI and don't treat its absence as a problem. If check runs do appear but haven't finished, sleep briefly, then re-dispatch it to check again — repeat until CI resolves or a sane timeout passes. Fix failures through the normal commit → push cycle and re-check.
-- **Automated code review.** When the repo has automated code review configured, dispatch the `github` subagent (`task` tool, `subagent_type: github`) to check for a review matching the current head — not a stale one. If none has landed yet, sleep briefly, then re-dispatch it to check again — repeat until a review lands or a sane timeout passes. If that timeout is reached while the merge request is still a draft, treat it the same way as CI: this repo's automated review doesn't run on drafts, nothing to wait for, move on. If a review does land, dispatch it to fetch the findings it posted as inline threads and top-level comments — triage them, fix actionable items through the normal commit → push cycle, and once a fix has landed, dispatch the `github` subagent to resolve the addressed threads; reply only when declining, deferring, or questioning, and get approval before dispatching the `github` subagent to post any reply. If the repo has no automated code review configured at all, there is nothing to wait for on that signal either.
+- **Conflict with the base branch → resolve first.** A conflicted merge request can't run CI at all, draft or not.
+- **No check runs on the current head** → nothing to wait for; the pre-push suite stands in. Don't treat absence as a problem.
+- **Check runs pending** → sleep, re-check, repeat until resolved or a sane timeout. Failures → fix through the normal commit → push cycle.
+- **Automated review** — same loop, matched against the *current* head, not a stale review. Timeout while still a draft → this repo doesn't review drafts; move on.
+- **Review landed** → fetch its inline threads and top-level comments, fix actionable items, resolve each thread only after its fix is pushed. Reply (rather than resolve) to decline, defer, or add context — and only with approval.

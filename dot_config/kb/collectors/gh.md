@@ -3,7 +3,7 @@ name: gh
 description: GitHub PRs, reviews, and issues
 ---
 
-Dispatch the `github` subagent (`task` tool, `subagent_type: github`) with a prompt asking it to find, within the enrichment window: pull requests authored by the authenticated user, pull requests where the user left a review, and issues opened or updated by the user. Extract kb facts from its returned summary.
+Find, within the enrichment window: pull requests authored by the authenticated user, pull requests where the user left a review, and issues opened or updated by the user. Extract kb facts from the result.
 
 ### Discover orgs
 
@@ -13,7 +13,7 @@ Read GitHub orgs from chezmoi data:
 chezmoi data --format json | jq -r '[.orgs | keys[]] | join(" ")'
 ```
 
-If the result is empty, ask the subagent to search without an org filter.
+If the result is empty, retry the search without an org filter.
 
 ### Bot filter
 

@@ -4,54 +4,27 @@ description: Load before designing a new system, choosing between competing impl
 license: MIT
 ---
 
-Use this when facing a software design decision with multiple valid approaches, hard-to-reverse consequences, or system boundary implications.
+## Check for a prerequisite refactor first
 
-## Design prerequisite check
+For any change touching domain logic, authorization, state machines, or anything enforced in more than one layer — read the code and answer:
 
-Before evaluating options, check whether a prerequisite refactor would simplify the work. For any change touching domain logic, authorization, state machines, or anything enforced in more than one layer — read the relevant code and answer:
+- Already checked in multiple places? List the callsites. Centralizing first may be the prerequisite.
+- New dependency between modules that had no prior relationship?
+- 2nd or 3rd instance of a pattern? One abstraction may serve all of them.
 
-- **Scattered enforcement:** is this concept already checked in multiple places? List callsites. If yes, is centralizing first a prerequisite?
-- **Coupling:** does this add a new dependency between modules that had no prior relationship?
-- **Extensibility:** is this the 2nd or 3rd instance of a pattern? Is there a single abstraction that serves all of them?
+Found one → propose it as a separate issue/PR, get confirmation, do it first.
 
-If a prerequisite refactor would simplify the work, surface it: propose a separate issue/PR, get user confirmation, do it first.
+## Present options, don't decide alone
 
-## Steps
+Always 2+ options in a table (what it is / pros / cons / best when). One option presented as fait accompli is a failure.
 
-1. **Gather context.** State the problem, constraints, and options. Check issue history and prior decisions if relevant. Research patterns, prior art, library docs.
+Score on: reversibility, YAGNI, simplicity, testability, coupling, operational cost, DX. **When criteria conflict, prefer reversibility and simplicity — complexity must earn its place.**
 
-2. **Present options as a table.** Always include 2+ options — never one-option-as-fait-accompli.
+Recommend with one sentence naming the single most important reason.
 
-   | | Option A | Option B | … |
-   |---|---|---|---|
-   | **What it is** | … | … | … |
-   | **Pros** | … | … | … |
-   | **Cons** | … | … | … |
-   | **Best when** | … | … | … |
+## Escalate instead of recommending
 
-3. **Score against software-architecture criteria:**
-
-   - **Reversibility:** how painful to undo in 6 months?
-   - **YAGNI:** real present problem or hypothetical?
-   - **Simplicity:** which would a new team member understand fastest?
-   - **Testability:** which is easiest to test in isolation?
-   - **Coupling:** does it create hard dependencies that constrain future changes?
-   - **Operational cost:** what does it add to deploy, monitor, debug?
-   - **DX:** which is less annoying day-to-day?
-
-   **Prefer reversibility and simplicity when criteria conflict. Complexity must earn its place.**
-
-4. **Call out system-level anti-patterns by name** when present in any option — use the code-quality catalog (Premature Abstraction, Wrong Layer, Leaky Abstraction, Distributed Monolith, Config as Code, Speculative Generality).
-
-5. **Escalate** when any of these are true; do not recommend unilaterally:
-
-   - Irreversible at the data layer (schema changes, migration strategy)
-   - Crosses service/team boundaries
-   - Significant operational cost (new infrastructure, new external dependency)
-   - You are genuinely uncertain after applying the framework
-
-6. **Recommend** with one concrete sentence naming the single most important reason. Never be vague. Never present one option as if no alternatives exist.
-
-## Writing the decision down
-
-If the user asks for an ADR (architecture decision record), use `templates/adr.md` in this skill directory — covers status, context, decision, decision matrix, alternatives, consequences, and common mistakes. Apply the template to the user's situation; don't repeat it verbatim.
+- Irreversible at the data layer (schema, migration strategy)
+- Crosses service or team boundaries
+- Real operational cost — new infrastructure, new external dependency
+- You're genuinely uncertain after applying the framework

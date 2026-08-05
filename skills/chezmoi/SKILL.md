@@ -2,7 +2,6 @@
 name: chezmoi
 description: Manage dotfiles via chezmoi — apply safely, destroy files, manage LaunchAgents and externals, config and template gotchas
 license: MIT
-compatibility: opencode
 ---
 
 `chezmoi apply` deploys source files to `~` and runs `run_onchange` scripts (brew bundle, skill sync, etc.).
@@ -31,10 +30,9 @@ launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/<plist-file>
 
 ## Notes
 
-- Session transcript data is persisted in `~/.local/share/opencode/opencode.db` — sessions survive restarts
 - **Adding a new `[data]` key to `.chezmoi.toml.tmpl` requires `chezmoi init` before `chezmoi apply`** — `apply` alone does not regenerate `~/.config/chezmoi/chezmoi.toml`
 - **`chezmoi init` is destructive to the live config** — it re-renders the template from scratch. The "config file template has changed" warning from `chezmoi apply` is cosmetic when scripts are already deployed; do not run `chezmoi init` to silence it.
-- **Machine-specific config lives in `.chezmoidata/local.yaml`** in the source directory — secrets manifest, calendar config, reminders, per-org config. This file is gitignored. Copy `local.yaml.example` from the repo root to `~/.local/share/chezmoi/.chezmoidata/local.yaml` to get started. The example must NOT live under `.chezmoidata/` itself — files there get merged into `chezmoi data` and would leak placeholder values into runtime.
+- **Machine-specific config lives in `.chezmoidata/local.yaml`** in the source directory — secrets manifest, calendar config, reminders, per-org config. Gitignored. The `local.yaml.example` template must NOT live under `.chezmoidata/` itself — files there get merged into `chezmoi data` and would leak placeholder values into runtime.
 
 ## Gotchas
 

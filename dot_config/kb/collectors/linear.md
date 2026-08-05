@@ -3,7 +3,7 @@ name: linear
 description: Linear issues and comments
 ---
 
-Dispatch the `linear` subagent (`task` tool, `subagent_type: linear`) with a prompt asking it to fetch issues updated within the enrichment window where the authenticated user is the assignee, creator, or a comment author, and to fetch comments on those issues to surface inline decisions and action items. Extract kb facts from its returned summary.
+Fetch issues updated within the enrichment window where the authenticated user is the assignee, creator, or a comment author, and to fetch comments on those issues to surface inline decisions and action items. Extract kb facts from the result.
 
 ## Triage rules
 

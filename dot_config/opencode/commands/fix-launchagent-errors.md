@@ -11,7 +11,7 @@ The argument carries the flagged service name(s) and the new error log lines the
 
 ## Skills
 
-- **opencode** — for stale-worktree / session DB failures, follow `repair.md` (especially "Fix B").
+- **opencode** — stale-worktree / session DB failures.
 - **aoe** — for aoe-cmd/aoe-serve LaunchAgent dispatch-mechanics failures, see `SKILL.md`.
 - **chezmoi** — this repo manages `~`; load the chezmoi skill for the deploy workflow.
 
@@ -25,7 +25,7 @@ The argument carries the flagged service name(s) and the new error log lines the
 
 2. **Genuine defects — fix at source.** Edit the source file in this repo (e.g. `dot_local/bin/...`, `dot_config/...`, `.chezmoidata/...`). Leave the commit and deploy to the lead unless told otherwise.
 
-3. **Stale worktree / session-picker errors.** For errors like `Failed to init file picker: Invalid path .../worktree/.../<session-name>` (or a blank session list), apply the opencode skill `repair.md` **"Fix B"** procedure:
+3. **Stale worktree / session-picker errors.** For errors like `Failed to init file picker: Invalid path .../worktree/.../<session-name>` (or a blank session list), load the **opencode** skill and:
    - Recreate the missing git worktree as a real `git worktree add` (not `mkdir`), OR reconcile the sqlite DB by **UPDATE**-ing `project.sandboxes` — **never DELETE project rows** (deleting breaks the `session` FK constraint).
    - Keep `project.sandboxes` and `global.dat` `workspaceOrder` consistent — fixing only one leaves the UI blank.
    - The opencode DB is at `~/.local/share/opencode/opencode.db`.
