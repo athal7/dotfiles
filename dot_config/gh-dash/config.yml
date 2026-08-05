@@ -21,12 +21,24 @@ issuesSections:
 # start -> readiness-poll -> send sequence; backgrounded here so gh-dash
 # isn't blocked for the ~5-30s the readiness poll can take. Output goes to
 # /tmp for post-hoc debugging since a backgrounded job has no console.
+#
+# `L` opens lumen's interactive side-by-side diff viewer on the selected PR,
+# in the foreground (gh-dash suspends and hands over the terminal, same as
+# any interactive shell-out). `lumen diff --pr/--origin` fetches the PR
+# straight from the GitHub API via `gh`, so it needs no local clone of the
+# PR's own repo — only *some* git repo as a cwd anchor, which is why this
+# cds into the primary dotfiles checkout (always present) rather than
+# `~/code/$(basename {{.RepoName}})` like the aoe binding does.
 keybindings:
   prs:
     - key: A
       name: send to aoe (/mr)
       command: >
         aoe-cmd -d ~/code/$(basename {{.RepoName}}) -n pr-{{.PrNumber}} -w {{.HeadRefName}} "/mr {{.RepoName}}#{{.PrNumber}}" >/tmp/aoe-cmd-pr-{{.PrNumber}}.log 2>&1 &
+    - key: L
+      name: review with lumen
+      command: >
+        cd ~/code/dotfiles && lumen diff --pr {{.PrNumber}} --origin {{.RepoName}}
   issues:
     - key: A
       name: send to aoe (/implement)
