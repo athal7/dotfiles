@@ -13,10 +13,11 @@ Verify the diff and apply any findings before you stage. Run git from the worktr
    ```
 3. `git check-ignore <files>` — never stage globally-ignored files (`~/.config/git/ignore`, e.g. `.talismanrc`).
 4. Run the full test suite — unit, integration, e2e, system. No commits with failures. This is the gate; push assumes it already ran.
-5. Draft the message, with a trailer naming the model:
+5. Draft the message, with a trailer naming the model actually running the session — email is the model's *provider* domain, never the harness (`opencode.ai`, `omp.sh`, …):
    ```
-   Co-Authored-By: anthropic/claude-sonnet-4-6 <noreply@opencode.ai>
+   Co-Authored-By: anthropic/claude-sonnet-5 <noreply@anthropic.com>
    ```
+   Swap in the current model and its provider's domain (`openai.com`, `google.com`, `x.ai`, …) — don't reuse a stale example verbatim.
 
 ## Format
 
