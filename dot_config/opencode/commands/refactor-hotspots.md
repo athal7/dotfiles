@@ -119,7 +119,7 @@ For each surviving candidate, dispatch a refactor session. `aoe send` is fire-an
 `<slug>` is a deterministic slugification of `rel_file` (slashes and dots → dashes), used identically in the worktree branch name, the session title, and the log entry so the Step-4 `git branch --list`/`aoe list` dedup checks match on future runs.
 
 ```bash
-add_output=$(aoe add "<repo>" --tool opencode --worktree "refactor/hotspot-<slug>" --new-branch --title "hotspot-<slug>-$(date +%Y%m%d-%H%M%S)")
+add_output=$(aoe add "<repo>" --worktree "refactor/hotspot-<slug>" --new-branch --title "hotspot-<slug>-$(date +%Y%m%d-%H%M%S)")
 SID=$(printf '%s\n' "$add_output" | awk '/^  ID:/ {print $2}')
 aoe session start "$SID"
 sleep 5   # let opencode's TUI finish booting in the fresh tmux pane before sending
