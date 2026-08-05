@@ -11,7 +11,7 @@ Optional argument: a repo name or path to scope detection to a single repo. Defa
 
 ## Skills
 
-- **opencode** — aoe dispatch verbs (`aoe add --worktree`, `aoe session start`, `aoe send`) for the fire-and-forget dispatch flow.
+- **aoe** — aoe dispatch verbs (`aoe add --worktree`, `aoe session start`, `aoe send`) for the fire-and-forget dispatch flow.
 
 ## Step 1 — Repo orientation
 

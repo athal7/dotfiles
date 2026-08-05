@@ -12,7 +12,7 @@ Optional argument: a time-range override (e.g. `48h`). Default: last 24h.
 ## Skills
 
 - **elasticsearch** — APM error query (`logs-apm.error-*`) and auth.
-- **opencode** — `$HOME/.local/bin/aoe-cmd -d DIR -n NAME -w WORKTREE_BRANCH -b MESSAGE` for the fire-and-forget worktree dispatch flow (add→start→readiness-poll→send, all handled by the wrapper).
+- **aoe** — `$HOME/.local/bin/aoe-cmd -d DIR -n NAME -w WORKTREE_BRANCH -b MESSAGE` for the fire-and-forget worktree dispatch flow (add→start→readiness-poll→send, all handled by the wrapper).
 
 ## Steps
 

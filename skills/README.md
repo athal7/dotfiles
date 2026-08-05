@@ -10,11 +10,12 @@ Integration skills self-register their provided capabilities via `provides` in f
 
 | Integration (skill) | Workflow |
 |---------------------|----------|
+| **aoe** — Agent of Empires: session orchestration and worktree dispatch for opencode/omp | |
 | **branching** — Stacked branch management via git-spice | **architecture** — Architecture decisions, design prerequisite check, ADR template |
 | **chezmoi** — Manage dotfiles via chezmoi | **attention** — Energy and spoon check, surface NOW/NEXT/LATER |
 | **elasticsearch** — Query ES logs, APM traces, and errors | **code-quality** — Code quality reference: design patterns, smells, anti-patterns |
 | **knowledge-base** — Look up people, projects, and decisions locally | **commit** — Semantic commit format and pre-commit checks |
-| **opencode** — Sessions, dispatch, repair, and diff reset for the OpenCode runtime | **communication** — Human-facing prose style and AI-authorship markers |
+| **opencode** — Session history, SQLite DB repair, and diff-sidebar reset for the OpenCode runtime | **communication** — Human-facing prose style and AI-authorship markers |
 | **pagerduty** — Incidents, on-call schedules, escalation policies | **observability** — Investigate production issues using logs and traces |
 | **reminders** — macOS Reminders via remindctl | **push** — Push approval protocol and CI watching |
 | **xh** — HTTPie-compatible HTTP client for REST APIs | **qa-report-publish** — Deliver the AC-organized QA-evidence report to your own PR's description block |
