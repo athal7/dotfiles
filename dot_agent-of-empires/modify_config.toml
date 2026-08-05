@@ -13,9 +13,7 @@ is currently live (.chezmoi.stdin, empty on a machine's first-ever apply) and
 re-injected verbatim — they never get baked into this template's literal
 content, so no live app-state value can ever land in git history.
 */ -}}
-{{- $static := fromToml `default_profile = ""
-
-[acp]
+{{- $static := fromToml `[acp]
 allow_agent_install = false
 auto_stop_idle_secs = 0
 default_agent = "aoe-agent"
