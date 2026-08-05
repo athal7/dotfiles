@@ -111,8 +111,6 @@ packages:
         "remindctl list*": allow
         "remindctl status*": allow
         "remindctl *": ask
-    - name: roeyazroel/linear-tui/linear-tui
-    - name: oronbz/tap/nag
     - name: typescript-language-server
     - name: pyright
     - name: gopls
@@ -128,14 +126,6 @@ packages:
   aoe_plugins:
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
-
-  # gh CLI extensions — installed/updated via
-  # run_onchange_after_gh-extensions.sh.tmpl. A list from day one (even with
-  # a single entry) so adding another gh extension later is a one-line
-  # registry edit, matching the idiom of every other registry key here.
-  gh_extensions:
-    - repo: "dlvhdr/gh-dash"
-      name: "dash"
 
   pi_packages: []
 

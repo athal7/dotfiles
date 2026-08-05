@@ -81,6 +81,12 @@ repos:
         language: script
         always_run: true
         pass_filenames: false
+      - id: test-attention-list
+        name: attention-list tooling tests
+        entry: scripts/test-attention-list.sh
+        language: script
+        always_run: true
+        pass_filenames: false
 
   # Talisman (secrets scanning) - already configured, keep it
   - repo: https://github.com/thoughtworks/talisman
