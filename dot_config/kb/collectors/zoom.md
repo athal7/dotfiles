@@ -13,22 +13,22 @@ Retrieve, per the shape below:
 
 > Search Zoom meetings from `<FROM>` to `<TO>` (ISO-8601 UTC). User timezone: `<TZ>`. For each meeting with a summary or transcript available, fetch its assets. Return a distilled summary: participants, decisions, action items (next_steps[]), and open questions. Do not dump raw transcripts.
 
-Call `search_meetings` over the window and `get_meeting_assets` per qualifying meeting, applying content priority (`summary_markdown` → `my_notes.content_markdown` → transcript items) internally.
+Call the calendar's list-events/get-event-details methods over the window to resolve each meeting's Zoom `conference.conference_id` (dedupe a recurring series to one call), then `get_meeting_assets` per qualifying meeting, applying content priority (`meeting_summary` → `my_notes.content_markdown` → transcript items) internally.
 
-**Gotcha:** a default `search_meetings` call can silently miss real meetings that have no AI-generated summary but DO have substantive `my_notes` content — the search must be run (or re-run) with `include_zoom_my_notes: true` to surface these. A host-only, summary-only search will report "no actionable content" for a day that actually had real meetings with decisions/action items recorded only in My Notes. Always include this flag.
+**Gotcha:** `search_meetings` is host-scoped — it silently drops any meeting athal didn't organize, even ones with real decisions/action items only in My Notes. It's retired from this collector; resolve meetings via Calendar instead (above), never call `search_meetings`. The `include_zoom_my_notes` flag an earlier version of this doc referenced doesn't exist on any current tool — don't pass it.
 
 ## Triage rules
 
 From the result, extract:
 
 - Meeting participants and any contact info surfaced (names, roles, team membership)
-- Decisions recorded in the summary — anchor each to the project or product it concerns
-- Action items from `next_steps[]` — note the meeting topic and `meeting_start_time` for cross-reference
+- Decisions recorded in the summary or My Notes — anchor each to the project or product it concerns
+- Action items from `meeting_summary.next_steps[]` or My Notes — note the meeting topic and `start_time` for cross-reference, and who each item belongs to (My Notes items are often per-person, e.g. "Andrew: ..." vs "Brian: ...")
 - Open questions that remain unresolved at the end of the enrichment window
 
 ## Extraction rules
 
 - Map participants from `attendees[]` and any speaker lines to people facts.
 - Anchor decisions to the project or product they concern.
-- For action items, note the meeting topic and date for cross-reference.
-- No local distillation step is needed — Zoom AI Companion summaries are already distilled. Use the Zoom summary directly.
+- For action items, note the meeting topic and date for cross-reference; only athal's own open items are candidates for filing.
+- No local distillation step is needed for a real summary or My Notes doc — both are already distilled. Use directly; only fall back to the raw transcript when neither exists.
