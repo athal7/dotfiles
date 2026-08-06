@@ -48,12 +48,16 @@
 #                             visibility grant, so every MCP tool a
 #                             subagent can actually reach is already
 #                             listed here — never relying on that implicit
-#                             yolo fallback. task/write/edit/ast_edit are
-#                             the only built-ins that needed an explicit
-#                             entry (verified empirically); read/grep/glob/
-#                             lsp/web_search/todo/hub auto-approve under
-#                             every mode regardless (tier "read" or
-#                             approval-exempt) and need none.
+#                             yolo fallback. task/write/edit/ast_edit/hub/
+#                             bash get an explicit entry (verified
+#                             empirically for task/write/edit/ast_edit;
+#                             hub/bash added for a drift-proof guarantee —
+#                             hub was already tier-exempt, and bash's own
+#                             tool-level gate is bash.patterns below, not
+#                             this map, so its entry here is a no-op).
+#                             read/grep/glob/lsp/web_search/todo auto-
+#                             approve under every mode regardless (tier
+#                             "read" or approval-exempt) and need none.
 #
 # bash-permissions.yaml hash: {{ include ".chezmoidata/bash-permissions.yaml" | sha256sum }}
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}

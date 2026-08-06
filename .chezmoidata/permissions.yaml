@@ -22,4 +22,4 @@ permissions:
     "/private/var/folders/*/*/T/**": allow
 
 ompToolsApproval:
-  allow: [task, write, edit, ast_edit, ask, eval]
+  allow: [task, write, edit, ast_edit, ask, eval, hub, bash]

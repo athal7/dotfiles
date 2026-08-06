@@ -21,9 +21,13 @@
        so every MCP tool any subagent can see is already listed "allow"
        here by construction — never relying on that implicit yolo fallback.
        Built-ins a subagent can reach but that aren't in ompToolsApproval
-       (read/grep/glob/lsp/web_search/todo/ask/hub/bash) are tier "read" (or
+       (read/grep/glob/lsp/web_search/todo/ask) are tier "read" (or
        approval-exempt) and auto-approve in every mode regardless, verified
-       empirically — no entry needed for those either.
+       empirically — no entry needed for those either. hub and bash get an
+       explicit entry anyway (ompToolsApproval.allow) for a drift-proof
+       guarantee, even though hub was already tier-exempt and bash's own
+       tool-level gate is bash.patterns, not this map (see
+       run_onchange_after_omp-settings.sh.tmpl).
 
        ctx: servers (.mcp.servers), builtinAllow (.ompToolsApproval.allow).
        Emits a JSON object suitable for `omp config set tools.approval
