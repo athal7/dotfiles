@@ -17,6 +17,7 @@ agents:
       bash: { compose: lead }
   - name: plan
     enabled: [opencode, pi]
+    omp_name: planner
     description: "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only."
     mode: subagent
     class: slow

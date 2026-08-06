@@ -13,7 +13,7 @@
 # instead of leaking a stale file forever.
 #
 # Only 4 of the agents in agents.yaml become omp subagent files:
-#   - plan, qa, build, scout
+#   - plan (deployed as "planner" — see omp_name below), qa, build, scout
 # Deliberately excluded:
 #   - lead: gets its persona via the APPEND_SYSTEM.md symlink (whole-session
 #     system prompt append), not a subagent file — shipping both would
@@ -22,6 +22,14 @@
 #   - zoom, slack, atlassian, github, google, linear (the MCP-proxy agents):
 #     intentionally opencode-only — omp does lazy MCP tool loading itself,
 #     so it doesn't need dedicated per-service proxy subagents.
+#
+# `plan`'s optional `omp_name: planner` field (agents.yaml) renames only the
+# omp-deployed file/frontmatter name, not the source prompt file or
+# opencode's own agent name. Confirmed empirically: dispatching a custom omp
+# agent literally named "plan" via `task` hangs indefinitely (collides with
+# omp's own native plan-mode/model-role reserved name — filed upstream at
+# athal7/agentcfg#14); renaming the omp target to anything else fixes it.
+# opencode has no such collision, so its agent stays named "plan".
 #
 # NOTE: this generator's scout.md overrides omp's own BUILT-IN bundled
 # "scout" agent by name (global user-level agent files win over bundled ones
@@ -51,6 +59,10 @@ rm -f "$DEST"/*.md
 
 {{ range $a := .agents -}}
 {{- if has $a.name (list "plan" "qa" "build" "scout") }}
+{{- $ompName := $a.name }}
+{{- if hasKey $a "omp_name" }}
+{{- $ompName = $a.omp_name }}
+{{- end }}
 {{- $tools := list "read" "grep" "glob" "bash" "todo" "lsp" "web_search" "ast_grep" "inspect_image" }}
 {{- if and (hasKey $a "permission") (hasKey $a.permission "write") (eq $a.permission.write "allow") }}
 {{- $tools = append $tools "write" }}
@@ -75,9 +87,9 @@ rm -f "$DEST"/*.md
 {{- if and (hasKey $a "permission") (hasKey $a.permission "task") (eq $a.permission.task "allow") }}
 {{- $spawns = true }}
 {{- end }}
-cat > "$DEST/{{ $a.name }}.md" <<'OMP_AGENT_EOF'
+cat > "$DEST/{{ $ompName }}.md" <<'OMP_AGENT_EOF'
 ---
-name: {{ $a.name }}
+name: {{ $ompName }}
 description: {{ $a.description | quote }}
 tools: {{ $tools | join ", " }}
 {{- if $spawns }}
@@ -88,6 +100,6 @@ model: "@{{ $a.class }}"
 
 {{ include (printf "dot_agents/prompts/%s.md" $a.name) }}
 OMP_AGENT_EOF
-chmod 600 "$DEST/{{ $a.name }}.md"
+chmod 600 "$DEST/{{ $ompName }}.md"
 {{ end -}}
 {{- end }}
