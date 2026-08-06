@@ -888,6 +888,10 @@ chmod +x "$INTERACT_BIN/pbcopy"
 
 cat > "$INTERACT_BIN/aoe-cmd" <<STUB
 #!/bin/sh
+# Deliberately slow (mirrors aoe-cmd's real ~2-30s worktree+readiness-poll
+# latency) -- proves act() dispatches this in the background instead of
+# blocking the dashboard loop on it.
+sleep 1
 echo "\$*" >> "$AOE_CMD_LOG"
 exit 0
 STUB
@@ -1090,11 +1094,31 @@ else
 fi
 
 echo
-echo "-- session dispatch (alt-s): title-based slug, no issue-number/timestamp naming --"
+echo "-- session dispatch (alt-s): backgrounded (doesn't block the dashboard loop), title-based slug, no issue-number/timestamp naming --"
+
+# Polls up to ~3s for the backgrounded aoe-cmd stub (which sleeps 1s before
+# writing) to produce its log line, since dispatch_background() returns
+# before the child process finishes.
+wait_for_aoe_cmd_log() {
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    [ -s "$AOE_CMD_LOG" ] && return 0
+    sleep 0.3
+  done
+  return 1
+}
 
 : > "$AOE_CMD_LOG"
+start_ts=$(date +%s)
 run_act "alt-s" "$FIX_GH_LINE"
+elapsed=$(( $(date +%s) - start_ts ))
 check "GH alt-s exits 0" "$ACT_RC" "0"
+if [ "$elapsed" -le 1 ]; then
+  ok "GH alt-s returns without waiting for the dispatched process (${elapsed}s; stub sleeps 1s)"
+else
+  bad "GH alt-s returns without waiting for the dispatched process (took ${elapsed}s; stub sleeps 1s)"
+fi
+
+wait_for_aoe_cmd_log
 gh_session_call="$(cat "$AOE_CMD_LOG")"
 case "$gh_session_call" in
   *"-n test-pr -b -w test-pr "*)
@@ -1109,12 +1133,14 @@ esac
 
 : > "$AOE_CMD_LOG"
 run_act "alt-s" "$FIX_GH_LINE"
+wait_for_aoe_cmd_log
 second_call="$(cat "$AOE_CMD_LOG")"
 check "GH alt-s produces the identical slug on a repeat invocation (no timestamp suffix)" "$second_call" "$gh_session_call"
 
 : > "$AOE_CMD_LOG"
 run_act "alt-s" "$FIX_LIN_LINE"
 check "LIN alt-s exits 0" "$ACT_RC" "0"
+wait_for_aoe_cmd_log
 if grep -q -- '-n fix-bug ' "$AOE_CMD_LOG"; then
   ok "LIN alt-s names the session from the title slug 'fix-bug' (got: $(cat "$AOE_CMD_LOG"))"
 else

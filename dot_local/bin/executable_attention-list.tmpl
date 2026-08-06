@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import subprocess
+import tempfile
 import urllib.request
 import urllib.error
 from datetime import datetime, date, timedelta, timezone
@@ -838,7 +839,7 @@ def act(key, line):
         lambdas["alt-x"] = lambda: run_cmd(["remindctl", "complete", item_id])
     elif item_type == "GH":
         lambdas["alt-o"] = lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")
-        lambdas["alt-s"] = lambda: run_cmd(["aoe-cmd", "-d", repo_path, "-n", slug, "-b", "-w", slug, f"Work on issue {item_id} in this repo"]) if repo_path else print("No local repo path mapped.")
+        lambdas["alt-s"] = lambda: dispatch_background(["aoe-cmd", "-d", repo_path, "-n", slug, "-b", "-w", slug, f"Work on issue {item_id} in this repo"]) if repo_path else print("No local repo path mapped.")
         lambdas["alt-l"] = lambda: run_cmd(["lumen", "diff", "--pr", item_url]) if item_url else print("No URL.")
         lambdas["alt-a"] = lambda: run_cmd(["gh", "pr", "review", "--approve", item_id, "--repo", get_repo_from_url(item_url)]) if item_url else print("No URL.")
         lambdas["alt-m"] = lambda: confirm_and_merge(item_id, item_url)
@@ -853,7 +854,7 @@ def act(key, line):
             lambdas["T"] = lambda: linear_transition(lin_db_id)
     elif item_type == "LIN":
         lambdas["alt-o"] = lambda: run_cmd(["open", item_url]) if item_url else print("No URL.")
-        lambdas["alt-s"] = lambda: run_cmd(["aoe-cmd", "-d", os.getcwd(), "-n", slug, f"Work on Linear issue {item_id}"])
+        lambdas["alt-s"] = lambda: dispatch_background(["aoe-cmd", "-d", os.getcwd(), "-n", slug, f"Work on Linear issue {item_id}"])
         lambdas["alt-c"] = lambda: linear_comment(db_id)
         lambdas["alt-t"] = lambda: linear_transition(db_id)
 
@@ -915,6 +916,28 @@ def run_cmd(cmd):
         subprocess.run(cmd, check=True)
     except Exception as e:
         print(f"Command failed: {e}")
+
+def dispatch_background(cmd):
+    """Launch a fire-and-forget subprocess without blocking the dashboard
+    loop -- `aoe-cmd` (session dispatch) can take up to ~30s (worktree
+    creation plus a readiness poll) before it even sends anything, and
+    the dashboard has no reason to sit frozen for that: press alt-s,
+    it's queued, you're straight back at the list. Detached from this
+    process's stdio/session so it survives past this `act()` call
+    exiting; output goes to a per-dispatch log file since the terminal
+    may already be showing the next dashboard render by the time it
+    produces any.
+    """
+    log_fd, log_path = tempfile.mkstemp(prefix="attention-dispatch-", suffix=".log")
+    with os.fdopen(log_fd, "w") as log_file:
+        try:
+            subprocess.Popen(
+                cmd, stdout=log_file, stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL, start_new_session=True,
+            )
+            print(f"Dispatched in background (log: {log_path}): {' '.join(cmd)}")
+        except Exception as e:
+            print(f"Failed to dispatch: {e}")
 
 def get_repo_from_url(url):
     # e.g., https://github.com/athal7/kb/pull/40 -> athal7/kb
