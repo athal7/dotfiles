@@ -12,13 +12,24 @@
 # omp sessions only — bare terminal `omp` invocations are untouched and keep
 # using whatever env/OAuth they'd otherwise fall through to.
 #
-# Never blocks a launch: if the Keychain read fails for any reason (locked,
-# item missing, ACL denial), just skip the export and let omp fall through.
+# BLOCKS THE LAUNCH ON FAILURE: a failed keychain read used to be silently
+# swallowed, letting omp launch key-less and quietly fall back to whatever
+# local model was configured — indistinguishable from a model-routing bug.
+# Now a failed read refuses to launch omp at all: it logs to
+# ~/Library/Logs/omp-billed.error.log (picked up by check-error-logs' daily
+# scan) and exits nonzero, so the aoe session fails loudly instead of
+# quietly misrouting.
 
 key=$(security find-generic-password -s chezmoi -a omp_anthropic_api_key -w 2>/dev/null)
-if [ -n "$key" ]; then
-  ANTHROPIC_API_KEY="$key"
-  export ANTHROPIC_API_KEY
+status=$?
+if [ -z "$key" ]; then
+  mkdir -p "$HOME/Library/Logs" 2>/dev/null
+  printf '%s omp-billed: keychain read failed (exit %s) — refusing to launch omp without ANTHROPIC_API_KEY\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" "$status" >> "$HOME/Library/Logs/omp-billed.error.log" 2>/dev/null
+  printf 'omp-billed: keychain read for chezmoi/omp_anthropic_api_key failed (security exit %s) — refusing to launch omp without ANTHROPIC_API_KEY. Unlock the login keychain and retry.\n' "$status" >&2
+  exit 1
 fi
 
+ANTHROPIC_API_KEY="$key"
+export ANTHROPIC_API_KEY
 exec omp "$@"
