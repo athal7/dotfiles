@@ -138,10 +138,11 @@ test_reminders() {
 
   local overdue_line
   overdue_line="$(grep 'REGRESSION-overdue-work' <<<"$out" || true)"
-  case "$overdue_line" in
-    *"(95)"*) ok "overdue reminder weighted 95 (overdue logic engaged)" ;;
-    *) bad "overdue reminder weighted 95 (got: $overdue_line)" ;;
-  esac
+  if grep -Eq '^OVERDUE\b' <<<"$overdue_line"; then
+    ok "overdue reminder gets OVERDUE status (overdue logic engaged)"
+  else
+    bad "overdue reminder gets OVERDUE status (got: $overdue_line)"
+  fi
 }
 test_reminders
 
@@ -320,11 +321,13 @@ test_declined_event_excluded
 # `gh search issues`), not the repo-scoped `gh pr list` / `gh issue list`.
 # The latter resolve a single target repo from the cwd's git remote (or -R)
 # and only filter *within* that repo — --search never made them global.
-# Also covers: no org/user scoping (one unscoped @me search per query type),
-# and that the `{"name", "nameWithOwner"}` repository shape `gh search`
-# returns is parsed into weights/type tags identically to before.
+# Also covers the expanded fetch: PRs I authored that need MY attention
+# (failing checks / changes requested / merge conflict / new comments,
+# resolved via a follow-up `gh pr view`), issues in repos I own regardless
+# of assignee, and de-duplication when the same issue matches more than one
+# query.
 echo
-echo "== gh search regression (global search, not repo-scoped list) =="
+echo "== gh search regression (global search, not repo-scoped list; authored-PR attention; owned-repo issues) =="
 
 GH_BIN="$WORK/bin-gh-noorg-scoping"
 mkdir -p "$GH_BIN"
@@ -350,15 +353,33 @@ chmod +x "$GH_BIN/chezmoi"
 cat > "$GH_BIN/gh" <<STUB
 #!/bin/sh
 echo "\$*" >> "$GH_LOG"
-case "\$1 \$2" in
-  "search prs")
+case "\$*" in
+  "search prs --review-requested=@me"*)
     cat <<'JSON'
 [{"number": 1, "title": "GHTEST-review-me", "repository": {"name": "kb", "nameWithOwner": "athal7/kb"}, "url": "https://github.com/athal7/kb/pull/1"}]
 JSON
     ;;
-  "search issues")
+  "search prs --author=@me"*)
+    cat <<'JSON'
+[{"number": 3, "title": "GHTEST-authored-me", "repository": {"name": "kb", "nameWithOwner": "athal7/kb"}, "url": "https://github.com/athal7/kb/pull/3"}]
+JSON
+    ;;
+  "search issues --assignee=@me"*)
     cat <<'JSON'
 [{"number": 2, "title": "GHTEST-assigned-me", "repository": {"name": "kb", "nameWithOwner": "athal7/kb"}, "url": "https://github.com/athal7/kb/issues/2"}]
+JSON
+    ;;
+  "search issues --owner=@me"*)
+    cat <<'JSON'
+[{"number": 2, "title": "GHTEST-assigned-me", "repository": {"name": "kb", "nameWithOwner": "athal7/kb"}, "url": "https://github.com/athal7/kb/issues/2"}, {"number": 4, "title": "GHTEST-repo-issue", "repository": {"name": "kb", "nameWithOwner": "athal7/kb"}, "url": "https://github.com/athal7/kb/issues/4"}]
+JSON
+    ;;
+  "api user --jq .login")
+    echo "ghtestuser"
+    ;;
+  "pr view 3 -R athal7/kb"*)
+    cat <<'JSON'
+{"mergeable": "CONFLICTING", "reviewDecision": "CHANGES_REQUESTED", "statusCheckRollup": [{"conclusion": "FAILURE"}], "comments": [{"author": {"login": "someone-else"}}]}
 JSON
     ;;
   *)
@@ -393,14 +414,14 @@ test_gh_global_search_scope() {
   local out
   out="$(HOME="$TEST_HOME" PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
 
-  local pr_calls issue_calls pr_call issue_call
-  pr_calls="$(grep -c '^search prs ' "$GH_LOG" || true)"
-  issue_calls="$(grep -c '^search issues ' "$GH_LOG" || true)"
-  pr_call="$(grep '^search prs ' "$GH_LOG" || true)"
-  issue_call="$(grep '^search issues ' "$GH_LOG" || true)"
-
-  check "gh search prs invoked exactly once" "$pr_calls" "1"
-  check "gh search issues invoked exactly once" "$issue_calls" "1"
+  check "gh search prs (review-requested) invoked exactly once" \
+    "$(grep -c '^search prs --review-requested=@me' "$GH_LOG")" "1"
+  check "gh search prs (author) invoked exactly once" \
+    "$(grep -c '^search prs --author=@me' "$GH_LOG")" "1"
+  check "gh search issues (assignee) invoked exactly once" \
+    "$(grep -c '^search issues --assignee=@me' "$GH_LOG")" "1"
+  check "gh search issues (owner) invoked exactly once" \
+    "$(grep -c '^search issues --owner=@me' "$GH_LOG")" "1"
 
   # Repo-scoped `gh pr list`/`gh issue list` must never be used: they only
   # filter within a single cwd-resolved repo, not across all of @me's repos.
@@ -410,32 +431,156 @@ test_gh_global_search_scope() {
     ok "gh never invoked with repo-scoped 'pr list'/'issue list'"
   fi
 
-  check "gh search prs argv" "$pr_call" "search prs --review-requested=@me --state=open --limit 50 --json number,title,repository,url"
-  check "gh search issues argv" "$issue_call" "search issues --assignee=@me --state=open --limit 50 --json number,title,repository,url"
+  check "gh search prs (review-requested) argv" \
+    "$(grep '^search prs --review-requested=@me' "$GH_LOG")" \
+    "search prs --review-requested=@me --state=open --limit 50 --json number,title,repository,url"
+  check "gh search prs (author) argv" \
+    "$(grep '^search prs --author=@me' "$GH_LOG")" \
+    "search prs --author=@me --state=open --limit 50 --json number,title,repository,url"
+  check "gh search issues (assignee) argv" \
+    "$(grep '^search issues --assignee=@me' "$GH_LOG")" \
+    "search issues --assignee=@me --state=open --limit 50 --json number,title,repository,url"
+  check "gh search issues (owner) argv" \
+    "$(grep '^search issues --owner=@me' "$GH_LOG")" \
+    "search issues --owner=@me --state=open --limit 50 --json number,title,repository,url"
 
-  if grep -Eq 'org:|user:' <<<"$pr_call$issue_call"; then
-    bad "no org:/user: qualifier anywhere in gh invocations (got: $pr_call / $issue_call)"
+  if grep -Eq 'org:|user:' "$GH_LOG"; then
+    bad "no org:/user: qualifier anywhere in gh invocations (got: $(cat "$GH_LOG"))"
   else
     ok "no org:/user: qualifier anywhere in gh invocations"
   fi
 
-  # Confirm the {"name","nameWithOwner"} repository shape is parsed and
-  # priority weights/type tags still apply to the new subcommand's output.
+  # Confirm the {"name","nameWithOwner"} repository shape is parsed and the
+  # STATUS/CONTEXT columns carry the right values (STATUS replaced the old
+  # numeric weight; CONTEXT replaced the old "Repo: <name>" detail text).
   local pr_line issue_line
   pr_line="$(grep 'GHTEST-review-me' <<<"$out" || true)"
   issue_line="$(grep 'GHTEST-assigned-me' <<<"$out" || true)"
 
   case "$pr_line" in
-    *"(90)"*"Repo: athal7/kb"*) ok "review-requested PR weighted 90 with repository.nameWithOwner parsed (got: $pr_line)" ;;
-    *) bad "review-requested PR weighted 90 with repository.nameWithOwner parsed (got: $pr_line)" ;;
+    "REVIEW REQUESTED"*"athal7/kb"*) ok "review-requested PR gets REVIEW REQUESTED status with repo as context (got: $pr_line)" ;;
+    *) bad "review-requested PR gets REVIEW REQUESTED status with repo as context (got: $pr_line)" ;;
   esac
 
   case "$issue_line" in
-    *"(75)"*"Repo: athal7/kb"*) ok "assigned issue weighted 75 with repository.nameWithOwner parsed (got: $issue_line)" ;;
-    *) bad "assigned issue weighted 75 with repository.nameWithOwner parsed (got: $issue_line)" ;;
+    "ASSIGNED"*"athal7/kb"*) ok "assigned issue gets ASSIGNED status with repo as context (got: $issue_line)" ;;
+    *) bad "assigned issue gets ASSIGNED status with repo as context (got: $issue_line)" ;;
+  esac
+
+  # Authored PR with failing checks/changes-requested/conflict/new comments
+  # is flagged NEEDS ATTENTION, with the specific reasons in the details
+  # column, resolved via the `gh pr view` follow-up call.
+  local authored_line
+  authored_line="$(grep 'GHTEST-authored-me' <<<"$out" || true)"
+  case "$authored_line" in
+    "NEEDS ATTENTION"*"athal7/kb"*"Changes Requested, Merge Conflict, Checks Failing, New Comments"*)
+      ok "authored PR needing attention gets NEEDS ATTENTION status with reasons in details (got: $authored_line)" ;;
+    *) bad "authored PR needing attention gets NEEDS ATTENTION status with reasons in details (got: $authored_line)" ;;
+  esac
+
+  # Issue in an owned repo, not assigned to me, still surfaces (OPEN status).
+  local repo_issue_line
+  repo_issue_line="$(grep 'GHTEST-repo-issue' <<<"$out" || true)"
+  case "$repo_issue_line" in
+    "OPEN"*"athal7/kb"*) ok "owned-repo issue (not assigned to me) appears with OPEN status (got: $repo_issue_line)" ;;
+    *) bad "owned-repo issue (not assigned to me) appears with OPEN status (got: $repo_issue_line)" ;;
+  esac
+
+  # De-dupe: GHTEST-assigned-me matches both the assignee and owner queries
+  # (it's in the fixture's owner=@me response too) but must appear exactly
+  # once, keeping the more specific "assigned" variant (ASSIGNED, not OPEN).
+  local assigned_count
+  assigned_count="$(grep -c 'GHTEST-assigned-me' <<<"$out")"
+  check "issue matching both assignee and owner queries appears exactly once" "$assigned_count" "1"
+  case "$issue_line" in
+    "ASSIGNED"*) ok "de-duped issue keeps the more specific ASSIGNED status, not OPEN" ;;
+    *) bad "de-duped issue keeps the more specific ASSIGNED status, not OPEN (got: $issue_line)" ;;
   esac
 }
 test_gh_global_search_scope
+
+# ---------------------------------------------------------------------------
+# repo_path resolution must match a GH repo against local directories by
+# their actual `git remote origin` (not a maintained/committed mapping --
+# personal directory shorthands would leak real repo/org names into this
+# public dotfiles repo), so a repo cloned under a shorthand name (e.g.
+# "bigproj" for a repo actually named "big-project-name") still resolves.
+echo
+echo "== repo_path git-remote auto-detection regression =="
+
+REPODIR_BIN="$WORK/bin-repodirs"
+mkdir -p "$REPODIR_BIN"
+
+# A real local git repo whose directory name ("bigproj") does not match
+# its own remote's repo name ("big-project-name") -- exactly the
+# shorthand-clone case. Generic placeholder org/repo names throughout
+# this test on purpose -- no real repos/orgs in test fixtures.
+FAKE_CODE_DIR="$WORK/fakecode"
+mkdir -p "$FAKE_CODE_DIR/bigproj"
+env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX git -C "$FAKE_CODE_DIR/bigproj" init -q
+env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX git -C "$FAKE_CODE_DIR/bigproj" remote add origin "https://github.com/myorg/big-project-name.git"
+
+cat > "$REPODIR_BIN/chezmoi" <<STUB
+#!/bin/sh
+if [ "\$1" = "data" ]; then
+  cat <<JSON
+{
+  "calendars": {},
+  "reminders": {},
+  "codeDir": "$FAKE_CODE_DIR"
+}
+JSON
+  exit 0
+fi
+echo "fake chezmoi: unexpected invocation: \$*" >&2
+exit 99
+STUB
+chmod +x "$REPODIR_BIN/chezmoi"
+
+cat > "$REPODIR_BIN/gh" <<'STUB'
+#!/bin/sh
+case "$*" in
+  "search prs --review-requested=@me"*)
+    cat <<'JSON'
+[{"number": 9, "title": "REPODIRTEST-shorthand", "repository": {"name": "big-project-name", "nameWithOwner": "myorg/big-project-name"}, "url": "https://github.com/myorg/big-project-name/pull/9"}]
+JSON
+    ;;
+  *) echo "[]" ;;
+esac
+exit 0
+STUB
+chmod +x "$REPODIR_BIN/gh"
+
+cat > "$REPODIR_BIN/ical" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$REPODIR_BIN/ical"
+
+cat > "$REPODIR_BIN/remindctl" <<'STUB'
+#!/bin/sh
+echo "[]"
+exit 0
+STUB
+chmod +x "$REPODIR_BIN/remindctl"
+
+cat > "$REPODIR_BIN/security" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+chmod +x "$REPODIR_BIN/security"
+
+test_repo_path_git_remote_autodetect() {
+  local out repo_line
+  out="$(HOME="$TEST_HOME" PATH="$REPODIR_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
+  repo_line="$(grep 'REPODIRTEST-shorthand' <<<"$out" || true)"
+  case "$repo_line" in
+    *"REPO_PATH:$FAKE_CODE_DIR/bigproj"*) ok "repo_path matches the shorthand-named local clone via its git remote (got: $repo_line)" ;;
+    *) bad "repo_path matches the shorthand-named local clone via its git remote (got: $repo_line)" ;;
+  esac
+}
+test_repo_path_git_remote_autodetect
 
 # ---------------------------------------------------------------------------
 # Regression for get_ical_path() preferring `which ical` over the
@@ -667,6 +812,22 @@ check_hint "GH (no Linear link) hint" \
 check_hint "REM hint" "⌥x complete" \
   "m.hint_for('REM')"
 
+echo
+echo "== slugify() title-to-slug =="
+
+check "slugify: lowercases and hyphenates" \
+  "$(ACTIONS_FOR_HELPER "print(m.slugify('Fix the login bug!'))")" \
+  "fix-the-login-bug"
+check "slugify: collapses repeated punctuation/whitespace" \
+  "$(ACTIONS_FOR_HELPER "print(m.slugify('  Weird---Title!!  '))")" \
+  "weird-title"
+check "slugify: trims to max_len at a hyphen boundary, never mid-word" \
+  "$(ACTIONS_FOR_HELPER "print(m.slugify('one two three four five six seven', max_len=15))")" \
+  "one-two-three"
+check "slugify: empty/non-alnum input falls back to a generic slug" \
+  "$(ACTIONS_FOR_HELPER "print(m.slugify('!!!'))")" \
+  "session"
+
 test_get_list_emits_hint_field() {
   local out gh_line hint_field
   out="$(HOME="$TEST_HOME" PATH="$GH_BIN:$PATH" env -u LINEAR_API_TOKEN -u LINEAR_TOKEN python3 "$ATTENTION_LIST")"
@@ -695,6 +856,7 @@ OPEN_LOG="$WORK/open-invocations.log"; : > "$OPEN_LOG"
 REMINDCTL_ACT_LOG="$WORK/remindctl-act-invocations.log"; : > "$REMINDCTL_ACT_LOG"
 GH_ACT_LOG="$WORK/gh-act-invocations.log"; : > "$GH_ACT_LOG"
 PBCOPY_LOG="$WORK/pbcopy-invocations.log"; : > "$PBCOPY_LOG"
+AOE_CMD_LOG="$WORK/aoe-cmd-invocations.log"; : > "$AOE_CMD_LOG"
 
 cat > "$INTERACT_BIN/open" <<STUB
 #!/bin/sh
@@ -724,17 +886,24 @@ exit 0
 STUB
 chmod +x "$INTERACT_BIN/pbcopy"
 
+cat > "$INTERACT_BIN/aoe-cmd" <<STUB
+#!/bin/sh
+echo "\$*" >> "$AOE_CMD_LOG"
+exit 0
+STUB
+chmod +x "$INTERACT_BIN/aoe-cmd"
+
 # Fixture lines matching get_list()'s real 3-field output shape
 # (display\tmetadata\thint). The hint field's exact content doesn't matter
 # to act() (it only reads the display portion and metadata tail), so a
 # placeholder is fine here.
 TAB=$'\t'
-FIX_GH_LINE="🐙 [GH] (90) #42 Test PR - Review Requested | Repo: athal7/kb ${TAB}| ID:42 | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
-FIX_GH_LINKED_LINE="🐙 [GH] (95) #42 Test PR - Review Requested | Repo: athal7/kb | 🎯 Linear: ABC-1 (State: Todo) ${TAB}| ID:42 | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID:db-uuid | LINEAR_URL:https://linear.app/abc/issue/ABC-1 | REMINDER_ID:${TAB}hint"
-FIX_REM_LINE="📝 [REM] (85) Buy milk - List: Personal | Prio: HIGH ${TAB}| ID:r1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
-FIX_CAL_LINE="📅 [CAL] (50) Team Sync - Time: 10:00 ${TAB}| ID:e1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
-FIX_CAL_MULTI_LINE="📅 [CAL] (90) Team Sync - Time: 10:00 | 📝 Reminder: prep ${TAB}| ID:e1 | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:r1,r2,r3${TAB}hint"
-FIX_LIN_LINE="🎯 [LIN] (65) [ABC-1] Fix bug - State: Todo ${TAB}| ID:ABC-1 | DATABASE_ID:db-uuid | URL:https://linear.app/abc/issue/ABC-1 | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
+FIX_GH_LINE="REVIEW REQUESTED  athal7/kb  Test PR   ${TAB}| TYPE:GH | ID:42 | SLUG:test-pr | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
+FIX_GH_LINKED_LINE="REVIEW REQUESTED  athal7/kb  Test PR  Linear ABC-1: TODO ${TAB}| TYPE:GH | ID:42 | SLUG:test-pr | DATABASE_ID: | URL:https://github.com/athal7/kb/pull/42 | REPO_PATH:/tmp/repo | LINEAR_DB_ID:db-uuid | LINEAR_URL:https://linear.app/abc/issue/ABC-1 | REMINDER_ID:${TAB}hint"
+FIX_REM_LINE="HIGH  Personal  Buy milk   ${TAB}| TYPE:REM | ID:r1 | SLUG:buy-milk | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
+FIX_CAL_LINE="ALL DAY  Work  Team Sync   ${TAB}| TYPE:CAL | ID:e1 | SLUG:team-sync | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
+FIX_CAL_MULTI_LINE="ALL DAY  Work  Team Sync  Reminder: prep ${TAB}| TYPE:CAL | ID:e1 | SLUG:team-sync | DATABASE_ID: | URL: | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:r1,r2,r3${TAB}hint"
+FIX_LIN_LINE="TODO  MyProject  Fix bug   ${TAB}| TYPE:LIN | ID:ABC-1 | SLUG:fix-bug | DATABASE_ID:db-uuid | URL:https://linear.app/abc/issue/ABC-1 | REPO_PATH: | LINEAR_DB_ID: | LINEAR_URL: | REMINDER_ID:${TAB}hint"
 
 # run_act <key> <line> [stdin] — invokes `attention-list act <key> <line>`,
 # optionally feeding <stdin> (for merge-confirm/comment/label prompts, which
@@ -773,7 +942,7 @@ fi
 : > "$PBCOPY_LOG"
 run_act "alt-y" "$FIX_CAL_LINE"
 check "CAL alt-y exits 0" "$ACT_RC" "0"
-if grep -q 'CAL' "$PBCOPY_LOG"; then
+if grep -q 'Team Sync' "$PBCOPY_LOG"; then
   ok "CAL alt-y copies the row to the clipboard"
 else
   bad "CAL alt-y copies the row to the clipboard (got: $(cat "$PBCOPY_LOG"))"
@@ -918,6 +1087,38 @@ if [ -s "$GH_ACT_LOG" ]; then
   bad "merge confirm EOF must not invoke gh pr merge (got: $(cat "$GH_ACT_LOG"))"
 else
   ok "merge confirm EOF does not invoke gh pr merge"
+fi
+
+echo
+echo "-- session dispatch (alt-s): title-based slug, no issue-number/timestamp naming --"
+
+: > "$AOE_CMD_LOG"
+run_act "alt-s" "$FIX_GH_LINE"
+check "GH alt-s exits 0" "$ACT_RC" "0"
+gh_session_call="$(cat "$AOE_CMD_LOG")"
+case "$gh_session_call" in
+  *"-n test-pr -b -w test-pr "*)
+    ok "GH alt-s names session/worktree branch from the title slug 'test-pr' (got: $gh_session_call)" ;;
+  *)
+    bad "GH alt-s names session/worktree branch from the title slug 'test-pr' (got: $gh_session_call)" ;;
+esac
+case "$gh_session_call" in
+  *"issue-42"*) bad "GH alt-s must not name the session/branch after the issue number (got: $gh_session_call)" ;;
+  *) ok "GH alt-s does not name the session/branch after the issue number" ;;
+esac
+
+: > "$AOE_CMD_LOG"
+run_act "alt-s" "$FIX_GH_LINE"
+second_call="$(cat "$AOE_CMD_LOG")"
+check "GH alt-s produces the identical slug on a repeat invocation (no timestamp suffix)" "$second_call" "$gh_session_call"
+
+: > "$AOE_CMD_LOG"
+run_act "alt-s" "$FIX_LIN_LINE"
+check "LIN alt-s exits 0" "$ACT_RC" "0"
+if grep -q -- '-n fix-bug ' "$AOE_CMD_LOG"; then
+  ok "LIN alt-s names the session from the title slug 'fix-bug' (got: $(cat "$AOE_CMD_LOG"))"
+else
+  bad "LIN alt-s names the session from the title slug 'fix-bug' (got: $(cat "$AOE_CMD_LOG"))"
 fi
 
 # ---------------------------------------------------------------------------
