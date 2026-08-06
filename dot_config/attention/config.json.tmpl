@@ -1,0 +1,27 @@
+{{- /* Renders the attention CLI's config from the same calendars/reminders
+   data other tools share (see local.yaml.example) -- only entries flagged
+   attention_check: true contribute a calendar/reminder-list name here.
+   The Linear API token is baked in from the macOS keychain at apply time
+   (never persisted anywhere else); the attention tool itself has no
+   keychain dependency, it just reads linear.apiToken from this file. */ -}}
+{{- $calNames := list -}}
+{{- range $k, $v := .calendars -}}
+{{- if and (kindIs "map" $v) (dig "attention_check" false $v) -}}
+{{- $calNames = append $calNames (dig "name" "" $v) -}}
+{{- end -}}
+{{- end -}}
+{{- $remLists := list -}}
+{{- range $k, $v := .reminders -}}
+{{- if and (kindIs "map" $v) (dig "attention_check" false $v) -}}
+{{- $remLists = append $remLists (dig "name" "" $v) -}}
+{{- end -}}
+{{- end -}}
+{{- $config := dict
+      "codeDir" .codeDir
+      "plugins" (list "calendar" "reminders" "github" "linear")
+      "calendar" (dict "names" $calNames)
+      "reminders" (dict "lists" $remLists)
+      "github" (dict)
+      "linear" (dict "apiToken" (output "security" "find-generic-password" "-s" "chezmoi" "-a" "linear_api_key" "-w" | trim))
+-}}
+{{ $config | toPrettyJson }}

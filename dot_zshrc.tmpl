@@ -54,27 +54,3 @@ export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
 # Enable reverse search (ctrl-r)
 bindkey '^R' history-incremental-search-backward
-
-# Prioritized interactive multi-service attention/inbox triage via fzf.
-# Single fzf screen: hotkeys act immediately on the highlighted row, with
-# their availability shown live in the footer as the cursor moves.
-attention() {
-  local out key row
-  # Loop back to the dashboard after each action so triage continues until
-  # the user backs all the way out (Esc at the dashboard) -- that's the
-  # only quit path now. --height/--layout=reverse keep fzf off the
-  # alt-screen so action output (e.g. "Copied to clipboard!") stays visible
-  # on the terminal instead of being wiped before the dashboard re-renders.
-  while true; do
-    out=$(attention-list 2>/dev/null | fzf --ansi --height ~60% --layout=reverse \
-      --header "Hotkeys act immediately on this row · Enter = primary action · Esc = quit" \
-      -d '\t' --with-nth 1 \
-      --expect="$(attention-list expect-keys)" \
-      --footer-border=line --bind 'start,focus:transform-footer:printf "%s\n" {3}')
-    [[ -z "$out" ]] && break
-    key=${out%%$'\n'*}
-    row=${out#*$'\n'}
-    attention-list act "$key" "$row"
-  done
-}
-alias att=attention
