@@ -119,6 +119,7 @@ packages:
     - name: lua-language-server
     - name: bash-language-server
     - name: yaml-language-server
+    - name: witr
 
   # aoe (Agent of Empires) plugins — installed/updated via
   # run_onchange_after_plugins-aoe.sh.tmpl. A list from day one (even with a
