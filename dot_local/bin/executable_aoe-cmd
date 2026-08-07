@@ -11,9 +11,9 @@
 # session persists and is reviewable later via `aoe`/`aoe serve`, unlike
 # blocking on an HTTP call ever did.
 #
-# Launching is two calls, not one: `aoe add DIR --tool opencode --title
-# TITLE` to create the session record, then `aoe session start ID` to
-# actually start the tmux pane running opencode. This is deliberately NOT
+# Launching is two calls, not one: `aoe add DIR --title TITLE` to create the
+# session record, then `aoe session start ID` to actually start the tmux pane.
+# This is deliberately NOT
 # `aoe add ... -l/--launch`, which tries to interactively attach to the new
 # tmux session right after creating it — in the non-TTY context this script
 # always runs in (a LaunchAgent has no controlling terminal), that attach
@@ -121,7 +121,7 @@ fi
 
 title="${name}-$(date +%Y%m%d-%H%M%S)"
 
-set -- "$dir" --tool opencode --title "$title"
+set -- "$dir" --title "$title"
 if [ -n "$worktree" ]; then
   set -- "$@" --worktree "$worktree"
 fi

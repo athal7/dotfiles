@@ -125,13 +125,17 @@ test_happy_path() {
   send_line="$(grep '^send' "$AOE_LOG")"
 
   case "$add_line" in
-    *"add	/tmp/proj	--tool	opencode	--title	audit-"*) ok "aoe add called with --tool opencode (no -l) and prefixed title" ;;
+    *"add	/tmp/proj	--title	audit-"*) ok "aoe add called with --title and prefixed title (no -l)" ;;
     *) bad "aoe add args (got: $add_line)" ;;
   esac
 
   case "$add_line" in
     *"-l"*) bad "aoe add should not be called with -l (got: $add_line)" ;;
     *) ok "aoe add called without -l" ;;
+  esac
+  case "$add_line" in
+    *"--tool"*) bad "aoe add should not specify --tool (uses default)" ;;
+    *) ok "aoe add does not specify --tool (uses default)" ;;
   esac
 
   case "$add_line" in
@@ -182,7 +186,7 @@ test_worktree_passthrough() {
   add_line="$(grep '^add' "$AOE_LOG")"
 
   case "$add_line" in
-    *"--tool	opencode	--title	audit-"*) ok "aoe add still called with --tool opencode and prefixed title when -w/-b set" ;;
+    *"--title	audit-"*) ok "aoe add called with --title and prefixed title when -w/-b set" ;;
     *) bad "aoe add args with -w/-b (got: $add_line)" ;;
   esac
 

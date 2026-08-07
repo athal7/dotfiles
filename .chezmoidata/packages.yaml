@@ -220,9 +220,9 @@ packages:
     # plugin array; declared here for the repo's package-registry convention).
     - name: npm:@tarquinen/opencode-dcp
       version: "3.1.12"
-    # Coding agent needed for `omp`/`pi` (selectable per-session via aoe's
-    # --tool flag, gated by the `pi` entry in each subagent's `enabled` list
-    # in .chezmoidata/agents.yaml) to render in aoe's structured view natively.
+    # Coding agent needed for `omp`/`pi` (gated by the `pi` entry in each
+    # subagent's `enabled` list in .chezmoidata/agents.yaml) to render in
+    # aoe's structured view natively.
     - name: npm:@oh-my-pi/pi-coding-agent
       version: latest
     - name: npm:@google/jules
