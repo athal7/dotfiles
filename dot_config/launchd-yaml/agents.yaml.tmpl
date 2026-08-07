@@ -181,8 +181,8 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-  mlx-qwen-server:
-    Label: com.$USER.mlx-qwen-server
+  mlx-server:
+    Label: com.$USER.mlx-server
     ProgramArguments:
       # Runs through a launcher shim (dot_local/bin/executable_mlx-lm-server-launcher.tmpl)
       # instead of the bare mlx_lm.server mise shim: it monkeypatches
@@ -210,14 +210,42 @@ launchagents:
       - "1"
       - --prompt-concurrency
       - "1"
-      # Cap generation length to prevent runaway output.
+      # Cap generation length to the same value advertised to
+      # omp/opencode via models.yaml's local_model.max_tokens, so the
+      # server's actual cap matches what clients are told they can request.
       - --max-tokens
-      - "2048"
+      - "{{ .local_model.max_tokens }}"
+      # KV-cache bound (mlx-lm#883/#1666 mitigation): the wired-limit shim
+      # in the launcher lets memory spill into swap instead of panicking,
+      # but unbounded KV-cache growth across ~20 concurrent aoe sessions
+      # was still driving active memory past physical RAM (48-60GB
+      # observed active/peak on a 48GB machine, 34.8GB swap used). Bound
+      # both the per-conversation cache count and total cache bytes.
+      - --prompt-cache-size
+      - "{{ .local_model.prompt_cache_size }}"
+      - --prompt-cache-bytes
+      - "{{ .local_model.prompt_cache_bytes }}"
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
-    StandardOutPath: $HOME/Library/Logs/mlx-qwen-server.log
-    StandardErrorPath: $HOME/Library/Logs/mlx-qwen-server.error.log
+    StandardOutPath: $HOME/Library/Logs/mlx-server.log
+    StandardErrorPath: $HOME/Library/Logs/mlx-server.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      HOME: $HOME
+
+  mlx-watchdog:
+    Label: com.$USER.mlx-watchdog
+    ProgramArguments:
+      # Detects mlx_lm.server's uncaught background-thread crash (dead
+      # generation thread, HTTP layer still answering health checks) and
+      # force-restarts mlx-server — see
+      # dot_local/bin/executable_mlx-watchdog for the full writeup.
+      - $HOME/.local/bin/mlx-watchdog
+    StartInterval: 60
+    RunAtLoad: true
+    StandardOutPath: $HOME/Library/Logs/mlx-watchdog.log
+    StandardErrorPath: $HOME/Library/Logs/mlx-watchdog.log
     EnvironmentVariables:
       PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME

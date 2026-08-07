@@ -31,7 +31,7 @@ homebridge|bonjour-hap: send EADDRNOTAVAIL
 homebridge|request to https://oauth2\.googleapis\.com/token failed
 "
 
-# mlx-qwen-server: benign startup race — a previous mlx_lm.server process is
+# mlx-server: benign startup race — a previous mlx_lm.server process is
 # still slowly releasing port 8091 (unloading a 30B-param model) while
 # launchd's KeepAlive respawns a new instance every ~10s. The race self-heals
 # within ~90s once the old process fully exits, with zero service disruption
@@ -39,13 +39,13 @@ homebridge|request to https://oauth2\.googleapis\.com/token failed
 # in 29+ hours of normal operation since the one occurrence on 2026-07-14
 # (day this LaunchAgent was first deployed).
 EXCLUDE_PATTERNS="$EXCLUDE_PATTERNS
-mlx-qwen-server|OSError: \[Errno 48\] Address already in use
-mlx-qwen-server|RuntimeError: cannot schedule new futures after interpreter shutdown
-mlx-qwen-server|raise RuntimeError\('cannot schedule new futures after '
-mlx-qwen-server|Exception in thread Thread-1 \(_generate\):
+mlx-server|OSError: \[Errno 48\] Address already in use
+mlx-server|RuntimeError: cannot schedule new futures after interpreter shutdown
+mlx-server|raise RuntimeError\('cannot schedule new futures after '
+mlx-server|Exception in thread Thread-1 \(_generate\):
 "
 
-# mlx-qwen-server: two classes of upstream/library noise from mlx_lm.server,
+# mlx-server: two classes of upstream/library noise from mlx_lm.server,
 # neither indicating a defect in this repo.
 #
 # 1. "tool text was likely truncated mid-generation" — raised by
@@ -61,9 +61,9 @@ mlx-qwen-server|Exception in thread Thread-1 \(_generate\):
 #    mid-response. Standard library boilerplate, not mlx_lm-specific. Server
 #    keeps running.
 EXCLUDE_PATTERNS="$EXCLUDE_PATTERNS
-mlx-qwen-server|tool text was likely truncated mid-generation
-mlx-qwen-server|Exception occurred during processing of request from
-mlx-qwen-server|BrokenPipeError: \[Errno 32\] Broken pipe
+mlx-server|tool text was likely truncated mid-generation
+mlx-server|Exception occurred during processing of request from
+mlx-server|BrokenPipeError: \[Errno 32\] Broken pipe
 "
 
 # Return the exclusion pattern for a service name, or empty string if none.

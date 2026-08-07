@@ -84,6 +84,10 @@ Static and blast-radius review is **not** inline — it happens automatically on
 Approved but not pushed. Order matters — store steps run *after* the push, since archiving early finalizes durable state for code that may still change.
 
 1. **Commit and push.** Load `commit`, then `push`. For PR repos this opens the draft request; otherwise it's the whole ship step.
+
+   **Tracker auto-transition:** When a PR is linked to an issue (issue key in branch name, title, or body), the tracker-GitHub integration auto-transitions issue status and posts PR linkage. Don't manually update the issue or add comments—races with the integration.
+
+   **List state names before guessing:** State names vary per org/team (e.g., 'Code Review' vs 'In Review' have distinct meanings). Query the tracker's actual available states instead of assuming similarity.
 2. **Watch CI and automated review** per the `push` skill. A long-pending approval is not the finish line — the steps below still run in the same pass. CI failure routes like any Review finding: code fix → `build`, approach problem → `plan`, flaky → re-run. Never terminal.
 3. **Merge delta specs into the durable store — before archiving.** Read both sides, integrate, preserve existing scenarios, flag conflicts or supersession to the human. Detection only; never auto-reconcile. `openspec archive` does not do this.
 4. **Archive:** `openspec archive <name> --skip-specs -y` from the repo root. `--skip-specs` avoids the lossy replace-only auto-fold; `-y` stops it hanging.

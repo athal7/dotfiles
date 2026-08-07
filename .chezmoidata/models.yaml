@@ -1,5 +1,5 @@
 # Single source of truth for the locally-hosted mlx model. Consumed by:
-#   - dot_config/launchd-yaml/agents.yaml.tmpl   (mlx-qwen-server ProgramArguments)
+#   - dot_config/launchd-yaml/agents.yaml.tmpl   (mlx-server ProgramArguments)
 #   - dot_omp/private_agent/models.yml.tmpl      (omp mlx provider)
 #   - dot_config/opencode/opencode.json.tmpl     (opencode mlx provider)
 # NOTE: unrelated to run_once_after_mlx-gpu-wired-limit.sh's
@@ -15,3 +15,19 @@ local_model:
   name: qwen3.6-35b-a3b-optiq
   context_window: 128000
   max_tokens: 8192
+  # KV-cache bound for mlx_lm.server (mlx-lm#883/#1666 mitigation): with the
+  # wired-limit shim disabled, unbounded KV cache growth spills into swap
+  # instead of panicking, which is safer but still starves the whole box.
+  # 10GiB budget across at most 4 distinct cached conversations keeps total
+  # process memory (weights ~18-20GB + cache) comfortably under the 48GB
+  # physical ceiling even with ~20 concurrent aoe sessions.
+  prompt_cache_size: 4
+  prompt_cache_bytes: 10737418240
+  # Extra headroom against mid-tool-loop compaction overshoot: default
+  # threshold is contextWindow - max(15%, reserveTokens) = ~108800, but a
+  # long uninterrupted tool loop can outrun that check before it fires
+  # (observed 150-160k-token requests on this 128k-window model before
+  # this was added). aoe-model-class applies this only for projects
+  # actually routed to this model — see its retry.modelFallback note for
+  # why cross-model drift is the other, larger half of this mitigation.
+  compaction_threshold_tokens: 70000

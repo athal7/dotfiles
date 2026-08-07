@@ -22,7 +22,7 @@ Batch the whole cycle: fix every actionable thread first, then **one** commit an
 
 **QA before that push** if any fix touches views, templates, CSS, or frontend — once, covering every UI-touching fix. Route findings as implement's Review does. Skip entirely when no fix touches UI.
 
-**Resolve silently, in one pass** — the resolution is the acknowledgment. Resolution only counts once the fix is pushed.
+**Resolve silently, in one pass** — no comment, just mark resolved.
 
 **Batch the non-fix replies** — declines, deferrals, questions, added context. Draft them together, present every reply's full text as one approval, then post consecutively.
 
@@ -34,8 +34,8 @@ Resolve preserving both sides' intent — examine both, never mechanically accep
 
 ## 5. Re-request
 
-Present a summary. After approval, mark ready for review (the linked issue's status follows automatically) and re-request from every previous reviewer with a comment summarizing what was addressed.
+Present a summary. After approval, mark ready for review (the linked issue's status follows automatically) and re-request from every previous reviewer — no comment, the diff speaks for itself.
 
 **Refresh the QA evidence** in the description if a prior ship created the marked block: an in-place read-modify-write of the whole span between the `<!-- qa:start -->` / `<!-- qa:end -->` markers — never a new comment. Mechanics in `qa-report-publish`.
 
-Push via `commit` and `push`. Reply and re-request content is shown in full for steering; batch same-turn replies into one presentation.
+Push via `commit` and `push`. Reply content is shown in full for steering; batch same-turn replies into one presentation.

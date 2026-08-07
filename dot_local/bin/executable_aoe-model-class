@@ -52,7 +52,28 @@ main() {
         | from_entries)
     }' 2>/dev/null)"
 
-  write .omp/config.yml "$(printf '%s' "$classes" | jq '{modelRoles: .}' 2>/dev/null | yq -P 2>/dev/null)"
+  # retry.modelFallback: false + a tighter compaction.thresholdTokens are
+  # applied only when this org's classes actually route to the local mlx
+  # model. Root cause (2026-08-07 incident): omp's global
+  # retry.fallbackChains let a transient mlx hiccup silently reroute a
+  # session onto a much-larger-context cloud model; the session grew past
+  # mlx's contextWindow while away, then retry.fallbackRevertPolicy's
+  # cooldown-expiry reverted it back onto mlx with an oversized context,
+  # crashing mlx_lm.server (can1357/oh-my-pi#7952, ml-explore/mlx-lm#1672).
+  # Pinning modelFallback off for these orgs means an mlx outage is
+  # retried against mlx itself (no model switch) instead of drifting
+  # cross-model. The threshold override guards the other half: a
+  # mlx-only session's own mid-tool-loop growth can still outrun the
+  # default compaction check before it fires.
+  write .omp/config.yml "$(printf '%s' "$data" | jq --argjson c "$classes" '
+      (.local_model.provider + "/" + .local_model.id) as $localId
+      | ($c | to_entries | any(.value == $localId)) as $usesLocal
+      | {modelRoles: $c}
+        + (if $usesLocal then {
+            retry: {modelFallback: false},
+            compaction: {thresholdTokens: .local_model.compaction_threshold_tokens}
+          } else {} end)
+    ' 2>/dev/null | yq -P 2>/dev/null)"
 }
 
 main
