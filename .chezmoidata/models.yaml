@@ -23,9 +23,11 @@ local_model:
   # physical ceiling even with ~20 concurrent aoe sessions.
   prompt_cache_size: 4
   prompt_cache_bytes: 10737418240
-  # Model that performs compaction/summarization for sessions running on
-  # this local model. Compaction has no dedicated role — by default it
-  # reuses whichever model is running the session, which would otherwise
-  # queue summarization calls behind the same decode-concurrency=1 slot as
-  # real turns. Point it at a real, fast cloud model instead.
-  compaction_model: anthropic/claude-haiku-4-5
+  # Extra headroom against mid-tool-loop compaction overshoot: default
+  # threshold is contextWindow - max(15%, reserveTokens) = ~108800, but a
+  # long uninterrupted tool loop can outrun that check before it fires
+  # (observed 150-160k-token requests on this 128k-window model before
+  # this was added). aoe-model-class applies this only for projects
+  # actually routed to this model — see its retry.modelFallback note for
+  # why cross-model drift is the other, larger half of this mitigation.
+  compaction_threshold_tokens: 70000

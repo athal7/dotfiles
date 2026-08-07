@@ -14,8 +14,3 @@ providers:
         contextWindow: {{ .local_model.context_window }}
         maxTokens: {{ .local_model.max_tokens }}
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-        # Compaction has no dedicated model role — by default it reuses
-        # whichever model is running the session. For sessions on this
-        # local model that means summarization calls would otherwise
-        # queue behind the same decode-concurrency=1 slot as real turns.
-        compactionModel: {{ .local_model.compaction_model }}
