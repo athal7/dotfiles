@@ -1,0 +1,58 @@
+#!/bin/sh
+# mlx-watchdog — detects mlx_lm.server's uncaught background-thread crash
+# and force-restarts the agent.
+#
+# mlx_lm.server runs generation in a background thread
+# (BatchGenerator._generate). An uncaught fatal exception there — observed:
+# `RuntimeError: [metal::malloc] Resource limit (...) exceeded`, triggered
+# by a prompt that overruns the model's context window (e.g. a session
+# whose context grew under a larger-context model, then fell back/reverted
+# to this local model's smaller context window) — kills only that thread.
+# The HTTP server keeps answering cheap endpoints like /v1/models, so
+# ordinary health checks report healthy, but every /v1/chat/completions
+# request hangs forever: there is no other thread left to advance
+# generation. launchd's KeepAlive cannot catch this either, since the
+# process itself never exits. Related: mlx-lm#1015 (generate() has no OOM
+# recovery path), mlx-lm#1666 (this repo's own kernel-panic report on the
+# same server).
+#
+# NOT the same as the benign "Exception in thread Thread-1 (_generate)"
+# startup-race noise excluded in executable_check-error-logs (a previous
+# process still releasing the port while KeepAlive respawns a new one,
+# self-heals in ~90s). This watchdog matches only the fatal Metal
+# RuntimeError/command-buffer signature, not the generic thread-exception
+# line, so it never fires on that benign race.
+set -eu
+
+LOG="$HOME/Library/Logs/mlx-server.error.log"
+STATE_DIR="$HOME/.cache/mlx-watchdog"
+OFFSET_FILE="$STATE_DIR/offset"
+COOLDOWN_FILE="$STATE_DIR/last-restart"
+COOLDOWN_SECONDS=120
+LABEL="com.$(whoami).mlx-server"
+
+mkdir -p "$STATE_DIR"
+[ -f "$LOG" ] || exit 0
+
+log_size=$(wc -c <"$LOG" | tr -d ' ')
+offset=$(cat "$OFFSET_FILE" 2>/dev/null || echo 0)
+
+# Log rotated/truncated since last check: rescan from the top.
+if [ "$log_size" -lt "$offset" ]; then
+	offset=0
+fi
+
+new_content=$(tail -c "+$((offset + 1))" "$LOG" 2>/dev/null || true)
+echo "$log_size" >"$OFFSET_FILE"
+
+if printf '%s' "$new_content" | grep -qE 'RuntimeError: \[metal::(malloc|command)|\[METAL\] Command buffer execution failed'; then
+	now=$(date +%s)
+	last=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo 0)
+	if [ $((now - last)) -ge "$COOLDOWN_SECONDS" ]; then
+		echo "$(date -Iseconds) detected fatal Metal error in $LOG, restarting $LABEL"
+		echo "$now" >"$COOLDOWN_FILE"
+		launchctl kickstart -k "gui/$(id -u)/$LABEL"
+	else
+		echo "$(date -Iseconds) fatal Metal error seen but within ${COOLDOWN_SECONDS}s cooldown, skipping restart"
+	fi
+fi

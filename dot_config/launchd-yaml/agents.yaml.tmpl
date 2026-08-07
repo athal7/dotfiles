@@ -181,8 +181,8 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-  mlx-qwen-server:
-    Label: com.$USER.mlx-qwen-server
+  mlx-server:
+    Label: com.$USER.mlx-server
     ProgramArguments:
       # Runs through a launcher shim (dot_local/bin/executable_mlx-lm-server-launcher.tmpl)
       # instead of the bare mlx_lm.server mise shim: it monkeypatches
@@ -228,8 +228,24 @@ launchagents:
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
-    StandardOutPath: $HOME/Library/Logs/mlx-qwen-server.log
-    StandardErrorPath: $HOME/Library/Logs/mlx-qwen-server.error.log
+    StandardOutPath: $HOME/Library/Logs/mlx-server.log
+    StandardErrorPath: $HOME/Library/Logs/mlx-server.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      HOME: $HOME
+
+  mlx-watchdog:
+    Label: com.$USER.mlx-watchdog
+    ProgramArguments:
+      # Detects mlx_lm.server's uncaught background-thread crash (dead
+      # generation thread, HTTP layer still answering health checks) and
+      # force-restarts mlx-server — see
+      # dot_local/bin/executable_mlx-watchdog for the full writeup.
+      - $HOME/.local/bin/mlx-watchdog
+    StartInterval: 60
+    RunAtLoad: true
+    StandardOutPath: $HOME/Library/Logs/mlx-watchdog.log
+    StandardErrorPath: $HOME/Library/Logs/mlx-watchdog.log
     EnvironmentVariables:
       PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME

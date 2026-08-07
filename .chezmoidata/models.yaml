@@ -1,5 +1,5 @@
 # Single source of truth for the locally-hosted mlx model. Consumed by:
-#   - dot_config/launchd-yaml/agents.yaml.tmpl   (mlx-qwen-server ProgramArguments)
+#   - dot_config/launchd-yaml/agents.yaml.tmpl   (mlx-server ProgramArguments)
 #   - dot_omp/private_agent/models.yml.tmpl      (omp mlx provider)
 #   - dot_config/opencode/opencode.json.tmpl     (opencode mlx provider)
 # NOTE: unrelated to run_once_after_mlx-gpu-wired-limit.sh's
