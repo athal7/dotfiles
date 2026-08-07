@@ -150,7 +150,7 @@ mouse = "auto"
 status_bar = "auto"
 
 [tools.lumen]
-command = "ANTHROPIC_API_KEY=$(security find-generic-password -s chezmoi -a anthropic_api_key -w 2>/dev/null) $HOME/.local/bin/lumen --provider claude diff --watch --save-viewed --guide --wrap main..-"
+command = "ANTHROPIC_API_KEY=$(security find-generic-password -s chezmoi -a anthropic_api_key -w 2>/dev/null) $HOME/.local/bin/lumen --provider claude diff --watch --wrap $(x=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null); x=${x#origin/}; printf %s \"${x:-main}\")..-"
 hotkey = "Alt+l"
 
 [tools.editor]
