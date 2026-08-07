@@ -28,7 +28,12 @@ orgs:
       slow: anthropic/claude-opus-5
       plan: anthropic/claude-opus-5
   your-personal-org:
-    # All-local: route every class to a locally-hosted model (no cloud spend).
+    # All-local: route every class to a locally-hosted model. Not literally
+    # zero cloud spend: models.yaml's compaction_model (mlx/default_model's
+    # compactionModel) routes context-compaction summarization for these
+    # sessions to a real cloud model (currently anthropic/claude-haiku-4-5)
+    # instead of competing with real turns for the local server's single
+    # decode-concurrency slot — small, cheap, but real API calls.
     model_class:
       default: mlx/default_model
       smol: mlx/default_model
