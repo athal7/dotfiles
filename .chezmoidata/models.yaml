@@ -15,3 +15,17 @@ local_model:
   name: qwen3.6-35b-a3b-optiq
   context_window: 128000
   max_tokens: 8192
+  # KV-cache bound for mlx_lm.server (mlx-lm#883/#1666 mitigation): with the
+  # wired-limit shim disabled, unbounded KV cache growth spills into swap
+  # instead of panicking, which is safer but still starves the whole box.
+  # 10GiB budget across at most 4 distinct cached conversations keeps total
+  # process memory (weights ~18-20GB + cache) comfortably under the 48GB
+  # physical ceiling even with ~20 concurrent aoe sessions.
+  prompt_cache_size: 4
+  prompt_cache_bytes: 10737418240
+  # Model that performs compaction/summarization for sessions running on
+  # this local model. Compaction has no dedicated role — by default it
+  # reuses whichever model is running the session, which would otherwise
+  # queue summarization calls behind the same decode-concurrency=1 slot as
+  # real turns. Point it at a real, fast cloud model instead.
+  compaction_model: anthropic/claude-haiku-4-5

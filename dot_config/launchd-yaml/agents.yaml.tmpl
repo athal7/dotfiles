@@ -210,9 +210,21 @@ launchagents:
       - "1"
       - --prompt-concurrency
       - "1"
-      # Cap generation length to prevent runaway output.
+      # Cap generation length to the same value advertised to
+      # omp/opencode via models.yaml's local_model.max_tokens, so the
+      # server's actual cap matches what clients are told they can request.
       - --max-tokens
-      - "2048"
+      - "{{ .local_model.max_tokens }}"
+      # KV-cache bound (mlx-lm#883/#1666 mitigation): the wired-limit shim
+      # in the launcher lets memory spill into swap instead of panicking,
+      # but unbounded KV-cache growth across ~20 concurrent aoe sessions
+      # was still driving active memory past physical RAM (48-60GB
+      # observed active/peak on a 48GB machine, 34.8GB swap used). Bound
+      # both the per-conversation cache count and total cache bytes.
+      - --prompt-cache-size
+      - "{{ .local_model.prompt_cache_size }}"
+      - --prompt-cache-bytes
+      - "{{ .local_model.prompt_cache_bytes }}"
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
