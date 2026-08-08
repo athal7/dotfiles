@@ -1,32 +1,5 @@
-{{- /* Collect per-package patterns from packages.yaml — flat format (pattern: allow/ask).
-       NOTE: $globalBash holds ONLY package perms; guardrails/allow-lists now come
-       from .chezmoidata/bash-permissions.yaml via the opencode-bash partial. */ -}}
-{{- $globalBash := dict -}}
-{{- range $list := .packages -}}
-  {{- if kindIs "slice" $list -}}
-    {{- range $entry := $list -}}
-      {{- if kindIs "map" $entry -}}
-        {{- $perms := index $entry "permissions" -}}
-        {{- if $perms -}}
-          {{- range $pattern, $action := $perms -}}
-            {{- $_ := set $globalBash $pattern $action -}}
-          {{- end -}}
-        {{- end -}}
-      {{- end -}}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-{{- /* Bash permission data: guardrails, named allow-lists, per-agent specs. */ -}}
-{{- $bp := .bashPermissions -}}
-{{- $primaryAgent := "lead" -}}
-{{- range .agents -}}
-  {{- if eq (index . "mode") "primary" -}}
-    {{- $primaryAgent = .name -}}
-  {{- end -}}
-{{- end -}}
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": {{ $primaryAgent | quote }},
   "server": {
     "hostname": "127.0.0.1"
   },
@@ -41,35 +14,22 @@
     "@tarquinen/opencode-dcp@3.1.12",
     "opencode-permission-log"
   ],
+  {{- /* default_agent, agent, tools, mcp, model, small_model, and the
+  permission.{bash,read,edit,write,task,skill,webfetch} leaves are all
+  managed by `agentcfg apply --target opencode`
+  (.chezmoiscripts/run_onchange_after_agentcfg-apply.sh.tmpl), sourced from
+  dot_config/agentcfg/. grep/glob/lsp/websearch have no registry-level
+  concept in agentcfg (see internal/render/opencode/vocab.go's
+  unsupportedCanonicals) and external_directory has no *global* registry
+  field (only per-agent) — see dot_config/agentcfg/agents.yaml.tmpl's
+  `&extdirs` anchor for the per-agent equivalent that superseded this
+  file's old global external_directory default. */ -}}
   "permission": {
-    "skill": {{ .permissions.skill | quote }},
-    "read": {{ .permissions.read | quote }},
     "grep": {{ .permissions.grep | quote }},
     "glob": {{ .permissions.find | quote }},
     "lsp": "allow",
-    "websearch": "allow",
-    "external_directory": {{ .permissions.external_directory | toPrettyJson | indent 4 | trim }},
-    "bash": {{ includeTemplate "opencode-bash" (dict "spec" $bp.agents.global "lists" $bp.lists "guardrails" $bp.guardrails "packages" $globalBash) | indent 4 | trim }}
+    "websearch": "allow"
   },
-  {{- /*
-  Per-agent skill deny lists — blocked by sst/opencode#21793
-  (permission.skill patterns not enforced). When fixed, add to each agent:
-
-  plan:  deny commit, push, chezmoi
-  build: deny commit, push, architecture
-  */ -}}
-  {{- /*
-  NOTE: always set `model` explicitly on each agent — never rely on top-level
-  model inheritance for subagents. Testing confirmed that dispatched subagents
-  inherit the CALLING AGENT's model, not the top-level default. So if
-  lead=sonnet and plan has no model field, plan runs on sonnet even though
-  the top-level default is opus.
-  */ -}}
-  "agent": {
-    {{ includeTemplate "opencode-agents" (dict "agents" .agents "bp" $bp "packages" $globalBash "classes" .model_class) | indent 4 | trim }}
-  },
-  "model": {{ index .model_class "default" | quote }},
-  "small_model": {{ index .model_class "smol" | quote }},
   "compaction": {
     "prune": true
   },
@@ -107,8 +67,6 @@
       }
     }
   },
-  "tools": {{ includeTemplate "opencode-mcp-tools" (dict "servers" .mcp.servers) | indent 2 | trim }},
-  "mcp": {{ includeTemplate "opencode-mcp-servers" (dict "servers" .mcp.servers "runlayer" .runlayer) | indent 2 | trim }},
   "formatter": {
     "rubocop": { "disabled": true },
     "ruff": { "disabled": true }

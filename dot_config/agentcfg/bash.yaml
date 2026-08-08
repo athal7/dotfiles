@@ -1,0 +1,133 @@
+# Mirrors .chezmoidata/bash-permissions.yaml's shape (guardrails + named
+# allow-lists + per-agent profile composition). One deliberate deviation:
+# `packages` below inlines the literal per-package bash patterns that
+# opencode.json.tmpl used to harvest at template time from
+# .chezmoidata/packages.yaml's `permissions:` blocks (chezmoi, git, gh, xh,
+# remindctl, the opencode CLI release). agentcfg has no equivalent
+# "harvest permissions co-located with each package" mechanism, so this is
+# a manually-synced mirror, not a reference — a package's bash permissions
+# changing in packages.yaml must be mirrored here too, or opencode's
+# agentcfg-managed bash policy silently drifts from omp's (which still
+# reads packages.yaml directly, unchanged — see AGENTS.md/summary notes).
+bash:
+  default_lists: [guardrails, packages]
+  lists:
+    # Destructive system commands — prompt the human everywhere these apply.
+    guardrails:
+      "rm -rf /*": ask
+      "rm -fr /*": ask
+      "rm -rf ~*": ask
+      "rm -fr ~*": ask
+      "rm -rf $HOME*": ask
+      "sudo *": ask
+      "dd if=*": ask
+      "dd of=*": ask
+      "mkfs*": ask
+      "diskutil *": ask
+      "shutdown*": ask
+      "reboot*": ask
+      "curl * -X POST*": ask
+      "curl * -X PUT*": ask
+      "curl * -X DELETE*": ask
+      "curl * -X PATCH*": ask
+      "curl * -d *": ask
+      "curl * --data*": ask
+      "curl * -T *": ask
+      "curl * --upload-file*": ask
+      "wget *": ask
+    # Manually mirrored from .chezmoidata/packages.yaml's per-package
+    # `permissions:` blocks — see header note above.
+    packages:
+      "chezmoi apply*": ask
+      "chezmoi-deploy*": ask
+      "chezmoi destroy*": ask
+      "chezmoi init*": ask
+      "chezmoi purge*": ask
+      "chezmoi forget*": ask
+      "chezmoi upgrade*": ask
+      "chezmoi add*": ask
+      "chezmoi diff*": allow
+      "chezmoi status*": allow
+      "chezmoi data*": allow
+      "chezmoi cat*": allow
+      "chezmoi managed*": allow
+      "chezmoi source-path*": allow
+      "git commit*": ask
+      "git push*": ask
+      "git reset --hard*": ask
+      "git reset --merge*": ask
+      "git clean -f*": ask
+      "git clean -d*": ask
+      "git checkout -- *": ask
+      "git checkout * -- *": ask
+      "git restore *": ask
+      "git restore --staged*": allow
+      "git branch -d*": ask
+      "git branch -D*": ask
+      "git stash drop*": ask
+      "git stash clear*": ask
+      "git worktree remove*": ask
+      "git -C * commit*": ask
+      "git -C * push*": ask
+      "git -C * reset --hard*": ask
+      "git -C * clean -f*": ask
+      "git status*": allow
+      "git diff*": allow
+      "git log*": allow
+      "git show*": allow
+      "git add*": allow
+      "git stash list*": allow
+      "git rev-parse*": allow
+      "git config --get*": allow
+      "git remote -v*": allow
+      "git remote show*": allow
+      "git remote get-url*": allow
+      "gh *": deny
+      "xh *GET *": allow
+      "xh *HEAD *": allow
+      "xh *mutation*": ask
+      "xh *query*": allow
+      "xh *": ask
+      "remindctl show*": allow
+      "remindctl list*": allow
+      "remindctl status*": allow
+      "remindctl *": ask
+      "opencode session *": allow
+      "opencode export *": allow
+      "opencode *": ask
+    # lead: harmless non-package navigation layered onto its allow base,
+    # plus two lead-only exceptions to the `gh *: deny` package default
+    # (Deployments API + run-log viewing have no MCP tool coverage).
+    lead:
+      "ls*": allow
+      "pwd": allow
+      "gh api */deployments*": ask
+      "gh run view*": allow
+    build:
+      "git commit*": deny
+      "git -C * commit*": deny
+    # Unused by any profile today — kept for future read-only-subagent use,
+    # mirroring bash-permissions.yaml's own dead-but-intentional entry.
+    readonly:
+      "ls*": allow
+      "pwd": allow
+      "cd *": allow
+      "echo *": allow
+      "grep *": allow
+      "find *": allow
+      "fd *": allow
+      "cat *": allow
+      "head *": allow
+      "tail *": allow
+      "wc *": allow
+      "sed *": allow
+      "sed -i*": deny
+  profiles:
+    global:
+      base: allow
+    lead:
+      base: allow
+      lists: [lead]
+    build:
+      base: allow
+      lists: [build]

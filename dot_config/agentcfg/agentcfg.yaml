@@ -1,0 +1,12 @@
+version: 1
+imports:
+  - model_classes.yaml
+  - bash.yaml
+  - mcp_servers.yaml
+  - agents.yaml
+harnesses:
+  opencode:
+    out: ~/.config/opencode/opencode.json
+  omp:
+    agents_dir: ~/.omp/agent/agents
+    bash_profile: lead
