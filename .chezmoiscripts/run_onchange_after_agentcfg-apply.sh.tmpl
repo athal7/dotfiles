@@ -35,7 +35,7 @@
 # model_classes.yaml hash: {{ include "dot_config/agentcfg/model_classes.yaml" | sha256sum }}
 # bash.yaml hash: {{ include "dot_config/agentcfg/bash.yaml" | sha256sum }}
 # mcp_servers.yaml hash: {{ include "dot_config/agentcfg/mcp_servers.yaml" | sha256sum }}
-# agents.yaml.tmpl hash: {{ include "dot_config/agentcfg/agents.yaml.tmpl" | sha256sum }}
+# workflow.yaml.tmpl hash: {{ include "dot_config/agentcfg/workflow.yaml.tmpl" | sha256sum }}
 {{- range $name := (list "lead" "plan" "qa" "build" "scout" "zoom" "slack" "atlassian" "github" "google" "linear") }}
 # prompt hash ({{ $name }}): {{ include (printf "dot_agents/prompts/%s.md" $name) | sha256sum }}
 {{- end }}

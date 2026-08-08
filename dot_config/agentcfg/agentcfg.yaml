@@ -3,7 +3,7 @@ imports:
   - model_classes.yaml
   - bash.yaml
   - mcp_servers.yaml
-  - agents.yaml
+  - workflow.yaml
 harnesses:
   opencode:
     out: ~/.config/opencode/opencode.json
