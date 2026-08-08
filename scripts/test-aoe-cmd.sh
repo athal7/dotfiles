@@ -321,6 +321,19 @@ test_ready_timeout() {
 }
 test_ready_timeout
 
+# ---------------------------------------------------------------------------
+echo "== readiness poll via omp marker =="
+
+test_omp_ready_marker() {
+  local status
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    AOE_STUB_CAPTURE_OUTPUT="$(printf '\xe2\xac\xa2 qwen3.6-35b-a3b-optiq')" \
+    run_aoe_cmd -d /tmp/proj -n audit /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 when only the omp marker is present (no opencode marker)" "$status" 0
+  check "aoe send called once via omp marker readiness" "$(send_call_count)" 1
+}
+test_omp_ready_marker
+
 echo
 echo "== summary: $pass passed, $fail failed =="
 [ "$fail" -eq 0 ]

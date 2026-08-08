@@ -45,11 +45,17 @@
 # ~/.local/share/opencode/opencode.db for those runs), because boot time
 # under real unattended conditions isn't reliably bounded by a guessed
 # constant. The fix is a bounded poll: after `aoe session start` returns,
-# repeatedly capture the pane (`aoe session capture`) and check for
-# opencode's input placeholder text, sending only once that marker appears
-# (or failing loudly if it never does within a timeout). Retrying the send
-# itself would overcomplicate a fire-and-forget tool, so there's still just
-# one `aoe send` call — only the wait before it is adaptive now.
+# repeatedly capture the pane (`aoe session capture`) and check for a ready
+# marker, sending only once one appears (or failing loudly if none does
+# within a timeout). The marker isn't fixed: `aoe`'s `session.default_tool`
+# config decides whether a dispatched session actually boots opencode or
+# omp, and the two share no "ready" text — opencode shows an input
+# placeholder ("Ask anything..."), omp has no placeholder at all but always
+# renders a bordered status bar containing a model-indicator glyph (`⬢`)
+# once its TUI is up. Both are checked; whichever the session actually
+# launches will match. Retrying the send itself would overcomplicate a
+# fire-and-forget tool, so there's still just one `aoe send` call — only the
+# wait before it is adaptive now.
 #
 # `aoe send` gets the message with a trailing space appended. All 4 real
 # scheduled jobs send a slash command (e.g. `/audit`); opencode's TUI treats
@@ -88,7 +94,11 @@
 #                           1). Override to 0 in tests.
 #   AOE_CMD_READY_MARKER    Text to look for in the captured pane that
 #                           indicates opencode's TUI is ready for input
-#                           (default "Ask anything...").
+#                           (default "Ask anything..."). Only used when the
+#                           dispatched session is actually running opencode;
+#                           omp sessions are detected via a fixed
+#                           model-indicator glyph instead (not configurable
+#                           — see the omp_ready_marker check below).
 
 set -eu
 
@@ -163,6 +173,7 @@ fi
 ready_timeout="${AOE_CMD_READY_TIMEOUT:-30}"
 poll_interval="${AOE_CMD_POLL_INTERVAL:-1}"
 ready_marker="${AOE_CMD_READY_MARKER:-Ask anything...}"
+omp_ready_marker='⬢'
 
 waited=0
 ready=0
@@ -176,12 +187,12 @@ while [ "$waited" -lt "$ready_timeout" ]; do
   waited=$((waited + poll_interval + (poll_interval == 0)))
   pane=$(aoe session capture "$id" --lines 50 --strip-ansi 2>/dev/null) || pane=""
   case "$pane" in
-    *"$ready_marker"*) ready=1; break ;;
+    *"$ready_marker"*|*"$omp_ready_marker"*) ready=1; break ;;
   esac
 done
 
 if [ "$ready" -ne 1 ]; then
-  echo "aoe-cmd: opencode TUI never became ready (no '$ready_marker' after ${ready_timeout}s) for session '$title' (id $id); not sending" >&2
+  echo "aoe-cmd: TUI never became ready (no '$ready_marker' or omp marker '$omp_ready_marker' after ${ready_timeout}s) for session '$title' (id $id); not sending" >&2
   printf '%s\n' "$pane" >&2
   exit 1
 fi
