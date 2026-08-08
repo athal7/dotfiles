@@ -75,6 +75,7 @@ packages:
         # Single pathway for GitHub interaction is the `github` MCP subagent (see
         # dot_config/opencode/prompts/github.md) — no bash gh exceptions, not even reads.
         "gh *": deny
+    - name: athal7/tap/agentcfg
     - name: athal7/tap/attention
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
