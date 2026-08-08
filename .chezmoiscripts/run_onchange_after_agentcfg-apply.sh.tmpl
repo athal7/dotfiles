@@ -1,0 +1,50 @@
+#!/bin/sh
+# Applies the agentcfg registry (dot_config/agentcfg/ -> ~/.config/agentcfg/)
+# to opencode's native config via `agentcfg apply --target opencode`.
+#
+# opencode-only, deliberately: agentcfg's omp renderer has two real gaps
+# against this repo's actual omp setup today —
+#   1. per-agent `mcp:` grants aren't expressed in omp's rendered subagent
+#      frontmatter at all (internal/render/omp/omp.go never reads
+#      registry.Agent.MCP), so running it would silently drop plan/qa/
+#      build/scout's MCP tool visibility (context7/firefox-devtools/
+#      figma-desktop) — a real regression, not a documented/gated gap.
+#   2. a registry agent has exactly one prompt shared by every targeted
+#      harness; omp's primary today gets lead.md PLUS omp-specific
+#      delegation/planning guidance (dot_agents/prompts/lead-omp.md.tmpl)
+#      that doesn't belong on opencode's lead (which has edit/write
+#      denied, unlike omp's primary).
+# omp's config generation stays on the existing hand-rolled path
+# (run_onchange_after_omp-agents.sh.tmpl / run_onchange_after_omp-
+# settings.sh.tmpl, .chezmoidata/agents.yaml + mcp.yaml + bash-
+# permissions.yaml + packages.yaml) unchanged. Re-run `agentcfg render
+# --target omp --explain` against dot_config/agentcfg/ to check whether
+# those gaps have closed upstream before ever adding `--target omp` (or
+# dropping `--target opencode`) here.
+#
+# `agentcfg apply`'s own JSON/YAML merge only touches the managed paths
+# each renderer declares (default_agent, agent, tools, mcp, model,
+# small_model, and the permission.{bash,read,edit,write,task,skill,
+# webfetch} leaves for opencode) — every other key in opencode.json
+# (server, plugin, provider, formatter, lsp, and the permission leaves
+# agentcfg has no registry concept for: grep/glob/lsp/websearch) is left
+# untouched, so this script and dot_config/opencode/opencode.json.tmpl
+# co-own the same file without conflict.
+#
+# agentcfg.yaml hash: {{ include "dot_config/agentcfg/agentcfg.yaml" | sha256sum }}
+# model_classes.yaml hash: {{ include "dot_config/agentcfg/model_classes.yaml" | sha256sum }}
+# bash.yaml hash: {{ include "dot_config/agentcfg/bash.yaml" | sha256sum }}
+# mcp_servers.yaml hash: {{ include "dot_config/agentcfg/mcp_servers.yaml" | sha256sum }}
+# agents.yaml.tmpl hash: {{ include "dot_config/agentcfg/agents.yaml.tmpl" | sha256sum }}
+{{- range $name := (list "lead" "plan" "qa" "build" "scout" "zoom" "slack" "atlassian" "github" "google" "linear") }}
+# prompt hash ({{ $name }}): {{ include (printf "dot_agents/prompts/%s.md" $name) | sha256sum }}
+{{- end }}
+
+set -eu
+
+if ! command -v agentcfg >/dev/null 2>&1; then
+  echo "agentcfg not found on PATH — skipping agentcfg apply" >&2
+  exit 0
+fi
+
+agentcfg apply --target opencode --scope global --strict
