@@ -29,6 +29,11 @@ EXCLUDE_PATTERNS="
 homebridge|Rate limited for the GetDevice API
 homebridge|bonjour-hap: send EADDRNOTAVAIL
 homebridge|request to https://oauth2\.googleapis\.com/token failed
+homebridge|Authorisation failed using Google account for connection
+homebridge|Token refresh failed using Google account for connection
+homebridge|Error: send EADDRNOTAVAIL
+homebridge|Error: send EPIPE
+homebridge|TypeError: Cannot read properties of undefined
 "
 
 # mlx-server: benign startup race — a previous mlx_lm.server process is
