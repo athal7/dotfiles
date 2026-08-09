@@ -60,4 +60,12 @@ if ! command -v agentcfg >/dev/null 2>&1; then
   exit 0
 fi
 
-agentcfg apply --target opencode,omp --scope global --strict
+# --strict is deliberately omitted: opencode has no structured-workflow
+# mechanism and omp has no per-agent bash scoping, external-directory
+# policy, per-tool MCP ask-listing, or step budgets, so the registry's
+# richer per-role model always produces some [skip]/[reduction] gaps
+# against either harness. That's an inherent, permanent cross-harness
+# capability difference, not a regression to gate deploys on — run
+# `agentcfg apply --target opencode,omp --scope global --explain` by
+# hand to review the current gap list.
+agentcfg apply --target opencode,omp --scope global
