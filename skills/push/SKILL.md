@@ -29,3 +29,7 @@ Both are asynchronous; the push isn't settled until each has landed or been rule
 - **Check runs pending** → sleep, re-check, repeat until resolved or a sane timeout. Failures → fix through the normal commit → push cycle.
 - **Automated review** — same loop, matched against the *current* head, not a stale review. Timeout while still a draft → this repo doesn't review drafts; move on.
 - **Review landed** → fetch its inline threads and top-level comments, fix actionable items, resolve each thread only after its fix is pushed. Reply (rather than resolve) to decline, defer, or add context — and only with approval.
+
+## External contributions
+
+Before contributing to any external project, check for `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, or equivalent. Follow their process — issue-first vs. PR-first, required templates, license requirements, DCO/sign-off, CI expectations. Never submit a PR to a project whose guidelines you haven't verified.
