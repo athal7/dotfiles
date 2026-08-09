@@ -14,16 +14,17 @@
        prompt — so it stays in scope for that check. Renaming sidesteps
        the collision for both harnesses at once instead of only omp.
 
-       "lead" gets the base lead.md prompt only, not the richer
-       lead-omp.md.tmpl (lead.md + omp-specific delegation/planning
-       sections) omp's hand-rolled APPEND_SYSTEM.md symlink still ships
-       today: a registry step has exactly one prompt shared by every
-       targeted harness, and applying omp's "you have edit/write here"
-       framing to opencode's lead (which has edit/write denied below)
-       would be actively wrong. See the integration summary for why omp
-       rendering isn't wired into `agentcfg apply` yet, so this gap is
-       currently inert (only affects `agentcfg render --target omp`
-       previews, not anything actually deployed). */ -}}
+       "lead" shares lead.md across every harness — a step has exactly
+       one prompt shared by every targeted harness, deliberately: the
+       omp-vs-opencode difference in how directly the primary may edit
+       lives in the portable `implement`/`merge-request` workflow
+       commands instead (dot_config/agentcfg/commands.yaml.tmpl), phrased
+       from the session's own tool inventory rather than which harness
+       it's running on, so the exact same guidance is correct dispatched
+       as a task on either one. agentcfg's omp renderer writes lead.md
+       directly to ~/.omp/agent/APPEND_SYSTEM.md (harnesses.omp.extra in
+       agentcfg.yaml.tmpl covers the settings that file's neighbor
+       scripts used to hand-roll). */ -}}
 workflow:
   steps:
     - name: lead

@@ -40,8 +40,9 @@ External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](
 
 Not everything is a skill:
 
-- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and what only that agent does. `lead` is the primary; `plan`/`qa`/`build`/`scout` are subagents in both harnesses. `general` and the MCP-service wrappers are opencode-only — omp loads MCP tools lazily and needs no per-service proxy. Registry: `.chezmoidata/agents.yaml`.
-- **Slash commands** live in `dot_config/opencode/commands/` and are opencode-only. The reusable workflows are thin wrappers over the `implement` and `merge-request` skills so omp reaches the same methodology.
+- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and what only that agent does. `lead` is the primary; `planner`/`qa`/`build`/`scout` are subagents in both harnesses. `general` and the MCP-service wrappers are opencode-only — omp loads MCP tools lazily and needs no per-service proxy. Registry: `dot_config/agentcfg/workflow.yaml.tmpl`.
+- **Structured commands** (`implement`, `merge-request`) are agentcfg-rendered skills (`dot_config/agentcfg/commands.yaml.tmpl`, phase bodies in `dot_agents/prompts/commands/<name>/`) — portable to both harnesses natively; omp's rendering additionally triggers its native `workflowz` deterministic-pipeline mechanism (see agentcfg's `docs/schema.md` commands: section), opencode just reads the flattened numbered phases as a skill.
+- **Slash commands** live in `dot_config/opencode/commands/` and are opencode-only, thin triggers ("load skill X") — `/implement` and `/mr` just point at the structured commands above; omp reaches the same content by loading the skill directly, no slash-command equivalent needed.
 - **Scripts** carry anything too long or too exact to inline: `openspec-worktree-link`.
 
 ## Commands

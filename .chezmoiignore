@@ -13,10 +13,6 @@
 # Local command overrides (contain personal details like locations, team IDs)
 .config/opencode/command.local/
 
-# opencode.json is host-specific (model config, MCP servers)
-# Using modify_ script to merge chezmoi-managed settings with local config
-# .config/opencode/opencode.json
-
 # Repo documentation and project config - not for home directory
 AGENTS.md
 README.md

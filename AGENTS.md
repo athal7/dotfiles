@@ -9,13 +9,14 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
-- **`dot_config/opencode/`** — OpenCode config: model, MCPs, plugins, permissions, agent instructions
-- **`skills/`** — agent skills deployed to `~/.agents/skills/`
+- **`dot_config/opencode/`** — OpenCode-specific files that aren't agent config: plugin settings (`dcp.jsonc`), slash commands (`commands/`). `opencode.json` itself is agentcfg-owned (see below), not templated here.
+- **`dot_config/agentcfg/`** — the single registry driving both opencode's and omp's agent/workflow config via [`agentcfg`](https://github.com/athal7/agentcfg), applied by `.chezmoiscripts/run_onchange_after_agentcfg-apply.sh.tmpl`. `workflow.yaml.tmpl` declares every agent/step once (prompt, permissions, role, MCP grants); `mcp_servers.yaml` declares every MCP server once; `agentcfg.yaml.tmpl`'s `harnesses.<id>.extra` covers config neither renderer's registry model has a field for (opencode.json's static server/plugin/provider/formatter/lsp blocks; omp's `tools.approvalMode`/`task.disabledAgents`/`compaction.strategy`). Adding a "reach service X via MCP" subagent is a `workflow.yaml.tmpl` step plus an `mcp_servers.yaml` entry — no separate per-agent prompt file needed unless the prompt itself is long enough to warrant `prompt.file` over inline `prompt.text`.
+- **`skills/`** — agent skills deployed to `~/.agents/skills/`. Multi-step commands (`dot_config/agentcfg/commands.yaml.tmpl`, if present) render additional skills into the same directory — see `docs.schema.md`'s `commands:` section in the agentcfg repo.
 - **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
-- **`.chezmoidata/mcp.yaml`** — MCP server connections and their optional wrapping subagents, rendered into `opencode.json` via the `opencode-mcp-{servers,tools,agents}` template partials (in `.chezmoitemplates/`). `servers[]` drives both the `mcp` block and the global tool deny-list; `agents[]` (optional per server) drives the wrapping subagent definitions. Adding a "reach service X via MCP" subagent is a registry entry here plus a hand-authored prompt at `dot_config/opencode/prompts/<agent>.md`.
+- **`.chezmoidata/agents.yaml`** — per-org model-class overrides only (`dot_local/bin/executable_aoe-model-class` reads it from `chezmoi data` at aoe launch time); NOT an agent-definition source anymore — that's `dot_config/agentcfg/workflow.yaml.tmpl`.
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
-- **`.chezmoiscripts/`** — run on apply: brew bundle, skill sync
+- **`.chezmoiscripts/`** — run on apply: brew bundle, skill sync, agentcfg apply
 
 ## Packages
 
@@ -23,7 +24,7 @@ All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`
 
 ## OpenCode Config
 
-MCPs, plugins, and permissions are all in `opencode.json`. Skills live in `skills/` — edit here, not in `~/.agents/skills/`.
+MCPs, plugins, agent definitions, and permissions all end up in `opencode.json`, but it's agentcfg-owned — edit `dot_config/agentcfg/` (agent/MCP/permission content) or `agentcfg.yaml.tmpl`'s `harnesses.opencode.extra` (everything else: server, plugin, provider, formatter, lsp), never `opencode.json` directly; the next `agentcfg apply` overwrites it. Skills live in `skills/` — edit here, not in `~/.agents/skills/`.
 
 **Keep the global `dot_config/opencode/AGENTS.md` lean.**  Resist adding DO/DO NOT lists to it. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
 

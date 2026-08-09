@@ -1,7 +1,0 @@
-{{- $primary := "" -}}
-{{- range .agents -}}
-  {{- if eq (index . "mode") "primary" -}}
-    {{- $primary = .name -}}
-  {{- end -}}
-{{- end -}}
-{{ .chezmoi.homeDir }}/.agents/prompts/{{ $primary }}-omp.md

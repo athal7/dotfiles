@@ -1,0 +1,87 @@
+version: 1
+imports:
+  - model_classes.yaml
+  - bash.yaml
+  - mcp_servers.yaml
+  - workflow.yaml
+  - commands.yaml
+harnesses:
+  opencode:
+    out: ~/.config/opencode/opencode.json
+    # Everything below is opencode.json's static skeleton: no registry
+    # field models it (server/plugin/provider/formatter/lsp aren't
+    # agent/mcp/model/permission concepts), so agentcfg owns it verbatim
+    # here instead of chezmoi separately templating opencode.json itself
+    # — two writers on one chezmoi-tracked target used to fight (chezmoi
+    # only knows what IT last wrote, so every apply after this
+    # onchange-script's own JSON merge saw the live file "changed outside
+    # chezmoi" and either prompted forever or hard-failed under
+    # --error-on-conflict). agentcfg's own JSON merge (Render's managed
+    # keys: default_agent, agent, tools, mcp, model, small_model, and the
+    # permission.{bash,read,edit,write,task,skill,webfetch} leaves) still
+    # layers on top of this every apply, keyed by the dotted paths below.
+    extra:
+      server:
+        hostname: 127.0.0.1
+      plugin:
+        - ["./lib/skill-inject.ts", {
+            architecture: [code-quality],
+            communication: [knowledge-base],
+            elasticsearch: [{skill: xh, context: "All requests use xh --ignore-stdin --session=agent for auth"}],
+            pagerduty: [{skill: xh, context: "All requests use xh --ignore-stdin --session=agent for auth"}],
+            push: [commit],
+          }]
+        - "@tarquinen/opencode-dcp@3.1.12"
+        - opencode-permission-log
+      permission.grep: {{ .permissions.grep | quote }}
+      permission.glob: {{ .permissions.find | quote }}
+      permission.lsp: allow
+      permission.websearch: allow
+      compaction:
+        prune: true
+      provider:
+        anthropic:
+          models:
+            claude-opus-5:
+              options:
+                thinking: {type: adaptive, display: summarized}
+            claude-sonnet-5:
+              options:
+                thinking: {type: adaptive, display: summarized}
+        {{ .local_model.provider }}:
+          npm: "@ai-sdk/openai-compatible"
+          name: mlx-lm
+          options:
+            baseURL: "http://{{ .local_model.host }}:{{ .local_model.port }}/v1"
+          models:
+            {{ .local_model.id }}:
+              name: {{ .local_model.name | quote }}
+      formatter:
+        rubocop: {disabled: true}
+        ruff: {disabled: true}
+      lsp:
+        ruby-lsp:
+          command: [ruby, -S, ruby-lsp]
+          extensions: [.rb, .rake, .gemspec, .ru]
+  omp:
+    agents_dir: ~/.omp/agent/agents
+    bash_profile: lead
+    # tools.approvalMode/task.disabledAgents/compaction.strategy have no
+    # registry-level concept (they're not agent/mcp/model/bash policy);
+    # tools.approval is layered with agentcfg's own registry-derived MCP
+    # tool grants (see docs/schema.md's harnesses.omp.extra section) —
+    # this list is the built-in, non-MCP tools that should always be
+    # pre-approved rather than prompted under the always-ask default.
+    extra:
+      tools.approvalMode: always-ask
+      task.disabledAgents: [reviewer, security-reviewer]
+      compaction.strategy: context-full
+      tools.approval:
+        task: allow
+        write: allow
+        edit: allow
+        ast_edit: allow
+        ask: allow
+        eval: allow
+        hub: allow
+        bash: allow

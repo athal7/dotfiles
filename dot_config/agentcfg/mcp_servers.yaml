@@ -1,26 +1,31 @@
-# Mirrors .chezmoidata/mcp.yaml's server list for the servers agentcfg
-# renders (opencode's mcp/tools blocks; omp rendering isn't wired live yet
-# — see the integration summary). `tools:` allowlists aren't set here:
-# neither renderer actually consumes MCPServer.Tools for restriction today
-# (opencode's per-agent grants are namespace globs, not per-tool), so there
-# is nothing to gain by enumerating them, unlike .chezmoidata/mcp.yaml
-# (still hand-authored, still needed by omp's run_onchange generators for
-# per-subagent frontmatter tool IDs and the global tools.approval map).
+# The single MCP server registry driving both harnesses: opencode's
+# mcp/tools blocks (per-agent grants are namespace globs, Tools is
+# informational there) and omp's mcp.json + tools.approval + per-agent
+# frontmatter tool ids (Tools is a hard visibility allowlist there — see
+# docs/schema.md's mcp_servers: and harnesses.omp.extra sections).
 #
-# Seven `runlayer-*` servers proxy OAuth'd services (Zoom/Slack/Atlassian/
-# Google/…) at a workspace-specific URL. The old chezmoi templates read
-# that URL from `.chezmoidata/local.yaml`'s gitignored `runlayer:` map —
-# private, machine-specific data that must never be committed here.
-# agentcfg's `Value` type gives a public-safe equivalent: resolve each
-# URL from an environment variable at apply time instead. Set these in a
-# private, untracked file (e.g. ~/.config/zsh/private.zsh, per this repo's
-# own AGENTS.md convention for infra details) on each machine that uses
-# them; an unset variable resolves to an empty string rather than erroring
-# (see agentcfg's docs/schema.md Value.Resolve semantics).
+# `tools:` = the subset of this server's raw MCP tool names a subagent
+# granted this server (via workflow.yaml.tmpl's mcp:) can actually call on
+# omp, and the set agentcfg pre-approves in tools.approval. No glob
+# support — every name must be literal. Anything NOT listed here falls
+# through to omp's global tools.approvalMode: always-ask tier default and
+# prompts, with zero extra bookkeeping (MCP tools all declare tier
+# "write"; always-ask only auto-approves "read"). runlayer-self has none:
+# never authenticated (no stored OAuth token) — authenticate it once
+# (obtain a live tools/list) to populate a real allowlist.
+#
+# Seven `runlayer-*` servers proxy OAuth'd services (Zoom/Slack/
+# Atlassian/Google/…) at a workspace-specific URL, resolved from an
+# environment variable at apply time (never committed) — set these in a
+# private, untracked file (e.g. ~/.config/zsh/private.zsh, per this
+# repo's own AGENTS.md convention) on each machine that uses them; an
+# unset variable resolves to an empty string rather than erroring (see
+# agentcfg's docs/schema.md Value.Resolve semantics).
 mcp_servers:
   - name: context7
     transport: remote
     url: https://mcp.context7.com/mcp
+    tools: [query-docs, resolve-library-id]
 
   - name: firefox-devtools
     transport: local
@@ -30,6 +35,15 @@ mcp_servers:
       - --firefox-path
       - /Applications/Firefox.app/Contents/MacOS/firefox
       - --enable-script
+    tools: [accept_dialog, clear_console_messages, clear_snapshot, click_by_uid, close_page,
+      dismiss_dialog, drag_by_uid_to_uid, enable_debugger, evaluate_script, fill_by_uid,
+      fill_form_by_uid, get_firefox_info, get_firefox_output, get_logpoint_results,
+      get_network_request, get_script_source, hover_by_uid, install_extension,
+      list_console_messages, list_network_requests, list_pages, list_scripts,
+      navigate_history, navigate_page, new_page, profiler_is_active, profiler_start,
+      profiler_stop, remove_logpoint, resolve_uid_to_selector, restart_firefox,
+      screenshot_by_uid, screenshot_page, select_page, set_logpoint, set_viewport_size,
+      take_snapshot, uninstall_extension, upload_file_by_uid]
 
   - name: github
     transport: remote
@@ -39,65 +53,111 @@ mcp_servers:
         from: command
         run: [gh, auth, token]
         format: "Bearer {}"
+    tools: [get_commit, get_copilot_job_status, get_file_contents, get_label, get_latest_release,
+      get_me, get_release_by_tag, get_tag, get_team_members, get_teams, issue_read,
+      list_branches, list_commits, list_issue_fields, list_issue_types, list_issues,
+      list_pull_requests, list_releases, list_repository_collaborators, list_tags,
+      pull_request_read, run_secret_scanning, search_code, search_commits, search_issues,
+      search_pull_requests, search_repositories, search_users]
 
   - name: linear
     transport: remote
     url: https://mcp.linear.app/mcp
+    tools: [extract_images, get_agent_skill, get_attachment, get_diff, get_diff_threads, get_document,
+      get_initiative, get_issue, get_issue_status, get_milestone, get_project, get_release,
+      get_release_note, get_status_updates, get_team, get_user, list_agent_skills,
+      list_comments, list_customers, list_cycles, list_diffs, list_documents,
+      list_initiative_labels, list_initiatives, list_issue_labels, list_issue_statuses,
+      list_issues, list_milestones, list_project_labels, list_projects, list_release_notes,
+      list_release_pipelines, list_releases, list_teams, list_users, search_documentation]
+    # verified live against Linear's MCP server directly, but the mcp__linear_*
+    # prefix omp will actually use is UNVERIFIED — omp's own session never
+    # completed a Linear OAuth handshake in testing (distinct from opencode's
+    # stored token). Authenticate omp against Linear once and diff xd:// to confirm.
 
   - name: figma-desktop
     transport: remote
     url: http://127.0.0.1:3845/mcp
+    tools: [add_code_connect_map, get_code_connect_map, get_code_connect_suggestions,
+      get_design_context, get_figjam, get_metadata, get_motion_context, get_screenshot,
+      get_shader_effect, get_shader_fill, get_variable_defs, list_shader_effects,
+      list_shader_fills, send_code_connect_mappings]
+    # sourced from Figma's public Dev Mode MCP docs (desktop-only subset),
+    # not a live connection — the local Figma app wasn't running when this
+    # was generated. qa is already fully trusted with the whole namespace.
 
   - name: runlayer-zoom
     transport: remote
     url:
       from: env
       name: RUNLAYER_ZOOM_MCP_URL
+    tools: [ask, get_file_content, get_meeting_assets, get_recording_resource, hub_get_file_content,
+      my_notes_get_note_content, recordings_list, search, search_describe_capabilities,
+      search_meetings]
 
   - name: runlayer-self
     transport: remote
     url:
       from: env
       name: RUNLAYER_SELF_MCP_URL
+    # No tools listed: never authenticated (see header note above). Lead
+    # currently has unrestricted, ungated access to whatever this proxies
+    # to — under always-ask this still prompts by tier default.
 
   - name: runlayer-slack
     transport: remote
     url:
       from: env
       name: RUNLAYER_SLACK_MCP_URL
+    tools: [slack_get_reactions, slack_list_channel_members, slack_read_canvas, slack_read_channel,
+      slack_read_file, slack_read_thread, slack_read_user_profile, slack_search_channels,
+      slack_search_emojis, slack_search_public, slack_search_public_and_private,
+      slack_search_users]
 
   - name: runlayer-atlassian
     transport: remote
     url:
       from: env
       name: RUNLAYER_ATLASSIAN_MCP_URL
+    tools: [atlassianUserInfo, fetch, getAccessibleAtlassianResources, getConfluenceCommentChildren,
+      getConfluencePage, getConfluencePageDescendants, getConfluencePageFooterComments,
+      getConfluencePageInlineComments, getConfluenceSpaces, getIssueLinkTypes,
+      getJiraIssue, getJiraIssueRemoteIssueLinks, getJiraIssueTypeMetaWithFields,
+      getJiraProjectIssueTypesMetadata, getPagesInConfluenceSpace,
+      getTransitionsForJiraIssue, getVisibleJiraProjects, lookupJiraAccountId, search,
+      searchConfluenceUsingCql, searchJiraIssuesUsingJql]
 
   - name: runlayer-gmail
     transport: remote
     url:
       from: env
       name: RUNLAYER_GMAIL_MCP_URL
+    tools: [fetch_attachment, fetch_message, list_drafts, list_labels, list_messages, search]
 
   - name: runlayer-gcalendar
     transport: remote
     url:
       from: env
       name: RUNLAYER_GCALENDAR_MCP_URL
+    tools: [get_event, get_free_busy, list_calendars, list_events]
 
   - name: runlayer-gdrive
     transport: remote
     url:
       from: env
       name: RUNLAYER_GDRIVE_MCP_URL
+    tools: [fetch_file, get_metadata, list_folder, list_permissions, search]
 
   - name: runlayer-gdocs
     transport: remote
     url:
       from: env
       name: RUNLAYER_GDOCS_MCP_URL
+    tools: [fetch, fetch_all_tabs, fetch_tab, list_comments, list_tabs, replace_text, search]
 
   - name: runlayer-gsheets
     transport: remote
     url:
       from: env
       name: RUNLAYER_GSHEETS_MCP_URL
+    tools: [fetch, get_metadata, list, search]

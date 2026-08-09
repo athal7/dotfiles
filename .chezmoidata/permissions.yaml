@@ -20,6 +20,3 @@ permissions:
     "/private/tmp/**": allow
     "/var/folders/*/*/T/**": allow
     "/private/var/folders/*/*/T/**": allow
-
-ompToolsApproval:
-  allow: [task, write, edit, ast_edit, ask, eval, hub, bash]

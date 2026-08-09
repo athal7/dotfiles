@@ -107,17 +107,17 @@ SQL
 **Config checks:**
 
 ```bash
-# Top-level bash policy (default-allow + guardrails; inherited by lead/plan)
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.permission'
+# Top-level bash policy (default-allow + guardrails; inherited by lead/planner)
+jq '.permission' ~/.config/opencode/opencode.json
 
 # Rendered agent permissions (agent-level overrides; bash for build)
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent | to_entries[] | {key, permissions: .value.permission}'
+jq '.agent | to_entries[] | {key, permissions: .value.permission}' ~/.config/opencode/opencode.json
 
 # Skill injection mappings
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.plugin[0][1]'
+jq '.plugin[0][1]' ~/.config/opencode/opencode.json
 
 # Per-agent model + effort variant — verify expected models; cross-check vs empty-turn query (catch access-gated models)
-chezmoi execute-template < dot_config/opencode/opencode.json.tmpl | jq '.agent | to_entries[] | {agent: .key, model: .value.model, variant: .value.variant}'
+jq '.agent | to_entries[] | {agent: .key, model: .value.model, variant: .value.variant}' ~/.config/opencode/opencode.json
 ```
 
 **Cost & context health** — the system's spend profile. Lead is typically the largest cost (always-on primary carrying full context); build is the largest *editing* agent. Watch for context bloat, speed regressions, and silently-broken models.
@@ -427,7 +427,7 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 |---|---|
 | `openspec/specs/*/spec.md` | Desired state — audit measures against these |
 | `~/.local/share/opencode/opencode.db` | Session data for compliance measurement |
-| `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json.tmpl` |
+| `~/.config/opencode/opencode.json` | `dot_config/agentcfg/` (via `agentcfg apply --target opencode`) |
 | `~/.agents/prompts/*.md` | `dot_agents/prompts/*.md` |
 | `~/.config/opencode/commands/*.md` | `dot_config/opencode/commands/*.md` |
 | `~/.agents/skills/*` | `skills/*` |

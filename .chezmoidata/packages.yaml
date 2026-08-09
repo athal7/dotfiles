@@ -2,8 +2,10 @@
 # brew, cask, mise, and GitHub release packages. Install scripts and
 # chezmoi externals are generated from this file.
 #
-# Each entry can also declare per-tool permission rules for OpenCode agents
-# (merged into opencode.json at template time).
+# Per-package bash permission rules used to live here too (merged into
+# opencode.json at template time); they're now agentcfg-managed — see
+# dot_config/agentcfg/bash.yaml's `packages` list, which both harnesses
+# compile identically.
 
 packages:
   taps:
@@ -19,62 +21,12 @@ packages:
     - name: autojump
     - name: bat
     - name: chezmoi
-      permissions:
-        "chezmoi apply*": ask
-        "chezmoi-deploy*": ask
-        "chezmoi destroy*": ask
-        "chezmoi init*": ask
-        "chezmoi purge*": ask
-        "chezmoi forget*": ask
-        "chezmoi upgrade*": ask
-        "chezmoi add*": ask
-        "chezmoi diff*": allow
-        "chezmoi status*": allow
-        "chezmoi data*": allow
-        "chezmoi cat*": allow
-        "chezmoi managed*": allow
-        "chezmoi source-path*": allow
     - name: container
     - name: direnv
     - name: ffmpeg
     - name: fzf
     - name: git
-      permissions:
-        "git commit*": ask
-        "git push*": ask
-        "git reset --hard*": ask
-        "git reset --merge*": ask
-        "git clean -f*": ask
-        "git clean -d*": ask
-        "git checkout -- *": ask
-        "git checkout * -- *": ask
-        "git restore *": ask
-        "git restore --staged*": allow
-        "git branch -d*": ask
-        "git branch -D*": ask
-        "git stash drop*": ask
-        "git stash clear*": ask
-        "git worktree remove*": ask
-        "git -C * commit*": ask
-        "git -C * push*": ask
-        "git -C * reset --hard*": ask
-        "git -C * clean -f*": ask
-        "git status*": allow
-        "git diff*": allow
-        "git log*": allow
-        "git show*": allow
-        "git add*": allow
-        "git stash list*": allow
-        "git rev-parse*": allow
-        "git config --get*": allow
-        "git remote -v*": allow
-        "git remote show*": allow
-        "git remote get-url*": allow
     - name: gh
-      permissions:
-        # Single pathway for GitHub interaction is the `github` MCP subagent (see
-        # dot_config/opencode/prompts/github.md) — no bash gh exceptions, not even reads.
-        "gh *": deny
     - name: athal7/tap/agentcfg
     - name: athal7/tap/attention
     - name: athal7/tap/git-worktree-sync
@@ -100,19 +52,8 @@ packages:
     - name: watch
     - name: worktrunk
     - name: xh
-      permissions:
-        "xh *GET *": allow
-        "xh *HEAD *": allow
-        "xh *mutation*": ask
-        "xh *query*": allow
-        "xh *": ask
     - name: yq
     - name: steipete/tap/remindctl
-      permissions:
-        "remindctl show*": allow
-        "remindctl list*": allow
-        "remindctl status*": allow
-        "remindctl *": ask
     - name: typescript-language-server
     - name: pyright
     - name: gopls
@@ -150,10 +91,6 @@ packages:
       path: opencode
       executable: true
       refresh_period: 24h
-      permissions:
-        "opencode session *": allow
-        "opencode export *": allow
-        "opencode *": ask
 
     # Note: com.apple.provenance on Apple Silicon prevents chezmoi's atomic
     # rename from updating files inside this bundle. On version updates, run:
@@ -218,13 +155,14 @@ packages:
       version: latest
     - name: argocd
       version: latest
-    # Token-efficiency opencode plugin (also wired in opencode.json.tmpl's
-    # plugin array; declared here for the repo's package-registry convention).
+    # Token-efficiency opencode plugin (also wired in agentcfg.yaml.tmpl's
+    # harnesses.opencode.extra.plugin array; declared here for the repo's
+    # package-registry convention).
     - name: npm:@tarquinen/opencode-dcp
       version: "3.1.12"
-    # Coding agent needed for `omp`/`pi` (gated by the `pi` entry in each
-    # subagent's `enabled` list in .chezmoidata/agents.yaml) to render in
-    # aoe's structured view natively.
+    # Coding agent needed for `omp`/`pi` to render in aoe's structured
+    # view natively (every workflow.yaml.tmpl step without an explicit
+    # targets: applies to omp too — see dot_config/agentcfg/).
     - name: npm:@oh-my-pi/pi-coding-agent
       version: latest
     - name: npm:@google/jules

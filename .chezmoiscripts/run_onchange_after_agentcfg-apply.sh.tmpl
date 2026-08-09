@@ -1,43 +1,56 @@
 #!/bin/sh
 # Applies the agentcfg registry (dot_config/agentcfg/ -> ~/.config/agentcfg/)
-# to opencode's native config via `agentcfg apply --target opencode`.
+# to both opencode's and omp's native config via `agentcfg apply`. This is
+# the ONE script that materializes agent definitions, structured commands,
+# MCP server config, bash policy, and harness-specific settings for both
+# harnesses — the hand-rolled omp generators this replaced (run_onchange_
+# after_omp-agents.sh.tmpl, run_onchange_after_omp-settings.sh.tmpl,
+# dot_omp/private_agent/{symlink_APPEND_SYSTEM.md,private_mcp.json}.tmpl)
+# are gone; .chezmoidata/agents.yaml and mcp.yaml's role as a rendering
+# source for omp went with them (agents.yaml is kept, narrowed to just
+# the per-org model-class override dot_local/bin/executable_aoe-model-
+# class still reads from `chezmoi data` — see its own header).
 #
-# opencode-only, deliberately: agentcfg's omp renderer has two real gaps
-# against this repo's actual omp setup today —
-#   1. per-agent `mcp:` grants aren't expressed in omp's rendered subagent
-#      frontmatter at all (internal/render/omp/omp.go never reads
-#      registry.Agent.MCP), so running it would silently drop plan/qa/
-#      build/scout's MCP tool visibility (context7/firefox-devtools/
-#      figma-desktop) — a real regression, not a documented/gated gap.
-#   2. a registry agent has exactly one prompt shared by every targeted
-#      harness; omp's primary today gets lead.md PLUS omp-specific
-#      delegation/planning guidance (dot_agents/prompts/lead-omp.md.tmpl)
-#      that doesn't belong on opencode's lead (which has edit/write
-#      denied, unlike omp's primary).
-# omp's config generation stays on the existing hand-rolled path
-# (run_onchange_after_omp-agents.sh.tmpl / run_onchange_after_omp-
-# settings.sh.tmpl, .chezmoidata/agents.yaml + mcp.yaml + bash-
-# permissions.yaml + packages.yaml) unchanged. Re-run `agentcfg render
-# --target omp --explain` against dot_config/agentcfg/ to check whether
-# those gaps have closed upstream before ever adding `--target omp` (or
-# dropping `--target opencode`) here.
+# `agentcfg apply`'s own JSON/YAML merge (or, for omp, `omp config set`
+# calls) only touches the managed paths/keys each renderer declares:
+#   - opencode: default_agent, agent, tools, mcp, model, small_model, the
+#     permission.{bash,read,edit,write,task,skill,webfetch} leaves, and
+#     every key under harnesses.opencode.extra in agentcfg.yaml.tmpl
+#     (server, plugin, provider, formatter, lsp, and the remaining
+#     permission leaves agentcfg has no registry concept for:
+#     grep/glob/lsp/websearch) — this is opencode.json's ENTIRE content,
+#     so chezmoi no longer separately templates that file at all (the
+#     two-writer race that used to cause was the reason for this design:
+#     chezmoi only knows what IT last wrote, so a downstream script
+#     merge it can't see looks like external drift on every later apply).
+#   - omp: subagent files under ~/.omp/agent/agents (MCP tool ids folded
+#     into tools: per agent), ~/.omp/agent/APPEND_SYSTEM.md (lead.md,
+#     shared verbatim with every other harness — no per-harness prompt
+#     split), bash.patterns, tools.approval (registry-derived MCP grants
+#     merged with harnesses.omp.extra's built-in-tool allow-list), and
+#     every other harnesses.omp.extra key (tools.approvalMode,
+#     task.disabledAgents, compaction.strategy) via `omp config set`.
+#   - both: commands.yaml.tmpl's structured commands (implement,
+#     merge-request) render identically to ~/.agents/skills/<name>/
+#     SKILL.md on either harness; omp's rendering additionally triggers
+#     its native `workflowz` deterministic-pipeline mechanism.
 #
-# `agentcfg apply`'s own JSON/YAML merge only touches the managed paths
-# each renderer declares (default_agent, agent, tools, mcp, model,
-# small_model, and the permission.{bash,read,edit,write,task,skill,
-# webfetch} leaves for opencode) — every other key in opencode.json
-# (server, plugin, provider, formatter, lsp, and the permission leaves
-# agentcfg has no registry concept for: grep/glob/lsp/websearch) is left
-# untouched, so this script and dot_config/opencode/opencode.json.tmpl
-# co-own the same file without conflict.
-#
-# agentcfg.yaml hash: {{ include "dot_config/agentcfg/agentcfg.yaml" | sha256sum }}
+# agentcfg.yaml.tmpl hash: {{ include "dot_config/agentcfg/agentcfg.yaml.tmpl" | sha256sum }}
 # model_classes.yaml hash: {{ include "dot_config/agentcfg/model_classes.yaml" | sha256sum }}
 # bash.yaml hash: {{ include "dot_config/agentcfg/bash.yaml" | sha256sum }}
 # mcp_servers.yaml hash: {{ include "dot_config/agentcfg/mcp_servers.yaml" | sha256sum }}
 # workflow.yaml.tmpl hash: {{ include "dot_config/agentcfg/workflow.yaml.tmpl" | sha256sum }}
+# commands.yaml.tmpl hash: {{ include "dot_config/agentcfg/commands.yaml.tmpl" | sha256sum }}
+# models.yaml hash: {{ include ".chezmoidata/models.yaml" | sha256sum }}
+# permissions.yaml hash: {{ include ".chezmoidata/permissions.yaml" | sha256sum }}
 {{- range $name := (list "lead" "plan" "qa" "build" "scout" "zoom" "slack" "atlassian" "github" "google" "linear") }}
 # prompt hash ({{ $name }}): {{ include (printf "dot_agents/prompts/%s.md" $name) | sha256sum }}
+{{- end }}
+{{- range $name := (list "issue" "workspace" "plan" "build" "review" "ship") }}
+# implement/{{ $name }} hash: {{ include (printf "dot_agents/prompts/commands/implement/%s.md" $name) | sha256sum }}
+{{- end }}
+{{- range $name := (list "draft" "triage" "fix" "conflicts" "re-request") }}
+# merge-request/{{ $name }} hash: {{ include (printf "dot_agents/prompts/commands/merge-request/%s.md" $name) | sha256sum }}
 {{- end }}
 
 set -eu
@@ -47,4 +60,4 @@ if ! command -v agentcfg >/dev/null 2>&1; then
   exit 0
 fi
 
-agentcfg apply --target opencode --scope global --strict
+agentcfg apply --target opencode,omp --scope global --strict
