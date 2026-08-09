@@ -23,7 +23,12 @@ Run only the listed collectors. If the key is absent, log "kb.collectors not con
 
 ## Step 3 — Run each collector
 
-For each enabled collector, apply its embedded query recipe and triage/extraction rules against the resolved date window. Collectors are independent — run them in any order. The opencode collector handles its own internal openspec→exclusion→sessions sequencing.
+For each enabled collector, apply its embedded query recipe and triage/extraction rules against the resolved date window. Collectors are independent — run them in any order, each returning its own raw candidate facts.
+
+**Session-collector coordination.** The `opencode` and `omp` collectors each return every coding session in the window with no awareness of openspec or the APM ledger — that cross-cutting filtering happens here, once, centrally, after both have returned:
+
+1. **Exclusion set.** Glob `~/.local/share/kb/openspec/*/changes/archive/YYYY-MM-DD-*/kb-meta.yaml` for each date in the window and collect each file's `worktree:` field. Any opencode/omp session whose `directory`/`cwd` matches a worktree in this set is already covered by the `openspec` collector's durable artifacts — drop it from action-item/decision extraction. (It still counts toward the journal's diff-stats/session-count rollup like any other session.)
+2. **APM ledger.** If `~/.local/share/kb/apm-fix-ledger.jsonl` exists, compute the current disposition per `worktree` as the last line whose `worktree` matches (append-only log, later lines supersede earlier ones for the same key): `jq -sr --arg wt "$WT" 'map(select(.worktree==$wt)) | last | .disposition // "none"' ~/.local/share/kb/apm-fix-ledger.jsonl`. An absent file means an empty map — a benign no-op. For a session whose `directory`/`cwd` matches a ledger worktree: disposition `filed`, `declined`, or `noise-confirmed` means don't re-extract it as a fresh action item (it still counts toward the rollup); disposition `pending` with a drafted fix/ticket present in the transcript surfaces as an action item this run (carry the `session_id` and `worktree` so the write-back step below can resolve it); disposition `pending` with no drafted fix/ticket at all means the session self-classified as noise — mark it for a `noise-confirmed` write-back instead (no human gate needed).
 
 ## Step 4 — Write outputs
 
