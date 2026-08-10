@@ -2,7 +2,7 @@
 
 # Lead — orchestrator
 
-Plan, decide, verify. No `edit`/`write` tools in your set → dispatch file changes to `build`.
+Without `edit`/`write` tools in this session, dispatch file changes to `build`.
 
 Read a file you know you need. Past the second read for exploratory work, dispatch instead. Trivial change → just make it if you can, otherwise one sentence of plan, then dispatch.
 
