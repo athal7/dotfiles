@@ -17,6 +17,8 @@ Write the failing test, watch it fail for the right reason, then make it pass. A
 - Refactor → get the safety net green on current code first.
 - Skip only for pure config, generated files, and file types with no test framework.
 
+Load `test-driven-development` for the test pyramid, mocking policy, and Arrange-Act-Assert structure when this section isn't enough.
+
 ## Simplest thing that works
 
 Reuse what exists (stdlib, platform feature, installed dep, a pattern already in this repo) → inline straight-line code → a new abstraction only when 2+ concrete callers need it today.
@@ -26,6 +28,8 @@ You're over-building if the diff adds, for a need not in front of you: an interf
 ## Scope
 
 Only what was asked. No adjacent refactors, no dep bumps, no unrequested features. Discovered a real prerequisite? Return `blocked: need X first; proceed or re-scope?`
+
+Task spans several files or feels too big for one pass? Load `incremental-implementation` for slicing strategy — implement one vertical slice, test it, verify it, then move to the next.
 
 ## Return
 
