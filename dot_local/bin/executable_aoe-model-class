@@ -49,13 +49,17 @@ main() {
   # model — both compute the same effective usable-context ceiling
   # (contextWindow - compaction_threshold_tokens) so a mid-tool-loop
   # session can't outrun mlx_lm.server's real context window regardless
-  # of which harness is driving it. See the omp write below for the
-  # cross-model-drift half of this mitigation (retry.modelFallback),
-  # which opencode has no equivalent of — it never reroutes a session to
-  # a different provider/model on failure, so no matching override is
-  # needed here.
+  # of which harness is driving it. $localId defaults provider/id the
+  # same way the render templates do (agentcfg.yaml.tmpl,
+  # models.yml.tmpl) — local.yaml normally leaves both fields unset, and
+  # jq's `+` silently treats a missing/null provider or id as identity
+  # rather than erroring, so an undefaulted comparison against $c's
+  # "mlx/default_model" values always came out as bare "/" and never
+  # matched: compaction.reserved/thresholdTokens have been dead code
+  # since they were introduced, camouflaged by the always-false
+  # $usesLocal comparison never touching the arithmetic below it either.
   write .opencode/opencode.json "$(printf '%s' "$data" | jq --argjson c "$classes" '
-      (.local_model.provider + "/" + .local_model.id) as $localId
+      ((.local_model.provider // "mlx") + "/" + (.local_model.id // "default_model")) as $localId
       | ($c | to_entries | any(.value == $localId)) as $usesLocal
       | {
           model: $c.default,
@@ -69,7 +73,20 @@ main() {
           } else {} end)
     ' 2>/dev/null)"
 
-  write .omp/config.yml "$(printf '%s' "$data" | jq --argjson c "$classes" '{modelRoles: $c}' 2>/dev/null | yq -P 2>/dev/null)"
+  # omp's per-project compaction.thresholdTokens counterpart — reinstated
+  # after 4c07f17 deleted it as collateral damage while correctly removing
+  # the separate, by-then-obsolete retry.modelFallback workaround (omp
+  # 17.2.11 fixed that upstream). The two were unrelated fixes bundled in
+  # one conditional block; only modelFallback needed to go.
+  write .omp/config.yml "$(printf '%s' "$data" | jq --argjson c "$classes" '
+      ((.local_model.provider // "mlx") + "/" + (.local_model.id // "default_model")) as $localId
+      | ($c | to_entries | any(.value == $localId)) as $usesLocal
+      | {modelRoles: $c}
+        + (if $usesLocal then {
+            compaction: {thresholdTokens: .local_model.compaction_threshold_tokens}
+          } else {} end)
+    ' 2>/dev/null | yq -P 2>/dev/null)"
+
 }
 
 main
