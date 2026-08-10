@@ -69,7 +69,14 @@ mcp_servers:
       list_comments, list_customers, list_cycles, list_diffs, list_documents,
       list_initiative_labels, list_initiatives, list_issue_labels, list_issue_statuses,
       list_issues, list_milestones, list_project_labels, list_projects, list_release_notes,
-      list_release_pipelines, list_releases, list_teams, list_users, search_documentation]
+      list_release_pipelines, list_releases, list_teams, list_users, search_documentation,
+      save_comment, save_customer, save_customer_need, save_diff_comment, save_document,
+      save_initiative, save_issue, save_milestone, save_project, save_release,
+      save_release_note, save_status_update, delete_attachment, delete_comment,
+      delete_customer, delete_customer_need, delete_diff_comment, delete_status_update,
+      merge_diff, resolve_diff_thread, submit_diff_review, create_attachment,
+      create_attachment_from_upload, create_initiative_label, create_issue_label,
+      prepare_attachment_upload]
     # verified live against Linear's MCP server directly, but the mcp__linear_*
     # prefix omp will actually use is UNVERIFIED — omp's own session never
     # completed a Linear OAuth handshake in testing (distinct from opencode's
@@ -112,7 +119,8 @@ mcp_servers:
     tools: [slack_get_reactions, slack_list_channel_members, slack_read_canvas, slack_read_channel,
       slack_read_file, slack_read_thread, slack_read_user_profile, slack_search_channels,
       slack_search_emojis, slack_search_public, slack_search_public_and_private,
-      slack_search_users]
+      slack_search_users, slack_add_reaction, slack_create_canvas, slack_create_conversation,
+      slack_schedule_message, slack_send_message, slack_send_message_draft]
 
   - name: runlayer-atlassian
     transport: remote
@@ -125,39 +133,50 @@ mcp_servers:
       getJiraIssue, getJiraIssueRemoteIssueLinks, getJiraIssueTypeMetaWithFields,
       getJiraProjectIssueTypesMetadata, getPagesInConfluenceSpace,
       getTransitionsForJiraIssue, getVisibleJiraProjects, lookupJiraAccountId, search,
-      searchConfluenceUsingCql, searchJiraIssuesUsingJql]
+      searchConfluenceUsingCql, searchJiraIssuesUsingJql, addCommentToJiraIssue,
+      addWorklogToJiraIssue, createConfluenceFooterComment, createConfluenceInlineComment,
+      createConfluencePage, createIssueLink, createJiraIssue, editJiraIssue,
+      transitionJiraIssue, updateConfluencePage]
 
   - name: runlayer-gmail
     transport: remote
     url:
       from: env
       name: RUNLAYER_GMAIL_MCP_URL
-    tools: [fetch_attachment, fetch_message, list_drafts, list_labels, list_messages, search]
+    tools: [fetch_attachment, fetch_message, list_drafts, list_labels, list_messages, search,
+      add_labels, create_draft, create_label, mark_as_read, reply_to_message, send_draft, send_email]
 
   - name: runlayer-gcalendar
     transport: remote
     url:
       from: env
       name: RUNLAYER_GCALENDAR_MCP_URL
-    tools: [get_event, get_free_busy, list_calendars, list_events]
+    tools: [get_event, get_free_busy, list_calendars, list_events,
+      create_calendar, create_event, move_event, quick_add, respond_to_event, update_calendar, update_event]
 
   - name: runlayer-gdrive
     transport: remote
     url:
       from: env
       name: RUNLAYER_GDRIVE_MCP_URL
-    tools: [fetch_file, get_metadata, list_folder, list_permissions, search]
+    tools: [fetch_file, get_metadata, list_folder, list_permissions, search,
+      copy_file, create_doc_from_markdown, create_file, create_folder, move_file,
+      rename_file, share_file, update_doc_from_markdown, update_file]
 
   - name: runlayer-gdocs
     transport: remote
     url:
       from: env
       name: RUNLAYER_GDOCS_MCP_URL
-    tools: [fetch, fetch_all_tabs, fetch_tab, list_comments, list_tabs, replace_text, search]
+    tools: [fetch, fetch_all_tabs, fetch_tab, list_comments, list_tabs, search,
+      add_comment, create_file, format_paragraphs, format_text, insert_break, insert_text,
+      link_text, replace_text, resolve_comment]
 
   - name: runlayer-gsheets
     transport: remote
     url:
       from: env
       name: RUNLAYER_GSHEETS_MCP_URL
-    tools: [fetch, get_metadata, list, search]
+    tools: [fetch, get_metadata, list, search,
+      add_sheet, append, autofill, create, format_cells, group_rows, insert_rows,
+      set_row_visibility, update, update_ranges]

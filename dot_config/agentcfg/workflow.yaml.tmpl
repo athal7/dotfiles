@@ -306,15 +306,29 @@ workflow:
         external_directory: *extdirs
       mcp:
         - server: runlayer-gmail
-          ask: &googleWritePatterns ["*send*", "*create*", "*update*", "*delete*", "*schedule*"]
+          # Exact enumeration, not a shared glob: "*send*/*create*/*update*/
+          # *delete*/*schedule*" (this list's prior shape) missed add_labels,
+          # mark_as_read, and reply_to_message entirely — verified live
+          # against the actual runlayer-gmail tool set 2026-08-10.
+          ask: ["add_labels", "create_draft", "create_label", "mark_as_read", "reply_to_message", "send_draft", "send_email"]
         - server: runlayer-gcalendar
-          ask: *googleWritePatterns
+          # move_event, quick_add, and respond_to_event were uncovered by
+          # the prior shared glob — verified live 2026-08-10.
+          ask: ["create_calendar", "create_event", "move_event", "quick_add", "respond_to_event", "update_calendar", "update_event"]
         - server: runlayer-gdrive
-          ask: *googleWritePatterns
+          # copy_file, move_file, rename_file, and share_file (grants
+          # access — high sensitivity) were uncovered — verified live 2026-08-10.
+          ask: ["copy_file", "create_doc_from_markdown", "create_file", "create_folder", "move_file", "rename_file", "share_file", "update_doc_from_markdown", "update_file"]
         - server: runlayer-gdocs
-          ask: *googleWritePatterns
+          # add_comment, format_paragraphs, format_text, insert_break,
+          # insert_text, link_text, replace_text, and resolve_comment were
+          # all uncovered — verified live 2026-08-10. replace_text was
+          # previously in Tools: unmarked, as if read-only; it is not.
+          ask: ["add_comment", "create_file", "format_paragraphs", "format_text", "insert_break", "insert_text", "link_text", "replace_text", "resolve_comment"]
         - server: runlayer-gsheets
-          ask: *googleWritePatterns
+          # add_sheet, append, autofill, format_cells, group_rows,
+          # insert_rows, and set_row_visibility were all uncovered —
+          ask: ["add_sheet", "append", "autofill", "create", "format_cells", "group_rows", "insert_rows", "set_row_visibility", "update", "update_ranges"]
 
     - name: linear
       description: "Reaches Linear via its official remote MCP (OAuth). Dispatched to search and read issues, projects, and documents; write actions (create/update issues, projects, documents) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
@@ -330,4 +344,9 @@ workflow:
         external_directory: *extdirs
       mcp:
         - server: linear
-          ask: ["save_*"]
+          # "save_*" alone missed every delete_*/merge_*/resolve_*/submit_*
+          # write tool and create_attachment* — verified against this
+          # session's own live linear MCP tool routes 2026-08-10.
+          ask: ["save_*", "delete_*", "merge_diff", "resolve_diff_thread", "submit_diff_review",
+            "create_attachment", "create_attachment_from_upload", "create_initiative_label",
+            "create_issue_label", "prepare_attachment_upload"]
