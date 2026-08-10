@@ -225,6 +225,12 @@ launchagents:
       - "{{ .local_model.prompt_cache_size }}"
       - --prompt-cache-bytes
       - "{{ .local_model.prompt_cache_bytes }}"
+      # Prefill batching (mlx-lm transient-activation mitigation): halves the
+      # per-forward-pass token count during prompt processing to shrink the
+      # activation spike that was the largest unaccounted term in a measured
+      # 39.77GB active-memory peak (34.8GB swap used). Default is 2048.
+      - --prefill-step-size
+      - "{{ .local_model.prefill_step_size }}"
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
