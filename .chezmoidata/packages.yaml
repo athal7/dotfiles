@@ -121,6 +121,10 @@ packages:
       skill: ical-cli
     - repo: athal7/opencode-permission-audit
       skill: permission-audit
+    - repo: addyosmani/agent-skills
+      skill: incremental-implementation
+    - repo: addyosmani/agent-skills
+      skill: test-driven-development
     - source: .opencode/skills
       match: openspec-*
 
