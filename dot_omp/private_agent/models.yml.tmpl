@@ -1,16 +1,20 @@
+{{- if hasKey . "local_model" -}}
 providers:
-  {{ .local_model.provider }}:
-    baseUrl: http://{{ .local_model.host }}:{{ .local_model.port }}/v1
-    api: {{ .local_model.api }}
-    apiKey: {{ .local_model.api_key }}
+  {{ (index .local_model "provider") | default "mlx" }}:
+    baseUrl: http://{{ (index .local_model "host") | default "127.0.0.1" }}:{{ (index .local_model "port") | default 8091 }}/v1
+    api: {{ (index .local_model "api") | default "openai-completions" }}
+    apiKey: {{ (index .local_model "api_key") | default "mlx-local" }}
     compat:
       supportsDeveloperRole: false
       supportsReasoningEffort: false
     models:
-      - id: {{ .local_model.id }}
+      - id: {{ (index .local_model "id") | default "default_model" }}
         name: {{ .local_model.name }}
         reasoning: true
         input: [text]
         contextWindow: {{ .local_model.context_window }}
         maxTokens: {{ .local_model.max_tokens }}
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+{{- else -}}
+providers: {}
+{{- end }}

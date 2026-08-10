@@ -3,7 +3,6 @@
 # Re-runs whenever agents.yaml changes.
 #
 # agents.yaml hash: {{ include "dot_config/launchd-yaml/agents.yaml.tmpl" | sha256sum }}
-# local model registry: {{ .local_model | toJson }}
 
 set -eu
 launchd-yaml apply

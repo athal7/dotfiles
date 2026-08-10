@@ -48,13 +48,14 @@ harnesses:
             claude-sonnet-5:
               options:
                 thinking: {type: adaptive, display: summarized}
-        {{ .local_model.provider }}:
+{{- if hasKey . "local_model" }}
+        {{ (index .local_model "provider") | default "mlx" }}:
           npm: "@ai-sdk/openai-compatible"
           name: mlx-lm
           options:
-            baseURL: "http://{{ .local_model.host }}:{{ .local_model.port }}/v1"
+            baseURL: "http://{{ (index .local_model "host") | default "127.0.0.1" }}:{{ (index .local_model "port") | default 8091 }}/v1"
           models:
-            {{ .local_model.id }}:
+            {{ (index .local_model "id") | default "default_model" }}:
               name: {{ .local_model.name | quote }}
               # Without an explicit limit, this unregistered custom model
               # resolves to limit.context=0 in opencode's provider registry
@@ -67,6 +68,7 @@ harnesses:
               limit:
                 context: {{ .local_model.context_window }}
                 output: {{ .local_model.max_tokens }}
+{{- end }}
       formatter:
         rubocop: {disabled: true}
         ruff: {disabled: true}

@@ -181,6 +181,8 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
+{{- if hasKey . "local_model" }}
+
   mlx-server:
     Label: com.$USER.mlx-server
     ProgramArguments:
@@ -197,9 +199,9 @@ launchagents:
       - --model
       - {{ .local_model.hf_repo }}
       - --host
-      - {{ .local_model.host }}
+      - {{ (index .local_model "host") | default "127.0.0.1" }}
       - --port
-      - "{{ .local_model.port }}"
+      - "{{ (index .local_model "port") | default 8091 }}"
       - --log-level
       - INFO
       # Concurrency: dropped to 1 (was 2) as a diagnostic/mitigation for the
@@ -255,6 +257,7 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
+{{- end }}
 
   naya-sync:
     Label: com.$USER.naya-sync

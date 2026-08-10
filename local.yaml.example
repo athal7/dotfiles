@@ -40,6 +40,46 @@ orgs:
       slow: mlx/default_model
       plan: mlx/default_model
 
+# Locally-hosted mlx model (Apple Silicon only) served by mlx_lm.server,
+# consumed by three templates: dot_config/launchd-yaml/agents.yaml.tmpl
+# (mlx-server/mlx-watchdog LaunchAgents), dot_omp/private_agent/models.yml.tmpl
+# (omp's mlx provider), and dot_config/agentcfg/agentcfg.yaml.tmpl (opencode's
+# mlx provider). Omit this key entirely on a machine that shouldn't run a
+# local model — all three templates render without any mlx-server/provider
+# entries when .local_model is unset, and .chezmoiscripts/run_once_after_mlx-gpu-wired-limit.sh.tmpl
+# is a no-op. host/port/provider/api/api_key/id default sensibly in-template
+# (127.0.0.1:8091, provider "mlx", OpenAI-compatible protocol, model id
+# "default_model") — only override them here if you actually need to.
+#
+# The tuning fields below (context_window, prompt_cache_size/bytes,
+# prefill_step_size, gpu_wired_limit_mb) are sized to THIS machine's RAM —
+# they're not portable defaults. Current values assume a 48GB box running the
+# 35B-A3B model below; see the comments in agents.yaml.tmpl for the
+# measured-memory reasoning (39.77GB peak / 34.8GB swap before these were
+# tightened) if retuning for a different model or RAM size.
+local_model:
+  hf_repo: mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit
+  name: qwen3.6-35b-a3b-optiq
+  # Client-advertised context window (omp contextWindow / opencode limit.context)
+  # AND the upstream trigger for earlier auto-compaction — kept in lockstep
+  # with the server's own --max-tokens cap below.
+  context_window: 32000
+  max_tokens: 8192
+  # LRU cache of KV-caches across distinct conversations (mlx-lm#883/#1666
+  # mitigation) — bounds memory without disabling the cache outright (a hit
+  # skips prompt reprocessing entirely).
+  prompt_cache_size: 4
+  prompt_cache_bytes: 3221225472 # 3GiB
+  # Per-forward-pass token batch during prompt processing (mlx_lm.server
+  # default is 2048) — halving it shrinks the transient activation spike
+  # that dominates peak memory on long prompts.
+  prefill_step_size: 512
+  # macOS iogpu.wired_limit_mb ceiling (headroom only, not the IOGPUFamily
+  # panic fix — that's the wired-limit no-op shim in
+  # mlx-lm-server-launcher.tmpl). Leave enough gap below total RAM for the
+  # OS and everything else running.
+  gpu_wired_limit_mb: 40960
+
 # Production service → local repo mapping for the daily fix-prod-errors task.
 # Keys are Elastic APM service.name values; values are repo directory names under ~/code.
 # Used by the /fix-prod-errors command to decide which repo to create a worktree in.
