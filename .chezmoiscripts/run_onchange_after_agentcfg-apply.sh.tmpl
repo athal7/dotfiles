@@ -24,12 +24,22 @@
 #     chezmoi only knows what IT last wrote, so a downstream script
 #     merge it can't see looks like external drift on every later apply).
 #   - omp: subagent files under ~/.omp/agent/agents (MCP tool ids folded
-#     into tools: per agent), ~/.omp/agent/APPEND_SYSTEM.md (lead.md,
-#     shared verbatim with every other harness — no per-harness prompt
-#     split), bash.patterns, tools.approval (registry-derived MCP grants
-#     merged with harnesses.omp.extra's built-in-tool allow-list), and
-#     every other harnesses.omp.extra key (tools.approvalMode,
-#     task.disabledAgents, compaction.strategy) via `omp config set`.
+#     into tools: per agent) — currently 0 files, since every workflow
+#     step names an opencode: persona and no role: advisory step exists.
+#     No ~/.omp/agent/APPEND_SYSTEM.md is written either: every step's
+#     Agent.Opencode override makes that content opencode-only by
+#     construction (see agentcfg's omp.go Render() doc comment) — omp's
+#     primary session gets zero agentcfg-authored prompt content, not
+#     lead.md verbatim (a prior pre-agentcfg symlink+lead-omp.md pair once
+#     delivered lead.md there; the migration to this registry deleted
+#     their chezmoi source without `chezmoi destroy`-ing the deployed
+#     files first, so they silently kept serving stale content until
+#     manually removed — nothing regenerates that path today). What omp
+#     DOES get from this script: bash.patterns, tools.approval
+#     (registry-derived MCP grants merged with harnesses.omp.extra's
+#     built-in-tool allow-list), and every other harnesses.omp.extra key
+#     (tools.approvalMode, task.disabledAgents, compaction.strategy) via
+#     `omp config set`.
 #   - both: commands.yaml.tmpl's structured commands (implement,
 #     merge-request) render identically to ~/.agents/skills/<name>/
 #     SKILL.md on either harness; omp's rendering additionally triggers
