@@ -44,13 +44,30 @@ main() {
     '(.model_class // {}) * (.orgs[$org].model_class // {})' 2>/dev/null) || return 0
   [ -n "$classes" ] && [ "$classes" != "null" ] || return 0
 
-  write .opencode/opencode.json "$(printf '%s' "$data" | jq --argjson c "$classes" '{
-      model: $c.default,
-      small_model: $c.smol,
-      agent: (.agents
-        | map(select(has("class")) | {key: .name, value: {model: $c[.class]}})
-        | from_entries)
-    }' 2>/dev/null)"
+  # compaction.reserved (opencode) / compaction.thresholdTokens (omp) are
+  # applied only when this org's classes actually route to the local mlx
+  # model — both compute the same effective usable-context ceiling
+  # (contextWindow - compaction_threshold_tokens) so a mid-tool-loop
+  # session can't outrun mlx_lm.server's real context window regardless
+  # of which harness is driving it. See the omp write below for the
+  # cross-model-drift half of this mitigation (retry.modelFallback),
+  # which opencode has no equivalent of — it never reroutes a session to
+  # a different provider/model on failure, so no matching override is
+  # needed here.
+  write .opencode/opencode.json "$(printf '%s' "$data" | jq --argjson c "$classes" '
+      (.local_model.provider + "/" + .local_model.id) as $localId
+      | ($c | to_entries | any(.value == $localId)) as $usesLocal
+      | {
+          model: $c.default,
+          small_model: $c.smol,
+          agent: (.agents
+            | map(select(has("class")) | {key: .name, value: {model: $c[.class]}})
+            | from_entries)
+        }
+        + (if $usesLocal then {
+            compaction: {reserved: (.local_model.context_window - .local_model.compaction_threshold_tokens)}
+          } else {} end)
+    ' 2>/dev/null)"
 
   write .omp/config.yml "$(printf '%s' "$data" | jq --argjson c "$classes" '{modelRoles: $c}' 2>/dev/null | yq -P 2>/dev/null)"
 }
