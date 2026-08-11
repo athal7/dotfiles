@@ -23,7 +23,6 @@ packages:
     - name: bat
     - name: chezmoi
     - name: container
-    - name: cq
     - name: direnv
     - name: ffmpeg
     - name: fzf
@@ -76,6 +75,7 @@ packages:
   pi_packages: []
 
   casks:
+    - name: mozilla-ai/tap/cq
     - name: gcloud-cli
     - name: font-monaspace-nf
     - name: claude-code
