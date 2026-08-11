@@ -7,33 +7,18 @@
 # WHY A HOOK, NOT A WRAPPER: the aoe-cli-defaults spec forbids any shell
 # function that injects flags into user-invoked `aoe` commands.
 #
-# WHY IT NO LONGER RENDERS ANYTHING ITSELF: this script used to reimplement
-# org->model-class routing in jq — parsing `git remote get-url origin`,
-# reading orgs.<org>.model_class out of `chezmoi data`, and writing both
-# project files directly. agentcfg models exactly that now as a first-class
-# concept: contexts.yaml matches git_remote_host/git_remote_owner and merges
-# the matched context's partial model_classes over the registry defaults
-# (internal/scope Project + internal/contextres), then asks each renderer to
-# project it onto its own project-local file. So the hook's only job is to
-# invoke that for this repo's directory. One writer, one source of truth —
-# the same two-writer hazard run_onchange_after_agentcfg-apply.sh.tmpl
-# already documents for opencode.json applied here too, and it bit hard:
-# see the compaction note below.
+# WHY IT RENDERS NOTHING ITSELF: it used to reimplement org->model-class
+# routing in jq and write both project files. agentcfg does that natively
+# (contexts matched on the git remote, per-renderer project scope), so this
+# is now one call and there is one writer per file.
 #
-# WHY THE compaction.thresholdTokens WRITE IS GONE (and must not come back
-# in this shape): it set omp's ABSOLUTE compaction trigger to the local
-# model's usable budget (20000) whenever any class routed to mlx. omp's
-# per-turn floor — system prompt plus every MCP server's tool schemas,
-# which omp mounts unconditionally (agentcfg ADR-0002) — is ~37.5k, above
-# that trigger by construction, so shouldCompact() was true on every turn
-# forever: each pass warned "Compaction freed too little context to make
-# progress" and no session made any forward progress at all. It also fired
-# for a project whose `default` was a cloud model just because `smol`
-# routed to mlx, because the guard tested `any` class rather than the one
-# that governs the primary session. The real fix is upstream of any
-# threshold: shrink the floor so the local model can hold a session
-# (mcp_servers.yaml's exclude_for_models). A trigger below the harness's
-# own irreducible floor is unsatisfiable at any value.
+# DO NOT REINTRODUCE a compaction.thresholdTokens write here. It set omp's
+# absolute compaction trigger below omp's own irreducible per-turn floor
+# (system prompt + unconditionally-mounted MCP schemas), which made
+# shouldCompact() true on every turn forever and stalled every session. A
+# trigger below that floor is unsatisfiable at any value; the fix is to
+# shrink the floor (mcp_servers.yaml's exclude_for_models). See agentcfg
+# ADR-0005 and the 2026-08-11 kb journal entry.
 #
 # ALWAYS EXITS 0 — aoe kills the whole session process tree if an on_launch
 # hook fails or times out. A lookup or write failure must never block a launch.

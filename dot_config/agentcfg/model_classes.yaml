@@ -1,7 +1,0 @@
-# Mirrors .chezmoidata/agents.yaml's `model_class:` map (the single source
-# of truth for opencode/omp model literals). Dropped the old `plan` entry:
-# it duplicated `slow`'s literal value and nothing referenced it.
-model_classes:
-  default: anthropic/claude-sonnet-5
-  smol: mlx/default_model
-  slow: anthropic/claude-opus-5

@@ -1,11 +1,50 @@
 version: 1
 imports:
-  - model_classes.yaml
-  - contexts.yaml
   - bash.yaml
   - mcp_servers.yaml
   - workflow.yaml
   - commands.yaml
+
+{{- /* model_classes and contexts are inline rather than imported files:
+       agentcfg merges the root agentcfg.yaml with the same mergeFileInto
+       every import uses (internal/registry/load.go), so an import buys
+       nothing here but two more files, two more `imports:` entries, and
+       two more hash lines in run_onchange_after_agentcfg-apply.sh.tmpl.
+       Both render from the same two data sources, so they belong together.
+
+       Model literals come from .chezmoidata/agents.yaml's model_class (the
+       map agents' `class:` bindings resolve against). Per-org overrides come
+       from local.yaml's untracked orgs.<org>.model_class — this repo is
+       public, so no org name is committed. Each context is a PARTIAL
+       override merged over the defaults.
+
+       Routing a context's `default` to the local model REQUIRES the
+       exclude_for_models entries in mcp_servers.yaml; without them omp's
+       unconditional MCP surface overflows the local window and silently
+       falls back to a cloud model. See agentcfg ADR-0005. */ -}}
+{{- $classes := .model_class }}
+model_classes:
+{{- range $class := (keys $classes | sortAlpha) }}
+  {{ $class }}: {{ index $classes $class }}
+{{- end }}
+{{- $orgs := dict }}
+{{- if hasKey . "orgs" }}{{ $orgs = .orgs }}{{ end }}
+{{- $ctx := dict }}
+{{- range $org, $cfg := $orgs }}
+{{-   if hasKey $cfg "model_class" }}{{ $ctx = set $ctx $org (index $cfg "model_class") }}{{ end }}
+{{- end }}
+{{- if $ctx }}
+contexts:
+{{- range $org := (keys $ctx | sortAlpha) }}
+  - match:
+      git_remote_host: github.com
+      git_remote_owner: {{ $org }}
+    model_classes:
+{{-   range $class := (keys (index $ctx $org) | sortAlpha) }}
+      {{ $class }}: {{ index (index $ctx $org) $class }}
+{{-   end }}
+{{- end }}
+{{- end }}
 harnesses:
   opencode:
     out: ~/.config/opencode/opencode.json

@@ -6,10 +6,10 @@
 # harnesses — the hand-rolled omp generators this replaced (run_onchange_
 # after_omp-agents.sh.tmpl, run_onchange_after_omp-settings.sh.tmpl,
 # dot_omp/private_agent/{symlink_APPEND_SYSTEM.md,private_mcp.json}.tmpl)
-# are gone; .chezmoidata/agents.yaml and mcp.yaml's role as a rendering
-# source for omp went with them (agents.yaml is kept, narrowed to just
-# the per-org model-class override dot_local/bin/executable_aoe-model-
-# class still reads from `chezmoi data` — see its own header).
+# are gone. .chezmoidata/agents.yaml is still a rendering source, but only
+# for agentcfg.yaml.tmpl's inline model_classes/contexts blocks — nothing
+# else reads it, and aoe-model-class no longer reads `chezmoi data` at all
+# (it just calls `agentcfg apply --scope project`).
 #
 # `agentcfg apply`'s own JSON/YAML merge (or, for omp, `omp config set`
 # calls) only touches the managed paths/keys each renderer declares:
@@ -29,12 +29,7 @@
 #     No ~/.omp/agent/APPEND_SYSTEM.md is written either: every step's
 #     Agent.Opencode override makes that content opencode-only by
 #     construction (see agentcfg's omp.go Render() doc comment) — omp's
-#     primary session gets zero agentcfg-authored prompt content, not
-#     lead.md verbatim (a prior pre-agentcfg symlink+lead-omp.md pair once
-#     delivered lead.md there; the migration to this registry deleted
-#     their chezmoi source without `chezmoi destroy`-ing the deployed
-#     files first, so they silently kept serving stale content until
-#     manually removed — nothing regenerates that path today). What omp
+#     primary session gets zero agentcfg-authored prompt content. What omp
 #     DOES get from this script: bash.patterns, tools.approval
 #     (registry-derived MCP grants merged with harnesses.omp.extra's
 #     built-in-tool allow-list), and every other harnesses.omp.extra key
@@ -45,8 +40,12 @@
 #     SKILL.md on either harness; omp's rendering additionally triggers
 #     its native `workflowz` deterministic-pipeline mechanism.
 #
+# Every registry file needs a hash line or its edits won't retrigger this
+# script. agents.yaml is here because agentcfg.yaml.tmpl renders
+# model_classes/contexts from it, and `include` hashes template SOURCE, not
+# output — a data-only change would otherwise leave this script identical.
 # agentcfg.yaml.tmpl hash: {{ include "dot_config/agentcfg/agentcfg.yaml.tmpl" | sha256sum }}
-# model_classes.yaml hash: {{ include "dot_config/agentcfg/model_classes.yaml" | sha256sum }}
+# agents.yaml hash: {{ include ".chezmoidata/agents.yaml" | sha256sum }}
 # bash.yaml hash: {{ include "dot_config/agentcfg/bash.yaml" | sha256sum }}
 # mcp_servers.yaml hash: {{ include "dot_config/agentcfg/mcp_servers.yaml" | sha256sum }}
 # workflow.yaml.tmpl hash: {{ include "dot_config/agentcfg/workflow.yaml.tmpl" | sha256sum }}

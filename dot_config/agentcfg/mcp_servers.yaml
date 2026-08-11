@@ -14,21 +14,12 @@
 # never authenticated (no stored OAuth token) — authenticate it once
 # (obtain a live tools/list) to populate a real allowlist.
 #
-# `exclude_for_models: [mlx/default_model]` on every server but context7
-# and cq is a HARD REQUIREMENT of any contexts.yaml entry whose `default`
-# class routes to the local model — not a tuning preference. omp has no
-# per-role MCP tool-visibility layer (agentcfg ADR-0002): it mounts every
-# targeted server into its primary session unconditionally, so these tool
-# schemas are a fixed cost every turn pays. All 15 together measure ~37.5k
-# tokens — more than the local model's entire 32000-token window (see
-# local.yaml's local_model). Left unexcluded, such a session cannot fit
-# even its own first request: it silently falls back to a cloud model,
-# billing the very account the local-model routing exists to keep out of.
-#
-# Only context7 (2 tools) and cq (5) stay — both cheap, both directly
-# serving code. github is dropped despite being genuinely useful here: 28
-# schemas is a large share of a 32k budget, and bash.yaml already allows
-# the `gh` CLI, which covers the same ground at zero context cost.
+# `exclude_for_models` is REQUIRED, not tuning: omp mounts every targeted
+# server unconditionally, and all 15 together (~37.5k tokens of schema)
+# exceed the local model's whole 32000-token window — so a session routed
+# there silently falls back to a billed cloud model. Rationale, mechanism
+# and rejected alternatives: agentcfg ADR-0005. Only context7 (2 tools) and
+# cq (5) survive; github goes too since bash.yaml allows the `gh` CLI.
 #
 # Seven `runlayer-*` servers proxy OAuth'd services (Zoom/Slack/
 # Atlassian/Google/…) at a workspace-specific URL, resolved from an
