@@ -1,200 +1,106 @@
-{{- /* Mirrors .chezmoidata/agents.yaml. Prompt bodies are inlined via
-       chezmoi's `include` (raw file read, not re-templated) so this file
-       stays the single source of truth without duplicating
-       dot_agents/prompts/*.md's content — see the integration summary for
-       which agents fell back to a literal inline `text:` instead (only
-       "general", which has no source prompt file of its own).
+{{- /* Mirrors .chezmoidata/agents.yaml. Prompt bodies inlined via `include`.
+       No opencode_agents:/opencode: indirection, no targets: — role
+       carries the discipline, every step renders on every harness.
 
-       The core five steps (orchestrate/plan/verify/implement/research)
-       each set `opencode: {agent: <name>}`, pointing at a same-named
-       entry under opencode_agents: below, rather than rendering directly
-       from the step's own name/prompt/permissions. Why the split:
-
-       - Step names are semantic/action-oriented (what discipline the
-         workflow needs), decoupled from any one harness's vocabulary —
-         "orchestrate" is the step; "lead" is opencode's name for the
-         persona that implements it. Steps stay meaningful even for a
-         harness with no concept of named, restriction-bearing agents.
-       - omp's task-dispatch model needs no standing persona for these:
-         its primary session already has full tools (no lever exists to
-         gate write/edit there — confirmed empirically, bash bypasses any
-         exclusion; see agentcfg's omp renderer Capabilities() doc) and
-         its subagent dispatch carries ad hoc, step-specific instructions
-         inline at call time. A permanent named agent file per step, the
-         way opencode structurally requires, buys omp nothing a dynamic
-         task() dispatch doesn't already give it — so every step below
-         sets targets: [opencode], and Agent.Opencode makes omp render
-         NOTHING for any of them (no standalone agent file, no
-         APPEND_SYSTEM.md composition) as an additional, renderer-level
-         guarantee, not just a targets-only convention.
-       - opencode has no native workflow concept and no way to dispatch
-         "ad hoc, uninstantiated" work — every dispatch target must be a
-         real, pre-declared agent.<name> with its own tools/permissions.
-         opencode_agents: below is that declaration, decoupled from the
-         step so the SAME persona (e.g. "qa") could back more than one
-         step without duplicating its prompt/permissions/mcp.
-       - Each opencode_agents entry's prompt is the full, complete
-         persona (methodology + role framing combined, i.e. today's
-         plan.md/qa.md/build.md/scout.md content, unchanged) — splitting
-         these personas' content between the step and the agent would
-         leave opencode's actual dispatched agent with an incomplete
-         prompt, since the step's own `prompt:` is never rendered
-         anywhere once opencode: is set (see Agent.Opencode's doc comment
-         in agentcfg's schema.go). Each step's own `prompt:` below is
-         consequently a short, undispatched documentation stub — required
-         by schema, never rendered by any renderer here, since every step
-         below is fully opencode-agent-overridden.
-
-       "orchestrate" (opencode agent: lead) is the one exception worth
-       calling out: lead.md's content genuinely IS split, because its
-       "no edit/write, dispatch instead" framing describes a real,
-       enforced opencode constraint (agent.lead.permission.edit/write:
-       deny actually revokes those tools there) that has no omp
-       equivalent to assert — omp's primary session can't be gapped this
-       way at all (see above). The portable `implement`/`merge-request`
-       workflow commands (dot_config/agentcfg/commands.yaml.tmpl)
-       separately phrase their guidance from the session's own tool
-       inventory, so the same command reads correctly whether a
-       fully-tooled omp session or a gapped opencode lead runs it —
-       that's the actual cross-harness delivery mechanism for
-       step-specific guidance, not this file. */ -}}
-opencode_agents:
-  - name: lead
-    description: "Primary orchestrator — plans, decides, dispatches, and verifies. Does not edit files directly."
-    class: default
-    prompt:
-      text: |
-        {{ include "dot_agents/prompts/lead.md" | indent 8 | trim }}
-    permissions:
-      task: allow
-      edit: deny
-      write: deny
-      bash:
-        profile: lead
-      external_directory: &extdirs
-        "*": ask
-        "~/code/**": allow
-        "~/.local/**": allow
-        "~/.agents/skills/**": allow
-        "~/.config/**": allow
-        "~/.cache/**": allow
-        "~/.agent-of-empires/**": allow
-        "~/Downloads/**": allow
-        "~/Library/LaunchAgents/**": allow
-        "~/Library/Logs/**": allow
-        "/tmp/**": allow
-        "/private/tmp/**": allow
-        "/var/folders/*/*/T/**": allow
-        "/private/var/folders/*/*/T/**": allow
-
-  - name: planner
-    description: "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only."
-    class: slow
-    prompt:
-      text: |
-        {{ include "dot_agents/prompts/plan.md" | indent 8 | trim }}
-    permissions:
-      edit: deny
-      write: deny
-      external_directory: *extdirs
-    mcp:
-      - server: context7
-
-  - name: qa
-    description: "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior, and compares against a linked Figma design (figma-desktop MCP) when one exists. Read-only re: code."
-    class: default
-    prompt:
-      text: |
-        {{ include "dot_agents/prompts/qa.md" | indent 8 | trim }}
-    permissions:
-      edit: deny
-      write: deny
-      external_directory: *extdirs
-    mcp:
-      - server: firefox-devtools
-      - server: figma-desktop
-
-  - name: build
-    description: "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done."
-    class: default
-    prompt:
-      text: |
-        {{ include "dot_agents/prompts/build.md" | indent 8 | trim }}
-    permissions:
-      edit: allow
-      write: allow
-      bash:
-        profile: build
-      external_directory: *extdirs
-    mcp:
-      - server: figma-desktop
-      - server: context7
-
-  - name: scout
-    description: "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7."
-    class: default
-    prompt:
-      text: |
-        {{ include "dot_agents/prompts/scout.md" | indent 8 | trim }}
-    permissions:
-      edit: deny
-      write: deny
-      external_directory: *extdirs
-    mcp:
-      - server: context7
-
+       - lead: primary
+       - planner: advisory
+       - qa: delegate
+       - build: delegate
+       - scout: delegate */ -}}
 workflow:
   steps:
-    - name: orchestrate
+    - name: lead
       description: "Primary orchestrator — plans, decides, dispatches, and verifies."
       role: primary
       class: default
-      targets: [opencode]
-      opencode:
-        agent: lead
       prompt:
-        text: "Compiles to opencode's \"lead\" persona (see opencode_agents: above). omp's primary session gets no agentcfg-authored prompt content at all — see this file's header comment."
+        text: |
+          {{ include "dot_agents/prompts/lead.md" | indent 10 | trim }}
+      permissions:
+        task: allow
+        edit: deny
+        write: deny
+        bash:
+          profile: lead
+        external_directory: &extdirs
+          "*": ask
+          "~/code/**": allow
+          "~/.local/**": allow
+          "~/.agents/skills/**": allow
+          "~/.config/**": allow
+          "~/.cache/**": allow
+          "~/.agent-of-empires/**": allow
+          "~/Downloads/**": allow
+          "~/Library/LaunchAgents/**": allow
+          "~/Library/Logs/**": allow
+          "/tmp/**": allow
+          "/private/tmp/**": allow
+          "/var/folders/*/*/T/**": allow
+          "/private/var/folders/*/*/T/**": allow
 
-    - name: plan
-      description: "Deep analysis and architectural thinking — read-only."
-      role: delegate
+    - name: planner
+      description: "Deep analysis and architectural thinking. Dispatched by lead for design decisions, complex tradeoffs, and architectural review; composed into the primary's own prompt on omp as standing discipline. Read-only."
+      role: advisory
       class: slow
-      targets: [opencode]
-      opencode:
-        agent: planner
       prompt:
-        text: "Compiles to opencode's \"planner\" persona (see opencode_agents: above). omp dispatches this discipline ad hoc via task() with inline instructions instead of a standing agent file."
+        text: |
+          {{ include "dot_agents/prompts/plan.md" | indent 10 | trim }}
+      permissions:
+        edit: deny
+        write: deny
+        bash: deny
+        external_directory: *extdirs
+      mcp:
+        - server: context7
 
-    - name: verify
-      description: "Functional QA — drives a running app in a browser to verify UI/behavior against acceptance criteria and a linked design. Read-only re: code."
+    - name: qa
+      description: "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior, and compares against a linked Figma design (figma-desktop MCP) when one exists. Read-only re: code."
       role: delegate
       class: default
-      targets: [opencode]
-      opencode:
-        agent: qa
       prompt:
-        text: "Compiles to opencode's \"qa\" persona (see opencode_agents: above). omp dispatches this discipline ad hoc via task() with inline instructions instead of a standing agent file."
+        text: |
+          {{ include "dot_agents/prompts/qa.md" | indent 10 | trim }}
+      permissions:
+        edit: deny
+        write: deny
+        bash: deny
+        external_directory: *extdirs
+      mcp:
+        - server: firefox-devtools
+        - server: figma-desktop
 
-    - name: implement
-      description: "Implementation work under TDD discipline — full read/write and local dev tooling."
+    - name: build
+      description: "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done."
       role: delegate
       class: default
       steps: 30
-      targets: [opencode]
-      opencode:
-        agent: build
       prompt:
-        text: "Compiles to opencode's \"build\" persona (see opencode_agents: above). omp dispatches this discipline ad hoc via task() with inline instructions instead of a standing agent file."
+        text: |
+          {{ include "dot_agents/prompts/build.md" | indent 10 | trim }}
+      permissions:
+        edit: allow
+        write: allow
+        bash:
+          profile: build
+        external_directory: *extdirs
+      mcp:
+        - server: figma-desktop
+        - server: context7
 
-    - name: research
-      description: "External research — library/framework docs, dependency source, changelogs. Read-only."
+    - name: scout
+      description: "External research — library/framework docs, dependency source, changelogs. Read-only; uses webfetch and context7."
       role: delegate
       class: default
-      targets: [opencode]
-      opencode:
-        agent: scout
       prompt:
-        text: "Compiles to opencode's \"scout\" persona (see opencode_agents: above). omp dispatches this discipline ad hoc via task() with inline instructions instead of a standing agent file."
+        text: |
+          {{ include "dot_agents/prompts/scout.md" | indent 10 | trim }}
+      permissions:
+        edit: deny
+        write: deny
+        bash: deny
+        external_directory: *extdirs
+      mcp:
+        - server: context7
 
     - name: general
       description: "Multi-step research and read-only work that doesn't fit scout/plan/qa — the reads catch-all."

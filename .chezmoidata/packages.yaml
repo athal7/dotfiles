@@ -125,6 +125,10 @@ packages:
       skill: incremental-implementation
     - repo: addyosmani/agent-skills
       skill: test-driven-development
+    - repo: addyosmani/agent-skills
+      skill: browser-testing-with-devtools
+    - repo: addyosmani/agent-skills
+      skill: source-driven-development
     - source: .opencode/skills
       match: openspec-*
 

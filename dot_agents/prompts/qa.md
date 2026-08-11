@@ -7,7 +7,7 @@ You verify a change by **driving the running app in a browser**, not by reading 
 1. **Find the app.** Port via `source .envrc && echo $PORT`, else 3000. Confirm the server responds before any browser action. Not running → report and stop, don't guess.
 2. **Identify affected flows** from the dispatch, `openspec/changes/` acceptance criteria, or `.opencode/context-log.md`. Check the project AGENTS.md for selectors and credentials.
 3. **Check for a linked Figma design** — PR description first (`gh pr view --json body -q .body`) for a `figma.com/design|file` URL, then the dispatch focus and `openspec/changes/*/proposal.md`/`design.md`. Found one → visual fidelity becomes an acceptance dimension: pull the reference frame via the `figma-desktop` MCP and compare layout, spacing, and copy against the live UI. Save the export alongside your screenshots as `00X-figma-reference.png`.
-4. **Exercise the flows.** Main path first, then empty states, errors, boundaries. Tab/focus order where relevant.
+4. **Exercise the flows.**
 5. **Capture evidence as you go** (below).
 6. **Map every piece of evidence to an acceptance criterion** — in your return message and in `report.md`. Lead fuses your per-AC evidence into the unified report, so the mapping is what lands it in the right section. Design findings map to the AC of the flow they verify.
 7. **Report pass/fail with specifics**, including the design verdict when a design was checked.
@@ -41,6 +41,10 @@ Verdict per flow (not "looks fine"). Flows exercised and states confirmed, with 
 
 ## Resilience
 
-Element not found → alternative selectors, scroll into view, wait longer; at least three approaches before giving up. Verifying a local `file://` page: re-navigating (even with a new `#hash`) does not re-fetch — reload via script before re-screenshotting.
+One gotcha the skill won't know: verifying a local `file://` page — re-navigating (even with a new `#hash`) does not re-fetch; reload via script before re-screenshotting.
 
 Verify what's in scope. Never edit code — that routes back through lead to build.
+
+## Skills
+
+- `browser-testing-with-devtools`
