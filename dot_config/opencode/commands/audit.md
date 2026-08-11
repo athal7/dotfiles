@@ -23,14 +23,60 @@ If no specs exist, fall back to the legacy audit (skill load rates, delegation e
 
 ```bash
 WINDOW_DAYS=30
-DB=~/.local/share/opencode/opencode.db
 ```
 
-## Step 3 — Gather evidence per spec
+## Step 3 — Session & dispatch layer (harness-agnostic, via aoe)
 
-For each spec, gather evidence from the session DB and config. Organize findings by spec, not by data source.
+Session counts, status distribution, and worktree/dispatch cadence are read through `aoe`'s own session API, never through a harness's native store. `aoe` already normalizes this across every harness it manages (`opencode`, `omp`, etc.), so this layer never needs a per-harness adapter — a new harness later needs zero changes here.
 
-### Evidence sources
+```bash
+# Aggregate status distribution — already normalized across harnesses
+aoe status --json
+
+# Per-session live runtime state (join key: id == session)
+aoe ps --json
+
+# Session/worktree metadata, filtered to the measurement window.
+# created_at is ISO8601; -v is macOS/BSD date (this fleet is darwin).
+WINDOW_CUTOFF=$(date -u -v-${WINDOW_DAYS}d +%Y-%m-%dT%H:%M:%SZ)
+aoe list --json | jq --arg cutoff "$WINDOW_CUTOFF" '[.[] | select(.created_at >= $cutoff)]'
+
+# Dispatch cadence by harness — which tool is doing the work this window?
+aoe list --json | jq --arg cutoff "$WINDOW_CUTOFF" \
+  '[.[] | select(.created_at >= $cutoff)] | group_by(.tool) | map({tool: .[0].tool, dispatches: length})'
+
+# Worktree usage — sessions running in aoe-managed worktrees vs the primary checkout
+aoe list --json | jq --arg cutoff "$WINDOW_CUTOFF" \
+  '[.[] | select(.created_at >= $cutoff)] | group_by(.worktree.managed_by_aoe // false) | map({managed_by_aoe: .[0].worktree.managed_by_aoe, count: length})'
+```
+
+Report status distribution, dispatch cadence by harness, and worktree-managed share directly from this layer's output — do not re-derive these from any harness's own session store.
+
+## Step 4 — Per-message telemetry layer (per-harness adapters, normalized shape)
+
+`aoe` treats each session as a mostly-opaque process — it doesn't proxy per-message detail. Skill load rates, delegation-topology violations, interrupt rates, and cost/latency need a thin adapter per harness, each producing the same normalized shape so a new harness means writing one adapter, not rewriting this audit:
+
+```
+{
+  harness:            "opencode" | "omp" | ...,
+  window_days:         N,
+  skill_loads:         [{ agent, skill, loads, sessions }],
+  delegation:          { top_level_sessions, sessions_with_edits, violations, pct_violations } | "not_available",
+  interrupts:          [{ agent, interrupts, msgs, pct }],
+  cost_by_agent:       [{ agent, cost_usd, msgs, avg_ctx_tok }],
+  latency_by_model:    [{ agent, model, msgs, avg_lat_s, avg_out_tok }]
+}
+```
+
+Any field an adapter can't yet produce for its harness is reported as `"not_available"` rather than omitted or guessed — that's a real, reportable gap (see the omp adapter below), not a bug in this audit.
+
+### Opencode adapter
+
+Existing SQL against opencode's own session DB. This adapter also carries several opencode-plugin-specific extras (DCP firing signal, Anthropic extended-cache, local-model adoption) that have no omp equivalent yet — reported as opencode-only additions layered on top of the shared normalized core, not as gaps in the shared shape.
+
+```bash
+DB=~/.local/share/opencode/opencode.db
+```
 
 **Session DB queries** — adapt these to the specific requirements you're measuring:
 
@@ -45,7 +91,7 @@ WHERE json_extract(p.data,'$.type') = 'tool'
 GROUP BY command ORDER BY uses DESC;
 SQL
 
-# Skill load rates by agent
+# Skill load rates by agent -> normalized shape: skill_loads[]
 sqlite3 -readonly "$DB" <<SQL
 SELECT s.agent, json_extract(p.data,'$.state.input.name') AS skill,
        COUNT(*) AS loads, COUNT(DISTINCT p.session_id) AS sessions
@@ -56,7 +102,7 @@ WHERE json_extract(p.data,'$.tool')='skill'
 GROUP BY s.agent, skill ORDER BY s.agent, loads DESC;
 SQL
 
-# Delegation rate (lead edits = topology violation)
+# Delegation rate (lead edits = topology violation) -> normalized shape: delegation{}
 sqlite3 -readonly "$DB" <<SQL
 WITH base AS (
   SELECT id FROM session
@@ -75,7 +121,7 @@ LEFT JOIN edits e ON e.session_id=b.id
 LEFT JOIN tasks t ON t.session_id=b.id;
 SQL
 
-# Interrupt rate by agent
+# Interrupt rate by agent -> normalized shape: interrupts[]
 sqlite3 -readonly "$DB" <<SQL
 WITH interrupts AS (
   SELECT m.id, json_extract(m.data, '$.agent') AS agent
@@ -102,9 +148,9 @@ GROUP BY i.agent ORDER BY pct DESC;
 SQL
 ```
 
-**Permission audit** — the `opencode-permission-log` plugin logs every permission-prompt reply to per-day JSON sidecar files. Load the `permission-audit` skill and run it for this project; fold its loosening-candidate, denial, friction, and policy-concern findings into this audit's report. Never auto-suggest loosening a policy-concern or ambiguous finding — confirm with the human first.
+**Permission audit** (opencode-only — the `opencode-permission-log` plugin logs every permission-prompt reply to per-day JSON sidecar files) — Load the `permission-audit` skill and run it for this project; fold its loosening-candidate, denial, friction, and policy-concern findings into this audit's report. Never auto-suggest loosening a policy-concern or ambiguous finding — confirm with the human first.
 
-**Config checks:**
+**Config checks** (opencode-only):
 
 ```bash
 # Top-level bash policy (default-allow + guardrails; inherited by lead/planner)
@@ -120,18 +166,18 @@ jq '.plugin[0][1]' ~/.config/opencode/opencode.json
 jq '.agent | to_entries[] | {agent: .key, model: .value.model, variant: .value.variant}' ~/.config/opencode/opencode.json
 ```
 
-**Cost & context health** — the system's spend profile. Lead is typically the largest cost (always-on primary carrying full context); build is the largest *editing* agent. Watch for context bloat, speed regressions, and silently-broken models.
+**Cost & context health** (opencode-only, normalized-shape fields `cost_by_agent`/`latency_by_model` plus opencode-specific extras below) — the system's spend profile. Lead is typically the largest cost (always-on primary carrying full context); build is the largest *editing* agent. Watch for context bloat, speed regressions, and silently-broken models.
 
-**Token-efficiency baseline (DCP):** the headline metric for the token-efficiency plugin is the `lead` `avg_ctx_tok` from the queries below — the per-turn average context, which is robust across windows. `cache_r_Mtok` is a window-SUM (it scales with how much work happened that month, so a quiet month shows a fake "reduction"); treat it as **directional / decomposition support only**, not the target metric. Target: **≥15% reduction in `lead` `avg_ctx_tok`** vs a re-derived, work-intensity-controlled **floor read from `~/.config/opencode/dcp-baseline.json`** (source: `dot_config/opencode/dcp-baseline.json`) — NOT a hard-coded scalar. The floor is a ratcheting one (it only moves DOWN, and only on a guard-passing lower median; a higher/non-representative window is flagged, never adopted). Use `cache_r_Mtok` only to sanity-check direction, not to grade the target.
+**Token-efficiency baseline (DCP, opencode-only — no omp equivalent):** the headline metric for the token-efficiency plugin is the `lead` `avg_ctx_tok` from the queries below — the per-turn average context, which is robust across windows. `cache_r_Mtok` is a window-SUM (it scales with how much work happened that month, so a quiet month shows a fake "reduction"); treat it as **directional / decomposition support only**, not the target metric. Target: **≥15% reduction in `lead` `avg_ctx_tok`** vs a re-derived, work-intensity-controlled **floor read from `~/.config/opencode/dcp-baseline.json`** (source: `dot_config/opencode/dcp-baseline.json`) — NOT a hard-coded scalar. The floor is a ratcheting one (it only moves DOWN, and only on a guard-passing lower median; a higher/non-representative window is flagged, never adopted). Use `cache_r_Mtok` only to sanity-check direction, not to grade the target.
 
 **Grade R3 by SEGMENTING at the DCP-introduction date — never average across the boundary.** DCP was wired on **2026-06-16** (git commit `8d3f374`), so a single 30-day window straddles that date and yields a window-straddling artifact (the prior misleading −2.7%). The reduction MUST be computed as **post-introduction `avg_ctx_tok` vs pre-introduction `avg_ctx_tok`** (same formula on each segment), using the conservative "fully live" cutoff **2026-06-17** as the primary post boundary (the 06-16 commit day is partial and used only as a sensitivity point). The introduction-date split is the **bootstrap** method while the post-DCP segment is young (currently ~6 days / ~3.4k turns — **revisit at ≥30 post-DCP days, n≈15–20k turns**); the work-intensity-guarded median floor (below) becomes the **ongoing** mechanism once ≥30 post-DCP days accumulate.
 
-**DCP firing is instrumented (fail-open).** Read DCP's own persisted sidecar state (`~/.local/share/opencode/storage/plugin/dcp/<sessionId>.json`, written on every prune/compress) joined to the DB for `lead` attribution to prove prune/`compress` actually fires on `lead` turns and quantify per-turn tokens removed (a directional **median** of per-event `blocksById.compressedTokens`, not a window-sum). The sidecar dir is rolling/partial, so ALSO report the DB `compress`-part count as a complete **lower bound**. If neither is present for the window, report "firing signal absent" and continue (do not error). This distinguishes **firing-but-under-pruning** from **silently-no-op** — see the Step-5 row.
+**DCP firing is instrumented (fail-open).** Read DCP's own persisted sidecar state (`~/.local/share/opencode/storage/plugin/dcp/<sessionId>.json`, written on every prune/compress) joined to the DB for `lead` attribution to prove prune/`compress` actually fires on `lead` turns and quantify per-turn tokens removed (a directional **median** of per-event `blocksById.compressedTokens`, not a window-sum). The sidecar dir is rolling/partial, so ALSO report the DB `compress`-part count as a complete **lower bound**. If neither is present for the window, report "firing signal absent" and continue (do not error). This distinguishes **firing-but-under-pruning** from **silently-no-op** — see the recommendations row below.
 
 Reuse the per-agent `avg_ctx_tok`, the `cache_r_Mtok` decomposition, and the `lead` daily trend below for the baseline; add only the minimal `lead`-session-id selector SQL + the read-only `jq` aggregation over the sidecar store for the firing signal. The new snippets below keep each command to a single-statement `sqlite3 -readonly` call or a single `jq` pipeline fed by command substitutions (no heredoc, no bare `VAR=` lines, no shell read-loop, inline literal paths, `\$` escaped); the firing aggregate slurps the sidecar glob inside one `jq` pass to ~5 scalars — never reading sidecar bodies into context.
 
 ```bash
-# Per-agent cost & avg context — which agent dominates spend?
+# Per-agent cost & avg context — which agent dominates spend? -> normalized shape: cost_by_agent[]
 sqlite3 -readonly "$DB" <<SQL
 SELECT json_extract(data,'$.agent') AS agent,
        ROUND(SUM(json_extract(data,'$.cost')),0) AS cost_usd,
@@ -167,6 +213,7 @@ GROUP BY day ORDER BY day DESC;
 SQL
 
 # Per-agent/model latency & output — speed regressions (build is tuned for speed).
+# -> normalized shape: latency_by_model[]
 # Turns with latency >= 30 min (1,800,000 ms) are excluded: they represent suspended
 # sessions (laptop closed mid-turn), not slow model responses, and would otherwise
 # dominate the average (e.g. 14 frozen turns accounted for 93.5% of raw general-agent
@@ -203,7 +250,7 @@ GROUP BY agent, model HAVING total_turns > 20 AND empty_pct > 30 ORDER BY empty_
 SQL
 ```
 
-**Subagent fan-out cost** — the invisible half of spend. The per-agent query above groups messages by `agent` alone, so a subagent (child) session's cost is attributed to `build`/`explore`/etc. and never rolled up to the `lead` session that dispatched it via `task`. A recursive CTE over `session.parent_id` walks every descendant session (however deeply nested — subagents can themselves dispatch subagents) back to its top-level lead, so the true cost of a lead-driven unit of work — not just its visible thread — is comparable window-over-window; fan-out routinely runs 40-50%+ of total spend.
+**Subagent fan-out cost** (opencode-only) — the invisible half of spend. The per-agent query above groups messages by `agent` alone, so a subagent (child) session's cost is attributed to `build`/`explore`/etc. and never rolled up to the `lead` session that dispatched it via `task`. A recursive CTE over `session.parent_id` walks every descendant session (however deeply nested — subagents can themselves dispatch subagents) back to its top-level lead, so the true cost of a lead-driven unit of work — not just its visible thread — is comparable window-over-window; fan-out routinely runs 40-50%+ of total spend.
 
 ```bash
 # Subagent fan-out cost — per-lead breakdown. Recursive CTE walks session.parent_id
@@ -255,7 +302,7 @@ FROM descendants d JOIN session s ON s.id = d.id;
 SQL
 ```
 
-**Anthropic extended-cache (1h TTL) firing signal (fail-open).** `plugins/anthropic-extended-cache.ts` rewrites opencode's hardcoded 5-minute ephemeral `cache_control` markers to Anthropic's 1-hour extended TTL on the request path, since opencode's stable Anthropic path has no config for this. opencode's own `message.tokens.cache` only stores an undifferentiated read/write total — confirmed by inspecting real rows (`sqlite3 -readonly ~/.local/share/opencode/opencode.db "SELECT json_extract(data,'\$.tokens') FROM message WHERE json_extract(data,'\$.providerID')='anthropic' AND json_extract(data,'\$.role')='assistant' ORDER BY time_created DESC LIMIT 3"`) — there's no TTL breakdown to read from the DB. So the plugin peeks at the (unmodified, passed-through) response for `usage.cache_creation.ephemeral_1h_input_tokens` and appends `{timestamp, ephemeral_1h_input_tokens, ephemeral_5m_input_tokens}` to a rolling per-UTC-day sidecar (`~/.local/share/opencode/storage/plugin/anthropic-extended-cache/<date>.json`, mirroring DCP's own sidecar pattern above). This check reads that sidecar and reports whether the rewrite is actually taking effect on Anthropic's side — a nonzero `firing_entries` count means the 1h TTL is confirmed appearing in live responses; an empty sidecar reports "firing signal absent" rather than erroring (the plugin may simply not have run yet). If entries exist but none show a nonzero 1h count, that's a **silent regression** signal: an opencode/`@ai-sdk/anthropic` upgrade likely moved or renamed the `cache_control` marker so the plugin's key-name match no longer finds it — inspect `plugins/anthropic-extended-cache.ts`'s `upgradeEphemeralCacheControl` before assuming the TTL upgrade is simply unused.
+**Anthropic extended-cache (1h TTL) firing signal (opencode-only, fail-open).** `plugins/anthropic-extended-cache.ts` rewrites opencode's hardcoded 5-minute ephemeral `cache_control` markers to Anthropic's 1-hour extended TTL on the request path, since opencode's stable Anthropic path has no config for this. opencode's own `message.tokens.cache` only stores an undifferentiated read/write total — confirmed by inspecting real rows (`sqlite3 -readonly ~/.local/share/opencode/opencode.db "SELECT json_extract(data,'\$.tokens') FROM message WHERE json_extract(data,'\$.providerID')='anthropic' AND json_extract(data,'\$.role')='assistant' ORDER BY time_created DESC LIMIT 3"`) — there's no TTL breakdown to read from the DB. So the plugin peeks at the (unmodified, passed-through) response for `usage.cache_creation.ephemeral_1h_input_tokens` and appends `{timestamp, ephemeral_1h_input_tokens, ephemeral_5m_input_tokens}` to a rolling per-UTC-day sidecar (`~/.local/share/opencode/storage/plugin/anthropic-extended-cache/<date>.json`, mirroring DCP's own sidecar pattern above). This check reads that sidecar and reports whether the rewrite is actually taking effect on Anthropic's side — a nonzero `firing_entries` count means the 1h TTL is confirmed appearing in live responses; an empty sidecar reports "firing signal absent" rather than erroring (the plugin may simply not have run yet). If entries exist but none show a nonzero 1h count, that's a **silent regression** signal: an opencode/`@ai-sdk/anthropic` upgrade likely moved or renamed the `cache_control` marker so the plugin's key-name match no longer finds it — inspect `plugins/anthropic-extended-cache.ts`'s `upgradeEphemeralCacheControl` before assuming the TTL upgrade is simply unused.
 
 ```bash
 # Anthropic extended-cache firing aggregate. Single jq pass flattens the per-day sidecar arrays
@@ -310,7 +357,7 @@ jq -n --argjson m "$(sqlite3 -readonly ~/.local/share/opencode/opencode.db "WITH
 jq -n --slurpfile f ~/.config/opencode/dcp-baseline.json --argjson post "$(sqlite3 -readonly ~/.local/share/opencode/opencode.db "SELECT ROUND(AVG(json_extract(data,'\$.tokens.cache.read'))) FROM message WHERE json_extract(data,'\$.role')='assistant' AND json_extract(data,'\$.agent')='lead' AND time_created >= strftime('%s','2026-06-17','localtime')*1000")" '($f[0].floor_avg_ctx_tok) as $floor | {committed_floor: $floor, post_dcp_avg_ctx_tok: $post, reduction_pct: (((($floor-$post)/$floor)*100)|.*10|round/10), target_pct: 15, r3_meets: ((($floor-$post)/$floor) >= 0.15), gate: "human ratification required before closing R3"}'
 ```
 
-**Local-model adoption (Claude displacement):** the headline metric is **local turn-share** — the % of assistant turns served by a non-Anthropic provider (`lmstudio`/`ollama`/`mlx`/etc.), which **ratchets UP** as work is displaced off Claude (the opposite direction from the DCP floor). Because every local/non-Anthropic provider records `cost = 0` in the DB, dollar savings cannot be read directly — it is **ESTIMATED** (an agent's local turns × that agent's historical avg Anthropic $/turn) and treated as **directional only**, exactly like `cache_r_Mtok`. Key the metric on `providerID`, NOT on agent name: the `title` agent's turns are not stored under `agent='title'`, so an agent-name filter would miss them. **Baseline (recorded 2026-06-18):** local turn-share = 0.1%; as of commit `fa89b03` the `title` agent runs on `lmstudio/qwen3-30b-a3b-instruct-2507` (first deliberate production displacement; prior local turns were ad-hoc experiments). **Target:** local turn-share expands run-over-run WITHOUT a rise in local empty-turn rate or interactive-latency regressions (an empty or timed-out local turn is *fake* displacement, not savings — cross-check the empty-turn and latency queries above, scanning rows where `providerID != 'anthropic'`). Expansion path: `title` (done) → kb-summarization pipeline (next) → low-stakes `explore`/`scout` (gated). Never move `build`/`plan`/`lead`.
+**Local-model adoption (Claude displacement, opencode-only):** the headline metric is **local turn-share** — the % of assistant turns served by a non-Anthropic provider (`lmstudio`/`ollama`/`mlx`/etc.), which **ratchets UP** as work is displaced off Claude (the opposite direction from the DCP floor). Because every local/non-Anthropic provider records `cost = 0` in the DB, dollar savings cannot be read directly — it is **ESTIMATED** (an agent's local turns × that agent's historical avg Anthropic $/turn) and treated as **directional only**, exactly like `cache_r_Mtok`. Key the metric on `providerID`, NOT on agent name: the `title` agent's turns are not stored under `agent='title'`, so an agent-name filter would miss them. **Baseline (recorded 2026-06-18):** local turn-share = 0.1%; as of commit `fa89b03` the `title` agent runs on `lmstudio/qwen3-30b-a3b-instruct-2507` (first deliberate production displacement; prior local turns were ad-hoc experiments). **Target:** local turn-share expands run-over-run WITHOUT a rise in local empty-turn rate or interactive-latency regressions (an empty or timed-out local turn is *fake* displacement, not savings — cross-check the empty-turn and latency queries above, scanning rows where `providerID != 'anthropic'`). Expansion path: `title` (done) → kb-summarization pipeline (next) → low-stakes `explore`/`scout` (gated). Never move `build`/`plan`/`lead`.
 
 ```bash
 # (a) Local vs Anthropic turn-share by provider/model/agent — WHERE is work displaced?
@@ -384,7 +431,75 @@ WHERE time_created > (strftime('%s','now','-${WINDOW_DAYS} days')*1000)
 SQL
 ```
 
-**Manual spot-checks** — for requirements that can't be automated, sample 3-5 recent sessions and inspect:
+### omp adapter
+
+`omp`'s per-message telemetry lives in JSONL session files under `~/.omp/agent/sessions/**/*.jsonl` — NOT `~/.omp/agent/history.db` (that's a separate prompt-recall FTS index, not session replay). The schema is documented and versioned (`docs/session.md` in `github.com/can1357/oh-my-pi`, currently `version: 3` with documented v1→v2→v3 migrations) — safe to key queries on the field names below; a missing/unreadable session file behaves like an empty session (skip, don't error), and an unrecognized `type` on an entry should be skipped rather than choking the parser (the schema documents more entry types than this adapter consumes, and future versions may add more).
+
+```bash
+WINDOW_CUTOFF_ISO=$(date -u -v-${WINDOW_DAYS}d +%Y-%m-%dT%H:%M:%SZ)
+
+# NOTE: this scans with `find`, not a `**` glob stored in a variable. zsh does not
+# re-expand a glob pattern held in a variable when the variable is referenced
+# unquoted (bash does, with or without globstar) — a `SESSIONS_GLOB=...; ... $SESSIONS_GLOB`
+# pattern silently matches zero files under zsh even though the files exist. `find`
+# has no such footgun and behaves identically in bash and zsh.
+
+# Skill loads by agent -> normalized shape: skill_loads[]. omp has no dedicated skill-load
+# entry type; skill invocations surface as tool-call blocks (name matching manage_skill/skill*)
+# inside `message` entries' content[], so this scans assistant message content rather than a
+# typed field.
+jq -s --arg cutoff "$WINDOW_CUTOFF_ISO" '
+  map(select(.type=="message" and .message.role=="assistant" and .timestamp >= $cutoff))
+  | map(.message.content[]? | select(.type=="toolCall" and (.name|test("^(manage_)?skill";"i"))))
+  | group_by(.name) | map({skill: .[0].name, loads: length})
+' $(find ~/.omp/agent/sessions -name '*.jsonl' 2>/dev/null) </dev/null
+
+# Interrupt rate -> normalized shape: interrupts[]. omp's analog of an opencode session ending
+# mid-tool-call is a `custom` entry with customType "session_exit" whose kind is signal/fatal/
+# process_exit, or one with a nonempty pendingToolCalls list.
+jq -s --arg cutoff "$WINDOW_CUTOFF_ISO" '
+  map(select(.timestamp >= $cutoff)) as $rows
+  | ($rows | map(select(.type=="custom" and .customType=="session_exit"))) as $exits
+  | ($exits | map(select(.kind=="signal" or .kind=="fatal" or .kind=="process_exit"
+      or ((.pendingToolCalls // [])|length)>0))) as $interrupted
+  | {interrupts: ($interrupted|length), session_exits: ($exits|length),
+     pct: (if ($exits|length)==0 then null else (100.0*($interrupted|length)/($exits|length)) end)}
+' $(find ~/.omp/agent/sessions -name '*.jsonl' 2>/dev/null) </dev/null
+
+# Cost & latency by model -> normalized shape: cost_by_agent[] / latency_by_model[].
+# omp attributes cost/tokens per message entry (message.usage.cost.total), not per agent
+# role the way opencode's `agent` column does — omp sessions don't carry a lead/build/explore
+# agent-role tag today, so `agent` is reported as the session's cwd-derived project bucket
+# (the closest available grouping key) rather than left blank.
+jq -s --arg cutoff "$WINDOW_CUTOFF_ISO" '
+  map(select(.type=="message" and .message.role=="assistant" and .timestamp >= $cutoff))
+  | group_by(.message.model) | map({
+      model: .[0].message.model,
+      msgs: length,
+      cost_usd: (map(.message.usage.cost.total // 0) | add),
+      avg_ctx_tok: (map(.message.usage.cacheRead // 0) | (if length==0 then 0 else (add/length) end))
+    })
+' $(find ~/.omp/agent/sessions -name '*.jsonl' 2>/dev/null) </dev/null
+
+# Delegation / topology violations -> normalized shape: delegation. Not yet available for
+# omp: the documented schema has no equivalent of opencode's session.parent_id + task-tool
+# concept for subagent dispatch. Report as "not_available" rather than a fabricated 0 — a
+# known adapter gap for follow-up, not a finding that omp has zero violations.
+echo '{"delegation": "not_available", "reason": "no documented omp equivalent of session.parent_id + task-tool dispatch yet"}'
+```
+
+## Step 5 — Passive learning capture (replaces manual `/learn`)
+
+This is the mechanism issue #52 uses to retire `/learn`: instead of a human running a separate command, the telemetry-adapter pass above — since it's already walking full session content for both harnesses — also watches for two kinds of durable findings and captures them immediately, without waiting for a manual invocation:
+
+- **cq-worthy** (situational/reactive: a debugging breakthrough, an API/tool quirk, a fix recipe, a schema/format detail that took real investigation to pin down) — submit it directly and autonomously: `cq propose --domain "<topic>" --action "<what to do differently>" --summary "<one line>" --detail "<full context>"`. This is safe without a human-approval gate: the local cq store is additive-only and this is exactly the kind of call issues #52/#54 intend to run mid-task without friction.
+- **AGENTS.md-worthy** (a durable, project-wide practice or gotcha any agent working in this repo should know upfront) — do NOT edit `AGENTS.md` directly from within `/audit`. Surface it in the Step 7 report below as a suggested addition with the exact proposed wording; a human reviews and lands it — editing a shared instructions file is a structural change, not an autonomous one.
+
+If a given `/audit` run surfaces nothing durable in either bucket, say so explicitly in the report — that's a legitimate outcome, not a failure of this step.
+
+## Step 6 — Manual spot-checks
+
+For requirements that can't be automated, sample 3-5 recent sessions and inspect:
 - Were review passes run in order? (code-review R1)
 - Were findings verified against the diff? (code-review R2)
 - Did triage happen before code fixes? (merge-request R1)
@@ -392,7 +507,7 @@ SQL
 - Did /implement present exactly two workflow gates — plan, then one combined changeset+QA — not a third separate review gate? (agent-workflow: Human approval gates)
 - Did independent write approvals cluster within a phase rather than scatter across the session? (remote-operations: Independent write approvals are clustered)
 
-## Step 4 — Report
+## Step 7 — Report
 
 For each spec, report:
 
@@ -400,9 +515,9 @@ For each spec, report:
 |---|---|---|
 | R1: ... | ✅ Compliant / ⚠️ Partial / ❌ Non-compliant | What you found |
 
-Flag requirements that can't be measured and explain why.
+Flag requirements that can't be measured and explain why. Include the Step 3 session/dispatch summary (status distribution, dispatch cadence by harness, worktree share) and, per harness present in the window, the Step 4 normalized telemetry summary. List any AGENTS.md-worthy suggestions surfaced in Step 5 for human approval, and note how many cq-worthy findings were proposed automatically this run.
 
-## Step 5 — Recommendations
+## Step 8 — Recommendations
 
 For each non-compliant requirement, recommend one action. Reference prior-attempts history at `openspec/changes/agent-rearchitecture/prior-attempts.md` to avoid repeating approaches that have failed.
 
@@ -418,6 +533,7 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Local-model turn-share flat / not expanding vs prior audit | Take the next bounded crawl→walk step (title done → kb-summarization: bulk text, no tools, latency-tolerant, privacy-positive) | Moving agentic/high-stakes roles (build/plan/lead) to local — quality regression + qwen3 tool-call XML-leak risk |
 | Local model shows high empty-turn rate or latency blowup | Raise its LM Studio load-context, or revert that role to Claude — empty/timed-out turns are fake savings | Counting broken local turns as displacement |
 | Independent write approvals scattered across a session | Sequence independent writes to cluster their approvals | Interleaving unrelated work between required approvals |
+| A harness-specific field (e.g. omp `delegation`) is `"not_available"` | Add a follow-up adapter task once the harness documents the needed concept | Fabricating a plausible-looking value for a field the harness doesn't expose |
 
 ---
 
@@ -426,7 +542,10 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 | Target | Source |
 |---|---|
 | `openspec/specs/*/spec.md` | Desired state — audit measures against these |
-| `~/.local/share/opencode/opencode.db` | Session data for compliance measurement |
+| `aoe` CLI (`list`/`status`/`ps --json`) | Session/dispatch layer — harness-agnostic, no local source file |
+| `~/.local/share/opencode/opencode.db` | Opencode adapter's per-message telemetry data |
+| `~/.omp/agent/sessions/**/*.jsonl` | omp adapter's per-message telemetry data (documented schema: `docs/session.md` in `github.com/can1357/oh-my-pi`) |
+| `~/.local/share/cq/local.db` | Passive learning capture destination (cq-worthy findings) |
 | `~/.config/opencode/opencode.json` | `dot_config/agentcfg/` (via `agentcfg apply --target opencode`) |
 | `~/.agents/prompts/*.md` | `dot_agents/prompts/*.md` |
 | `~/.config/opencode/commands/*.md` | `dot_config/opencode/commands/*.md` |
