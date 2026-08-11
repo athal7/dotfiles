@@ -15,6 +15,9 @@ providers:
         contextWindow: {{ .local_model.context_window }}
         maxTokens: {{ .local_model.max_tokens }}
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+{{- if hasKey .local_model "compaction_model" }}
+        compactionModel: {{ .local_model.compaction_model }}
+{{- end }}
 {{- else -}}
 providers: {}
 {{- end }}
