@@ -16,7 +16,7 @@ tap {{ . | quote }}
 cask_args appdir: "/Applications"
 
 {{ range .packages.brews -}}
-brew {{ .name | quote }}
+brew {{ .name | quote }}{{ if hasKey . "args" }}, args: [{{ range $i, $a := .args }}{{ if $i }}, {{ end }}{{ $a | quote }}{{ end }}]{{ end }}
 {{ end -}}
 
 {{ range .packages.casks -}}
