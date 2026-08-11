@@ -14,6 +14,13 @@
 # never authenticated (no stored OAuth token) — authenticate it once
 # (obtain a live tools/list) to populate a real allowlist.
 #
+# `exclude_for_models` is REQUIRED, not tuning: omp mounts every targeted
+# server unconditionally, and all 15 together (~37.5k tokens of schema)
+# exceed the local model's whole 32000-token window — so a session routed
+# there silently falls back to a billed cloud model. Rationale, mechanism
+# and rejected alternatives: agentcfg ADR-0005. Only context7 (2 tools) and
+# cq (5) survive; github goes too since bash.yaml allows the `gh` CLI.
+#
 # Seven `runlayer-*` servers proxy OAuth'd services (Zoom/Slack/
 # Atlassian/Google/…) at a workspace-specific URL, resolved from an
 # environment variable at apply time (never committed) — set these in a
@@ -27,7 +34,13 @@ mcp_servers:
     url: https://mcp.context7.com/mcp
     tools: [query-docs, resolve-library-id]
 
+  - name: cq
+    transport: local
+    command: [cq, mcp]
+    tools: [confirm, flag, propose, query, status]
+
   - name: firefox-devtools
+    exclude_for_models: [mlx/default_model]
     transport: local
     command:
       - npx
@@ -46,6 +59,7 @@ mcp_servers:
       take_snapshot, uninstall_extension, upload_file_by_uid]
 
   - name: github
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url: https://api.githubcopilot.com/mcp/
     headers:
@@ -61,6 +75,7 @@ mcp_servers:
       search_pull_requests, search_repositories, search_users]
 
   - name: linear
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url: https://mcp.linear.app/mcp
     tools: [extract_images, get_agent_skill, get_attachment, get_diff, get_diff_threads, get_document,
@@ -83,6 +98,7 @@ mcp_servers:
     # stored token). Authenticate omp against Linear once and diff xd:// to confirm.
 
   - name: figma-desktop
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url: http://127.0.0.1:3845/mcp
     tools: [add_code_connect_map, get_code_connect_map, get_code_connect_suggestions,
@@ -94,6 +110,7 @@ mcp_servers:
     # was generated. qa is already fully trusted with the whole namespace.
 
   - name: runlayer-zoom
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -103,6 +120,7 @@ mcp_servers:
       search_meetings]
 
   - name: runlayer-self
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -112,6 +130,7 @@ mcp_servers:
     # to — under always-ask this still prompts by tier default.
 
   - name: runlayer-slack
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -123,6 +142,7 @@ mcp_servers:
       slack_schedule_message, slack_send_message, slack_send_message_draft]
 
   - name: runlayer-atlassian
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -139,6 +159,7 @@ mcp_servers:
       transitionJiraIssue, updateConfluencePage]
 
   - name: runlayer-gmail
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -147,6 +168,7 @@ mcp_servers:
       add_labels, create_draft, create_label, mark_as_read, reply_to_message, send_draft, send_email]
 
   - name: runlayer-gcalendar
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -155,6 +177,7 @@ mcp_servers:
       create_calendar, create_event, move_event, quick_add, respond_to_event, update_calendar, update_event]
 
   - name: runlayer-gdrive
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -164,6 +187,7 @@ mcp_servers:
       rename_file, share_file, update_doc_from_markdown, update_file]
 
   - name: runlayer-gdocs
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -173,6 +197,7 @@ mcp_servers:
       link_text, replace_text, resolve_comment]
 
   - name: runlayer-gsheets
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env

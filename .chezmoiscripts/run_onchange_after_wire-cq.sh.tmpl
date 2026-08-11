@@ -1,0 +1,48 @@
+#!/bin/bash
+# Wire cq CLI into opencode config, AGENTS.md, and skills directory.
+#
+# Only --target opencode: cq's installer has no working omp target. Its
+# "pi" target writes to ~/.pi/agent/{prompts,AGENTS.md} -- the ORIGINAL
+# upstream badlogic/pi-mono tool's config path, not this fork's
+# (can1357/oh-my-pi, installed as `omp`) real, actively-used
+# ~/.omp/agent/ directory. Running --target pi would write dead files
+# omp never reads. omp still gets full MCP-level cq access anyway, via
+# the `cq` entry in dot_config/agentcfg/mcp_servers.yaml (the shared
+# registry agentcfg renders into both opencode's mcp block and omp's
+# mcp.json + tools.approval) -- that registry entry is the authoritative,
+# durable source for mcp.cq on opencode too, since agentcfg's opencode
+# renderer treats "mcp" as a whole-subtree managed key and replaces it
+# entirely on every `agentcfg apply` run. This `cq install --target
+# opencode` call below is what still uniquely provisions the AGENTS.md
+# <!-- cq:start --> instruction block, the /cq:reflect and /cq:status
+# command files, and the shared skill -- agentcfg claims none of those.
+# The actual cq query/propose dedup wiring (in fix-prod-errors.md,
+# refactor-hotspots.md, audit.md) is plain bash CLI calls to the `cq`
+# binary, so it already works identically on opencode and omp regardless
+# of any of the above.
+#
+# Rerun triggers (chezmoi reruns run_onchange_* scripts whenever their
+# rendered content changes):
+{{- if stat (joinPath (env "HOME") ".config/opencode/opencode.json") }}
+{{- $oc := (output "cat" (joinPath (env "HOME") ".config/opencode/opencode.json") | fromJson) }}
+# opencode-mcp-cq: {{- if and (hasKey $oc "mcp") (hasKey ($oc.mcp) "cq") }}1{{ else }}0{{ end }}
+{{- else }}
+# opencode-mcp-cq: 0
+{{- end }}
+# agentsmd-cq: {{- if contains "<!-- cq:start -->" (output "cat" (joinPath (env "HOME") ".config/opencode/AGENTS.md")) }}1{{ else }}0{{ end }}
+# skill-present: {{- if (stat (joinPath (env "HOME") ".agents/skills/cq/SKILL.md")) }}1{{ else }}0{{ end }}
+
+# Deliberately not -e: individual plugin install/update failures (missing
+# host capability, incompatible cq version, upstream re-consent requirement)
+# must never abort the rest of chezmoi apply.
+set -uo pipefail
+
+if ! command -v cq >/dev/null 2>&1; then
+  echo "cq not found, skipping cq install" >&2
+  exit 0
+fi
+
+echo "running cq install --target opencode..."
+if ! cq install --target opencode < /dev/null; then
+  echo "WARN: cq install --target opencode failed" >&2
+fi

@@ -108,7 +108,7 @@ For each file-hotspot candidate, resolve its `repo` (`project.worktree`) and ver
 
 ## Step 4 — Dedup / in-flight check
 
-Read `~/.config/opencode/hotspot-dispatch-log.json`, tolerating absence (treat missing file as "no prior dispatches"). Skip a candidate if it has a `dispatches[]` entry with matching `repo` + `rel_file` and `dispatch_date` within the last 180 days, UNLESS `edit_calls` has risen ≥50% versus the logged `signal.edit_calls` (the friction regressed — worth re-dispatching).
+Query cq's local knowledge store for prior proposals/fixes/dispatches tagged with this hotspot's domain. Run `cq query --domain "<slug>" --format json` — if the result surfaces a prior knowledge unit that is recent and still-confirmed for this file, skip the candidate ("already handled"), UNLESS `edit_calls` has risen ≥50% versus the prior unit's recorded signal (the friction regressed — worth re-dispatching).
 
 Also run `aoe list` (matching titles against the `hotspot-<slug>-*` naming convention used below) and `git -C "<repo>" branch --list 'refactor/hotspot-<slug>'` — if a live session or branch already targets that file, mark **"in flight — skip"**.
 
@@ -126,11 +126,10 @@ sleep 5   # let opencode's TUI finish booting in the fresh tmux pane before send
 aoe send "$SID" "As your first action, before anything else, read this repo's own AGENTS.md and any openspec/ specs. Determine whether <rel_file>'s high edit/error volume reflects genuine structural friction (agents keep getting stuck) versus intentional by-design churn (e.g. actively hand-tuned configuration, or a file whose spec mandates frequent change). If by-design, report 'not a refactor target' and stop — do not implement anything. Only if it's genuine friction: Workflow: implement. Propose a refactor of <rel_file> that reduces edit friction (split up, clarify structure, add missing docs/tests) WITHOUT changing external behavior. Evidence: <edit_calls> edit/write calls across <sessions_touched> sessions, <errors> tool errors (<pct_error>% where computable)."
 ```
 
-After a successful dispatch, this command itself (not a human) appends to the log:
+After a successful dispatch, this command itself (not a human) records the dispatch as a cq knowledge unit:
 
 ```bash
-jq '.dispatches += [{repo:"<repo>",rel_file:"<rel_file>",dispatch_date:"'"$(date +%F)"'",branch:"refactor/hotspot-<slug>",signal:{edit_calls:<n>,sessions_touched:<m>,errors:<e>},status:"dispatched"}]' \
-  ~/.config/opencode/hotspot-dispatch-log.json > /tmp/hdl.json && mv /tmp/hdl.json ~/.config/opencode/hotspot-dispatch-log.json
+cq propose --domain "<slug>" --action "refactor" --summary "Dispatched refactor session for hotspot <rel_file> in <repo>" --detail "repo:<repo> rel_file:<rel_file> dispatch_date:$(date +%F) branch:refactor/hotspot-<slug> signal:{edit_calls:<n>,sessions_touched:<m>,errors:<e>} status:dispatched"
 ```
 
 ## Step 6 — Report
@@ -142,6 +141,5 @@ List: hotspots found, dispatches fired (with worktree path and branch name), and
 | Target | Source |
 |---|---|
 | `~/.local/share/opencode/opencode.db` | Session data for hotspot detection |
-| `~/.config/opencode/hotspot-dispatch-log.json` | `dot_config/opencode/create_hotspot-dispatch-log.json` — this command reads AND writes it (no human step required) |
 
 Run `/refactor-hotspots` weekly.
