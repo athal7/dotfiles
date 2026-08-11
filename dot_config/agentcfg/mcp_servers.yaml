@@ -27,6 +27,11 @@ mcp_servers:
     url: https://mcp.context7.com/mcp
     tools: [query-docs, resolve-library-id]
 
+  - name: cq
+    transport: local
+    command: [cq, mcp]
+    tools: [confirm, flag, propose, query, status]
+
   - name: firefox-devtools
     transport: local
     command:
