@@ -28,12 +28,6 @@ orgs:
       slow: anthropic/claude-opus-5
       plan: anthropic/claude-opus-5
   your-personal-org:
-    # All-local: route every class to a locally-hosted model. Not literally
-    # zero cloud spend: models.yaml's compaction_model (mlx/default_model's
-    # compactionModel) routes context-compaction summarization for these
-    # sessions to a real cloud model (currently anthropic/claude-haiku-4-5)
-    # instead of competing with real turns for the local server's single
-    # decode-concurrency slot — small, cheap, but real API calls.
     model_class:
       default: mlx/default_model
       smol: mlx/default_model
@@ -62,35 +56,10 @@ local_model:
   hf_repo: mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit
   name: qwen3.6-35b-a3b-optiq
   context_window: 32000
-  # Below the harness's actual fixed system-prompt/tool-schema floor
-  # (omp's primary session mounts every configured MCP server
-  # unconditionally, regardless of role — a separate agentcfg feature to
-  # exclude servers for local-model-only orgs is in progress), a small
-  # context_window alone doesn't force useful early compaction —
-  # aoe-model-class's compaction.reserved (opencode) /
-  # compaction.thresholdTokens (omp) overrides below are what actually
-  # make the harness compact before hitting the wall. Both were dead
-  # code until 2026-08-10: opencode's $localId comparison always
-  # resolved to bare "/" (local.yaml leaves provider/id unset, and jq's
-  # `+` treats missing/null as identity rather than erroring, so it
-  # never matched a real "mlx/..." class value), and omp's
-  # thresholdTokens override was deleted as collateral damage by the
-  # commit that correctly removed the separate, obsolete
-  # retry.modelFallback workaround. Confirmed via mlx-server.error.log:
-  # with both proactive guards dark and only omp's reactive
-  # compaction.strategy: context-full left (compacts once a request is
-  # already at the limit, not before), real prompts of 57k/119k/161k
-  # tokens hit the server long after this cap was in place.
-  compaction_threshold_tokens: 20000
   max_tokens: 8192
-  # LRU cache of KV-caches across distinct conversations (mlx-lm#883/#1666
-  # mitigation) — bounds memory without disabling the cache outright (a hit
-  # skips prompt reprocessing entirely).
+  compaction_model: anthropic/claude-haiku-4-5
   prompt_cache_size: 4
   prompt_cache_bytes: 3221225472 # 3GiB
-  # Per-forward-pass token batch during prompt processing (mlx_lm.server
-  # default is 2048) — halving it shrinks the transient activation spike
-  # that dominates peak memory on long prompts.
   prefill_step_size: 512
   # macOS iogpu.wired_limit_mb ceiling (headroom only, not the IOGPUFamily
   # panic fix — that's the wired-limit no-op shim in
