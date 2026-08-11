@@ -14,6 +14,22 @@
 # never authenticated (no stored OAuth token) — authenticate it once
 # (obtain a live tools/list) to populate a real allowlist.
 #
+# `exclude_for_models: [mlx/default_model]` on every server but context7
+# and cq is a HARD REQUIREMENT of any contexts.yaml entry whose `default`
+# class routes to the local model — not a tuning preference. omp has no
+# per-role MCP tool-visibility layer (agentcfg ADR-0002): it mounts every
+# targeted server into its primary session unconditionally, so these tool
+# schemas are a fixed cost every turn pays. All 15 together measure ~37.5k
+# tokens — more than the local model's entire 32000-token window (see
+# local.yaml's local_model). Left unexcluded, such a session cannot fit
+# even its own first request: it silently falls back to a cloud model,
+# billing the very account the local-model routing exists to keep out of.
+#
+# Only context7 (2 tools) and cq (5) stay — both cheap, both directly
+# serving code. github is dropped despite being genuinely useful here: 28
+# schemas is a large share of a 32k budget, and bash.yaml already allows
+# the `gh` CLI, which covers the same ground at zero context cost.
+#
 # Seven `runlayer-*` servers proxy OAuth'd services (Zoom/Slack/
 # Atlassian/Google/…) at a workspace-specific URL, resolved from an
 # environment variable at apply time (never committed) — set these in a
@@ -33,6 +49,7 @@ mcp_servers:
     tools: [confirm, flag, propose, query, status]
 
   - name: firefox-devtools
+    exclude_for_models: [mlx/default_model]
     transport: local
     command:
       - npx
@@ -51,6 +68,7 @@ mcp_servers:
       take_snapshot, uninstall_extension, upload_file_by_uid]
 
   - name: github
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url: https://api.githubcopilot.com/mcp/
     headers:
@@ -66,6 +84,7 @@ mcp_servers:
       search_pull_requests, search_repositories, search_users]
 
   - name: linear
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url: https://mcp.linear.app/mcp
     tools: [extract_images, get_agent_skill, get_attachment, get_diff, get_diff_threads, get_document,
@@ -88,6 +107,7 @@ mcp_servers:
     # stored token). Authenticate omp against Linear once and diff xd:// to confirm.
 
   - name: figma-desktop
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url: http://127.0.0.1:3845/mcp
     tools: [add_code_connect_map, get_code_connect_map, get_code_connect_suggestions,
@@ -99,6 +119,7 @@ mcp_servers:
     # was generated. qa is already fully trusted with the whole namespace.
 
   - name: runlayer-zoom
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -108,6 +129,7 @@ mcp_servers:
       search_meetings]
 
   - name: runlayer-self
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -117,6 +139,7 @@ mcp_servers:
     # to — under always-ask this still prompts by tier default.
 
   - name: runlayer-slack
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -128,6 +151,7 @@ mcp_servers:
       slack_schedule_message, slack_send_message, slack_send_message_draft]
 
   - name: runlayer-atlassian
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -144,6 +168,7 @@ mcp_servers:
       transitionJiraIssue, updateConfluencePage]
 
   - name: runlayer-gmail
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -152,6 +177,7 @@ mcp_servers:
       add_labels, create_draft, create_label, mark_as_read, reply_to_message, send_draft, send_email]
 
   - name: runlayer-gcalendar
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -160,6 +186,7 @@ mcp_servers:
       create_calendar, create_event, move_event, quick_add, respond_to_event, update_calendar, update_event]
 
   - name: runlayer-gdrive
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -169,6 +196,7 @@ mcp_servers:
       rename_file, share_file, update_doc_from_markdown, update_file]
 
   - name: runlayer-gdocs
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env
@@ -178,6 +206,7 @@ mcp_servers:
       link_text, replace_text, resolve_comment]
 
   - name: runlayer-gsheets
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url:
       from: env

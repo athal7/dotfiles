@@ -1,0 +1,64 @@
+{{- /*
+Per-org model-class routing, resolved from a project's git remote at
+project-scope apply time (agentcfg internal/scope Project +
+internal/contextres). Each entry's model_classes is a PARTIAL override
+merged over model_classes.yaml's defaults, so a context only names the
+classes it actually changes.
+
+WHY THIS EXISTS: cloud API keys are billed to an account that personal
+work must not touch, so personal repos have to run against the local mlx
+server. That separation is a billing boundary, not a preference. This
+file is the single declarative statement of it.
+
+Previously the same routing lived in dot_local/bin/executable_aoe-model-class's
+jq, which reimplemented org matching by parsing `git remote get-url origin`
+and wrote .omp/config.yml itself. agentcfg models it natively now, so the
+hook only invokes `agentcfg apply --scope project` and there is one writer
+per file — the same two-writer hazard
+.chezmoiscripts/run_onchange_after_agentcfg-apply.sh.tmpl documents for
+opencode.json applies here too.
+
+RENDERED FROM local.yaml, NOT COMMITTED LITERALLY: org names are the same
+untracked `orgs.<org>.model_class` data local.yaml.example documents, read
+straight from `chezmoi data` the way dot_agents/prompts/lead.md and
+dot_config/kb/collectors/gh.md already read orgs.<org>.issues. This repo is
+public; no org name reaches git from here.
+
+The local model's small context window is what makes mcp_servers.yaml's
+exclude_for_models necessary — see that file's header. Routing a context's
+`default` class to the local model WITHOUT those exclusions does not work:
+omp mounts every targeted MCP server into its primary session
+unconditionally (agentcfg ADR-0002) and their combined tool schemas exceed
+the local window outright, so omp silently falls back to a cloud model and
+the boundary this file draws is breached with no error anywhere.
+
+git_remote_host is github.com for every org here; agentcfg treats an unset
+match key as a wildcard, but pinning it keeps a same-named org on another
+forge from matching by accident.
+*/ -}}
+{{- /* hasKey, not `.orgs | default dict`: chezmoi errors on a missing key
+       before the pipe runs, so a machine whose local.yaml omits orgs
+       entirely would fail every apply. Same guard style as
+       dot_omp/private_agent/models.yml.tmpl's .local_model check. */ -}}
+{{- $orgs := dict -}}
+{{- if hasKey . "orgs" -}}{{- $orgs = .orgs -}}{{- end -}}
+{{- $entries := dict -}}
+{{- range $org, $cfg := $orgs -}}
+{{-   if hasKey $cfg "model_class" -}}
+{{-     $entries = set $entries $org (index $cfg "model_class") -}}
+{{-   end -}}
+{{- end -}}
+{{- if not $entries -}}
+contexts: []
+{{- else -}}
+contexts:
+{{- range $org := (keys $entries | sortAlpha) }}
+  - match:
+      git_remote_host: github.com
+      git_remote_owner: {{ $org }}
+    model_classes:
+{{- range $class := (keys (index $entries $org) | sortAlpha) }}
+      {{ $class }}: {{ index (index $entries $org) $class }}
+{{- end }}
+{{- end }}
+{{- end }}

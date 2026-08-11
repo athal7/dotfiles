@@ -7,86 +7,73 @@
 # WHY A HOOK, NOT A WRAPPER: the aoe-cli-defaults spec forbids any shell
 # function that injects flags into user-invoked `aoe` commands.
 #
-# WHY NO RENDERED LOOKUP FILE: org policy is read straight from `chezmoi
-# data`, the same way dot_config/opencode/commands/implement.md,
-# dot_agents/prompts/lead.md, and dot_config/kb/collectors/gh.md already read
-# orgs.<org>.issues. No derived artifact to drift; editing local.yaml takes
-# effect on the next launch with no `chezmoi apply` needed.
+# WHY IT NO LONGER RENDERS ANYTHING ITSELF: this script used to reimplement
+# org->model-class routing in jq — parsing `git remote get-url origin`,
+# reading orgs.<org>.model_class out of `chezmoi data`, and writing both
+# project files directly. agentcfg models exactly that now as a first-class
+# concept: contexts.yaml matches git_remote_host/git_remote_owner and merges
+# the matched context's partial model_classes over the registry defaults
+# (internal/scope Project + internal/contextres), then asks each renderer to
+# project it onto its own project-local file. So the hook's only job is to
+# invoke that for this repo's directory. One writer, one source of truth —
+# the same two-writer hazard run_onchange_after_agentcfg-apply.sh.tmpl
+# already documents for opencode.json applied here too, and it bit hard:
+# see the compaction note below.
+#
+# WHY THE compaction.thresholdTokens WRITE IS GONE (and must not come back
+# in this shape): it set omp's ABSOLUTE compaction trigger to the local
+# model's usable budget (20000) whenever any class routed to mlx. omp's
+# per-turn floor — system prompt plus every MCP server's tool schemas,
+# which omp mounts unconditionally (agentcfg ADR-0002) — is ~37.5k, above
+# that trigger by construction, so shouldCompact() was true on every turn
+# forever: each pass warned "Compaction freed too little context to make
+# progress" and no session made any forward progress at all. It also fired
+# for a project whose `default` was a cloud model just because `smol`
+# routed to mlx, because the guard tested `any` class rather than the one
+# that governs the primary session. The real fix is upstream of any
+# threshold: shrink the floor so the local model can hold a session
+# (mcp_servers.yaml's exclude_for_models). A trigger below the harness's
+# own irreducible floor is unsatisfiable at any value.
 #
 # ALWAYS EXITS 0 — aoe kills the whole session process tree if an on_launch
 # hook fails or times out. A lookup or write failure must never block a launch.
 #
 # PATH is set explicitly: aoe may run this hook under launchd/a restricted
-# PATH context; chezmoi/jq/yq/git must resolve.
+# PATH context; agentcfg/git must resolve.
 
 PATH="/opt/homebrew/bin:$PATH"; export PATH
 
-write() {
-  # $1 = path, $2 = content. Never clobber a file this repo legitimately tracks.
-  git ls-files --error-unmatch "$1" >/dev/null 2>&1 && return 0
-  [ -n "$2" ] || return 0
-  mkdir -p "$(dirname "$1")" 2>/dev/null || return 0
-  printf '%s\n' "$2" > "$1" 2>/dev/null || return 0
-}
-
 main() {
+  command -v agentcfg >/dev/null 2>&1 || return 0
+
   root=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
   cd "$root" || return 0
 
-  url=$(git remote get-url origin 2>/dev/null) || return 0
-  case "$url" in *github.com*) ;; *) return 0 ;; esac
-  org=$(printf '%s' "$url" | sed -E 's#.*[:/]([^/]+)/[^/]+(\.git)?$#\1#')
-  [ -n "$org" ] || return 0
+  # Project scope resolves this directory's own git remote, so it must run
+  # with the repo as cwd. --target is both harnesses: opencode takes literal
+  # model ids, omp takes the class map plus the disabledExtensions list that
+  # drops MCP servers the resolved local model can't afford.
+  agentcfg apply --target opencode,omp --scope project >/dev/null 2>&1 || return 0
 
-  data=$(chezmoi data --format json 2>/dev/null) || return 0
+  # SAFETY NET FOR A SILENT BILLING BOUNDARY. If this project routes omp's
+  # primary session to the local model but no MCP servers were excluded,
+  # the session's tool-schema floor will exceed the local context window,
+  # omp will fall back to a cloud model via retry.fallbackChains, and it
+  # will bill the account the local routing exists to avoid — with no error
+  # anywhere. The likeliest cause is an agentcfg too old to support
+  # mcp_servers.yaml's exclude_for_models (needs the ADR-0005 renderer;
+  # v0.4.2 accepts the field and silently ignores it). Log loudly rather
+  # than let it pass: ~/Library/Logs is swept by check-error-logs' daily
+  # scan, the same channel omp-billed uses for its keychain failure.
+  cfg=.omp/config.yml
+  [ -f "$cfg" ] || return 0
+  grep -q 'mlx/default_model' "$cfg" 2>/dev/null || return 0
+  grep -q 'disabledExtensions' "$cfg" 2>/dev/null && return 0
 
-  classes=$(printf '%s' "$data" | jq -c --arg org "$org" \
-    '(.model_class // {}) * (.orgs[$org].model_class // {})' 2>/dev/null) || return 0
-  [ -n "$classes" ] && [ "$classes" != "null" ] || return 0
-
-  # compaction.reserved (opencode) / compaction.thresholdTokens (omp) are
-  # applied only when this org's classes actually route to the local mlx
-  # model — both compute the same effective usable-context ceiling
-  # (contextWindow - compaction_threshold_tokens) so a mid-tool-loop
-  # session can't outrun mlx_lm.server's real context window regardless
-  # of which harness is driving it. $localId defaults provider/id the
-  # same way the render templates do (agentcfg.yaml.tmpl,
-  # models.yml.tmpl) — local.yaml normally leaves both fields unset, and
-  # jq's `+` silently treats a missing/null provider or id as identity
-  # rather than erroring, so an undefaulted comparison against $c's
-  # "mlx/default_model" values always came out as bare "/" and never
-  # matched: compaction.reserved/thresholdTokens have been dead code
-  # since they were introduced, camouflaged by the always-false
-  # $usesLocal comparison never touching the arithmetic below it either.
-  write .opencode/opencode.json "$(printf '%s' "$data" | jq --argjson c "$classes" '
-      ((.local_model.provider // "mlx") + "/" + (.local_model.id // "default_model")) as $localId
-      | ($c | to_entries | any(.value == $localId)) as $usesLocal
-      | {
-          model: $c.default,
-          small_model: $c.smol,
-          agent: (.agents
-            | map(select(has("class")) | {key: .name, value: {model: $c[.class]}})
-            | from_entries)
-        }
-        + (if $usesLocal then {
-            compaction: {reserved: (.local_model.context_window - .local_model.compaction_threshold_tokens)}
-          } else {} end)
-    ' 2>/dev/null)"
-
-  # omp's per-project compaction.thresholdTokens counterpart — reinstated
-  # after 4c07f17 deleted it as collateral damage while correctly removing
-  # the separate, by-then-obsolete retry.modelFallback workaround (omp
-  # 17.2.11 fixed that upstream). The two were unrelated fixes bundled in
-  # one conditional block; only modelFallback needed to go.
-  write .omp/config.yml "$(printf '%s' "$data" | jq --argjson c "$classes" '
-      ((.local_model.provider // "mlx") + "/" + (.local_model.id // "default_model")) as $localId
-      | ($c | to_entries | any(.value == $localId)) as $usesLocal
-      | {modelRoles: $c}
-        + (if $usesLocal then {
-            compaction: {thresholdTokens: .local_model.compaction_threshold_tokens}
-          } else {} end)
-    ' 2>/dev/null | yq -P 2>/dev/null)"
-
+  mkdir -p "$HOME/Library/Logs" 2>/dev/null || return 0
+  printf '%s aoe-model-class: %s routes omp to the local model but %s has no disabledExtensions — MCP tool schemas will overflow the local context window and omp will silently fall back to a billed cloud model. Check that agentcfg (see agentcfg --version) supports exclude_for_models.\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" "$root" "$cfg" \
+    >> "$HOME/Library/Logs/aoe-model-class.error.log" 2>/dev/null || return 0
 }
 
 main
