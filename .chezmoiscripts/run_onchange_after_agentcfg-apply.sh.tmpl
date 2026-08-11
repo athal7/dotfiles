@@ -1,10 +1,10 @@
 #!/bin/sh
 # Applies the agentcfg registry (dot_config/agentcfg/ -> ~/.config/agentcfg/)
-# to both opencode's and omp's native config via `agentcfg apply`. This is
-# the ONE script that materializes agent definitions, structured commands,
-# MCP server config, bash policy, and harness-specific settings for both
-# harnesses — the hand-rolled omp generators this replaced (run_onchange_
-# after_omp-agents.sh.tmpl, run_onchange_after_omp-settings.sh.tmpl,
+# to opencode's, omp's, and codex's native config via `agentcfg apply`.
+# This is the ONE script that materializes agent definitions, structured
+# commands, MCP server config, bash policy, and harness-specific settings
+# for all three harnesses — the hand-rolled omp generators this replaced
+# (run_onchange_after_omp-agents.sh.tmpl, run_onchange_after_omp-settings.sh.tmpl,
 # dot_omp/private_agent/{symlink_APPEND_SYSTEM.md,private_mcp.json}.tmpl)
 # are gone; .chezmoidata/agents.yaml and mcp.yaml's role as a rendering
 # source for omp went with them (agents.yaml is kept, narrowed to just
@@ -40,9 +40,15 @@
 #     built-in-tool allow-list), and every other harnesses.omp.extra key
 #     (tools.approvalMode, task.disabledAgents, compaction.strategy) via
 #     `omp config set`.
-#   - both: commands.yaml.tmpl's structured commands (implement,
+#   - codex: subagent files under ~/.codex/agents (currently 0, same
+#     reason as omp: every workflow step names an opencode: persona and
+#     no role: advisory step exists) and MCP server definitions merged
+#     into ~/.codex/config.toml's [mcp_servers] table — this renderer has
+#     no bash-policy, tool-approval, or per-agent model/permission
+#     mapping yet, so those registry keys simply don't apply here.
+#   - all three: commands.yaml.tmpl's structured commands (implement,
 #     merge-request) render identically to ~/.agents/skills/<name>/
-#     SKILL.md on either harness; omp's rendering additionally triggers
+#     SKILL.md on every harness; omp's rendering additionally triggers
 #     its native `workflowz` deterministic-pipeline mechanism.
 #
 # agentcfg.yaml.tmpl hash: {{ include "dot_config/agentcfg/agentcfg.yaml.tmpl" | sha256sum }}
@@ -70,11 +76,13 @@ if ! command -v agentcfg >/dev/null 2>&1; then
 fi
 
 # --strict is deliberately omitted: opencode has no structured-workflow
-# mechanism and omp has no per-agent bash scoping, external-directory
-# policy, per-tool MCP ask-listing, or step budgets, so the registry's
-# richer per-role model always produces some [skip]/[reduction] gaps
-# against either harness. That's an inherent, permanent cross-harness
-# capability difference, not a regression to gate deploys on — run
-# `agentcfg apply --target opencode,omp --scope global --explain` by
-# hand to review the current gap list.
-agentcfg apply --target opencode,omp --scope global
+# mechanism, omp has no per-agent bash scoping, external-directory policy,
+# per-tool MCP ask-listing, or step budgets, and codex has none of the
+# above (structured-workflow, bash scoping, external-directory policy,
+# or step budgets) — so the registry's richer per-role model always
+# produces some [skip]/[reduction] gaps against every harness. That's an
+# inherent, permanent cross-harness capability difference, not a
+# regression to gate deploys on — run `agentcfg apply --target
+# opencode,omp,codex --scope global --explain` by hand to review the
+# current gap list.
+agentcfg apply --target opencode,omp,codex --scope global
