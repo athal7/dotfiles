@@ -28,6 +28,29 @@
 # repo's own AGENTS.md convention) on each machine that uses them; an
 # unset variable resolves to an empty string rather than erroring (see
 # agentcfg's docs/schema.md Value.Resolve semantics).
+#
+# KNOWN GAP, not fixable from this registry: `eval`'s `tool.<name>(args)`
+# bridge (both JS and Python — the Python bridge forwards to the same
+# `callSessionTool`, per omp's eval/py/tool-bridge.ts) bypasses every
+# `tools.approval`/`tools.approvalMode` entry this file drives, including
+# the exact "prompt" overrides the ask: patterns below expand into.
+# Root cause, confirmed against omp v17.2.12 source (eval/js/tool-bridge.ts,
+# callSessionTool): it calls `tool.execute(toolCallId, normalizedArgs,
+# options.signal)` — omitting the `context` argument every other call site
+# in the codebase threads through (cursor.ts, sdk.ts, extensions/wrapper.ts,
+# hooks/tool-wrapper.ts, session-tools.ts, task/executor.ts, tools/xdev.ts).
+# `ExtensionToolWrapper.execute` (extensibility/extensions/wrapper.ts),
+# the layer that actually calls resolveApproval, reads its approval mode
+# and per-tool policy off `context?.settings`; with no context, both
+# default to yolo-with-no-policy (wrapper.ts's `settings?.get(...) ?? "yolo"`
+# / `?? {}`), so the call executes unapproved regardless of any tools.approval
+# entry — pre-approved, ask-gated, or explicitly denied alike. Not a
+# registry-side bug (nothing here can supply the missing context) and, as
+# of 2026-08-11, not yet filed upstream — distinct from the already-filed
+# oh-my-pi#3091 subagent-yolo issue cited by agentcfg's docs/decisions/0004
+# (that one is a forced approval *mode*; this one is a skipped approval
+# *call* entirely). File upstream before relying on tools.approval to gate
+# anything reachable through eval's tool bridge.
 mcp_servers:
   - name: context7
     transport: remote
