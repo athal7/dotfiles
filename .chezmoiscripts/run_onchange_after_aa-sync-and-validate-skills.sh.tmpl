@@ -1,5 +1,10 @@
 #!/bin/sh
-# Sync and validate agent skills when skill files change.
+# Sync and validate agent skills when skill files change. Filename prefixed
+# "aa-" so it sorts (and runs) before run_onchange_after_agentcfg-apply.sh.tmpl:
+# this script's wholesale `rm -rf` rebuild of ~/.agents/skills/ knows nothing
+# about agentcfg's own commands.yaml.tmpl output (implement/merge-request,
+# written directly by `agentcfg apply`) — running after it would silently
+# wipe those. Never rename this to sort after agentcfg-apply.
 # Hashes for change detection (every file inside per-skill folders + external-skill
 # manifest + deployed-state presence so a missing external skill triggers re-run):
 {{- range (glob (joinPath .chezmoi.sourceDir "skills/*/**/*")) }}
