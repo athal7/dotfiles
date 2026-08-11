@@ -79,6 +79,7 @@ packages:
     - name: gcloud-cli
     - name: font-monaspace-nf
     - name: claude-code
+    - name: codex
     - name: tailscale-app
     - name: obsidian
     - name: figma
