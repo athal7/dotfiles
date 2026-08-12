@@ -58,6 +58,10 @@ local_model:
   context_window: 32000
   max_tokens: 8192
   compaction_model: anthropic/claude-haiku-4-5
+  # OMP-only local-session retention after compaction. It leaves room for the
+  # fixed tool-schema prefix and max_tokens within context_window; global and
+  # cloud-session settings are unchanged.
+  compaction_keep_recent_tokens: 8000
   prompt_cache_size: 4
   prompt_cache_bytes: 3221225472 # 3GiB
   prefill_step_size: 512
