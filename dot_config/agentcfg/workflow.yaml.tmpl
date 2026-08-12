@@ -1,76 +1,52 @@
 {{- /* Mirrors .chezmoidata/agents.yaml. Prompt bodies are inlined via
        chezmoi's `include` (raw file read, not re-templated) so this file
        stays the single source of truth without duplicating
-       dot_agents/prompts/*.md's content — see the integration summary for
-       which agents fell back to a literal inline `text:` instead (only
-       "general", which has no source prompt file of its own).
+       dot_agents/prompts/*.md's content.
 
-       The core five steps (orchestrate/plan/verify/implement/research)
-       each set `opencode: {agent: <name>}`, pointing at a same-named
-       entry under opencode_agents: below, rather than rendering directly
-       from the step's own name/prompt/permissions. Why the split:
+       The core four steps (plan/verify/implement/research) each set
+       `opencode: {agent: <name>}`, pointing at a same-named entry under
+       opencode_agents: below, rather than rendering directly from the
+       step's own name/prompt/permissions (agentcfg#29). Why the split:
+       step names are semantic/action-oriented (what discipline the
+       workflow needs), decoupled from opencode's own vocabulary — "plan"
+       is the step, "planner" is opencode's name for the persona that
+       implements it (also dodges omp's reserved "plan" name), and the
+       same persona (e.g. "qa") could back more than one step without
+       duplicating its prompt/permissions/mcp. omp's task-dispatch model
+       needs no standing persona for these: its primary session already
+       has full tools (no lever exists to gate write/edit there) and its
+       subagent dispatch carries ad hoc, step-specific instructions
+       inline at call time — so every step below sets targets: [opencode],
+       and Agent.Opencode makes omp render nothing for any of them. The
+       portable `implement`/`merge-request` workflow commands
+       (dot_config/agentcfg/commands.yaml.tmpl) separately phrase their
+       guidance from the session's own tool inventory, so the same
+       command reads correctly whether a fully-tooled omp session or a
+       gapped opencode lead runs it — that's the actual cross-harness
+       delivery mechanism for step-specific guidance, not this file.
 
-       - Step names are semantic/action-oriented (what discipline the
-         workflow needs), decoupled from any one harness's vocabulary —
-         "orchestrate" is the step; "lead" is opencode's name for the
-         persona that implements it. Steps stay meaningful even for a
-         harness with no concept of named, restriction-bearing agents.
-       - omp's task-dispatch model needs no standing persona for these:
-         its primary session already has full tools (no lever exists to
-         gate write/edit there — confirmed empirically, bash bypasses any
-         exclusion; see agentcfg's omp renderer Capabilities() doc) and
-         its subagent dispatch carries ad hoc, step-specific instructions
-         inline at call time. A permanent named agent file per step, the
-         way opencode structurally requires, buys omp nothing a dynamic
-         task() dispatch doesn't already give it — so every step below
-         sets targets: [opencode], and Agent.Opencode makes omp render
-         NOTHING for any of them (no standalone agent file, no
-         APPEND_SYSTEM.md composition) as an additional, renderer-level
-         guarantee, not just a targets-only convention.
-       - opencode has no native workflow concept and no way to dispatch
-         "ad hoc, uninstantiated" work — every dispatch target must be a
-         real, pre-declared agent.<name> with its own tools/permissions.
-         opencode_agents: below is that declaration, decoupled from the
-         step so the SAME persona (e.g. "qa") could back more than one
-         step without duplicating its prompt/permissions/mcp.
-       - Each opencode_agents entry's prompt is the full, complete
-         persona (methodology + role framing combined, i.e. today's
-         plan.md/qa.md/build.md/scout.md content, unchanged) — splitting
-         these personas' content between the step and the agent would
-         leave opencode's actual dispatched agent with an incomplete
-         prompt, since the step's own `prompt:` is never rendered
-         anywhere once opencode: is set (see Agent.Opencode's doc comment
-         in agentcfg's schema.go). Each step's own `prompt:` below is
-         consequently a short, undispatched documentation stub — required
-         by schema, never rendered by any renderer here, since every step
-         below is fully opencode-agent-overridden.
-
-       "orchestrate" (opencode agent: lead) is the one exception worth
-       calling out: lead.md's content genuinely IS split, because its
-       "no edit/write, dispatch instead" framing describes a real,
-       enforced opencode constraint (agent.lead.permission.edit/write:
-       deny actually revokes those tools there) that has no omp
-       equivalent to assert — omp's primary session can't be gapped this
-       way at all (see above). The portable `implement`/`merge-request`
-       workflow commands (dot_config/agentcfg/commands.yaml.tmpl)
-       separately phrase their guidance from the session's own tool
-       inventory, so the same command reads correctly whether a
-       fully-tooled omp session or a gapped opencode lead runs it —
-       that's the actual cross-harness delivery mechanism for
-       step-specific guidance, not this file. */ -}}
+       "lead" (the primary step) deliberately does NOT use this split:
+       it has no naming collision to dodge and backs exactly one step,
+       so the override buys nothing — and omp's primary session needs
+       lead.md's orchestration policy (issue-refs-first, KB-before-
+       remote, remote-write approval gate) as much as opencode's does.
+       role: primary renders correctly on both harnesses without an
+       override: opencode's default_agent, omp's APPEND_SYSTEM.md body.
+       An opencode: override on a primary step suppresses BOTH of those
+       — omp gets nothing at all in that case (confirmed against
+       agentcfg's omp.go Render()) — which is what left omp's own lead
+       running with zero of this policy until this fix. */ -}}
 opencode_agents:
-  - name: lead
-    description: "Primary orchestrator — plans, decides, dispatches, and verifies. Does not edit files directly."
-    class: default
+  - name: planner
+    description: "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only."
+    class: slow
     prompt:
       text: |
-        {{ include "dot_agents/prompts/lead.md" | indent 8 | trim }}
+        {{ include "dot_agents/prompts/plan.md" | indent 8 | trim }}
     permissions:
-      task: allow
       edit: deny
       write: deny
-      bash:
-        profile: lead
+      bash: deny
       external_directory: &extdirs
         "*": ask
         "~/code/**": allow
@@ -86,20 +62,8 @@ opencode_agents:
         "/private/tmp/**": allow
         "/var/folders/*/*/T/**": allow
         "/private/var/folders/*/*/T/**": allow
-
-  - name: planner
-    description: "Deep analysis and architectural thinking subagent. Dispatched by lead for design decisions, complex tradeoffs, and architectural review. Read-only."
-    class: slow
-    prompt:
-      text: |
-        {{ include "dot_agents/prompts/plan.md" | indent 8 | trim }}
-    permissions:
-      edit: deny
-      write: deny
-      external_directory: *extdirs
     mcp:
       - server: context7
-
   - name: qa
     description: "Functional QA — drives the running app in a browser (Firefox MCP) to verify UI/behavior, and compares against a linked Figma design (figma-desktop MCP) when one exists. Read-only re: code."
     class: default
@@ -109,6 +73,7 @@ opencode_agents:
     permissions:
       edit: deny
       write: deny
+      bash: deny
       external_directory: *extdirs
     mcp:
       - server: firefox-devtools
@@ -139,21 +104,27 @@ opencode_agents:
     permissions:
       edit: deny
       write: deny
+      bash: deny
       external_directory: *extdirs
     mcp:
       - server: context7
 
 workflow:
   steps:
-    - name: orchestrate
+    - name: lead
       description: "Primary orchestrator — plans, decides, dispatches, and verifies."
       role: primary
       class: default
-      targets: [opencode]
-      opencode:
-        agent: lead
       prompt:
-        text: "Compiles to opencode's \"lead\" persona (see opencode_agents: above). omp's primary session gets no agentcfg-authored prompt content at all — see this file's header comment."
+        text: |
+          {{ include "dot_agents/prompts/lead.md" | indent 10 | trim }}
+      permissions:
+        task: allow
+        edit: deny
+        write: deny
+        bash:
+          profile: lead
+        external_directory: *extdirs
 
     - name: plan
       description: "Deep analysis and architectural thinking — read-only."

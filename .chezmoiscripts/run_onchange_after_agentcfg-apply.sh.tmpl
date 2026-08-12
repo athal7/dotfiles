@@ -9,7 +9,11 @@
 # are gone. .chezmoidata/agents.yaml is still a rendering source, but only
 # for agentcfg.yaml.tmpl's inline model_classes/contexts blocks — nothing
 # else reads it, and aoe-model-class no longer reads `chezmoi data` at all
-# (it just calls `agentcfg apply --scope project`).
+# (it just calls `agentcfg apply --scope project`). This script's filename
+# deliberately sorts after run_onchange_after_aa-sync-and-validate-skills.sh.tmpl
+# (that script's wholesale ~/.agents/skills/ rebuild would otherwise wipe
+# this script's implement/merge-request SKILL.md output — see that script's
+# own header) — this MUST stay the later-sorting of the two.
 #
 # `agentcfg apply`'s own JSON/YAML merge (or, for omp, `omp config set`
 # calls) only touches the managed paths/keys each renderer declares:

@@ -1,4 +1,4 @@
-Changeset touches UI (views, templates, CSS, frontend) → dispatch `qa` for browser verification of the affected flows.
+Changeset touches UI (views, templates, CSS, frontend) → dispatch `qa` for browser verification of the affected flows (on omp, no standing `qa` agent exists — construct the task() dispatch from `qa-verification`, the skill both this and opencode's persona load).
 
 Static and blast-radius review is **not** inline — it happens automatically on the pushed merge request.
 
