@@ -87,6 +87,7 @@ bash:
       "xh *HEAD *": allow
       "xh *mutation*": ask
       "xh *query*": allow
+      "xh *_search*": allow
       "xh *": ask
       "remindctl show*": allow
       "remindctl list*": allow
