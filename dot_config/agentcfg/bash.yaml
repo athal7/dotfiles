@@ -10,7 +10,7 @@
 # agentcfg-managed bash policy silently drifts from omp's (which still
 # reads packages.yaml directly, unchanged — see AGENTS.md/summary notes).
 bash:
-  default_lists: [guardrails, packages]
+  default_lists: []
   lists:
     # Destructive system commands — prompt the human everywhere these apply.
     guardrails:
@@ -114,14 +114,10 @@ bash:
       "opencode session *": allow
       "opencode export *": allow
       "opencode *": ask
-    # lead: harmless non-package navigation layered onto its allow base,
-    # plus two lead-only exceptions to the `gh *: deny` package default
-    # (Deployments API + run-log viewing have no MCP tool coverage).
+    # Lead may invoke GitHub CLI commands only, and every invocation requires
+    # human approval. All other shell commands fall through to the deny base.
     lead:
-      "ls*": allow
-      "pwd": allow
-      "gh api */deployments*": ask
-      "gh run view*": allow
+      "gh *": ask
     build:
       "git commit*": deny
       "git -C * commit*": deny
@@ -143,10 +139,11 @@ bash:
       "sed -i*": deny
   profiles:
     global:
-      base: allow
+      base: deny
+      lists: [lead]
     lead:
-      base: allow
+      base: deny
       lists: [lead]
     build:
       base: allow
-      lists: [build]
+      lists: [guardrails, packages, build]
