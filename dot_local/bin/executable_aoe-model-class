@@ -1,8 +1,7 @@
 #!/bin/sh
 # aoe-model-class — aoe host-level on_launch hook. Materializes this repo's
-# effective per-class model policy into the two gitignored, project-local files
-# opencode and omp each read natively: .opencode/opencode.json and
-# .omp/config.yml.
+# effective per-class model policy into the gitignored, project-local OMP and
+# OpenCode configuration files each harness reads natively.
 #
 # WHY A HOOK, NOT A WRAPPER: the aoe-cli-defaults spec forbids any shell
 # function that injects flags into user-invoked `aoe` commands.
@@ -36,8 +35,8 @@ main() {
 
   # Project scope resolves this directory's own git remote, so it must run
   # with the repo as cwd. --target is both harnesses: opencode takes literal
-  # model ids, omp takes the class map plus the disabledExtensions list that
-  # drops MCP servers the resolved local model can't afford.
+  # model ids, while OMP records local-model MCP exclusions for migration into
+  # its project MCP configuration.
   agentcfg apply --target opencode,omp --scope project >/dev/null 2>&1 || return 0
 
   # SAFETY NET FOR A SILENT BILLING BOUNDARY. If this project routes omp's
@@ -65,12 +64,34 @@ main() {
       | if type == "number" and . >= 1 then floor else error("invalid compaction_keep_recent_tokens") end' 2>/dev/null) \
     || return 0
   yq -i ".compaction.keepRecentTokens = $keep_recent_tokens" "$cfg" 2>/dev/null || return 0
-  grep -q 'disabledExtensions' "$cfg" 2>/dev/null && return 0
+  grep -q 'disabledExtensions' "$cfg" 2>/dev/null || {
+    mkdir -p "$HOME/Library/Logs" 2>/dev/null || return 0
+    printf '%s aoe-model-class: %s routes omp to the local model but %s has no disabledExtensions — MCP tool schemas will overflow the local context window and omp will silently fall back to a billed cloud model. Check that agentcfg (see agentcfg --version) supports exclude_for_models.\n' \
+      "$(date '+%Y-%m-%d %H:%M:%S')" "$root" "$cfg" \
+      >> "$HOME/Library/Logs/aoe-model-class.error.log" 2>/dev/null || return 0
+    return 0
+  }
 
-  mkdir -p "$HOME/Library/Logs" 2>/dev/null || return 0
-  printf '%s aoe-model-class: %s routes omp to the local model but %s has no disabledExtensions — MCP tool schemas will overflow the local context window and omp will silently fall back to a billed cloud model. Check that agentcfg (see agentcfg --version) supports exclude_for_models.\n' \
-    "$(date '+%Y-%m-%d %H:%M:%S')" "$root" "$cfg" \
-    >> "$HOME/Library/Logs/aoe-model-class.error.log" 2>/dev/null || return 0
+  disabled_mcp=$(yq -o=json '.disabledExtensions // [] | map(select(startswith("mcp:")) | ltrimstr("mcp:"))' "$cfg" 2>/dev/null) || return 0
+  [ "$disabled_mcp" = "[]" ] && return 0
+  global_mcp="$HOME/.omp/agent/mcp.json"
+  [ -f "$global_mcp" ] || return 0
+  project_mcp=.omp/mcp.json
+  [ -f "$project_mcp" ] || printf '{\n  "mcpServers": {}\n}\n' > "$project_mcp" || return 0
+  tmp_mcp=$(mktemp "${project_mcp}.XXXXXX") || return 0
+  jq --argjson names "$disabled_mcp" --slurpfile global "$global_mcp" '
+    reduce $names[] as $name
+      (.;
+        .mcpServers //= {} |
+        if $global[0].mcpServers[$name] then
+          .mcpServers[$name] = ($global[0].mcpServers[$name] + {enabled: (.mcpServers[$name].enabled // false)})
+        else
+          error("missing global MCP definition: \($name)")
+        end
+      )
+  ' "$project_mcp" > "$tmp_mcp" 2>/dev/null || return 0
+  mv "$tmp_mcp" "$project_mcp" || return 0
+  yq -i 'del(.disabledExtensions[] | select(startswith("mcp:")))' "$cfg" 2>/dev/null || return 0
 }
 
 main

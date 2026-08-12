@@ -18,8 +18,9 @@
 # server unconditionally, and all 15 together (~37.5k tokens of schema)
 # exceed the local model's whole 32000-token window — so a session routed
 # there silently falls back to a billed cloud model. Rationale, mechanism
-# and rejected alternatives: agentcfg ADR-0005. Only context7 (2 tools) and
-# cq (5) survive; github goes too since bash.yaml allows the `gh` CLI.
+# and rejected alternatives: agentcfg ADR-0005. Context7 (2 tools), cq (5),
+# and GitHub remain within the budget; all other remote service MCPs are
+# excluded for local sessions.
 #
 # Seven `runlayer-*` servers proxy OAuth'd services (Zoom/Slack/
 # Atlassian/Google/…) at a workspace-specific URL, resolved from an
@@ -82,7 +83,6 @@ mcp_servers:
       take_snapshot, uninstall_extension, upload_file_by_uid]
 
   - name: github
-    exclude_for_models: [mlx/default_model]
     transport: remote
     url: https://api.githubcopilot.com/mcp/
     headers:

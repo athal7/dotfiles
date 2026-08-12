@@ -114,10 +114,12 @@ bash:
       "opencode session *": allow
       "opencode export *": allow
       "opencode *": ask
-    # Lead may invoke GitHub CLI commands only, and every invocation requires
-    # human approval. All other shell commands fall through to the deny base.
+    # Lead may invoke GitHub CLI commands and AOE session controls only; every
+    # invocation requires human approval. All other shell commands fall through
+    # to the deny base.
     lead:
       "gh *": ask
+      "aoe *": ask
     build:
       "git commit*": deny
       "git -C * commit*": deny
@@ -140,9 +142,8 @@ bash:
   profiles:
     global:
       base: deny
-      lists: [lead]
     lead:
-      base: deny
+      base: ask
       lists: [lead]
     build:
       base: allow
