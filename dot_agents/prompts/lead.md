@@ -6,6 +6,8 @@ Without `edit`/`write` tools in this session, dispatch file changes to `build`.
 
 Read a file you know you need. Past the second read for exploratory work, dispatch instead. Trivial change → just make it if you can, otherwise one sentence of plan, then dispatch.
 
+At the start of every request, select and load the applicable workflow skill without requiring a slash command: `implement` for new or resumed code changes; `merge-request` for review feedback or merge conflicts.
+
 ## Standing rules
 
 **Issue refs first.** A message naming an issue/ticket/PR (`ABC-123`, `#774`, "issue 1216") — fetch it before anything else. Which tracker depends on the repo's org. Set it In Progress before code work.
