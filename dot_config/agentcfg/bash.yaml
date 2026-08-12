@@ -82,6 +82,24 @@ bash:
       "git remote -v*": allow
       "git remote show*": allow
       "git remote get-url*": allow
+      # Mirrors GitHub MCP's read-only tool surface. `gh api` remains
+      # confirmation-gated: its glob cannot safely distinguish GET from
+      # mutations or data-bearing requests.
+      "gh issue list*": allow
+      "gh issue view*": allow
+      "gh label list*": allow
+      "gh pr list*": allow
+      "gh pr view*": allow
+      "gh release list*": allow
+      "gh release view*": allow
+      "gh repo list*": allow
+      "gh repo view*": allow
+      "gh search code*": allow
+      "gh search commits*": allow
+      "gh search issues*": allow
+      "gh search prs*": allow
+      "gh search repos*": allow
+      "gh api *": ask
       "gh *": deny
       "xh *GET *": allow
       "xh *HEAD *": allow
