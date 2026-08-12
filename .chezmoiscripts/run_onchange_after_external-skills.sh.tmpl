@@ -1,0 +1,55 @@
+#!/bin/sh
+# Installs only skills that chezmoi and agentcfg do not own.
+# external-skill manifest: {{ .packages.skills | toJson | sha256sum }}
+# runlayer-skill manifest: {{ .runlayer_skills | toJson | sha256sum }}
+{{- range .packages.skills }}
+{{- if hasKey . "repo" }}
+# external-present: {{ .skill }}={{ if (joinPath (env "HOME") ".agents/skills" .skill "SKILL.md" | stat) }}1{{ else }}0{{ end }}
+{{- end }}
+{{- if hasKey . "source" }}
+{{- range (glob (joinPath $.chezmoi.sourceDir .source .match "**/*")) }}
+{{- if not (stat .).isDir }}
+# local-skill-file: {{ . | include | sha256sum }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+set -eu
+
+SKILLS_DEST="$HOME/.agents/skills"
+mkdir -p "$SKILLS_DEST"
+
+{{- range .packages.skills }}
+{{- if hasKey . "source" }}
+LOCAL_SKILLS_SRC="{{ $.chezmoi.sourceDir }}/{{ .source }}"
+if [ -d "$LOCAL_SKILLS_SRC" ]; then
+  for skill_dir in "$LOCAL_SKILLS_SRC"/{{ .match }}/; do
+    [ -d "$skill_dir" ] || continue
+    cp -r "${skill_dir%/}" "$SKILLS_DEST/"
+    echo "mirrored local skill: $(basename "$skill_dir")"
+  done
+fi
+{{- end }}
+{{- end }}
+
+{{ range .packages.skills -}}
+{{- if hasKey . "repo" }}
+echo "installing {{ .skill }} from {{ .repo }}..."
+gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode --force < /dev/null
+{{ end -}}
+{{- end }}
+
+if command -v uvx >/dev/null 2>&1 && [ -f "$HOME/.runlayer/config.yaml" ]; then
+  echo "resyncing runlayer-managed skills..."
+  RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills remove --all --global --client opencode --yes >/dev/null 2>&1 || \
+    echo "WARN: runlayer skill removal failed; continuing" >&2
+  RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills add --all --global --client opencode || \
+    echo "WARN: runlayer skill installation failed; continuing" >&2
+fi
+
+PRIVATE_SKILLS_INSTALL="$HOME/.config/agentskills/private-install.sh"
+if [ -f "$PRIVATE_SKILLS_INSTALL" ]; then
+  echo "running host-local private skill installs..."
+  SKILLS_DEST="$SKILLS_DEST" sh "$PRIVATE_SKILLS_INSTALL"
+fi

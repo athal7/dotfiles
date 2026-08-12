@@ -2,7 +2,7 @@
 
 [agentskills.io](https://agentskills.io)-compatible skills, deployed to `~/.agents/skills/`. Used by both harnesses in play here — [OpenCode](https://opencode.ai) and omp.
 
-Edit skills here, never in `~/.agents/skills/` — the sync script replaces that directory wholesale on `chezmoi apply`.
+Edit skills here, never in `~/.agents/skills/`; chezmoi manages each authored skill directly without replacing the shared directory.
 
 See `AGENTS.md` for what earns a line and when something shouldn't be a skill at all.
 
@@ -34,7 +34,7 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
 
-External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical) and [permission-audit](https://github.com/athal7/opencode-permission-audit). The `openspec` CLI generates its own skills project-locally into `.opencode/skills/`; the sync script mirrors them globally, version-matched to the installed CLI. Skills only — its slash commands aren't mirrored.
+External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical) and [permission-audit](https://github.com/athal7/opencode-permission-audit). The `openspec` CLI generates its own skills project-locally into `.opencode/skills/`; the external-skills installer mirrors them globally, version-matched to the installed CLI. Skills only — its slash commands aren't mirrored.
 
 ## Other primitives
 
