@@ -125,6 +125,25 @@ workflow:
         bash:
           profile: lead
         external_directory: *extdirs
+      mcp:
+        - server: github
+          ask: &githubWriteAsk
+            - "create_*"
+            - "update_*"
+            - "delete_*"
+            - "merge_*"
+            - "push_*"
+            - "fork_*"
+            - "add_*"
+            - "assign_*"
+            - "request_*"
+            - "dismiss_*"
+            - "mark_*"
+            - "manage_*"
+            - "star_repository"
+            - "unstar_repository"
+            - "actions_run_trigger"
+            - "*_write"
 
     - name: plan
       description: "Deep analysis and architectural thinking — read-only."
@@ -245,23 +264,7 @@ workflow:
         external_directory: *extdirs
       mcp:
         - server: github
-          ask:
-            - "create_*"
-            - "update_*"
-            - "delete_*"
-            - "merge_*"
-            - "push_*"
-            - "fork_*"
-            - "add_*"
-            - "assign_*"
-            - "request_*"
-            - "dismiss_*"
-            - "mark_*"
-            - "manage_*"
-            - "star_repository"
-            - "unstar_repository"
-            - "actions_run_trigger"
-            - "*_write"
+          ask: *githubWriteAsk
 
     - name: google
       description: "Reaches Gmail, Calendar, Drive, Docs, and Sheets via Runlayer MCP (OAuth). Dispatched to search and read messages, events, and files; write actions (send/create/update/delete) require explicit confirmation. Returns a tight distilled summary, never raw dumps."
