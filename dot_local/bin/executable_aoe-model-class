@@ -7,10 +7,10 @@
 # WHY A HOOK, NOT A WRAPPER: the aoe-cli-defaults spec forbids any shell
 # function that injects flags into user-invoked `aoe` commands.
 #
-# WHY IT RENDERS NOTHING ITSELF: it used to reimplement org->model-class
-# routing in jq and write both project files. agentcfg does that natively
-# (contexts matched on the git remote, per-renderer project scope), so this
-# is now one call and there is one writer per file.
+# agentcfg renders the shared policy; this hook then layers one
+# local-model-only context budget into OMP's project config. The order is
+# intentional: agentcfg may rewrite .omp/config.yml, and this is the only
+# place that owns the conditional override.
 #
 # DO NOT REINTRODUCE a compaction.thresholdTokens write here. It set omp's
 # absolute compaction trigger below omp's own irreducible per-turn floor
@@ -53,6 +53,18 @@ main() {
   cfg=.omp/config.yml
   [ -f "$cfg" ] || return 0
   grep -q 'mlx/default_model' "$cfg" 2>/dev/null || return 0
+
+  # OMP retains 20k recent tokens after context-full fallback by default.
+  # That alone nearly fills the local model's 32k window once its fixed
+  # system/tool-schema prefix and 8k output reservation are added, so the
+  # next ordinary turn re-prefills near the limit even after compaction. Keep
+  # only 8k for local sessions. The optional data value permits a host-specific
+  # retune; 8k is the safe default for legacy local.yaml files.
+  keep_recent_tokens=$(chezmoi data --format=json 2>/dev/null \
+    | jq -er '.local_model.compaction_keep_recent_tokens // 8000
+      | if type == "number" and . >= 1 then floor else error("invalid compaction_keep_recent_tokens") end' 2>/dev/null) \
+    || return 0
+  yq -i ".compaction.keepRecentTokens = $keep_recent_tokens" "$cfg" 2>/dev/null || return 0
   grep -q 'disabledExtensions' "$cfg" 2>/dev/null && return 0
 
   mkdir -p "$HOME/Library/Logs" 2>/dev/null || return 0
