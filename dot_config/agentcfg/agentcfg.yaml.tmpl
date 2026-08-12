@@ -129,6 +129,11 @@ harnesses:
       tools.approvalMode: always-ask
       task.disabledAgents: [reviewer, security-reviewer]
       compaction.strategy: shake
+      retry.fallbackChains:
+        default: [anthropic/claude-sonnet-5]
+{{- if hasKey . "local_model" }}
+        {{ (index .local_model "provider") | default "mlx" }}/{{ (index .local_model "id") | default "default_model" }}: []
+{{- end }}
       tools.approval:
         task: allow
         write: allow
