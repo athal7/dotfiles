@@ -14,7 +14,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 - **`skills/`** — agent skills deployed to `~/.agents/skills/`. Multi-step commands (`dot_config/agentcfg/commands.yaml.tmpl`, if present) render additional skills into the same directory — see `docs.schema.md`'s `commands:` section in the agentcfg repo.
 - **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
-- **`.chezmoidata/agents.yaml`** — per-org model-class overrides only (`dot_local/bin/executable_aoe-model-class` reads it from `chezmoi data` at aoe launch time); NOT an agent-definition source anymore — that's `dot_config/agentcfg/workflow.yaml.tmpl`.
+- **`.chezmoidata/local.yaml`** — private machine and organization data, including agentcfg model defaults and per-org overrides; gitignored and represented publicly only by `local.yaml.example`.
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
 - **`.chezmoiscripts/`** — run on apply: brew bundle, skill sync, agentcfg apply
 

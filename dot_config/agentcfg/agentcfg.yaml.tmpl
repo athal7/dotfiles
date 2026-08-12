@@ -12,11 +12,10 @@ imports:
        two more hash lines in run_onchange_after_agentcfg-apply.sh.tmpl.
        Both render from the same two data sources, so they belong together.
 
-       Model literals come from .chezmoidata/agents.yaml's model_class (the
-       map agents' `class:` bindings resolve against). Per-org overrides come
-       from local.yaml's untracked orgs.<org>.model_class — this repo is
-       public, so no org name is committed. Each context is a PARTIAL
-       override merged over the defaults.
+       Model literals and per-org overrides come from untracked
+       .chezmoidata/local.yaml, so organization names and billing choices
+       remain private. Each context is a PARTIAL override merged over the
+       private defaults.
 
        Routing a context's `default` to the local model REQUIRES the
        exclude_for_models entries in mcp_servers.yaml; without them omp's

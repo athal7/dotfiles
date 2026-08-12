@@ -1,6 +1,14 @@
 # Machine-specific config for chezmoi.
 # Copy to ~/.local/share/chezmoi/.chezmoidata/local.yaml and fill in your values.
 # This file is never committed — it lives only on the machine.
+# Private model defaults. The tracked agentcfg template compiles these into
+# agentcfg's model_classes; keep provider choices here because they encode
+# account and billing boundaries.
+model_class:
+  default: anthropic/claude-sonnet-5
+  smol: anthropic/claude-haiku-4-5
+  slow: anthropic/claude-opus-5
+  plan: anthropic/claude-opus-5
 
 # Per-org config keyed by GitHub org login. Orgs not listed fall back to defaults
 # (GitHub Issues for issue tracking; no automated code review).
@@ -9,13 +17,11 @@
 #   issues           : "linear" if the org uses Linear (anything else → default GitHub Issues)
 #   automated_review : config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login : the GitHub user.login the bot posts as (used to filter PR review comments)
-#   model_class      : per-org default models for coding-agent CLIs (opencode, omp), applied at
-#     aoe session-launch time by ~/.local/bin/aoe-model-class. Class names are omp's own native
-#     `modelRoles` vocabulary (default/smol/slow/plan) — values are `provider/model` selector
-#     strings used verbatim by both tools. `plan` backs the deep-analysis/architecture subagent;
-#     it's a recommended class to set alongside the other three. This is a PARTIAL override: any
-#     class you omit here falls back to .chezmoidata/agents.yaml's `model_class`. Two common
-#     patterns:
+#   model_class      : per-org model overrides for opencode and omp, applied at
+#     aoe session launch by ~/.local/bin/aoe-model-class. Class names use
+#     agentcfg's default/smol/slow/plan vocabulary; values are provider/model
+#     selectors. This is a PARTIAL override: omitted classes fall back to the
+#     private top-level model_class above.
 orgs:
   your-work-org:
     issues: linear

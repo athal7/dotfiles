@@ -6,10 +6,9 @@
 # for all three harnesses — the hand-rolled omp generators this replaced
 # (run_onchange_after_omp-agents.sh.tmpl, run_onchange_after_omp-settings.sh.tmpl,
 # dot_omp/private_agent/{symlink_APPEND_SYSTEM.md,private_mcp.json}.tmpl)
-# are gone. .chezmoidata/agents.yaml is still a rendering source, but only
-# for agentcfg.yaml.tmpl's inline model_classes/contexts blocks — nothing
-# else reads it, and aoe-model-class no longer reads `chezmoi data` at all
-# (it just calls `agentcfg apply --scope project`). This script's filename
+# are gone. Private model defaults and per-org contexts come from
+# .chezmoidata/local.yaml; aoe-model-class just calls
+# `agentcfg apply --scope project` to resolve them for the launched repo.
 # `run_onchange_after_aa-sync-and-validate-skills.sh.tmpl` runs first when
 # both scripts change. It also reruns `agentcfg apply` itself when it alone
 # rebuilds ~/.agents/skills, so structured-command skills cannot be wiped.
@@ -49,12 +48,10 @@
 #     SKILL.md on every harness; omp's rendering additionally triggers
 #     its native `workflowz` deterministic-pipeline mechanism.
 #
-# Every registry file needs a hash line or its edits won't retrigger this
-# script. agents.yaml is here because agentcfg.yaml.tmpl renders
-# model_classes/contexts from it, and `include` hashes template SOURCE, not
-# output — a data-only change would otherwise leave this script identical.
+# The private model-policy hash retriggers this script when local defaults or
+# per-org contexts change without exposing either value in the rendered file.
 # agentcfg.yaml.tmpl hash: {{ include "dot_config/agentcfg/agentcfg.yaml.tmpl" | sha256sum }}
-# agents.yaml hash: {{ include ".chezmoidata/agents.yaml" | sha256sum }}
+# private model policy hash: {{ dict "model_class" .model_class "orgs" .orgs | toJson | sha256sum }}
 # bash.yaml hash: {{ include "dot_config/agentcfg/bash.yaml" | sha256sum }}
 # mcp_servers.yaml hash: {{ include "dot_config/agentcfg/mcp_servers.yaml" | sha256sum }}
 # workflow.yaml.tmpl hash: {{ include "dot_config/agentcfg/workflow.yaml.tmpl" | sha256sum }}
