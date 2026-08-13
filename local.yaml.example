@@ -63,6 +63,9 @@ local_model:
   name: qwen3.6-35b-a3b-optiq
   context_window: 32000
   max_tokens: 8192
+  # Agent request cap. Leave headroom for the fixed system/tool prefix inside
+  # context_window; the server still permits max_tokens for direct requests.
+  agent_max_tokens: 4096
   compaction_model: anthropic/claude-haiku-4-5
   # OMP-only local-session retention after compaction. It leaves room for the
   # fixed tool-schema prefix and max_tokens within context_window; global and

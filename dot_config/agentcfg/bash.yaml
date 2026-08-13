@@ -141,7 +141,7 @@ bash:
       "sed -i*": deny
   profiles:
     global:
-      base: deny
+      base: ask
     lead:
       base: ask
       lists: [lead]
