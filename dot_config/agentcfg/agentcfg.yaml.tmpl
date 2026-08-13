@@ -103,10 +103,10 @@ harnesses:
               # limit.context===0 as "never overflow", so opencode's
               # built-in auto-compaction silently never engages for mlx
               # sessions without this — the opencode-side counterpart to
-              # omp's contextWindow/maxTokens in models.yml.tmpl.
+              # omp's contextWindow/agent_max_tokens in models.yml.tmpl.
               limit:
                 context: {{ .local_model.context_window }}
-                output: {{ .local_model.max_tokens }}
+                output: {{ (index .local_model "agent_max_tokens") | default 4096 }}
 {{- end }}
       formatter:
         rubocop: {disabled: true}
@@ -117,7 +117,7 @@ harnesses:
           extensions: [.rb, .rake, .gemspec, .ru]
   omp:
     agents_dir: ~/.omp/agent/agents
-    bash_profile: lead
+    bash_profile: global
     # tools.approvalMode/task.disabledAgents/compaction.strategy have no
     # registry-level concept (they're not agent/mcp/model/bash policy);
     # tools.approval is layered with agentcfg's own registry-derived MCP
