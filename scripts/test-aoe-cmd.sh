@@ -203,6 +203,20 @@ test_worktree_passthrough() {
 test_worktree_passthrough
 
 # ---------------------------------------------------------------------------
+echo "== scratch passthrough =="
+
+test_scratch_passthrough() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -s -n kb-enrich /kb-enrich >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -s" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  check "aoe add uses scratch mode" "$add_line" "add	--scratch	--title	kb-enrich-$(printf '%s' "$add_line" | sed -n 's/.*--title	kb-enrich-\([0-9-]*\).*/\1/p')"
+}
+test_scratch_passthrough
+
+# ---------------------------------------------------------------------------
 echo "== stdout relay of aoe add output =="
 
 test_stdout_relay_happy_path() {

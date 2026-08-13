@@ -5,15 +5,15 @@ description: GitHub PRs, reviews, and issues
 
 Find, within the enrichment window: pull requests authored by the authenticated user, pull requests where the user left a review, and issues opened or updated by the user. Extract kb facts from the result.
 
-### Discover orgs
+### Discover eligible orgs
 
-Read GitHub orgs from chezmoi data:
+Read only GitHub organizations explicitly eligible for this KB:
 
 ```
-chezmoi data --format json | jq -r '[.orgs | keys[]] | join(" ")'
+chezmoi data --format json | jq -r '.orgs | to_entries[] | select(.value.kb_eligible == true) | .key'
 ```
 
-If the result is empty, retry the search without an org filter.
+If no organization is eligible, log `No GitHub organizations are KB-eligible` and skip this collector. Never fall back to an unscoped GitHub search.
 
 ### Bot filter
 

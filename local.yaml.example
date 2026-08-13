@@ -13,7 +13,7 @@ model_class:
 # Per-org config keyed by GitHub org login. Orgs not listed fall back to defaults
 # (GitHub Issues for issue tracking; no automated code review).
 #
-# Per-org keys:
+#   kb_eligible      : whether GitHub activity from the organization may enrich this KB; omit or false to exclude it.
 #   issues           : "linear" if the org uses Linear (anything else → default GitHub Issues)
 #   automated_review : config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login : the GitHub user.login the bot posts as (used to filter PR review comments)
@@ -24,6 +24,7 @@ model_class:
 #     private top-level model_class above.
 orgs:
   your-work-org:
+    kb_eligible: true
     issues: linear
     automated_review:
       bot_login: copilot-pull-request-reviewer
@@ -34,6 +35,7 @@ orgs:
       slow: anthropic/claude-opus-5
       plan: anthropic/claude-opus-5
   your-personal-org:
+    kb_eligible: false
     model_class:
       default: mlx/default_model
       smol: mlx/default_model

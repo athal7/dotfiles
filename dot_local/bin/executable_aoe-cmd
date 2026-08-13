@@ -83,8 +83,7 @@
 # times out and the send never happens — the exit code alone tells the
 # caller whether the send actually landed.
 #
-# Usage:
-#   aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE...
+#   aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE...
 
 # Env:
 #   AOE_CMD_READY_TIMEOUT   Max seconds to poll the pane for the ready marker
@@ -103,17 +102,19 @@
 set -eu
 
 usage() {
-  echo "Usage: aoe-cmd -d DIR -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE..." >&2
+  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE..." >&2
 }
 
 dir=""
+scratch=0
 name=""
 worktree=""
 new_branch=0
 
-while getopts "d:n:w:b" opt; do
+while getopts "d:sn:w:b" opt; do
   case "$opt" in
     d) dir="$OPTARG" ;;
+    s) scratch=1 ;;
     n) name="$OPTARG" ;;
     w) worktree="$OPTARG" ;;
     b) new_branch=1 ;;
@@ -124,14 +125,18 @@ shift $((OPTIND - 1))
 
 message="$*"
 
-if [ -z "$dir" ] || [ -z "$name" ] || [ -z "$message" ]; then
+if [ -z "$name" ] || [ -z "$message" ] || { [ "$scratch" -eq 0 ] && [ -z "$dir" ]; } || { [ "$scratch" -eq 1 ] && [ -n "$dir" ]; } || { [ "$scratch" -eq 1 ] && { [ -n "$worktree" ] || [ "$new_branch" -eq 1 ]; }; }; then
   usage
   exit 1
 fi
 
 title="${name}-$(date +%Y%m%d-%H%M%S)"
 
-set -- "$dir" --title "$title"
+if [ "$scratch" -eq 1 ]; then
+  set -- --scratch --title "$title"
+else
+  set -- "$dir" --title "$title"
+fi
 if [ -n "$worktree" ]; then
   set -- "$@" --worktree "$worktree"
 fi

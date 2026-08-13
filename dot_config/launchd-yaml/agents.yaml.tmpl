@@ -95,8 +95,7 @@ launchagents:
     Label: com.$USER.fix-prod-errors
     ProgramArguments:
       - $HOME/.local/bin/aoe-cmd
-      - -d
-      - $HOME/code/dotfiles
+      - -s
       - -n
       - fix-prod-errors
       - /fix-prod-errors
@@ -153,8 +152,7 @@ launchagents:
     Label: com.$USER.kb-enrich
     ProgramArguments:
       - $HOME/.local/bin/aoe-cmd
-      - -d
-      - $HOME/code/dotfiles
+      - -s
       - -n
       - kb-enrich
       - /kb-enrich
