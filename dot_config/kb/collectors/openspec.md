@@ -3,9 +3,9 @@ name: openspec
 description: OpenSpec durable store — design decisions, rejected alternatives, and standing specs from archived /implement changes
 ---
 
-Find archived OpenSpec changes within the enrichment window: glob `~/.local/share/kb/openspec/*/changes/archive/YYYY-MM-DD-*/kb-meta.yaml` for each date in the window. Each file's `worktree:` field (the absolute repo/worktree root, stamped at archive time) is the join key `/kb-enrich`'s Step 3 session-coordination step reuses to filter opencode/omp sessions covered by these durable artifacts. For each matching archive directory, read `design.md`; for each repo store, read the standing `~/.local/share/kb/openspec/<repo-slug>/specs/` for requirements active during the window.
+Find archived OpenSpec changes within the enrichment window with `kb openspec list --from YYYY-MM-DD --to YYYY-MM-DD`. Each result includes `worktree`, `branch`, `date`, `change`, `repo`, and `path`; use `worktree` as the join key `/kb-enrich`'s Step 3 session-coordination step uses to filter opencode/omp sessions covered by these durable artifacts. Read each change's design with `kb openspec show <change> --repo <repo>`; list standing requirements with `kb openspec specs list --repo <repo>` and read a requirement with `kb openspec specs show <spec> --repo <repo>`.
 
-Note: this collector reads the openspec archive directly from the filesystem — there is no `kb` CLI surface for openspec data today (`kb`'s CLI only covers `action-items`, `journal`, and `people`). Adding a `kb openspec` query command is tracked as a follow-up in the separate `kb` CLI repo (`/Users/athal/code/kb`), not in scope for this change.
+The kb v0.4.0 console entry point registers this read-only OpenSpec interface before invoking `main()`. Do not read archive files directly when the CLI can provide the needed metadata or content.
 
 ## Triage rules
 
