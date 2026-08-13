@@ -17,12 +17,14 @@ metadata:
 |---|---|
 | Contact fields for a person | `kb people show <name>` — resolves aliases; JSON |
 | Everyone in the vault | `kb people list` |
-| Write a journal entry | `kb journal append --date <YYYY-MM-DD> --section <heading> [--content <text>]` — stdin if `--content` omitted |
+| Find a project or product | `kb projects show <name>` / `kb products show <name>` — both resolve aliases; use their `list` subcommands for enumeration |
+| Write a journal entry | `kb journal append --date <YYYY-MM-DD> --section <heading> [--content <text>]` — stdin if `--content` is omitted or `-` |
+| Locate or read journal entries | `kb journal list [--from YYYY-MM-DD] [--to YYYY-MM-DD]` / `kb journal show <YYYY-MM-DD>` |
 | Open action items | `kb action-items list`, then `complete`/`progress`/`todo <line_no>` |
 
-**`people show` returns contact fields only** — no `github` handle, no project links, no body content. Those need the profile itself.
+**`people show` includes the person's GitHub handle when recorded**, but it does not include project links or profile body content. Read the profile itself for those.
 
-**Products, projects, and decisions have no CLI surface yet**, nor does any profile write. Until they do, those lookups read the vault directly — `kb people show` on a known person is the cheapest way to discover the vault root.
+**Projects and products have read-only CLI surfaces; decisions and all profile writes do not.** Read or update those Markdown files directly when the CLI cannot represent the required operation.
 
 **`action-items` has no `add`** — new items become reminders or tracked issues instead.
 
