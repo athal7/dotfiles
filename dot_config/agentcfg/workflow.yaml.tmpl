@@ -80,7 +80,7 @@ opencode_agents:
       - server: figma-desktop
 
   - name: build
-    description: "Focused worker subagent dispatched by lead. Executes implementation work under TDD discipline. Has edit/write access and local dev tooling. Returns a tight summary when done."
+    description: "Focused worker subagent dispatched by lead. Executes implementation work. Has edit/write access and local dev tooling. Returns a tight summary when done."
     class: default
     prompt:
       text: |
@@ -166,7 +166,7 @@ workflow:
         text: "Compiles to opencode's \"qa\" persona (see opencode_agents: above). omp dispatches this discipline ad hoc via task() with inline instructions instead of a standing agent file."
 
     - name: implement
-      description: "Implementation work under TDD discipline — full read/write and local dev tooling."
+      description: "Implementation work — full read/write and local dev tooling."
       role: delegate
       class: default
       steps: 30

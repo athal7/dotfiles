@@ -125,8 +125,6 @@ packages:
     - repo: addyosmani/agent-skills
       skill: incremental-implementation
     - repo: addyosmani/agent-skills
-      skill: test-driven-development
-    - repo: addyosmani/agent-skills
       skill: browser-testing-with-devtools
     - repo: addyosmani/agent-skills
       skill: source-driven-development
