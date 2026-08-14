@@ -8,6 +8,6 @@ Static and blast-radius review is **not** inline — it happens automatically on
 | Wrong approach, missing requirement | Update the proposal |
 | Tradeoff or scope question | Carry into the gate |
 
-**Present an understanding-first explanation of the diff (background first, intuition before details, literate diff narrative, and optional micro-worlds or comprehension checks), the QA report, and any carried findings. Wait.** (`lumen diff --save-viewed` persists per-file viewed state locally.)
+**Present the exact diff, an understanding-first explanation of the diff (background first, intuition before details, literate diff narrative, and optional micro-worlds or comprehension checks), the QA report, and any carried findings. Wait.** (`lumen diff --save-viewed` persists per-file viewed state locally.)
 
 Ends with: an approved changeset + QA.
