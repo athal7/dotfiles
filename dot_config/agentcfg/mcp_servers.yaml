@@ -17,9 +17,8 @@
 # `exclude_for_models` is REQUIRED, not tuning: omp mounts every targeted
 # server unconditionally, and all 15 together (~37.5k tokens of schema)
 # exceed the local model's whole 32000-token window — so a session routed
-# there silently falls back to a billed cloud model. Rationale, mechanism
-# and rejected alternatives: agentcfg ADR-0005. Context7 (2 tools), cq (5),
-# and GitHub remain within the budget; all other remote service MCPs are
+# there silently falls back to a billed cloud model. Context7 (2 tools) and
+# cq (5) remain mounted; every remote service MCP, including GitHub, is
 # excluded for local sessions.
 #
 # Seven `runlayer-*` servers proxy OAuth'd services (Zoom/Slack/
@@ -83,6 +82,7 @@ mcp_servers:
       take_snapshot, uninstall_extension, upload_file_by_uid]
 
   - name: github
+    exclude_for_models: [mlx/default_model]
     transport: remote
     url: https://api.githubcopilot.com/mcp/
     headers:
