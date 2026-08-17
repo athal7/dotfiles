@@ -128,6 +128,7 @@ harnesses:
       tools.approvalMode: always-ask
       task.disabledAgents: [reviewer, security-reviewer]
       compaction.strategy: shake
+      plan.defaultOnStartup: true
       retry.fallbackChains:
         default: [anthropic/claude-sonnet-5]
 {{- if hasKey . "local_model" }}
