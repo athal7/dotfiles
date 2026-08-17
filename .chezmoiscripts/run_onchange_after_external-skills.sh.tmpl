@@ -20,6 +20,11 @@ set -eu
 SKILLS_DEST="$HOME/.agents/skills"
 mkdir -p "$SKILLS_DEST"
 
+if [ -d "$SKILLS_DEST/test-driven-development" ]; then
+  rm -rf "$SKILLS_DEST/test-driven-development"
+  echo "removed test-driven-development"
+fi
+
 {{- range .packages.skills }}
 {{- if hasKey . "source" }}
 LOCAL_SKILLS_SRC="{{ $.chezmoi.sourceDir }}/{{ .source }}"

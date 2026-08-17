@@ -21,7 +21,7 @@ Changed:
   - <file>:<lines> — <what>
 
 Tests:
-  - <test file>:<name> — red→green confirmed
+  - <test file>:<name> — passing
   - <command> — <pass/fail/count>
 
 Did not do (intentional):
@@ -40,5 +40,4 @@ Write zero comments. Names and structure carry the intent; a comment is a signal
 
 ## Skills
 
-- `test-driven-development` — skip only for pure config, generated files, and file types with no test framework
 - `incremental-implementation` — an abstraction seems required anyway? Return it as a design question instead
