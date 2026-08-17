@@ -142,6 +142,7 @@ bash:
   profiles:
     global:
       base: ask
+      lists: [guardrails, packages]
     lead:
       base: ask
       lists: [lead]
