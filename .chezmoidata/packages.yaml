@@ -178,6 +178,8 @@ packages:
       version: latest
     - name: npm:@google/jules
       version: latest
+    - name: npm:freebuff
+      version: latest
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema

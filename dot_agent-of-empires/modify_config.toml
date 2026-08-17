@@ -121,6 +121,7 @@ yolo_mode_default = false
 
 [session.custom_agents]
 jules = "jules"
+freebuff = "freebuff"
 
 [session.agent_acp_cmd]
 jules = "jules"
