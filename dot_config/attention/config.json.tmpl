@@ -3,7 +3,10 @@
    attention_check: true contribute a calendar/reminder-list name here.
    The Linear API token is baked in from the macOS keychain at apply time
    (never persisted anywhere else); the attention tool itself has no
-   keychain dependency, it just reads linear.apiToken from this file. */ -}}
+   keychain dependency, it just reads linear.apiToken from this file.
+   Session (aoe-cmd) and lumen hotkeys were removed from the bundled
+   plugins upstream (hardcoded tool deps) and are restored here as
+   configured actions. */ -}}
 {{- $calNames := list -}}
 {{- range $k, $v := .calendars -}}
 {{- if and (kindIs "map" $v) (dig "attention_check" false $v) -}}
@@ -21,7 +24,15 @@
       "plugins" (list "calendar" "reminders" "github" "linear")
       "calendar" (dict "names" $calNames)
       "reminders" (dict "lists" $remLists)
-      "github" (dict)
-      "linear" (dict "apiToken" (output "security" "find-generic-password" "-s" "chezmoi" "-a" "linear_api_key" "-w" | trim))
+      "github" (dict "actions" (list
+        (dict "key" "alt-s" "label" "session" "background" true
+              "command" (list "aoe-cmd" "-d" "{repo_path}" "-n" "{slug}" "-b" "-w" "{slug}" "Work on issue {id} in this repo"))
+        (dict "key" "alt-l" "label" "lumen"
+              "command" (list "lumen" "diff" "{url}"))))
+      "linear" (dict
+        "apiToken" (output "security" "find-generic-password" "-s" "chezmoi" "-a" "linear_api_key" "-w" | trim)
+        "actions" (list
+          (dict "key" "alt-s" "label" "session" "background" true
+                "command" (list "aoe-cmd" "-d" "." "-n" "{identifier_lower}" "Work on Linear issue {identifier}"))))
 -}}
 {{ $config | toPrettyJson }}
