@@ -43,7 +43,7 @@
 # per-org contexts change without exposing either value in the rendered file.
 # agentcfg.yaml.tmpl hash: {{ include "dot_config/agentcfg/agentcfg.yaml.tmpl" | sha256sum }}
 # private model policy hash: {{ dict "model_class" .model_class "orgs" .orgs | toJson | sha256sum }}
-# bash.yaml hash: {{ include "dot_config/agentcfg/bash.yaml" | sha256sum }}
+# bash.yaml.tmpl hash: {{ include "dot_config/agentcfg/bash.yaml.tmpl" | sha256sum }}
 # mcp_servers.yaml hash: {{ include "dot_config/agentcfg/mcp_servers.yaml" | sha256sum }}
 # workflow.yaml.tmpl hash: {{ include "dot_config/agentcfg/workflow.yaml.tmpl" | sha256sum }}
 # commands.yaml.tmpl hash: {{ include "dot_config/agentcfg/commands.yaml.tmpl" | sha256sum }}

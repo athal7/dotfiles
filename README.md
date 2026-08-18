@@ -21,7 +21,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Attention triage dashboard](dot_config/attention/config.json.tmpl) — config for the [`attention`](https://github.com/athal7/attention) CLI (installed via `athal7/tap/attention`), a prioritized calendar/reminders/GitHub/Linear triage dashboard with an fzf-driven hotkey UI; this file just supplies the calendar/reminder-list names flagged `attention_check: true` plus codeDir and a Linear token.
   - [Homebridge](dot_homebridge/)
   - [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) — scheduled macOS tasks defined declaratively in [`dot_config/launchd-yaml/agents.yaml.tmpl`](dot_config/launchd-yaml/agents.yaml.tmpl) (generated to plists via yq + plutil), including a daily 7am production-error triage (`fix-prod-errors`) that dispatches worktree fix sessions, a monthly spec-compliance audit (`audit`), a weekly Sunday cross-repo friction-hotspot refactor dispatcher (`refactor-hotspots`) that tracks dispatches in [`dot_config/opencode/create_hotspot-dispatch-log.json`](dot_config/opencode/create_hotspot-dispatch-log.json) to dedup repeat proposals, a weekly Sunday disk-space cleanup (`cleanup`), a 15-minute `kb-zoom-capture` that carves recent Zoom meeting transcripts out of the ephemeral "My Notes" cache into `~/Documents/Zoom` so the daily `kb-enrich` job can distill them.
-- [Packages](.chezmoidata/packages.yaml)
+- [Packages](.chezmoidata/packages.yaml) — dependency registry and source of truth for package-owned Bash permission rules; [`bash.yaml.tmpl`](dot_config/agentcfg/bash.yaml.tmpl) renders those rules into the OMP policy, while [`mcp_servers.yaml`](dot_config/agentcfg/mcp_servers.yaml) owns MCP tool classifications.
 
 ## Quick start
 
