@@ -47,7 +47,8 @@
 # mcp_servers.yaml hash: {{ include "dot_config/agentcfg/mcp_servers.yaml" | sha256sum }}
 # workflow.yaml.tmpl hash: {{ include "dot_config/agentcfg/workflow.yaml.tmpl" | sha256sum }}
 # commands.yaml.tmpl hash: {{ include "dot_config/agentcfg/commands.yaml.tmpl" | sha256sum }}
-# permissions.yaml hash: {{ include ".chezmoidata/permissions.yaml" | sha256sum }}
+# package policy hash: {{ dict "brews" .packages.brews "github_releases" .packages.github_releases | toJson | sha256sum }}
+# generic permission hash: {{ .permissions | toJson | sha256sum }}
 {{- range $name := (list "lead" "plan" "qa" "build" "scout" "zoom" "slack" "atlassian" "github" "google" "linear") }}
 # prompt hash ({{ $name }}): {{ include (printf "dot_agents/prompts/%s.md" $name) | sha256sum }}
 {{- end }}
