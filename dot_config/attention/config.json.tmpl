@@ -22,17 +22,25 @@
 {{- $config := dict
       "codeDir" .codeDir
       "plugins" (list "calendar" "reminders" "github" "linear")
-      "calendar" (dict "names" $calNames)
-      "reminders" (dict "lists" $remLists)
+      "calendar" (dict "names" $calNames "actions" (list
+        (dict "key" "alt-s" "label" "session" "background" true
+              "command" (list "aoe-cmd" "-s" "-n" "{title}" "{input}")
+              "input" (dict "prompt" "Session message" "default" "Prepare for calendar event {display_text}"))))
+      "reminders" (dict "lists" $remLists "actions" (list
+        (dict "key" "alt-s" "label" "session" "background" true
+              "command" (list "aoe-cmd" "-s" "-n" "{title}" "{input}")
+              "input" (dict "prompt" "Session message" "default" "Help me complete reminder {title}"))))
       "github" (dict "actions" (list
         (dict "key" "alt-s" "label" "session" "background" true
-              "command" (list "aoe-cmd" "-d" "{repo_path}" "-n" "{slug}" "-b" "-w" "{slug}" "Work on issue {id} in this repo"))
+              "command" (list "aoe-cmd" "-d" "{repo_path}" "-n" "{slug}" "-b" "-w" "{slug}" "{input}")
+              "input" (dict "prompt" "Session message" "default" "Work on issue {id} in this repo"))
         (dict "key" "alt-l" "label" "lumen"
               "command" (list "lumen" "diff" "{url}"))))
       "linear" (dict
         "apiToken" (output "security" "find-generic-password" "-s" "chezmoi" "-a" "linear_api_key" "-w" | trim)
         "actions" (list
           (dict "key" "alt-s" "label" "session" "background" true
-                "command" (list "aoe-cmd" "-d" "." "-n" "{identifier_lower}" "Work on Linear issue {identifier}"))))
+                "command" (list "aoe-cmd" "-d" "." "-n" "{identifier_lower}" "{input}")
+                "input" (dict "prompt" "Session message" "default" "Work on Linear issue {identifier}"))))
 -}}
 {{ $config | toPrettyJson }}
