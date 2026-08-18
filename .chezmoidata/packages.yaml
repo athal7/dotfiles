@@ -99,6 +99,8 @@ packages:
     - name: worktrunk
     - name: xh
       permissions:
+        "xh *GET *": allow
+        "xh *HEAD *": allow
         "xh *POST *": ask
         "xh *PUT *": ask
         "xh *PATCH *": ask
@@ -106,6 +108,7 @@ packages:
         "xh *mutation*": ask
         "xh *query*": allow
         "xh *_search*": allow
+        "xh *": ask
     - name: yq
     - name: steipete/tap/remindctl
       permissions:
