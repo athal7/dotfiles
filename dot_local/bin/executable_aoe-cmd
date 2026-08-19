@@ -83,18 +83,27 @@
 # times out and the send never happens — the exit code alone tells the
 # caller whether the send actually landed.
 #
-# `-P` skips plan mode for the dispatched session by forcing `--tool omp
-# --extra-args "--config $HOME/.omp/agent/no-plan.yml"` on `aoe add` (see
-# that overlay file for its contents and why it's needed). agentcfg's global
-# omp config defaults every session to plan mode
+# `-P` skips plan mode for the dispatched session. agentcfg's global omp
+# config defaults every omp session to plan mode
 # (`plan.defaultOnStartup: true`), which is right for interactive use but
 # wrong for a scheduled dispatch: plan mode stages edits instead of applying
 # them and hard-restricts `task` subagents to read-only tools, both gated
-# behind an interactive approval nobody is there to give. Plan mode is an
-# omp-only concept — opencode has no equivalent and no `--config` overlay
-# flag, so `-P` forces `--tool omp` rather than trusting aoe's
-# `session.default_tool` (which could be opencode) and silently doing
-# nothing, or worse, breaking an opencode dispatch on an unrecognized flag.
+# behind an interactive approval nobody is there to give. opencode has an
+# analogous read-only "plan" primary agent, but it's a per-session `--agent`
+# choice rather than a settings toggle — agentcfg's workflow.yaml.tmpl
+# already sets opencode's `default_agent` to this registry's full-capability
+# "lead" persona (not opencode's own "plan"), so an opencode dispatch never
+# starts in plan mode today regardless of `-P`. `-P` still forces both
+# mechanisms explicitly rather than trusting either default to still be
+# correct when it runs:
+#   - omp: `--tool omp --extra-args "--config $HOME/.omp/agent/no-plan.yml"`
+#     (see that overlay file for its contents)
+#   - opencode: `--tool opencode --extra-args "--agent lead"` (forces this
+#     registry's non-plan primary; update this if workflow.yaml.tmpl's
+#     `role: primary` agent is ever renamed)
+# `-P` reads `aoe settings explain session.default_tool` to pick the branch;
+# anything other than `opencode` (including unset) falls back to the omp
+# branch, matching the omp/opencode-only scope of the readiness poll below.
 # Every real scheduled job that needs to actually write/edit (audit,
 # fix-prod-errors, kb-enrich, refactor-hotspots, fix-launchagent-errors)
 # passes `-P`; omit it for a dispatch that's meant to stop at a proposed
@@ -163,7 +172,14 @@ if [ "$new_branch" -eq 1 ]; then
   set -- "$@" --new-branch
 fi
 if [ "$no_plan" -eq 1 ]; then
-  set -- "$@" --tool omp --extra-args "--config $HOME/.omp/agent/no-plan.yml"
+  # See the `-P` header comment above for why this branches per tool
+  # instead of always forcing one mechanism.
+  default_tool=$(aoe settings explain session.default_tool 2>/dev/null | awk -F'"' 'NR==1{print $2}') || default_tool=""
+  if [ "$default_tool" = "opencode" ]; then
+    set -- "$@" --tool opencode --extra-args "--agent lead"
+  else
+    set -- "$@" --tool omp --extra-args "--config $HOME/.omp/agent/no-plan.yml"
+  fi
 fi
 
 if ! add_output=$(aoe add "$@"); then

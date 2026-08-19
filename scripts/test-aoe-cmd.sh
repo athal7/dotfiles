@@ -30,6 +30,13 @@ cat > "$STUB_BIN/aoe" <<'STUB'
 if [ "$1" = "add" ]; then
   [ -n "${AOE_STUB_ADD_OUTPUT:-}" ] && printf '%s\n' "$AOE_STUB_ADD_OUTPUT"
   exit "${AOE_STUB_ADD_EXIT:-0}"
+elif [ "$1" = "settings" ] && [ "$2" = "explain" ]; then
+  if [ "${AOE_STUB_DEFAULT_TOOL:-omp}" = "null" ]; then
+    printf 'session.default_tool = null\n'
+  else
+    printf 'session.default_tool = "%s"\n' "${AOE_STUB_DEFAULT_TOOL:-omp}"
+  fi
+  exit 0
 elif [ "$1" = "session" ] && [ "$2" = "start" ]; then
   [ -n "${AOE_STUB_SESSION_START_EXIT:-0}" ] && [ "${AOE_STUB_SESSION_START_EXIT:-0}" != "0" ] && \
     echo "fake aoe: session start failing on purpose" >&2
@@ -59,6 +66,7 @@ run_aoe_cmd() {
     AOE_STUB_SESSION_START_EXIT="${AOE_STUB_SESSION_START_EXIT:-0}" \
     AOE_STUB_CAPTURE_OUTPUT="${AOE_STUB_CAPTURE_OUTPUT:-Ask anything...}" \
     AOE_STUB_SEND_EXIT="${AOE_STUB_SEND_EXIT:-0}" \
+    AOE_STUB_DEFAULT_TOOL="${AOE_STUB_DEFAULT_TOOL:-omp}" \
     sh "$AOE_CMD" "$@"
 }
 
@@ -81,6 +89,7 @@ run_aoe_cmd_split() {
     AOE_STUB_SESSION_START_EXIT="${AOE_STUB_SESSION_START_EXIT:-0}" \
     AOE_STUB_CAPTURE_OUTPUT="${AOE_STUB_CAPTURE_OUTPUT:-Ask anything...}" \
     AOE_STUB_SEND_EXIT="${AOE_STUB_SEND_EXIT:-0}" \
+    AOE_STUB_DEFAULT_TOOL="${AOE_STUB_DEFAULT_TOOL:-omp}" \
     sh "$AOE_CMD" "$@" > "$stdout_file" 2> "$stderr_file"
 }
 
@@ -219,19 +228,47 @@ test_scratch_passthrough
 # ---------------------------------------------------------------------------
 echo "== plan mode skip (-P) =="
 
-test_no_plan_flag() {
+test_no_plan_flag_omp() {
   local status add_line
-  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_STUB_DEFAULT_TOOL="omp" \
     run_aoe_cmd -d /tmp/proj -n audit -P /audit >/dev/null 2>&1 && status=0 || status=$?
-  check "exits 0 on success with -P" "$status" 0
+  check "exits 0 on success with -P (omp default)" "$status" 0
 
   add_line="$(grep '^add' "$AOE_LOG")"
   case "$add_line" in
-    *"--tool	omp	--extra-args	--config $HOME/.omp/agent/no-plan.yml"*) ok "aoe add called with --tool omp and the no-plan.yml overlay when -P is set" ;;
-    *) bad "aoe add -P passthrough (got: $add_line)" ;;
+    *"--tool	omp	--extra-args	--config $HOME/.omp/agent/no-plan.yml"*) ok "aoe add called with --tool omp and the no-plan.yml overlay when -P is set and default_tool is omp" ;;
+    *) bad "aoe add -P passthrough for omp (got: $add_line)" ;;
   esac
 }
-test_no_plan_flag
+test_no_plan_flag_omp
+
+test_no_plan_flag_unset_default_tool() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_STUB_DEFAULT_TOOL="null" \
+    run_aoe_cmd -d /tmp/proj -n audit -P /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -P (default_tool unset)" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--tool	omp	--extra-args	--config $HOME/.omp/agent/no-plan.yml"*) ok "aoe add falls back to the omp branch when session.default_tool is unset" ;;
+    *) bad "aoe add -P fallback for unset default_tool (got: $add_line)" ;;
+  esac
+}
+test_no_plan_flag_unset_default_tool
+
+test_no_plan_flag_opencode() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_STUB_DEFAULT_TOOL="opencode" \
+    run_aoe_cmd -d /tmp/proj -n audit -P /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -P (opencode default)" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--tool	opencode	--extra-args	--agent lead"*) ok "aoe add called with --tool opencode and --agent lead when -P is set and default_tool is opencode" ;;
+    *) bad "aoe add -P passthrough for opencode (got: $add_line)" ;;
+  esac
+}
+test_no_plan_flag_opencode
 
 test_no_plan_flag_omitted() {
   local status add_line
@@ -244,6 +281,12 @@ test_no_plan_flag_omitted() {
     *"--tool"*|*"--extra-args"*) bad "aoe add should not get --tool/--extra-args when -P is unset (got: $add_line)" ;;
     *) ok "aoe add called without --tool/--extra-args when -P is unset" ;;
   esac
+
+  if grep -q '^settings' "$AOE_LOG"; then
+    bad "aoe settings explain should not be called when -P is unset (got log: $(cat "$AOE_LOG"))"
+  else
+    ok "aoe settings explain not called when -P is unset"
+  fi
 }
 test_no_plan_flag_omitted
 
