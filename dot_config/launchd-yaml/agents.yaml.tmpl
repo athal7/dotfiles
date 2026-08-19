@@ -21,6 +21,7 @@ launchagents:
       - $HOME/code/dotfiles
       - -n
       - audit
+      - -P
       - /audit
     StartCalendarInterval:
       Day: 1
@@ -98,6 +99,7 @@ launchagents:
       - -s
       - -n
       - fix-prod-errors
+      - -P
       - /fix-prod-errors
     # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
     # by then, so each run simply covers that same day's errors.
@@ -155,6 +157,7 @@ launchagents:
       - -s
       - -n
       - kb-enrich
+      - -P
       - /kb-enrich
     # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
     # by then, so each run simply enriches that same day's activity.
@@ -278,6 +281,7 @@ launchagents:
       - $HOME/code/dotfiles
       - -n
       - refactor-hotspots
+      - -P
       - /refactor-hotspots
     StartCalendarInterval:
       Weekday: 0

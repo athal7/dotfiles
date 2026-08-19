@@ -12,7 +12,7 @@ Optional argument: a time-range override (e.g. `48h`). Default: last 24h.
 ## Skills
 
 - **elasticsearch** — APM error query (`logs-apm.error-*`) and auth.
-- **aoe** — `$HOME/.local/bin/aoe-cmd -d DIR -n NAME -w WORKTREE_BRANCH -b MESSAGE` for the fire-and-forget worktree dispatch flow (add→start→readiness-poll→send, all handled by the wrapper).
+- **aoe** — `$HOME/.local/bin/aoe-cmd -d DIR -n NAME -w WORKTREE_BRANCH -b -P MESSAGE` for the fire-and-forget worktree dispatch flow (add→start→readiness-poll→send, all handled by the wrapper); `-P` skips plan mode so the dispatched session actually writes the fix instead of staging it for an approval no unattended session will ever give.
 
 ## Steps
 
@@ -27,7 +27,7 @@ Optional argument: a time-range override (e.g. `48h`). Default: last 24h.
 4. **Dispatch a triage + fix session** for each of the top 3 mapped groups on a `fix/apm-<date>-<service>` branch (append a short slug if multiple groups share a service, to keep branch names distinct):
 
    ```bash
-   if add_output=$($HOME/.local/bin/aoe-cmd -d "<repo>" -n "apm-<service>" -w "fix/apm-<date>-<service>" -b "<prompt carrying the error context>"); then
+   if add_output=$($HOME/.local/bin/aoe-cmd -d "<repo>" -n "apm-<service>" -w "fix/apm-<date>-<service>" -b -P "<prompt carrying the error context>"); then
      sent=1
    else
      sent=0

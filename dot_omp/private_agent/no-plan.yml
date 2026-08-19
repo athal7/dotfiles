@@ -1,0 +1,19 @@
+# omp --config overlay: disables plan-mode-on-startup for one launch, without
+# touching the global default (agentcfg's harnesses.omp.extra sets
+# `plan.defaultOnStartup: true` in ~/.omp/agent/config.yml, so interactive
+# sessions still open in read-only plan mode by default).
+#
+# Plan mode gates real work behind an interactive approval a human never
+# gives in an unattended session: edits are staged instead of applied, and
+# `task`-dispatched subagents are hard-restricted to read/grep/glob/web_search
+# (see omp docs task-agent-discovery.md, resolve-tool-runtime.md). Verified
+# live: a scratch session started with `omp --config no-plan.yml` skipped the
+# "Plan mode enabled" banner and the "🗺 Plan" status-bar segment that a
+# control session (no overlay) showed.
+#
+# Used by `aoe-cmd -P`, which passes `--extra-args "--config
+# $HOME/.omp/agent/no-plan.yml"` to `aoe add` for scheduled/dispatched
+# sessions that must actually execute (write/edit/run commands) rather than
+# just propose a plan for a human to approve later.
+plan:
+  defaultOnStartup: false

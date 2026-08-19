@@ -217,6 +217,37 @@ test_scratch_passthrough() {
 test_scratch_passthrough
 
 # ---------------------------------------------------------------------------
+echo "== plan mode skip (-P) =="
+
+test_no_plan_flag() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -d /tmp/proj -n audit -P /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -P" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--tool	omp	--extra-args	--config $HOME/.omp/agent/no-plan.yml"*) ok "aoe add called with --tool omp and the no-plan.yml overlay when -P is set" ;;
+    *) bad "aoe add -P passthrough (got: $add_line)" ;;
+  esac
+}
+test_no_plan_flag
+
+test_no_plan_flag_omitted() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -d /tmp/proj -n audit /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success without -P" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--tool"*|*"--extra-args"*) bad "aoe add should not get --tool/--extra-args when -P is unset (got: $add_line)" ;;
+    *) ok "aoe add called without --tool/--extra-args when -P is unset" ;;
+  esac
+}
+test_no_plan_flag_omitted
+
+# ---------------------------------------------------------------------------
 echo "== stdout relay of aoe add output =="
 
 test_stdout_relay_happy_path() {

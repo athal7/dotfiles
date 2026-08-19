@@ -83,7 +83,24 @@
 # times out and the send never happens — the exit code alone tells the
 # caller whether the send actually landed.
 #
-#   aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE...
+# `-P` skips plan mode for the dispatched session by forcing `--tool omp
+# --extra-args "--config $HOME/.omp/agent/no-plan.yml"` on `aoe add` (see
+# that overlay file for its contents and why it's needed). agentcfg's global
+# omp config defaults every session to plan mode
+# (`plan.defaultOnStartup: true`), which is right for interactive use but
+# wrong for a scheduled dispatch: plan mode stages edits instead of applying
+# them and hard-restricts `task` subagents to read-only tools, both gated
+# behind an interactive approval nobody is there to give. Plan mode is an
+# omp-only concept — opencode has no equivalent and no `--config` overlay
+# flag, so `-P` forces `--tool omp` rather than trusting aoe's
+# `session.default_tool` (which could be opencode) and silently doing
+# nothing, or worse, breaking an opencode dispatch on an unrecognized flag.
+# Every real scheduled job that needs to actually write/edit (audit,
+# fix-prod-errors, kb-enrich, refactor-hotspots, fix-launchagent-errors)
+# passes `-P`; omit it for a dispatch that's meant to stop at a proposed
+# plan for a human to review later.
+#
+#   aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] MESSAGE...
 
 # Env:
 #   AOE_CMD_READY_TIMEOUT   Max seconds to poll the pane for the ready marker
@@ -102,7 +119,7 @@
 set -eu
 
 usage() {
-  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] MESSAGE..." >&2
+  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] MESSAGE..." >&2
 }
 
 dir=""
@@ -110,14 +127,16 @@ scratch=0
 name=""
 worktree=""
 new_branch=0
+no_plan=0
 
-while getopts "d:sn:w:b" opt; do
+while getopts "d:sn:w:bP" opt; do
   case "$opt" in
     d) dir="$OPTARG" ;;
     s) scratch=1 ;;
     n) name="$OPTARG" ;;
     w) worktree="$OPTARG" ;;
     b) new_branch=1 ;;
+    P) no_plan=1 ;;
     *) usage; exit 1 ;;
   esac
 done
@@ -142,6 +161,9 @@ if [ -n "$worktree" ]; then
 fi
 if [ "$new_branch" -eq 1 ]; then
   set -- "$@" --new-branch
+fi
+if [ "$no_plan" -eq 1 ]; then
+  set -- "$@" --tool omp --extra-args "--config $HOME/.omp/agent/no-plan.yml"
 fi
 
 if ! add_output=$(aoe add "$@"); then
