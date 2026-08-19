@@ -1,0 +1,411 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Mearman/agent-permissions/main/agent-permissions.schema.json",
+  "defaultMode": "autonomous",
+  "rules": [
+    {
+      "tool": "Bash",
+      "pattern": "git -C * reset --hard*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git worktree remove*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * --upload-file*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh search commits*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git reset --merge*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "opencode session *",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git checkout * -- *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh search issues*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git checkout -- *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git reset --hard*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "opencode export *",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "remindctl status*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git -C * clean -f*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi destroy*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi upgrade*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh release list*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh release view*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh search repos*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git stash clear*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh-es-search '*'",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * -X DELETE*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi forget*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi-deploy*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh search code*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git stash drop*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "remindctl list*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "remindctl show*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * -X PATCH*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git -C * commit*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi apply*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi purge*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh issue list*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh issue view*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh label list*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh search prs*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git branch -D*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git branch -d*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * -X POST*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi init*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh repo list*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh repo view*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git clean -d*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git clean -f*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git restore *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "rm -rf $HOME*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * --data*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * -X PUT*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git -C * push*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "chezmoi add*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *mutation*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh pr list*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh pr view*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git commit*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "remindctl *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *DELETE *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "diskutil *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "opencode *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * -T *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "curl * -d *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *PATCH *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git push*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "rm -fr /*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "rm -fr ~*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "rm -rf /*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "rm -rf ~*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "shutdown*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *HEAD *",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *POST *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *query*",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh api *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *GET *",
+      "tier": "allow"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *PUT *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "dd if=*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "dd of=*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "reboot*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sudo *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "wget *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "mkfs*",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "gh *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "xh *",
+      "tier": "ask"
+    },
+    {
+      "tool": "Bash",
+      "pattern": "*",
+      "tier": "allow"
+    }
+  ]
+}

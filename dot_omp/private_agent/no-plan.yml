@@ -1,5 +1,5 @@
 # omp --config overlay: disables plan-mode-on-startup for one launch, without
-# touching the global default (agentcfg's harnesses.omp.extra sets
+# touching the global default (`config.yml.tmpl` sets
 # `plan.defaultOnStartup: true` in ~/.omp/agent/config.yml, so interactive
 # sessions still open in read-only plan mode by default).
 #

@@ -87,18 +87,12 @@
 # caller that already knows which tool it wants (rather than trusting
 # `session.default_tool`) can say so explicitly.
 #
-# `-P` skips plan mode for the dispatched session. agentcfg's global omp
-# config defaults every omp session to plan mode
-# (`plan.defaultOnStartup: true`), which is right for interactive use but
-# wrong for a scheduled dispatch: plan mode stages edits instead of applying
-# them and hard-restricts `task` subagents to read-only tools, both gated
-# behind an interactive approval nobody is there to give. opencode has an
-# analogous read-only "plan" primary agent, but it's a per-session `--agent`
-# choice rather than a settings toggle — the non-plan choice is whatever
-# opencode.json's `default_agent` currently is (stock opencode's own
-# default is "build"; this registry may override it, e.g. to a custom
-# primary persona). `-P` still forces both mechanisms explicitly rather
-# than trusting either default to still be correct when it runs:
+# `-P` skips plan mode for the dispatched session. OMP defaults every session
+# to plan mode through `config.yml.tmpl`, which is right for interactive use but
+# wrong for a scheduled dispatch: plan mode stages edits behind an interactive
+# approval. OpenCode's stock `plan` agent is selected per session; its stock
+# `build` agent remains the non-plan default. `-P` forces both mechanisms
+# explicitly rather than trusting defaults:
 #   - omp: `--extra-args "--config $HOME/.omp/agent/no-plan.yml"` (see that
 #     overlay file for its contents)
 #   - opencode: `--extra-args "--agent <default_agent>"`, reading

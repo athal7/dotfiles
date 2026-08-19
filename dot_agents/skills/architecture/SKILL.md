@@ -3,6 +3,8 @@ name: architecture
 description: Load before designing a new system, choosing between competing implementations, weighing tradeoffs across libraries or frameworks, or escalating an architectural question to a human. Fires at the moment a multi-option design decision appears, not during routine implementation.
 license: MIT
 ---
+Load `code-quality` before applying this framework.
+
 
 ## Check for a prerequisite refactor first
 

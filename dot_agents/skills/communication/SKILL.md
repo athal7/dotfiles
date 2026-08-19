@@ -3,6 +3,8 @@ name: communication
 description: Load when composing human-facing prose through an integration — chat messages, review comments, merge request descriptions, emails, doc bodies, ticket descriptions. Carries the AI-authorship attribution rule.
 license: MIT
 ---
+Load `knowledge-base` before collecting project, product, person, or decision context.
+
 
 Tailor to the recipient — role, technical depth, your relationship with them. Some want two lines; some need the context.
 

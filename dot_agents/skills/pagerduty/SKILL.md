@@ -3,6 +3,8 @@ name: pagerduty
 description: PagerDuty REST API for incidents, on-call schedules, and escalation policies
 license: MIT
 ---
+Load `xh` before querying. All requests use `xh --ignore-stdin --session=agent` for authentication.
+
 
 Base URL: https://api.pagerduty.com
 Write actions need: `From: <email>` — fetch from /users/me first.

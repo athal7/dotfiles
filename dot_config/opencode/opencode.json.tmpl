@@ -1,0 +1,48 @@
+{{- $policy := includeTemplate "dot_agents/permissions.json.tmpl" . -}}
+{{- $permissions := output "sh" "-c" "printf '%s\n' \"$1\" | agent-perms convert --from - --to opencode --output -" "sh" $policy | fromJson -}}
+{{- $_ := set $permissions "edit" "allow" -}}
+{{- $_ := set $permissions "glob" "allow" -}}
+{{- $_ := set $permissions "grep" "allow" -}}
+{{- $_ := set $permissions "lsp" "allow" -}}
+{{- $_ := set $permissions "read" "allow" -}}
+{{- $_ := set $permissions "skill" "allow" -}}
+{{- $_ := set $permissions "task" "allow" -}}
+{{- $_ := set $permissions "webfetch" "allow" -}}
+{{- $_ := set $permissions "websearch" "allow" -}}
+{{- $_ := set $permissions "write" "allow" -}}
+{{- $mcp := dict -}}
+{{- $tools := dict -}}
+{{- range $server := .mcp_servers -}}
+{{-   $entry := dict "type" $server.transport -}}
+{{-   if eq $server.transport "local" -}}
+{{-     $_ := set $entry "command" $server.command -}}
+{{-   else -}}
+{{-     $url := $server.url -}}
+{{-     if kindIs "map" $url -}}{{- $url = env (index $url "name") -}}{{- end -}}
+{{-     $_ := set $entry "url" $url -}}
+{{-     if hasKey $server "headers" -}}
+{{-       $_ := set $entry "headers" (dict "Authorization" (printf "Bearer %s" (output "gh" "auth" "token" | trim))) -}}
+{{-     end -}}
+{{-   end -}}
+{{-   $_ := set $mcp $server.name $entry -}}
+{{-   $_ := set $tools (printf "%s_*" $server.name) false -}}
+{{- end -}}
+{{- $provider := dict "anthropic" (dict "models" (dict "claude-opus-5" (dict "options" (dict "thinking" (dict "type" "adaptive" "display" "summarized"))) "claude-sonnet-5" (dict "options" (dict "thinking" (dict "type" "adaptive" "display" "summarized"))))) -}}
+{{- if hasKey . "local_model" -}}
+{{-   $local := .local_model -}}
+{{-   $providerName := (index $local "provider") | default "mlx" -}}
+{{-   $modelID := (index $local "id") | default "default_model" -}}
+{{-   $baseURL := printf "http://%s:%v/v1" ((index $local "host") | default "127.0.0.1") ((index $local "port") | default 8091) -}}
+{{-   $limits := dict "context" $local.context_window "output" ((index $local "agent_max_tokens") | default 4096) -}}
+{{-   $model := dict "name" $local.name "limit" $limits -}}
+{{-   $localProvider := dict "npm" "@ai-sdk/openai-compatible" "name" "mlx-lm" "options" (dict "baseURL" $baseURL) "models" (dict $modelID $model) -}}
+{{-   $_ := set $provider $providerName $localProvider -}}
+{{- end -}}
+{{- $config := `{"$schema":"https://opencode.ai/config.json","compaction":{"prune":true},"formatter":{"rubocop":{"disabled":true},"ruff":{"disabled":true}},"lsp":{"ruby-lsp":{"command":["ruby","-S","ruby-lsp"],"extensions":[".rb",".rake",".gemspec",".ru"]}},"plugin":["@tarquinen/opencode-dcp@3.1.12","opencode-permission-log"],"server":{"hostname":"127.0.0.1"},"tools":{"context7_*":false,"cq_*":false,"figma-desktop_*":false,"firefox-devtools_*":false,"github_*":false,"linear_*":false,"runlayer-atlassian_*":false,"runlayer-gcalendar_*":false,"runlayer-gdocs_*":false,"runlayer-gdrive_*":false,"runlayer-gmail_*":false,"runlayer-gsheets_*":false,"runlayer-self_*":false,"runlayer-slack_*":false,"runlayer-zoom_*":false}}` | fromJson -}}
+{{- $_ := set $config "mcp" $mcp -}}
+{{- $_ := set $config "model" .model_class.default -}}
+{{- $_ := set $config "small_model" .model_class.smol -}}
+{{- $_ := set $config "permission" $permissions -}}
+{{- $_ := set $config "provider" $provider -}}
+{{- $_ := set $config "tools" $tools -}}
+{{ $config | toJson }}

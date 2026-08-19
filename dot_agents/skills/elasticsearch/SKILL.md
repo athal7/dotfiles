@@ -3,6 +3,8 @@ name: elasticsearch
 description: Load when investigating production errors, latency, or trace data — triage order, index patterns, field names, and time-range syntax. Use before hand-rolling a query DSL call or guessing field names.
 license: MIT
 ---
+Load `xh` before querying. Use `xh-es-search '<index-expression>'` with JSON in the Bash `PAYLOAD` environment variable.
+
 
 Query application logs, APM traces, and errors via the Elasticsearch REST API. Endpoint `$ES_URL` varies per environment.
 

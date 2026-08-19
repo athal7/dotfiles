@@ -1,23 +1,21 @@
 ---
-description: Audit the agent system against workflow specs and measured data
+description: Audit the agent system against observed behavior and measured data
 subtask: true
 ---
 
-# Spec Compliance Audit
+# Agent System Audit
 
-Measure the agent system against the workflow specs in `openspec/specs/`. The specs are the source of truth — when they change, this audit automatically covers the new requirements.
+Measure the agent system against observed behavior, configured policy, and measured data.
 
 $ARGUMENTS
 
-**Scoping:** When arguments name a specific spec or topic, audit only that. A bare `/audit` runs all specs.
+**Scoping:** When arguments name a specific topic, audit only that. A bare `/audit` covers the full system.
 
 ---
 
-## Step 1 — Read the specs
+## Step 1 — Establish the baseline
 
-Read every `spec.md` in `openspec/specs/*/`. List each requirement and scenario. These are what you're measuring against.
-
-If no specs exist, fall back to the legacy audit (skill load rates, delegation effectiveness, capability layer health).
+Review configured policy, skill behavior, and prior measurements before collecting current telemetry.
 
 ## Step 2 — Set the measurement window
 
@@ -519,7 +517,7 @@ Flag requirements that can't be measured and explain why. Include the Step 3 ses
 
 ## Step 8 — Recommendations
 
-For each non-compliant requirement, recommend one action. Reference prior-attempts history at `openspec/changes/agent-rearchitecture/prior-attempts.md` to avoid repeating approaches that have failed.
+For each finding, recommend one action and explain the evidence.
 
 | Symptom | Proven approach | Don't repeat |
 |---|---|---|
@@ -541,12 +539,11 @@ For each non-compliant requirement, recommend one action. Reference prior-attemp
 
 | Target | Source |
 |---|---|
-| `openspec/specs/*/spec.md` | Desired state — audit measures against these |
 | `aoe` CLI (`list`/`status`/`ps --json`) | Session/dispatch layer — harness-agnostic, no local source file |
 | `~/.local/share/opencode/opencode.db` | Opencode adapter's per-message telemetry data |
 | `~/.omp/agent/sessions/**/*.jsonl` | omp adapter's per-message telemetry data (documented schema: `docs/session.md` in `github.com/can1357/oh-my-pi`) |
 | `~/.local/share/cq/local.db` | Passive learning capture destination (cq-worthy findings) |
-| `~/.config/opencode/opencode.json` | `dot_config/agentcfg/` (via `agentcfg apply --target opencode`) |
+| `~/.config/opencode/opencode.json` | `dot_config/opencode/opencode.json.tmpl` |
 | `~/.agents/prompts/*.md` | `dot_agents/prompts/*.md` |
 | `~/.config/opencode/commands/*.md` | `dot_config/opencode/commands/*.md` |
 | `~/.agents/skills/*` | `skills/*` |

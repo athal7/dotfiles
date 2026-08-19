@@ -9,12 +9,13 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
-- **`dot_config/opencode/`** — OpenCode-specific files that aren't agent config: plugin settings (`dcp.jsonc`), slash commands (`commands/`). `opencode.json` itself is agentcfg-owned (see below), not templated here.
-- **`dot_config/agentcfg/`** — the single registry driving both opencode's and omp's agent/workflow config via [`agentcfg`](https://github.com/athal7/agentcfg), applied by `.chezmoiscripts/run_onchange_after_agentcfg-apply.sh.tmpl`. `workflow.yaml.tmpl` declares every agent/step once (prompt, permissions, role, MCP grants); `mcp_servers.yaml` declares every MCP server once; `agentcfg.yaml.tmpl`'s `harnesses.<id>.extra` covers config neither renderer's registry model has a field for (opencode.json's static server/plugin/provider/formatter/lsp blocks; omp's `tools.approvalMode`/`task.disabledAgents`/`compaction.strategy`). Adding a "reach service X via MCP" subagent is a `workflow.yaml.tmpl` step plus an `mcp_servers.yaml` entry — no separate per-agent prompt file needed unless the prompt itself is long enough to warrant `prompt.file` over inline `prompt.text`.
-- **`dot_agents/skills/`** — authored agent skills managed natively at `~/.agents/skills/`; agentcfg-generated commands and externally installed skills own separate sibling directories.
+- **`dot_config/opencode/`** — OpenCode config, plugins, and slash commands. `opencode.json.tmpl` is the sole writer for `~/.config/opencode/opencode.json`; it leaves OpenCode's stock `build` and `plan` agents active.
+- **`dot_omp/private_agent/`** — OMP's sole config writers: `config.yml.tmpl`, `private_mcp.json.tmpl`, and the lead-prompt symlink.
+- **`.chezmoidata/mcp.yaml`** — neutral MCP server data shared by the native OpenCode and OMP templates. **`dot_agents/permissions.json.tmpl`** is the canonical Bash policy; templates project its representable fragments through `agent-perms`.
+- **`dot_agents/skills/`** — authored agent skills managed natively at `~/.agents/skills/`; externally installed skills own separate sibling directories.
 - **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
-- **`.chezmoidata/local.yaml`** — private machine and organization data, including agentcfg model defaults and per-org overrides; gitignored and represented publicly only by `local.yaml.example`.
+- **`.chezmoidata/local.yaml`** — private machine and organization data, including model defaults and per-org overrides; gitignored and represented publicly only by `local.yaml.example`.
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
 - **`.chezmoiscripts/`** — run on apply only where generation or an external installer is required
 
@@ -22,9 +23,11 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`, `mise`, `github_releases`, or `aoe_plugins` (aoe/Agent of Empires plugins, installed/updated via `run_onchange_after_plugins-aoe.sh.tmpl`). The install scripts and external file are generated from it — edit only the registry.
 
-## OpenCode Config
+## Agent Config
 
-MCPs, plugins, agent definitions, and permissions all end up in `opencode.json`, but it's agentcfg-owned — edit `dot_config/agentcfg/` (agent/MCP/permission content) or `agentcfg.yaml.tmpl`'s `harnesses.opencode.extra` (everything else: server, plugin, provider, formatter, lsp), never `opencode.json` directly; the next `agentcfg apply` overwrites it. Authored skills live in `dot_agents/skills/` and are deployed directly by chezmoi.
+`dot_config/opencode/opencode.json.tmpl` and `dot_omp/private_agent/config.yml.tmpl` own their complete native targets. Keep nonpermission controls native; only permission fragments come from `dot_agents/permissions.json.tmpl` through `agent-perms`. `dot_omp/private_agent/symlink_APPEND_SYSTEM.md.tmpl` keeps OMP on the shared lead prompt.
+
+Until the OMP codec is released, templates require the temporary global npm link: build the persistent codec checkout and run `npm link` there. On release cutover, add `npm:agent-perms@<published-version>` to `.chezmoidata/packages.yaml`'s `mise` list, run `chezmoi apply`, verify the mise-installed binary renders equivalent configs, then run `npm unlink -g agent-perms` and verify the command still resolves through mise.
 
 **Keep the global `dot_config/opencode/AGENTS.md` lean.**  Resist adding DO/DO NOT lists to it. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
 

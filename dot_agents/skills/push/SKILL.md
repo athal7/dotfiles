@@ -3,6 +3,8 @@ name: push
 description: Load before pushing — merge request description rules and the post-push CI and automated-review watch loop.
 license: MIT
 ---
+Load `commit` before preparing the push.
+
 
 Show unpushed commits in chat first — branch name, one subject per line. The full test suite already ran at commit time; don't re-run it.
 

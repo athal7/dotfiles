@@ -1,5 +1,5 @@
 #!/bin/sh
-# Installs only skills that chezmoi and agentcfg do not own.
+# Installs only skills that chezmoi does not own.
 # external-skill manifest: {{ .packages.skills | toJson | sha256sum }}
 # runlayer-skill manifest: {{ .runlayer_skills | toJson | sha256sum }}
 {{- range .packages.skills }}

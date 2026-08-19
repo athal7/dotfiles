@@ -1,11 +1,6 @@
 # Package registry — single source of truth for all managed dependencies.
 # brew, cask, mise, and GitHub release packages. Install scripts and
 # chezmoi externals are generated from this file.
-#
-# Per-package bash permission rules used to live here too (merged into
-# opencode.json at template time); they're now agentcfg-managed — see
-# dot_config/agentcfg/bash.yaml's `packages` list, which both harnesses
-# compile identically.
 
 packages:
   taps:
@@ -22,58 +17,12 @@ packages:
     - name: autojump
     - name: bat
     - name: chezmoi
-      permissions:
-        "chezmoi apply*": ask
-        "chezmoi-deploy*": ask
-        "chezmoi destroy*": ask
-        "chezmoi init*": ask
-        "chezmoi purge*": ask
-        "chezmoi forget*": ask
-        "chezmoi upgrade*": ask
-        "chezmoi add*": ask
     - name: container
     - name: direnv
     - name: ffmpeg
     - name: fzf
     - name: git
-      permissions:
-        "git commit*": ask
-        "git push*": ask
-        "git reset --hard*": ask
-        "git reset --merge*": ask
-        "git clean -f*": ask
-        "git clean -d*": ask
-        "git checkout -- *": ask
-        "git checkout * -- *": ask
-        "git restore *": ask
-        "git branch -d*": ask
-        "git branch -D*": ask
-        "git stash drop*": ask
-        "git stash clear*": ask
-        "git worktree remove*": ask
-        "git -C * commit*": ask
-        "git -C * push*": ask
-        "git -C * reset --hard*": ask
-        "git -C * clean -f*": ask
     - name: gh
-      permissions:
-        "gh issue list*": allow
-        "gh issue view*": allow
-        "gh label list*": allow
-        "gh pr list*": allow
-        "gh pr view*": allow
-        "gh release list*": allow
-        "gh release view*": allow
-        "gh repo list*": allow
-        "gh repo view*": allow
-        "gh search code*": allow
-        "gh search commits*": allow
-        "gh search issues*": allow
-        "gh search prs*": allow
-        "gh search repos*": allow
-        "gh api *": ask
-        "gh *": ask
-    - name: athal7/tap/agentcfg
     - name: athal7/tap/attention
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
@@ -98,24 +47,8 @@ packages:
     - name: watch
     - name: worktrunk
     - name: xh
-      permissions:
-        "xh *GET *": allow
-        "xh *HEAD *": allow
-        "xh *POST *": ask
-        "xh *PUT *": ask
-        "xh *PATCH *": ask
-        "xh *DELETE *": ask
-        "xh *mutation*": ask
-        "xh *query*": allow
-        "xh-es-search '*'": allow
-        "xh *": ask
     - name: yq
     - name: steipete/tap/remindctl
-      permissions:
-        "remindctl show*": allow
-        "remindctl list*": allow
-        "remindctl status*": allow
-        "remindctl *": ask
     - name: typescript-language-server
     - name: pyright
     - name: gopls
@@ -153,10 +86,6 @@ packages:
       path: opencode
       executable: true
       refresh_period: 24h
-      permissions:
-        "opencode session *": allow
-        "opencode export *": allow
-        "opencode *": ask
 
     # Note: com.apple.provenance on Apple Silicon prevents chezmoi's atomic
     # rename from updating files inside this bundle. On version updates, run:
@@ -178,10 +107,7 @@ packages:
       executable: true
       refresh_period: 24h
 
-  # Non-authored skills synced into the global skill dir. Two entry shapes:
-  #   - remote: { repo, skill }   → fetched via `gh skill install`
-  #   - local:  { source, match } → mirrored from a project dir (skills a CLI
-  #     like openspec generates project-locally; `match` globs the dir names)
+  # Non-authored skills synced into the global skill dir.
   skills:
     - repo: BRO3886/ical
       skill: ical-cli
@@ -195,8 +121,6 @@ packages:
       skill: source-driven-development
     - repo: addyosmani/agent-skills
       skill: interview-me
-    - source: .opencode/skills
-      match: openspec-*
 
   # npm-managed global packages
   npm:
@@ -229,14 +153,8 @@ packages:
       version: latest
     - name: argocd
       version: latest
-    # Token-efficiency opencode plugin (also wired in agentcfg.yaml.tmpl's
-    # harnesses.opencode.extra.plugin array; declared here for the repo's
-    # package-registry convention).
     - name: npm:@tarquinen/opencode-dcp
       version: "3.1.12"
-    # Coding agent needed for `omp`/`pi` to render in aoe's structured
-    # view natively (every workflow.yaml.tmpl step without an explicit
-    # targets: applies to omp too — see dot_config/agentcfg/).
     - name: npm:@oh-my-pi/pi-coding-agent
       version: latest
     - name: npm:@google/jules

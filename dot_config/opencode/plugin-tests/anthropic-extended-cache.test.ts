@@ -1,14 +1,6 @@
 /**
  * Tests for the anthropic-extended-cache plugin.
  *
- * Functions under test are extracted copies of their production counterparts
- * (matching skill-inject.test.ts's convention) so they can be called directly
- * without importing the plugin module at runtime. A final "production
- * wiring" section imports the real module directly — this plugin's only
- * @opencode-ai/plugin dependency is a type-only import (erased at build
- * time, unlike skill-inject's runtime `tool` import), so the module resolves
- * fine under `bun test` and we can cross-check the extracted copies against
- * the real implementation to catch drift.
  *
  * Sections:
  *   1. isAnthropicMessagesRequest  — request targeting filter

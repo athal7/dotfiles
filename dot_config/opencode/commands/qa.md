@@ -18,4 +18,4 @@ Optional argument: a focus string (e.g. `the checkout flow and the settings page
 
 ## Non-goals
 
-Standalone. No request interaction beyond publishing the report, no OpenSpec coupling, no description edits.
+Standalone. No request interaction beyond publishing the report or description edits.

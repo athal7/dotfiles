@@ -9,8 +9,8 @@ Drive the running app in a browser; never read markup or reason about code inste
 ## Steps
 
 1. **Find the app.** Port via `source .envrc && echo $PORT`, else 3000. Confirm the server responds before any browser action. Not running → report and stop, don't guess.
-2. **Identify affected flows** from the dispatch, `openspec/changes/` acceptance criteria, or `.opencode/context-log.md`. Check the project AGENTS.md for selectors and credentials.
-3. **Check for a linked Figma design** — PR description first (`gh pr view --json body -q .body`) for a `figma.com/design|file` URL, then the dispatch focus and `openspec/changes/*/proposal.md`/`design.md`. Found one → visual fidelity becomes an acceptance dimension: pull the reference frame via the `figma-desktop` MCP and compare layout, spacing, and copy against the live UI. Save the export alongside your screenshots as `00X-figma-reference.png`.
+2. **Identify affected flows** from the dispatch or `.opencode/context-log.md`. Check the project AGENTS.md for selectors and credentials.
+3. **Check for a linked Figma design** — PR description first (`gh pr view --json body -q .body`) for a `figma.com/design|file` URL, then the dispatch focus. Found one → visual fidelity becomes an acceptance dimension: pull the reference frame via the `figma-desktop` MCP and compare layout, spacing, and copy against the live UI. Save the export alongside your screenshots as `00X-figma-reference.png`.
 4. **Capture evidence as you go** (below).
 5. **Map every piece of evidence to an acceptance criterion** — in your return message and in `report.md`. Design findings map to the AC of the flow they verify.
 6. **Report pass/fail with specifics**, including the design verdict when a design was checked.

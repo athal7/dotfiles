@@ -34,16 +34,15 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
 
-External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical) and [permission-audit](https://github.com/athal7/opencode-permission-audit). The `openspec` CLI generates its own skills project-locally into `.opencode/skills/`; the external-skills installer mirrors them globally, version-matched to the installed CLI. Skills only — its slash commands aren't mirrored.
+External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical) and [permission-audit](https://github.com/athal7/opencode-permission-audit).
 
 ## Other primitives
 
 Not everything is a skill:
 
-- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and what only that agent does. `lead` is the primary; `planner`/`qa`/`build`/`scout` are subagents in both harnesses. `general` and the MCP-service wrappers are opencode-only — omp loads MCP tools lazily and needs no per-service proxy. Registry: `dot_config/agentcfg/workflow.yaml.tmpl`.
-- **Structured commands** (`implement`, `merge-request`) are agentcfg-rendered skills (`dot_config/agentcfg/commands.yaml.tmpl`, phase bodies in `dot_agents/prompts/commands/<name>/`) — portable to both harnesses natively; omp's rendering additionally triggers its native `workflowz` deterministic-pipeline mechanism (see agentcfg's `docs/schema.md` commands: section), opencode just reads the flattened numbered phases as a skill.
-- **Slash commands** live in `dot_config/opencode/commands/` and are opencode-only, thin triggers ("load skill X") — `/implement` and `/mr` just point at the structured commands above; omp reaches the same content by loading the skill directly, no slash-command equivalent needed.
-- **Scripts** carry anything too long or too exact to inline: `openspec-worktree-link`.
+- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and workflow guidance. OMP loads the lead prompt through `dot_omp/private_agent/symlink_APPEND_SYSTEM.md.tmpl`; OpenCode uses its stock agents.
+- **Slash commands** live in `dot_config/opencode/commands/` and are opencode-only, thin triggers ("load skill X").
+- **Scripts** carry runtime automation.
 
 ## Commands
 
@@ -55,7 +54,7 @@ Not everything is a skill:
 | `/learn` | Capture discoveries into AGENTS.md or a skill |
 | `/rename` | Retitle the session from what it turned out to be about |
 | `/demo` | Build a demo deck from work since the last demo |
-| `/audit` | Spec-compliance and cost/latency audit (scheduled) |
+| `/audit` | Agent-system and cost/latency audit (scheduled) |
 | `/kb-enrich` | Knowledge-base enrichment (scheduled) |
 | `/fix-prod-errors` | APM error triage and fix dispatch (scheduled) |
 | `/refactor-hotspots` | Hotspot detection and fix dispatch (scheduled) |

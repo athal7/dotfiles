@@ -1,0 +1,16 @@
+{{- $servers := dict -}}
+{{- range $server := .mcp_servers -}}
+{{-   $entry := dict -}}
+{{-   if eq $server.transport "local" -}}
+{{-     $_ := set $entry "command" $server.command -}}
+{{-   else -}}
+{{-     $url := $server.url -}}
+{{-     if kindIs "map" $url -}}{{- $url = env (index $url "name") -}}{{- end -}}
+{{-     $_ := set $entry "url" $url -}}
+{{-     if hasKey $server "headers" -}}
+{{-       $_ := set $entry "headers" (dict "Authorization" (printf "Bearer %s" (output "gh" "auth" "token" | trim))) -}}
+{{-     end -}}
+{{-   end -}}
+{{-   $_ := set $servers $server.name $entry -}}
+{{- end -}}
+{{ dict "mcpServers" $servers | toJson }}

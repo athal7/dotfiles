@@ -7,13 +7,9 @@ license: MIT
 Verify the diff and apply any findings before you stage. Run git from the worktree you're committing in. Then:
 
 1. `git add -A`
-2. Unstage in-flight OpenSpec change files — review artifacts, not code; they reach the durable store at archive time:
-   ```
-   git reset -q -- 'openspec/changes/*' ':(exclude)openspec/changes/archive'
-   ```
-3. `git check-ignore <files>` — never stage globally-ignored files (`~/.config/git/ignore`, e.g. `.talismanrc`).
-4. Run the full test suite — unit, integration, e2e, system. No commits with failures. This is the gate; push assumes it already ran.
-5. Draft the message, with a trailer naming the model actually running the session — email is the model's *provider* domain, never the harness (`opencode.ai`, `omp.sh`, …):
+2. `git check-ignore <files>` — never stage globally-ignored files (`~/.config/git/ignore`, e.g. `.talismanrc`).
+3. Run the full test suite — unit, integration, e2e, system. No commits with failures. This is the gate; push assumes it already ran.
+4. Draft the message, with a trailer naming the model actually running the session — email is the model's *provider* domain, never the harness (`opencode.ai`, `omp.sh`, …):
    ```
    Co-Authored-By: anthropic/claude-sonnet-5 <noreply@anthropic.com>
    ```

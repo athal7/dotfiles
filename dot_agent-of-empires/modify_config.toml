@@ -37,8 +37,6 @@ persist_sessions = true
 context_lines = 3
 split_view = false
 
-[hooks]
-on_launch = ["$HOME/.local/bin/aoe-model-class"]
 
 [host_hooks]
 
