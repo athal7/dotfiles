@@ -107,7 +107,7 @@ packages:
         "xh *DELETE *": ask
         "xh *mutation*": ask
         "xh *query*": allow
-        "xh *_search*": allow
+        "xh --ignore-stdin --session-read-only=agent POST \"$ES_URL/*/_search\" 'Content-Type:application/json' --raw \"$PAYLOAD\"": allow
         "xh *": ask
     - name: yq
     - name: steipete/tap/remindctl
