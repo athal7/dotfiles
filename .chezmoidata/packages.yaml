@@ -72,7 +72,7 @@ packages:
         "gh search prs*": allow
         "gh search repos*": allow
         "gh api *": ask
-        "gh *": deny
+        "gh *": ask
     - name: athal7/tap/agentcfg
     - name: athal7/tap/attention
     - name: athal7/tap/git-worktree-sync
