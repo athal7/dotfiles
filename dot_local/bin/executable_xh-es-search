@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  printf 'usage: xh-es-search <index-expression>\n' >&2
+  exit 2
+fi
+
+index=$1
+case "$index" in
+  ""|-*|*[!A-Za-z0-9._,*-]*)
+    printf 'xh-es-search: invalid index expression\n' >&2
+    exit 2
+    ;;
+esac
+
+if [ -z "${ES_URL:-}" ]; then
+  printf 'xh-es-search: ES_URL is required\n' >&2
+  exit 2
+fi
+
+if [ -z "${PAYLOAD:-}" ]; then
+  printf 'xh-es-search: PAYLOAD is required\n' >&2
+  exit 2
+fi
+
+base_url=${ES_URL%/}
+exec xh --ignore-stdin --session-read-only=agent POST "$base_url/$index/_search" 'Content-Type:application/json' --raw "$PAYLOAD"

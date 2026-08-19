@@ -66,7 +66,7 @@ harnesses:
         - ["./lib/skill-inject.ts", {
             architecture: [code-quality],
             communication: [knowledge-base],
-            elasticsearch: [{skill: xh, context: "Elasticsearch searches use xh --ignore-stdin --session-read-only=agent for auth"}],
+            elasticsearch: [{skill: xh, context: "Elasticsearch searches use xh-es-search '<index-expression>' with JSON in the Bash PAYLOAD env"}],
             pagerduty: [{skill: xh, context: "All requests use xh --ignore-stdin --session=agent for auth"}],
             push: [commit],
           }]
