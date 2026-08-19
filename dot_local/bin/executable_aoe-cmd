@@ -83,6 +83,10 @@
 # times out and the send never happens — the exit code alone tells the
 # caller whether the send actually landed.
 #
+# `-t TOOL` forces `--tool TOOL` on `aoe add`, independent of `-P` — a
+# caller that already knows which tool it wants (rather than trusting
+# `session.default_tool`) can say so explicitly.
+#
 # `-P` skips plan mode for the dispatched session. agentcfg's global omp
 # config defaults every omp session to plan mode
 # (`plan.defaultOnStartup: true`), which is right for interactive use but
@@ -90,26 +94,29 @@
 # them and hard-restricts `task` subagents to read-only tools, both gated
 # behind an interactive approval nobody is there to give. opencode has an
 # analogous read-only "plan" primary agent, but it's a per-session `--agent`
-# choice rather than a settings toggle — agentcfg's workflow.yaml.tmpl
-# already sets opencode's `default_agent` to this registry's full-capability
-# "lead" persona (not opencode's own "plan"), so an opencode dispatch never
-# starts in plan mode today regardless of `-P`. `-P` still forces both
-# mechanisms explicitly rather than trusting either default to still be
-# correct when it runs:
-#   - omp: `--tool omp --extra-args "--config $HOME/.omp/agent/no-plan.yml"`
-#     (see that overlay file for its contents)
-#   - opencode: `--tool opencode --extra-args "--agent lead"` (forces this
-#     registry's non-plan primary; update this if workflow.yaml.tmpl's
-#     `role: primary` agent is ever renamed)
-# `-P` reads `aoe settings explain session.default_tool` to pick the branch;
-# anything other than `opencode` (including unset) falls back to the omp
-# branch, matching the omp/opencode-only scope of the readiness poll below.
+# choice rather than a settings toggle — the non-plan choice is whatever
+# opencode.json's `default_agent` currently is (stock opencode's own
+# default is "build"; this registry may override it, e.g. to a custom
+# primary persona). `-P` still forces both mechanisms explicitly rather
+# than trusting either default to still be correct when it runs:
+#   - omp: `--extra-args "--config $HOME/.omp/agent/no-plan.yml"` (see that
+#     overlay file for its contents)
+#   - opencode: `--extra-args "--agent <default_agent>"`, reading
+#     `default_agent` fresh out of `~/.config/opencode/opencode.json` (falls
+#     back to stock "build" if that key is absent) rather than hardcoding a
+#     name that can be renamed or removed by a later registry change
+# The tool to branch on is `-t`'s value when given, else `aoe settings
+# explain session.default_tool`; either way `--tool` is only added when `-t`
+# didn't already supply it, so the two never collide. A tool that's neither
+# omp nor opencode (aoe also supports cursor, claude, etc.) has no known
+# plan-mode mechanism here, so `-P` warns and dispatches without one rather
+# than guessing.
 # Every real scheduled job that needs to actually write/edit (audit,
 # fix-prod-errors, kb-enrich, refactor-hotspots, fix-launchagent-errors)
 # passes `-P`; omit it for a dispatch that's meant to stop at a proposed
 # plan for a human to review later.
 #
-#   aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] MESSAGE...
+#   aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] [-t TOOL] MESSAGE...
 
 # Env:
 #   AOE_CMD_READY_TIMEOUT   Max seconds to poll the pane for the ready marker
@@ -124,11 +131,16 @@
 #                           omp sessions are detected via a fixed
 #                           model-indicator glyph instead (not configurable
 #                           — see the omp_ready_marker check below).
+#   AOE_CMD_OPENCODE_CONFIG Path to opencode's config file `-P` reads
+#                           `default_agent` from for the opencode branch
+#                           (default `~/.config/opencode/opencode.json`).
+#                           Override in tests to avoid depending on the
+#                           real file.
 
 set -eu
 
 usage() {
-  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] MESSAGE..." >&2
+  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] [-t TOOL] MESSAGE..." >&2
 }
 
 dir=""
@@ -137,8 +149,9 @@ name=""
 worktree=""
 new_branch=0
 no_plan=0
+tool=""
 
-while getopts "d:sn:w:bP" opt; do
+while getopts "d:sn:w:bPt:" opt; do
   case "$opt" in
     d) dir="$OPTARG" ;;
     s) scratch=1 ;;
@@ -146,6 +159,7 @@ while getopts "d:sn:w:bP" opt; do
     w) worktree="$OPTARG" ;;
     b) new_branch=1 ;;
     P) no_plan=1 ;;
+    t) tool="$OPTARG" ;;
     *) usage; exit 1 ;;
   esac
 done
@@ -171,15 +185,32 @@ fi
 if [ "$new_branch" -eq 1 ]; then
   set -- "$@" --new-branch
 fi
+if [ -n "$tool" ]; then
+  set -- "$@" --tool "$tool"
+fi
 if [ "$no_plan" -eq 1 ]; then
   # See the `-P` header comment above for why this branches per tool
-  # instead of always forcing one mechanism.
-  default_tool=$(aoe settings explain session.default_tool 2>/dev/null | awk -F'"' 'NR==1{print $2}') || default_tool=""
-  if [ "$default_tool" = "opencode" ]; then
-    set -- "$@" --tool opencode --extra-args "--agent lead"
-  else
-    set -- "$@" --tool omp --extra-args "--config $HOME/.omp/agent/no-plan.yml"
+  # instead of always forcing one mechanism. `-t`'s value (if given) is
+  # authoritative over the resolved session default, and `--tool` is only
+  # appended here when `-t` didn't already supply it above.
+  effective_tool="$tool"
+  if [ -z "$effective_tool" ]; then
+    effective_tool=$(aoe settings explain session.default_tool 2>/dev/null | awk -F'"' 'NR==1{print $2}') || effective_tool=""
   fi
+  case "$effective_tool" in
+    opencode)
+      opencode_agent=$(jq -r '.default_agent // "build"' "${AOE_CMD_OPENCODE_CONFIG:-$HOME/.config/opencode/opencode.json}" 2>/dev/null) || opencode_agent="build"
+      [ -n "$tool" ] || set -- "$@" --tool opencode
+      set -- "$@" --extra-args "--agent $opencode_agent"
+      ;;
+    omp|"")
+      [ -n "$tool" ] || set -- "$@" --tool omp
+      set -- "$@" --extra-args "--config $HOME/.omp/agent/no-plan.yml"
+      ;;
+    *)
+      echo "aoe-cmd: -P has no plan-mode-skip mechanism for tool '$effective_tool'; dispatching without one" >&2
+      ;;
+  esac
 fi
 
 if ! add_output=$(aoe add "$@"); then

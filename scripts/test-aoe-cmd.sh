@@ -54,6 +54,15 @@ exit 99
 STUB
 chmod +x "$STUB_BIN/aoe"
 
+# Fixture opencode.json for the -P opencode branch's `jq -r .default_agent`
+# lookup. Points at this file (not the real ~/.config/opencode/opencode.json)
+# so the suite doesn't depend on whatever's actually configured on the
+# machine running it. Mirrors this repo's current real value ("lead") by
+# default; individual tests override AOE_CMD_OPENCODE_CONFIG to exercise the
+# missing-key/missing-file fallback to "build".
+OPENCODE_CONFIG_FIXTURE="$WORK/opencode.json"
+printf '{"default_agent": "lead"}\n' > "$OPENCODE_CONFIG_FIXTURE"
+
 AOE_LOG="$WORK/aoe.log"
 
 run_aoe_cmd() {
@@ -61,6 +70,7 @@ run_aoe_cmd() {
   PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" \
     AOE_CMD_READY_TIMEOUT="${AOE_CMD_READY_TIMEOUT:-5}" \
     AOE_CMD_POLL_INTERVAL="${AOE_CMD_POLL_INTERVAL:-0}" \
+    AOE_CMD_OPENCODE_CONFIG="${AOE_CMD_OPENCODE_CONFIG:-$OPENCODE_CONFIG_FIXTURE}" \
     AOE_STUB_ADD_OUTPUT="${AOE_STUB_ADD_OUTPUT:-}" \
     AOE_STUB_ADD_EXIT="${AOE_STUB_ADD_EXIT:-0}" \
     AOE_STUB_SESSION_START_EXIT="${AOE_STUB_SESSION_START_EXIT:-0}" \
@@ -84,6 +94,7 @@ run_aoe_cmd_split() {
   PATH="$STUB_BIN:$PATH" AOE_LOG="$AOE_LOG" \
     AOE_CMD_READY_TIMEOUT="${AOE_CMD_READY_TIMEOUT:-5}" \
     AOE_CMD_POLL_INTERVAL="${AOE_CMD_POLL_INTERVAL:-0}" \
+    AOE_CMD_OPENCODE_CONFIG="${AOE_CMD_OPENCODE_CONFIG:-$OPENCODE_CONFIG_FIXTURE}" \
     AOE_STUB_ADD_OUTPUT="${AOE_STUB_ADD_OUTPUT:-}" \
     AOE_STUB_ADD_EXIT="${AOE_STUB_ADD_EXIT:-0}" \
     AOE_STUB_SESSION_START_EXIT="${AOE_STUB_SESSION_START_EXIT:-0}" \
@@ -92,6 +103,7 @@ run_aoe_cmd_split() {
     AOE_STUB_DEFAULT_TOOL="${AOE_STUB_DEFAULT_TOOL:-omp}" \
     sh "$AOE_CMD" "$@" > "$stdout_file" 2> "$stderr_file"
 }
+
 
 canonical_add_output='✓ Added session: audit-20260101-000000
   Profile: main
@@ -289,6 +301,104 @@ test_no_plan_flag_omitted() {
   fi
 }
 test_no_plan_flag_omitted
+
+# ---------------------------------------------------------------------------
+echo "== explicit tool selection (-t) =="
+
+test_explicit_tool_flag() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -d /tmp/proj -n audit -t opencode /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -t" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--tool	opencode"*) ok "aoe add called with --tool opencode when -t opencode is set" ;;
+    *) bad "aoe add -t passthrough (got: $add_line)" ;;
+  esac
+
+  if grep -q '^settings' "$AOE_LOG"; then
+    bad "aoe settings explain should not be called when -P is unset, even with -t (got log: $(cat "$AOE_LOG"))"
+  else
+    ok "aoe settings explain not called for -t alone (no -P)"
+  fi
+}
+test_explicit_tool_flag
+
+test_explicit_tool_with_no_plan() {
+  local status add_line tool_count
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_STUB_DEFAULT_TOOL="omp" \
+    run_aoe_cmd -d /tmp/proj -n audit -t opencode -P /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with -t and -P" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--tool	opencode	--extra-args	--agent lead"*) ok "-t opencode wins over session.default_tool=omp, and --agent lead is still applied" ;;
+    *) bad "-t + -P precedence (got: $add_line)" ;;
+  esac
+
+  tool_count="$(printf '%s\n' "$add_line" | tr '\t' '\n' | grep -c '^--tool$')"
+  check "--tool appears exactly once (not duplicated by -P)" "$tool_count" 1
+
+  if grep -q '^settings' "$AOE_LOG"; then
+    bad "aoe settings explain should not be called when -t already resolves the tool (got log: $(cat "$AOE_LOG"))"
+  else
+    ok "aoe settings explain not called when -t already resolves the tool"
+  fi
+}
+test_explicit_tool_with_no_plan
+
+test_opencode_agent_fallback_missing_key() {
+  local status add_line fixture
+  fixture="$WORK/opencode-no-default-agent.json"
+  printf '{}\n' > "$fixture"
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_CMD_OPENCODE_CONFIG="$fixture" \
+    run_aoe_cmd -d /tmp/proj -n audit -t opencode -P /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with missing default_agent key" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--extra-args	--agent build"*) ok "falls back to stock --agent build when opencode.json has no default_agent key" ;;
+    *) bad "missing-key fallback (got: $add_line)" ;;
+  esac
+}
+test_opencode_agent_fallback_missing_key
+
+test_opencode_agent_fallback_missing_file() {
+  local status add_line
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" AOE_CMD_OPENCODE_CONFIG="$WORK/does-not-exist.json" \
+    run_aoe_cmd -d /tmp/proj -n audit -t opencode -P /audit >/dev/null 2>&1 && status=0 || status=$?
+  check "exits 0 on success with missing opencode.json" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--extra-args	--agent build"*) ok "falls back to stock --agent build when opencode.json is missing" ;;
+    *) bad "missing-file fallback (got: $add_line)" ;;
+  esac
+}
+test_opencode_agent_fallback_missing_file
+
+test_unknown_tool_no_plan() {
+  local status add_line err
+  err="$WORK/stderr.unknown-tool"
+  AOE_STUB_ADD_OUTPUT="$canonical_add_output" \
+    run_aoe_cmd -d /tmp/proj -n audit -t cursor -P /audit >/dev/null 2>"$err" && status=0 || status=$?
+  check "exits 0 on success with an unrecognized -t tool" "$status" 0
+
+  add_line="$(grep '^add' "$AOE_LOG")"
+  case "$add_line" in
+    *"--extra-args"*) bad "aoe add should not get --extra-args for an unrecognized tool (got: $add_line)" ;;
+    *"--tool	cursor"*) ok "aoe add still gets --tool cursor from -t, with no plan-mode-skip extra-args" ;;
+    *) bad "unrecognized -t tool passthrough (got: $add_line)" ;;
+  esac
+
+  if grep -qi 'no plan-mode-skip mechanism' "$err"; then
+    ok "warns on stderr when -P has no mechanism for the resolved tool"
+  else
+    bad "expected a no-mechanism warning on stderr (got: $(cat "$err"))"
+  fi
+}
+test_unknown_tool_no_plan
 
 # ---------------------------------------------------------------------------
 echo "== stdout relay of aoe add output =="
