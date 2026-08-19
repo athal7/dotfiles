@@ -40,6 +40,7 @@ bash:
 {{- end }}
 {{- end }}
     lead:
+      "xh --ignore-stdin --session-read-only=agent POST \"$ES_URL/*/_search\" 'Content-Type:application/json' --raw \"$PAYLOAD\"": allow
       "gh *": ask
       "aoe *": ask
     build:
