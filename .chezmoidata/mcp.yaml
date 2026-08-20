@@ -25,61 +25,6 @@
       ]
     },
     {
-      "name": "firefox-devtools",
-      "exclude_for_models": [
-        "mlx/default_model"
-      ],
-      "transport": "local",
-      "command": [
-        "npx",
-        "@mozilla/firefox-devtools-mcp@0.9.7",
-        "--firefox-path",
-        "/Applications/Firefox.app/Contents/MacOS/firefox",
-        "--enable-script"
-      ],
-      "tools": [
-        "accept_dialog",
-        "clear_console_messages",
-        "clear_snapshot",
-        "click_by_uid",
-        "close_page",
-        "dismiss_dialog",
-        "drag_by_uid_to_uid",
-        "enable_debugger",
-        "evaluate_script",
-        "fill_by_uid",
-        "fill_form_by_uid",
-        "get_firefox_info",
-        "get_firefox_output",
-        "get_logpoint_results",
-        "get_network_request",
-        "get_script_source",
-        "hover_by_uid",
-        "install_extension",
-        "list_console_messages",
-        "list_network_requests",
-        "list_pages",
-        "list_scripts",
-        "navigate_history",
-        "navigate_page",
-        "new_page",
-        "profiler_is_active",
-        "profiler_start",
-        "profiler_stop",
-        "remove_logpoint",
-        "resolve_uid_to_selector",
-        "restart_firefox",
-        "screenshot_by_uid",
-        "screenshot_page",
-        "select_page",
-        "set_logpoint",
-        "set_viewport_size",
-        "take_snapshot",
-        "uninstall_extension",
-        "upload_file_by_uid"
-      ]
-    },
-    {
       "name": "github",
       "exclude_for_models": [
         "mlx/default_model"

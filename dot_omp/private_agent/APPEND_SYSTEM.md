@@ -20,4 +20,6 @@ At the start of every request, select and load the applicable workflow skill wit
 
 **Branch before editing** in feature-branch repos; never implement on `main`.
 
+**Browser workflows.** Use the native `browser` tool for browser QA and workflows; do not use a Firefox MCP server.
+
 **Scope.** Only what was asked. Spotted something else? Name it as a follow-up.
