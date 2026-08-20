@@ -220,10 +220,10 @@ $context"
 
   # aoe-cmd is fire-and-forget: it creates the session, starts the tmux pane,
   # and sends the prompt, then exits — matching the dispatch pattern used by
-  # the audit/fix-prod-errors/kb-enrich/refactor-hotspots LaunchAgent
-  # triggers. `-P` skips plan mode (see executable_aoe-cmd) since this
-  # session needs to actually fix the LaunchAgent errors, not just propose a
-  # plan for a human who isn't there to approve it.
+  # the audit/fix-prod-errors/kb-enrich LaunchAgent triggers. `-P` skips plan
+  # mode (see executable_aoe-cmd) since this session needs to actually fix the
+  # LaunchAgent errors, not just propose a plan for a human who isn't there to
+  # approve it.
   if aoe-cmd -d "$HOME/code/dotfiles" -n fix-launchagent-errors -P "$prompt" >/dev/null 2>&1; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched /fix-launchagent-errors for: $service_list"
     # Dispatch succeeded — now advance the deferred offsets for error logs.

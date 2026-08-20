@@ -259,24 +259,6 @@ launchagents:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
 
-  refactor-hotspots:
-    Label: com.$USER.refactor-hotspots
-    ProgramArguments:
-      - $HOME/.local/bin/aoe-cmd
-      - -d
-      - $HOME/code/dotfiles
-      - -n
-      - refactor-hotspots
-      - -P
-      - /refactor-hotspots
-    StartCalendarInterval:
-      Weekday: 0
-      Hour: 8
-      Minute: 0
-    StandardOutPath: $HOME/Library/Logs/refactor-hotspots.log
-    StandardErrorPath: $HOME/Library/Logs/refactor-hotspots.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   setenv-gui-path:
     Label: com.$USER.setenv-gui-path

@@ -55,5 +55,4 @@ Not everything is a skill:
 | `/audit` | Agent-system and cost/latency audit (scheduled) |
 | `/kb-enrich` | Knowledge-base enrichment (scheduled) |
 | `/fix-prod-errors` | APM error triage and fix dispatch (scheduled) |
-| `/refactor-hotspots` | Hotspot detection and fix dispatch (scheduled) |
 | `/fix-launchagent-errors` | LaunchAgent error self-heal (watcher-dispatched) |
