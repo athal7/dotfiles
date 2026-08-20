@@ -4,6 +4,7 @@
 {{-   if eq $server.transport "local" -}}
 {{-     $_ := set $entry "command" $server.command -}}
 {{-   else -}}
+{{-     $_ := set $entry "type" "http" -}}
 {{-     $url := $server.url -}}
 {{-     if kindIs "map" $url -}}{{- $url = env (index $url "name") -}}{{- end -}}
 {{-     $_ := set $entry "url" $url -}}
