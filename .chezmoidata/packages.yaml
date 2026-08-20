@@ -102,16 +102,6 @@ packages:
   skills:
     - repo: BRO3886/ical
       skill: ical-cli
-    - repo: athal7/opencode-permission-audit
-      skill: permission-audit
-    - repo: addyosmani/agent-skills
-      skill: incremental-implementation
-    - repo: addyosmani/agent-skills
-      skill: browser-testing-with-devtools
-    - repo: addyosmani/agent-skills
-      skill: source-driven-development
-    - repo: addyosmani/agent-skills
-      skill: interview-me
 
   # npm-managed global packages
   npm:

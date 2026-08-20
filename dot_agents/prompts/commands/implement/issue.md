@@ -1,6 +1,6 @@
 Every change is tracked — no exemptions. The issue id anchors the branch name, the proposal, and the commit.
 
-Request underspecified (missing who/why/what-success, or you're about to silently fill in a gap) and a live human is present? Load `interview-me` before drafting anything — one question at a time, skip it entirely in unattended/autonomous dispatch.
+Request underspecified (missing who/why/what-success, or you're about to silently fill in a gap) and a live human is present? Use `ask` to clarify one question at a time before drafting anything; skip clarification entirely in unattended/autonomous dispatch.
 
 Resolve the tracker for the repo's org:
 

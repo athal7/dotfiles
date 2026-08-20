@@ -13,10 +13,10 @@ Skip:
 Extract:
 - Coding activity per project (session count and diff-stats, for the journal)
 - People facts (new contacts, role changes, team membership)
-- Informal decisions made outside the openspec workflow
+- Informal decisions not captured in the session's own plan or task state
 - Action items
 
 ## Extraction rules
 
 - Anchor coding-activity rollups to the project/repo (the session's `cwd`).
-- For action items, always carry the `session_id` and `cwd` alongside the extracted content — `/kb-enrich`'s Step 3 session-coordination step uses these to apply the openspec exclusion set and APM ledger disposition centrally, across this collector and `opencode` together.
+- For action items, always carry the `session_id` and `cwd` alongside the extracted content — `/kb-enrich`'s Step 3 session coordination uses them with the APM ledger disposition centrally.

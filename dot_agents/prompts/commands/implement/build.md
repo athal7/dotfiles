@@ -1,4 +1,4 @@
-Implement each task. Load `incremental-implementation` — this applies whether you implement directly or dispatch. Without `edit`/`write` tools in this session, every task dispatches to `build`. With them, implement directly and dispatch `build` only when delegation earns its keep — real parallelism, an experiment worth isolating, a subagent's specialized context. Track progress via the task checkboxes either way.
+Implement each task as the smallest complete increment. Use `todo` to track the increments; use `task` only for genuinely independent work; use `edit` or `write` directly when available. Verify every completed observable behavior with its focused command or runtime scenario before advancing, then run the applicable repository-wide check after the final increment.
 
 **No code comments.** Names and structure carry the intent — write zero, whether direct or dispatched.
 

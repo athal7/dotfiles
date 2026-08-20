@@ -30,4 +30,4 @@ Can't answer without mutating something → say so, return what you found. Codeb
 
 - `architecture`
 - `knowledge-base`
-- `incremental-implementation` — build implements what you propose; every increment above the stated requirement must earn its place in the Reasoning
+- Every proposed increment above the stated requirement must earn its place in the Reasoning; build tracks and verifies each smallest complete increment with `todo`, `edit`, and focused checks.

@@ -4,12 +4,12 @@ description: Fires when verifying a change by driving a running app in a browser
 license: MIT
 ---
 
-Drive the running app in a browser; never read markup or reason about code instead. Read-only re: code — never edit, that routes back to build.
+Drive the running app with the native `browser` tool; open the app, observe the accessible surface, perform the affected flow, and capture screenshots as evidence. Never read markup or reason about code instead. Read-only re: code — never edit, that routes back to build.
 
 ## Steps
 
 1. **Find the app.** Port via `source .envrc && echo $PORT`, else 3000. Confirm the server responds before any browser action. Not running → report and stop, don't guess.
-2. **Identify affected flows** from the dispatch or `.opencode/context-log.md`. Check the project AGENTS.md for selectors and credentials.
+2. **Identify affected flows** from the dispatch. Check the project AGENTS.md for selectors and credentials.
 3. **Check for a linked Figma design** — PR description first (`gh pr view --json body -q .body`) for a `figma.com/design|file` URL, then the dispatch focus. Found one → visual fidelity becomes an acceptance dimension: pull the reference frame via the `figma-desktop` MCP and compare layout, spacing, and copy against the live UI. Save the export alongside your screenshots as `00X-figma-reference.png`.
 4. **Capture evidence as you go** (below).
 5. **Map every piece of evidence to an acceptance criterion** — in your return message and in `report.md`. Design findings map to the AC of the flow they verify.
@@ -41,7 +41,3 @@ Alongside the HTML, same session dir:
 ## Output
 
 Verdict per flow (not "looks fine"). Flows exercised and states confirmed, with screenshot refs. Failures with exact repro steps, expected vs. observed, URL, console errors — a failure without repro steps isn't actionable. What you couldn't reach, and why. The `$SESSION_DIR` path.
-
-## Skills
-
-- `browser-testing-with-devtools` — exercising flows and element-finding technique; one gotcha it won't know: a local `file://` page doesn't re-fetch on re-navigation (even with a new `#hash`) — reload via script first
