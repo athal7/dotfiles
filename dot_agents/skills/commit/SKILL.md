@@ -9,7 +9,7 @@ Verify the diff and apply any findings before you stage. Run git from the worktr
 1. `git add -A`
 2. `git check-ignore <files>` — never stage globally-ignored files (`~/.config/git/ignore`, e.g. `.talismanrc`).
 3. Run the full test suite — unit, integration, e2e, system. No commits with failures. This is the gate; push assumes it already ran.
-4. Draft the message, with a trailer naming the model actually running the session — email is the model's *provider* domain, never the harness (`opencode.ai`, `omp.sh`, …):
+4. Draft the message, with a trailer naming the model actually running the session — email is the model's provider domain, never the harness (`omp.sh`, …):
    ```
    Co-Authored-By: anthropic/claude-sonnet-5 <noreply@anthropic.com>
    ```

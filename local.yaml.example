@@ -1,7 +1,7 @@
 # Machine-specific config for chezmoi.
 # Copy to ~/.local/share/chezmoi/.chezmoidata/local.yaml and fill in your values.
 # This file is never committed — it lives only on the machine.
-# Private model defaults rendered by the native OpenCode and OMP templates.
+# Private model defaults rendered by OMP templates.
 model_class:
   default: anthropic/claude-sonnet-5
   smol: anthropic/claude-haiku-4-5
@@ -25,13 +25,12 @@ orgs:
     kb_eligible: false
 
 # Locally-hosted mlx model (Apple Silicon only) served by mlx_lm.server,
-# consumed by three templates: dot_config/launchd-yaml/agents.yaml.tmpl
-# (mlx-server/mlx-watchdog LaunchAgents), dot_omp/private_agent/models.yml.tmpl
-# (omp's mlx provider), and dot_config/opencode/opencode.json.tmpl (OpenCode's
-# mlx provider). Omit this key entirely on a machine that shouldn't run a
-# local model — all three templates render without any mlx-server/provider
-# entries when .local_model is unset, and .chezmoiscripts/run_once_after_mlx-gpu-wired-limit.sh.tmpl
-# is a no-op. host/port/provider/api/api_key/id default sensibly in-template
+# consumed by dot_config/launchd-yaml/agents.yaml.tmpl (mlx-server/mlx-watchdog
+# LaunchAgents) and dot_omp/private_agent/models.yml.tmpl (OMP's mlx provider).
+# Omit this key entirely on a machine that shouldn't run a local model — both
+# templates render without mlx-server/provider entries when .local_model is
+# unset, and .chezmoiscripts/run_once_after_mlx-gpu-wired-limit.sh.tmpl is a
+# no-op. host/port/provider/api/api_key/id default sensibly in-template
 # (127.0.0.1:8091, provider "mlx", OpenAI-compatible protocol, model id
 # "default_model") — only override them here if you actually need to.
 #
@@ -75,7 +74,7 @@ prod_services:
 # file at ~/.config/kb/collectors/<name>.md. Only listed collectors run; omit one
 # to disable it without deleting its recipe.
 kb:
-  collectors: [openspec, opencode, omp, slack, zoom, linear, gh, atlassian]
+  collectors: [openspec, omp, slack, zoom, linear, gh, atlassian]
   # Confluence page ID of the Decision Log container page (the page running the
   # Page Properties Report macro that auto-lists its children). Leave unset/empty
   # to skip Decision Log write-back in /kb-enrich entirely — no Confluence write

@@ -1,10 +1,8 @@
 #!/bin/sh
 # check-error-logs — daily scan of LaunchAgent error logs
-# When any services have new errors, dispatches an opencode session (via
-# aoe-cmd, same fire-and-forget pattern as the audit/fix-prod-errors/kb-enrich/
-# refactor-hotspots scheduled jobs) to triage and self-heal them — running the
-# /fix-launchagent-errors command in the dotfiles repo. Dispatch-only: no
-# reminder is filed.
+# When any services have new errors, dispatches an OMP session through aoe-cmd
+# to triage and self-heal them by running `/fix-launchagent-errors` in the
+# dotfiles repo. Dispatch-only: no reminder is filed.
 #
 # State file tracks byte offsets per log file so only new content is read.
 # First run establishes a baseline and exits silently.

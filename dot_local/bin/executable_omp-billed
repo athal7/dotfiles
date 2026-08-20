@@ -1,11 +1,11 @@
 #!/bin/sh
 # omp-billed — aoe-scoped wrapper around `omp` (@oh-my-pi/pi-coding-agent).
 #
-# WHY: opencode and omp each need to bill against their own Anthropic API key
-# so usage shows up separately in the Anthropic console. omp has no
-# persistent non-OAuth credential storage (`auth-broker import` only accepts
-# OAuth-shaped JSON; `--api-key` is session-only), so the only way to point
-# omp at its own key is exporting ANTHROPIC_API_KEY right before it launches.
+# WHY: omp needs to bill against its own Anthropic API key so usage shows up
+# separately in the Anthropic console. omp has no persistent non-OAuth
+# credential storage (`auth-broker import` only accepts OAuth-shaped JSON;
+# `--api-key` is session-only), so the only way to point omp at its own key is
+# exporting ANTHROPIC_API_KEY right before it launches.
 #
 # SCOPE: this script is wired in only via aoe's `session.agent_command_override`
 # (dot_agent-of-empires/modify_config.toml), so it applies to aoe-dispatched

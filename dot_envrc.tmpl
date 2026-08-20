@@ -7,8 +7,10 @@ _envrc_secret() {
   val=$(security find-generic-password -s "chezmoi" -a "$1" -w 2>/dev/null) && export "$2=$val"
 }
 
+{{ if hasKey . "secrets" -}}
 {{ range $name, $cfg := .secrets -}}
 _envrc_secret {{ $name }} {{ $name | upper }}
 {{ end -}}
+{{ end }}
 
 unset -f _envrc_secret

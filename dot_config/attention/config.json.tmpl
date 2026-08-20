@@ -8,15 +8,19 @@
    plugins upstream (hardcoded tool deps) and are restored here as
    configured actions. */ -}}
 {{- $calNames := list -}}
+{{- if hasKey . "calendars" -}}
 {{- range $k, $v := .calendars -}}
 {{- if and (kindIs "map" $v) (dig "attention_check" false $v) -}}
 {{- $calNames = append $calNames (dig "name" "" $v) -}}
 {{- end -}}
 {{- end -}}
+{{- end -}}
 {{- $remLists := list -}}
+{{- if hasKey . "reminders" -}}
 {{- range $k, $v := .reminders -}}
 {{- if and (kindIs "map" $v) (dig "attention_check" false $v) -}}
 {{- $remLists = append $remLists (dig "name" "" $v) -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- $config := dict

@@ -13,7 +13,7 @@
 #    matter the configured background color — the floor renders around
 #    RGB(20,20,20) regardless. Pure black minimizes that floor's absolute
 #    lightness compared to any lighter configured background, which matters
-#    for full-screen TUI apps like aoe/opencode painting up to those edges.
+#    for full-screen TUI apps such as aoe and omp painting up to those edges.
 #    This is deliberately a fixed constant rather than tracking aoe's active
 #    theme color — dynamic theme-tracking was tried and abandoned, since the
 #    floor-vs-theme mismatch was still visible and kept shifting with every

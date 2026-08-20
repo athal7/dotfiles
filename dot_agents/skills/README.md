@@ -1,6 +1,6 @@
 # Agent Skills
 
-[agentskills.io](https://agentskills.io)-compatible skills, deployed to `~/.agents/skills/`. Used by both harnesses in play here — [OpenCode](https://opencode.ai) and omp.
+[agentskills.io](https://agentskills.io)-compatible skills, deployed to `~/.agents/skills/` for OMP.
 
 Edit skills here, never in `~/.agents/skills/`; chezmoi manages each authored skill directly without replacing the shared directory.
 
@@ -26,7 +26,6 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | Skill | Covers |
 |---|---|
 | **aoe** | Agent of Empires: session creation, worktrees, dispatch |
-| **opencode** | OpenCode runtime internals: session DB, repair, stale diff sidebar |
 | **chezmoi** | This repo's deploy workflow, LaunchAgents, template gotchas |
 | **knowledge-base** | `~/.local/share/kb/` — people, projects, decisions. Check before any remote lookup |
 | **elasticsearch** | Production triage: logs, APM traces, errors |
@@ -34,14 +33,13 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
 
-External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical) and [permission-audit](https://github.com/athal7/opencode-permission-audit).
+External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical).
 
 ## Other primitives
 
 Not everything is a skill:
 
-- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and workflow guidance. OMP loads the lead prompt through `dot_omp/private_agent/symlink_APPEND_SYSTEM.md.tmpl`; OpenCode uses its stock agents.
-- **Slash commands** live in `dot_config/opencode/commands/` and are opencode-only, thin triggers ("load skill X").
+- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and workflow guidance. OMP's system prompt lives directly at `dot_omp/private_agent/APPEND_SYSTEM.md`.
 - **Scripts** carry runtime automation.
 
 ## Commands

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Installs only skills that chezmoi does not own.
 # external-skill manifest: {{ .packages.skills | toJson | sha256sum }}
-# runlayer-skill manifest: {{ .runlayer_skills | toJson | sha256sum }}
+# runlayer-skill manifest: {{ if hasKey . "runlayer_skills" }}{{ .runlayer_skills | toJson | sha256sum }}{{ else }}{{ list | toJson | sha256sum }}{{ end }}
 {{- range .packages.skills }}
 {{- if hasKey . "repo" }}
 # external-present: {{ .skill }}={{ if (joinPath (env "HOME") ".agents/skills" .skill "SKILL.md" | stat) }}1{{ else }}0{{ end }}
@@ -41,15 +41,13 @@ fi
 {{ range .packages.skills -}}
 {{- if hasKey . "repo" }}
 echo "installing {{ .skill }} from {{ .repo }}..."
-gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --agent opencode --force < /dev/null
+gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --force < /dev/null
 {{ end -}}
 {{- end }}
 
 if command -v uvx >/dev/null 2>&1 && [ -f "$HOME/.runlayer/config.yaml" ]; then
   echo "resyncing runlayer-managed skills..."
-  RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills remove --all --global --client opencode --yes >/dev/null 2>&1 || \
-    echo "WARN: runlayer skill removal failed; continuing" >&2
-  RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills add --all --global --client opencode || \
+  RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills sync || \
     echo "WARN: runlayer skill installation failed; continuing" >&2
 fi
 

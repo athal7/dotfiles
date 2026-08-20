@@ -3,7 +3,7 @@ name: omp
 description: omp sessions — all coding activity via the omp CLI in the enrichment window
 ---
 
-omp persists every session as a JSONL transcript at `~/.omp/agent/sessions/<slugified-cwd>/<timestamp>_<session-uuid>.jsonl` — one file per session; the files themselves are the durable historical store, directly analogous to OpenCode's SQLite DB. Find candidate sessions for the enrichment window by file mtime (last-write time, approximating OpenCode's `time_updated`): `find ~/.omp/agent/sessions -name '*.jsonl' -newermt "<FROM>" -not -newermt "<TO, +1 day>"`. Each file's first line is a `{"type":"session","id":...,"timestamp":...,"cwd":"<absolute path>"}` record. Read the full transcript for every candidate.
+omp persists every session as a JSONL transcript at `~/.omp/agent/sessions/<slugified-cwd>/<timestamp>_<session-uuid>.jsonl` — one file per session and the durable historical store. Find candidate sessions for the enrichment window by file mtime (last-write time): `find ~/.omp/agent/sessions -name '*.jsonl' -newermt "<FROM>" -not -newermt "<TO, +1 day>"`. Each file's first line is a `{"type":"session"...}` record with its session id and cwd.
 
 ## Triage rules
 

@@ -3,7 +3,7 @@ name: openspec
 description: OpenSpec durable store — design decisions, rejected alternatives, and standing specs from archived /implement changes
 ---
 
-Find archived OpenSpec changes within the enrichment window with `kb openspec list --from YYYY-MM-DD --to YYYY-MM-DD`. Each result includes `worktree`, `branch`, `date`, `change`, `repo`, and `path`; use `worktree` as the join key `/kb-enrich`'s Step 3 session-coordination step uses to filter opencode/omp sessions covered by these durable artifacts. Read each change's design with `kb openspec show <change> --repo <repo>`; list standing requirements with `kb openspec specs list --repo <repo>` and read a requirement with `kb openspec specs show <spec> --repo <repo>`.
+Find archived OpenSpec changes within the enrichment window with `kb openspec list --from YYYY-MM-DD --to YYYY-MM-DD`. Each result includes `worktree`, `branch`, `date`, `change`, `repo`, and `path`; use `worktree` as the join key `/kb-enrich`'s Step 3 session-coordination step uses to filter OMP sessions covered by these durable artifacts. Read each change's design with `kb openspec show <change> --repo <repo>`; list standing requirements with `kb openspec specs list --repo <repo>` and read affected specs.
 
 The kb v0.4.0 console entry point registers this read-only OpenSpec interface before invoking `main()`. Do not read archive files directly when the CLI can provide the needed metadata or content.
 
@@ -20,4 +20,4 @@ Extract:
 ## Extraction rules
 
 - These artifacts are already in the kb via symlink; reference them, don't copy them.
-- Anchor each decision to the archived change's worktree/repo so the journal's coding-activity rollup (from opencode/omp) and this collector's decision output can be cross-referenced.
+- Anchor each decision to the archived change's worktree/repo so the journal's OMP coding-activity rollup and this collector's decision output can be cross-referenced.

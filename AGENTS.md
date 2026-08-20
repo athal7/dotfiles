@@ -9,9 +9,8 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
-- **`dot_config/opencode/`** — OpenCode config, plugins, and slash commands. `opencode.json.tmpl` is the sole writer for `~/.config/opencode/opencode.json`; it leaves OpenCode's stock `build` and `plan` agents active.
 - **`dot_omp/private_agent/`** — OMP's sole config writers: `config.yml.tmpl`, `private_mcp.json.tmpl`, and the lead-prompt symlink.
-- **`.chezmoidata/mcp.yaml`** — neutral MCP server data shared by the native OpenCode and OMP templates. **`dot_agents/permissions.json.tmpl`** is the canonical Bash policy; templates project its representable fragments through `agent-perms`.
+- **`.chezmoidata/mcp.yaml`** — neutral MCP server data rendered into OMP templates.
 - **`dot_agents/skills/`** — authored agent skills managed natively at `~/.agents/skills/`; externally installed skills own separate sibling directories.
 - **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by the `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh` generator (renders via yq → plutil, reloads only changed agents, removes agents deleted from the YAML). Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
@@ -25,11 +24,7 @@ All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`
 
 ## Agent Config
 
-`dot_config/opencode/opencode.json.tmpl` and `dot_omp/private_agent/config.yml.tmpl` own their complete native targets. Keep nonpermission controls native; only permission fragments come from `dot_agents/permissions.json.tmpl` through `agent-perms`. `dot_omp/private_agent/symlink_APPEND_SYSTEM.md.tmpl` keeps OMP on the shared lead prompt.
-
-Until the OMP codec is released, templates require the temporary global npm link: build the persistent codec checkout and run `npm link` there. On release cutover, add `npm:agent-perms@<published-version>` to `.chezmoidata/packages.yaml`'s `mise` list, run `chezmoi apply`, verify the mise-installed binary renders equivalent configs, then run `npm unlink -g agent-perms` and verify the command still resolves through mise.
-
-**Keep the global `dot_config/opencode/AGENTS.md` lean.**  Resist adding DO/DO NOT lists to it. Long instruction files degrade agent performance — prefer skills and progressive context loading instead.
+`dot_omp/private_agent/config.yml.tmpl` owns OMP's complete native target; `dot_omp/private_agent/APPEND_SYSTEM.md` owns its system prompt.
 
 ## Public Repo — Privacy Guidelines
 

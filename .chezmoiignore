@@ -4,19 +4,9 @@
 # Keep gh authentication tokens local (don't sync across machines)
 .config/gh/hosts.yml
 
-# Keep poll configs private (contains repo paths and personal workflow)
-.config/opencode-pilot/
-
-# Machine-specific attention sources (Linear team IDs, local tools, etc.)
-.config/opencode/attention-sources.local
-
-# Local command overrides (contain personal details like locations, team IDs)
-.config/opencode/command.local/
-
 # Repo documentation and project config - not for home directory
 AGENTS.md
 README.md
-opencode.json
 index.html
 
 # Source-only skill documentation; authored skill files are managed natively.

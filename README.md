@@ -9,23 +9,22 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Editor](dot_config/nvim/)
   - [Git](dot_config/git/)
 - **AI tooling**
-  - [Canonical agent policy](dot_agents/permissions.json.tmpl) — the `agent-perms` source of truth for global Bash approvals. Native [OpenCode](dot_config/opencode/opencode.json.tmpl) and [OMP](dot_omp/private_agent/config.yml.tmpl) templates project only its representable permission fragments and retain their nonpermission settings directly.
-  - [MCP registry](.chezmoidata/mcp.yaml) — shared server transport, command, URL, header, model-exclusion, and tool inventory data rendered into the native OpenCode and OMP configurations.
-  - [OMP lead prompt](dot_omp/private_agent/symlink_APPEND_SYSTEM.md.tmpl) — a symlink to the shared lead prompt. OpenCode has no lead override and uses its stock `build` and `plan` agents.
+  - [OMP configuration](dot_omp/private_agent/config.yml.tmpl) — native OMP controls and ordered Bash approval patterns.
+  - [MCP registry](.chezmoidata/mcp.yaml) — server transport, command, URL, header, model-exclusion, and tool inventory data rendered into OMP configuration.
+  - [OMP lead prompt](dot_omp/private_agent/APPEND_SYSTEM.md) — direct OMP system prompt.
   - [Agent skills](dot_agents/skills/) — authored skills are managed directly by chezmoi; externally installed skills own distinct sibling directories under `~/.agents/skills/`.
   - [Agent of Empires config](dot_agent-of-empires/config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`.
   - [Freebuff](https://freebuff.com/) — installed through mise and available to Agent of Empires as the opt-in `freebuff` terminal agent (`aoe add --tool freebuff`).
   - Per-org model routing — private defaults and organization overrides live only in gitignored `.chezmoidata/local.yaml`.
-  - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the locally-hosted mlx model (endpoint, repo, context window, server generation cap, and lower agent request cap). It feeds omp's [`models.yml`](dot_omp/private_agent/models.yml.tmpl), the native OpenCode mlx provider block, and the `mlx-server` LaunchAgent.
-  - [omp model config](dot_omp/private_agent/models.yml.tmpl) — points omp's local `mlx` provider at the same `mlx_lm.server` endpoint (`127.0.0.1:8091`) OpenCode uses.
-  - [Plan-mode skip overlay](dot_omp/private_agent/no-plan.yml) — omp `--config` overlay disabling `plan.defaultOnStartup` for one launch; [`aoe-cmd -P`](dot_local/bin/executable_aoe-cmd) applies it when dispatching a scheduled session that must actually write/edit.
-  - Temporary codec dependency — until an OMP-capable `agent-perms` release is available, build the persistent codec checkout and run `npm link`. On release cutover, add `npm:agent-perms@<published-version>` to the `mise` package list, run `chezmoi apply`, verify its rendered projections, then run `npm unlink -g agent-perms` and verify mise resolves the command.
+  - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the locally-hosted mlx model (endpoint, repo, context window, server generation cap, and lower agent request cap). It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl) and the `mlx-server` LaunchAgent.
+  - [OMP model config](dot_omp/private_agent/models.yml.tmpl) — points OMP's local `mlx` provider at the shared `mlx_lm.server` endpoint.
+  - [Plan-mode skip overlay](dot_omp/private_agent/no-plan.yml) — OMP `--config` overlay disabling `plan.defaultOnStartup` for one launch; [`aoe-cmd -P`](dot_local/bin/executable_aoe-cmd) applies it when dispatching a scheduled session that must actually write/edit.
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)
   - [Attention triage dashboard](dot_config/attention/config.json.tmpl) — config for the [`attention`](https://github.com/athal7/attention) CLI (installed via `athal7/tap/attention`), a prioritized calendar/reminders/GitHub/Linear triage dashboard with an fzf-driven hotkey UI; it supplies the calendar/reminder-list names flagged `attention_check: true`, codeDir, a Linear token, a Lumen shortcut, and an AOE-session action on every item type. Starting an AOE session prompts for a customizable session message; calendar and reminder sessions use AOE scratch projects.
   - [Homebridge](dot_homebridge/)
-  - [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) — scheduled macOS tasks defined declaratively in [`dot_config/launchd-yaml/agents.yaml.tmpl`](dot_config/launchd-yaml/agents.yaml.tmpl) (generated to plists via yq + plutil), including a daily 7am production-error triage (`fix-prod-errors`), a monthly agent-system audit (`audit`), a weekly Sunday cross-repo friction-hotspot refactor dispatcher (`refactor-hotspots`), a weekly Sunday disk-space cleanup (`cleanup`), and a 15-minute `kb-zoom-capture`.
-- [Packages](.chezmoidata/packages.yaml) — dependency registry. The canonical permissions template owns global Bash policy; `.chezmoidata/mcp.yaml` owns shared MCP data.
+  - [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) — scheduled macOS tasks defined declaratively in [`dot_config/launchd-yaml/agents.yaml.tmpl`](dot_config/launchd-yaml/agents.yaml.tmpl) (generated to plists via yq + plutil), including a daily 7am production-error triage (`fix-prod-errors`), a monthly agent-system audit (`audit`), and a 15-minute `kb-zoom-capture`.
+- [Packages](.chezmoidata/packages.yaml) — dependency registry. `.chezmoidata/mcp.yaml` owns shared MCP data.
 
 ## Quick start
 

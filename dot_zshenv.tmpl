@@ -1,10 +1,9 @@
 {{ template "brewenv" . }}
 
 # XDG Base Directory paths — asserted unconditionally, not defaulted with
-# ${VAR:-...}. Sandboxed parent processes (e.g. the OpenCode desktop app)
-# export their own XDG_* overrides for their own subprocess isolation, and
-# those can leak into and persist in long-lived shells (e.g. a tmux server
-# started years ago under such a process) long after that process is gone.
+# ${VAR:-...}. Sandboxed parent processes can export their own XDG_* overrides
+# for subprocess isolation, and those can leak into and persist in long-lived
+# shells such as a tmux server after the parent process is gone.
 # Always reasserting here means no inherited value can silently redirect
 # this user's shells.
 export XDG_CONFIG_HOME="$HOME/.config"

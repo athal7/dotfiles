@@ -1,140 +1,8 @@
 #!/bin/sh
-# aoe-cmd — dispatch a scheduled opencode session through aoe (Agent of
-# Empires) instead of hitting the opencode HTTP API directly, so the session
-# shows up in aoe's session list/TUI/`aoe serve` dashboard like an
-# interactively-created one.
-#
-# Fire-and-forget by design: creates a terminal-view session (opencode
-# running inside a tmux pane, same mode a plain `aoe add` produces) and types
-# a message into it, then exits. There is no blocking "wait for the agent's
-# reply" verb for these sessions — the point of moving to aoe is that the
-# session persists and is reviewable later via `aoe`/`aoe serve`, unlike
-# blocking on an HTTP call ever did.
-#
-# Launching is two calls, not one: `aoe add DIR --title TITLE` to create the
-# session record, then `aoe session start ID` to actually start the tmux pane.
-# This is deliberately NOT
-# `aoe add ... -l/--launch`, which tries to interactively attach to the new
-# tmux session right after creating it — in the non-TTY context this script
-# always runs in (a LaunchAgent has no controlling terminal), that attach
-# attempt fails and `aoe add` exits 1 even though the session, tmux pane, and
-# opencode process were all created successfully. Live-tested: `aoe add ...
-# -l` reliably returns exit 1 in this environment despite fully succeeding,
-# which would make every scheduled run look like a failure and abort before
-# ever sending a message. Splitting into `aoe add` (no -l, just creates the
-# record, exits 0) + `aoe session start` (starts the tmux process without
-# attaching, exits 0) avoids the spurious failure and gives a reliable exit
-# code at each step.
-#
-# `aoe add` does not error or dedupe on a repeated --title — repeated runs
-# with the same NAME would produce multiple sessions sharing a title. So the
-# title always gets a timestamp suffix, and the numeric session ID (parsed
-# from `aoe add`'s output) is what's used for the follow-up `session start`
-# and `send` calls — never the title.
-#
-# opencode's TUI takes a few seconds to boot inside the fresh tmux pane.
-# `aoe send` types straight into the pane with no readiness check and no ACK:
-# a message sent before opencode is ready is silently dropped — `aoe send`
-# still prints its "Sent message" confirmation and exits 0, so there's no
-# error signal to retry on. This used to be handled with a fixed sleep after
-# `aoe session start` returns, before calling `aoe send` once — that design
-# was falsified by real evidence: under unattended 20:00 weekday LaunchAgent
-# runs (kb-enrich, fix-prod-errors), the fixed 5s sleep silently dropped the
-# send in 4/4 recent runs (tmux panes still showed opencode's pristine
-# welcome screen; zero opencode sessions were created in
-# ~/.local/share/opencode/opencode.db for those runs), because boot time
-# under real unattended conditions isn't reliably bounded by a guessed
-# constant. The fix is a bounded poll: after `aoe session start` returns,
-# repeatedly capture the pane (`aoe session capture`) and check for a ready
-# marker, sending only once one appears (or failing loudly if none does
-# within a timeout). The marker isn't fixed: `aoe`'s `session.default_tool`
-# config decides whether a dispatched session actually boots opencode or
-# omp, and the two share no "ready" text — opencode shows an input
-# placeholder ("Ask anything..."), omp has no placeholder at all but always
-# renders a bordered status bar containing a model-indicator glyph (`⬢`)
-# once its TUI is up. Both are checked; whichever the session actually
-# launches will match. Retrying the send itself would overcomplicate a
-# fire-and-forget tool, so there's still just one `aoe send` call — only the
-# wait before it is adaptive now.
-#
-# `aoe send` gets the message with a trailing space appended. All 4 real
-# scheduled jobs send a slash command (e.g. `/audit`); opencode's TUI treats
-# a leading `/` as the start of its slash-command autocomplete dropdown, and
-# `aoe send`'s trailing Enter keystroke gets consumed by that dropdown
-# (dismissing/accepting it) instead of submitting the message — so the
-# command sits typed-but-unsubmitted forever while `aoe send` still reports
-# success. A trailing space closes the dropdown as it's typed, so the Enter
-# that follows submits normally. Live-tested against the real `audit`
-# LaunchAgent: without the trailing space `/audit` was typed but stuck in
-# the dropdown indefinitely; with it, `/audit` submitted immediately and the
-# workflow ran. Harmless for plain-text messages too.
-#
-# `-w WORKTREE_BRANCH` / `-b` pass straight through to `aoe add --worktree
-# ... --new-branch`, and the raw `aoe add` output (its `  ID:` / `  Path:`
-# lines) is relayed to stdout the moment the session ID is successfully
-# parsed — before `aoe session start` is even attempted, well before the
-# readiness poll. Both were added so a caller that needs a git-worktree
-# session with a custom prompt (e.g. fix-prod-errors.md dispatching a fix
-# session per top APM error group into its own worktree+branch) can capture
-# the session id and worktree path via `$(...)` and use this wrapper for the
-# whole add→start→poll→send sequence, instead of re-implementing that same
-# race-prone poll loop a second time. Relaying before the poll also means a
-# caller still gets the id/worktree path even if the readiness poll below
-# times out and the send never happens — the exit code alone tells the
-# caller whether the send actually landed.
-#
-# `-t TOOL` forces `--tool TOOL` on `aoe add`, independent of `-P` — a
-# caller that already knows which tool it wants (rather than trusting
-# `session.default_tool`) can say so explicitly.
-#
-# `-P` skips plan mode for the dispatched session. OMP defaults every session
-# to plan mode through `config.yml.tmpl`, which is right for interactive use but
-# wrong for a scheduled dispatch: plan mode stages edits behind an interactive
-# approval. OpenCode's stock `plan` agent is selected per session; its stock
-# `build` agent remains the non-plan default. `-P` forces both mechanisms
-# explicitly rather than trusting defaults:
-#   - omp: `--extra-args "--config $HOME/.omp/agent/no-plan.yml"` (see that
-#     overlay file for its contents)
-#   - opencode: `--extra-args "--agent <default_agent>"`, reading
-#     `default_agent` fresh out of `~/.config/opencode/opencode.json` (falls
-#     back to stock "build" if that key is absent) rather than hardcoding a
-#     name that can be renamed or removed by a later registry change
-# The tool to branch on is `-t`'s value when given, else `aoe settings
-# explain session.default_tool`; either way `--tool` is only added when `-t`
-# didn't already supply it, so the two never collide. A tool that's neither
-# omp nor opencode (aoe also supports cursor, claude, etc.) has no known
-# plan-mode mechanism here, so `-P` warns and dispatches without one rather
-# than guessing.
-# Every real scheduled job that needs to actually write/edit (audit,
-# fix-prod-errors, kb-enrich, refactor-hotspots, fix-launchagent-errors)
-# passes `-P`; omit it for a dispatch that's meant to stop at a proposed
-# plan for a human to review later.
-#
-#   aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] [-t TOOL] MESSAGE...
-
-# Env:
-#   AOE_CMD_READY_TIMEOUT   Max seconds to poll the pane for the ready marker
-#                           after `aoe session start` before giving up
-#                           (default 30).
-#   AOE_CMD_POLL_INTERVAL   Seconds to sleep between poll attempts (default
-#                           1). Override to 0 in tests.
-#   AOE_CMD_READY_MARKER    Text to look for in the captured pane that
-#                           indicates opencode's TUI is ready for input
-#                           (default "Ask anything..."). Only used when the
-#                           dispatched session is actually running opencode;
-#                           omp sessions are detected via a fixed
-#                           model-indicator glyph instead (not configurable
-#                           — see the omp_ready_marker check below).
-#   AOE_CMD_OPENCODE_CONFIG Path to opencode's config file `-P` reads
-#                           `default_agent` from for the opencode branch
-#                           (default `~/.config/opencode/opencode.json`).
-#                           Override in tests to avoid depending on the
-#                           real file.
-
 set -eu
 
 usage() {
-  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] [-t TOOL] MESSAGE..." >&2
+  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] [-t omp] MESSAGE..." >&2
 }
 
 dir=""
@@ -143,7 +11,6 @@ name=""
 worktree=""
 new_branch=0
 no_plan=0
-tool=""
 
 while getopts "d:sn:w:bPt:" opt; do
   case "$opt" in
@@ -153,7 +20,12 @@ while getopts "d:sn:w:bPt:" opt; do
     w) worktree="$OPTARG" ;;
     b) new_branch=1 ;;
     P) no_plan=1 ;;
-    t) tool="$OPTARG" ;;
+    t)
+      if [ "$OPTARG" != "omp" ]; then
+        echo "aoe-cmd: only the OMP tool is supported" >&2
+        exit 1
+      fi
+      ;;
     *) usage; exit 1 ;;
   esac
 done
@@ -169,9 +41,9 @@ fi
 title="${name}-$(date +%Y%m%d-%H%M%S)"
 
 if [ "$scratch" -eq 1 ]; then
-  set -- --scratch --title "$title"
+  set -- --scratch --title "$title" --tool omp
 else
-  set -- "$dir" --title "$title"
+  set -- "$dir" --title "$title" --tool omp
 fi
 if [ -n "$worktree" ]; then
   set -- "$@" --worktree "$worktree"
@@ -179,32 +51,13 @@ fi
 if [ "$new_branch" -eq 1 ]; then
   set -- "$@" --new-branch
 fi
-if [ -n "$tool" ]; then
-  set -- "$@" --tool "$tool"
-fi
 if [ "$no_plan" -eq 1 ]; then
-  # See the `-P` header comment above for why this branches per tool
-  # instead of always forcing one mechanism. `-t`'s value (if given) is
-  # authoritative over the resolved session default, and `--tool` is only
-  # appended here when `-t` didn't already supply it above.
-  effective_tool="$tool"
-  if [ -z "$effective_tool" ]; then
-    effective_tool=$(aoe settings explain session.default_tool 2>/dev/null | awk -F'"' 'NR==1{print $2}') || effective_tool=""
+  omp_model=$(yq -r '.modelRoles.default // ""' "$HOME/.omp/agent/config.yml" 2>/dev/null) || omp_model=""
+  if [ -n "$omp_model" ] && [ "$omp_model" != "null" ]; then
+    set -- "$@" --extra-args "--config $HOME/.omp/agent/no-plan.yml --model $omp_model"
+  else
+    set -- "$@" --extra-args "--config $HOME/.omp/agent/no-plan.yml"
   fi
-  case "$effective_tool" in
-    opencode)
-      opencode_agent=$(jq -r '.default_agent // "build"' "${AOE_CMD_OPENCODE_CONFIG:-$HOME/.config/opencode/opencode.json}" 2>/dev/null) || opencode_agent="build"
-      [ -n "$tool" ] || set -- "$@" --tool opencode
-      set -- "$@" --extra-args "--agent $opencode_agent"
-      ;;
-    omp|"")
-      [ -n "$tool" ] || set -- "$@" --tool omp
-      set -- "$@" --extra-args "--config $HOME/.omp/agent/no-plan.yml"
-      ;;
-    *)
-      echo "aoe-cmd: -P has no plan-mode-skip mechanism for tool '$effective_tool'; dispatching without one" >&2
-      ;;
-  esac
 fi
 
 if ! add_output=$(aoe add "$@"); then
@@ -220,10 +73,6 @@ if [ -z "$id" ]; then
   exit 1
 fi
 
-# Relay `aoe add`'s raw output (its `  ID:` / `  Path:` lines) to stdout now,
-# before `aoe session start` or the readiness poll below — so a caller
-# capturing this script's stdout via `$(...)` gets the session id and
-# worktree path regardless of whether the later poll times out.
 printf '%s\n' "$add_output"
 
 if ! start_output=$(aoe session start "$id" 2>&1); then
@@ -232,40 +81,27 @@ if ! start_output=$(aoe session start "$id" 2>&1); then
   exit 1
 fi
 
-# Wait for opencode's TUI to be ready for input before sending. `aoe send`
-# has no delivery ACK — a send into a still-booting pane is silently dropped
-# (proven under unattended 20:00 LaunchAgent runs: 4/4 recent dispatches left
-# the pane on opencode's untouched welcome screen and never created an
-# opencode session, despite `aoe send` reporting success every time). Poll
-# the pane for opencode's input placeholder instead of guessing a fixed sleep.
 ready_timeout="${AOE_CMD_READY_TIMEOUT:-30}"
 poll_interval="${AOE_CMD_POLL_INTERVAL:-1}"
-ready_marker="${AOE_CMD_READY_MARKER:-Ask anything...}"
-omp_ready_marker='⬢'
-
 waited=0
 ready=0
 pane=""
 while [ "$waited" -lt "$ready_timeout" ]; do
   sleep "$poll_interval"
-  # `+ (poll_interval == 0)` guards against an infinite loop when
-  # AOE_CMD_POLL_INTERVAL=0 (used in tests to keep the suite fast): without
-  # it, a zero interval would never advance `waited` and this loop would
-  # never hit the timeout bound. No-op for the real default of 1.
   waited=$((waited + poll_interval + (poll_interval == 0)))
   pane=$(aoe session capture "$id" --lines 50 --strip-ansi 2>/dev/null) || pane=""
   case "$pane" in
-    *"$ready_marker"*|*"$omp_ready_marker"*) ready=1; break ;;
+    *"⬢"*) ready=1; break ;;
   esac
 done
 
 if [ "$ready" -ne 1 ]; then
-  echo "aoe-cmd: TUI never became ready (no '$ready_marker' or omp marker '$omp_ready_marker' after ${ready_timeout}s) for session '$title' (id $id); not sending" >&2
+  echo "aoe-cmd: OMP TUI never became ready after ${ready_timeout}s for session '$title' (id $id); not sending" >&2
   printf '%s\n' "$pane" >&2
   exit 1
 fi
 
-if ! send_output=$(aoe send "$id" "$message " 2>&1); then
+if ! send_output=$(aoe send "$id" "$message" 2>&1); then
   echo "aoe-cmd: 'aoe send' failed for session '$title' (id $id)" >&2
   printf '%s\n' "$send_output" >&2
   exit 1

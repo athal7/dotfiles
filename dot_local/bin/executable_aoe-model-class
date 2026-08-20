@@ -1,0 +1,47 @@
+#!/bin/sh
+PATH="/opt/homebrew/bin:$PATH"; export PATH
+
+main() {
+  root=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+  cd "$root" || return 0
+
+  remote=$(git remote get-url origin 2>/dev/null) || return 0
+  owner=$(printf '%s\n' "$remote" | sed -E 's#.*[:/]([^/]+)/[^/]+(\.git)?$#\1#')
+  routing=$(chezmoi data --format=json 2>/dev/null | jq -cer --arg owner "$owner" '.orgs[$owner].model_class // empty' 2>/dev/null) || return 0
+  [ -n "$routing" ] && [ "$routing" != "null" ] || return 0
+
+  default_model=$(printf '%s' "$routing" | jq -er '.default' 2>/dev/null) || return 0
+  case "$default_model" in mlx/*) ;; *) return 0 ;; esac
+
+  keep_recent_tokens=$(chezmoi data --format=json 2>/dev/null | jq -er '.local_model.compaction_keep_recent_tokens // 8000 | if type == "number" and . >= 1 then floor else error("invalid compaction_keep_recent_tokens") end' 2>/dev/null) || return 0
+
+  mkdir -p .omp || return 0
+  omp_config=.omp/config.yml
+  omp_tmp=$(mktemp "${omp_config}.XXXXXX") || return 0
+  jq -n --argjson routing "$routing" --argjson keep "$keep_recent_tokens" '{compaction: {keepRecentTokens: $keep}, modelRoles: $routing}' | yq -p=json -o=yaml '.' > "$omp_tmp" || { rm -f "$omp_tmp"; return 0; }
+  if [ -f "$omp_config" ]; then
+    yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' "$omp_config" "$omp_tmp" > "${omp_tmp}.merged" || { rm -f "$omp_tmp" "${omp_tmp}.merged"; return 0; }
+    mv "${omp_tmp}.merged" "$omp_tmp" || { rm -f "$omp_tmp"; return 0; }
+  fi
+  mv "$omp_tmp" "$omp_config" || return 0
+
+  disabled='["figma-desktop","firefox-devtools","github","linear","runlayer-atlassian","runlayer-gcalendar","runlayer-gdocs","runlayer-gdrive","runlayer-gmail","runlayer-gsheets","runlayer-self","runlayer-slack","runlayer-zoom"]'
+  global_mcp="$HOME/.omp/agent/mcp.json"
+  project_mcp=.omp/mcp.json
+  if [ -f "$global_mcp" ]; then
+    if jq -n --argjson names "$disabled" --slurpfile global "$global_mcp" '
+      reduce $names[] as $name
+        ({mcpServers: {}};
+          if $global[0].mcpServers[$name] then
+            .mcpServers[$name] = ($global[0].mcpServers[$name] + {enabled: false})
+          else . end)
+    ' > "${project_mcp}.tmp" 2>/dev/null; then
+      mv "${project_mcp}.tmp" "$project_mcp" || rm -f "${project_mcp}.tmp"
+    else
+      rm -f "${project_mcp}.tmp"
+    fi
+  fi
+}
+
+main
+exit 0

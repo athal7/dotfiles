@@ -60,20 +60,6 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
-  cleanup:
-    Label: com.$USER.cleanup
-    ProgramArguments:
-      - $HOME/.config/opencode/bin/opencode-cleanup
-      - --force
-    StartCalendarInterval:
-      Weekday: 0
-      Hour: 4
-      Minute: 0
-    StandardOutPath: $HOME/Library/Logs/cleanup.log
-    StandardErrorPath: $HOME/Library/Logs/cleanup.log
-    EnvironmentVariables:
-      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      HOME: $HOME
 
   family-scheduler:
     Label: com.$USER.family-scheduler
@@ -213,9 +199,9 @@ launchagents:
       - "1"
       - --prompt-concurrency
       - "1"
-      # Cap generation length to the same value advertised to
-      # omp/opencode via models.yaml's local_model.max_tokens, so the
-      # server's actual cap matches what clients are told they can request.
+      # Cap generation length to the same value advertised to OMP via
+      # models.yaml's local_model.max_tokens, so the server's actual cap
+      # matches what clients are told they can request.
       - --max-tokens
       - "{{ .local_model.max_tokens }}"
       # KV-cache bound (mlx-lm#883/#1666 mitigation): the wired-limit shim

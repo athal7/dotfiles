@@ -1,6 +1,6 @@
 ---
 name: aoe
-description: "Agent of Empires (aoe) — the session-orchestration CLI: create, dispatch to, and manage agent sessions (worktrees, aoe add/send/session attach/capture, scratch sessions). Governs the session lifecycle regardless of which tool (opencode or omp) runs inside it — for opencode's own session history, SQLite DB, or TUI internals, load the opencode skill instead."
+description: "Agent of Empires (aoe) — the session-orchestration CLI: create, dispatch to, and manage OMP sessions (worktrees, aoe add/send/session attach/capture, scratch sessions)."
 license: MIT
 ---
 
@@ -11,7 +11,6 @@ license: MIT
 - **Worktrees are mandatory for branch or parallel work.** Concurrent sessions in one directory clobber each other's checkout, stashes, and index. `--worktree <branch> --new-branch` (plus `--base-branch` to base it elsewhere).
 - **`<path>` is canonicalized, never resolved back to the main repo.** Point `aoe add` at a worktree and it silently creates a bogus project rooted there. Pass the exact registered path (`aoe project list`) plus `--worktree`. `--project`/`--repo` add *extra* repos to a multi-repo workspace — they don't select the primary target.
 - **`send` is fire-and-forget.** No wait verb. Check back with `aoe session capture <id>` or attach. One task per session — check `aoe list` before starting overlapping work.
-- **Slash commands need a trailing space** (opencode TUI only): a leading `/` opens the autocomplete dropdown, which eats the submitting Enter. `aoe send <id> "/audit "`.
 
 ## Troubleshooting
 

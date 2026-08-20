@@ -27,7 +27,6 @@ packages:
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
     - name: athal7/tap/kb
-    - name: athal7/tap/opencode-pilot
     - name: git-spice
     - name: jc
     - name: jq
@@ -78,14 +77,6 @@ packages:
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
-    - name: opencode
-      repo: anomalyco/opencode
-      target: .local/bin/opencode
-      asset: opencode-darwin-arm64.zip
-      type: archive-file
-      path: opencode
-      executable: true
-      refresh_period: 24h
 
     # Note: com.apple.provenance on Apple Silicon prevents chezmoi's atomic
     # rename from updating files inside this bundle. On version updates, run:
@@ -153,8 +144,6 @@ packages:
       version: latest
     - name: argocd
       version: latest
-    - name: npm:@tarquinen/opencode-dcp
-      version: "3.1.12"
     - name: npm:@oh-my-pi/pi-coding-agent
       version: latest
     - name: npm:@google/jules

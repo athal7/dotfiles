@@ -1,8 +1,6 @@
 # Allow favicon (overrides global gitignore)
 !favicon.svg
 
-# Allow repo-level opencode config
-!.opencode/opencode.json
 
 # Allow .sql files (skill query scripts)
 !*.sql
@@ -10,8 +8,6 @@
 # Allow .talismanrc (overrides global gitignore) — threshold config, not secrets
 !.talismanrc
 
-# opencode plugin lock file (generated, not committed)
-.opencode/package-lock.json
 
 # gws CLI download artifacts
 download.html
