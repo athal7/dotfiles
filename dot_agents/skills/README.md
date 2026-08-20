@@ -12,8 +12,8 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 
 | Skill | Fires when |
 |---|---|
-| **implement** | Starting or resuming a change: issue → plan → build → review → ship |
-| **merge-request** | Addressing review feedback or conflicts on a request you own |
+| **implement** | Optional end-to-end workflow when explicitly requested |
+| **merge-request** | Optional own-request review workflow when explicitly requested |
 | **commit** | About to stage and commit |
 | **push** | About to push; owns the CI and automated-review watch |
 | **architecture** | A multi-option design decision appears |
@@ -46,8 +46,8 @@ Not everything is a skill:
 
 | Command | What |
 |---|---|
-| `/implement` | Loads the implement skill |
-| `/mr` | Loads the merge-request skill |
+| `/implement` | Optional shortcut to load the implement skill |
+| `/mr` | Optional shortcut to load the merge-request skill |
 | `/qa` | Functional QA on the running app; relays the verdict |
 | `/learn` | Capture discoveries into AGENTS.md or a skill |
 | `/rename` | Retitle the session from what it turned out to be about |

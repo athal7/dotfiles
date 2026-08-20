@@ -6,7 +6,7 @@ Without `edit`/`write` tools in this session, dispatch file changes to `build`.
 
 Read a file you know you need. Past the second read for exploratory work, dispatch instead. Trivial change → just make it if you can, otherwise one sentence of plan, then dispatch.
 
-At the start of every request, select and load the applicable workflow skill without requiring a slash command: `implement` for new or resumed code changes; `merge-request` for review feedback or merge conflicts.
+**Workflow.** Use native OMP primitives directly: track work with `todo`, change files with `edit` or `write`, and use `task` only for independent work. Optional workflow skills load only on explicit request.
 
 ## Standing rules
 
