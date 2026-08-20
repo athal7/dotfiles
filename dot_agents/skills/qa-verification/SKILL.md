@@ -10,7 +10,7 @@ Drive the running app with the native `browser` tool; open the app, observe the 
 
 1. **Find the app.** Port via `source .envrc && echo $PORT`, else 3000. Confirm the server responds before any browser action. Not running → report and stop, don't guess.
 2. **Identify affected flows** from the dispatch. Check the project AGENTS.md for selectors and credentials.
-3. **Check for a linked Figma design** — PR description first (`gh pr view --json body -q .body`) for a `figma.com/design|file` URL, then the dispatch focus. Found one → visual fidelity becomes an acceptance dimension: pull the reference frame via the `figma-desktop` MCP and compare layout, spacing, and copy against the live UI. Save the export alongside your screenshots as `00X-figma-reference.png`.
+3. **Check for a linked Figma design** — PR description first (`gh pr view --json body -q .body`) for a `figma.com/design|file` URL, then the dispatch focus. Found one → visual fidelity becomes an acceptance dimension: open the reference with the native `browser` tool when accessible and compare layout, spacing, and copy against the live UI. If it is unavailable, record that limitation; do not use an MCP server.
 4. **Capture evidence as you go** (below).
 5. **Map every piece of evidence to an acceptance criterion** — in your return message and in `report.md`. Design findings map to the AC of the flow they verify.
 6. **Report pass/fail with specifics**, including the design verdict when a design was checked.
@@ -22,7 +22,7 @@ SESSION_DIR="$HOME/.local/share/qa/$(basename "$PWD")/qa-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$SESSION_DIR"
 ```
 
-After **every** browser action: scroll into view (`evaluate_script` with `(el) => el.scrollIntoView({block:'center'})`, or `() => window.scrollTo(0,0)` for a page shot), screenshot to `$SESSION_DIR/NNN-slug.png` (sequential, `001-`, `002-`, …), capture the URL via `() => location.href`. Record console errors when they appear.
+After **every** browser action: scroll into view with `tab.scrollIntoView()` or `tab.evaluate(() => window.scrollTo(0, 0))`, screenshot with `tab.screenshot()`, and capture the URL with `tab.evaluate(() => location.href)`. Record console errors when they appear.
 
 Write `$SESSION_DIR/report.html` — a self-contained local page, one section per step: screenshot, short title, one-line description, the page URL. Close it out and `open` it when testing is done.
 
