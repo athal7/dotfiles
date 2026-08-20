@@ -202,30 +202,6 @@
       ]
     },
     {
-      "name": "figma-desktop",
-      "exclude_for_models": [
-        "mlx/default_model"
-      ],
-      "transport": "remote",
-      "url": "http://127.0.0.1:3845/mcp",
-      "tools": [
-        "add_code_connect_map",
-        "get_code_connect_map",
-        "get_code_connect_suggestions",
-        "get_design_context",
-        "get_figjam",
-        "get_metadata",
-        "get_motion_context",
-        "get_screenshot",
-        "get_shader_effect",
-        "get_shader_fill",
-        "get_variable_defs",
-        "list_shader_effects",
-        "list_shader_fills",
-        "send_code_connect_mappings"
-      ]
-    },
-    {
       "name": "runlayer-zoom",
       "exclude_for_models": [
         "mlx/default_model"
