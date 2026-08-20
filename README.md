@@ -13,12 +13,11 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [MCP registry](.chezmoidata/mcp.yaml) — server transport, command, URL, header, model-exclusion, and tool inventory data rendered into OMP configuration.
   - [OMP lead prompt](dot_omp/private_agent/APPEND_SYSTEM.md) — direct OMP system prompt.
   - [Agent skills](dot_agents/skills/) — authored skills are managed directly by chezmoi; externally installed skills own distinct sibling directories under `~/.agents/skills/`.
-  - [Agent of Empires config](dot_agent-of-empires/config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`.
+  - [Agent of Empires config](dot_agent-of-empires/modify_config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`.
   - [Freebuff](https://freebuff.com/) — installed through mise and available to Agent of Empires as the opt-in `freebuff` terminal agent (`aoe add --tool freebuff`).
   - Per-org model routing — private defaults and organization overrides live only in gitignored `.chezmoidata/local.yaml`.
   - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the locally-hosted mlx model (endpoint, repo, context window, server generation cap, and lower agent request cap). It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl) and the `mlx-server` LaunchAgent.
   - [OMP model config](dot_omp/private_agent/models.yml.tmpl) — points OMP's local `mlx` provider at the shared `mlx_lm.server` endpoint.
-  - [Plan-mode skip overlay](dot_omp/private_agent/no-plan.yml) — OMP `--config` overlay disabling `plan.defaultOnStartup` for one launch; [`aoe-cmd -P`](dot_local/bin/executable_aoe-cmd) applies it when dispatching a scheduled session that must actually write/edit.
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)
   - [Attention triage dashboard](dot_config/attention/config.json.tmpl) — config for the [`attention`](https://github.com/athal7/attention) CLI (installed via `athal7/tap/attention`), a prioritized calendar/reminders/GitHub/Linear triage dashboard with an fzf-driven hotkey UI; it supplies the calendar/reminder-list names flagged `attention_check: true`, codeDir, a Linear token, a Lumen shortcut, and an AOE-session action on every item type. Starting an AOE session prompts for a customizable session message; calendar and reminder sessions use AOE scratch projects.

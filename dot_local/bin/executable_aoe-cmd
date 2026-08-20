@@ -2,7 +2,7 @@
 set -eu
 
 usage() {
-  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-P] [-t omp] MESSAGE..." >&2
+  echo "Usage: aoe-cmd [-d DIR | -s] -n NAME [-w WORKTREE_BRANCH] [-b] [-t omp] MESSAGE..." >&2
 }
 
 dir=""
@@ -10,16 +10,14 @@ scratch=0
 name=""
 worktree=""
 new_branch=0
-no_plan=0
 
-while getopts "d:sn:w:bPt:" opt; do
+while getopts "d:sn:w:bt:" opt; do
   case "$opt" in
     d) dir="$OPTARG" ;;
     s) scratch=1 ;;
     n) name="$OPTARG" ;;
     w) worktree="$OPTARG" ;;
     b) new_branch=1 ;;
-    P) no_plan=1 ;;
     t)
       if [ "$OPTARG" != "omp" ]; then
         echo "aoe-cmd: only the OMP tool is supported" >&2
@@ -51,14 +49,6 @@ fi
 if [ "$new_branch" -eq 1 ]; then
   set -- "$@" --new-branch
 fi
-if [ "$no_plan" -eq 1 ]; then
-  omp_model=$(yq -r '.modelRoles.default // ""' "$HOME/.omp/agent/config.yml" 2>/dev/null) || omp_model=""
-  if [ -n "$omp_model" ] && [ "$omp_model" != "null" ]; then
-    set -- "$@" --extra-args "--config $HOME/.omp/agent/no-plan.yml --model $omp_model"
-  else
-    set -- "$@" --extra-args "--config $HOME/.omp/agent/no-plan.yml"
-  fi
-fi
 
 if ! add_output=$(aoe add "$@"); then
   echo "aoe-cmd: 'aoe add' failed for session '$title'" >&2
@@ -72,6 +62,7 @@ if [ -z "$id" ]; then
   printf '%s\n' "$add_output" >&2
   exit 1
 fi
+sleep 2
 
 printf '%s\n' "$add_output"
 

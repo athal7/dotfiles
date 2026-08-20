@@ -15,8 +15,7 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 STUB_BIN="$WORK/bin"
 TEST_HOME="$WORK/home"
 AOE_LOG="$WORK/aoe.log"
-mkdir -p "$STUB_BIN" "$TEST_HOME/.omp/agent"
-printf 'modelRoles:\n  default: test-model\n' > "$TEST_HOME/.omp/agent/config.yml"
+mkdir -p "$STUB_BIN"
 
 cat > "$STUB_BIN/aoe" <<'STUB'
 #!/bin/sh
@@ -79,6 +78,10 @@ case "$add_line" in
   *$'add\t/tmp/proj\t--title\taudit-'*'--tool	omp'*) ok "adds an OMP session" ;;
   *) bad "adds an OMP session (got: $add_line)" ;;
 esac
+case "$add_line" in
+  *$'\t--extra-args\t'*|*$'\t--model\t'*) bad "does not inject model arguments (got: $add_line)" ;;
+  *) ok "does not inject model arguments" ;;
+esac
 check "sends the original message" "$(grep '^send' "$AOE_LOG")" $'send\t24777d8e72f2416c\t/audit'
 
 echo "== worktree and scratch =="
@@ -96,13 +99,9 @@ case "$(grep '^add' "$AOE_LOG")" in
   *) bad "adds an OMP scratch session" ;;
 esac
 
-echo "== plan skip =="
-AOE_STUB_ADD_OUTPUT="$canonical_add_output" run_aoe_cmd -d /tmp/proj -n audit -P -t omp /audit >/dev/null 2>&1 && status=0 || status=$?
-check "explicit OMP plan-skip dispatch exits zero" "$status" 0
-case "$(grep '^add' "$AOE_LOG")" in
-  *$'--tool	omp	--extra-args	--config '"$TEST_HOME"$'/.omp/agent/no-plan.yml --model test-model'*) ok "uses no-plan overlay and default model role" ;;
-  *) bad "uses no-plan overlay and default model role (got: $(grep '^add' "$AOE_LOG"))" ;;
-esac
+echo "== retired plan skip =="
+out="$(run_aoe_cmd -d /tmp/proj -n audit -P /audit 2>&1)" && status=0 || status=$?
+check "plan-skip flag exits non-zero" "$status" 1
 out="$(run_aoe_cmd -d /tmp/proj -n audit -t cursor /audit 2>&1)" && status=0 || status=$?
 check "non-OMP tool exits non-zero" "$status" 1
 

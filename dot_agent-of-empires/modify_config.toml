@@ -39,6 +39,7 @@ split_view = false
 
 
 [host_hooks]
+before_session = ["$HOME/.local/bin/aoe-model-class"]
 
 [logging]
 default_level = "info"
