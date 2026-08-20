@@ -17,12 +17,99 @@ packages:
     - name: autojump
     - name: bat
     - name: chezmoi
+      permissions:
+        - match: "chezmoi destroy*"
+          approval: ask
+        - match: "chezmoi upgrade*"
+          approval: ask
+        - match: "chezmoi forget*"
+          approval: ask
+        - match: "chezmoi-deploy*"
+          approval: ask
+        - match: "chezmoi apply*"
+          approval: ask
+        - match: "chezmoi purge*"
+          approval: ask
+        - match: "chezmoi init*"
+          approval: ask
+        - match: "chezmoi add*"
+          approval: ask
     - name: container
     - name: direnv
     - name: ffmpeg
     - name: fzf
     - name: git
+      permissions:
+        - match: "git -C * reset --hard*"
+          approval: ask
+        - match: "git worktree remove*"
+          approval: ask
+        - match: "git reset --merge*"
+          approval: ask
+        - match: "git checkout * -- *"
+          approval: ask
+        - match: "git checkout -- *"
+          approval: ask
+        - match: "git reset --hard*"
+          approval: ask
+        - match: "git -C * clean -f*"
+          approval: ask
+        - match: "git stash clear*"
+          approval: ask
+        - match: "git stash drop*"
+          approval: ask
+        - match: "git -C * commit*"
+          approval: ask
+        - match: "git branch -D*"
+          approval: ask
+        - match: "git branch -d*"
+          approval: ask
+        - match: "git clean -d*"
+          approval: ask
+        - match: "git clean -f*"
+          approval: ask
+        - match: "git restore *"
+          approval: ask
+        - match: "git -C * push*"
+          approval: ask
+        - match: "git commit*"
+          approval: ask
+        - match: "git push*"
+          approval: ask
     - name: gh
+      permissions:
+        - match: "gh search commits*"
+          approval: allow
+        - match: "gh search issues*"
+          approval: allow
+        - match: "gh release list*"
+          approval: allow
+        - match: "gh release view*"
+          approval: allow
+        - match: "gh search repos*"
+          approval: allow
+        - match: "gh search code*"
+          approval: allow
+        - match: "gh issue list*"
+          approval: allow
+        - match: "gh issue view*"
+          approval: allow
+        - match: "gh label list*"
+          approval: allow
+        - match: "gh search prs*"
+          approval: allow
+        - match: "gh repo list*"
+          approval: allow
+        - match: "gh repo view*"
+          approval: allow
+        - match: "gh pr list*"
+          approval: allow
+        - match: "gh pr view*"
+          approval: allow
+        - match: "gh api *"
+          approval: ask
+        - match: "gh *"
+          approval: ask
     - name: athal7/tap/attention
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
@@ -46,8 +133,38 @@ packages:
     - name: watch
     - name: worktrunk
     - name: xh
+      permissions:
+        - match: "xh-es-search '*'"
+          approval: allow
+        - match: "xh *mutation*"
+          approval: ask
+        - match: "xh *DELETE *"
+          approval: ask
+        - match: "xh *PATCH *"
+          approval: ask
+        - match: "xh *HEAD *"
+          approval: allow
+        - match: "xh *POST *"
+          approval: ask
+        - match: "xh *query*"
+          approval: allow
+        - match: "xh *GET *"
+          approval: allow
+        - match: "xh *PUT *"
+          approval: ask
+        - match: "xh *"
+          approval: ask
     - name: yq
     - name: steipete/tap/remindctl
+      permissions:
+        - match: "remindctl status*"
+          approval: allow
+        - match: "remindctl list*"
+          approval: allow
+        - match: "remindctl show*"
+          approval: allow
+        - match: "remindctl *"
+          approval: ask
     - name: typescript-language-server
     - name: pyright
     - name: gopls
