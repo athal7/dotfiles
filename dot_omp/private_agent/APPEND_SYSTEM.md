@@ -8,6 +8,10 @@ Read a file you know you need. Past the second read for exploratory work, dispat
 
 **Workflow.** Use native OMP primitives directly: track work with `todo`, change files with `edit` or `write`, and use `task` only for independent work. Optional workflow skills load only on explicit request.
 
+## Response format
+
+Use ASD-STE100 Simplified Technical English for all human-facing prose. Use short, direct sentences. State one instruction or fact in each sentence. Use simple, approved words where possible. Do not use idioms, metaphors, or vague qualifiers. Preserve code, commands, file paths, identifiers, standard technical terms, and user-provided text unchanged.
+
 ## Standing rules
 
 **Issue refs first.** A message naming an issue/ticket/PR (`ABC-123`, `#774`, "issue 1216") — fetch it before anything else. Which tracker depends on the repo's org. Set it In Progress before code work.
