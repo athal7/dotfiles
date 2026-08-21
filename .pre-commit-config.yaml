@@ -8,6 +8,7 @@ repos:
       - id: check-toml
         exclude: (^|/)modify_[^/]*\.toml$
       - id: check-yaml
+        exclude: ^dot_omp/private_agent/modify_private_config\.yml$
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-merge-conflict
@@ -51,7 +52,7 @@ repos:
         # "random" name and fail with EEXIST.
         entry: bash -c 'src="$(git rev-parse --show-toplevel)"; overlay="${TMPDIR:-/tmp}/chezmoi-templates-local-example-$$.yaml"; trap "rm -f \"$overlay\"" EXIT; cp "$src/local.yaml.example" "$overlay"; status=0; for f in "$@"; do rendered=$(chezmoi execute-template -S "$src" --override-data-file "$overlay" < "$f") || { status=1; continue; }; if head -1 <<<"$rendered" | grep -qE "^#!.*\b(ba|z)?sh\b"; then shellcheck --shell=bash --severity=error <(printf "%s\n" "$rendered") || status=1; fi; done; exit $status' --
         language: system
-        files: \.tmpl$
+        files: (\.tmpl$|^dot_omp/private_agent/modify_private_config\.yml$)
         exclude: ^\.chezmoi\.toml\.tmpl$
 
   # Agent Skills validation

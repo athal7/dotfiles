@@ -1,0 +1,10 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $defaults := fromYaml (includeTemplate "omp-agent-defaults.yml.tmpl" .) -}}
+{{- $live := dict -}}
+{{- if and (hasKey .chezmoi "stdin") .chezmoi.stdin -}}
+{{- $live = fromYaml .chezmoi.stdin -}}
+{{- end -}}
+{{- $config := mergeOverwrite (deepCopy $defaults) $live -}}
+{{- $_ := setValueAtPath "bash" (index $defaults "bash") $config -}}
+{{- $_ := setValueAtPath "tools.approval" (index (index $defaults "tools") "approval") $config -}}
+{{- $config | toYaml -}}

@@ -9,7 +9,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Editor](dot_config/nvim/)
   - [Git](dot_config/git/)
 - **AI tooling**
-  - [OMP configuration](dot_omp/private_agent/config.yml.tmpl) — native OMP controls and ordered Bash approval patterns.
+  - [OMP configuration](dot_omp/private_agent/private_modify_config.yml.tmpl) — ChezMoi enforces OMP tool and Bash approval policy while OMP retains its runtime settings.
   - [MCP registry](.chezmoidata/mcp.yaml) — server transport, command, URL, header, model-exclusion, and tool inventory data rendered into OMP configuration.
   - [OMP lead prompt](dot_omp/private_agent/APPEND_SYSTEM.md) — direct OMP system prompt.
   - [Agent skills](dot_agents/skills/) — authored skills are managed directly by chezmoi; externally installed skills own distinct sibling directories under `~/.agents/skills/`.
