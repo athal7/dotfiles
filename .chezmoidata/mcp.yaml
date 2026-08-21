@@ -25,6 +25,13 @@
       ]
     },
     {
+      "name": "1password",
+      "transport": "local",
+      "command": [
+        "/Applications/1Password.app/Contents/MacOS/onepassword-mcp"
+      ]
+    },
+    {
       "name": "github",
       "exclude_for_models": [
         "mlx/default_model"
