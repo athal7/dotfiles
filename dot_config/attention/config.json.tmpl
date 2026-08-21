@@ -23,9 +23,21 @@
 {{- end -}}
 {{- end -}}
 {{- end -}}
+{{- $githubuser := output "gh" "api" "user" "--jq" ".login" | trim -}}
 {{- $config := dict
       "codeDir" .codeDir
       "plugins" (list "calendar" "reminders" "github" "linear")
+      "dashboard" (dict "groups" (list
+        (dict "name" "Time sensitive" "match" (dict "statuses" (list "NOW" "SOON" "OVERDUE" "DUE TODAY")))
+        (dict "name" "Personal GitHub" "match" (dict
+          "plugins" (list "github")
+          "contextPrefixes" (list (printf "%s/" $githubuser))))
+        (dict "name" "Work reviews" "match" (dict
+          "plugins" (list "github")
+          "statuses" (list "REVIEW REQUESTED" "NEEDS ATTENTION")))
+        (dict "name" "Work queue" "match" (dict "plugins" (list "github" "linear")))
+        (dict "name" "Schedule and reminders" "match" (dict "plugins" (list "calendar" "reminders")))
+        (dict "name" "Other" "fallback" true)))
       "calendar" (dict "names" $calNames "actions" (list
         (dict "key" "alt-s" "label" "session" "background" true
               "command" (list "aoe-cmd" "-s" "-n" "{title}" "{input}")
