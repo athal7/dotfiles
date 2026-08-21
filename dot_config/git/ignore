@@ -45,6 +45,7 @@ Thumbs.db
 .talismanrc
 .scratch/
 .omp/config.yml
+.omp/mcp.json
 .screencast/
 favicon.svg
 
