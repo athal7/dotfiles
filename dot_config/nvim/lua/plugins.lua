@@ -35,6 +35,13 @@ require("lazy").setup({
       { "<leader>fh", "<cmd>Telescope help_tags<CR>", desc = "Help tags" },
       { "<leader>fr", "<cmd>Telescope oldfiles<CR>", desc = "Recent files" },
     },
+    config = function()
+      require("telescope").setup({
+        defaults = {
+          hide_gitignore = false,
+        },
+      })
+    end,
   },
 
   -- Syntax highlighting
