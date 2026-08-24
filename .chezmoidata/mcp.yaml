@@ -1,6 +1,4 @@
-{ ? https://github.com/0din-ai/0din-JEF/actions/runs/32765590937
-    "mcp_servers"
-  : [
+{ "mcp_servers": [
       {
         "name": "context7",
         "transport": "remote",
