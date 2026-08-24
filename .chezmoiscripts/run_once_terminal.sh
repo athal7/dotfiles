@@ -7,7 +7,18 @@
 #    against com.apple.Terminal.plist, since it's a plain preference bit and
 #    doesn't require Terminal.app to be running.
 #
-# 2. Background color pinned to pure black (#000000). Terminal.app has a
+# 2. Nerd Font enforced. Starship's prompt icons and nvim-web-devicons'
+#    file-tree glyphs both render through Terminal's own font and need a
+#    Nerd Font glyph set to display correctly — neither dependent is
+#    Neovim-side config, both are downstream of whatever font Terminal
+#    itself uses. If a profile's font isn't a Monaspace variant, it's set to
+#    the default MonaspaceNeonNF-Regular; if it's already a plain
+#    (unpatched) Monaspace variant (e.g. MonaspaceNeon-Regular), it's
+#    upgraded in place to the matching NF-patched style. Non-destructive:
+#    already-NF fonts are left untouched. Implemented via osascript for the
+#    same reason as point 3 below.
+#
+# 3. Background color pinned to pure black (#000000). Terminal.app has a
 #    rendering floor on unpainted/fallback screen cells (scrollbar gutters,
 #    layout rounding at pane edges) that blends toward a lighter shade no
 #    matter the configured background color — the floor renders around
@@ -21,17 +32,6 @@
 #    settings API rather than a raw plist edit, since com.apple.Terminal.plist
 #    is cfprefsd-managed and a direct write risks being silently clobbered;
 #    this requires Terminal.app to actually be running.
-#
-# 3. Nerd-Font-patch any Monaspace font a profile is set to. Terminal's font
-#    is user-configured to a plain Monaspace variant (e.g.
-#    MonaspaceNeon-Regular), but Starship's prompt icons and nvim-web-devicons'
-#    file-tree glyphs both render through Terminal's own font and need the
-#    Nerd-Font-patched glyph set to display correctly — neither dependent is
-#    Neovim-side config, both are downstream of whatever font Terminal itself
-#    uses. Non-destructive: only rewrites font names that already match the
-#    Monaspace family and aren't already NF-patched, so unrelated fonts
-#    (AndaleMono, Monaco, Courier, ...) and already-patched fonts are left
-#    alone. Implemented via osascript for the same reason as point 2 above.
 set -euo pipefail
 
 PLIST="$HOME/Library/Preferences/com.apple.Terminal.plist"
@@ -77,16 +77,23 @@ set_nerd_font() {
     return 0
   }
 
-  # Only rewrite fonts that are plain (unpatched) Monaspace variants — leave
-  # already-NF fonts and unrelated fonts (AndaleMono, Monaco, Courier, ...)
-  # untouched.
-  if [[ ! "$font" =~ ^Monaspace([A-Za-z]+)-(.+)$ ]] || [[ "$font" == *NF* ]]; then
+  # Leave already-NF-patched fonts untouched.
+  if [[ "$font" == *NF* ]]; then
     return 0
   fi
 
-  local variant="${BASH_REMATCH[1]}"
-  local style="${BASH_REMATCH[2]}"
-  local new_font="Monaspace${variant}NF-${style}"
+  local new_font
+  if [[ "$font" =~ ^Monaspace([A-Za-z]+)-(.+)$ ]]; then
+    # Plain (unpatched) Monaspace variant — upgrade in place to the
+    # matching NF-patched style.
+    new_font="Monaspace${BASH_REMATCH[1]}NF-${BASH_REMATCH[2]}"
+  else
+    # Non-Monaspace font (macOS default Menlo, or an unrelated font like
+    # AndaleMono, Monaco, Courier, ...) — fall back to the default Nerd
+    # Font so glyph-dependent tooling (Starship, nvim-web-devicons, tmux
+    # powerline) still renders.
+    new_font="MonaspaceNeonNF-Regular"
+  fi
 
   if osascript -e "tell application \"Terminal\" to set font name of settings set \"$profile\" to \"$new_font\"" >/dev/null 2>&1; then
     echo "terminal-nerd-font: set Terminal.app profile '$profile' font to '$new_font'"
