@@ -45,11 +45,11 @@
       "reminders" (dict "lists" $remLists "actions" (list
         (dict "key" "alt-s" "label" "session" "background" true
               "command" (list "aoe-cmd" "-s" "-n" "{title}" "{input}")
-              "input" (dict "prompt" "Session message" "default" "Help me complete reminder {title}"))))
+              "input" (dict "prompt" "Session message" "default" "Help me do the work to complete reminder {title}"))))
       "github" (dict "actions" (list
         (dict "key" "alt-s" "label" "session" "background" true
               "command" (list "aoe-cmd" "-d" "{repo_path}" "-n" "{slug}" "-b" "-w" "{slug}" "{input}")
-              "input" (dict "prompt" "Session message" "default" "Work on issue {id} in this repo"))
+              "input" (dict "prompt" "Session message" "default" "Work on Github issue or review pr {id} in this repo"))
         (dict "key" "alt-l" "label" "lumen"
               "command" (list "lumen" "diff" "{url}"))))
       "linear" (dict
