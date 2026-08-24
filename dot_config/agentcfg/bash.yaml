@@ -1,4 +1,0 @@
-bash:
-  profiles:
-    global:
-      base: allow
