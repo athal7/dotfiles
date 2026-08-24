@@ -1,0 +1,43 @@
+workflow:
+  steps:
+    - name: planner
+      description: Read-only analysis and design agent for structured recommendations
+      role: delegate
+      class: plan
+      targets: [omp]
+      prompt:
+        file: prompts/plan.md
+      permissions:
+        task: deny
+        edit: deny
+        write: deny
+        skill: allow
+        bash: deny
+    - name: build
+      description: Scoped implementation agent that returns a verified working change
+      role: delegate
+      class: default
+      targets: [omp]
+      prompt:
+        file: prompts/build.md
+      permissions:
+        task: deny
+        edit: allow
+        write: allow
+        skill: allow
+        bash: allow
+    - name: scout
+      description: Fast read-only external research agent
+      role: delegate
+      class: smol
+      targets: [omp]
+      prompt:
+        file: prompts/scout.md
+      mcp:
+        - server: context7
+      permissions:
+        task: deny
+        edit: deny
+        write: deny
+        skill: allow
+        bash: deny

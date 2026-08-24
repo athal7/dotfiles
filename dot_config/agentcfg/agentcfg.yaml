@@ -1,0 +1,9 @@
+version: 1
+imports:
+  - models.yaml
+  - bash.yaml
+  - mcp.yaml
+  - workflow.yaml
+harnesses:
+  omp:
+    agents_dir: ~/.omp/agent/agents

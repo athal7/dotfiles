@@ -1,0 +1,8 @@
+mcp_servers:
+  - name: context7
+    transport: remote
+    url: https://mcp.context7.com/mcp
+    targets: [omp]
+    tools:
+      - query-docs
+      - resolve-library-id

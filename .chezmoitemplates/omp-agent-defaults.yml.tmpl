@@ -258,9 +258,11 @@ bash:
 {{ end }}
 {{ end }}
 defaultThinkingLevel: auto
+modelRoleStorage: project
 modelRoles:
-  default: openai-codex/gpt-5.6-sol
-  plan: openai-codex/gpt-5.6-terra
+{{- range $role := list "default" "plan" "slow" "smol" }}
+  {{ $role }}: {{ index $.model_class $role }}
+{{- end }}
 symbolPreset: unicode
 setupVersion: 2
 dev:
@@ -525,6 +527,7 @@ retry:
       - anthropic/claude-sonnet-5
     mlx/default_model: []
 task:
+  agentModelOverrides: {}
   disabledAgents: []
 plan:
   defaultOnStartup: false
