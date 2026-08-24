@@ -16,11 +16,15 @@ launchagents:
   audit:
     Label: com.$USER.audit
     ProgramArguments:
-      - $HOME/.local/bin/aoe-cmd
-      - -d
+      - aoe
+      - add
       - $HOME/code/dotfiles
-      - -n
+      - --title
       - audit
+      - --tool
+      - omp
+      - --launch
+      - --extra-args
       - /audit
     StartCalendarInterval:
       Day: 1
@@ -80,10 +84,15 @@ launchagents:
   fix-prod-errors:
     Label: com.$USER.fix-prod-errors
     ProgramArguments:
-      - $HOME/.local/bin/aoe-cmd
-      - -s
-      - -n
+      - aoe
+      - add
+      - --scratch
+      - --title
       - fix-prod-errors
+      - --tool
+      - omp
+      - --launch
+      - --extra-args
       - /fix-prod-errors
     # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
     # by then, so each run simply covers that same day's errors.
@@ -137,10 +146,15 @@ launchagents:
   kb-enrich:
     Label: com.$USER.kb-enrich
     ProgramArguments:
-      - $HOME/.local/bin/aoe-cmd
-      - -s
-      - -n
+      - aoe
+      - add
+      - --scratch
+      - --title
       - kb-enrich
+      - --tool
+      - omp
+      - --launch
+      - --extra-args
       - /kb-enrich
     # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
     # by then, so each run simply enriches that same day's activity.

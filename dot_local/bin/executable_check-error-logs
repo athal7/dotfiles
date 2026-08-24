@@ -1,17 +1,16 @@
 #!/bin/sh
 # check-error-logs — daily scan of LaunchAgent error logs
-# When any services have new errors, dispatches an OMP session through aoe-cmd
-# to triage and self-heal them by running `/fix-launchagent-errors` in the
-# dotfiles repo. Dispatch-only: no reminder is filed.
+# When any services have new errors, launch an OMP session through aoe and
+# dispatch `/fix-launchagent-errors` in the dotfiles repo. Dispatch-only: no
+# reminder is filed.
 #
 # State file tracks byte offsets per log file so only new content is read.
 # First run establishes a baseline and exits silently.
 #
 # Offset invariant: a log's byte offset is advanced only after its new errors
-# have been handed off. If the dispatch does not happen (the aoe-cmd dispatch
-# fails), offsets for logs that contributed errors are NOT advanced, so the
-# next run retries them and no error is silently lost. Logs with no new
-# errors always advance normally.
+# have been handed off. If the upstream aoe launch or send fails, offsets for
+# logs that contributed errors are NOT advanced, so the next run retries them
+# and no error is silently lost. Logs with no new errors always advance normally.
 
 LOG_DIR="$HOME/Library/Logs"
 STATE_FILE="$LOG_DIR/.check-error-logs-state"
@@ -218,7 +217,9 @@ Services with new errors: $service_list
 
 $context"
 
-  if aoe-cmd -d "$HOME/code/dotfiles" -n fix-launchagent-errors "$prompt" >/dev/null 2>&1; then
+  dispatch_title="fix-launchagent-errors-$(date +%Y%m%d-%H%M%S)"
+  if aoe add "$HOME/code/dotfiles" --title "$dispatch_title" --tool omp --launch >/dev/null 2>&1 \
+    && aoe send "$dispatch_title" "$prompt" >/dev/null 2>&1; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched /fix-launchagent-errors for: $service_list"
     # Dispatch succeeded — now advance the deferred offsets for error logs.
     printf '%s\n' "$pending_offsets" | while IFS="$TAB" read -r size logfile; do
