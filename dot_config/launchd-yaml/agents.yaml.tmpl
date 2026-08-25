@@ -13,27 +13,19 @@
 # <true/>/<false/>. ProgramArguments are always strings, so numeric args
 # (timeouts, ports) must be quoted.
 launchagents:
-  audit:
-    Label: com.$USER.audit
+  aoe-serve:
+    Label: com.$USER.aoe-serve
     ProgramArguments:
       - aoe
-      - add
-      - $HOME/code/dotfiles
-      - --title
-      - audit
-      - --tool
-      - omp
-      - --launch
-      - --extra-args
-      - /audit
-    StartCalendarInterval:
-      Day: 1
-      Hour: 8
-      Minute: 0
-    StandardOutPath: $HOME/Library/Logs/audit.log
-    StandardErrorPath: $HOME/Library/Logs/audit.log
+      - serve
+    RunAtLoad: true
+    KeepAlive: true
+    ProcessType: Interactive
+    StandardOutPath: $HOME/Library/Logs/aoe-serve.log
+    StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
 
   babysitter-check:
     Label: com.$USER.babysitter-check
@@ -81,41 +73,6 @@ launchagents:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       PYTHONPATH: $HOME/.local/lib
 
-  fix-prod-errors:
-    Label: com.$USER.fix-prod-errors
-    ProgramArguments:
-      - aoe
-      - add
-      - --scratch
-      - --title
-      - fix-prod-errors
-      - --tool
-      - omp
-      - --launch
-      - --extra-args
-      - /fix-prod-errors
-    # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
-    # by then, so each run simply covers that same day's errors.
-    StartCalendarInterval:
-      - Weekday: 1
-        Hour: 20
-        Minute: 0
-      - Weekday: 2
-        Hour: 20
-        Minute: 0
-      - Weekday: 3
-        Hour: 20
-        Minute: 0
-      - Weekday: 4
-        Hour: 20
-        Minute: 0
-      - Weekday: 5
-        Hour: 20
-        Minute: 0
-    StandardOutPath: $HOME/Library/Logs/fix-prod-errors.log
-    StandardErrorPath: $HOME/Library/Logs/fix-prod-errors.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   git-worktree-sync:
     Label: com.$USER.git-worktree-sync
@@ -143,41 +100,6 @@ launchagents:
       HOME: $HOME
       UIX_STORAGE_PATH: $HOME/.homebridge
 
-  kb-enrich:
-    Label: com.$USER.kb-enrich
-    ProgramArguments:
-      - aoe
-      - add
-      - --scratch
-      - --title
-      - kb-enrich
-      - --tool
-      - omp
-      - --launch
-      - --extra-args
-      - /kb-enrich
-    # Weekday evenings only (1=Mon … 5=Fri) at 20:00. The workday is complete
-    # by then, so each run simply enriches that same day's activity.
-    StartCalendarInterval:
-      - Weekday: 1
-        Hour: 20
-        Minute: 0
-      - Weekday: 2
-        Hour: 20
-        Minute: 0
-      - Weekday: 3
-        Hour: 20
-        Minute: 0
-      - Weekday: 4
-        Hour: 20
-        Minute: 0
-      - Weekday: 5
-        Hour: 20
-        Minute: 0
-    StandardOutPath: $HOME/Library/Logs/kb-enrich.log
-    StandardErrorPath: $HOME/Library/Logs/kb-enrich.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
 {{- if hasKey . "local_model" }}
 

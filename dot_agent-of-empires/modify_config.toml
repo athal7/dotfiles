@@ -13,6 +13,12 @@ is currently live (.chezmoi.stdin, empty on a machine's first-ever apply) and
 re-injected verbatim — they never get baked into this template's literal
 content, so no live app-state value can ever land in git history.
 */ -}}
+{{- $auditProject := joinPath .chezmoi.homeDir "code" "dotfiles" -}}
+{{- $cronJobs := list
+    (dict "id" "kb-enrich" "name" "kb-enrich" "schedule" "0 20 * * 1-5" "agent_id" "omp" "project_paths" (list) "prompt" "/kb-enrich" "group" "Scheduled" "enabled" true)
+    (dict "id" "fix-prod-errors" "name" "fix-prod-errors" "schedule" "0 20 * * 1-5" "agent_id" "omp" "project_paths" (list) "prompt" "/fix-prod-errors" "group" "Scheduled" "enabled" true)
+    (dict "id" "audit" "name" "audit" "schedule" "0 8 * * 1" "agent_id" "omp" "project_paths" (list $auditProject) "prompt" "/audit" "group" "Scheduled" "enabled" true)
+-}}
 {{- $static := fromToml `[acp]
 allow_agent_install = false
 auto_stop_idle_secs = 0
@@ -60,6 +66,10 @@ capabilities = [
 ]
 granted_at = "2026-07-08T19:43:58.777548Z"
 manifest_hash = "sha256:96c3746a11e23975725ffd089e0f57430d97ca605399d3651bc23a402c092aa0"
+
+[plugins."agent-of-empires.cron"]
+enabled = true
+source = "gh:agent-of-empires/plugin-cron"
 
 [plugins."aoe.web"]
 enabled = true
@@ -165,11 +175,19 @@ init_submodules = true
 path_template = "../{repo-name}-worktrees/{branch}"
 workspace_path_template = "../{branch}-workspace-{session-id}"
 ` -}}
+{{- $cronConfig := dict "enabled" true "source" "gh:agent-of-empires/plugin-cron" "settings" (dict "jobs" $cronJobs) -}}
 {{- $liveAppState := dict -}}
 {{- if and (hasKey .chezmoi "stdin") .chezmoi.stdin -}}
 {{-   $live := fromToml .chezmoi.stdin -}}
 {{-   if hasKey $live "app_state" -}}
 {{-     $liveAppState = index $live "app_state" -}}
 {{-   end -}}
+{{-   if hasKey $live "plugins" -}}
+{{-     $livePlugins := index $live "plugins" -}}
+{{-     if hasKey $livePlugins "agent-of-empires.cron" -}}
+{{-       $cronConfig = mergeOverwrite (index $livePlugins "agent-of-empires.cron") $cronConfig -}}
+{{-     end -}}
+{{-   end -}}
 {{- end -}}
+{{- $_ := set (index $static "plugins") "agent-of-empires.cron" $cronConfig -}}
 {{- $static | setValueAtPath "app_state" $liveAppState | toToml -}}
