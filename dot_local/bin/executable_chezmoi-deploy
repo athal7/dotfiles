@@ -26,28 +26,28 @@ main() {
     exit 1
   fi
 
-  echo "chezmoi-deploy: fast-forward merging '$branch' into main…"
-  if ! git -C "$PRIMARY" merge --ff-only "$branch"; then
-    echo "chezmoi-deploy: '$branch' is not a fast-forward of main; attempting to rebase '$branch' onto main…"
-    if git -C "$PRIMARY" rebase main "$branch"; then
-      git -C "$PRIMARY" checkout main \
-        || { echo "chezmoi-deploy: failed to check out main after rebasing '$branch'" >&2; exit 1; }
-      git -C "$PRIMARY" merge --ff-only "$branch" \
-        || { echo "chezmoi-deploy: '$branch' is still not a fast-forward of main after rebase" >&2; exit 1; }
-    else
-      git -C "$PRIMARY" rebase --abort >/dev/null 2>&1
-      echo "chezmoi-deploy: rebase of '$branch' onto main failed (branch may be checked out in another worktree); falling back to merge…"
-      git -C "$PRIMARY" merge --no-ff "$branch" -m "Merge '$branch' into main" \
-        || { echo "chezmoi-deploy: merge of '$branch' into main also failed; resolve manually" >&2; exit 1; }
-    fi
+  if ! git -C "$PRIMARY" merge-base --is-ancestor main "$branch"; then
+    echo "chezmoi-deploy: '$branch' does not contain main; rebase it onto main in its worktree, then retry" >&2
+    exit 1
   fi
 
-  echo "chezmoi-deploy: applying to ~ (chezmoi apply --error-on-conflict)…"
-  chezmoi apply --error-on-conflict \
-    || { echo "chezmoi-deploy: chezmoi apply failed; primary main has the merge but ~ may be partially applied. A conflict means a managed target changed outside chezmoi since the last apply — run 'chezmoi diff' to inspect the drift, then update the source or resolve manually and retry." >&2; exit 1; }
+  echo "chezmoi-deploy: fast-forward merging '$branch' into main…"
+  git -C "$PRIMARY" merge --ff-only --quiet "$branch" \
+    || { echo "chezmoi-deploy: failed to fast-forward main with '$branch'" >&2; exit 1; }
+
+  echo "chezmoi-deploy: checking for chezmoi conflicts…"
+  if ! chezmoi apply --dry-run --error-on-conflict --no-tty; then
+    echo "chezmoi-deploy: managed targets conflict with the source; no changes were applied. Diff follows:" >&2
+    chezmoi diff || echo "chezmoi-deploy: unable to render chezmoi diff" >&2
+    exit 1
+  fi
+
+  echo "chezmoi-deploy: applying to ~…"
+  chezmoi apply --force --no-tty \
+    || { echo "chezmoi-deploy: chezmoi apply failed; primary main has the merge but ~ may be partially applied" >&2; exit 1; }
 
   echo "chezmoi-deploy: pushing main to origin…"
-  git -C "$PRIMARY" push origin main \
+  git -C "$PRIMARY" push --quiet origin main \
     || { echo "chezmoi-deploy: push failed (deploy succeeded locally); push main manually" >&2; exit 1; }
 
   echo "chezmoi-deploy: done."
