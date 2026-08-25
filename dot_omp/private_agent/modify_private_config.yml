@@ -8,6 +8,7 @@
 {{- $_ := setValueAtPath "bash" (index $defaults "bash") $config -}}
 {{- $_ := setValueAtPath "modelRoles" (index $defaults "modelRoles") $config -}}
 {{- $_ := setValueAtPath "modelRoleStorage" (index $defaults "modelRoleStorage") $config -}}
+{{- $_ := setValueAtPath "retry.fallbackChains" (index (index $defaults "retry") "fallbackChains") $config -}}
 {{- $_ := setValueAtPath "task.agentModelOverrides" (index (index $defaults "task") "agentModelOverrides") $config -}}
 {{- $_ := setValueAtPath "task.disabledAgents" (index (index $defaults "task") "disabledAgents") $config -}}
 {{- $_ := setValueAtPath "tools.approval" (index (index $defaults "tools") "approval") $config -}}
