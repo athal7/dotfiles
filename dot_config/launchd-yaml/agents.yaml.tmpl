@@ -18,8 +18,8 @@ launchagents:
     ProgramArguments:
       - aoe
       - serve
+      - --daemon
     RunAtLoad: true
-    KeepAlive: true
     ProcessType: Interactive
     StandardOutPath: $HOME/Library/Logs/aoe-serve.log
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
