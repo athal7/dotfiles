@@ -4,7 +4,7 @@ providers:
   {{ (index .local_model "provider") | default "mlx" }}:
     baseUrl: http://{{ (index .local_model "host") | default "127.0.0.1" }}:{{ (index .local_model "port") | default 8091 }}/v1
     api: {{ (index .local_model "api") | default "openai-completions" }}
-    apiKey: {{ (index .local_model "api_key") | default "mlx-local" }}
+    apiKey: {{ if hasKey .local_model "api_key" }}{{ .local_model.api_key }}{{ else if eq ((index .local_model "server") | default "mlx-lm") "optiq" }}sk-optiq-local{{ else }}mlx-local{{ end }}
     compat:
       supportsDeveloperRole: false
       supportsReasoningEffort: false
