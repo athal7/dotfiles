@@ -269,3 +269,5 @@ packages:
       version: latest
     - name: pipx:mlx-lm
       version: latest
+    - name: pipx:mlx-optiq
+      version: latest

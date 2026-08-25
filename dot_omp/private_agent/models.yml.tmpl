@@ -1,4 +1,5 @@
 {{- if hasKey . "local_model" -}}
+{{- $agentMaxTokens := (index .local_model "agent_max_tokens") | default (index .local_model "max_tokens") | default 4096 -}}
 providers:
   {{ (index .local_model "provider") | default "mlx" }}:
     baseUrl: http://{{ (index .local_model "host") | default "127.0.0.1" }}:{{ (index .local_model "port") | default 8091 }}/v1
@@ -13,7 +14,7 @@ providers:
         reasoning: true
         input: [text]
         contextWindow: {{ .local_model.context_window }}
-        maxTokens: {{ (index .local_model "agent_max_tokens") | default 4096 }}
+        maxTokens: {{ $agentMaxTokens }}
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
 {{- if hasKey .local_model "compaction_model" }}
         compactionModel: {{ .local_model.compaction_model }}

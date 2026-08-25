@@ -106,16 +106,15 @@ launchagents:
   mlx-server:
     Label: com.$USER.mlx-server
     ProgramArguments:
-      # Runs through a launcher shim (dot_local/bin/executable_mlx-lm-server-launcher.tmpl)
-      # instead of the bare mlx_lm.server mise shim: it monkeypatches
-      # mx.set_wired_limit() to a no-op before importing mlx_lm.server, to
-      # work around a recurring IOGPUFamily residency-race kernel panic
-      # (IOGPUMemory.cpp:550) — mlx_lm.server pins ~75% of RAM as
-      # non-swappable GPU working set via set_wired_limit() and keeps
-      # re-touching that pin during batched serving, the leading theory for
-      # the panic. It also logs periodic GPU memory stats for correlating
-      # future panics with the memory trend leading up to them.
+      # DeepSeek-V4 needs mlx-optiq because stock mlx-lm does not implement
+      # its architecture. Existing mlx-lm configurations retain the launcher
+      # below, which avoids the observed MLX GPU wired-memory panic.
+{{- if eq ((index .local_model "server") | default "mlx-lm") "optiq" }}
+      - $HOME/.local/share/mise/shims/optiq
+      - serve
+{{- else }}
       - $HOME/.local/bin/mlx-lm-server-launcher
+{{- end }}
       - --model
       - {{ .local_model.hf_repo }}
       - --host
@@ -124,33 +123,22 @@ launchagents:
       - "{{ (index .local_model "port") | default 8091 }}"
       - --log-level
       - INFO
-      # Concurrency: dropped to 1 (was 2) as a diagnostic/mitigation for the
-      # same IOGPUFamily panic. mlx#3866 implicates mid-batch admission of
-      # varying-length requests as a reliable trigger; serializing to 1
-      # concurrent request avoids that admission path entirely.
+      # Serialize request admission. This avoids spikes from concurrent
+      # prefill and decode work on a shared-memory GPU.
       - --decode-concurrency
       - "1"
       - --prompt-concurrency
       - "1"
-      # Cap generation length to the same value advertised to OMP via
-      # models.yaml's local_model.max_tokens, so the server's actual cap
-      # matches what clients are told they can request.
+      # Match the server output limit to the local_model value. OMP applies
+      # its lower agent-specific limit through models.yml.
       - --max-tokens
       - "{{ .local_model.max_tokens }}"
-      # KV-cache bound (mlx-lm#883/#1666 mitigation): the wired-limit shim
-      # in the launcher lets memory spill into swap instead of panicking,
-      # but unbounded KV-cache growth across ~20 concurrent aoe sessions
-      # was still driving active memory past physical RAM (48-60GB
-      # observed active/peak on a 48GB machine, 34.8GB swap used). Bound
-      # both the per-conversation cache count and total cache bytes.
+      # Bound warm-conversation cache memory across concurrent sessions.
       - --prompt-cache-size
       - "{{ .local_model.prompt_cache_size }}"
       - --prompt-cache-bytes
       - "{{ .local_model.prompt_cache_bytes }}"
-      # Prefill batching (mlx-lm transient-activation mitigation): halves the
-      # per-forward-pass token count during prompt processing to shrink the
-      # activation spike that was the largest unaccounted term in a measured
-      # 39.77GB active-memory peak (34.8GB swap used). Default is 2048.
+      # Limit the transient activation peak during large prompt prefills.
       - --prefill-step-size
       - "{{ .local_model.prefill_step_size }}"
     RunAtLoad: true

@@ -24,43 +24,35 @@ orgs:
   your-personal-org:
     kb_eligible: false
 
-# Locally-hosted mlx model (Apple Silicon only) served by mlx_lm.server,
-# consumed by dot_config/launchd-yaml/agents.yaml.tmpl (mlx-server/mlx-watchdog
-# LaunchAgents) and dot_omp/private_agent/models.yml.tmpl (OMP's mlx provider).
-# Omit this key entirely on a machine that shouldn't run a local model — both
-# templates render without mlx-server/provider entries when .local_model is
-# unset, and .chezmoiscripts/run_once_after_mlx-gpu-wired-limit.sh.tmpl is a
-# no-op. host/port/provider/api/api_key/id default sensibly in-template
-# (127.0.0.1:8091, provider "mlx", OpenAI-compatible protocol, model id
-# "default_model") — only override them here if you actually need to.
+# Locally-hosted Apple Silicon model. `server` selects the runtime that owns
+# the shared OpenAI-compatible endpoint consumed by the OMP provider and the
+# local LaunchAgent. Use `optiq` for DeepSeek-V4; stock mlx-lm has no
+# DeepSeek-V4 architecture. Omit this key entirely on machines that should
+# not run a local model.
 #
-# prompt_cache_size/bytes, prefill_step_size, and gpu_wired_limit_mb are
-# sized to THIS machine's RAM — they're not portable defaults. Current
-# values assume a 48GB box running the 35B-A3B model below; see the
-# comments in agents.yaml.tmpl for the measured-memory reasoning (39.77GB
-# peak / 34.8GB swap before these were tightened) if retuning for a
-# different model or RAM size. context_window is unrelated to that memory
-# budget — see its own comment below.
+# host, port, provider, api, api_key, and id have template defaults
+# (127.0.0.1:8091, provider "mlx", OpenAI-compatible protocol, and model id
+# "default_model"). Set only values that need an override.
+#
+# The DeepSeek quant streams experts from SSD. It needs 92.5 GB of disk space.
+# Its KV cache still grows with context, so start at 128k tokens on a 48 GB
+# machine rather than its 1M-token architectural limit.
 local_model:
-  hf_repo: mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit
-  name: qwen3.6-35b-a3b-optiq
-  context_window: 32000
+  server: optiq
+  hf_repo: mlx-community/DeepSeek-V4-Flash-0731-OptiQ-2bit
+  name: deepseek-v4-flash-0731-optiq-2bit
+  context_window: 128000
   max_tokens: 8192
-  # Agent request cap. Leave headroom for the fixed system/tool prefix inside
-  # context_window; the server still permits max_tokens for direct requests.
-  agent_max_tokens: 4096
+  agent_max_tokens: 8192
   compaction_model: anthropic/claude-haiku-4-5
-  # OMP-only local-session retention after compaction. It leaves room for the
-  # fixed tool-schema prefix and max_tokens within context_window; global and
-  # cloud-session settings are unchanged.
-  compaction_keep_recent_tokens: 8000
+  # Keep the most recent 32k tokens after a local-session compaction. This
+  # retains the active task, tool results, and current implementation state.
+  compaction_keep_recent_tokens: 32000
   prompt_cache_size: 4
   prompt_cache_bytes: 3221225472 # 3GiB
   prefill_step_size: 512
-  # macOS iogpu.wired_limit_mb ceiling (headroom only, not the IOGPUFamily
-  # panic fix — that's the wired-limit no-op shim in
-  # mlx-lm-server-launcher.tmpl). Leave enough gap below total RAM for the
-  # OS and everything else running.
+  # macOS IOGPU wired-memory ceiling. Leave capacity for the OS and other
+  # apps. This limit is machine-RAM-dependent.
   gpu_wired_limit_mb: 40960
 
 # Production service → local repo mapping for the daily fix-prod-errors task.
