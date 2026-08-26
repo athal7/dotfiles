@@ -97,6 +97,7 @@ runlayer_skills:
 # Agents read values via `security find-generic-password -s chezmoi -a <name> -w` —
 # this works non-interactively, including from remote sessions, with no biometric prompts.
 secrets:
+  aoe_serve_passphrase: {}
   es_api_key: {}
   es_url: {}
   pagerduty_api_token: {}
