@@ -1,0 +1,11 @@
+#!/bin/sh
+# Run AoE behind the node's private Tailscale Serve proxy.
+set -eu
+
+dns_name=$(/opt/homebrew/bin/tailscale status --json | /opt/homebrew/bin/jq -er '.Self.DNSName')
+dns_name=${dns_name%.}
+
+exec /opt/homebrew/bin/aoe serve \
+  --host 127.0.0.1 \
+  --port 4097 \
+  --allowed-host "$dns_name"

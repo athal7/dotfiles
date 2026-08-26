@@ -16,13 +16,9 @@ launchagents:
   aoe-serve:
     Label: com.$USER.aoe-serve
     ProgramArguments:
-      - /opt/homebrew/bin/aoe
-      - serve
-      - --daemon
-      - --remote
-      - --port
-      - "64590"
+      - $HOME/.local/bin/aoe-serve
     RunAtLoad: true
+    KeepAlive: true
     ProcessType: Interactive
     StandardOutPath: $HOME/Library/Logs/aoe-serve.log
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
