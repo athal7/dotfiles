@@ -1,14 +1,14 @@
 ---
 name: qa-report-publish
-description: Fires when lead is about to publish an assembled QA report to a merge request after human approval.
+description: Fires before publishing an assembled QA report to a merge request after human approval.
 license: MIT
 ---
 
-Lead is the sole remote writer. The QA agent writes only local artifacts; it never touches the remote.
+This skill performs the remote writes for QA publishing. The QA agent produces only local artifacts; those artifacts are pushed to the remote here.
 
 The report carries QA evidence only. Static and blast-radius review happens separately on the merge request.
 
-**Verdict** — parsed from the first line of `qa-report.md` (`## 🧪 QA — PASS ✅`) and used verbatim as the deployment status `description`.
+**Verdict** — the deployment status `description` is exactly `QA - PASS` or `QA - FAIL`. It must be pure ASCII: GitHub Deployments rejects 4-byte Unicode in status descriptions. Derive the verdict from `qa-report.md`, stripping any emoji or other non-ASCII decoration from the heading before use.
 
 ## Approval gate
 
