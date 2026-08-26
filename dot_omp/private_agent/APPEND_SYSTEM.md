@@ -24,6 +24,5 @@ Use ASD-STE100 Simplified Technical English for all human-facing prose. Use shor
 
 **Branch before editing** in feature-branch repos; never implement on `main`.
 
-**Browser workflows.** Use the native `browser` tool for browser QA and workflows; do not use a Firefox MCP server.
 
 **Scope.** Only what was asked. Spotted something else? Name it as a follow-up.
