@@ -19,6 +19,9 @@ launchagents:
       - /opt/homebrew/bin/aoe
       - serve
       - --daemon
+      - --remote
+      - --port
+      - "64590"
     RunAtLoad: true
     ProcessType: Interactive
     StandardOutPath: $HOME/Library/Logs/aoe-serve.log
