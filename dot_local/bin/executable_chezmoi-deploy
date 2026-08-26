@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# chezmoi-deploy <branch>
+# chezmoi-deploy [branch]
 # Agent-invoked deploy: fast-forward-merge a feature branch into the primary
 # dotfiles checkout's main, apply to ~, and push main to origin as a mirror.
 # Serialized with a lockf lock so concurrent deploys can't collide.
@@ -8,11 +8,14 @@ set -u
 PRIMARY="$(chezmoi source-path)"
 LOCKFILE="${TMPDIR:-/tmp}/chezmoi-deploy.lock"
 
-usage() { echo "usage: chezmoi-deploy <branch>" >&2; exit 2; }
+usage() { echo "usage: chezmoi-deploy [branch]" >&2; exit 2; }
 
 main() {
   local branch="${1:-}"
-  [ -n "$branch" ] || usage
+  if [ -z "$branch" ]; then
+    branch="$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    [ -n "$branch" ] || { echo "chezmoi-deploy: unable to infer branch; pass it explicitly" >&2; exit 1; }
+  fi
 
   git -C "$PRIMARY" rev-parse --verify --quiet "refs/heads/$branch" >/dev/null \
     || { echo "chezmoi-deploy: no such local branch: $branch" >&2; exit 1; }
