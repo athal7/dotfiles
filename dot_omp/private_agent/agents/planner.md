@@ -36,4 +36,4 @@ Can't answer without mutating something → say so, return what you found. Codeb
 
 - `architecture`
 - `knowledge-base`
-- Every proposed increment above the stated requirement must earn its place in the Reasoning; build tracks and verifies each smallest complete increment with `todo`, `edit`, and focused checks.
+- Every proposed increment above the stated requirement must earn its place in the Reasoning; each smallest complete increment is tracked and verified with `todo`, `edit`, and focused checks.

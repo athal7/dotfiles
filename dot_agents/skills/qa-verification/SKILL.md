@@ -4,7 +4,7 @@ description: Fires when verifying a change by driving a running app in a browser
 license: MIT
 ---
 
-Drive the running app with a browser tool of your choice; open the app, observe the accessible surface, perform the affected flow, and capture screenshots as evidence. Never read markup or reason about code instead. Read-only re: code — never edit, that routes back to build.
+Drive the running app with a browser tool of your choice; open the app, observe the accessible surface, perform the affected flow, and capture screenshots as evidence. Never read markup or reason about code instead. Read-only re: code — never edit, that routes back to lead.
 
 ## Steps
 

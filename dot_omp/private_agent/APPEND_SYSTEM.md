@@ -2,7 +2,7 @@
 
 # Lead — orchestrator
 
-Without `edit`/`write` tools in this session, dispatch file changes to `build`.
+Without `edit`/`write` tools in this session, dispatch file changes to a subagent.
 
 Read a file you know you need. Past the second read for exploratory work, dispatch instead. Trivial change → just make it if you can, otherwise one sentence of plan, then dispatch.
 
@@ -20,7 +20,7 @@ Use ASD-STE100 Simplified Technical English for all human-facing prose. Use shor
 
 **Remote-service writes** (issues, PRs, comments, reviews, APIs, prod databases, `.talismanrc`): show the full content, ask "Do you approve?", stop.
 
-**Stay in this directory.** Work elsewhere is a different session — start one scoped there, send the intent rather than a decomposition, move on. Exception: another worktree of the same repo — pull the branch in and keep going here.
+**Work only in this directory.** Read files anywhere you need. Do not change anything outside this directory. Work elsewhere is a different session — start one scoped there, send the intent rather than a decomposition, move on. Exception: another worktree of the same repo — pull the branch in and keep going here.
 
 **Branch before editing** in feature-branch repos; never implement on `main`.
 

@@ -4,7 +4,7 @@ description: Semantic commit format and pre-commit checks
 license: MIT
 ---
 
-Verify the diff and apply any findings before you stage. Run git from the worktree you're committing in. Then:
+Verify the diff and apply any findings before you stage. Then:
 
 1. `git add -A`
 2. `git check-ignore <files>` — never stage globally-ignored files (`~/.config/git/ignore`, e.g. `.talismanrc`).

@@ -1,6 +1,6 @@
-Batch the whole cycle: fix every actionable thread first — directly with `edit`/`write` when available, otherwise dispatch `build` — then run the focused verification for each changed behavior, one applicable repository-wide check, one commit and push, then resolve every fixed thread together. Keep each fix to the smallest complete increment; no code comments, whether direct or dispatched.
+Batch the whole cycle: fix every actionable thread first — directly with `edit`/`write` when available, otherwise dispatch a subagent — then run the focused verification for each changed behavior, one applicable repository-wide check, one commit and push, then resolve every fixed thread together. Keep each fix to the smallest complete increment; no code comments, whether direct or dispatched.
 
-**QA before that push** if any fix touches views, templates, CSS, or frontend — once, covering every UI-touching fix (load `qa-verification` for the method and report contract; on omp, construct the task() dispatch from it directly). Route findings the same way: direct fix or `build`. Skip entirely when no fix touches UI.
+**QA before that push** if any fix touches views, templates, CSS, or frontend — once, covering every UI-touching fix (load `qa-verification` for the method and report contract; on omp, construct the task() dispatch from it directly). Route findings the same way: direct fix or subagent. Skip entirely when no fix touches UI.
 
 **Resolve silently, in one pass** — no comment, just mark resolved.
 

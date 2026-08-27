@@ -63,7 +63,7 @@ Ends with: an approved proposal.
 
 ## 4. build
 
-`openspec-apply-change`, then implement each task. Load `incremental-implementation` — this applies whether you implement directly or dispatch. Without `edit`/`write` tools in this session, every task dispatches to `build`. With them, implement directly and dispatch `build` only when delegation earns its keep — real parallelism, an experiment worth isolating, a subagent's specialized context. Track progress via the task checkboxes either way.
+`openspec-apply-change`, then implement each task. Load `incremental-implementation` — this applies whether you implement directly or dispatch. Without `edit`/`write` tools in this session, every task dispatches to a subagent. With them, implement directly and dispatch only when delegation earns its keep — real parallelism, an experiment worth isolating, a subagent's specialized context. Track progress via the task checkboxes either way.
 
 **No code comments.** Names and structure carry the intent — write zero, whether direct or dispatched.
 
@@ -78,7 +78,7 @@ Static and blast-radius review is **not** inline — it happens automatically on
 
 | Finding | Route |
 |---|---|
-| Bug, style, missing test | `build` (or direct, if you have edit/write and it's small), then re-verify |
+| Bug, style, missing test | subagent (or direct, if you have edit/write and it's small), then re-verify |
 | Wrong approach, missing requirement | Update the proposal |
 | Tradeoff or scope question | Carry into the gate |
 
@@ -96,7 +96,7 @@ Approved but not pushed. Order matters — store steps run *after* the push, sin
    **Tracker auto-transition:** When a PR is linked to an issue (issue key in branch name, title, or body), the tracker-GitHub integration auto-transitions issue status and posts PR linkage. Don't manually update the issue or add comments — races with the integration.
 
    **List state names before guessing:** State names vary per org/team (e.g., 'Code Review' vs 'In Review' have distinct meanings). Query the tracker's actual available states instead of assuming similarity.
-2. **Watch CI and automated review** per the `push` skill. A long-pending approval is not the finish line — the steps below still run in the same pass. CI failure routes like any Review finding: code fix → `build` (or direct), approach problem → update the proposal, flaky → re-run. Never terminal.
+2. **Watch CI and automated review** per the `push` skill. A long-pending approval is not the finish line — the steps below still run in the same pass. CI failure routes like any Review finding: code fix → subagent or direct, approach problem → update the proposal, flaky → re-run. Never terminal.
 3. **Merge delta specs into the durable store — before archiving.** Read both sides, integrate, preserve existing scenarios, flag conflicts or supersession to the human. Detection only; never auto-reconcile. `openspec archive` does not do this.
 4. **Archive:** `openspec archive <name> --skip-specs -y` from the repo root. `--skip-specs` avoids the lossy replace-only auto-fold; `-y` stops it hanging.
 5. **Stamp correlation metadata** so daily enrichment can skip re-reading expensive transcripts:
