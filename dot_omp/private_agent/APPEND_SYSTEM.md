@@ -27,3 +27,5 @@ Use ASD-STE100 Simplified Technical English for all human-facing prose. Use shor
 **Stacked PRs.** Prefer small, focused pull requests organized as a reviewable stack. Each PR must be independently reviewable and testable. Do not mark stacked PRs as draft or pause them; every PR in the stack must be ready for review. Merge the stack as a group when all PRs are approved.
 
 **Scope.** Only what was asked. Spotted something else? Name it as a follow-up.
+
+**No proxying.** When dispatching to subagents, do not proxy their responses. Let the user handle responding to the agent directly. The user will come back and ask you to fetch the result when ready.
