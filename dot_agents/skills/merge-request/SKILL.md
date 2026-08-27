@@ -6,9 +6,11 @@ Use `workflowz` to run the following phases as a deterministic pipeline via the 
 
 ## 1. draft
 
-References a tracked issue? Mark the request a draft before anything else — a returning request may still be marked ready from a previous pass. Where the tracker syncs status from request state (Linear's GitHub integration), the linked issue updates from this alone; **don't also write to the tracker**.
+**Don't disrupt an active reviewer.** A reviewer who has already left threads is done reviewing — you are now implementing their feedback, so leave the request marked ready and preserve their review state. Do **not** flip it back to draft: GitHub never clears a reviewer's active-review state, so a draft flip sends no stop signal and only throws away a fresh review pass.
 
-Ends with: request marked draft (when applicable).
+Mark the request draft only when you must make changes the reviewer has not seen and did not request — and then **leave a comment** so anyone mid-review knows to stop. Where the tracker syncs status from request state (Linear's GitHub integration), the linked issue follows the draft flip alone; **don't also write to the tracker**.
+
+Ends with: reviewer state preserved; draft used only for unrequested changes, with a stop-signal comment.
 
 
 ## 2. triage
@@ -45,6 +47,8 @@ Ends with: conflicts resolved, suite green.
 ## 5. re-request
 
 Present a summary. After approval, mark ready for review (the linked issue's status follows automatically) and re-request from every previous reviewer — no comment, the diff speaks for itself.
+
+**Re-request only at a stable moment.** Don't re-request and then keep pushing — new commits force the reviewer to restart from scratch. If you find more to change after re-requesting, **comment to tell them to hold**, batch the change, then re-request once.
 
 **Refresh the QA evidence** in the description if a prior ship created the marked block: an in-place read-modify-write of the whole span between the `<!-- qa:start -->` / `<!-- qa:end -->` markers — never a new comment. Mechanics in `qa-report-publish`.
 

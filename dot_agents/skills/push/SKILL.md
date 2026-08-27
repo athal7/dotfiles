@@ -10,7 +10,7 @@ Show unpushed commits in chat first — branch name, one subject per line. The f
 
 ## Draft merge request
 
-None exists → create one from the branch commits, as a draft. One exists → update title/body only on a material change (new scope, different fix, renamed component, changed API); skip for tests, docs, formatting. **Never flip draft↔ready.**
+None exists → create one from the branch commits, as a draft. One exists → update title/body only on a material change (new scope, different fix, renamed component, changed API); skip for tests, docs, formatting. **Never flip draft↔ready during a push** — pushing new commits onto a review-requested PR already forces the reviewer to restart, and flipping it to draft on top strands them, since GitHub keeps them assigned with no stop signal. A deliberate draft flip belongs in the `merge-request` flow, always with a comment telling any mid-review reviewer to hold.
 
 Description: 1-2 sentences. Skip headers, bullet lists, and anything obvious from the diff.
 
