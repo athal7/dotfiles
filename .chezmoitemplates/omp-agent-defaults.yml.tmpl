@@ -108,11 +108,6 @@ bash:
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
-{{ $package := index $packagesByName "gh" }}
-{{ range slice $package.permissions 6 10 }}
-    - approval: {{ index $approvalByTier .approval }}
-      match: {{ .match | quote }}
-{{ end }}
 {{ $package := index $packagesByName "git" }}
 {{ range slice $package.permissions 10 12 }}
     - approval: {{ index $approvalByTier .approval }}
@@ -122,11 +117,6 @@ bash:
       match: "curl * -X POST*"
 {{ $package := index $packagesByName "chezmoi" }}
 {{ range slice $package.permissions 6 7 }}
-    - approval: {{ index $approvalByTier .approval }}
-      match: {{ .match | quote }}
-{{ end }}
-{{ $package := index $packagesByName "gh" }}
-{{ range slice $package.permissions 10 12 }}
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
@@ -153,11 +143,6 @@ bash:
 {{ end }}
 {{ $package := index $packagesByName "xh" }}
 {{ range slice $package.permissions 1 2 }}
-    - approval: {{ index $approvalByTier .approval }}
-      match: {{ .match | quote }}
-{{ end }}
-{{ $package := index $packagesByName "gh" }}
-{{ range slice $package.permissions 12 14 }}
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
@@ -207,11 +192,6 @@ bash:
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
-{{ $package := index $packagesByName "gh" }}
-{{ range slice $package.permissions 14 15 }}
-    - approval: {{ index $approvalByTier .approval }}
-      match: {{ .match | quote }}
-{{ end }}
 {{ $package := index $packagesByName "xh" }}
 {{ range slice $package.permissions 7 9 }}
     - approval: {{ index $approvalByTier .approval }}
@@ -229,11 +209,6 @@ bash:
       match: "wget *"
     - approval: prompt
       match: "mkfs*"
-{{ $package := index $packagesByName "gh" }}
-{{ range slice $package.permissions 15 16 }}
-    - approval: {{ index $approvalByTier .approval }}
-      match: {{ .match | quote }}
-{{ end }}
 {{ $package := index $packagesByName "xh" }}
 {{ range slice $package.permissions 9 10 }}
     - approval: {{ index $approvalByTier .approval }}

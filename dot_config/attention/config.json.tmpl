@@ -22,21 +22,26 @@
 {{- end -}}
 {{- end -}}
 {{- end -}}
-{{- $githubuser := output "gh" "api" "user" "--jq" ".login" | trim -}}
+{{- $githubuser := output "/bin/sh" "-c" "gh api user --jq .login 2>/dev/null || true" | trim -}}
+{{- $linearToken := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
+{{- $groups := list
+      (dict "name" "Time sensitive" "match" (dict "statuses" (list "NOW" "SOON" "OVERDUE" "DUE TODAY"))) -}}
+{{- if $githubuser -}}
+{{- $groups = append $groups (dict "name" "Personal GitHub" "match" (dict
+      "plugins" (list "github")
+      "contextPrefixes" (list (printf "%s/" $githubuser)))) -}}
+{{- end -}}
+{{- $groups = concat $groups (list
+      (dict "name" "Work reviews" "match" (dict
+        "plugins" (list "github")
+        "statuses" (list "REVIEW REQUESTED" "NEEDS ATTENTION")))
+      (dict "name" "Work queue" "match" (dict "plugins" (list "github" "linear")))
+      (dict "name" "Schedule and reminders" "match" (dict "plugins" (list "calendar" "reminders")))
+      (dict "name" "Other" "fallback" true)) -}}
 {{- $config := dict
       "codeDir" .codeDir
       "plugins" (list "calendar" "reminders" "github" "linear")
-      "dashboard" (dict "groups" (list
-        (dict "name" "Time sensitive" "match" (dict "statuses" (list "NOW" "SOON" "OVERDUE" "DUE TODAY")))
-        (dict "name" "Personal GitHub" "match" (dict
-          "plugins" (list "github")
-          "contextPrefixes" (list (printf "%s/" $githubuser))))
-        (dict "name" "Work reviews" "match" (dict
-          "plugins" (list "github")
-          "statuses" (list "REVIEW REQUESTED" "NEEDS ATTENTION")))
-        (dict "name" "Work queue" "match" (dict "plugins" (list "github" "linear")))
-        (dict "name" "Schedule and reminders" "match" (dict "plugins" (list "calendar" "reminders")))
-        (dict "name" "Other" "fallback" true)))
+      "dashboard" (dict "groups" $groups)
       "calendar" (dict "names" $calNames "actions" (list
         (dict "key" "alt-s" "label" "session" "background" true
               "command" (list "/bin/sh" "-c"
@@ -54,11 +59,11 @@
               "command" (list "/bin/sh" "-c"
                 "aoe add \"$1\" --title \"$2\" --tool omp --worktree \"$3\" --new-branch --launch >/dev/null && aoe send \"$2\" \"$4\""
                 "attention-session" "{repo_path}" "{slug}" "{slug}" "{input}")
-              "input" (dict "prompt" "Session message" "default" "For issue/PR {id} in this repo, checkout the existing branch if exists, and work on or review it. {session_prompt}")
+              "input" (dict "prompt" "Session message" "default" "For issue/PR {id} in this repo, checkout the existing branch if exists, and work on or review it. {session_prompt}"))
         (dict "key" "alt-l" "label" "lumen"
               "command" (list "lumen" "diff" "{url}"))))
       "linear" (dict
-        "apiToken" (output "security" "find-generic-password" "-s" "chezmoi" "-a" "linear_api_key" "-w" | trim)
+        "apiToken" $linearToken
         "actions" (list
           (dict "key" "alt-s" "label" "session" "background" true
                 "command" (list "/bin/sh" "-c"
