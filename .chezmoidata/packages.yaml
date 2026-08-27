@@ -78,33 +78,13 @@ packages:
           approval: ask
     - name: gh
       permissions:
-        - match: "gh search commits*"
+        - match: "gh* search *"
           approval: allow
-        - match: "gh search issues*"
+        - match: "gh* list*"
           approval: allow
-        - match: "gh release list*"
+        - match: "gh* view*"
           approval: allow
-        - match: "gh release view*"
-          approval: allow
-        - match: "gh search repos*"
-          approval: allow
-        - match: "gh search code*"
-          approval: allow
-        - match: "gh issue list*"
-          approval: allow
-        - match: "gh issue view*"
-          approval: allow
-        - match: "gh label list*"
-          approval: allow
-        - match: "gh search prs*"
-          approval: allow
-        - match: "gh repo list*"
-          approval: allow
-        - match: "gh repo view*"
-          approval: allow
-        - match: "gh pr list*"
-          approval: allow
-        - match: "gh pr view*"
+        - match: "gh* status*"
           approval: allow
         - match: "gh api *"
           approval: ask
@@ -196,7 +176,6 @@ packages:
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
-
     # Note: com.apple.provenance on Apple Silicon prevents chezmoi's atomic
     # rename from updating files inside this bundle. On version updates, run:
     #   rm -rf ~/Applications/NayaFlow-Beta.app && chezmoi apply
