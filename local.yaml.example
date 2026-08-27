@@ -99,6 +99,7 @@ runlayer_skills:
 secrets:
   aoe_serve_passphrase: {}
   es_api_key: {}
+  openrouter_api_key: {}
   es_url: {}
   pagerduty_api_token: {}
 # Calendar configuration

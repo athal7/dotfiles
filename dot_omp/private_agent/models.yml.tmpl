@@ -1,15 +1,17 @@
 {{- $agentMaxTokens := (index .local_model "agent_max_tokens") | default (index .local_model "max_tokens") | default 4096 -}}
+{{- $openRouterKeychainKey := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a openrouter_api_key -w 2>/dev/null || true" | trim -}}
+{{- $openRouterApiKey := env "OPENROUTER_API_KEY" | default $openRouterKeychainKey -}}
 providers:
   openrouter:
     baseUrl: https://openrouter.ai/api/v1
     api: openai-completions
-    apiKey: {{ env "OPENROUTER_API_KEY" | default "" }}
+    apiKey: {{ $openRouterApiKey | quote }}
     compat:
       supportsDeveloperRole: false
       supportsReasoningEffort: true
     models:
-      - id: openrouter/free
-        name: openrouter/free
+      - id: "openrouter/ox-alpha"
+        name: Ox Alpha
         reasoning: false
         input: [text]
         contextWindow: 131072
