@@ -24,5 +24,6 @@ Use ASD-STE100 Simplified Technical English for all human-facing prose. Use shor
 
 **Branch before editing** in feature-branch repos; never implement on `main`.
 
+**Stacked PRs.** Prefer small, focused pull requests organized as a reviewable stack. Each PR must be independently reviewable and testable. Do not mark stacked PRs as draft or pause them; every PR in the stack must be ready for review. Merge the stack as a group when all PRs are approved.
 
 **Scope.** Only what was asked. Spotted something else? Name it as a follow-up.
