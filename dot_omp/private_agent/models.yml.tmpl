@@ -1,7 +1,9 @@
 {{- $agentMaxTokens := (index .local_model "agent_max_tokens") | default (index .local_model "max_tokens") | default 4096 -}}
 {{- $openRouterKeychainKey := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a openrouter_api_key -w 2>/dev/null || true" | trim -}}
 {{- $openRouterApiKey := env "OPENROUTER_API_KEY" | default $openRouterKeychainKey -}}
+{{- if or $openRouterApiKey (hasKey . "local_model") }}
 providers:
+{{- if $openRouterApiKey }}
   openrouter:
     baseUrl: https://openrouter.ai/api/v1
     api: openai-completions
@@ -17,6 +19,7 @@ providers:
         contextWindow: 131072
         maxTokens: 8192
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+{{- end }}
 {{- if hasKey . "local_model" }}
   {{ (index .local_model "provider") | default "mlx" }}:
     baseUrl: http://{{ (index .local_model "host") | default "127.0.0.1" }}:{{ (index .local_model "port") | default 8091 }}/v1
@@ -35,5 +38,6 @@ providers:
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
 {{- if hasKey .local_model "compaction_model" }}
         compactionModel: {{ .local_model.compaction_model }}
+{{- end }}
 {{- end }}
 {{- end }}
