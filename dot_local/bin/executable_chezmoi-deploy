@@ -38,12 +38,6 @@ main() {
   git -C "$PRIMARY" merge --ff-only --quiet "$branch" \
     || { echo "chezmoi-deploy: failed to fast-forward main with '$branch'" >&2; exit 1; }
 
-  echo "chezmoi-deploy: checking for chezmoi conflicts…"
-  if ! chezmoi apply --dry-run --error-on-conflict --no-tty; then
-    echo "chezmoi-deploy: managed targets conflict with the source; no changes were applied. Diff follows:" >&2
-    chezmoi diff || echo "chezmoi-deploy: unable to render chezmoi diff" >&2
-    exit 1
-  fi
 
   echo "chezmoi-deploy: applying to ~…"
   chezmoi apply --force --no-tty \
