@@ -23,7 +23,7 @@ content, so no live app-state value can ever land in git history.
 allow_agent_install = false
 auto_stop_idle_secs = 0
 default_agent = "aoe-agent"
-max_concurrent_workers = 5
+max_concurrent_workers = 10
 node_path = ""
 rate_limit_auto_resume = false
 replay_events = 0
@@ -111,8 +111,6 @@ mouse_capture = true
 restart_wake_message = "wake up: pick up what you were doing"
 row_tag = "none"
 show_tips = true
-smart_rename = true
-smart_rename_agent = ""
 snooze_duration_minutes = 30
 strict_hotkeys = false
 tie_workdir_to_name = true
