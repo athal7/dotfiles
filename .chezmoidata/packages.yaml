@@ -86,8 +86,18 @@ packages:
           approval: allow
         - match: "gh* status*"
           approval: allow
-        - match: "gh api *"
+        - match: "gh api * -X POST*"
           approval: ask
+        - match: "gh api * -X PUT*"
+          approval: ask
+        - match: "gh api * -X PATCH*"
+          approval: ask
+        - match: "gh api * -X DELETE*"
+          approval: ask
+        - match: "gh api graphql*mutation*"
+          approval: ask
+        - match: "gh api *"
+          approval: allow
         - match: "gh *"
           approval: ask
     - name: athal7/tap/attention
@@ -142,6 +152,10 @@ packages:
         - match: "remindctl list*"
           approval: allow
         - match: "remindctl show*"
+          approval: allow
+        - match: "remindctl *--help*"
+          approval: allow
+        - match: "remindctl help*"
           approval: allow
         - match: "remindctl *"
           approval: ask

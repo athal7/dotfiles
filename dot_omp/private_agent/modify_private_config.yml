@@ -12,4 +12,5 @@
 {{- $_ := setValueAtPath "task.agentModelOverrides" (index (index $defaults "task") "agentModelOverrides") $config -}}
 {{- $_ := setValueAtPath "task.disabledAgents" (index (index $defaults "task") "disabledAgents") $config -}}
 {{- $_ := setValueAtPath "tools.approval" (index (index $defaults "tools") "approval") $config -}}
+{{- $_ := setValueAtPath "tools.approvalMode" (index (index $defaults "tools") "approvalMode") $config -}}
 {{- $config | toYaml -}}

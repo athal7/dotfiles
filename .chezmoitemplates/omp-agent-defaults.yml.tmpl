@@ -13,7 +13,7 @@
 {{- $_ := set $packagePermissionCounts "git" 18 -}}
 {{- $_ := set $packagePermissionCounts "gh" 16 -}}
 {{- $_ := set $packagePermissionCounts "xh" 10 -}}
-{{- $_ := set $packagePermissionCounts "steipete/tap/remindctl" 4 -}}
+{{- $_ := set $packagePermissionCounts "steipete/tap/remindctl" 6 -}}
 
 bash:
   patterns:
@@ -60,7 +60,12 @@ bash:
       match: {{ .match | quote }}
 {{ end }}
 {{ $package := index $packagesByName "gh" }}
-{{ range slice $package.permissions 2 5 }}
+{{ range slice $package.permissions 2 4 }}
+    - approval: {{ index $approvalByTier .approval }}
+      match: {{ .match | quote }}
+{{ end }}
+{{ $package := index $packagesByName "gh" }}
+{{ range slice $package.permissions 4 10 }}
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
@@ -82,7 +87,7 @@ bash:
       match: {{ .match | quote }}
 {{ end }}
 {{ $package := index $packagesByName "gh" }}
-{{ range slice $package.permissions 5 6 }}
+{{ range slice $package.permissions 10 11 }}
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
@@ -152,7 +157,7 @@ bash:
       match: {{ .match | quote }}
 {{ end }}
 {{ $package := index $packagesByName "steipete/tap/remindctl" }}
-{{ range slice $package.permissions 3 4 }}
+{{ range slice $package.permissions 3 6 }}
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
@@ -490,7 +495,7 @@ tools:
     mcp__runlayer_zoom_search_meetings: allow
     task: allow
     write: allow
-  approvalMode: always-ask
+  approvalMode: write
 compaction:
   methodOrder:
     - shake
