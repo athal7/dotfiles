@@ -59,7 +59,7 @@
               "command" (list "/bin/sh" "-c"
                 "aoe add \"$1\" --title \"$2\" --tool omp --worktree \"$3\" --new-branch --launch >/dev/null && aoe send \"$2\" \"$4\""
                 "attention-session" "{repo_path}" "{slug}" "{slug}" "{input}")
-              "input" (dict "prompt" "Session message" "default" "For issue/PR {id} in this repo, checkout the existing branch if exists, and work on or review it. {session_prompt}"))
+              "input" (dict "prompt" "Session message" "default" "For issue/PR {id} in this repo, checkout the existing branch if exists, and {session_prompt}"))
         (dict "key" "L" "label" "lumen"
               "command" (list "lumen" "diff" "{url}"))))
       "linear" (dict
