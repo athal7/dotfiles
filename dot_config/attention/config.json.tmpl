@@ -22,22 +22,29 @@
 {{- end -}}
 {{- end -}}
 {{- end -}}
-{{- $githubuser := output "/bin/sh" "-c" "gh api user --jq .login 2>/dev/null || true" | trim -}}
 {{- $linearToken := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
+{{- $attentionPrefixes := dict -}}
+{{- if hasKey . "orgs" -}}
+{{- range $org, $settings := .orgs -}}
+{{- if kindIs "map" $settings -}}
+{{- $group := dig "attention" "" $settings -}}
+{{- if and (kindIs "string" $group) $group -}}
+{{- $prefixes := get $attentionPrefixes $group | default (list) -}}
+{{- $attentionPrefixes = set $attentionPrefixes $group (append $prefixes (printf "%s/" $org)) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $attentionGroups := list -}}
+{{- range $name, $contextPrefixes := $attentionPrefixes -}}
+{{- $attentionGroups = append $attentionGroups (dict "name" $name "match" (dict
+      "plugins" (list "github")
+      "contextPrefixes" $contextPrefixes)) -}}
+{{- end -}}
 {{- $groups := list
       (dict "name" "Time sensitive" "match" (dict "statuses" (list "NOW" "SOON" "OVERDUE" "DUE TODAY"))) -}}
-{{- if $githubuser -}}
-{{- $groups = append $groups (dict "name" "Personal GitHub" "match" (dict
-      "plugins" (list "github")
-      "contextPrefixes" (list (printf "%s/" $githubuser)))) -}}
-{{- end -}}
-{{- $groups = concat $groups (list
-      (dict "name" "Work reviews" "match" (dict
-        "plugins" (list "github")
-        "statuses" (list "REVIEW REQUESTED" "NEEDS ATTENTION")))
-      (dict "name" "Work queue" "match" (dict "plugins" (list "github" "linear")))
-      (dict "name" "Schedule and reminders" "match" (dict "plugins" (list "calendar" "reminders")))
-      (dict "name" "Other" "fallback" true)) -}}
+{{- $groups = concat $groups $attentionGroups -}}
+{{- $groups = append $groups (dict "name" "Other" "fallback" true) -}}
 {{- $config := dict
       "codeDir" .codeDir
       "plugins" (list "calendar" "reminders" "github" "linear")
