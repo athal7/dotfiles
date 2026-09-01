@@ -74,7 +74,7 @@
         "actions" (list
           (dict "key" "s" "label" "session" "background" true
                 "command" (list "/bin/sh" "-c"
-                  "aoe add . --title \"$1\" --tool omp --launch >/dev/null && aoe send \"$1\" \"$2\""
+                  "aoe add --scratch --title \"$1\" --tool omp --launch >/dev/null && aoe send \"$1\" \"$2\""
                   "attention-session" "{identifier_lower}" "{input}")
                 "input" (dict "prompt" "Session message" "default" "Work on Linear issue {identifier}"))))
 -}}
