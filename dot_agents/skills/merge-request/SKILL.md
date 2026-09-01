@@ -6,9 +6,9 @@ Use `workflowz` to run the following phases as a deterministic pipeline via the 
 
 ## 1. draft
 
-**Don't disrupt an active reviewer.** A reviewer who has already left threads is done reviewing — you are now implementing their feedback, so leave the request marked ready and preserve their review state. Do **not** flip it back to draft: GitHub never clears a reviewer's active-review state, so a draft flip sends no stop signal and only throws away a fresh review pass.
+**Don't disrupt an active reviewer.** An assignee who is not you signals an in-flight review, even when the request is marked ready for review. Do not change its draft state, reviewer list, or assignment. A reviewer who has already left threads is done reviewing — you are now implementing their feedback, so leave the request marked ready and preserve their review state. Do **not** flip it back to draft: GitHub never clears a reviewer's active-review state, so a draft flip sends no stop signal and only throws away a fresh review pass.
 
-Mark the request draft only when you must make changes the reviewer has not seen and did not request — and then **leave a comment** so anyone mid-review knows to stop. Where the tracker syncs status from request state (Linear's GitHub integration), the linked issue follows the draft flip alone; **don't also write to the tracker**.
+Mark the request draft only when it has no other assignee and you must make changes the reviewer has not seen and did not request — and then **leave a comment** so anyone mid-review knows to stop. Where the tracker syncs status from request state (Linear's GitHub integration), the linked issue follows the draft flip alone; **don't also write to the tracker**.
 
 Ends with: reviewer state preserved; draft used only for unrequested changes, with a stop-signal comment.
 

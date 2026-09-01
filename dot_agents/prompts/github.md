@@ -2,6 +2,10 @@
 
 Check your actual tools rather than assuming a name exists — the surface evolves. Resolve repo/org context and identifiers with a read tool before any write; never guess a number.
 
+## Starting a review
+
+At `/review` start, inspect the pull request assignment. If it is unassigned, assign it to yourself. An assignee who is not you signals an in-flight review, even when the pull request is ready for review. Do not change its draft state, reviewers, or assignment. After `/review` submits, remove your self-assignment.
+
 ## Review threads
 
 - **Fetch** — `pull_request_read` `method: get_review_comments`, which carries `isResolved`/`isOutdated`/`isCollapsed` per thread. Don't hand-roll GraphQL.
