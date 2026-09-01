@@ -1,4 +1,8 @@
-{{- $agentMaxTokens := (index .local_model "agent_max_tokens") | default (index .local_model "max_tokens") | default 4096 -}}
+{{- $localModel := dict -}}
+{{- if hasKey . "local_model" -}}
+{{- $localModel = .local_model -}}
+{{- end -}}
+{{- $agentMaxTokens := (index $localModel "agent_max_tokens") | default (index $localModel "max_tokens") | default 4096 -}}
 {{- $openRouterKeychainKey := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a openrouter_api_key -w 2>/dev/null || true" | trim -}}
 {{- $openRouterApiKey := env "OPENROUTER_API_KEY" | default $openRouterKeychainKey -}}
 {{- if or $openRouterApiKey (hasKey . "local_model") }}
@@ -21,23 +25,23 @@ providers:
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
 {{- end }}
 {{- if hasKey . "local_model" }}
-  {{ (index .local_model "provider") | default "mlx" }}:
-    baseUrl: http://{{ (index .local_model "host") | default "127.0.0.1" }}:{{ (index .local_model "port") | default 8091 }}/v1
-    api: {{ (index .local_model "api") | default "openai-completions" }}
-    apiKey: {{ if hasKey .local_model "api_key" }}{{ .local_model.api_key }}{{ else if eq ((index .local_model "server") | default "mlx-lm") "optiq" }}sk-optiq-local{{ else }}mlx-local{{ end }}
+  {{ (index $localModel "provider") | default "mlx" }}:
+    baseUrl: http://{{ (index $localModel "host") | default "127.0.0.1" }}:{{ (index $localModel "port") | default 8091 }}/v1
+    api: {{ (index $localModel "api") | default "openai-completions" }}
+    apiKey: {{ if hasKey $localModel "api_key" }}{{ $localModel.api_key }}{{ else if eq ((index $localModel "server") | default "mlx-lm") "optiq" }}sk-optiq-local{{ else }}mlx-local{{ end }}
     compat:
       supportsDeveloperRole: false
       supportsReasoningEffort: false
     models:
-      - id: {{ (index .local_model "id") | default "default_model" }}
-        name: {{ .local_model.name }}
+      - id: {{ (index $localModel "id") | default "default_model" }}
+        name: {{ $localModel.name }}
         reasoning: true
         input: [text]
-        contextWindow: {{ .local_model.context_window }}
+        contextWindow: {{ $localModel.context_window }}
         maxTokens: {{ $agentMaxTokens }}
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-{{- if hasKey .local_model "compaction_model" }}
-        compactionModel: {{ .local_model.compaction_model }}
+{{- if hasKey $localModel "compaction_model" }}
+        compactionModel: {{ $localModel.compaction_model }}
 {{- end }}
 {{- end }}
 {{- end }}
