@@ -1,1 +1,23 @@
-{{ includeTemplate "mcp-servers.json.tmpl" . }}
+{{- $servers := dict -}}
+{{- range $server := .mcp_servers -}}
+{{-   $entry := dict -}}
+{{-   if eq $server.transport "local" -}}
+{{-     $_ := set $entry "command" (first $server.command) -}}
+{{-     $_ := set $entry "args" (rest $server.command) -}}
+{{-   else -}}
+{{-     $_ := set $entry "type" "http" -}}
+{{-     $url := $server.url -}}
+{{-     if kindIs "map" $url -}}{{- $url = env (index $url "name") -}}{{- end -}}
+{{-     $_ := set $entry "url" $url -}}
+{{-     if hasKey $server "headers" -}}
+{{-       $headers := dict -}}
+{{-       range $headerName, $headerSpec := $server.headers -}}
+{{-         $value := output "sh" "-c" $headerSpec.cmd | trim -}}
+{{-         $_ := set $headers $headerName (printf $headerSpec.format $value) -}}
+{{-       end -}}
+{{-       $_ := set $entry "headers" $headers -}}
+{{-     end -}}
+{{-   end -}}
+{{-   $_ := set $servers $server.name $entry -}}
+{{- end -}}
+{{ dict "mcpServers" $servers | toJson }}
