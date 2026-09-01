@@ -26,6 +26,76 @@ launchagents:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
 
+  aoe-kb-enrich:
+    Label: com.$USER.aoe-kb-enrich
+    ProgramArguments:
+      - $HOME/.local/bin/aoe-scheduled-session
+      - kb-enrich
+      - /kb-enrich
+    StartCalendarInterval:
+      - Weekday: 1
+        Hour: 20
+        Minute: 0
+      - Weekday: 2
+        Hour: 20
+        Minute: 0
+      - Weekday: 3
+        Hour: 20
+        Minute: 0
+      - Weekday: 4
+        Hour: 20
+        Minute: 0
+      - Weekday: 5
+        Hour: 20
+        Minute: 0
+    StandardOutPath: $HOME/Library/Logs/aoe-kb-enrich.log
+    StandardErrorPath: $HOME/Library/Logs/aoe-kb-enrich.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  aoe-fix-prod-errors:
+    Label: com.$USER.aoe-fix-prod-errors
+    ProgramArguments:
+      - $HOME/.local/bin/aoe-scheduled-session
+      - fix-prod-errors
+      - /fix-prod-errors
+    StartCalendarInterval:
+      - Weekday: 1
+        Hour: 20
+        Minute: 0
+      - Weekday: 2
+        Hour: 20
+        Minute: 0
+      - Weekday: 3
+        Hour: 20
+        Minute: 0
+      - Weekday: 4
+        Hour: 20
+        Minute: 0
+      - Weekday: 5
+        Hour: 20
+        Minute: 0
+    StandardOutPath: $HOME/Library/Logs/aoe-fix-prod-errors.log
+    StandardErrorPath: $HOME/Library/Logs/aoe-fix-prod-errors.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+  aoe-audit:
+    Label: com.$USER.aoe-audit
+    ProgramArguments:
+      - $HOME/.local/bin/aoe-scheduled-session
+      - audit
+      - /audit
+      - $HOME/code/dotfiles
+    StartCalendarInterval:
+      Weekday: 1
+      Hour: 8
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/aoe-audit.log
+    StandardErrorPath: $HOME/Library/Logs/aoe-audit.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
   babysitter-check:
     Label: com.$USER.babysitter-check
     ProgramArguments:

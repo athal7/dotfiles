@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  printf 'usage: %s <title> <prompt> [project-path]\n' "$0" >&2
+  exit 64
+fi
+
+title=$1
+prompt=$2
+project_path=${3:-}
+
+if [[ -n "$project_path" ]]; then
+  session_output=$(aoe add "$project_path" --tool omp --title "$title" --group Scheduled)
+else
+  session_output=$(aoe add --scratch --tool omp --title "$title" --group Scheduled)
+fi
+
+session_id=$(sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
+if [[ -z "$session_id" ]]; then
+  printf '%s\n' "$session_output" >&2
+  printf 'aoe add did not return a session ID\n' >&2
+  exit 1
+fi
+
+aoe session start "$session_id"
+sleep 5
+aoe send --no-revive "$session_id" "$prompt"
