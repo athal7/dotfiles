@@ -9,6 +9,11 @@
 {{-     $url := $server.url -}}
 {{-     if kindIs "map" $url -}}{{- $url = env (index $url "name") -}}{{- end -}}
 {{-     $_ := set $entry "url" $url -}}
+{{-     if hasKey $server "auth" -}}
+{{-       if eq (index $server "auth") "oauth" -}}
+{{-         $_ := set $entry "auth" (dict "type" "oauth" "credentialId" (printf "mcp_oauth:profile:default:%s" $url)) -}}
+{{-       end -}}
+{{-     end -}}
 {{-     if hasKey $server "headers" -}}
 {{-       $headers := dict -}}
 {{-       range $headerName, $headerSpec := $server.headers -}}

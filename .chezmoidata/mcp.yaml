@@ -83,6 +83,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": "https://mcp.linear.app/mcp",
+        "auth": "oauth",
         "tools":
           [
             "extract_images",
@@ -154,6 +155,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_ZOOM_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "ask",
@@ -173,12 +175,14 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SELF_MCP_URL" },
+        "auth": "oauth",
       },
       {
         "name": "runlayer-slack",
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SLACK_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "slack_get_reactions",
@@ -206,6 +210,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_ATLASSIAN_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "atlassianUserInfo",
@@ -246,6 +251,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GMAIL_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "fetch_attachment",
@@ -268,6 +274,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GCALENDAR_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "get_event",
@@ -288,6 +295,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GDRIVE_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "fetch_file",
@@ -311,6 +319,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GDOCS_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "fetch",
@@ -335,6 +344,7 @@
         "exclude_for_models": ["mlx/default_model"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GSHEETS_MCP_URL" },
+        "auth": "oauth",
         "tools":
           [
             "fetch",
