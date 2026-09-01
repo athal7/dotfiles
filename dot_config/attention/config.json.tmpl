@@ -50,7 +50,7 @@
       "plugins" (list "calendar" "reminders" "github" "linear")
       "dashboard" (dict "groups" $groups)
       "calendar" (dict "names" $calNames "actions" (list
-        (dict "key" "S" "label" "session" "background" true
+        (dict "key" "s" "label" "session" "background" true
               "command" (list "/bin/sh" "-c"
                 "aoe add --scratch --title \"$1\" --tool omp --launch >/dev/null && aoe send \"$1\" \"$2\""
                 "attention-session" "{title}" "{input}")
@@ -62,17 +62,17 @@
                 "attention-session" "{title}" "{input}")
               "input" (dict "prompt" "Session message" "default" "Help me do the work to complete reminder {title}"))))
       "github" (dict "actions" (list
-        (dict "key" "S" "label" "session" "background" true
+        (dict "key" "s" "label" "session" "background" true
               "command" (list "/bin/sh" "-c"
                 "aoe add \"$1\" --title \"$2\" --tool omp --worktree \"$3\" --new-branch --launch >/dev/null && aoe send \"$2\" \"$4\""
                 "attention-session" "{repo_path}" "{slug}" "{slug}" "{input}")
               "input" (dict "prompt" "Session message" "default" "For issue/PR {id} in this repo, checkout the existing branch if exists, and {session_prompt}"))
-        (dict "key" "L" "label" "lumen"
+        (dict "key" "l" "label" "lumen"
               "command" (list "lumen" "diff" "{url}"))))
       "linear" (dict
         "apiToken" $linearToken
         "actions" (list
-          (dict "key" "S" "label" "session" "background" true
+          (dict "key" "s" "label" "session" "background" true
                 "command" (list "/bin/sh" "-c"
                   "aoe add . --title \"$1\" --tool omp --launch >/dev/null && aoe send \"$1\" \"$2\""
                   "attention-session" "{identifier_lower}" "{input}")
