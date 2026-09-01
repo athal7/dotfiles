@@ -20,6 +20,14 @@ fi
 dns_name=$(/opt/homebrew/bin/tailscale status --json | /opt/homebrew/bin/jq -er '.Self.DNSName')
 dns_name=${dns_name%.}
 
+if [ -z "$dns_name" ]; then
+  mkdir -p "$HOME/Library/Logs" 2>/dev/null
+  printf '%s aoe-serve: tailscale DNS name is empty — refusing to start with --allowed-host ""\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" >> "$HOME/Library/Logs/aoe-serve.error.log" 2>/dev/null
+  printf 'aoe-serve: tailscale DNS name is empty — check Tailscale connectivity and retry.\n' >&2
+  exit 1
+fi
+
 exec /opt/homebrew/bin/aoe serve \
   --host 127.0.0.1 \
   --port 4097 \
