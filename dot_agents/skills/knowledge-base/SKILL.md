@@ -1,37 +1,45 @@
 ---
 name: knowledge-base
-description: "Look up people, projects, products, and decisions locally first: contact info (email, Slack ID, GitHub handle), titles and teams, project/product status, who works on what, and past decisions. Check before searching Slack, email, calendar, or GitHub — this is the first stop for any contact detail, project context, or decision-history question."
+description: "Maintain KB ingestion and upstream CQ projection during /kb-enrich, capability checks, approved projection, verification, or backfill. Do not load for normal agent context unless CQ must fall back to KB."
 license: MIT
 metadata:
   provides:
     - knowledge-base
 ---
 
-`kb` wraps a local vault of people, projects, and decisions. Check it before reaching for any remote service. Read `kb --help` and `kb <group> --help` on demand.
+`kb` is local ingestion and reconciliation state. CQ is the normal local agent index. Use `kb` as fallback when CQ has no answer or projection verification is incomplete.
 
-`kb` with no subcommand opens an interactive TUI — never invoke it bare from an agent session; it will hang waiting on a terminal.
+`kb` with no subcommand opens an interactive TUI. Never invoke it bare from an agent session.
 
-## Coverage, and where it stops
+## KB maintenance
 
 | Need | Command |
 |---|---|
-| Contact fields for a person | `kb people show <name>` — resolves aliases; JSON |
-| Everyone in the vault | `kb people list` |
-| Find a project or product | `kb projects show <name>` / `kb products show <name>` — both resolve aliases; use their `list` subcommands for enumeration |
-| Write a journal entry | `kb journal append --date <YYYY-MM-DD> --section <heading> [--content <text>]` — stdin if `--content` is omitted or `-` |
-| Locate or read journal entries | `kb journal list [--from YYYY-MM-DD] [--to YYYY-MM-DD]` / `kb journal show <YYYY-MM-DD>` |
-| Open action items | `kb action-items list`, then `complete`/`progress`/`todo <line_no>` |
+| Reconcile people, projects, or products | `kb people|projects|products show <name>` |
+| Record or inspect source journal state | `kb journal append|list|show` |
+| Reconcile existing local action items | `kb action-items list`, then `complete`/`progress`/`todo <line_no>` |
 
-**`people show` includes the person's GitHub handle when recorded**, but it does not include project links or profile body content. Read the profile itself for those.
+Read `kb --help` and `kb <group> --help` on demand. Projects and products have read-only CLI surfaces. Update their Markdown only when the CLI cannot represent the needed local reconciliation.
 
-**Projects and products have read-only CLI surfaces; decisions and all profile writes do not.** Read or update those Markdown files directly when the CLI cannot represent the required operation.
+## Projection operation
 
-**`action-items` has no `add`** — new items become reminders or tracked issues instead.
+- Keep canonical facts, source evidence, deduplication, and publication disposition in KB state. Do not use a direct SQLite write for CQ or KB state.
+- Collectors provide source identity, fingerprint, and access classification. KB performs projection after enrichment presents the complete plan for explicit approval.
+- Capability gate: call `/usr/bin/env -u CQ_ADDR -u CQ_API_KEY CQ_LOCAL_DB_PATH="$HOME/.local/share/cq/local.db" kb cq projection plan --help`. If it fails, stop projection safely and retain KB fallback.
+- Normal projection: run upstream `plan --output <owner-only-plan.json>`. Backfill: run upstream `backfill --output <owner-only-plan.json>`. Add `--authorization-policy all-local-agents` only when `kb.local_projection.all_local_agents_authorized_for_classified_content` is true.
+- After approval, run upstream `approve <plan.json> --output <owner-only-approved.json>`, `apply <approved.json>`, `verify`, then `status` in the same isolated environment.
+- Upstream owns approval digests, ledger mutation, recovery, replacement, completion, and verification. Do not emulate these mechanics.
+- Upstream fails closed for records whose access classification needs authorization. Never use `CQ_ADDR`, `CQ_API_KEY`, `cq auth`, `cq drain`, another database, credentials, secrets, or access-incompatible content.
+- CQ verification is complete only when upstream `status` and `verify` report the relevant scope complete. Until every backfill scope completes, retain KB fallback.
 
-## Gotchas
+## Confluence
 
-- **Journal stats come from git, not from any session store.** Agent session stores are pruned and harness-specific, so they can't supply older counts. `git log --all` double-counts pre-squash and merged copies of the same work and includes bot commits (`reg_actions`, `argocd-image-updater`) — filter to the human author and dedupe.
-- **A person usually already exists under another name.** Look them up by alias before creating anything; the vault keeps variant→canonical maps, and a new profile for an existing person is the common corruption.
-- **Never invent a URL.** Discover a workspace or org slug from entries already in the vault rather than guessing one.
-- **Caps are deliberate:** max 5 current items and 10 key decisions per profile. Drop current items older than ~2 weeks with no recent mention.
-- **A project is a durable service or named workstream** — not a feature, ticket, or infra task. Those become status bullets on the parent; time-bound efforts belong in the tracker.
+- A Decision Log page is eligible source material unless its exact content is a recorded KB write-back echo.
+- Confluence publication is approval-gated. Link a CQ KU only when one exists.
+
+## Limits
+
+- A person usually exists under an alias. Resolve before adding a profile.
+- Journal stats come from git, not from ephemeral session stores.
+- Never invent a source URL or workspace slug.
+- A project is a durable service or named workstream. A feature or issue belongs under its parent.

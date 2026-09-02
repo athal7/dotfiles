@@ -3,7 +3,7 @@ name: communication
 description: Load when composing human-facing prose through an integration — chat messages, review comments, merge request descriptions, emails, doc bodies, ticket descriptions. Carries the AI-authorship attribution rule.
 license: MIT
 ---
-Load `knowledge-base` before collecting project, product, person, or decision context.
+Query CQ for normal context. Load `knowledge-base` when CQ has no answer or its projection verification is incomplete.
 
 
 Tailor to the recipient — role, technical depth, your relationship with them. Some want two lines; some need the context.

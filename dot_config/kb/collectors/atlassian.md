@@ -1,40 +1,30 @@
 ---
 name: atlassian
-description: Confluence decisions/status and wiki-hygiene flags
+description: Confluence and Jira collector input with provenance-safe Decision Log handling
 ---
 
-Run a CQL search scoped to whatever Confluence space(s) the team's wiki presence lives in (discoverable via `getConfluenceSpaces` if not already known — a natural candidate for a per-workspace config value alongside the other local settings this repo already keeps, rather than a value assumed here) with `lastmodified` inside the enrichment window, prioritizing sections organized like retrospectives, demos, meeting notes, PRDs, and proposals; sections like sales/prospect notes are lower priority and worth a pull only if the page shows an explicit decision or status change, not routine meeting-note traffic. Exclude pages carrying the `decision-log` label (e.g. `AND label != "decision-log"`) — those are the write-back target of the Decision Log feature, not source material, and re-ingesting them here would echo-loop the two features against each other. Extract kb facts from the result.
+Run a CQL search in the configured Confluence space or spaces for the enrichment window. Prioritize retrospectives, demos, meeting notes, PRDs, and proposals. Pull sales or prospect notes only for explicit decisions or status changes. Use Jira only when its configured collector scope identifies relevant work.
+
+Do not exclude `decision-log` pages by label. For every candidate page, record its stable page ID, URL, version or modification time, normalized body fingerprint, and collector time.
+
+## KB write-back echo check
+
+Treat a Decision Log page as a KB echo only when all conditions match:
+
+1. The body has a `KB projection: ledger:<entry-id>` marker.
+2. KB publication provenance identifies that page ID and entry ID as a KB write-back. Its linked CQ KU is optional.
+3. The page's current normalized body fingerprint equals the recorded published-content fingerprint.
+
+If any condition fails, process the page as independently authored source material. A human edit to a KB-created page changes the fingerprint and is eligible for fresh extraction.
 
 ## Triage rules
 
-Skip:
-- Routine meeting-note pages with no decision or status change, especially in sales/prospect-note sections
-- Page edits that are formatting-only (typo fixes, reordering) with no substantive content change
+Skip routine meeting notes with no decision or status change. Skip formatting-only edits. Extract explicit decisions, assigned open action items, and project or product status updates. Anchor each item to its project or product. Cite the Confluence URL and page ID with each extracted fact.
 
-Extract:
-- Decisions recorded on pages like retrospectives, PRDs, or proposals (explicit "we decided", scope changes, architectural choices)
-- Action items assigned to the user or left open at page-edit time
-- Project or product status updates, including those surfaced in demo-page transcripts
-- Explicit decisions or status changes on prospect/sales-note pages (contact/deal status change, not routine notes)
-
-## Extraction rules
-
-- Anchor each decision or status update to the project or product it concerns.
-- Cite the Confluence page URL for every extracted fact so it can be cross-referenced at write time.
-- For demo-page transcripts, prefer the page's own summary/notes over the raw transcript; only extract what is distilled there.
-- Meeting-notes and retrospective pages take the same distillation approach: they're typically freeform prose with no structured metadata (no Page Properties fields), so extract directly from the narrative content under headings like "what went well," "action items," or "decisions," rather than expecting a structured block.
+Prefer a page summary over a raw demo transcript. Read meeting notes and retrospectives as narrative prose under decision, summary, and action-item headings.
 
 ## Wiki-hygiene flagging
 
-Separately from the window-scoped extraction above, periodically scan the space's page tree (`getPagesInConfluenceSpace` / `getConfluencePageDescendants`) for hygiene issues and surface each as a candidate action item, filed through the same reminder/tracked-issue pipeline `/kb-enrich` uses for other collectors — subject to its existing dedup-against-current-state rule, which suppresses re-filing a flag already raised on a prior run.
+Periodically scan configured page trees for stale active content, superseded pages left in active trees, duplicate containers, and obvious mis-parenting. Before filing a personal reminder, establish that the user can act on the page. Deduplicate against current destination state and prior source evidence.
 
-Heuristics for what's hygiene-worthy:
-- A page unmodified for more than ~9 months that sits in an actively-referenced section (e.g. a roadmap, goals, or infra/architecture container) — stale content in a section people still consult is worse than stale content in an archive.
-- A page whose title contains "(superseded)" or similar but that still exists in the tree rather than being deleted or archived.
-- Two top-level containers covering the same topic (e.g. two goals containers, two retrospectives containers) — a sign one is a stale duplicate that should be merged or removed.
-- A page that's obviously mis-parented — its content topic doesn't match its parent container (e.g. a meeting-agenda page filed under a policies/procedures container).
-- Before filing a hygiene candidate as a reminder to the user, check whether they plausibly have edit/delete authority over the page (are they the creator, or does the page sit in a section/space they own?). A page the user didn't create and doesn't own isn't an actionable reminder for them — filing it anyway just produces noise they can't act on. If ownership is unclear or the page belongs to someone else, skip filing it as a personal action item.
-
-This is not an exhaustive checklist — apply the heuristics to whatever the current page tree looks like rather than checking only for previously-found instances.
-
-**This collector never proposes writing to Confluence itself.** Flagged hygiene issues are always filed as a local reminder or a tracked issue for a human (or a future explicitly-approved write path) to act on — never as a direct page edit, move, or delete.
+This collector never writes to Confluence. Any publication uses the separate approval-gated KB projection flow.

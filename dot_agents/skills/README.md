@@ -27,7 +27,7 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 |---|---|
 | **aoe** | Agent of Empires: session creation, worktrees, dispatch |
 | **chezmoi** | This repo's deploy workflow, LaunchAgents, template gotchas |
-| **knowledge-base** | `~/.local/share/kb/` — people, projects, decisions. Check before any remote lookup |
+| **knowledge-base** | KB ingestion and local CQ projection maintenance. CQ is the normal index; KB is the fallback. |
 | **elasticsearch** | Production triage: logs, APM traces, errors |
 | **pagerduty** | Incidents, on-call schedules, escalation policies |
 | **reminders** | macOS Reminders via `remindctl` |

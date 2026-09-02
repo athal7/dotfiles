@@ -62,17 +62,20 @@ prod_services:
   your-api-service: your-api-repo
   your-worker-service: your-worker-repo
 
-# Knowledge-base collectors to run during /kb-enrich. Each name maps to a recipe
-# file at ~/.config/kb/collectors/<name>.md. Only listed collectors run; omit one
-# to disable it without deleting its recipe.
+# Knowledge routing configuration. KB owns upstream local projection after its
+# capability check succeeds. The policy below permits classified records only
+# when every local CQ agent is authorized.
 kb:
-  collectors: [openspec, omp, slack, zoom, linear, gh, atlassian]
-  # Confluence page ID of the Decision Log container page (the page running the
-  # Page Properties Report macro that auto-lists its children). Leave unset/empty
-  # to skip Decision Log write-back in /kb-enrich entirely — no Confluence write
-  # of any kind happens until you fill this in with your own page ID.
+  collectors: [private, openspec, omp, slack, zoom, linear, gh, atlassian]
+  # Explicit allowlist for the `private` collector. Each entry declares its
+  # access classification. Never use a broad path scan.
+  private_sources: []
+  local_projection:
+    # Set true only after confirming every local CQ agent may read classified data.
+    all_local_agents_authorized_for_classified_content: false
+  # Confluence page ID of the Decision Log container page. Leave empty to skip
+  # Decision Log publication. Every publication still requires per-write approval.
   decision_log_container_page_id: ""
-
 runlayer:
   zoom_mcp_url: ""  # Runlayer MCP proxy URL for the Zoom connector
   self_mcp_url: ""  # Runlayer MCP proxy URL for the self/discovery server

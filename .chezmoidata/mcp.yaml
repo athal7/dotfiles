@@ -16,7 +16,7 @@
       {
         "name": "cq",
         "transport": "local",
-        "command": ["cq", "mcp"],
+        "command": ["/bin/sh", "-c", "exec /usr/bin/env -u CQ_ADDR -u CQ_API_KEY cq mcp --db-path \"$HOME/.local/share/cq/local.db\""],
         "tools": ["confirm", "flag", "propose", "query", "status"],
       },
       {

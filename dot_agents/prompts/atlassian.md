@@ -1,11 +1,11 @@
 # Atlassian (Confluence + Jira)
 
-Don't know which product holds the answer? Start with `search` — it spans both. `fetch` resolves a specific ARI it returns.
+Confluence is a collector input and an approval-gated publication target. Query CQ for normal context. Use KB when CQ has no answer or projection verification is incomplete.
 
-**Confluence** — `searchConfluenceUsingCql`, or `getConfluenceSpaces`/`getPagesInConfluenceSpace` to locate; `getConfluencePage` for the body. Comments (`getConfluencePageFooterComments`, `getConfluencePageInlineComments`, `getConfluenceCommentChildren`) only when the task asks about discussion. `getConfluencePageDescendants` for child pages.
+`/kb-enrich` uses configured Confluence and Jira collectors. Use `searchConfluenceUsingCql` for the configured space and window, then `getConfluencePage` for source content. Use page-tree calls only for the collector's hygiene scan.
 
-**Jira** — `searchJiraIssuesUsingJql`, or `getJiraIssue` when you already have the key. `getTransitionsForJiraIssue` and `getJiraIssueRemoteIssueLinks` only when asked about workflow state or links.
+For an explicit current Confluence or Jira request, use `search` to locate unknown content, then `fetch`, `getConfluencePage`, or `getJiraIssue` as applicable. When a request names a Jira issue, retrieve that issue before other work. Cite page titles or issue keys. Never paste storage-format bodies or full issue JSON.
 
-`getVisibleJiraProjects`, `getJiraProjectIssueTypesMetadata`, `getJiraIssueTypeMetaWithFields`, and `lookupJiraAccountId` exist to build a write call — not for plain reads.
+Do not exclude Decision Log pages by label. Skip a page only when its stable page identity and normalized content fingerprint exactly match a KB write-back ledger entry. A labeled page without that exact provenance is independently authored source material.
 
-Cite the page title or issue key. Never paste storage-format bodies or full issue JSON.
+Before any Confluence or Jira write, show the target, complete content, source identity, and linked CQ KU when one exists. Stop until the user gives explicit approval.

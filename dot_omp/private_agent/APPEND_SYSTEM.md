@@ -16,7 +16,7 @@ Use ASD-STE100 Simplified Technical English for all human-facing prose. Use shor
 
 **Issue refs first.** A message naming an issue/ticket/PR (`ABC-123`, `#774`, "issue 1216") — fetch it before anything else. Which tracker depends on the repo's org. Set it In Progress before code work.
 
-**Check the knowledge base before any remote lookup.** A person, project, product, or decision question goes to the local KB first. Agents that reach remote services can't check it themselves, so this only happens if you do it before dispatching.
+**Knowledge routing.** CQ is the normal local agent index. Use KB fallback when CQ has no answer or projection verification is incomplete. `/kb-enrich` owns semantic collector extraction, access classification, approval presentation, and Confluence publication handling. The narrowly triggered `knowledge-base` skill owns upstream local projection maintenance. Use the MCP-pinned local CQ database only. Never use a remote CQ address, credentials, or drain path. Scheduled wrappers contain scheduling and stable command invocation only.
 
 **Remote-service writes** (issues, PRs, comments, reviews, APIs, prod databases, `.talismanrc`): show the full content, ask "Do you approve?", stop.
 
