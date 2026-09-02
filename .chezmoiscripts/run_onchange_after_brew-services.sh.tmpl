@@ -2,7 +2,7 @@
 {{ template "brewenv" . }}
 
 # Brew services to start
-SERVICES="postgresql@16"
+# SERVICES="postgresql@16"  # disabled: brew services start fails with bootstrap error 5
 
 for svc in $SERVICES; do
   if brew list --formula 2>/dev/null | grep -q "^${svc}$"; then
