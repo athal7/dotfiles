@@ -31,6 +31,14 @@ Read `kb --help` and `kb <group> --help` on demand. Projects and products have r
 - Upstream owns approval digests, ledger mutation, recovery, replacement, completion, and verification. Do not emulate these mechanics.
 - Upstream fails closed for records whose access classification needs authorization. Never use `CQ_ADDR`, `CQ_API_KEY`, `cq auth`, `cq drain`, another database, credentials, secrets, or access-incompatible content.
 - CQ verification is complete only when upstream `status` and `verify` report the relevant scope complete. Until every backfill scope completes, retain KB fallback.
+## Enrichment completion reporting
+
+Every enrichment completion response MUST report every configured collector by name with one of the following statuses:
+- `succeeded` — the collector ran and produced eligible evidence
+- `succeeded with no eligible evidence` — the collector ran but found no extractable facts
+- `failed` — the collector encountered an error
+
+Never claim all collectors succeeded unless every configured collector ran successfully. Omitting a collector from the report is a failure.
 
 ## Confluence
 

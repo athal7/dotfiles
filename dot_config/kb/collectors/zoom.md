@@ -16,6 +16,7 @@ Retrieve, per the shape below:
 Call the calendar's list-events/get-event-details methods over the window to resolve each meeting's Zoom `conference.conference_id` (dedupe a recurring series to one call), then `get_meeting_assets` per qualifying meeting, applying content priority (`meeting_summary` → `my_notes.content_markdown` → transcript items) internally.
 
 **Gotcha:** `search_meetings` is host-scoped — it silently drops any meeting athal didn't organize, even ones with real decisions/action items only in My Notes. It's retired from this collector; resolve meetings via Calendar instead (above), never call `search_meetings`. The `include_zoom_my_notes` flag an earlier version of this doc referenced doesn't exist on any current tool — don't pass it.
+- **Calendar absence:** Unscheduled calls may not appear in Calendar. A valid Slack call invitation with transcript or summary is real meeting evidence and must not be classified as an absent meeting.
 
 ## Triage rules
 
