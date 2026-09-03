@@ -141,7 +141,7 @@ status_bar = "auto"
 
 
 [tools.lumen]
-command = "$HOME/.local/bin/lumen diff --watch --save-viewed --wrap $(remote=origin; git remote get-url upstream >/dev/null 2>&1 && remote=upstream; name=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null); name=${name#origin/}; printf %s \"$remote/${name:-main}\")..-"
+command = "lumen diff --watch --wrap $(remote=origin; git remote get-url upstream >/dev/null 2>&1 && remote=upstream; name=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null); name=${name#origin/}; printf %s \"$remote/${name:-main}\")..-"
 hotkey = "Alt+l"
 
 [tools.editor]
@@ -172,6 +172,9 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{-   if hasKey $live "app_state" -}}
 {{-     $liveAppState = index $live "app_state" -}}
 {{-   end -}}
+{{- end -}}
+{{- if hasKey $live "tools" -}}
+{{-   $_ := unset (index $live "tools") "lumen" -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $static) $live -}}
 {{- if hasKey $config "plugins" -}}
