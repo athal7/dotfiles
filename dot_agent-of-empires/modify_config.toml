@@ -85,7 +85,6 @@ volume_ignores = []
 volume_ignores_strategy = "anonymous"
 
 [session]
-agent_command_override = { omp = "omp-billed" }
 agent_status_hooks = true
 auto_resume_on_restart = true
 auto_stop_idle_secs = 0
@@ -118,7 +117,7 @@ freebuff = "freebuff"
 jules = "jules"
 
 [session.agent_detect_as]
-jules = "claude"
+jules = "jules"
 
 [sound]
 enabled = false
@@ -179,5 +178,13 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- $config := mergeOverwrite (deepCopy $static) $live -}}
 {{- if hasKey $config "plugins" -}}
 {{-   $_ := unset (index $config "plugins") "agent-of-empires.cron" -}}
+{{- end -}}
+{{- $session := index $config "session" -}}
+{{- $_ := setValueAtPath "acp.default_agent" (index (index $static "acp") "default_agent") $config -}}
+{{- $_ := unset $session "agent_command_override" -}}
+{{- $_ := set (index $session "agent_detect_as") "jules" "jules" -}}
+{{- $_ := setValueAtPath "tools.lumen" (deepCopy (index (index $static "tools") "lumen")) $config -}}
+{{- if and (hasKey $config "providers") (hasKey (index $config "providers") "webSearchOrder") -}}
+{{- $_ := set (index $config "providers") "webSearchOrder" (without (index (index $config "providers") "webSearchOrder") "anthropic") -}}
 {{- end -}}
 {{- $config | setValueAtPath "app_state" $liveAppState | toToml -}}

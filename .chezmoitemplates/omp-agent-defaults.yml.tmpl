@@ -358,13 +358,6 @@ compaction:
     - shake
     - remote
     - soft
-retry:
-  fallbackChains:
-    default:
-      - anthropic/claude-sonnet-5
-{{- if hasKey . "local_model" }}
-    {{ (index .local_model "provider") | default "mlx" }}/{{ (index .local_model "id") | default "default_model" }}: []
-{{- end }}
 task:
   agentModelOverrides: {}
   disabledAgents: []

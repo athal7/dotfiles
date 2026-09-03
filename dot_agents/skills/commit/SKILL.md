@@ -11,7 +11,7 @@ Verify the diff and apply any findings before you stage. Then:
 3. Run the full test suite — unit, integration, e2e, system. No commits with failures. This is the gate; push assumes it already ran.
 4. Draft the message, with a trailer naming the model actually running the session — email is the model's provider domain, never the harness (`omp.sh`, …):
    ```
-   Co-Authored-By: anthropic/claude-sonnet-5 <noreply@anthropic.com>
+   Co-Authored-By: mlx/default_model <noreply@mlx.local>
    ```
    Swap in the current model and its provider's domain (`openai.com`, `google.com`, `x.ai`, …) — don't reuse a stale example verbatim.
 

@@ -42,8 +42,5 @@ providers:
         contextWindow: {{ $localModel.context_window }}
         maxTokens: {{ $agentMaxTokens }}
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-{{- if hasKey $localModel "compaction_model" }}
-        compactionModel: {{ $localModel.compaction_model }}
-{{- end }}
 {{- end }}
 {{- end }}

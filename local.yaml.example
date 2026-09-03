@@ -3,10 +3,10 @@
 # This file is never committed — it lives only on the machine.
 # Private model defaults rendered by OMP templates.
 model_class:
-  default: anthropic/claude-sonnet-5
-  smol: anthropic/claude-haiku-4-5
-  slow: anthropic/claude-opus-5
-  plan: anthropic/claude-opus-5
+  default: openai-codex/gpt-5.6-terra
+  smol: openai-codex/gpt-5.6-luna
+  slow: openai-codex/gpt-5.6-sol
+  plan: openai-codex/gpt-5.6-sol
 
 # Per-org config keyed by GitHub org login. Orgs not listed fall back to defaults
 # (GitHub Issues for issue tracking; no automated code review).
@@ -44,7 +44,6 @@ local_model:
   context_window: 128000
   max_tokens: 8192
   agent_max_tokens: 8192
-  compaction_model: anthropic/claude-haiku-4-5
   # Keep the most recent 32k tokens after a local-session compaction. This
   # retains the active task, tool results, and current implementation state.
   compaction_keep_recent_tokens: 32000
