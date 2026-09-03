@@ -4,7 +4,9 @@
 {{- end -}}
 {{- $agentMaxTokens := (index $localModel "agent_max_tokens") | default (index $localModel "max_tokens") | default 4096 -}}
 {{- $openRouterKeychainKey := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a openrouter_api_key -w 2>/dev/null || true" | trim -}}
-{{- $openRouterApiKey := env "OPENROUTER_API_KEY" | default $openRouterKeychainKey -}}
+{{- $openRouterEnvKey := env "OPENROUTER_API_KEY" -}}
+{{- $openRouterLocalKey := index . "openrouter_api_key" | default "" -}}
+{{- $openRouterApiKey := $openRouterEnvKey | default $openRouterKeychainKey | default $openRouterLocalKey -}}
 {{- if or $openRouterApiKey (hasKey . "local_model") }}
 providers:
 {{- if $openRouterApiKey }}

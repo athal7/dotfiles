@@ -29,6 +29,10 @@ check "renders the local provider" "$(yq -r '.providers.mlx.models[0].id' "$MODE
 OPENROUTER_MODELS="$WORK/openrouter-models.yml"
 OPENROUTER_API_KEY=test-key chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$OPENROUTER_MODELS"
 check "renders OpenRouter with a key" "$(yq -r '(.providers // {}) | has("openrouter")' "$OPENROUTER_MODELS")" true
+OPENROUTER_LOCAL_MODELS="$WORK/openrouter-local-models.yml"
+echo 'openrouter_api_key: local-test-key' >> "$DATA"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$OPENROUTER_LOCAL_MODELS"
+check "renders OpenRouter from local.yaml" "$(yq -r '(.providers // {}) | has("openrouter")' "$OPENROUTER_LOCAL_MODELS")" true
 
 mkdir -p "$AGENT_DIR"
 cp "$MODELS" "$AGENT_DIR/models.yml"
