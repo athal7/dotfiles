@@ -184,7 +184,10 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- $_ := unset $session "agent_command_override" -}}
 {{- $_ := set (index $session "agent_detect_as") "jules" "jules" -}}
 {{- $_ := setValueAtPath "tools.lumen" (deepCopy (index (index $static "tools") "lumen")) $config -}}
-{{- if and (hasKey $config "providers") (hasKey (index $config "providers") "webSearchOrder") -}}
-{{- $_ := set (index $config "providers") "webSearchOrder" (without (index (index $config "providers") "webSearchOrder") "anthropic") -}}
+{{- if hasKey $config "providers" -}}
+{{- $_ := unset (index $config "providers") "webSearchOrder" -}}
+{{- if eq (len (index $config "providers")) 0 -}}
+{{- $_ := unset $config "providers" -}}
+{{- end -}}
 {{- end -}}
 {{- $config | setValueAtPath "app_state" $liveAppState | toToml -}}

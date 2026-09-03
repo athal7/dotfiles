@@ -5,6 +5,12 @@
 {{- $live = fromYaml .chezmoi.stdin -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $defaults) $live -}}
+{{- if hasKey $config "providers" -}}
+{{- $_ := unset (index $config "providers") "webSearchOrder" -}}
+{{- if eq (len (index $config "providers")) 0 -}}
+{{- $_ := unset $config "providers" -}}
+{{- end -}}
+{{- end -}}
 {{- $_ := setValueAtPath "bash" (index $defaults "bash") $config -}}
 {{- $_ := setValueAtPath "modelRoles" (index $defaults "modelRoles") $config -}}
 {{- $_ := setValueAtPath "modelRoleStorage" (index $defaults "modelRoleStorage") $config -}}
