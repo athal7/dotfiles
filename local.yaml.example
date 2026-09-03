@@ -66,7 +66,7 @@ prod_services:
 # capability check succeeds. The policy below permits classified records only
 # when every local CQ agent is authorized.
 kb:
-  collectors: [private, openspec, omp, slack, zoom, linear, gh, atlassian]
+  collectors: [private, omp, slack, zoom, linear, gh, atlassian]
   # Explicit allowlist for the `private` collector. Each entry declares its
   # access classification. Never use a broad path scan.
   private_sources: []

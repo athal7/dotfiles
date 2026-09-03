@@ -13,8 +13,6 @@ index.html
 .agents/skills/AGENTS.md
 .agents/skills/README.md
 
-openspec
-
 # Python bytecode caches — regenerated at runtime, never managed config
 **/__pycache__
 **/__pycache__/**
