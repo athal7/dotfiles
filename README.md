@@ -13,7 +13,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [MCP registry](.chezmoidata/mcp.yaml) — server transport, command, URL, header, model-exclusion, and tool inventory data rendered into OMP configuration.
   - [OMP lead prompt](dot_omp/private_agent/APPEND_SYSTEM.md) — direct OMP system prompt.
   - [Agent skills](dot_agents/skills/) — authored skills are managed directly by chezmoi; externally installed skills own distinct sibling directories under `~/.agents/skills/`.
-  - [Agent of Empires config](dot_agent-of-empires/modify_config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`. Its `Alt+l` shortcut invokes the Homebrew-managed `lumen` CLI from `PATH`.
+  - [Agent of Empires config](dot_agent-of-empires/modify_config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`. Its `Alt+l` shortcut resolves the Homebrew package prefix, so it runs `lumen` without a link or `PATH` entry.
   - [Freebuff](https://freebuff.com/) — installed through mise and available to Agent of Empires as the opt-in `freebuff` terminal agent (`aoe add --tool freebuff`).
   - Per-org model routing — private defaults and organization overrides live only in gitignored `.chezmoidata/local.yaml`.
   - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the local Apple Silicon model endpoint, runtime, repo, context window, server generation cap, and lower agent request cap. It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl) and the local-model LaunchAgent.
