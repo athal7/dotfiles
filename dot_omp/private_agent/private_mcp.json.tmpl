@@ -7,7 +7,7 @@
 {{-   else -}}
 {{-     $_ := set $entry "type" "http" -}}
 {{-     $url := $server.url -}}
-{{-     if kindIs "map" $url -}}{{- $url = env (index $url "name") -}}{{- end -}}
+{{-     if kindIs "map" $url -}}{{- $url = printf "${%s}" (index $url "name") -}}{{- end -}}
 {{-     $_ := set $entry "url" $url -}}
 {{-     if hasKey $server "headers" -}}
 {{-       $headers := dict -}}
