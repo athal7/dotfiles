@@ -1,4 +1,5 @@
 Enrich KB routing state for every date since the last run. `backfill` requests one-time all-scope projection through the `knowledge-base` skill.
+Run KB enrichment in the caller session using the installed `kb` CLI against local runtime state. Do not create a session in, change directory to, or delegate this workflow to the kb tooling source repository.
 
 1. Resolve the normal enrichment range from `kb journal list`: enrich from the last recorded date plus one through today; with no journal entries, use today. With `backfill`, do not derive a journal window.
 2. Read `chezmoi data --format json | jq -r '.kb.collectors[]'`. Run only configured recipes under `~/.config/kb/collectors/`. Treat Confluence, Slack, Linear, GitHub, OMP, and explicitly approved local private sources as collector inputs. Stop if the collector list is absent.
