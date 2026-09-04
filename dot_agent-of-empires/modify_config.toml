@@ -165,6 +165,16 @@ init_submodules = true
 path_template = "../{repo-name}-worktrees/{branch}"
 workspace_path_template = "../{branch}-workspace-{session-id}"
 ` -}}
+{{- $runlayerEnvironment := list -}}
+{{- if hasKey . "runlayer" -}}
+{{-   range $key := keys .runlayer | sortAlpha -}}
+{{-     $url := index $.runlayer $key -}}
+{{-     if and (hasSuffix "_mcp_url" $key) (kindIs "string" $url) -}}
+{{-       $name := upper (trimSuffix "_mcp_url" $key) -}}
+{{-       $runlayerEnvironment = append $runlayerEnvironment (printf "RUNLAYER_%s_MCP_URL=%s" $name $url) -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
 {{- $liveAppState := dict -}}
 {{- if and (hasKey .chezmoi "stdin") .chezmoi.stdin -}}
 {{-   $live = fromToml .chezmoi.stdin -}}
@@ -176,6 +186,9 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{-   $_ := unset (index $live "tools") "lumen" -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $static) $live -}}
+{{- if gt (len $runlayerEnvironment) 0 -}}
+{{-   $_ := set $config "environment" $runlayerEnvironment -}}
+{{- end -}}
 {{- if hasKey $config "plugins" -}}
 {{-   $_ := unset (index $config "plugins") "agent-of-empires.cron" -}}
 {{- end -}}
