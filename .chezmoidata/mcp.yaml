@@ -3,14 +3,6 @@
         "name": "context7",
         "transport": "remote",
         "url": "https://mcp.context7.com/mcp",
-        "headers":
-          {
-            "Authorization":
-              {
-                "cmd": "security find-generic-password -l context7 -w 2>/dev/null",
-                "format": "Bearer %s",
-              },
-          },
         "tools": ["query-docs", "resolve-library-id"],
       },
       {
