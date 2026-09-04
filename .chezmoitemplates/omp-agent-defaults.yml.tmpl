@@ -237,8 +237,10 @@ bash:
 {{ end }}
 {{ end }}
 {{ end }}
+  autoBackground:
+    enabled: true
 defaultThinkingLevel: auto
-modelRoleStorage: project
+modelRoleStorage: global
 modelRoles:
 {{- range $role := list "default" "plan" "slow" "smol" }}
   {{ $role }}: {{ index $.model_class $role }}
@@ -353,15 +355,93 @@ tools:
     mcp__runlayer_slack_slack_send_message_draft: prompt
     task: allow
   approvalMode: write
+advisor:
+  enabled: true
+  subagents: true
+astGrep:
+  enabled: true
+autoResume: true
+autolearn:
+  enabled: true
+browser:
+  headless: true
+checkpoint:
+  enabled: true
 compaction:
   methodOrder:
     - shake
     - remote
     - soft
+  strategy: handoff
+composer:
+  shape: box
+computer:
+  enabled: true
+display:
+  cacheMissMarker: true
+  shimmer: classic
+  showTokenUsage: false
+doubleEscapeAction: tree
+error:
+  notify: "on"
+eval:
+  rb: true
+features:
+  unexpectedStopDetection: true
+followUpMode: all
+generate_image:
+  enabled: true
+github:
+  enabled: true
+hideThinkingBlock: true
+interruptMode: immediate
+marketplace:
+  autoUpdate: auto
+memory:
+  backend: mnemopi
+mnemopi:
+  enhancedRecall: true
+  polyphonicRecall: true
+  proactiveLinking: true
+personality: pragmatic
+plan:
+  defaultOnStartup: false
+prewalk:
+  enabled: true
+providers:
+  memoryModel: online
+read:
+  renderMarkdown: true
+security:
+  enabled: true
+secrets:
+  enabled: true
+speechgen:
+  enabled: true
+startup:
+  quiet: true
+  setupWizard: false
+statusLine:
+  compactThinkingLevel: true
+  preset: ascii
+  separator: ascii
+  sessionAccent: true
+  showHookStatus: true
+  transparent: true
+steeringMode: all
+stt:
+  enabled: true
+  submitTrigger: never
 task:
   agentModelOverrides: {}
   disabledAgents: []
-plan:
-  defaultOnStartup: false
-composer:
-  shape: box
+  showResolvedModelBadge: false
+terminal:
+  showProgress: false
+tui:
+  hyperlinks: auto
+  renderMermaid: true
+  tight: false
+  titleState: true
+vault:
+  enabled: true
