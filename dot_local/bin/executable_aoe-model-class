@@ -2,6 +2,15 @@
 PATH="/opt/homebrew/bin:$PATH"; export PATH
 
 main() {
+  runlayer_env=$(chezmoi data --format=json 2>/dev/null | jq -r '
+    .runlayer // {}
+    | to_entries[]
+    | select(.key | endswith("_mcp_url"))
+    | select(.value | type == "string" and test("^https://[^[:space:]]+$"))
+    | "RUNLAYER_\(.key | sub("_mcp_url$"; "") | ascii_upcase)_MCP_URL=\(.value)"
+  ' 2>/dev/null) || return 0
+  [ -n "$runlayer_env" ] && printf '%s\n' "$runlayer_env"
+
   root=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
   cd "$root" || return 0
 
