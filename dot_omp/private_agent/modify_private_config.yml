@@ -14,6 +14,7 @@
 {{- $_ := setValueAtPath "bash" (index $defaults "bash") $config -}}
 {{- $_ := setValueAtPath "modelRoles" (index $defaults "modelRoles") $config -}}
 {{- $_ := setValueAtPath "modelRoleStorage" (index $defaults "modelRoleStorage") $config -}}
+{{- $_ := setValueAtPath "computer" (index $defaults "computer") $config -}}
 {{- if hasKey $config "retry" -}}
 {{- $_ := unset (index $config "retry") "fallbackChains" -}}
 {{- end -}}
