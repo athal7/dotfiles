@@ -11,11 +11,10 @@ prompt=$2
 project_path=${3:-}
 
 if [[ -n "$project_path" ]]; then
-  session_output=$(/opt/homebrew/bin/aoe add "$project_path" --tool omp --title "$title" --group Scheduled)
+  session_output=$(/opt/homebrew/bin/aoe add "$project_path" --tool omp --title "$title" --group Scheduled --launch)
 else
-  session_output=$(/opt/homebrew/bin/aoe add --scratch --tool omp --title "$title" --group Scheduled)
+  session_output=$(/opt/homebrew/bin/aoe add --scratch --tool omp --title "$title" --group Scheduled --launch)
 fi
-
 session_id=$(sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
 if [[ -z "$session_id" ]]; then
   printf '%s\n' "$session_output" >&2
@@ -23,6 +22,5 @@ if [[ -z "$session_id" ]]; then
   exit 1
 fi
 
-/opt/homebrew/bin/aoe session start "$session_id"
 sleep 30
 /opt/homebrew/bin/aoe send --no-revive "$session_id" "$prompt"
