@@ -19,6 +19,14 @@ Fetch **both** surfaces: inline review threads and top-level comments. Categoriz
 
 **Present the triage. Wait.**
 
+For **every** comment, show these three items:
+
+1. **The comment** — full text, inline location (file:line or top-level), author, and timestamp.
+2. **Relevant context** — the surrounding code (5–10 lines), the thread state (open/discussion/resolved), and why the comment was raised (what the reviewer was reacting to).
+3. **Proposed action/response** — the concrete fix you will make (file, line, change summary) or the exact reply text you will post. For fixes, include the diff hunk. For replies, include the full draft text.
+
+Group by type: actionable (fix code), discussable (needs reply), already resolved. Present all three groups. **Wait for approval on every entry before acting.** Do not fix or reply until each line is approved.
+
 Ends with: an approved triage.
 
 
