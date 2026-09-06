@@ -5,8 +5,12 @@
 {{- $live = fromYaml .chezmoi.stdin -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $defaults) $live -}}
+{{- if hasKey $config "mnemopi" -}}
+{{- $_ := unset $config "mnemopi" -}}
+{{- end -}}
 {{- if hasKey $config "providers" -}}
 {{- $_ := unset (index $config "providers") "webSearchOrder" -}}
+{{- $_ := unset (index $config "providers") "memoryModel" -}}
 {{- if eq (len (index $config "providers")) 0 -}}
 {{- $_ := unset $config "providers" -}}
 {{- end -}}
@@ -15,6 +19,8 @@
 {{- $_ := setValueAtPath "modelRoles" (index $defaults "modelRoles") $config -}}
 {{- $_ := setValueAtPath "modelRoleStorage" (index $defaults "modelRoleStorage") $config -}}
 {{- $_ := setValueAtPath "computer" (index $defaults "computer") $config -}}
+{{- $_ := setValueAtPath "autolearn" (index $defaults "autolearn") $config -}}
+{{- $_ := setValueAtPath "memory" (index $defaults "memory") $config -}}
 {{- if hasKey $config "retry" -}}
 {{- $_ := unset (index $config "retry") "fallbackChains" -}}
 {{- end -}}
