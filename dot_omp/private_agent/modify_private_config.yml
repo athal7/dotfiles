@@ -21,6 +21,11 @@
 {{- $_ := setValueAtPath "computer" (index $defaults "computer") $config -}}
 {{- $_ := setValueAtPath "autolearn" (index $defaults "autolearn") $config -}}
 {{- $_ := setValueAtPath "memory" (index $defaults "memory") $config -}}
+{{- $_ := setValueAtPath "autoResume" (index $defaults "autoResume") $config -}}
+{{- $_ := setValueAtPath "compaction.strategy" (index (index $defaults "compaction") "strategy") $config -}}
+{{- if hasKey $config "compaction" -}}
+{{- $_ := unset (index $config "compaction") "methodOrder" -}}
+{{- end -}}
 {{- if hasKey $config "retry" -}}
 {{- $_ := unset (index $config "retry") "fallbackChains" -}}
 {{- end -}}

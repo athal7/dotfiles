@@ -360,7 +360,7 @@ advisor:
   subagents: true
 astGrep:
   enabled: true
-autoResume: true
+autoResume: false
 autolearn:
   enabled: false
 browser:
@@ -368,11 +368,7 @@ browser:
 checkpoint:
   enabled: true
 compaction:
-  methodOrder:
-    - shake
-    - remote
-    - soft
-  strategy: handoff
+  strategy: snapcompact
 composer:
   shape: box
 computer:

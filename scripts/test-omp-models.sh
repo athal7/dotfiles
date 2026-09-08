@@ -13,6 +13,7 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 
 DATA="$WORK/local.yaml"
 MODELS="$WORK/models.yml"
+CONFIG="$WORK/config.yml"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
 mkdir -p "$BIN"
@@ -23,6 +24,10 @@ EOF
 chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
+check "disables automatic session resume" "$(yq -r '.autoResume' "$CONFIG")" false
+check "selects Snapcompact compaction" "$(yq -r '.compaction.strategy' "$CONFIG")" snapcompact
+check "removes unsupported compaction order" "$(yq -r '.compaction | has("methodOrder")' "$CONFIG")" false
 
 check "omits OpenRouter without a key" "$(yq -r '(.providers // {}) | has("openrouter")' "$MODELS")" false
 check "renders the local provider" "$(yq -r '.providers.mlx.models[0].id' "$MODELS")" default_model
@@ -36,6 +41,11 @@ check "renders OpenRouter from local.yaml" "$(yq -r '(.providers // {}) | has("o
 
 mkdir -p "$AGENT_DIR"
 cp "$MODELS" "$AGENT_DIR/models.yml"
+cp "$CONFIG" "$AGENT_DIR/config.yml"
+auto_resume="$(PI_CODING_AGENT_DIR="$AGENT_DIR" omp config get autoResume --json | jq -r '.value')"
+check "OMP accepts disabled automatic resume" "$auto_resume" false
+compaction_strategy="$(PI_CODING_AGENT_DIR="$AGENT_DIR" omp config get compaction.strategy --json | jq -r '.value')"
+check "OMP accepts Snapcompact strategy" "$compaction_strategy" snapcompact
 models="$(PI_CODING_AGENT_DIR="$AGENT_DIR" omp models mlx --json)"
 check "OMP enables the local provider" "$(printf '%s' "$models" | jq -r '.models[0].provider')" mlx
 
