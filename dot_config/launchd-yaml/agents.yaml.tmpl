@@ -175,7 +175,7 @@ launchagents:
   llama-server:
     Label: com.$USER.llama-server
     ProgramArguments:
-      - llama-server
+      - /opt/homebrew/bin/llama-server
       - --hf-repo
       - {{ .local_model.hf_repo }}
       - --host

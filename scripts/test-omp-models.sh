@@ -45,7 +45,7 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.omp/agen
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --file "$REPO_ROOT/dot_config/launchd-yaml/agents.yaml.tmpl" > "$LAUNCH_AGENTS"
 check "propagates the configured provider context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$CUSTOM_MODELS")" 40960
 check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
-check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" llama-server
+check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" /opt/homebrew/bin/llama-server
 check "enables the llama prompt cache" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r 'index("--cache-prompt") != null')" true
 check "preserves a single llama request slot" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--parallel")) + 1]')" 1
 check "propagates the llama cache limit" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--cache-ram")) + 1]')" 3G
