@@ -11,7 +11,7 @@ main() {
   [ -n "$routing" ] && [ "$routing" != "null" ] || return 0
 
   default_model=$(printf '%s' "$routing" | jq -er '.default' 2>/dev/null) || return 0
-  case "$default_model" in mlx/*) ;; *) return 0 ;; esac
+  case "$default_model" in gguf/*) ;; *) return 0 ;; esac
 
   keep_recent_tokens=$(chezmoi data --format=json 2>/dev/null | jq -er '.local_model.compaction_keep_recent_tokens // 8000 | if type == "number" and . >= 1 then floor else error("invalid compaction_keep_recent_tokens") end' 2>/dev/null) || return 0
 

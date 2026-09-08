@@ -13,7 +13,7 @@
       },
       {
         "name": "github",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": "https://api.githubcopilot.com/mcp/",
         "headers":
@@ -72,7 +72,7 @@
       },
       {
         "name": "linear",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": "https://mcp.linear.app/mcp",
         "tools":
@@ -143,7 +143,7 @@
       },
       {
         "name": "runlayer-zoom",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_ZOOM_MCP_URL" },
         "tools":
@@ -162,13 +162,13 @@
       },
       {
         "name": "runlayer-self",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SELF_MCP_URL" },
       },
       {
         "name": "runlayer-slack",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SLACK_MCP_URL" },
         "tools":
@@ -195,7 +195,7 @@
       },
       {
         "name": "runlayer-atlassian",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_ATLASSIAN_MCP_URL" },
         "tools":
@@ -235,7 +235,7 @@
       },
       {
         "name": "runlayer-gmail",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GMAIL_MCP_URL" },
         "tools":
@@ -257,7 +257,7 @@
       },
       {
         "name": "runlayer-gcalendar",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GCALENDAR_MCP_URL" },
         "tools":
@@ -277,7 +277,7 @@
       },
       {
         "name": "runlayer-gdrive",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GDRIVE_MCP_URL" },
         "tools":
@@ -300,7 +300,7 @@
       },
       {
         "name": "runlayer-gdocs",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GDOCS_MCP_URL" },
         "tools":
@@ -324,7 +324,7 @@
       },
       {
         "name": "runlayer-gsheets",
-        "exclude_for_models": ["mlx/default_model"],
+        "exclude_for_models": ["gguf/Qwen3-30B-A3B-Instruct-2507"],
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_GSHEETS_MCP_URL" },
         "tools":

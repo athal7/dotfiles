@@ -22,10 +22,10 @@ cat > "$TEST_SOURCE/.chezmoidata/local.yaml" <<'YAML'
 orgs:
   acme:
     model_class:
-      default: mlx/test
-      plan: mlx/test
-      slow: mlx/test
-      smol: mlx/test
+      default: gguf/test
+      plan: gguf/test
+      slow: gguf/test
+      smol: gguf/test
 local_model:
   compaction_keep_recent_tokens: 1234
 YAML
@@ -53,9 +53,9 @@ YAML
 echo "== matching organization =="
 run_router "$project" && status=0 || status=$?
 check "matching organization exits zero" "$status" 0
-check "writes configured default role" "$(yq -r '.modelRoles.default' "$project/.omp/config.yml")" "mlx/test"
-check "writes configured plan role" "$(yq -r '.modelRoles.plan' "$project/.omp/config.yml")" "mlx/test"
-check "writes compaction setting" "$(yq -r '.compaction.keepRecentTokens' "$project/.omp/config.yml")" 1234
+check "writes configured default role" "$(yq -r '.modelRoles.default' "$project/.omp/config.yml")" "gguf/test"
+check "writes configured plan role" "$(yq -r '.modelRoles.plan' "$project/.omp/config.yml")" "gguf/test"
+check "writes the configured compaction tail" "$(yq -r '.compaction.keepRecentTokens' "$project/.omp/config.yml")" 1234
 check "preserves existing configuration" "$(yq -r '.custom.preserved' "$project/.omp/config.yml")" true
 check "preserves disabled extensions" "$(yq -r '.disabledExtensions[0]' "$project/.omp/config.yml")" mcp:github
 

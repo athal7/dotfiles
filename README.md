@@ -16,8 +16,8 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Agent of Empires config](dot_agent-of-empires/modify_config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`. Its `Alt+l` shortcut resolves the Homebrew package prefix, so it runs `lumen` without a link or `PATH` entry.
   - [Freebuff](https://freebuff.com/) — installed through mise and available to Agent of Empires as the opt-in `freebuff` terminal agent (`aoe add --tool freebuff`).
   - Per-org model routing — private defaults and organization overrides live only in gitignored `.chezmoidata/local.yaml`.
-  - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the local Apple Silicon model endpoint, runtime, repo, context window, server generation cap, and lower agent request cap. It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl) and the local-model LaunchAgent.
-  - [OMP model config](dot_omp/private_agent/models.yml.tmpl) — points OMP's local `mlx` provider at the shared local endpoint.
+  - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the local Apple Silicon model endpoint, runtime, repo, context window, cache limit, and OMP output cap. It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl) and the `llama-server` LaunchAgent.
+  - [Local GGUF server](dot_config/launchd-yaml/agents.yaml.tmpl) — the `llama.cpp` package runs Qwen 30B GGUF with a 32k context, one request slot, prompt caching, a 3 GiB cache limit, full GPU offload, disabled reasoning, and `/metrics`.
   - Knowledge routing — CQ is the local agent index. KB owns ingestion and the upstream local-projection integration. `/kb-enrich` retains semantic extraction, source access classification, approval presentation, and Confluence publication handling. Agents use KB as fallback when CQ cannot answer or projection verification is incomplete. CQ has no remote address, credentials, or drain tool.
 - **Automation**
   - [Calendar](dot_local/lib/cal/__main__.py)

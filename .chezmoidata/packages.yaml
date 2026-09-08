@@ -108,6 +108,7 @@ packages:
     - name: jc
     - name: jq
     - name: k9s
+    - name: llama.cpp
     - name: kubernetes-cli
     - name: jnsahaj/lumen/lumen
     - name: macos-trash
@@ -256,8 +257,4 @@ packages:
     - name: pipx:grip
       version: latest
     - name: pipx:skills-ref
-      version: latest
-    - name: pipx:mlx-lm
-      version: latest
-    - name: pipx:mlx-optiq
       version: latest

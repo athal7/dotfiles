@@ -27,17 +27,17 @@ providers:
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
 {{- end }}
 {{- if hasKey . "local_model" }}
-  {{ (index $localModel "provider") | default "mlx" }}:
+  {{ (index $localModel "provider") | default "gguf" }}:
     baseUrl: http://{{ (index $localModel "host") | default "127.0.0.1" }}:{{ (index $localModel "port") | default 8091 }}/v1
     api: {{ (index $localModel "api") | default "openai-completions" }}
-    apiKey: {{ if hasKey $localModel "api_key" }}{{ $localModel.api_key }}{{ else if eq ((index $localModel "server") | default "mlx-lm") "optiq" }}sk-optiq-local{{ else }}mlx-local{{ end }}
+    apiKey: {{ if hasKey $localModel "api_key" }}{{ $localModel.api_key }}{{ else }}llama-local{{ end }}
     compat:
       supportsDeveloperRole: false
       supportsReasoningEffort: false
     models:
       - id: {{ (index $localModel "id") | default "default_model" }}
         name: {{ $localModel.name }}
-        reasoning: true
+        reasoning: false
         input: [text]
         contextWindow: {{ $localModel.context_window }}
         maxTokens: {{ $agentMaxTokens }}

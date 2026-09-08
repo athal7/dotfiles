@@ -172,65 +172,35 @@ launchagents:
 
 {{- if hasKey . "local_model" }}
 
-  mlx-server:
-    Label: com.$USER.mlx-server
+  llama-server:
+    Label: com.$USER.llama-server
     ProgramArguments:
-      # DeepSeek-V4 needs mlx-optiq because stock mlx-lm does not implement
-      # its architecture. Existing mlx-lm configurations retain the launcher
-      # below, which avoids the observed MLX GPU wired-memory panic.
-{{- if eq ((index .local_model "server") | default "mlx-lm") "optiq" }}
-      - $HOME/.local/share/mise/shims/optiq
-      - serve
-{{- else }}
-      - $HOME/.local/bin/mlx-lm-server-launcher
-{{- end }}
-      - --model
+      - llama-server
+      - --hf-repo
       - {{ .local_model.hf_repo }}
       - --host
       - {{ (index .local_model "host") | default "127.0.0.1" }}
       - --port
       - "{{ (index .local_model "port") | default 8091 }}"
-      - --log-level
-      - INFO
-      # Serialize request admission. This avoids spikes from concurrent
-      # prefill and decode work on a shared-memory GPU.
-      - --decode-concurrency
+      - --ctx-size
+      - "{{ .local_model.context_window }}"
+      - --parallel
       - "1"
-      - --prompt-concurrency
-      - "1"
-      # Match the server output limit to the local_model value. OMP applies
-      # its lower agent-specific limit through models.yml.
-      - --max-tokens
-      - "{{ .local_model.max_tokens }}"
-      # Bound warm-conversation cache memory across concurrent sessions.
-      - --prompt-cache-size
-      - "{{ .local_model.prompt_cache_size }}"
-      - --prompt-cache-bytes
-      - "{{ .local_model.prompt_cache_bytes }}"
-      # Limit the transient activation peak during large prompt prefills.
-      - --prefill-step-size
-      - "{{ .local_model.prefill_step_size }}"
+      - --cache-prompt
+      - --cache-ram
+      - {{ (index .local_model "cache_ram") | default "3G" }}
+      - --gpu-layers
+      - all
+      - --fit
+      - "off"
+      - --reasoning
+      - "off"
+      - --metrics
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
-    StandardOutPath: $HOME/Library/Logs/mlx-server.log
-    StandardErrorPath: $HOME/Library/Logs/mlx-server.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      HOME: $HOME
-
-  mlx-watchdog:
-    Label: com.$USER.mlx-watchdog
-    ProgramArguments:
-      # Detects mlx_lm.server's uncaught background-thread crash (dead
-      # generation thread, HTTP layer still answering health checks) and
-      # force-restarts mlx-server — see
-      # dot_local/bin/executable_mlx-watchdog for the full writeup.
-      - $HOME/.local/bin/mlx-watchdog
-    StartInterval: 60
-    RunAtLoad: true
-    StandardOutPath: $HOME/Library/Logs/mlx-watchdog.log
-    StandardErrorPath: $HOME/Library/Logs/mlx-watchdog.log
+    StandardOutPath: $HOME/Library/Logs/llama-server.log
+    StandardErrorPath: $HOME/Library/Logs/llama-server.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
