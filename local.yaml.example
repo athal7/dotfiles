@@ -125,6 +125,10 @@ calendars:
   work:
     name: "Work"
     attention_check: true
+    # Sync OOO events as all-day on destination calendars.
+    # Timed OOO events from Work are normalized to full-day on the target.
+    # (Detected automatically via EventKit availability='Unavailable')
+    ooo_all_day: true
     sync_to:
       - personal
     lunch_guard: true
