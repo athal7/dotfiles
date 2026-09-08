@@ -91,6 +91,5 @@ Approved but not pushed.
 
    **List state names before guessing:** State names vary per org/team (e.g., 'Code Review' vs 'In Review' have distinct meanings). Query the tracker's actual available states instead of assuming similarity.
 2. **Watch CI and automated review** per the `push` skill. A long-pending approval is not the finish line — the steps below still run in the same pass. CI failure routes like any Review finding: code fix → subagent or direct, approach problem → update the proposal, flaky → re-run. Never terminal.
-3. **Publish the QA report** when QA ran — load `qa-report-publish`.
 
 Ends with: pushed.

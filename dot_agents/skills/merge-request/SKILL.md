@@ -58,7 +58,6 @@ Present a summary. After approval, mark ready for review (the linked issue's sta
 
 **Re-request only at a stable moment.** Don't re-request and then keep pushing — new commits force the reviewer to restart from scratch. If you find more to change after re-requesting, **comment to tell them to hold**, batch the change, then re-request once.
 
-**Refresh the QA evidence** in the description if a prior ship created the marked block: an in-place read-modify-write of the whole span between the `<!-- qa:start -->` / `<!-- qa:end -->` markers — never a new comment. Mechanics in `qa-report-publish`.
 
 Push via `commit` and `push`. Reply content is shown in full for steering; batch same-turn replies into one presentation.
 

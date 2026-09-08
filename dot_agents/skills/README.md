@@ -19,7 +19,7 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | **architecture** | A multi-option design decision appears |
 | **code-quality** | Grading review-finding severity; the mechanical sweeps |
 | **communication** | Composing human-facing prose through an integration |
-| **qa-report-publish** | Publishing an assembled QA report to a request |
+| **qa-report-publish** | Publishing concise QA evidence in GitHub pull request review bodies |
 
 **Integration** — how to drive a specific tool or API.
 

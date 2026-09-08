@@ -1,51 +1,76 @@
 ---
 name: qa-report-publish
-description: Fires before publishing an assembled QA report to a merge request after human approval.
+description: Fires before submitting a QA-backed GitHub pull request review after human approval.
 license: MIT
 ---
 
-This skill performs the remote writes for QA publishing. The QA agent produces only local artifacts; those artifacts are pushed to the remote here.
+This skill publishes concise QA evidence in your GitHub pull request review body. It is submitted with your inline review comments. The QA agent produces local artifacts. This skill never uploads `report.md`, `report.html`, or screenshots.
 
-The report carries QA evidence only. Static and blast-radius review happens separately on the merge request.
+The QA block carries QA evidence only. It sits with any concise review summary and the inline review comments.
 
-**Verdict** — the deployment status `description` is exactly `QA - PASS` or `QA - FAIL`. It must be pure ASCII: GitHub Deployments rejects 4-byte Unicode in status descriptions. Derive the verdict from `qa-report.md`, stripping any emoji or other non-ASCII decoration from the heading before use.
+## Prepare the QA evidence block
+
+Read `report.md` and reconcile it with the local HTML report before publication. Derive the verdict from the required report heading. Make the block self-contained and concise:
+
+- Include `QA — PASS` or `QA — FAIL`.
+- For each verified flow, include the acceptance criterion, observed result, and final local URL when it helps reproduce the result.
+- For a failure, include exact repro steps, expected result, observed result, URL, and console errors.
+- Include `**Could not verify:**` with its value.
+- Do not embed, link, upload, or otherwise publish screenshots or QA report files. They remain local evidence.
+
+Use one stable block in the review body:
+
+```markdown
+<!-- qa:start -->
+## QA — PASS
+
+**Verified**
+- <acceptance criterion> — <observed result>
+
+**Could not verify:** none
+<!-- qa:end -->
+```
+
+On a fail, replace the verified result with the required failure detail. Load `communication` when composing the review. Append its required authorship marker as the final line of the review body.
 
 ## Approval gate
 
-Before any remote write, show what will be pushed and what status will be registered. Wait for explicit approval.
+Before any remote write, show the full proposed review body, including the QA block and its authorship marker. Show every proposed inline comment too. Ask `Do you approve?` and wait for explicit approval. Do not create a pending review, add inline comments, or submit the review before approval.
 
-## 1. Host the report
+## Submit the review
 
-Push `qa-report.md` plus its screenshots to branch `qa-assets` at `pr-<n>/`.
+Build the full final review body locally. Start with any prepared review summary:
 
-- Overwrite wholesale — one report per request, so deleted or renamed shots don't linger.
-- Use a throwaway worktree; never disturb the checkout or the current branch.
-- Relative image refs render natively in the file view. No URL rewriting.
+- If exactly one `<!-- qa:start -->` through `<!-- qa:end -->` block exists, replace that block.
+- If no QA block exists, append the new block.
+- If more than one QA block exists, stop and report the ambiguity. Do not select one.
 
-## 2. Register the deployment
+Use the GitHub pending-review pattern:
 
-**No MCP server exposes the GitHub Deployments API** — not this one, not any. This write must go through `gh` directly via bash. Dispatching it to a GitHub MCP agent strands that agent hunting for a credential it couldn't use.
+1. Create one bodyless pending review with `pull_request_review_write` method `create`.
+2. Add each approved inline finding with `add_comment_to_pending_review`.
+3. Submit that same review once with `pull_request_review_write` method `submit_pending`, the full approved review body, and the approved decision.
 
-Pass the body with `--input -` and a heredoc — never `-f`/`-F` for `required_contexts`, which breaks on **zsh glob expansion** (not the API).
-
-```
-gh api repos/<owner>/<repo>/deployments -X POST --input - << 'EOF'
-{"ref": "<head-sha>", "environment": "qa-report", "auto_merge": false, "required_contexts": []}
-EOF
-```
-
-```
-gh api repos/<owner>/<repo>/deployments/<id>/statuses -X POST --input - << 'EOF'
-{"state": "success", "environment": "qa-report", "environment_url": "<blob-url>", "description": "<verdict>"}
-EOF
-```
-
-That surfaces a **"View deployment"** button in the timeline and environments panel — no description editing needed.
+Do not update the pull request body, create issue comments, create GitHub Deployments, or register deployment statuses.
 
 ## Re-review
 
-Regenerate both report forms from the reconciled evidence, re-open the HTML locally, re-host the Markdown (overwritten wholesale, so the blob URL is unchanged), then post a **new status on the existing deployment** with the updated `description`. No new deployment object.
+Before submitting a pending review, regenerate and reconcile the local evidence. Replace or append the marked QA block in the review body. Show the full updated review body and obtain explicit approval again.
+
+After a review is submitted, do not modify the pull request body or create a separate QA comment. A later QA review can have no inline comments. Create and submit a new pending review with its new QA evidence block.
 
 ## Merged or closed
 
-Post a final `inactive` status on the existing deployment, then delete its `pr-<n>/` directory from the hosting branch.
+Do not make a final remote write.
+
+## Retired `qa-assets` branch
+
+Do not delete the existing remote `qa-assets` branch. Do not delete it during QA publication, re-review, or pull-request closure.
+
+The separate destructive operation is:
+
+```sh
+git push origin --delete qa-assets
+```
+
+Show this command in full and obtain separate explicit user approval before running it.

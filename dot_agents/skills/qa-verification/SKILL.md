@@ -36,7 +36,7 @@ Alongside the HTML, same session dir:
 - Page URLs as inline code, never links — they're local and non-navigable.
 - A `**Could not verify:**` line, or `none`.
 
-**The store contract is load-bearing.** `report.html`, the `NNN-name.png` names, the `~/.local/share/qa/<project>/qa-<ts>/` path, and `report.md`'s heading are read by the demo command and pruned by the cleanup job. Don't rename or relocate them. Whoever publishes remotely (see `qa-report-publish`) writes `qa-report.html`/`qa-report.md` into the same dir — distinct prefix, no collision. Never write to the remote from here.
+**The store contract is load-bearing.** `report.html`, the `NNN-name.png` names, the `~/.local/share/qa/<project>/qa-<ts>/` path, and `report.md`'s heading are read by the demo command and pruned by the cleanup job. Don't rename or relocate them. The publisher reads these local artifacts to create a pull request review body. Never write to the remote from here.
 
 ## Output
 
