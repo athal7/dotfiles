@@ -140,7 +140,7 @@ status_bar = "auto"
 
 
 [tools.lumen]
-command = "$(/opt/homebrew/bin/brew --prefix jnsahaj/lumen/lumen)/bin/lumen diff --watch --wrap $(remote=origin; git remote get-url upstream >/dev/null 2>&1 && remote=upstream; name=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null); name=${name#origin/}; printf %s \"$remote/${name:-main}\")..-"
+command = "remote=origin; git remote get-url upstream >/dev/null 2>&1 && remote=upstream; name=$(git symbolic-ref --quiet --short \"refs/remotes/$remote/HEAD\" 2>/dev/null); name=${name#\"$remote/\"}; name=${name:-main}; git fetch --quiet \"$remote\" \"$name\" && base=$(git merge-base FETCH_HEAD HEAD) && exec $(/opt/homebrew/bin/brew --prefix jnsahaj/lumen/lumen)/bin/lumen diff --watch --wrap \"$base..-\""
 hotkey = "Alt+l"
 
 [tools.editor]
