@@ -14,6 +14,16 @@
 {{- $_ := set $packagePermissionCounts "gh" 16 -}}
 {{- $_ := set $packagePermissionCounts "xh" 10 -}}
 {{- $_ := set $packagePermissionCounts "steipete/tap/remindctl" 6 -}}
+{{- $prewalk := index . "prewalk" | default dict -}}
+{{- $prewalkEnabled := true -}}
+{{- if hasKey $prewalk "enabled" -}}
+{{- $prewalkEnabled = index $prewalk "enabled" -}}
+{{- end -}}
+{{- $prewalkInto := index .model_class "smol" -}}
+{{- if hasKey $prewalk "into" -}}
+{{- $prewalkInto = index $prewalk "into" -}}
+{{- end -}}
+
 
 bash:
   patterns:
@@ -242,8 +252,8 @@ bash:
 defaultThinkingLevel: auto
 modelRoleStorage: global
 modelRoles:
-{{- range $role := list "default" "plan" "slow" "smol" }}
-  {{ $role }}: {{ index $.model_class $role }}
+{{- range $role := keys .model_class | sortAlpha }}
+  {{ $role }}: {{ index $.model_class $role | quote }}
 {{- end }}
 symbolPreset: unicode
 setupVersion: 2
@@ -256,19 +266,6 @@ tools:
     eval: allow
     browser: allow
     hub: allow
-    mcp__github_create_branch: prompt
-    mcp__github_create_or_update_file: prompt
-    mcp__github_delete_file: prompt
-    mcp__github_delete_repository: prompt
-    mcp__github_fork_repository: prompt
-    mcp__github_issue_write: prompt
-    mcp__github_label_write: prompt
-    mcp__github_merge_pull_request: prompt
-    mcp__github_push_files: prompt
-    mcp__github_pull_request_review_write: prompt
-    mcp__github_sub_issue_write: prompt
-    mcp__github_update_pull_request: prompt
-    mcp__github_update_pull_request_branch: prompt
     mcp__linear_create_attachment: prompt
     mcp__linear_create_attachment_from_upload: prompt
     mcp__linear_create_initiative_label: prompt
@@ -357,7 +354,8 @@ tools:
   approvalMode: write
 advisor:
   enabled: true
-  subagents: true
+  model: "@slow"
+  subagents: false
 astGrep:
   enabled: true
 autoResume: false
@@ -399,7 +397,11 @@ personality: pragmatic
 plan:
   defaultOnStartup: false
 prewalk:
-  enabled: true
+  enabled: {{ $prewalkEnabled }}
+  into: {{ $prewalkInto | quote }}
+providers:
+  tinyModel: lfm2-350m
+  autoThinkingModel: lfm2-350m
 read:
   renderMarkdown: true
 security:
@@ -423,7 +425,16 @@ stt:
   enabled: true
   submitTrigger: never
 task:
-  agentModelOverrides: {}
+  prewalk: true
+  agentModelOverrides:
+    designer: "@designer"
+    librarian: "@smol"
+    planner: "@plan"
+    reviewer: "@slow"
+    scout: "@smol"
+    security-reviewer: "@slow"
+    sonic: "@smol"
+    task: "@task"
   disabledAgents: []
   showResolvedModelBadge: false
 terminal:

@@ -14,6 +14,16 @@ re-injected verbatim — they never get baked into this template's literal
 content, so no live app-state value can ever land in git history.
 */ -}}
 {{- $live := dict -}}
+{{- $prewalk := index . "prewalk" | default dict -}}
+{{- $prewalkEnabled := true -}}
+{{- if hasKey $prewalk "enabled" -}}
+{{- $prewalkEnabled = index $prewalk "enabled" -}}
+{{- end -}}
+{{- $prewalkInto := index .model_class "smol" -}}
+{{- if hasKey $prewalk "into" -}}
+{{- $prewalkInto = index $prewalk "into" -}}
+{{- end -}}
+
 {{- $static := fromToml `[acp]
 allow_agent_install = false
 auto_stop_idle_secs = 0
@@ -187,7 +197,14 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- end -}}
 {{- $session := index $config "session" -}}
 {{- $_ := setValueAtPath "acp.default_agent" (index (index $static "acp") "default_agent") $config -}}
+{{- if $prewalkEnabled -}}
+{{- $_ := setValueAtPath "session.agent_command_override.omp" (printf "omp --prewalk-into %s" $prewalkInto) $config -}}
+{{- else if hasKey $session "agent_command_override" -}}
+{{- $_ := unset (index $session "agent_command_override") "omp" -}}
+{{- if eq (len (index $session "agent_command_override")) 0 -}}
 {{- $_ := unset $session "agent_command_override" -}}
+{{- end -}}
+{{- end -}}
 {{- $_ := set (index $session "agent_detect_as") "jules" "jules" -}}
 {{- if hasKey $config "providers" -}}
 {{- $_ := unset (index $config "providers") "webSearchOrder" -}}

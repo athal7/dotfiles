@@ -3,35 +3,56 @@ name: push
 description: Load before pushing — merge request description rules and the post-push CI and automated-review watch loop.
 license: MIT
 ---
+
 Load `commit` before preparing the push.
 
+Show unpushed commits in chat first.
+State the branch name and one subject per line.
+Do not re-run the full suite during push unless a push-time check fails and needs a fix.
 
-Show unpushed commits in chat first — branch name, one subject per line. The full test suite already ran at commit time; don't re-run it.
+## Merge request policy
 
-## Draft merge request
+Use native `github` operations for repository, issue, PR, search, checkout, push, and Actions-watch work.
+Use approval-gated `gh api` only when native GitHub support does not cover the operation.
+Show the full payload and ask `Do you approve?` before every remote write.
 
-None exists → create one from the branch commits, as a draft. One exists → update title/body only on a material change (new scope, different fix, renamed component, changed API); skip for tests, docs, formatting. **Never flip draft↔ready during a push.** A review-requested PR that is assigned to someone else is in-flight, even if it is marked ready for review. Pushing new commits already forces that reviewer to restart, and a draft flip on top strands them because GitHub keeps them assigned with no stop signal. A deliberate draft flip belongs in the `merge-request` flow, always with a comment telling any mid-review reviewer to hold.
+No existing request means create one from the branch commits.
+A material scope change means update the title or body.
+Tests, docs, and formatting do not require a title or body update.
+Never flip draft or ready state during a push.
+A deliberate draft change belongs in the `merge-request` workflow.
 
-Description: 1-2 sentences. Skip headers, bullet lists, and anything obvious from the diff.
+Write the description in 1 or 2 sentences.
+Do not add headers or obvious bullet lists.
+Use `Resolves`, `Fixes`, or `Closes` for auto-close.
+A bare issue reference does not close anything.
+Never reference private issue keys in public repositories.
+Put the merge-request link on the private issue instead.
 
-**Auto-close needs an explicit verb** — `Resolves`, `Fixes`, or `Closes` plus the identifier. A bare `#123` does not close anything.
+Example:
 
-**Never reference private issue keys in public repos.** Check repo visibility first; instead put the merge-request link on the issue.
-
-```
+```text
 Adds retry logic for flaky external API calls. Resolves #123
 ```
 
-## Watch CI and automated review
+## Watch loop
 
-Both are asynchronous; the push isn't settled until each has landed or been ruled out. Route GitHub reads through whatever GitHub pathway the harness provides.
+A push is not settled until CI and automated review have landed or been ruled out.
+Use `github.run_watch` for GitHub Actions.
+Use native GitHub reads for check status, comments, and review threads.
 
-- **Conflict with the base branch → resolve first.** A conflicted merge request can't run CI at all, draft or not.
-- **No check runs on the current head** → nothing to wait for; the pre-push suite stands in. Don't treat absence as a problem.
-- **Check runs pending** → sleep, re-check, repeat until resolved or a sane timeout. Failures → fix through the normal commit → push cycle.
-- **Automated review** — same loop, matched against the *current* head, not a stale review. Timeout while still a draft → this repo doesn't review drafts; move on.
-- **Review landed** → fetch its inline threads and top-level comments, fix actionable items, resolve each thread only after its fix is pushed. Reply (rather than resolve) to decline, defer, or add context — and only with approval.
+- Resolve base-branch conflicts before waiting for CI.
+- If no check runs exist on the current head, treat the pre-push suite as the gate.
+- If checks are pending, wait and re-check until they resolve or time out.
+- If checks fail, fix through the normal commit and push cycle.
+- Match automated review against the current head.
+- If review lands, fetch inline threads and top-level comments.
+- Fix actionable review items.
+- Resolve a thread only after its fix is pushed.
+- Reply to decline, defer, or add context only after approval.
 
 ## External contributions
 
-Before contributing to any external project, check for `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, or equivalent. Follow their process — issue-first vs. PR-first, required templates, license requirements, DCO/sign-off, CI expectations. Never submit a PR to a project whose guidelines you haven't verified.
+Before contributing to an external project, check `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, or equivalent.
+Follow the project process.
+Do not submit a request before you verify the guidelines.

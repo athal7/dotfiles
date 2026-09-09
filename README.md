@@ -9,15 +9,15 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [Editor](dot_config/nvim/)
   - [Git](dot_config/git/)
 - **AI tooling**
-  - [OMP configuration](dot_omp/private_agent/private_modify_config.yml.tmpl) — ChezMoi enforces OMP tool and Bash approval policy while OMP retains its runtime settings.
+  - [OMP configuration](dot_omp/private_agent/modify_private_config.yml) — ChezMoi enforces OMP tool and Bash approval policy while OMP retains its runtime settings.
   - [MCP registry](.chezmoidata/mcp.yaml) — server transport, command, URL, header, model-exclusion, and tool inventory data rendered into OMP configuration.
   - [OMP lead prompt](dot_omp/private_agent/APPEND_SYSTEM.md) — direct OMP system prompt.
   - [Agent skills](dot_agents/skills/) — authored skills are managed directly by chezmoi; externally installed skills own distinct sibling directories under `~/.agents/skills/`.
   - [Agent of Empires config](dot_agent-of-empires/modify_config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`. Its `Alt+l` shortcut resolves the Homebrew package prefix, so it runs `lumen` without a link or `PATH` entry.
   - [Linear custom script](dot_linear/coding-tools.json.tmpl) — opens a Linear issue in a new AOE worktree session. Enable **Custom script** in Linear **Settings > Code & reviews > Configure coding tools**. Then select **Work on issue → Custom script**. The script requires the selected work directory to be the primary checkout of a Git repository.
   - [Freebuff](https://freebuff.com/) — installed through mise and available to Agent of Empires as the opt-in `freebuff` terminal agent (`aoe add --tool freebuff`).
-  - Per-org model routing — private defaults and organization overrides live only in gitignored `.chezmoidata/local.yaml`.
-  - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the local Apple Silicon model endpoint, runtime, repo, context window, cache limit, and OMP output cap. It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl) and the `llama-server` LaunchAgent.
+  - Per-org model routing — private defaults, organization overrides, and the shared OMP prewalk target live only in gitignored `.chezmoidata/local.yaml`.
+  - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the local Apple Silicon model endpoint, runtime, repo, context window, output cap, cache limit, compaction tail, and cloud compaction model. It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl), the `aoe-model-class` project reconciler, and the `llama-server` LaunchAgent.
   - [Local GGUF server](dot_config/launchd-yaml/agents.yaml.tmpl) — the `llama.cpp` package runs Qwen 30B GGUF with a 32k context, one request slot, prompt caching, a 3 GiB cache limit, full GPU offload, disabled reasoning, and `/metrics`.
   - Knowledge routing — CQ is the local agent index. KB owns ingestion and the upstream local-projection integration. `/kb-enrich` retains semantic extraction, source access classification, approval presentation, and Confluence publication handling. Agents use KB as fallback when CQ cannot answer or projection verification is incomplete. CQ has no remote address, credentials, or drain tool.
 - **Automation**

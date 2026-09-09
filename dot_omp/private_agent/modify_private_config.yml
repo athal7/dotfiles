@@ -18,6 +18,11 @@
 {{- $_ := setValueAtPath "bash" (index $defaults "bash") $config -}}
 {{- $_ := setValueAtPath "modelRoles" (index $defaults "modelRoles") $config -}}
 {{- $_ := setValueAtPath "modelRoleStorage" (index $defaults "modelRoleStorage") $config -}}
+{{- $_ := setValueAtPath "prewalk.enabled" (index (index $defaults "prewalk") "enabled") $config -}}
+{{- $_ := setValueAtPath "prewalk.into" (index (index $defaults "prewalk") "into") $config -}}
+{{- range $providerKey := list "tinyModel" "autoThinkingModel" -}}
+{{- $_ := setValueAtPath (printf "providers.%s" $providerKey) (index (index $defaults "providers") $providerKey) $config -}}
+{{- end -}}
 {{- $_ := setValueAtPath "computer" (index $defaults "computer") $config -}}
 {{- $_ := setValueAtPath "autolearn" (index $defaults "autolearn") $config -}}
 {{- $_ := setValueAtPath "memory" (index $defaults "memory") $config -}}
@@ -29,8 +34,12 @@
 {{- if hasKey $config "retry" -}}
 {{- $_ := unset (index $config "retry") "fallbackChains" -}}
 {{- end -}}
+{{- $_ := setValueAtPath "task.prewalk" (index (index $defaults "task") "prewalk") $config -}}
 {{- $_ := setValueAtPath "task.agentModelOverrides" (index (index $defaults "task") "agentModelOverrides") $config -}}
 {{- $_ := setValueAtPath "task.disabledAgents" (index (index $defaults "task") "disabledAgents") $config -}}
+{{- $_ := setValueAtPath "advisor.enabled" (index (index $defaults "advisor") "enabled") $config -}}
+{{- $_ := setValueAtPath "advisor.model" (index (index $defaults "advisor") "model") $config -}}
+{{- $_ := setValueAtPath "advisor.subagents" (index (index $defaults "advisor") "subagents") $config -}}
 {{- $_ := setValueAtPath "tools.approval" (index (index $defaults "tools") "approval") $config -}}
 {{- $_ := setValueAtPath "tools.approvalMode" (index (index $defaults "tools") "approvalMode") $config -}}
 {{- $_ := setValueAtPath "tools.xdev" (index (index $defaults "tools") "xdev") $config -}}

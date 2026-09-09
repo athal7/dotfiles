@@ -45,11 +45,11 @@ Build the full final review body locally. Start with any prepared review summary
 - If no QA block exists, append the new block.
 - If more than one QA block exists, stop and report the ambiguity. Do not select one.
 
-Use the GitHub pending-review pattern:
-
-1. Create one bodyless pending review with `pull_request_review_write` method `create`.
-2. Add each approved inline finding with `add_comment_to_pending_review`.
-3. Submit that same review once with `pull_request_review_write` method `submit_pending`, the full approved review body, and the approved decision.
+Use native GitHub review support when it is available.
+If native support cannot create and submit one pending review with inline comments, use approval-gated `gh api` for the pending-review API calls.
+Create one bodyless pending review.
+Add each approved inline finding to that pending review.
+Submit that same review once with the full approved review body and the approved decision.
 
 Do not update the pull request body, create issue comments, create GitHub Deployments, or register deployment statuses.
 
