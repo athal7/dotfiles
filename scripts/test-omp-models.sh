@@ -34,6 +34,7 @@ check "routes designer role through vision alias" "$(yq -r '.modelRoles.designer
 check "uses local tiny utility model" "$(yq -r '.providers.tinyModel' "$CONFIG")" lfm2-350m
 check "uses local thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$CONFIG")" lfm2-350m
 check "sets shared prewalk destination" "$(yq -r '.prewalk.into' "$CONFIG")" openai-codex/gpt-5.6-sol
+check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
 STALE_CONFIG="$WORK/stale-config.yml"
 printf 'prewalk:\n  enabled: false\n  into: stale/model\n  custom: preserved\nproviders:\n  tinyModel: stale-tiny\n  autoThinkingModel: stale-thinking\n  customModel: preserved\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_omp/private_agent/modify_private_config.yml" > "$STALE_CONFIG"
@@ -49,7 +50,7 @@ check "routes designer agent through designer role" "$(yq -r '.task.agentModelOv
 check "routes reviewer agent through slow role" "$(yq -r '.task.agentModelOverrides.reviewer' "$CONFIG")" @slow
 check "routes sonic agent through smol role" "$(yq -r '.task.agentModelOverrides.sonic' "$CONFIG")" @smol
 check "keeps advisor enabled" "$(yq -r '.advisor.enabled' "$CONFIG")" true
-check "routes advisor through slow role" "$(yq -r '.advisor.model' "$CONFIG")" @slow
+check "routes advisor through local model" "$(yq -r '.advisor.model' "$CONFIG")" gguf/Qwen3-30B-A3B-Instruct-2507
 check "disables advisor for subagents" "$(yq -r '.advisor.subagents' "$CONFIG")" false
 check "disables automatic session resume" "$(yq -r '.autoResume' "$CONFIG")" false
 check "selects Snapcompact compaction" "$(yq -r '.compaction.strategy' "$CONFIG")" snapcompact
