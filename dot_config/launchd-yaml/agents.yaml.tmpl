@@ -2,9 +2,9 @@
 #
 # Each entry's value is the plist payload expressed as YAML, using $HOME and
 # $USER placeholders (substituted with the real home directory and username at
-# apply time). The generator script .chezmoiscripts/run_onchange_after_aa-launch-agents.sh
-# renders, deploys, reloads, and prunes these agents: it pipes `yq -o=json`
-# through `plutil -convert xml1`, writes each plist to
+# apply time). The source template `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh.tmpl`
+# is rendered and run by chezmoi during apply. It delegates to `launchd-yaml apply`,
+# which renders plist files, writes each plist to
 # ~/Library/LaunchAgents/<name>.plist, reloads only agents whose plist content
 # changed, and removes agents that were deleted from this file. The individual
 # plists are NOT individually chezmoi-managed.
