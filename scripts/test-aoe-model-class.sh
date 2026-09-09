@@ -217,6 +217,17 @@ run_router "$legacy" && status=0 || status=$?
 check "legacy cleanup exits zero" "$status" 0
 absent "$legacy/.omp/config.yml" "removes exact legacy config"
 absent "$legacy/.omp/mcp.json" "removes exact legacy MCP"
+historical="$WORK/historical"
+make_repo "$historical" unknownorg
+mkdir -p "$historical/.omp"
+cat > "$historical/.omp/mcp.json" <<'JSON'
+{"mcpServers":{"github":{"headers":{"Authorization":"Bearer old-token"},"type":"http","url":"https://api.githubcopilot.com/mcp/","enabled":false},"linear":{"type":"http","url":"https://mcp.linear.app/mcp","enabled":false},"runlayer-atlassian":{"type":"http","url":"${RUNLAYER_ATLASSIAN_MCP_URL}","enabled":false},"runlayer-gcalendar":{"type":"http","url":"${RUNLAYER_GCALENDAR_MCP_URL}","enabled":false},"runlayer-gdocs":{"type":"http","url":"${RUNLAYER_GDOCS_MCP_URL}","enabled":false},"runlayer-gdrive":{"type":"http","url":"${RUNLAYER_GDRIVE_MCP_URL}","enabled":false},"runlayer-gmail":{"type":"http","url":"${RUNLAYER_GMAIL_MCP_URL}","enabled":false},"runlayer-gsheets":{"type":"http","url":"${RUNLAYER_GSHEETS_MCP_URL}","enabled":false},"runlayer-self":{"type":"http","url":"${RUNLAYER_SELF_MCP_URL}","enabled":false},"runlayer-slack":{"type":"http","url":"${RUNLAYER_SLACK_MCP_URL}","enabled":false},"runlayer-zoom":{"type":"http","url":"${RUNLAYER_ZOOM_MCP_URL}","enabled":false}}}
+JSON
+
+echo "== removal of historical copied MCP output =="
+run_router "$historical" && status=0 || status=$?
+check "historical MCP cleanup exits zero" "$status" 0
+absent "$historical/.omp/mcp.json" "removes copied historical MCP"
 
 user_owned="$WORK/user-owned"
 make_repo "$user_owned" gguforg

@@ -72,13 +72,39 @@ legacy_mcp() {
   names=${1:-[]}
   [ -f "$MCP" ] || return 1
   jq -e --argjson names "$names" '
+    def disabled_only:
+      type == "object"
+      and (.enabled == false);
+    def historical_copy:
+      .mcpServers as $servers
+      | ($servers | keys | sort) == [
+          "github",
+          "linear",
+          "runlayer-atlassian",
+          "runlayer-gcalendar",
+          "runlayer-gdocs",
+          "runlayer-gdrive",
+          "runlayer-gmail",
+          "runlayer-gsheets",
+          "runlayer-self",
+          "runlayer-slack",
+          "runlayer-zoom"
+        ]
+      and ($servers.github as $github | (($github | keys | sort) == ["enabled", "headers", "type", "url"] and $github.enabled == false and $github.type == "http" and $github.url == "https://api.githubcopilot.com/mcp/" and ($github.headers | keys == ["Authorization"]) and ($github.headers.Authorization | type == "string" and startswith("Bearer "))))
+      and ($servers.linear as $linear | (($linear | keys | sort) == ["enabled", "type", "url"] and $linear.enabled == false and $linear.type == "http" and $linear.url == "https://mcp.linear.app/mcp"))
+      and ([$servers[] | select(has("headers") | not) | . as $server | (($server | keys | sort) == ["enabled", "type", "url"] and $server.enabled == false and $server.type == "http" and ($server.url | type == "string"))] | all);
     type == "object"
     and (keys == ["mcpServers"])
     and (.mcpServers | type == "object")
-    and (.mcpServers | length > 0)
-    and ($names | length > 0)
-    and ((.mcpServers | keys) as $keys | all($keys[]; . as $name | $names | index($name)))
-    and (.mcpServers | to_entries | all((.value | type == "object") and (.value.enabled == false)))
+    and (
+      (
+        (.mcpServers | length > 0)
+        and ($names | length > 0)
+        and ((.mcpServers | keys) as $keys | all($keys[]; . as $name | $names | index($name)))
+        and (.mcpServers | to_entries | all(.value | disabled_only))
+      )
+      or historical_copy
+    )
   ' "$MCP" >/dev/null 2>&1
 }
 
