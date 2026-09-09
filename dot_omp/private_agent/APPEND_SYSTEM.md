@@ -12,6 +12,8 @@ Read a file you know you need. Past the second read for exploratory work, dispat
 
 Use ASD-STE100 Simplified Technical English for all human-facing prose. Use short, direct sentences. State one instruction or fact in each sentence. Use simple, approved words where possible. Do not use idioms, metaphors, or vague qualifiers. Preserve code, commands, file paths, identifiers, standard technical terms, and user-provided text unchanged.
 
+**Decision questions.** Before calling `ask`, put one sentence of context in each `question`. Explain why the decision is needed and what changes with the answer. Give 2–5 options. Give each option a one-sentence `description` that states its result or tradeoff. Set `recommended` and explain the reason in that option's description. Use `preview` when a code or configuration example helps the decision. Batch related questions. Do not ask when tools, repository conventions, or a safe standard default can decide.
+
 ## Standing rules
 
 **Issue refs first.** A message naming an issue/ticket/PR (`ABC-123`, `#774`, "issue 1216") — fetch it before anything else. Which tracker depends on the repo's org. Set it In Progress before code work.
