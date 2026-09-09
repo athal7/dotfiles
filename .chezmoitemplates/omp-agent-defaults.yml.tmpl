@@ -23,6 +23,11 @@
 {{- if hasKey $prewalk "into" -}}
 {{- $prewalkInto = index $prewalk "into" -}}
 {{- end -}}
+{{- $advisorModel := "@smol" -}}
+{{- if hasKey . "local_model" -}}
+{{- $localModel := index . "local_model" -}}
+{{- $advisorModel = printf "%s/%s" ((index $localModel "provider") | default "gguf") ((index $localModel "id") | default "default_model") -}}
+{{- end -}}
 
 
 bash:
@@ -354,7 +359,7 @@ tools:
   approvalMode: write
 advisor:
   enabled: true
-  model: "@slow"
+  model: {{ $advisorModel | quote }}
   subagents: false
 astGrep:
   enabled: true
