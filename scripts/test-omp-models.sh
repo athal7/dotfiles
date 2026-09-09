@@ -13,6 +13,8 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 
 DATA="$WORK/local.yaml"
 MODELS="$WORK/models.yml"
+MCP="$WORK/mcp.json"
+KB_PROFILE_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
@@ -25,6 +27,9 @@ chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/profiles/kb-enrich/agent/mcp.json" > "$KB_PROFILE_MCP"
+KB_PROFILE_COMMANDS_LINK="$(chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/profiles/kb-enrich/agent/commands")"
 expected_roles=(commit default designer plan slow smol task tiny vision)
 rendered_roles="$(yq -o=json '.modelRoles | keys | sort' "$CONFIG" | jq -r 'join(" ")')"
 check "renders every model role" "$rendered_roles" "${expected_roles[*]}"
@@ -33,13 +38,24 @@ check "routes smol role to cloud terra" "$(yq -r '.modelRoles.smol' "$CONFIG")" 
 check "routes designer role through vision alias" "$(yq -r '.modelRoles.designer' "$CONFIG")" @vision
 check "uses local tiny utility model" "$(yq -r '.providers.tinyModel' "$CONFIG")" lfm2-350m
 check "uses local thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$CONFIG")" lfm2-350m
-check "sets shared prewalk destination" "$(yq -r '.prewalk.into' "$CONFIG")" openai-codex/gpt-5.6-sol
+check "sets shared prewalk destination" "$(yq -r '.prewalk.into' "$CONFIG")" openai-codex/gpt-5.6-terra
 check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
+check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
+check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
+check "limits KB profile to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_PROFILE_MCP")" "cq linear runlayer-atlassian runlayer-slack runlayer-zoom"
+check "enables every KB profile MCP server" "$(jq '[.mcpServers[].enabled] | all(. != false)' "$KB_PROFILE_MCP")" true
+check "links KB profile commands to the default command set" "$KB_PROFILE_COMMANDS_LINK" ../../../agent/commands
+LEGACY_DATA="$WORK/legacy-local.yaml"
+LEGACY_CONFIG="$WORK/legacy-config.yml"
+cp "$DATA" "$LEGACY_DATA"
+yq -i '.prewalk.into = .model_class.default' "$LEGACY_DATA"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$LEGACY_DATA" "$HOME/.omp/agent/config.yml" > "$LEGACY_CONFIG"
+check "migrates legacy Sol prewalk target to Terra" "$(yq -r '.prewalk.into' "$LEGACY_CONFIG")" openai-codex/gpt-5.6-terra
 STALE_CONFIG="$WORK/stale-config.yml"
 printf 'prewalk:\n  enabled: false\n  into: stale/model\n  custom: preserved\nproviders:\n  tinyModel: stale-tiny\n  autoThinkingModel: stale-thinking\n  customModel: preserved\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_omp/private_agent/modify_private_config.yml" > "$STALE_CONFIG"
 check "modifier replaces stale prewalk enabled" "$(yq -r '.prewalk.enabled' "$STALE_CONFIG")" true
-check "modifier replaces stale prewalk destination" "$(yq -r '.prewalk.into' "$STALE_CONFIG")" openai-codex/gpt-5.6-sol
+check "modifier replaces stale prewalk destination" "$(yq -r '.prewalk.into' "$STALE_CONFIG")" openai-codex/gpt-5.6-terra
 check "modifier replaces stale tiny utility model" "$(yq -r '.providers.tinyModel' "$STALE_CONFIG")" lfm2-350m
 check "modifier replaces stale thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$STALE_CONFIG")" lfm2-350m
 check "modifier preserves unrelated prewalk settings" "$(yq -r '.prewalk.custom' "$STALE_CONFIG")" preserved
@@ -89,6 +105,7 @@ printf '[session.agent_command_override]\nother = "other-agent"\nomp = "stale-om
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$DISABLED_AOE_WITH_OTHER"
 check "preserves unrelated AOE overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$DISABLED_AOE_WITH_OTHER" | jq -r '.')" other-agent
 check "removes only the OMP AOE override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$DISABLED_AOE_WITH_OTHER")" false
+check "runs KB enrichment with its isolated OMP profile" "$(yq -r '.launchagents."aoe-kb-enrich".EnvironmentVariables.AOE_OMP_PROFILE' "$LAUNCH_AGENTS")" kb-enrich
 check "propagates the configured provider context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$CUSTOM_MODELS")" 40960
 check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
 check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" /opt/homebrew/bin/llama-server

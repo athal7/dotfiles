@@ -17,7 +17,7 @@ model_class:
   task: openai-codex/gpt-5.6-sol
 prewalk:
   enabled: true
-  into: openai-codex/gpt-5.6-sol
+  into: openai-codex/gpt-5.6-terra
 # Per-org config keyed by GitHub org login. Orgs not listed fall back to defaults
 # (GitHub Issues for issue tracking; no automated code review).
 #

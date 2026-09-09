@@ -52,6 +52,7 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/aoe-kb-enrich.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      AOE_OMP_PROFILE: kb-enrich
 
   aoe-fix-prod-errors:
     Label: com.$USER.aoe-fix-prod-errors

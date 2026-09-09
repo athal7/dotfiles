@@ -20,7 +20,7 @@
 {{- $prewalkEnabled = index $prewalk "enabled" -}}
 {{- end -}}
 {{- $prewalkInto := index .model_class "smol" -}}
-{{- if hasKey $prewalk "into" -}}
+{{- if and (hasKey $prewalk "into") (ne (index $prewalk "into") (index .model_class "default")) -}}
 {{- $prewalkInto = index $prewalk "into" -}}
 {{- end -}}
 {{- $advisorModel := "@smol" -}}

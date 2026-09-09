@@ -9,14 +9,22 @@ fi
 title=$1
 prompt=$2
 project_path=${3:-}
+omp_extra_args=()
+if [[ -n ${AOE_OMP_PROFILE:-} ]]; then
+  if [[ ! $AOE_OMP_PROFILE =~ ^[[:alnum:]_-]+$ ]]; then
+    printf 'AOE_OMP_PROFILE must contain only letters, digits, underscores, and hyphens\n' >&2
+    exit 64
+  fi
+  omp_extra_args=(--extra-args "--profile $AOE_OMP_PROFILE")
+fi
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/aoe/omp-session-map"
 correlation_id=$(/usr/bin/uuidgen)
 session_title="${title}-${correlation_id%%-*}"
 
 if [[ -n "$project_path" ]]; then
-  session_output=$(/opt/homebrew/bin/aoe add "$project_path" --tool omp --title "$session_title" --group Scheduled)
+  session_output=$(/opt/homebrew/bin/aoe add "$project_path" --tool omp --title "$session_title" --group Scheduled "${omp_extra_args[@]}")
 else
-  session_output=$(/opt/homebrew/bin/aoe add --scratch --tool omp --title "$session_title" --group Scheduled)
+  session_output=$(/opt/homebrew/bin/aoe add --scratch --tool omp --title "$session_title" --group Scheduled "${omp_extra_args[@]}")
 fi
 session_id=$(sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
 if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
