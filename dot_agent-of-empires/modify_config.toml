@@ -139,13 +139,6 @@ mouse = "auto"
 status_bar = "auto"
 
 
-[tools.lumen]
-command = "remote=origin; git remote get-url upstream >/dev/null 2>&1 && remote=upstream; name=$(git symbolic-ref --quiet --short \"refs/remotes/$remote/HEAD\" 2>/dev/null); name=${name#\"$remote/\"}; name=${name:-main}; git fetch --quiet \"$remote\" \"$name\" && base=$(git merge-base FETCH_HEAD HEAD) && exec $(/opt/homebrew/bin/brew --prefix jnsahaj/lumen/lumen)/bin/lumen diff --watch --wrap \"$base..-\""
-hotkey = "Alt+l"
-
-[tools.editor]
-command = "nvim ."
-hotkey = "Alt+e"
 
 [updates]
 
@@ -183,7 +176,7 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{-   end -}}
 {{- end -}}
 {{- if hasKey $live "tools" -}}
-{{-   $_ := unset (index $live "tools") "lumen" -}}
+{{-   $_ := unset $live "tools" -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $static) $live -}}
 {{- if gt (len $runlayerEnvironment) 0 -}}
@@ -196,7 +189,6 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- $_ := setValueAtPath "acp.default_agent" (index (index $static "acp") "default_agent") $config -}}
 {{- $_ := unset $session "agent_command_override" -}}
 {{- $_ := set (index $session "agent_detect_as") "jules" "jules" -}}
-{{- $_ := setValueAtPath "tools.lumen" (deepCopy (index (index $static "tools") "lumen")) $config -}}
 {{- if hasKey $config "providers" -}}
 {{- $_ := unset (index $config "providers") "webSearchOrder" -}}
 {{- if eq (len (index $config "providers")) 0 -}}
