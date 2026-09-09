@@ -40,12 +40,31 @@ legacy_config() {
   [ -f "$CONFIG" ] || return 1
   yq -o=json '.' "$CONFIG" 2>/dev/null | jq -e '
     type == "object"
-    and ((keys | sort) as $keys | ($keys == ["modelRoles"] or $keys == ["compaction", "modelRoles"]))
+    and ((keys | sort) as $keys | (
+      $keys == ["modelRoles"]
+      or $keys == ["compaction", "modelRoles"]
+      or $keys == ["compaction", "disabledExtensions", "modelRoles"]
+    ))
     and (.modelRoles | type == "object")
     and (.modelRoles | keys | sort == ["default", "plan", "slow", "smol"])
     and ([.modelRoles.default, .modelRoles.plan, .modelRoles.slow, .modelRoles.smol] | all(type == "string" and startswith("gguf/")))
     and ([.modelRoles.default, .modelRoles.plan, .modelRoles.slow, .modelRoles.smol] | unique | length == 1)
     and ((has("compaction") | not) or (.compaction | type == "object" and keys == ["keepRecentTokens"] and (.keepRecentTokens | type == "number")))
+    and ((has("disabledExtensions") | not) or .disabledExtensions == [
+      "mcp:figma-desktop",
+      "mcp:firefox-devtools",
+      "mcp:github",
+      "mcp:linear",
+      "mcp:runlayer-atlassian",
+      "mcp:runlayer-gcalendar",
+      "mcp:runlayer-gdocs",
+      "mcp:runlayer-gdrive",
+      "mcp:runlayer-gmail",
+      "mcp:runlayer-gsheets",
+      "mcp:runlayer-self",
+      "mcp:runlayer-slack",
+      "mcp:runlayer-zoom"
+    ])
   ' >/dev/null 2>&1
 }
 

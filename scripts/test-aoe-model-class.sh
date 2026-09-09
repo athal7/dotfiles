@@ -193,6 +193,20 @@ modelRoles:
   smol: gguf/legacy
 compaction:
   keepRecentTokens: 1234
+disabledExtensions:
+  - mcp:figma-desktop
+  - mcp:firefox-devtools
+  - mcp:github
+  - mcp:linear
+  - mcp:runlayer-atlassian
+  - mcp:runlayer-gcalendar
+  - mcp:runlayer-gdocs
+  - mcp:runlayer-gdrive
+  - mcp:runlayer-gmail
+  - mcp:runlayer-gsheets
+  - mcp:runlayer-self
+  - mcp:runlayer-slack
+  - mcp:runlayer-zoom
 YAML
 cat > "$legacy/.omp/mcp.json" <<'JSON'
 {"mcpServers":{"linear":{"enabled":false},"chat":{"enabled":false}}}
