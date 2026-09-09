@@ -1,0 +1,62 @@
+#!/bin/bash
+set -euo pipefail
+
+for variable in LINEAR_ISSUE_IDENTIFIER LINEAR_ISSUE_BRANCH_NAME LINEAR_WORK_DIR LINEAR_PROMPT; do
+  if [[ -z "${!variable:-}" ]]; then
+    printf '%s must be set by Linear\n' "$variable" >&2
+    exit 64
+  fi
+done
+
+aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
+if [[ ! -x "$aoe_bin" ]]; then
+  printf 'AOE executable not found: %s\n' "$aoe_bin" >&2
+  exit 69
+fi
+
+repo_root=$(/usr/bin/git -C "$LINEAR_WORK_DIR" rev-parse --show-toplevel 2>/dev/null) || {
+  printf 'Linear work directory is not in a Git repository: %s\n' "$LINEAR_WORK_DIR" >&2
+  exit 65
+}
+
+if [[ -f "$repo_root/.git" ]]; then
+  printf 'Linear work directory must be the primary checkout, not a Git worktree: %s\n' "$repo_root" >&2
+  exit 65
+fi
+
+if ! /usr/bin/git check-ref-format --branch "$LINEAR_ISSUE_BRANCH_NAME" >/dev/null 2>&1; then
+  printf 'Linear supplied an invalid Git branch name: %s\n' "$LINEAR_ISSUE_BRANCH_NAME" >&2
+  exit 65
+fi
+
+worktree_args=(--worktree "$LINEAR_ISSUE_BRANCH_NAME")
+if ! /usr/bin/git -C "$repo_root" show-ref --verify --quiet "refs/heads/$LINEAR_ISSUE_BRANCH_NAME"; then
+  worktree_args+=(--new-branch)
+fi
+
+session_output=$("$aoe_bin" add "$repo_root" \
+  --tool omp \
+  --title "$LINEAR_ISSUE_IDENTIFIER" \
+  --group Linear \
+  "${worktree_args[@]}")
+session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
+if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
+  printf '%s\n' "$session_output" >&2
+  printf 'aoe add did not return a valid session ID\n' >&2
+  exit 1
+fi
+
+for attempt in 1 2 3; do
+  if "$aoe_bin" session start "$session_id"; then
+    break
+  fi
+  if [[ "$attempt" -eq 3 ]]; then
+    printf 'aoe session failed to start after %s attempts\n' "$attempt" >&2
+    exit 1
+  fi
+  /bin/sleep 5
+done
+
+/bin/sleep 5
+"$aoe_bin" send --no-revive "$session_id" "$LINEAR_PROMPT"
+printf 'Started AOE session %s for %s\n' "$session_id" "$LINEAR_ISSUE_IDENTIFIER"

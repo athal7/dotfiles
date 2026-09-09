@@ -14,6 +14,7 @@ Manages `~` on macOS via [chezmoi](https://chezmoi.io).
   - [OMP lead prompt](dot_omp/private_agent/APPEND_SYSTEM.md) — direct OMP system prompt.
   - [Agent skills](dot_agents/skills/) — authored skills are managed directly by chezmoi; externally installed skills own distinct sibling directories under `~/.agents/skills/`.
   - [Agent of Empires config](dot_agent-of-empires/modify_config.toml) — aoe's global user config, chezmoi-managed and deployed to `~/.agent-of-empires/config.toml`. Its `Alt+l` shortcut resolves the Homebrew package prefix, so it runs `lumen` without a link or `PATH` entry.
+  - [Linear custom script](dot_linear/coding-tools.json.tmpl) — opens a Linear issue in a new AOE worktree session. Enable **Custom script** in Linear **Settings > Code & reviews > Configure coding tools**. Then select **Work on issue → Custom script**. The script requires the selected work directory to be the primary checkout of a Git repository.
   - [Freebuff](https://freebuff.com/) — installed through mise and available to Agent of Empires as the opt-in `freebuff` terminal agent (`aoe add --tool freebuff`).
   - Per-org model routing — private defaults and organization overrides live only in gitignored `.chezmoidata/local.yaml`.
   - [Local model configuration](local.yaml.example) — `local_model` is the single source of truth for the local Apple Silicon model endpoint, runtime, repo, context window, cache limit, and OMP output cap. It feeds OMP's [`models.yml`](dot_omp/private_agent/models.yml.tmpl) and the `llama-server` LaunchAgent.
