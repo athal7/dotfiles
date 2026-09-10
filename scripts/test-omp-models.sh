@@ -31,7 +31,7 @@ PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOM
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
-expected_roles=(commit default plan slow smol task vision)
+expected_roles=(commit default plan slow smol vision)
 rendered_roles="$(yq -o=json '.modelRoles | keys | sort' "$CONFIG" | jq -r 'join(" ")')"
 check "renders the static model roles" "$rendered_roles" "${expected_roles[*]}"
 check "routes default role to Terra" "$(yq -r '.modelRoles.default' "$CONFIG")" openai-codex/gpt-5.6-terra
@@ -66,6 +66,7 @@ check "routes planner agent through plan role" "$(yq -r '.task.agentModelOverrid
 check "routes designer agent through vision role" "$(yq -r '.task.agentModelOverrides.designer' "$CONFIG")" @vision
 check "routes reviewer agent through slow role" "$(yq -r '.task.agentModelOverrides.reviewer' "$CONFIG")" @slow
 check "routes sonic agent through smol role" "$(yq -r '.task.agentModelOverrides.sonic' "$CONFIG")" @smol
+check "routes general task agent through default role" "$(yq -r '.task.agentModelOverrides.task' "$CONFIG")" @default
 check "keeps advisor enabled" "$(yq -r '.advisor.enabled' "$CONFIG")" true
 check "routes advisor through smol role" "$(yq -r '.advisor.model' "$CONFIG")" @smol
 check "disables advisor for subagents" "$(yq -r '.advisor.subagents' "$CONFIG")" false
