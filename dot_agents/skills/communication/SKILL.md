@@ -8,12 +8,12 @@ Query CQ for normal context. Load `knowledge-base` when CQ has no answer or its 
 
 When the user has not provided exact final wording for an external communication, create a local draft before using an integration write tool.
 
-- Write the literal outbound body to `~/.omp/agent/drafts/communications/<slug>.md`.
+- Write the literal outbound body to `.omp/drafts/communications/<slug>.md` under the active workspace.
 - Use a collision-safe slug, such as `<YYYYMMDD-HHMM>-<topic>`, or confirm that an existing draft and sidecar are intentionally being replaced. Never silently overwrite an existing pair.
 - Include the AI-authorship marker in the draft body when it applies. Add it before stopping so the reviewed file is complete.
 - Keep destination, recipients, subject, thread, schedule, tool, and other metadata in the matching `<slug>.json` sidecar.
 - Keep the `.md` file limited to the outbound body. Do not put YAML frontmatter or review notes in it.
-- Keep drafts outside the repository unless the user explicitly requests a repository file.
+- Store drafts under the active workspace. Do not create them outside it.
 - Stop after creating the draft and give the user its path so they can edit it directly.
 - If the user requests changes, update the draft file and stop again.
 - When the user requests sending, read both the body file and matching sidecar immediately before constructing the integration call. Treat the `.md` contents as the authoritative body and the `.json` contents as authoritative metadata. Do not rewrite, paraphrase, or append to the body or silently replace the metadata.
