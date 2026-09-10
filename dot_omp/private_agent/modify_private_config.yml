@@ -19,7 +19,9 @@
 {{- $_ := setValueAtPath "modelRoles" (index $defaults "modelRoles") $config -}}
 {{- $_ := setValueAtPath "modelRoleStorage" (index $defaults "modelRoleStorage") $config -}}
 {{- $_ := setValueAtPath "prewalk.enabled" (index (index $defaults "prewalk") "enabled") $config -}}
-{{- $_ := setValueAtPath "prewalk.into" (index (index $defaults "prewalk") "into") $config -}}
+{{- if hasKey (index $config "prewalk") "into" -}}
+{{- $_ := unset (index $config "prewalk") "into" -}}
+{{- end -}}
 {{- range $providerKey := list "tinyModel" "autoThinkingModel" -}}
 {{- $_ := setValueAtPath (printf "providers.%s" $providerKey) (index (index $defaults "providers") $providerKey) $config -}}
 {{- end -}}

@@ -40,13 +40,15 @@ check "routes smol role to Luna" "$(yq -r '.modelRoles.smol' "$CONFIG")" openai-
 check "routes commit role through smol" "$(yq -r '.modelRoles.commit' "$CONFIG")" @smol
 check "uses local tiny utility model" "$(yq -r '.providers.tinyModel' "$CONFIG")" lfm2-350m
 check "uses local thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$CONFIG")" lfm2-350m
-check "prewalk moves into the default role" "$(yq -r '.prewalk.into' "$CONFIG")" @default
-check "starts AoE prewalk on plan and moves to default" "$(yq -p=toml -o=json '.session.agent_command_override.omp' "$AOE" | jq -r '.')" "omp --model @plan --prewalk-into @default"
+check "uses the native smol prewalk destination" "$(yq -r '.prewalk | has("into")' "$CONFIG")" false
+check "uses native OMP startup in AoE" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$AOE")" false
 STALE_AOE="$WORK/stale-aoe.toml"
-printf '[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n' \
+printf '[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$STALE_AOE"
 check "removes the stale AoE model-routing hook" "$(yq -p=toml -o=json '.host_hooks | has("before_session")' "$STALE_AOE")" false
 check "preserves unrelated AoE hooks" "$(yq -p=toml -o=json '.host_hooks.after_session[0]' "$STALE_AOE" | jq -r '.')" keep-hook
+check "removes the stale AoE OMP override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$STALE_AOE")" false
+check "preserves unrelated AoE agent overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$STALE_AOE" | jq -r '.')" keep-agent
 check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
@@ -56,7 +58,7 @@ STALE_CONFIG="$WORK/stale-config.yml"
 printf 'prewalk:\n  enabled: false\n  into: stale/model\n  custom: preserved\nproviders:\n  tinyModel: stale-tiny\n  autoThinkingModel: stale-thinking\n  customModel: preserved\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_omp/private_agent/modify_private_config.yml" > "$STALE_CONFIG"
 check "modifier replaces stale prewalk enabled" "$(yq -r '.prewalk.enabled' "$STALE_CONFIG")" true
-check "modifier replaces stale prewalk destination" "$(yq -r '.prewalk.into' "$STALE_CONFIG")" @default
+check "modifier removes the stale prewalk destination" "$(yq -r '.prewalk | has("into")' "$STALE_CONFIG")" false
 check "modifier replaces stale tiny utility model" "$(yq -r '.providers.tinyModel' "$STALE_CONFIG")" lfm2-350m
 check "modifier replaces stale thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$STALE_CONFIG")" lfm2-350m
 check "modifier preserves unrelated prewalk settings" "$(yq -r '.prewalk.custom' "$STALE_CONFIG")" preserved

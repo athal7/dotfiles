@@ -189,7 +189,12 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- end -}}
 {{- $session := index $config "session" -}}
 {{- $_ := setValueAtPath "acp.default_agent" (index (index $static "acp") "default_agent") $config -}}
-{{- $_ := setValueAtPath "session.agent_command_override.omp" "omp --model @plan --prewalk-into @default" $config -}}
+{{- if hasKey $session "agent_command_override" -}}
+{{-   $_ := unset (index $session "agent_command_override") "omp" -}}
+{{-   if eq (len (index $session "agent_command_override")) 0 -}}
+{{-     $_ := unset $session "agent_command_override" -}}
+{{-   end -}}
+{{- end -}}
 {{- $_ := set (index $session "agent_detect_as") "jules" "jules" -}}
 {{- if hasKey $config "providers" -}}
 {{- $_ := unset (index $config "providers") "webSearchOrder" -}}
