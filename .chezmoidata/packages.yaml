@@ -162,7 +162,7 @@ packages:
     - name: typescript-language-server
     - name: pyright
     - name: gopls
-    - name: terraform-ls
+    - name: tofu-ls
     - name: lua-language-server
     - name: bash-language-server
     - name: yaml-language-server
@@ -237,8 +237,6 @@ packages:
     - name: uv
       version: latest
     - name: pre-commit
-      version: latest
-    - name: terraform
       version: latest
     - name: helm
       version: latest
