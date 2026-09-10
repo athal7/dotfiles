@@ -16,6 +16,7 @@ MODELS="$WORK/models.yml"
 MCP="$WORK/mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
+AOE="$WORK/aoe.toml"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
 mkdir -p "$BIN"
@@ -27,44 +28,46 @@ chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
-expected_roles=(commit default designer plan slow smol task tiny vision)
+expected_roles=(commit default plan slow smol task vision)
 rendered_roles="$(yq -o=json '.modelRoles | keys | sort' "$CONFIG" | jq -r 'join(" ")')"
-check "renders every model role" "$rendered_roles" "${expected_roles[*]}"
-check "routes default role to cloud sol" "$(yq -r '.modelRoles.default' "$CONFIG")" openai-codex/gpt-5.6-sol
-check "routes smol role to cloud terra" "$(yq -r '.modelRoles.smol' "$CONFIG")" openai-codex/gpt-5.6-terra
-check "routes designer role through vision alias" "$(yq -r '.modelRoles.designer' "$CONFIG")" @vision
+check "renders the static model roles" "$rendered_roles" "${expected_roles[*]}"
+check "routes default role to Terra" "$(yq -r '.modelRoles.default' "$CONFIG")" openai-codex/gpt-5.6-terra
+check "routes plan role to Sol" "$(yq -r '.modelRoles.plan' "$CONFIG")" openai-codex/gpt-5.6-sol
+check "routes smol role to Luna" "$(yq -r '.modelRoles.smol' "$CONFIG")" openai-codex/gpt-5.6-luna
+check "routes commit role through smol" "$(yq -r '.modelRoles.commit' "$CONFIG")" @smol
 check "uses local tiny utility model" "$(yq -r '.providers.tinyModel' "$CONFIG")" lfm2-350m
 check "uses local thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$CONFIG")" lfm2-350m
-check "sets shared prewalk destination" "$(yq -r '.prewalk.into' "$CONFIG")" openai-codex/gpt-5.6-terra
+check "prewalk moves into the default role" "$(yq -r '.prewalk.into' "$CONFIG")" @default
+check "starts AoE prewalk on plan and moves to default" "$(yq -p=toml -o=json '.session.agent_command_override.omp' "$AOE" | jq -r '.')" "omp --model @plan --prewalk-into @default"
+STALE_AOE="$WORK/stale-aoe.toml"
+printf '[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n' \
+  | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$STALE_AOE"
+check "removes the stale AoE model-routing hook" "$(yq -p=toml -o=json '.host_hooks | has("before_session")' "$STALE_AOE")" false
+check "preserves unrelated AoE hooks" "$(yq -p=toml -o=json '.host_hooks.after_session[0]' "$STALE_AOE" | jq -r '.')" keep-hook
 check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
 check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-slack runlayer-zoom"
 check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
-LEGACY_DATA="$WORK/legacy-local.yaml"
-LEGACY_CONFIG="$WORK/legacy-config.yml"
-cp "$DATA" "$LEGACY_DATA"
-yq -i '.prewalk.into = .model_class.default' "$LEGACY_DATA"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$LEGACY_DATA" "$HOME/.omp/agent/config.yml" > "$LEGACY_CONFIG"
-check "migrates legacy Sol prewalk target to Terra" "$(yq -r '.prewalk.into' "$LEGACY_CONFIG")" openai-codex/gpt-5.6-terra
 STALE_CONFIG="$WORK/stale-config.yml"
 printf 'prewalk:\n  enabled: false\n  into: stale/model\n  custom: preserved\nproviders:\n  tinyModel: stale-tiny\n  autoThinkingModel: stale-thinking\n  customModel: preserved\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_omp/private_agent/modify_private_config.yml" > "$STALE_CONFIG"
 check "modifier replaces stale prewalk enabled" "$(yq -r '.prewalk.enabled' "$STALE_CONFIG")" true
-check "modifier replaces stale prewalk destination" "$(yq -r '.prewalk.into' "$STALE_CONFIG")" openai-codex/gpt-5.6-terra
+check "modifier replaces stale prewalk destination" "$(yq -r '.prewalk.into' "$STALE_CONFIG")" @default
 check "modifier replaces stale tiny utility model" "$(yq -r '.providers.tinyModel' "$STALE_CONFIG")" lfm2-350m
 check "modifier replaces stale thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$STALE_CONFIG")" lfm2-350m
 check "modifier preserves unrelated prewalk settings" "$(yq -r '.prewalk.custom' "$STALE_CONFIG")" preserved
 check "modifier preserves unrelated provider settings" "$(yq -r '.providers.customModel' "$STALE_CONFIG")" preserved
 check "enables task prewalk" "$(yq -r '.task.prewalk' "$CONFIG")" true
 check "routes planner agent through plan role" "$(yq -r '.task.agentModelOverrides.planner' "$CONFIG")" @plan
-check "routes designer agent through designer role" "$(yq -r '.task.agentModelOverrides.designer' "$CONFIG")" @designer
+check "routes designer agent through vision role" "$(yq -r '.task.agentModelOverrides.designer' "$CONFIG")" @vision
 check "routes reviewer agent through slow role" "$(yq -r '.task.agentModelOverrides.reviewer' "$CONFIG")" @slow
 check "routes sonic agent through smol role" "$(yq -r '.task.agentModelOverrides.sonic' "$CONFIG")" @smol
 check "keeps advisor enabled" "$(yq -r '.advisor.enabled' "$CONFIG")" true
-check "routes advisor through local model" "$(yq -r '.advisor.model' "$CONFIG")" gguf/Qwen3-30B-A3B-Instruct-2507
+check "routes advisor through smol role" "$(yq -r '.advisor.model' "$CONFIG")" @smol
 check "disables advisor for subagents" "$(yq -r '.advisor.subagents' "$CONFIG")" false
 check "disables automatic session resume" "$(yq -r '.autoResume' "$CONFIG")" false
 check "selects Snapcompact compaction" "$(yq -r '.compaction.strategy' "$CONFIG")" snapcompact
@@ -84,25 +87,6 @@ cp "$DATA" "$CUSTOM_DATA"
 yq -i '.local_model.context_window = 40960' "$CUSTOM_DATA"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.omp/agent/models.yml" > "$CUSTOM_MODELS"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --file "$REPO_ROOT/dot_config/launchd-yaml/agents.yaml.tmpl" > "$LAUNCH_AGENTS"
-CUSTOM_CONFIG="$WORK/custom-config.yml"
-CUSTOM_AOE="$WORK/custom-aoe.toml"
-yq -i '.prewalk.into = "test/prewalk-model"' "$CUSTOM_DATA"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.omp/agent/config.yml" > "$CUSTOM_CONFIG"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.agent-of-empires/config.toml" > "$CUSTOM_AOE"
-check "propagates shared prewalk destination to OMP config" "$(yq -r '.prewalk.into' "$CUSTOM_CONFIG")" test/prewalk-model
-check "propagates shared prewalk destination to AOE override" "$(yq -p=toml -o=json '.session.agent_command_override.omp' "$CUSTOM_AOE" | jq -r '.')" "omp --prewalk-into test/prewalk-model"
-DISABLED_CONFIG="$WORK/disabled-config.yml"
-DISABLED_AOE="$WORK/disabled-aoe.toml"
-yq -i '.prewalk.enabled = false' "$CUSTOM_DATA"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.omp/agent/config.yml" > "$DISABLED_CONFIG"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.agent-of-empires/config.toml" > "$DISABLED_AOE"
-check "propagates disabled prewalk to OMP config" "$(yq -r '.prewalk.enabled' "$DISABLED_CONFIG")" false
-check "removes AOE override when prewalk is disabled" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$DISABLED_AOE")" false
-DISABLED_AOE_WITH_OTHER="$WORK/disabled-aoe-with-other.toml"
-printf '[session.agent_command_override]\nother = "other-agent"\nomp = "stale-omp"\n' \
-  | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$DISABLED_AOE_WITH_OTHER"
-check "preserves unrelated AOE overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$DISABLED_AOE_WITH_OTHER" | jq -r '.')" other-agent
-check "removes only the OMP AOE override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$DISABLED_AOE_WITH_OTHER")" false
 check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.omp/agent/kb-enrich-mcp.json"
 check "pins daily maintenance to the lower-cost model role" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
 check "invokes the combined daily command" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" /daily-maintenance

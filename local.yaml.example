@@ -1,25 +1,8 @@
 # Machine-specific config for chezmoi.
 # Copy this shape to the private `.chezmoidata/local.yaml` file in your
 # chezmoi source directory and fill in your values.
-# Private model defaults rendered by OMP templates.
-# `lfm2-350m` must be present in OMP's tiny-model cache. Use
-# `omp tiny-models download lfm2-350m` if `omp tiny-models list --json`
-# reports that it is absent.
-model_class:
-  default: openai-codex/gpt-5.6-sol
-  plan: openai-codex/gpt-5.6-sol
-  slow: openai-codex/gpt-5.6-sol
-  smol: openai-codex/gpt-5.6-terra
-  vision: openai-codex/gpt-5.6-terra
-  designer: "@vision"
-  commit: openai-codex/gpt-5.6-terra
-  tiny: openai-codex/gpt-5.6-terra
-  task: openai-codex/gpt-5.6-sol
-prewalk:
-  enabled: true
-  into: openai-codex/gpt-5.6-terra
-# Per-org config keyed by GitHub org login. Orgs not listed fall back to defaults
-# (GitHub Issues for issue tracking; no automated code review).
+# Per-org metadata keyed by GitHub org login. Orgs not listed use GitHub
+# Issues for issue tracking and do not use automated code review.
 #
 #   kb_eligible      : whether GitHub activity from the organization may enrich this KB; omit or false to exclude it.
 #   issues           : "linear" if the org uses Linear (anything else → default GitHub Issues)

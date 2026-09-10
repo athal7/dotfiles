@@ -14,20 +14,6 @@
 {{- $_ := set $packagePermissionCounts "gh" 16 -}}
 {{- $_ := set $packagePermissionCounts "xh" 10 -}}
 {{- $_ := set $packagePermissionCounts "steipete/tap/remindctl" 6 -}}
-{{- $prewalk := index . "prewalk" | default dict -}}
-{{- $prewalkEnabled := true -}}
-{{- if hasKey $prewalk "enabled" -}}
-{{- $prewalkEnabled = index $prewalk "enabled" -}}
-{{- end -}}
-{{- $prewalkInto := index .model_class "smol" -}}
-{{- if and (hasKey $prewalk "into") (ne (index $prewalk "into") (index .model_class "default")) -}}
-{{- $prewalkInto = index $prewalk "into" -}}
-{{- end -}}
-{{- $advisorModel := "@smol" -}}
-{{- if hasKey . "local_model" -}}
-{{- $localModel := index . "local_model" -}}
-{{- $advisorModel = printf "%s/%s" ((index $localModel "provider") | default "gguf") ((index $localModel "id") | default "default_model") -}}
-{{- end -}}
 
 
 bash:
@@ -257,9 +243,13 @@ bash:
 defaultThinkingLevel: auto
 modelRoleStorage: global
 modelRoles:
-{{- range $role := keys .model_class | sortAlpha }}
-  {{ $role }}: {{ index $.model_class $role | quote }}
-{{- end }}
+  commit: "@smol"
+  default: openai-codex/gpt-5.6-terra
+  plan: openai-codex/gpt-5.6-sol
+  slow: openai-codex/gpt-5.6-sol
+  smol: openai-codex/gpt-5.6-luna
+  task: openai-codex/gpt-5.6-sol
+  vision: openai-codex/gpt-5.6-terra
 symbolPreset: unicode
 setupVersion: 2
 dev:
@@ -359,7 +349,7 @@ tools:
   approvalMode: write
 advisor:
   enabled: true
-  model: {{ $advisorModel | quote }}
+  model: "@smol"
   subagents: false
 astGrep:
   enabled: true
@@ -402,8 +392,8 @@ personality: pragmatic
 plan:
   defaultOnStartup: false
 prewalk:
-  enabled: {{ $prewalkEnabled }}
-  into: {{ $prewalkInto | quote }}
+  enabled: true
+  into: "@default"
 providers:
   tinyModel: lfm2-350m
   autoThinkingModel: lfm2-350m
@@ -432,7 +422,7 @@ stt:
 task:
   prewalk: true
   agentModelOverrides:
-    designer: "@designer"
+    designer: "@vision"
     librarian: "@smol"
     planner: "@plan"
     reviewer: "@slow"
