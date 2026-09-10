@@ -103,11 +103,11 @@ printf '[session.agent_command_override]\nother = "other-agent"\nomp = "stale-om
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$DISABLED_AOE_WITH_OTHER"
 check "preserves unrelated AOE overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$DISABLED_AOE_WITH_OTHER" | jq -r '.')" other-agent
 check "removes only the OMP AOE override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$DISABLED_AOE_WITH_OTHER")" false
-check "gives KB enrichment a scratch MCP overlay" "$(yq -r '.launchagents."aoe-kb-enrich".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.omp/agent/kb-enrich-mcp.json"
-check "pins KB enrichment to the lower-cost model role" "$(yq -r '.launchagents."aoe-kb-enrich".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
-check "pins production triage to the lower-cost model role" "$(yq -r '.launchagents."aoe-fix-prod-errors".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
-check "pins repository audit to the lower-cost model role" "$(yq -r '.launchagents."aoe-audit".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
-check "staggers production triage after KB enrichment" "$(yq -o=json '.launchagents."aoe-fix-prod-errors".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [15] then 15 else . end')" 15
+check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.omp/agent/kb-enrich-mcp.json"
+check "pins daily maintenance to the lower-cost model role" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
+check "invokes the combined daily command" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" /daily-maintenance
+check "runs daily maintenance at the original enrichment time" "$(yq -o=json '.launchagents."aoe-daily-maintenance".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [0] then 0 else . end')" 0
+check "removes superseded scheduled sessions" "$(yq -o=json '.launchagents' "$LAUNCH_AGENTS" | jq 'has("aoe-kb-enrich") or has("aoe-fix-prod-errors") or has("aoe-audit")')" false
 check "propagates the configured provider context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$CUSTOM_MODELS")" 40960
 check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
 check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" /opt/homebrew/bin/llama-server

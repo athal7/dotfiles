@@ -52,7 +52,8 @@ Not everything is a skill:
 | `/learn` | Capture discoveries into AGENTS.md or a skill |
 | `/rename` | Retitle the session from what it turned out to be about |
 | `/demo` | Build a demo deck from work since the last demo |
-| `/audit` | Agent-system and cost/latency audit (scheduled) |
-| `/kb-enrich` | Knowledge-base enrichment (scheduled) |
-| `/fix-prod-errors` | APM error triage and fix dispatch (scheduled) |
+| `/audit` | Agent-system and cost/latency audit |
+| `/daily-maintenance` | Production-error triage followed by knowledge-base enrichment (scheduled) |
+| `/kb-enrich` | Knowledge-base enrichment |
+| `/fix-prod-errors` | APM error triage and fix dispatch |
 | `/fix-launchagent-errors` | LaunchAgent error self-heal (watcher-dispatched) |

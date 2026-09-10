@@ -31,7 +31,7 @@ homebridge|Token refresh failed using Google account for connection
 homebridge|Error: send EADDRNOTAVAIL
 homebridge|Error: send EPIPE
 homebridge|TypeError: Cannot read properties of undefined
-aoe-kb-enrich|Error: session [[:xdigit:]]+ changed while launch hooks were running$
+aoe-daily-maintenance|Error: session [[:xdigit:]]+ changed while launch hooks were running$
 "
 
 
