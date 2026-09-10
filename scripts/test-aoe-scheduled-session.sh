@@ -64,10 +64,10 @@ else
   bad "runs a scratch KB session"
 fi
 check "copies the KB MCP overlay" cmp "$WORK/kb-mcp.json" "$WORK/scratch/testsession/.omp/mcp.json"
-if grep -Fqx 'ARG=--extra-args' "$LOG" && grep -Fqx 'ARG=--model @default' "$LOG"; then
-  ok "passes the pinned KB model"
+if grep -Fqx 'ARG=--extra-args' "$LOG" && grep -Fqx 'ARG=--model @default --prewalk-into @default' "$LOG"; then
+  ok "passes the pinned OMP model to the session and prewalk"
 else
-  bad "passes the pinned KB model"
+  bad "passes the pinned OMP model to the session and prewalk"
 fi
 if [[ "$(stat -f '%Lp' "$WORK/scratch/testsession/.omp/mcp.json")" == 600 ]]; then
   ok "makes the KB MCP overlay private"

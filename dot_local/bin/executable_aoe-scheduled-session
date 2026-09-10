@@ -48,7 +48,7 @@ else
 fi
 aoe_args+=(--tool omp --title "$session_title" --group Scheduled)
 if [[ -n "$omp_model" ]]; then
-  aoe_args+=(--extra-args "--model $omp_model")
+  aoe_args+=(--extra-args "--model $omp_model --prewalk-into $omp_model")
 fi
 session_output=$("$aoe_bin" "${aoe_args[@]}")
 session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
