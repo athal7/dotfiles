@@ -243,6 +243,7 @@ bash:
 defaultThinkingLevel: auto
 modelRoleStorage: global
 modelRoles:
+  advisor: openai-codex/gpt-5.6-luna
   commit: "@smol"
   default: openai-codex/gpt-5.6-terra
   plan: openai-codex/gpt-5.6-sol
@@ -348,7 +349,6 @@ tools:
   approvalMode: write
 advisor:
   enabled: true
-  model: "@smol"
   subagents: false
 astGrep:
   enabled: true

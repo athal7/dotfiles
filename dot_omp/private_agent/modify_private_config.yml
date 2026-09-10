@@ -40,7 +40,6 @@
 {{- $_ := setValueAtPath "task.agentModelOverrides" (index (index $defaults "task") "agentModelOverrides") $config -}}
 {{- $_ := setValueAtPath "task.disabledAgents" (index (index $defaults "task") "disabledAgents") $config -}}
 {{- $_ := setValueAtPath "advisor.enabled" (index (index $defaults "advisor") "enabled") $config -}}
-{{- $_ := setValueAtPath "advisor.model" (index (index $defaults "advisor") "model") $config -}}
 {{- $_ := setValueAtPath "advisor.subagents" (index (index $defaults "advisor") "subagents") $config -}}
 {{- $_ := setValueAtPath "tools.approval" (index (index $defaults "tools") "approval") $config -}}
 {{- $_ := setValueAtPath "tools.approvalMode" (index (index $defaults "tools") "approvalMode") $config -}}

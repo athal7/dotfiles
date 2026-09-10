@@ -31,9 +31,10 @@ PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOM
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
-expected_roles=(commit default plan slow smol vision)
+expected_roles=(advisor commit default plan slow smol vision)
 rendered_roles="$(yq -o=json '.modelRoles | keys | sort' "$CONFIG" | jq -r 'join(" ")')"
 check "renders the static model roles" "$rendered_roles" "${expected_roles[*]}"
+check "routes advisor to Luna" "$(yq -r '.modelRoles.advisor' "$CONFIG")" openai-codex/gpt-5.6-luna
 check "routes default role to Terra" "$(yq -r '.modelRoles.default' "$CONFIG")" openai-codex/gpt-5.6-terra
 check "routes plan role to Sol" "$(yq -r '.modelRoles.plan' "$CONFIG")" openai-codex/gpt-5.6-sol
 check "routes smol role to Luna" "$(yq -r '.modelRoles.smol' "$CONFIG")" openai-codex/gpt-5.6-luna
@@ -70,7 +71,6 @@ check "routes reviewer agent through slow role" "$(yq -r '.task.agentModelOverri
 check "routes sonic agent through smol role" "$(yq -r '.task.agentModelOverrides.sonic' "$CONFIG")" @smol
 check "routes general task agent through default role" "$(yq -r '.task.agentModelOverrides.task' "$CONFIG")" @default
 check "keeps advisor enabled" "$(yq -r '.advisor.enabled' "$CONFIG")" true
-check "routes advisor through smol role" "$(yq -r '.advisor.model' "$CONFIG")" @smol
 check "disables advisor for subagents" "$(yq -r '.advisor.subagents' "$CONFIG")" false
 check "disables automatic session resume" "$(yq -r '.autoResume' "$CONFIG")" false
 check "selects Snapcompact compaction" "$(yq -r '.compaction.strategy' "$CONFIG")" snapcompact
