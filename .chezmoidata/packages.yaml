@@ -124,7 +124,7 @@ packages:
     - name: worktrunk
     - name: xh
       permissions:
-        - match: "xh-es-search '*'"
+        - match: "xh-es-search *"
           approval: allow
         - match: "xh *mutation*"
           approval: ask
@@ -243,8 +243,6 @@ packages:
     - name: helm
       version: latest
     - name: argocd
-      version: latest
-    - name: npm:@oh-my-pi/pi-coding-agent
       version: latest
     - name: npm:@google/jules
       version: latest

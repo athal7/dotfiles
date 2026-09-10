@@ -9,13 +9,13 @@ license: MIT
 ## Syntax
 
 ```
-xh --ignore-stdin --session=agent [METHOD] https://endpoint Key:Value [key=value] [key==value]
+xh --ignore-stdin --session=agent METHOD https://endpoint Key:Value [key=value] [key==value]
 ```
 
 - **Headers:** `Key:Value` (no space after colon)
 - **JSON body:** `key=value` (string) or `key:=value` (raw JSON)
 - **Query params:** `key==value`
-- **Method:** optional first arg — defaults to GET, inferred POST if body present
+- **Method:** required for agent calls. Use explicit uppercase `GET` for reads so the permission rule can distinguish them from inferred writes.
 - **Body-less POST:** `xh --ignore-stdin --session=agent --json POST https://...`
 
 ## `--ignore-stdin`
