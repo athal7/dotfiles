@@ -3,6 +3,7 @@
 {{- range $server := .mcp_servers -}}
 {{-   if hasKey $allowed $server.name -}}
 {{-     $entry := dict -}}
+{{-     $_ := set $entry "enabled" true -}}
 {{-     if eq $server.transport "local" -}}
 {{-       $_ := set $entry "command" (first $server.command) -}}
 {{-       $_ := set $entry "args" (rest $server.command) -}}

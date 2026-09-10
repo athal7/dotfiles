@@ -42,7 +42,7 @@ check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
 check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-slack runlayer-zoom"
-check "enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. != false)' "$KB_ENRICH_MCP")" true
+check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
 LEGACY_DATA="$WORK/legacy-local.yaml"
 LEGACY_CONFIG="$WORK/legacy-config.yml"
 cp "$DATA" "$LEGACY_DATA"
