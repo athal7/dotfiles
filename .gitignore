@@ -25,6 +25,3 @@ bench-*.md
 __pycache__/
 
 *.pyc
-
-# Local communication drafts
-.omp/drafts/communications/
