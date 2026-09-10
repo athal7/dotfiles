@@ -14,7 +14,7 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 DATA="$WORK/local.yaml"
 MODELS="$WORK/models.yml"
 MCP="$WORK/mcp.json"
-KB_PROFILE_MCP="$WORK/kb-enrich-mcp.json"
+KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
@@ -28,8 +28,7 @@ cp "$REPO_ROOT/local.yaml.example" "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/profiles/kb-enrich/agent/mcp.json" > "$KB_PROFILE_MCP"
-KB_PROFILE_COMMANDS_LINK="$(chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/profiles/kb-enrich/agent/commands")"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 expected_roles=(commit default designer plan slow smol task tiny vision)
 rendered_roles="$(yq -o=json '.modelRoles | keys | sort' "$CONFIG" | jq -r 'join(" ")')"
 check "renders every model role" "$rendered_roles" "${expected_roles[*]}"
@@ -42,9 +41,8 @@ check "sets shared prewalk destination" "$(yq -r '.prewalk.into' "$CONFIG")" ope
 check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
-check "limits KB profile to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_PROFILE_MCP")" "cq linear runlayer-atlassian runlayer-slack runlayer-zoom"
-check "enables every KB profile MCP server" "$(jq '[.mcpServers[].enabled] | all(. != false)' "$KB_PROFILE_MCP")" true
-check "links KB profile commands to the default command set" "$KB_PROFILE_COMMANDS_LINK" ../../../agent/commands
+check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-slack runlayer-zoom"
+check "enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. != false)' "$KB_ENRICH_MCP")" true
 LEGACY_DATA="$WORK/legacy-local.yaml"
 LEGACY_CONFIG="$WORK/legacy-config.yml"
 cp "$DATA" "$LEGACY_DATA"
@@ -105,7 +103,9 @@ printf '[session.agent_command_override]\nother = "other-agent"\nomp = "stale-om
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$DISABLED_AOE_WITH_OTHER"
 check "preserves unrelated AOE overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$DISABLED_AOE_WITH_OTHER" | jq -r '.')" other-agent
 check "removes only the OMP AOE override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$DISABLED_AOE_WITH_OTHER")" false
-check "runs KB enrichment with its isolated OMP profile" "$(yq -r '.launchagents."aoe-kb-enrich".EnvironmentVariables.AOE_OMP_PROFILE' "$LAUNCH_AGENTS")" kb-enrich
+check "gives KB enrichment a scratch MCP overlay" "$(yq -r '.launchagents."aoe-kb-enrich".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.omp/agent/kb-enrich-mcp.json"
+check "pins KB enrichment to the default cloud model" "$(yq -r '.launchagents."aoe-kb-enrich".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @default
+check "staggers production triage after KB enrichment" "$(yq -o=json '.launchagents."aoe-fix-prod-errors".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [15] then 15 else . end')" 15
 check "propagates the configured provider context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$CUSTOM_MODELS")" 40960
 check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
 check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" /opt/homebrew/bin/llama-server

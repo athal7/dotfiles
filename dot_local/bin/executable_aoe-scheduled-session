@@ -9,24 +9,49 @@ fi
 title=$1
 prompt=$2
 project_path=${3:-}
-omp_extra_args=()
-if [[ -n ${AOE_OMP_PROFILE:-} ]]; then
-  if [[ ! $AOE_OMP_PROFILE =~ ^[[:alnum:]_-]+$ ]]; then
-    printf 'AOE_OMP_PROFILE must contain only letters, digits, underscores, and hyphens\n' >&2
+aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
+startup_delay=${AOE_STARTUP_DELAY_SECONDS:-30}
+project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
+omp_model=${AOE_OMP_MODEL:-}
+
+if [[ ! -x "$aoe_bin" ]]; then
+  printf 'AOE_BIN is not executable: %s\n' "$aoe_bin" >&2
+  exit 69
+fi
+if [[ ! "$startup_delay" =~ ^[0-9]+$ ]]; then
+  printf 'AOE_STARTUP_DELAY_SECONDS must be a non-negative integer\n' >&2
+  exit 64
+fi
+if [[ -n "$omp_model" && ! "$omp_model" =~ ^[@[:alnum:]_./:-]+$ ]]; then
+  printf 'AOE_OMP_MODEL contains unsupported characters\n' >&2
+  exit 64
+fi
+if [[ -n "$project_mcp_config" ]]; then
+  if [[ -n "$project_path" ]]; then
+    printf 'AOE_OMP_PROJECT_MCP_CONFIG is supported only for scratch sessions\n' >&2
     exit 64
   fi
-  omp_extra_args=(--extra-args "--profile $AOE_OMP_PROFILE")
+  if [[ "$project_mcp_config" != /* || ! -f "$project_mcp_config" ]]; then
+    printf 'AOE_OMP_PROJECT_MCP_CONFIG must name an absolute regular file\n' >&2
+    exit 66
+  fi
 fi
+
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/aoe/omp-session-map"
 correlation_id=$(/usr/bin/uuidgen)
 session_title="${title}-${correlation_id%%-*}"
-
+aoe_args=(add)
 if [[ -n "$project_path" ]]; then
-  session_output=$(/opt/homebrew/bin/aoe add "$project_path" --tool omp --title "$session_title" --group Scheduled "${omp_extra_args[@]}")
+  aoe_args+=("$project_path")
 else
-  session_output=$(/opt/homebrew/bin/aoe add --scratch --tool omp --title "$session_title" --group Scheduled "${omp_extra_args[@]}")
+  aoe_args+=(--scratch)
 fi
-session_id=$(sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
+aoe_args+=(--tool omp --title "$session_title" --group Scheduled)
+if [[ -n "$omp_model" ]]; then
+  aoe_args+=(--extra-args "--model $omp_model")
+fi
+session_output=$("$aoe_bin" "${aoe_args[@]}")
+session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
 if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
   printf '%s\n' "$session_output" >&2
   printf 'aoe add did not return a valid session ID\n' >&2
@@ -34,6 +59,18 @@ if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
 fi
 
 umask 077
+if [[ -n "$project_mcp_config" ]]; then
+  session_path=$(/usr/bin/sed -n 's/^[[:space:]]*Path:[[:space:]]*//p' <<<"$session_output")
+  if [[ "$session_path" != /* || ! -d "$session_path" ]]; then
+    printf '%s\n' "$session_output" >&2
+    printf 'aoe add did not return a valid scratch path\n' >&2
+    exit 1
+  fi
+  mkdir -p "$session_path/.omp"
+  cp "$project_mcp_config" "$session_path/.omp/mcp.json"
+  chmod 600 "$session_path/.omp/mcp.json"
+fi
+
 mkdir -p "$state_dir"
 created_at=$(/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
 mapping_path="$state_dir/$session_id.json"
@@ -43,7 +80,7 @@ printf '{"aoeSessionId":"%s","correlationId":"%s","createdAt":"%s"}\n' \
 mv "$mapping_temp" "$mapping_path"
 
 for attempt in 1 2 3; do
-  if /opt/homebrew/bin/aoe session start "$session_id"; then
+  if "$aoe_bin" session start "$session_id"; then
     break
   fi
   if [[ "$attempt" -eq 3 ]]; then
@@ -52,6 +89,6 @@ for attempt in 1 2 3; do
   fi
   sleep 5
 done
-sleep 30
-/opt/homebrew/bin/aoe send --no-revive "$session_id" \
+sleep "$startup_delay"
+"$aoe_bin" send --no-revive "$session_id" \
   "$prompt"$'\n\n'"AOE_CORRELATION=$correlation_id"
