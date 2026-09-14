@@ -98,6 +98,7 @@ mouse_capture = true
 new_session_mode = "live_send"
 restart_wake_message = "wake up: pick up what you were doing"
 row_tag = "none"
+show_diagnostics_pane = true
 show_tips = false
 snooze_duration_minutes = 30
 strict_hotkeys = false
