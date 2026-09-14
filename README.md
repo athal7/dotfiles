@@ -6,6 +6,7 @@ macOS development environment managed with [chezmoi](https://chezmoi.io).
 
 - Development tools: [shell](dot_zshrc.tmpl), [Neovim](dot_config/nvim/), and [Git](dot_config/git/).
 - AI tools: [OMP](dot_omp/private_agent/), [MCP servers](.chezmoidata/mcp.yaml), [agent skills](dot_agents/skills/), and [Agent of Empires](dot_agent-of-empires/modify_config.toml).
+- OMP theme: [message contrast theme](dot_omp/private_agent/themes/message-contrast.json) gives user prompts a distinct blue surface from agent output.
 - Local AI: [model provider](dot_omp/private_agent/models.yml.tmpl) and [llama.cpp service](dot_config/launchd-yaml/agents.yaml.tmpl).
 - Automation: [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl), [attention dashboard](dot_config/attention/config.json.tmpl), [calendar tools](dot_local/lib/cal/), and [Homebridge](dot_homebridge/).
 - Packages: [package registry](.chezmoidata/packages.yaml) and [external downloads](.chezmoiexternal.toml.tmpl).

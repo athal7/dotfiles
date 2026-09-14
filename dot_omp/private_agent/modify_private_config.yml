@@ -28,6 +28,8 @@
 {{- $_ := setValueAtPath "computer" (index $defaults "computer") $config -}}
 {{- $_ := setValueAtPath "autolearn" (index $defaults "autolearn") $config -}}
 {{- $_ := setValueAtPath "memory" (index $defaults "memory") $config -}}
+{{- $_ := setValueAtPath "theme.dark" (index (index $defaults "theme") "dark") $config -}}
+{{- $_ := setValueAtPath "theme.light" (index (index $defaults "theme") "light") $config -}}
 {{- $_ := setValueAtPath "autoResume" (index $defaults "autoResume") $config -}}
 {{- $_ := setValueAtPath "compaction.strategy" (index (index $defaults "compaction") "strategy") $config -}}
 {{- if hasKey $config "compaction" -}}
