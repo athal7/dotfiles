@@ -26,6 +26,10 @@ packages:
           approval: ask
         - match: "chezmoi-deploy*"
           approval: ask
+        - match: "chezmoi apply --dry-run*"
+          approval: allow
+        - match: "chezmoi apply -n*"
+          approval: allow
         - match: "chezmoi apply*"
           approval: ask
         - match: "chezmoi purge*"

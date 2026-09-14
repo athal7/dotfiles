@@ -9,7 +9,7 @@
 {{- $_ := set $packagesByName $package.name $package -}}
 {{- $_ := set $packagePermissionCounts $package.name 0 -}}
 {{- end -}}
-{{- $_ := set $packagePermissionCounts "chezmoi" 8 -}}
+{{- $_ := set $packagePermissionCounts "chezmoi" 10 -}}
 {{- $_ := set $packagePermissionCounts "git" 18 -}}
 {{- $_ := set $packagePermissionCounts "gh" 16 -}}
 {{- $_ := set $packagePermissionCounts "xh" 10 -}}
@@ -114,6 +114,11 @@ bash:
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
+{{ $package := index $packagesByName "chezmoi" }}
+{{ range slice $package.permissions 6 8 }}
+    - approval: {{ index $approvalByTier .approval }}
+      match: {{ .match | quote }}
+{{ end }}
 {{ $package := index $packagesByName "git" }}
 {{ range slice $package.permissions 10 12 }}
     - approval: {{ index $approvalByTier .approval }}
@@ -122,7 +127,7 @@ bash:
     - approval: prompt
       match: "curl * -X POST*"
 {{ $package := index $packagesByName "chezmoi" }}
-{{ range slice $package.permissions 6 7 }}
+{{ range slice $package.permissions 8 9 }}
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
@@ -143,7 +148,7 @@ bash:
       match: {{ .match | quote }}
 {{ end }}
 {{ $package := index $packagesByName "chezmoi" }}
-{{ range slice $package.permissions 7 8 }}
+{{ range slice $package.permissions 9 10 }}
     - approval: {{ index $approvalByTier .approval }}
       match: {{ .match | quote }}
 {{ end }}
