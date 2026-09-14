@@ -18,19 +18,14 @@
 #    already-NF fonts are left untouched. Implemented via osascript for the
 #    same reason as point 3 below.
 #
-# 3. Background color pinned to pure black (#000000). Terminal.app has a
-#    rendering floor on unpainted/fallback screen cells (scrollbar gutters,
-#    layout rounding at pane edges) that blends toward a lighter shade no
-#    matter the configured background color — the floor renders around
-#    RGB(20,20,20) regardless. Pure black minimizes that floor's absolute
-#    lightness compared to any lighter configured background, which matters
-#    for full-screen TUI apps such as aoe and omp painting up to those edges.
-#    This is deliberately a fixed constant rather than tracking aoe's active
-#    theme color — dynamic theme-tracking was tried and abandoned, since the
-#    floor-vs-theme mismatch was still visible and kept shifting with every
-#    theme change. Implemented via osascript against Terminal.app's own
-#    settings API rather than a raw plist edit, since com.apple.Terminal.plist
-#    is cfprefsd-managed and a direct write risks being silently clobbered;
+# 3. Background color set to the dark panel gray (#21262d). OMP's built-in
+#    themes own their message colors; this keeps OMP styling intact while
+#    giving the Terminal.app canvas a visible neutral contrast around
+#    full-screen TUI surfaces. The color matches tmux's existing panel
+#    palette and is deliberately fixed rather than tracking an app theme.
+#    Implemented via osascript against Terminal.app's own settings API
+#    rather than a raw plist edit, since com.apple.Terminal.plist is
+#    cfprefsd-managed and a direct write risks being silently clobbered;
 #    this requires Terminal.app to actually be running.
 set -euo pipefail
 
@@ -50,17 +45,17 @@ set_meta_key() {
     || /usr/libexec/PlistBuddy -c "Add $key bool true" "$PLIST" >/dev/null 2>&1
 }
 
-set_background_black() {
+set_background_panel() {
   local profile="$1"
 
   if [ "$can_set_background" != true ]; then
     return 0
   fi
 
-  if osascript -e "tell application \"Terminal\" to set background color of settings set \"$profile\" to {0, 0, 0}" >/dev/null 2>&1; then
-    echo "terminal-bg-black: set Terminal.app profile '$profile' background to #000000"
+  if osascript -e "tell application \"Terminal\" to set background color of settings set \"$profile\" to {8481, 9766, 11565}" >/dev/null 2>&1; then
+    echo "terminal-bg-panel: set Terminal.app profile '$profile' background to #21262d"
   else
-    echo "terminal-bg-black: WARN: osascript failed to set Terminal.app profile '$profile' background" >&2
+    echo "terminal-bg-panel: WARN: osascript failed to set Terminal.app profile '$profile' background" >&2
   fi
 }
 
@@ -126,6 +121,6 @@ profiles="$(
 while IFS= read -r profile; do
   [ -n "$profile" ] || continue
   set_meta_key "$profile"
-  set_background_black "$profile"
+  set_background_panel "$profile"
   set_nerd_font "$profile"
 done <<< "$profiles"
