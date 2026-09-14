@@ -31,7 +31,7 @@ persist_sessions = true
 
 [diff]
 context_lines = 3
-split_view = false
+split_view = true
 [logging]
 default_level = "info"
 file_path = "debug.log"
@@ -89,7 +89,7 @@ confirm_before_quit = true
 confirm_delete = false
 default_attach_mode = "tmux"
 default_tool = "omp"
-delete_to_trash = false
+delete_to_trash = true
 live_send_exit_chord = "C-q"
 live_send_leader = "C-b"
 live_send_on_view_switch = true
@@ -98,7 +98,7 @@ mouse_capture = true
 new_session_mode = "live_send"
 restart_wake_message = "wake up: pick up what you were doing"
 row_tag = "none"
-show_tips = true
+show_tips = false
 snooze_duration_minutes = 30
 strict_hotkeys = false
 tie_workdir_to_name = true
