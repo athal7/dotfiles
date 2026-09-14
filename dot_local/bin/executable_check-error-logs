@@ -185,8 +185,23 @@ Services with new errors: $service_list
 $context"
 
   dispatch_title="fix-launchagent-errors-$(date +%Y%m%d-%H%M%S)"
-  if aoe add "$HOME/code/dotfiles" --title "$dispatch_title" --tool omp --launch >/dev/null 2>&1 \
-    && aoe send "$dispatch_title" "$prompt" >/dev/null 2>&1; then
+  dispatch_ok=false
+  session_output=
+  session_id=
+  if session_output=$(aoe add "$HOME/code/dotfiles" --title "$dispatch_title" --tool omp 2>/dev/null); then
+    session_id=$(printf '%s\n' "$session_output" | sed -n 's/^[[:space:]]*ID:[[:space:]]*//p')
+    case "$session_id" in
+      ''|*[!A-Za-z0-9-]*) ;;
+      *)
+        if aoe session start "$session_id" >/dev/null 2>&1 \
+          && sleep 5 \
+          && aoe send --no-revive "$session_id" "$prompt" >/dev/null 2>&1; then
+          dispatch_ok=true
+        fi
+        ;;
+    esac
+  fi
+  if [ "$dispatch_ok" = true ]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched /fix-launchagent-errors for: $service_list"
     # Dispatch succeeded — now advance the deferred offsets for error logs.
     printf '%s\n' "$pending_offsets" | while IFS="$TAB" read -r size logfile; do

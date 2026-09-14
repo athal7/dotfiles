@@ -23,7 +23,31 @@ case "$1" in
     mkdir -p "$session_path"
     printf '  ID: testsession\n  Path: %s\n' "$session_path"
     ;;
-  session|send)
+  session)
+    if [[ "${AOE_START_ERROR_BUT_LIVE:-false}" == true ]]; then
+      printf 'session start reported a lost lifecycle reservation\n' >&2
+      exit 1
+    fi
+    ;;
+  ps)
+    if [[ "${AOE_START_ERROR_BUT_LIVE:-false}" == true ]]; then
+      ps_count_file="$AOE_TEST_ROOT/ps-count"
+      ps_count=0
+      if [[ -f "$ps_count_file" ]]; then
+        ps_count=$(<"$ps_count_file")
+      fi
+      ps_count=$((ps_count + 1))
+      printf '%s\n' "$ps_count" >"$ps_count_file"
+      if [[ "$ps_count" -ge 2 ]]; then
+        printf '[{"session":"testsession","pid":1234}]\n'
+      else
+        printf '[]\n'
+      fi
+    else
+      printf '[]\n'
+    fi
+    ;;
+  send)
     ;;
   *)
     exit 64
@@ -40,6 +64,7 @@ check() { local label=$1; shift; if "$@"; then ok "$label"; else bad "$label"; f
 
 run_wrapper() {
   AOE_BIN="$FAKE_AOE" \
+    JQ_BIN="${JQ_BIN:-/opt/homebrew/bin/jq}" \
     AOE_STARTUP_DELAY_SECONDS=0 \
     AOE_TEST_LOG="$LOG" \
     AOE_TEST_ROOT="$WORK" \
@@ -54,6 +79,22 @@ if grep -Fqx 'ARG=--extra-args' "$LOG"; then
   bad "omits empty OMP extra arguments"
 else
   ok "omits empty OMP extra arguments"
+fi
+
+: >"$LOG"
+: >"$WORK/liveness.err"
+if AOE_START_ERROR_BUT_LIVE=true run_wrapper lifecycle-race /lifecycle-race 2>"$WORK/liveness.err"; then
+  ok "accepts a live session when start reports a lost reservation"
+else
+  bad "accepts a live session when start reports a lost reservation"
+fi
+if [[ "$(grep -Fc 'ARG=session' "$LOG" || true)" == 1 ]] &&
+  grep -Fqx 'ARG=ps' "$LOG" &&
+  grep -Fqx 'ARG=send' "$LOG" &&
+  [[ ! -s "$WORK/liveness.err" ]]; then
+  ok "does not retry or surface a false startup error"
+else
+  bad "does not retry or surface a false startup error"
 fi
 
 printf '{"mcpServers":{"collector":{}}}\n' >"$WORK/kb-mcp.json"

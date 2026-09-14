@@ -13,7 +13,12 @@ aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
 startup_delay=${AOE_STARTUP_DELAY_SECONDS:-30}
 project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
 omp_model=${AOE_OMP_MODEL:-}
+jq_bin=${JQ_BIN:-/opt/homebrew/bin/jq}
 
+if [[ ! -x "$jq_bin" ]]; then
+  printf 'JQ_BIN is not executable: %s\n' "$jq_bin" >&2
+  exit 69
+fi
 if [[ ! -x "$aoe_bin" ]]; then
   printf 'AOE_BIN is not executable: %s\n' "$aoe_bin" >&2
   exit 69
@@ -79,16 +84,39 @@ printf '{"aoeSessionId":"%s","correlationId":"%s","createdAt":"%s"}\n' \
   "$session_id" "$correlation_id" "$created_at" >"$mapping_temp"
 mv "$mapping_temp" "$mapping_path"
 
+start_output=
+started=false
+session_is_running() {
+  "$aoe_bin" ps --json 2>/dev/null |
+    "$jq_bin" -e --arg session_id "$session_id" \
+      "any(.[]; .session == \$session_id and .pid != null)" >/dev/null
+}
 for attempt in 1 2 3; do
-  if "$aoe_bin" session start "$session_id"; then
+  if start_output=$("$aoe_bin" session start "$session_id" 2>&1); then
+    printf '%s\n' "$start_output"
+    started=true
     break
   fi
+  for probe in 1 2 3 4 5; do
+    if session_is_running; then
+      started=true
+      break 2
+    fi
+    if [[ "$probe" -lt 5 ]]; then
+      sleep 1
+    fi
+  done
   if [[ "$attempt" -eq 3 ]]; then
+    printf '%s\n' "$start_output" >&2
     printf 'aoe session failed to start after %s attempts\n' "$attempt" >&2
     exit 1
   fi
   sleep 5
 done
+if [[ "$started" != true ]]; then
+  printf 'aoe session failed to start\n' >&2
+  exit 1
+fi
 sleep "$startup_delay"
 "$aoe_bin" send --no-revive "$session_id" \
   "$prompt"$'\n\n'"AOE_CORRELATION=$correlation_id"
