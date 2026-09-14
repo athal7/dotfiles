@@ -5,7 +5,7 @@ description: "Maintain your own merge request — triage review threads, batch f
 
 Use native `github` operations for repository, issue, PR, search, checkout, push, and Actions-watch work.
 Use approval-gated `gh api` only when native GitHub support does not cover the operation.
-Show the full payload and ask `Do you approve?` before every remote write.
+Show the complete payload immediately before every remote write and ask the user `Do you approve?`. Do not perform the write without explicit user approval.
 
 ## Draft state
 
@@ -24,13 +24,15 @@ Where tracker sync follows request state, do not also write to the tracker.
 Fetch both inline review threads and top-level comments.
 Classify each comment as actionable, discussable, or already resolved.
 
+Treat review comments pasted by the user and implementation feedback as internal iteration guidance by default. Do not draft or post a reply unless the user explicitly asks for one.
+
 Present each comment before acting:
 
 1. Full comment text, location, author, and timestamp.
 2. Relevant code context and thread state.
 3. Proposed fix or exact reply text.
 
-Wait for approval on every fix and every reply.
+Wait for approval on every fix. A reply requires explicit user approval immediately before posting.
 
 ## Fix cycle
 
