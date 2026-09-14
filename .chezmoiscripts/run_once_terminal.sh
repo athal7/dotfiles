@@ -18,11 +18,11 @@
 #    already-NF fonts are left untouched. Implemented via osascript for the
 #    same reason as point 3 below.
 #
-# 3. Background color set to the dark panel gray (#21262d). OMP's built-in
-#    themes own their message colors; this keeps OMP styling intact while
-#    giving the Terminal.app canvas a visible neutral contrast around
-#    full-screen TUI surfaces. The color matches tmux's existing panel
-#    palette and is deliberately fixed rather than tracking an app theme.
+# 3. Background color set to titanium gray (#151820). OMP's built-in
+#    theme uses this dark neutral for its main canvas; keeping the terminal
+#    just darker than that canvas preserves a visible edge without making
+#    the TUI as bright as the previous panel gray. The color is deliberately
+#    fixed rather than tracking an app theme.
 #    Implemented via osascript against Terminal.app's own settings API
 #    rather than a raw plist edit, since com.apple.Terminal.plist is
 #    cfprefsd-managed and a direct write risks being silently clobbered;
@@ -45,17 +45,17 @@ set_meta_key() {
     || /usr/libexec/PlistBuddy -c "Add $key bool true" "$PLIST" >/dev/null 2>&1
 }
 
-set_background_panel() {
+set_background_titanium() {
   local profile="$1"
 
   if [ "$can_set_background" != true ]; then
     return 0
   fi
 
-  if osascript -e "tell application \"Terminal\" to set background color of settings set \"$profile\" to {8481, 9766, 11565}" >/dev/null 2>&1; then
-    echo "terminal-bg-panel: set Terminal.app profile '$profile' background to #21262d"
+  if osascript -e "tell application \"Terminal\" to set background color of settings set \"$profile\" to {5397, 6168, 8224}" >/dev/null 2>&1; then
+    echo "terminal-bg-titanium: set Terminal.app profile '$profile' background to #151820"
   else
-    echo "terminal-bg-panel: WARN: osascript failed to set Terminal.app profile '$profile' background" >&2
+    echo "terminal-bg-titanium: WARN: osascript failed to set Terminal.app profile '$profile' background" >&2
   fi
 }
 
@@ -121,6 +121,6 @@ profiles="$(
 while IFS= read -r profile; do
   [ -n "$profile" ] || continue
   set_meta_key "$profile"
-  set_background_panel "$profile"
+  set_background_titanium "$profile"
   set_nerd_font "$profile"
 done <<< "$profiles"
