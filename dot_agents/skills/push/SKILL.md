@@ -13,8 +13,8 @@ Do not re-run the full suite during push unless a push-time check fails and need
 ## Merge request policy
 
 Use native `github` operations for repository, issue, PR, search, checkout, push, and Actions-watch work.
-Use approval-gated `gh api` only when native GitHub support does not cover the operation.
-Show the full payload and ask `Do you approve?` before every remote write.
+Use `gh api` only when native GitHub support does not cover the operation.
+Show the full payload before every remote write.
 
 No existing request means create one from the branch commits.
 A material scope change means update the title or body.
@@ -49,7 +49,7 @@ Use native GitHub reads for check status, comments, and review threads.
 - If review lands, fetch inline threads and top-level comments.
 - Fix actionable review items.
 - Resolve a thread only after its fix is pushed.
-- Reply to decline, defer, or add context only after approval.
+Reply to decline, defer, or add context after the wording is finalized.
 
 ## External contributions
 

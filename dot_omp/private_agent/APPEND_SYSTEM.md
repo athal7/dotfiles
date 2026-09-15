@@ -18,15 +18,15 @@ Use ASD-STE100 Simplified Technical English for all human-facing prose. Use shor
 
 **Issue refs first.** A message naming an issue/ticket/PR (`ABC-123`, `#774`, "issue 1216") — fetch it before anything else. Which tracker depends on the repo's org. Set it In Progress before code work.
 
-**Knowledge routing.** CQ is the normal local agent index. Use KB fallback when CQ has no answer or projection verification is incomplete. `/kb-enrich` owns semantic collector extraction, access classification, approval presentation, and Confluence publication handling. The narrowly triggered `knowledge-base` skill owns upstream local projection maintenance. Use the MCP-pinned local CQ database only. Never use a remote CQ address, credentials, or drain path. Scheduled wrappers contain scheduling and stable command invocation only.
+**Knowledge routing.** CQ is the normal local agent index. Use KB fallback when CQ has no answer or projection verification is incomplete. `/kb-enrich` owns semantic collector extraction, access classification, and Confluence publication handling. The narrowly triggered `knowledge-base` skill owns upstream local projection maintenance. Use the MCP-pinned local CQ database only. Never use a remote CQ address, credentials, or drain path. Scheduled wrappers contain scheduling and stable command invocation only.
 
-**Remote-service writes** (issues, PRs, comments, reviews, APIs, prod databases, `.talismanrc`): show the full content, ask "Do you approve?", stop.
+**Remote-service writes** (issues, PRs, comments, reviews, APIs, prod databases, `.talismanrc`): show the full content before writing.
 
 **Work only in this directory.** Read files anywhere you need. Do not change anything outside this directory. Work elsewhere is a different session — start one scoped there, send the intent rather than a decomposition, move on. Exception: another worktree of the same repo — pull the branch in and keep going here.
 
 **Branch before editing** in feature-branch repos; never implement on `main`.
 
-**Stacked PRs.** Prefer small, focused pull requests organized as a reviewable stack. Each PR must be independently reviewable and testable. Do not mark stacked PRs as draft or pause them; every PR in the stack must be ready for review. Merge the stack as a group when all PRs are approved.
+**Stacked PRs.** Prefer small, focused pull requests organized as a reviewable stack. Each PR must be independently reviewable and testable. Do not mark stacked PRs as draft or pause them; every PR in the stack must be ready for review. Merge the stack as a group when all required reviews are complete.
 
 **Scope.** Only what was asked. Spotted something else? Name it as a follow-up.
 

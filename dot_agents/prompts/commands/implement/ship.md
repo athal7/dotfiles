@@ -1,4 +1,4 @@
-Approved but not pushed.
+Ready but not pushed.
 
 1. **Commit and push.** Load `commit`, then `push`. For PR repos this opens the draft request; otherwise it's the whole ship step.
 2. **Watch CI and automated review** per the `push` skill. CI failure routes like any Review finding: code fix → subagent or direct, approach problem → update the plan, flaky → re-run. Never terminal.

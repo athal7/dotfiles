@@ -4,8 +4,8 @@ description: "Maintain your own merge request — triage review threads, batch f
 ---
 
 Use native `github` operations for repository, issue, PR, search, checkout, push, and Actions-watch work.
-Use approval-gated `gh api` only when native GitHub support does not cover the operation.
-Show the complete payload immediately before every remote write and ask the user `Do you approve?`. Do not perform the write without explicit user approval.
+Use `gh api` only when native GitHub support does not cover the operation.
+Show the complete payload immediately before every remote write.
 
 ## Draft state
 
@@ -24,7 +24,7 @@ Where tracker sync follows request state, do not also write to the tracker.
 Fetch both inline review threads and top-level comments.
 Classify each comment as actionable, discussable, or already resolved.
 
-Treat review comments pasted by the user and implementation feedback as internal iteration guidance by default. Do not draft or post a reply unless the user explicitly asks for one.
+Treat review comments pasted by the user and implementation feedback as internal iteration guidance by default. Draft or post a reply only when the task requires one.
 
 Present each comment before acting:
 
@@ -32,19 +32,18 @@ Present each comment before acting:
 2. Relevant code context and thread state.
 3. Proposed fix or exact reply text.
 
-Wait for approval on every fix. A reply requires explicit user approval immediately before posting.
+Apply each actionable fix after presenting the relevant context. Post each reply after its wording is finalized.
 
 ## Fix cycle
 
 Batch the work.
-Fix every approved actionable thread first.
+Fix every actionable thread first.
 Run QA first if any fix touches UI, templates, CSS, or frontend code.
 Commit and push once.
 Resolve fixed threads silently after the fix is pushed.
 
 Batch non-fix replies.
-Present all reply text for approval.
-Post the approved replies consecutively.
+Present all reply text together. Post the replies consecutively.
 
 Look for a fitness function.
 If feedback expresses a rule the repository should always enforce, propose a lint rule, test, or CI gate instead of only restating the rule.
@@ -61,7 +60,7 @@ Rebasing invalidates inline comments.
 ## Re-request
 
 Present the final summary first.
-After approval, mark ready and re-request previous reviewers.
+After the final summary, mark ready and re-request previous reviewers.
 Do not add a comment unless a policy above requires it.
 Refresh QA evidence in the description if a prior ship added the `<!-- qa:start -->` block.
 Use the `qa-report-publish` skill for that update.

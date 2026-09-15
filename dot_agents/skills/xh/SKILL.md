@@ -40,7 +40,7 @@ xh --ignore-stdin --session=agent POST https://api.example.com/graphql \
   variables:='{"id":"ABC-123"}'
 ```
 
-Queries are read-only; mutations modify data and may require `ask` permission.
+Queries are read-only; mutations modify data, so use an explicit method and target.
 
 ## File input
 

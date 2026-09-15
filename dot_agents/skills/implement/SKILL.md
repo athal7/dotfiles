@@ -8,7 +8,7 @@ This skill adds repository policy only.
 
 ## Issue
 
-Every change needs a tracker reference unless tracking is unavailable and the user approves untracked work.
+Every change needs a tracker reference when tracking is available. If tracking is unavailable, record that fact.
 If the request names an issue, fetch it first.
 If no issue is named, search for a matching open or recently closed issue.
 If there is no clear match, draft the title and short what/why text before creating an issue.
@@ -30,12 +30,12 @@ Session tooling owns worktree isolation.
 Gather the source, issue, history, and constraints that affect the change.
 Use existing repository patterns.
 Do not add a second convention beside an existing one.
-Persist the plan and get approval when the request is not already backed by an approved plan.
+Persist the plan when the request is not already backed by a recorded plan.
 State open questions only when tools cannot answer them.
 
 ## Build
 
-Implement the approved scope only.
+Implement the requested scope only.
 Fix root causes instead of suppressing symptoms.
 Migrate all call sites for a changed contract.
 Remove obsolete code, aliases, re-exports, and deprecated paths.
@@ -51,7 +51,7 @@ For bug fixes, reproduce the bug and then show that the reproduction no longer f
 For permanent API or feature changes, run the existing tests that cover the contract.
 Add tests only when there is a new observable contract or the user asks for tests.
 
-Present the diff, the reasoning for the diff, verification evidence, and carried risks when a human approval gate is required.
+Present the diff, the reasoning for the diff, verification evidence, and carried risks before shipping.
 
 ## Ship
 

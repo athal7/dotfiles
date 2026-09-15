@@ -1,6 +1,6 @@
 ---
 name: qa-report-publish
-description: Fires before submitting a QA-backed GitHub pull request review after human approval.
+description: Fires before submitting a QA-backed GitHub pull request review.
 license: MIT
 ---
 
@@ -33,11 +33,9 @@ Use one stable block in the review body:
 
 On a fail, replace the verified result with the required failure detail. Load `communication` when composing the review. Append its required authorship marker as the final line of the review body.
 
-## Approval gate
-
-Before any remote write, show the full proposed review body, including the QA block and its authorship marker. Show every proposed inline comment too. Ask `Do you approve?` and wait for explicit approval. Do not create a pending review, add inline comments, or submit the review before approval.
-
 ## Submit the review
+
+Before any remote write, show the full proposed review body, including the QA block and its authorship marker. Show every proposed inline comment too. Do not create a pending review, add inline comments, or submit the review before the body and comments are finalized.
 
 Build the full final review body locally. Start with any prepared review summary:
 
@@ -46,16 +44,16 @@ Build the full final review body locally. Start with any prepared review summary
 - If more than one QA block exists, stop and report the ambiguity. Do not select one.
 
 Use native GitHub review support when it is available.
-If native support cannot create and submit one pending review with inline comments, use approval-gated `gh api` for the pending-review API calls.
+If native support cannot create and submit one pending review with inline comments, use `gh api` for the pending-review API calls.
 Create one bodyless pending review.
-Add each approved inline finding to that pending review.
-Submit that same review once with the full approved review body and the approved decision.
+Add each inline finding to that pending review.
+Submit that same review once with the full review body and selected decision.
 
 Do not update the pull request body, create issue comments, create GitHub Deployments, or register deployment statuses.
 
 ## Re-review
 
-Before submitting a pending review, regenerate and reconcile the local evidence. Replace or append the marked QA block in the review body. Show the full updated review body and obtain explicit approval again.
+Before submitting a pending review, regenerate and reconcile the local evidence. Replace or append the marked QA block in the review body. Show the full updated review body, then submit it.
 
 After a review is submitted, do not modify the pull request body or create a separate QA comment. A later QA review can have no inline comments. Create and submit a new pending review with its new QA evidence block.
 
@@ -73,4 +71,4 @@ The separate destructive operation is:
 git push origin --delete qa-assets
 ```
 
-Show this command in full and obtain separate explicit user approval before running it.
+Show this command in full before running it.
