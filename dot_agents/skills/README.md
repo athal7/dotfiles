@@ -20,6 +20,7 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | **code-quality** | Grading review-finding severity; the mechanical sweeps |
 | **communication** | Composing human-facing prose through an integration |
 | **qa-report-publish** | Publishing concise QA evidence in GitHub pull request review bodies |
+| **homebrew-release** | Releasing a pull request through semantic-release and Homebrew |
 
 **Integration** — how to drive a specific tool or API.
 
