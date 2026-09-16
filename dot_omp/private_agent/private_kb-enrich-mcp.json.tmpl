@@ -1,4 +1,4 @@
-{{- $allowed := dict "cq" true "linear" true "runlayer-atlassian" true "runlayer-slack" true "runlayer-zoom" true -}}
+{{- $allowed := dict "cq" true "linear" true "runlayer-atlassian" true "runlayer-slack" true "runlayer-zoom" true "runlayer-gcalendar" true -}}
 {{- $servers := dict -}}
 {{- range $server := .mcp_servers -}}
 {{-   if hasKey $allowed $server.name -}}

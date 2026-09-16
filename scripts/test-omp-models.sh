@@ -53,7 +53,9 @@ check "preserves unrelated AoE agent overrides" "$(yq -p=toml -o=json '.session.
 check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
-check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-slack runlayer-zoom"
+check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-gcalendar runlayer-slack runlayer-zoom"
+check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["runlayer-gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
+check "enables the Calendar MCP server" "$(jq -r '.mcpServers["runlayer-gcalendar"].enabled' "$KB_ENRICH_MCP")" true
 check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
 STALE_CONFIG="$WORK/stale-config.yml"
 printf 'prewalk:\n  enabled: false\n  into: stale/model\n  custom: preserved\nproviders:\n  tinyModel: stale-tiny\n  autoThinkingModel: stale-thinking\n  customModel: preserved\n' \

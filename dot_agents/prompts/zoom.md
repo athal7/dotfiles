@@ -1,7 +1,7 @@
 # Zoom
 
-1. `search_meetings` over the window — requires `from` and `to` as UTC ISO-8601, and a `timezone` you must get from context or ask for. Keep meetings where `has_summary` or `has_transcript` is true.
-2. `get_meeting_assets` per qualifying meeting, with `meetingId = meeting_uuid`.
-3. Read in priority order: `summary_markdown` (already distilled by Zoom AI Companion) → `my_notes.content_markdown` → transcript items, last resort, stitched by `start` time.
-
-Extract decisions, action items from `next_steps[]`, participants and roles, open questions. Cite meeting topic and date.
+1. Index Google Calendar events over the UTC enrichment window with `list_events`, then call `get_event` for each event to resolve `conference.conference_id`. Resolve and pass the user's IANA timezone.
+2. Dedupe recurring events by both `iCalUID` and conference ID.
+3. Call `get_meeting_assets` only for indexed events with a `conference.conference_id`. Do not call Zoom search, `search_describe_capabilities`, or `search_meetings`.
+4. Read assets in priority order: `meeting_summary` → `my_notes.content_markdown` → transcript items, last resort.
+5. Extract participants, decisions, `next_steps[]` action items, and open questions. Cite meeting topic and date.
