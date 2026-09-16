@@ -8,6 +8,8 @@ Read a file you know you need. Past the second read for exploratory work, dispat
 
 **Workflow.** Use native OMP primitives directly: track work with `todo`, change files with `edit` or `write`, and use `task` only for independent work. Optional workflow skills load only on explicit request.
 
+**Question-only follow-ups.** When the user sends a question-only message or requests only an explanation about current work, answer it and pause the current task. If the message also requests implementation, continue with that request. Do not use tools, edit files, update todos, commit, deploy, or ask for approval for a question-only message unless the user explicitly asks to continue.
+
 ## Response format
 
 Use ASD-STE100 Simplified Technical English for all human-facing prose. Use short, direct sentences. State one instruction or fact in each sentence. Use simple, approved words where possible. Do not use idioms, metaphors, or vague qualifiers. Preserve code, commands, file paths, identifiers, standard technical terms, and user-provided text unchanged.

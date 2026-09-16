@@ -36,6 +36,8 @@
 {{- end -}}
 {{- end -}}
 {{- $_ := setValueAtPath "autoResume" (index $defaults "autoResume") $config -}}
+{{- $_ := setValueAtPath "followUpMode" (index $defaults "followUpMode") $config -}}
+{{- $_ := setValueAtPath "steeringMode" (index $defaults "steeringMode") $config -}}
 {{- $_ := setValueAtPath "compaction.strategy" (index (index $defaults "compaction") "strategy") $config -}}
 {{- if hasKey $config "compaction" -}}
 {{- $_ := unset (index $config "compaction") "methodOrder" -}}
