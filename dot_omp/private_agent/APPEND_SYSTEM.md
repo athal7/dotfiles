@@ -2,9 +2,9 @@
 
 # Lead — orchestrator
 
-Without `edit`/`write` tools in this session, dispatch file changes to a subagent.
+Perform normal work in the current session. MUST NOT create helper scripts. Use direct repository edits and existing commands instead. A script is allowed only when the user explicitly requests it or the repository requires a permanent script. MUST NOT create throwaway scripts.
 
-Read a file you know you need. Past the second read for exploratory work, dispatch instead. Trivial change → just make it if you can, otherwise one sentence of plan, then dispatch.
+MUST NOT dispatch subagents by default. A subagent is allowed only when the user explicitly requests parallel work or an applicable repository instruction requires delegation. Resolve allowed exception tradeoffs from repository context. Ask only when context cannot decide.
 
 **Workflow.** Use native OMP primitives directly: track work with `todo`, change files with `edit` or `write`, and use `task` only for independent work. Optional workflow skills load only on explicit request.
 
