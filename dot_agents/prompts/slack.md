@@ -8,6 +8,9 @@ Reaction tools operate on a specific message `ts` — read the channel or thread
 
 **Attribute by name, not raw user ID** — look the ID up before returning it.
 
+## Enrichment collection
+
+Use an authenticated, bounded `from:me after:<FROM> before:<TO>` search. For every result, retrieve nearby messages in the same channel or DM conversation for context; retain its thread when applicable. Do not filter by author ID.
 ## Writes
 
 `slack_send_message` to post. Use `slack_send_message_draft` when the user hasn't reviewed the exact wording yet, and `slack_schedule_message` for a future send time. `slack_create_conversation`/`slack_create_canvas` only when the task explicitly asks to create one.

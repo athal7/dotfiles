@@ -3,7 +3,7 @@ name: slack
 description: Slack messages and threads
 ---
 
-Find messages sent by the authenticated user in the enrichment window, and to fetch threads for any message that received replies. Extract kb facts from the result.
+Search with `search_messages` using the authenticated-user query `from:me after:<FROM> before:<TO>`, where `<FROM>` and `<TO>` are the enrichment window. Do not filter by a raw author ID. For every authored message result, retrieve nearby messages in the same channel or DM conversation for context, and retain its thread when applicable. Extract kb facts from the result.
 
 ## Scope
 
