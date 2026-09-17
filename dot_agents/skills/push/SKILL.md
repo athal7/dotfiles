@@ -12,8 +12,7 @@ Do not re-run the full suite during push unless a push-time check fails and need
 
 ## Merge request policy
 
-Use native `github` operations for repository, issue, PR, search, checkout, push, and Actions-watch work.
-Use `gh api` only when native GitHub support does not cover the operation.
+Use repository, issue, pull-request, search, checkout, push, and Actions-watch operations.
 Show the full payload before every remote write.
 
 No existing request means create one from the branch commits.
@@ -39,7 +38,7 @@ Adds retry logic for flaky external API calls. Resolves #123
 
 A push is not settled until CI and automated review have landed or been ruled out.
 Use `github.run_watch` for GitHub Actions.
-Use native GitHub reads for check status, comments, and review threads.
+Read check status, comments, and review threads.
 
 - Resolve base-branch conflicts before waiting for CI.
 - If no check runs exist on the current head, treat the pre-push suite as the gate.

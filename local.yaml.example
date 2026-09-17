@@ -62,6 +62,8 @@ kb:
 runlayer:
   zoom_mcp_url: ""  # Runlayer MCP proxy URL for the Zoom connector
   self_mcp_url: ""  # Runlayer MCP proxy URL for the self/discovery server
+  bigquery_mcp_url: ""  # Runlayer MCP proxy URL for the BigQuery connector
+  pagerduty_mcp_url: ""  # Runlayer MCP proxy URL for the PagerDuty connector
   slack_mcp_url: ""  # Runlayer MCP proxy URL for the Slack connector
   atlassian_mcp_url: ""  # Runlayer MCP proxy URL for the Confluence/Jira connector
   gmail_mcp_url: ""  # Runlayer MCP proxy URL for the Gmail connector
@@ -87,7 +89,6 @@ secrets:
   es_api_key: {}
   openrouter_api_key: {}
   es_url: {}
-  pagerduty_api_token: {}
 # Calendar configuration
 calendars:
   personal:

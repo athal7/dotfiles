@@ -1,11 +1,4 @@
 xh_sessions:
-  pagerduty_api_token:
-    host: api.pagerduty.com
-    headers:
-      - name: authorization
-        format: "Token token={value}"
-      - name: accept
-        value: "application/vnd.pagerduty+json;version=2"
   es_api_key:
     host_data: esHost
     header: authorization

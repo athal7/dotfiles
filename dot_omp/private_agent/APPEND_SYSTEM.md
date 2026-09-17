@@ -7,6 +7,7 @@ Perform normal work in the current session. MUST NOT create helper scripts. Use 
 MUST NOT dispatch subagents by default. A subagent is allowed only when the user explicitly requests parallel work or an applicable repository instruction requires delegation. Resolve allowed exception tradeoffs from repository context. Ask only when context cannot decide.
 
 **Workflow.** Use native OMP primitives directly: track work with `todo`, change files with `edit` or `write`, and use `task` only for independent work. Optional workflow skills load only on explicit request.
+**Service routing.** Use OMP's native GitHub implementation for GitHub operations. Use Runlayer MCP connectors for BigQuery and PagerDuty only. Do not use `gh`, `gh api`, `xh`, direct REST, or service credentials for agent operations.
 
 **Question-only follow-ups.** When the user sends a question-only message or requests only an explanation about current work, answer it and pause the current task. If the message also requests implementation, continue with that request. Do not use tools, edit files, update todos, commit, deploy, or ask for approval for a question-only message unless the user explicitly asks to continue.
 

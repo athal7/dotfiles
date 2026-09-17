@@ -3,8 +3,7 @@ name: merge-request
 description: "Maintain your own merge request — triage review threads, batch fixes, resolve conflicts, re-request review."
 ---
 
-Use native `github` operations for repository, issue, PR, search, checkout, push, and Actions-watch work.
-Use `gh api` only when native GitHub support does not cover the operation.
+Use repository, issue, pull-request, search, checkout, push, and Actions-watch operations.
 Show the complete payload immediately before every remote write.
 
 ## Draft state

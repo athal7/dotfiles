@@ -43,8 +43,7 @@ Build the full final review body locally. Start with any prepared review summary
 - If no QA block exists, append the new block.
 - If more than one QA block exists, stop and report the ambiguity. Do not select one.
 
-Use native GitHub review support when it is available.
-If native support cannot create and submit one pending review with inline comments, use `gh api` for the pending-review API calls.
+Create and submit one pending review with its inline comments.
 Create one bodyless pending review.
 Add each inline finding to that pending review.
 Submit that same review once with the full review body and selected decision.

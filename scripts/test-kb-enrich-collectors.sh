@@ -15,14 +15,10 @@ not_contains() { if grep -Fq -- "$2" "$3"; then bad "$1"; else ok "$1"; fi; }
 
 COMMAND="$WORK/kb-enrich.md"
 SLACK="$WORK/slack.md"
-SLACK_PROMPT="$WORK/slack-prompt.md"
 ZOOM="$WORK/zoom.md"
-ZOOM_PROMPT="$WORK/zoom-prompt.md"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.omp/agent/commands/kb-enrich.md" > "$COMMAND"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/slack.md" > "$SLACK"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/zoom.md" > "$ZOOM"
-chezmoi cat -S "$REPO_ROOT" "$HOME/.agents/prompts/slack.md" > "$SLACK_PROMPT"
-chezmoi cat -S "$REPO_ROOT" "$HOME/.agents/prompts/zoom.md" > "$ZOOM_PROMPT"
 
 utc_boundary='2026-01-15T05:30:00+00:00'
 local_day="$(UTC_BOUNDARY="$utc_boundary" python3 - <<'PY'
@@ -62,10 +58,6 @@ contains "uses authenticated Slack time-window search" $'`from:me after:<FROM> b
 contains "retrieves same-conversation Slack context" 'For every authored message result, retrieve nearby messages in the same channel or DM conversation for context' "$SLACK"
 contains "retains applicable Slack threads" 'retain its thread when applicable' "$SLACK"
 not_contains "avoids raw Slack author-ID filtering" 'from:<author_id>' "$SLACK"
-contains "Slack helper uses authenticated bounded search" $'`from:me after:<FROM> before:<TO>`' "$SLACK_PROMPT"
-contains "Slack helper retrieves context for every result" 'For every result, retrieve nearby messages in the same channel or DM conversation for context' "$SLACK_PROMPT"
-contains "Slack helper retains applicable threads" 'retain its thread when applicable' "$SLACK_PROMPT"
-contains "Slack helper forbids author-ID filtering" 'Do not filter by author ID' "$SLACK_PROMPT"
 
 candidate_records=$(cat <<'EOF'
 calendar-alpha|icaluid-generic|conference-generic|2026-01-14T23:30:00-06:00
@@ -109,10 +101,6 @@ contains "forbids occurrence collapse by iCalUID or conference" 'never collapse 
 contains "requires asset meeting and occurrence-start match" $'its `meeting_id` equals the resolved event' "$ZOOM"
 contains "matches asset start to resolved event start" "its \`start_time\` equals the resolved event's \`start.dateTime\`" "$ZOOM"
 contains "forbids Zoom search capability fallback" 'do not add a search or capability fallback' "$ZOOM"
-contains "Zoom helper enumerates all calendars" $'Enumerate every accessible Google Calendar with `list_calendars`' "$ZOOM_PROMPT"
-contains "Zoom helper retains distinct occurrences" 'Retain distinct occurrences in the same series' "$ZOOM_PROMPT"
-contains "Zoom helper matches both asset identity fields" $'its `meeting_id` equals the conference ID and its `start_time` equals the resolved event start' "$ZOOM_PROMPT"
-contains "Zoom helper forbids capability fallback" 'do not add a search or capability fallback' "$ZOOM_PROMPT"
 
 if [ "$fail" -ne 0 ]; then
   printf '%s kb-enrich collector recipe checks failed; %s passed\n' "$fail" "$pass" >&2

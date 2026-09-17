@@ -107,6 +107,16 @@
         "url": { "from": "env", "name": "RUNLAYER_SELF_MCP_URL" },
       },
       {
+        "name": "runlayer-bigquery",
+        "transport": "remote",
+        "url": { "from": "env", "name": "RUNLAYER_BIGQUERY_MCP_URL" },
+      },
+      {
+        "name": "runlayer-pagerduty",
+        "transport": "remote",
+        "url": { "from": "env", "name": "RUNLAYER_PAGERDUTY_MCP_URL" },
+      },
+      {
         "name": "runlayer-slack",
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SLACK_MCP_URL" },

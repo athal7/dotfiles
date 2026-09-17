@@ -5,9 +5,7 @@ license: MIT
 ---
 
 Use this workflow only for the named pull request. Do not merge an unrelated request.
-Use read-only GitHub and Homebrew commands for discovery and verification.
-Run remote and local writes only after the required read-only checks pass.
-Use native `github` operations where available; use `gh` only when native support does not cover the operation.
+Use read-only repository and Homebrew operations for discovery and verification. Run remote and local writes only after the required read-only checks pass.
 
 ## 1. Preflight the pull request
 
@@ -15,18 +13,17 @@ Discover the source repository, pull request number, target Homebrew tap spec, f
 
 Run read-only checks:
 
-- `gh pr view <PR> --json number,title,state,isDraft,mergeable,reviewDecision,headRefName,baseRefName,commits`
-- `gh pr checks <PR>`
+- Read the pull request's state, draft status, mergeability, review decision, branches, commits, and checks.
 - Confirm the request is open, not draft, has the required review state, is mergeable, conflict-free, and has every required check passing.
 - Confirm the head commit and intended squash target. Do not bypass branch protection, required reviews, or failed checks.
 
-Record the full merge command, PR, target branch, squash operation, and commit subject. Then run `gh pr merge <PR> --squash`.
+Show the full merge payload, pull request, target branch, squash operation, and commit subject. Then merge the pull request.
 
-After the merge, verify the result with `gh pr view <PR> --json state,mergedAt,mergeCommit`.
+After the merge, verify its state, merge time, and merge commit.
 
 ## 2. Verify semantic-release
 
-Find the semantic-release run for the merged commit. Use `gh run list --workflow <release-workflow> --commit <merge-sha>` and `gh run watch <run-id> --exit-status`.
+Find the semantic-release run for the merged commit and wait for its terminal result.
 
 The release gate requires all of these:
 
@@ -44,15 +41,13 @@ Inspect the tap workflow's `workflow_dispatch` declaration. Confirm its reposito
 
 Prepare the exact command. For example:
 
-```sh
-gh workflow run <tap-workflow> --repo <verified-tap-repo> --ref <verified-tap-branch> -f <declared-input>=<verified-value>
-```
+Dispatch the declared tap workflow using the verified repository, branch, and input name/value.
 
 Use only the inputs that the workflow declares. If the workflow has no manual trigger, stop and report that prerequisite.
 
-Record the complete dispatch command and every input value. Then run the verified workflow dispatch command.
+Record every input value, then dispatch the verified workflow.
 
-Identify the newly created run by workflow, `workflow_dispatch` event, ref, and creation time. Run `gh run watch <run-id> --exit-status`. Then verify the target formula in the discovered tap repository: the formula version and URL match the release, the checksum is present and correct when required, and the commit is on the expected branch. A successful dispatch without the expected formula commit is failure.
+Identify the newly created run by workflow, dispatch event, ref, and creation time, then wait for its terminal result. Verify the target formula in the discovered tap repository: the formula version and URL match the release, the checksum is present and correct when required, and the commit is on the expected branch. A successful dispatch without the expected formula commit is failure.
 
 ## 4. Update the local Homebrew installation
 

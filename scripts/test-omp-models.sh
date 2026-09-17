@@ -26,11 +26,14 @@ exit 44
 EOF
 chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
+yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"' "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
+PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
+chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 expected_roles=(advisor commit default plan slow smol vision)
 rendered_roles="$(yq -o=json '.modelRoles | keys | sort' "$CONFIG" | jq -r 'join(" ")')"
 check "renders the static model roles" "$rendered_roles" "${expected_roles[*]}"
@@ -44,15 +47,34 @@ check "uses local thinking utility model" "$(yq -r '.providers.autoThinkingModel
 check "uses the native smol prewalk destination" "$(yq -r '.prewalk | has("into")' "$CONFIG")" false
 check "uses native OMP startup in AoE" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$AOE")" false
 STALE_AOE="$WORK/stale-aoe.toml"
-printf '[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
+printf '[plugins."agent-of-empires.github"]\nenabled = true\n[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$STALE_AOE"
 check "removes the stale AoE model-routing hook" "$(yq -p=toml -o=json '.host_hooks | has("before_session")' "$STALE_AOE")" false
 check "preserves unrelated AoE hooks" "$(yq -p=toml -o=json '.host_hooks.after_session[0]' "$STALE_AOE" | jq -r '.')" keep-hook
 check "removes the stale AoE OMP override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$STALE_AOE")" false
 check "preserves unrelated AoE agent overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$STALE_AOE" | jq -r '.')" keep-agent
+check "preserves the configured AoE GitHub plugin" "$(yq -p=toml -o=json '.plugins | has("agent-of-empires.github")' "$STALE_AOE")" true
+if bash -n "$PLUGIN_INSTALL"; then
+  plugin_install_valid=true
+else
+  plugin_install_valid=false
+fi
+check "renders the configured AoE plugin installer" "$plugin_install_valid" true
+check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
+runlayer_mcp_urls=(
+  "runlayer-bigquery RUNLAYER_BIGQUERY_MCP_URL"
+  "runlayer-pagerduty RUNLAYER_PAGERDUTY_MCP_URL"
+)
+for connector_and_environment in "${runlayer_mcp_urls[@]}"; do
+  read -r connector environment <<< "$connector_and_environment"
+  check "renders $connector MCP entry" "$(jq --arg connector "$connector" '.mcpServers | has($connector)' "$MCP")" true
+  check "renders $connector MCP URL" "$(jq -r --arg connector "$connector" '.mcpServers[$connector].url' "$MCP")" "\${$environment}"
+done
+rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("RUNLAYER_BIGQUERY_MCP_URL=") or startswith("RUNLAYER_PAGERDUTY_MCP_URL="))' | sort | paste -sd ' ' -)"
+check "exports retained Runlayer MCP URL variables to AoE sessions" "$rendered_runlayer_environment" "RUNLAYER_BIGQUERY_MCP_URL=https://bigquery.example.test/mcp RUNLAYER_PAGERDUTY_MCP_URL=https://pagerduty.example.test/mcp"
 check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-gcalendar runlayer-slack runlayer-zoom"
 check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["runlayer-gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
 check "enables the Calendar MCP server" "$(jq -r '.mcpServers["runlayer-gcalendar"].enabled' "$KB_ENRICH_MCP")" true

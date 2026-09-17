@@ -30,11 +30,11 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | **chezmoi** | This repo's deploy workflow, LaunchAgents, template gotchas |
 | **knowledge-base** | KB ingestion and local CQ projection maintenance. CQ is the normal index; KB is the fallback. |
 | **elasticsearch** | Production triage: logs, APM traces, errors |
-| **pagerduty** | Incidents, on-call schedules, escalation policies |
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
 
 External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical).
+
 
 ## Other primitives
 
