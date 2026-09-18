@@ -16,7 +16,6 @@ MODELS="$WORK/models.yml"
 MCP="$WORK/mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
-AOE="$WORK/aoe.toml"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
 mkdir -p "$BIN"
@@ -29,23 +28,17 @@ cp "$REPO_ROOT/local.yaml.example" "$DATA"
 yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"' "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
-expected_roles=(advisor commit default plan slow smol vision)
-rendered_roles="$(yq -o=json '.modelRoles | keys | sort' "$CONFIG" | jq -r 'join(" ")')"
-check "renders the static model roles" "$rendered_roles" "${expected_roles[*]}"
-check "routes advisor to Luna" "$(yq -r '.modelRoles.advisor' "$CONFIG")" openai-codex/gpt-5.6-luna
-check "routes default role to Terra" "$(yq -r '.modelRoles.default' "$CONFIG")" openai-codex/gpt-5.6-terra
-check "routes plan role to Sol" "$(yq -r '.modelRoles.plan' "$CONFIG")" openai-codex/gpt-5.6-sol
-check "routes smol role to Luna" "$(yq -r '.modelRoles.smol' "$CONFIG")" openai-codex/gpt-5.6-luna
-check "routes commit role through smol" "$(yq -r '.modelRoles.commit' "$CONFIG")" @smol
-check "uses local tiny utility model" "$(yq -r '.providers.tinyModel' "$CONFIG")" lfm2-350m
-check "uses local thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$CONFIG")" lfm2-350m
-check "uses the native smol prewalk destination" "$(yq -r '.prewalk | has("into")' "$CONFIG")" false
-check "uses native OMP startup in AoE" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$AOE")" false
+check "preserves git push approval" "$(yq -r '.bash.patterns[] | select(.match == "git push*") | .approval' "$CONFIG")" prompt
+check "preserves browser headless override" "$(yq -r '.browser.headless' "$CONFIG")" false
+check "preserves browser relay override" "$(yq -r '.browser.relay' "$CONFIG")" true
+check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
+check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
+check "preserves task advisor override" "$(yq -r '.task.agentAdvisor.task' "$CONFIG")" off
+check "omits empty retry configuration" "$(yq -r '. | has("retry")' "$CONFIG")" false
 STALE_AOE="$WORK/stale-aoe.toml"
 printf '[plugins."agent-of-empires.github"]\nenabled = true\n[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$STALE_AOE"
@@ -53,6 +46,7 @@ check "removes the stale AoE model-routing hook" "$(yq -p=toml -o=json '.host_ho
 check "preserves unrelated AoE hooks" "$(yq -p=toml -o=json '.host_hooks.after_session[0]' "$STALE_AOE" | jq -r '.')" keep-hook
 check "removes the stale AoE OMP override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$STALE_AOE")" false
 check "preserves unrelated AoE agent overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$STALE_AOE" | jq -r '.')" keep-agent
+<<<<<<< HEAD
 check "preserves the configured AoE GitHub plugin" "$(yq -p=toml -o=json '.plugins | has("agent-of-empires.github")' "$STALE_AOE")" true
 if bash -n "$PLUGIN_INSTALL"; then
   plugin_install_valid=true
@@ -62,6 +56,8 @@ fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
+=======
+>>>>>>> 80ddbd0 (refactor(omp): manage config directly)
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
 runlayer_mcp_urls=(
@@ -79,34 +75,12 @@ check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServer
 check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["runlayer-gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
 check "enables the Calendar MCP server" "$(jq -r '.mcpServers["runlayer-gcalendar"].enabled' "$KB_ENRICH_MCP")" true
 check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
-STALE_CONFIG="$WORK/stale-config.yml"
-printf 'prewalk:\n  enabled: false\n  into: stale/model\n  custom: preserved\nproviders:\n  tinyModel: stale-tiny\n  autoThinkingModel: stale-thinking\n  customModel: preserved\n' \
-  | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_omp/private_agent/modify_private_config.yml" > "$STALE_CONFIG"
-check "modifier replaces stale prewalk enabled" "$(yq -r '.prewalk.enabled' "$STALE_CONFIG")" true
-check "modifier removes the stale prewalk destination" "$(yq -r '.prewalk | has("into")' "$STALE_CONFIG")" false
-check "modifier replaces stale tiny utility model" "$(yq -r '.providers.tinyModel' "$STALE_CONFIG")" lfm2-350m
-check "modifier replaces stale thinking utility model" "$(yq -r '.providers.autoThinkingModel' "$STALE_CONFIG")" lfm2-350m
-check "modifier preserves unrelated prewalk settings" "$(yq -r '.prewalk.custom' "$STALE_CONFIG")" preserved
-check "modifier preserves unrelated provider settings" "$(yq -r '.providers.customModel' "$STALE_CONFIG")" preserved
-check "enables task prewalk" "$(yq -r '.task.prewalk' "$CONFIG")" true
-check "routes planner agent through plan role" "$(yq -r '.task.agentModelOverrides.planner' "$CONFIG")" @plan
-check "routes designer agent through vision role" "$(yq -r '.task.agentModelOverrides.designer' "$CONFIG")" @vision
-check "routes reviewer agent through slow role" "$(yq -r '.task.agentModelOverrides.reviewer' "$CONFIG")" @slow
-check "routes sonic agent through smol role" "$(yq -r '.task.agentModelOverrides.sonic' "$CONFIG")" @smol
-check "routes general task agent through default role" "$(yq -r '.task.agentModelOverrides.task' "$CONFIG")" @default
-check "keeps advisor enabled" "$(yq -r '.advisor.enabled' "$CONFIG")" true
-check "disables advisor for subagents" "$(yq -r '.advisor.subagents' "$CONFIG")" false
-check "disables automatic session resume" "$(yq -r '.autoResume' "$CONFIG")" false
-check "selects Snapcompact compaction" "$(yq -r '.compaction.strategy' "$CONFIG")" snapcompact
-check "removes unsupported compaction order" "$(yq -r '.compaction | has("methodOrder")' "$CONFIG")" false
-
 check "renders the local provider" "$(yq -r '.providers.gguf.models[0].id' "$MODELS")" Qwen3-30B-A3B-Instruct-2507
 check "renders the configured context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$MODELS")" 32768
 check "preserves the local output limit" "$(yq -r '.providers.gguf.models[0].maxTokens' "$MODELS")" 8192
 check "renders the GGUF compaction model" "$(yq -r '.providers.gguf.models[0].compactionModel' "$MODELS")" openai-codex/gpt-5.6-terra
 check "disables unsupported reasoning" "$(yq -r '.providers.gguf.models[0].reasoning' "$MODELS")" false
-check "disables automatic session resume" "$(yq -r '.autoResume' "$CONFIG")" false
-check "selects Snapcompact compaction" "$(yq -r '.compaction.strategy' "$CONFIG")" snapcompact
+
 CUSTOM_DATA="$WORK/custom-local.yaml"
 CUSTOM_MODELS="$WORK/custom-models.yml"
 LAUNCH_AGENTS="$WORK/agents.yaml"
@@ -114,13 +88,13 @@ cp "$DATA" "$CUSTOM_DATA"
 yq -i '.local_model.context_window = 40960' "$CUSTOM_DATA"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.omp/agent/models.yml" > "$CUSTOM_MODELS"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --file "$REPO_ROOT/dot_config/launchd-yaml/agents.yaml.tmpl" > "$LAUNCH_AGENTS"
+check "propagates the configured provider context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$CUSTOM_MODELS")" 40960
+check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
 check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.omp/agent/kb-enrich-mcp.json"
 check "pins daily maintenance to the lower-cost model role" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
 check "invokes the combined daily command" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" /daily-maintenance
 check "runs daily maintenance at the original enrichment time" "$(yq -o=json '.launchagents."aoe-daily-maintenance".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [0] then 0 else . end')" 0
 check "removes superseded scheduled sessions" "$(yq -o=json '.launchagents' "$LAUNCH_AGENTS" | jq 'has("aoe-kb-enrich") or has("aoe-fix-prod-errors") or has("aoe-audit")')" false
-check "propagates the configured provider context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$CUSTOM_MODELS")" 40960
-check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
 check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" /opt/homebrew/bin/llama-server
 check "enables the llama prompt cache" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r 'index("--cache-prompt") != null')" true
 check "preserves a single llama request slot" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--parallel")) + 1]')" 1
