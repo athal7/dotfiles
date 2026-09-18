@@ -99,16 +99,24 @@ fi
 
 printf '{"mcpServers":{"collector":{}}}\n' >"$WORK/kb-mcp.json"
 : >"$LOG"
-if AOE_OMP_MODEL=@default AOE_OMP_PROJECT_MCP_CONFIG="$WORK/kb-mcp.json" run_wrapper kb-enrich /kb-enrich; then
+correlation_id=E4D58213-F415-4A54-B9F9-F7993B6C0CDF
+if AOE_CORRELATION="$correlation_id" AOE_OMP_MODEL=@default AOE_OMP_PROJECT_MCP_CONFIG="$WORK/kb-mcp.json" run_wrapper daily-maintenance /daily-maintenance; then
   ok "runs a scratch KB session"
 else
   bad "runs a scratch KB session"
 fi
 check "copies the KB MCP overlay" cmp "$WORK/kb-mcp.json" "$WORK/scratch/testsession/.omp/mcp.json"
-if grep -Fqx 'ARG=--extra-args' "$LOG" && grep -Fqx 'ARG=--model @default --prewalk-into @default' "$LOG"; then
-  ok "passes the pinned OMP model to the session and prewalk"
+if grep -Fqx 'ARG=--extra-args' "$LOG" && grep -Fqx 'ARG=--model @default' "$LOG" && ! grep -Fq -- '--prewalk-into' "$LOG"; then
+  ok "passes the pinned OMP model without prewalk"
 else
-  bad "passes the pinned OMP model to the session and prewalk"
+  bad "passes the pinned OMP model without prewalk"
+fi
+if grep -Fqx "ARG=daily-maintenance-E4D58213" "$LOG" &&
+  grep -Fqx "AOE_CORRELATION=$correlation_id" "$LOG" &&
+  grep -Fq "\"correlationId\":\"$correlation_id\"" "$WORK/state/aoe/omp-session-map/testsession.json"; then
+  ok "preserves the caller correlation in session state and prompt"
+else
+  bad "preserves the caller correlation in session state and prompt"
 fi
 if [[ "$(stat -f '%Lp' "$WORK/scratch/testsession/.omp/mcp.json")" == 600 ]]; then
   ok "makes the KB MCP overlay private"

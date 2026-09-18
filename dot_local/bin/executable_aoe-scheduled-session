@@ -10,7 +10,7 @@ title=$1
 prompt=$2
 project_path=${3:-}
 aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
-startup_delay=${AOE_STARTUP_DELAY_SECONDS:-30}
+startup_delay=${AOE_STARTUP_DELAY_SECONDS:-5}
 project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
 omp_model=${AOE_OMP_MODEL:-}
 jq_bin=${JQ_BIN:-/opt/homebrew/bin/jq}
@@ -43,7 +43,7 @@ if [[ -n "$project_mcp_config" ]]; then
 fi
 
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/aoe/omp-session-map"
-correlation_id=$(/usr/bin/uuidgen)
+correlation_id=${AOE_CORRELATION:-$(/usr/bin/uuidgen)}
 session_title="${title}-${correlation_id%%-*}"
 aoe_args=(add)
 if [[ -n "$project_path" ]]; then
@@ -53,7 +53,7 @@ else
 fi
 aoe_args+=(--tool omp --title "$session_title" --group Scheduled)
 if [[ -n "$omp_model" ]]; then
-  aoe_args+=(--extra-args "--model $omp_model --prewalk-into $omp_model")
+  aoe_args+=(--extra-args "--model $omp_model")
 fi
 session_output=$("$aoe_bin" "${aoe_args[@]}")
 session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
