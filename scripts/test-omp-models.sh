@@ -16,6 +16,7 @@ MODELS="$WORK/models.yml"
 MCP="$WORK/mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
+AOE="$WORK/aoe.toml"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
 mkdir -p "$BIN"
@@ -28,6 +29,7 @@ cp "$REPO_ROOT/local.yaml.example" "$DATA"
 yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"' "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
@@ -46,7 +48,6 @@ check "removes the stale AoE model-routing hook" "$(yq -p=toml -o=json '.host_ho
 check "preserves unrelated AoE hooks" "$(yq -p=toml -o=json '.host_hooks.after_session[0]' "$STALE_AOE" | jq -r '.')" keep-hook
 check "removes the stale AoE OMP override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$STALE_AOE")" false
 check "preserves unrelated AoE agent overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$STALE_AOE" | jq -r '.')" keep-agent
-<<<<<<< HEAD
 check "preserves the configured AoE GitHub plugin" "$(yq -p=toml -o=json '.plugins | has("agent-of-empires.github")' "$STALE_AOE")" true
 if bash -n "$PLUGIN_INSTALL"; then
   plugin_install_valid=true
@@ -55,9 +56,6 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
-check "enables lazy tool loading" "$(yq -r '.tools.xdev' "$CONFIG")" true
-=======
->>>>>>> 80ddbd0 (refactor(omp): manage config directly)
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
 runlayer_mcp_urls=(
