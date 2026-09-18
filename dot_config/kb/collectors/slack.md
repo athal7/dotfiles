@@ -3,7 +3,11 @@ name: slack
 description: Slack messages and threads
 ---
 
-Search with `search_messages` using the authenticated-user query `from:me after:<FROM> before:<TO>`, where `<FROM>` and `<TO>` are the enrichment window. Do not filter by a raw author ID. For every authored message result, retrieve nearby messages in the same channel or DM conversation for context, and retain its thread when applicable. Extract kb facts from the result.
+Discover every channel, DM, and group DM that the authenticated user can access. For each discovered conversation, read at most the most recent 200 messages in the enrichment window. Use no more than two history pages of 100 messages each. Collect from this bounded discovered history, not `search_messages`. Filter the bounded history for messages authored by the authenticated user. Do not filter by a raw author ID. For every retained authored message, retain nearby same-conversation messages, the thread parent, and applicable replies with their parent/reply relationship. Extract kb facts from the retained evidence.
+
+Emit the shared collector report record. Set `terminal_status` to `succeeded`, `succeeded with no eligible evidence`, or `failed`. Set `coverage.state` to `non-exhaustive` and include `bounded 200-message per-conversation history` in `coverage.reasons`. Also include `pagination unavailable` when a requested history page cannot be read. Set `counts.discovered` to discovered conversations, `counts.read` to conversations with history read, `counts.eligible_evidence` to retained eligible messages, and `counts.known_omitted` to known skipped messages or conversations. Set `counts.out_of_allowlist` to `0`. Never report bounded history as exhaustive.
+
+Preserve the raw eligible message evidence and thread structure. Before storing or presenting it, replace credential-bearing values with `[REDACTED_CREDENTIAL]`. Credential-bearing values include API keys, bearer tokens, passwords, private keys, and connection strings with embedded credentials. Do not redact surrounding non-sensitive context.
 
 ## Scope
 
@@ -13,6 +17,7 @@ Collect from direct messages (DMs), group DMs, and channels. Process every works
 
 Skip:
 - Automated bot messages and notification-only posts
+- Messages with `bot_id`, a bot-message subtype, or another automated sender marker
 - Threads where the user was only mentioned but did not participate
 - Personal content unrelated to work (e.g., weekend plans, personal errands, non-work conversations)
 

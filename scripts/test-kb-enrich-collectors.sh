@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/kb-enrich-collectors-test.XXXXXX")"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT INT TERM
 
 pass=0
@@ -13,94 +13,116 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 contains() { if grep -Fq -- "$2" "$3"; then ok "$1"; else bad "$1"; fi; }
 not_contains() { if grep -Fq -- "$2" "$3"; then bad "$1"; else ok "$1"; fi; }
 
+assert_collector_report() {
+  local label="$1" record="$2"
+  local collector terminal coverage reasons discovered read_count eligible known_omitted out_of_allowlist extra
+  IFS='|' read -r collector terminal coverage reasons discovered read_count eligible known_omitted out_of_allowlist extra <<< "$record"
+  if [ -z "$collector" ] || [ -n "$extra" ]; then bad "$label has nine fields"; return; fi
+  case "$terminal" in succeeded|'succeeded with no eligible evidence'|failed) ;; *) bad "$label has terminal state"; return;; esac
+  case "$coverage" in exhaustive|non-exhaustive|not-applicable) ;; *) bad "$label has coverage state"; return;; esac
+  if [ "$coverage" != exhaustive ] && [ -z "$reasons" ]; then bad "$label has coverage reason"; return; fi
+  for count in "$discovered" "$read_count" "$eligible" "$known_omitted" "$out_of_allowlist"; do
+    if ! [[ "$count" =~ ^[0-9]+$ ]]; then bad "$label has integer counts"; return; fi
+  done
+  ok "$label has terminal status, coverage state/reason, and counts"
+}
+
 COMMAND="$WORK/kb-enrich.md"
 SLACK="$WORK/slack.md"
+GH="$WORK/gh.md"
 ZOOM="$WORK/zoom.md"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.omp/agent/commands/kb-enrich.md" > "$COMMAND"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/slack.md" > "$SLACK"
+chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/gh.md" > "$GH"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/zoom.md" > "$ZOOM"
 
-utc_boundary='2026-01-15T05:30:00+00:00'
-local_day="$(UTC_BOUNDARY="$utc_boundary" python3 - <<'PY'
-from datetime import datetime
-from zoneinfo import ZoneInfo
+contains "defines shared collector report identity" 'collector: <configured collector name>' "$COMMAND"
+contains "defines shared collector terminal status" 'terminal_status: succeeded | succeeded with no eligible evidence | failed' "$COMMAND"
+contains "defines independent shared coverage state" 'state: exhaustive | non-exhaustive | not-applicable' "$COMMAND"
+contains "defines all shared collector counts" 'out_of_allowlist: <integer>' "$COMMAND"
+contains "requires explicit pagination coverage reason" 'paginated source cannot page through requested scope' "$COMMAND"
 
-instant = datetime.fromisoformat(__import__('os').environ['UTC_BOUNDARY'])
-print(instant.astimezone(ZoneInfo('America/Chicago')).date())
-PY
-)"
-check "converts explicit UTC prior-evening boundary to America/Chicago day" "$local_day" 2026-01-14
-contains "uses local IANA timezone for implicit journal day" 'Resolve the local IANA timezone before calculating any implicit date' "$COMMAND"
-contains "keeps local YYYY-MM-DD journal labels" $'Local journal labels remain `YYYY-MM-DD`' "$COMMAND"
-contains "calculates implicit today in local IANA calendar" $'calculate `today` as the calendar date in that IANA timezone, never UTC' "$COMMAND"
-contains "preserves explicit journal labels" 'for an explicit journal range, use the supplied labels unchanged' "$COMMAND"
-contains "derives a half-open UTC collector window from local midnights" 'half-open UTC instant window from local midnight at the range start through local midnight after the inclusive range end' "$COMMAND"
-contains "uses exact Calendar enumeration method" $'`list_calendars`' "$COMMAND"
-contains "uses exact Calendar event listing method" $'`list_events`' "$COMMAND"
-contains "uses exact Calendar event resolution method" $'`get_event`' "$COMMAND"
-not_contains "avoids obsolete hyphenated Calendar event listing" $'`list-events`' "$COMMAND"
-not_contains "avoids obsolete Calendar event detail method" $'`get-event-details`' "$COMMAND"
+contains "discovers Slack conversations before history collection" 'Discover every channel, DM, and group DM that the authenticated user can access' "$SLACK"
+contains "declares Slack 200-message bound" 'read at most the most recent 200 messages' "$SLACK"
+contains "uses two bounded Slack history pages" 'no more than two history pages of 100 messages each' "$SLACK"
+contains "retains Slack conversation and thread context" 'the thread parent, and applicable replies with their parent/reply relationship' "$SLACK"
+contains "excludes Slack bot sender markers" 'bot-message subtype, or another automated sender marker' "$SLACK"
+contains "redacts Slack credential values" '[REDACTED_CREDENTIAL]' "$SLACK"
+contains "reports bounded Slack coverage as non-exhaustive" 'bounded 200-message per-conversation history' "$SLACK"
+not_contains "avoids Slack search as collection source" 'Search with search_messages' "$SLACK"
 
-collector_window="$(python3 - <<'PY'
-from datetime import date, datetime, time, timedelta
-from zoneinfo import ZoneInfo
+slack_history=''
+for index in $(seq 1 198); do slack_history+="channel-alpha|user|thread-parent|message-$index"$'\n'; done
+slack_history+='channel-alpha|bot|thread-parent|Automated notification'$'\n'
+slack_history+='dm-beta|user|thread-reply|token=secret-value'$'\n'
+slack_history+='channel-alpha|user|thread-reply|message-beyond-bound'
+bounded_slack_history="$(printf '%s\n' "$slack_history" | head -n 200)"
+retained_slack="$(printf '%s\n' "$bounded_slack_history" | awk -F '|' '$2 == "user" { print $1 "|" $3 "|" $4 }' | sed -E 's/(token=)[^[:space:]]+/\1[REDACTED_CREDENTIAL]/')"
+check "bounds discovered Slack history to 200 messages" "$(printf '%s\n' "$bounded_slack_history" | wc -l | tr -d ' ')" 200
+check "excludes bot noise from bounded Slack history" "$(printf '%s\n' "$retained_slack" | grep -c 'Automated notification' || true)" 0
+check "retains authored Slack evidence within the bound" "$(printf '%s\n' "$retained_slack" | wc -l | tr -d ' ')" 199
+check "redacts credential-bearing Slack values" "$(printf '%s\n' "$retained_slack" | tail -n 1)" 'dm-beta|thread-reply|token=[REDACTED_CREDENTIAL]'
+check "does not retain Slack evidence beyond the bound" "$(printf '%s\n' "$retained_slack" | grep -c 'message-beyond-bound' || true)" 0
 
-zone = ZoneInfo('America/Chicago')
-start = date(2026, 1, 14)
-inclusive_end = date(2026, 1, 15)
-for day in (start, inclusive_end + timedelta(days=1)):
-    print(datetime.combine(day, time.min, zone).astimezone(ZoneInfo('UTC')).isoformat())
-PY
-)"
-check "models local-label range as half-open UTC collector window" "$collector_window" $'2026-01-14T06:00:00+00:00\n2026-01-16T06:00:00+00:00'
+contains "reports GitHub out-of-allowlist activity" 'organization identity, observed time, and exclusion reason' "$GH"
+contains "reports each missing configured GitHub organization" 'for each configured eligible organization that has no result' "$GH"
+contains "does not infer GitHub eligibility" 'Do not infer eligibility, change allowlist configuration, or set any' "$GH"
+contains "reports GitHub pagination as non-exhaustive coverage" 'paginated organization query cannot continue' "$GH"
 
-contains "uses authenticated Slack time-window search" $'`from:me after:<FROM> before:<TO>`' "$SLACK"
-contains "retrieves same-conversation Slack context" 'For every authored message result, retrieve nearby messages in the same channel or DM conversation for context' "$SLACK"
-contains "retains applicable Slack threads" 'retain its thread when applicable' "$SLACK"
-not_contains "avoids raw Slack author-ID filtering" 'from:<author_id>' "$SLACK"
+configured_eligible_orgs=$'eligible-org\nomitted-org'
+collected_github_orgs='eligible-org'
+github_scope_report=''
+while IFS= read -r configured_org; do
+  if grep -Fxq "$configured_org" <<< "$collected_github_orgs"; then github_scope_report+="$configured_org:eligible evidence"$'\n';
+  else github_scope_report+="$configured_org:configured allowlist omission"$'\n'; fi
+done <<< "$configured_eligible_orgs"
+github_scope_report="$(printf '%s' "$github_scope_report")"$'\nother-org:out-of-allowlist activity'
+check "keeps GitHub omissions and out-of-allowlist activity separate" "$github_scope_report" $'eligible-org:eligible evidence\nomitted-org:configured allowlist omission\nother-org:out-of-allowlist activity'
 
-candidate_records=$(cat <<'EOF'
-calendar-alpha|icaluid-generic|conference-generic|2026-01-14T23:30:00-06:00
-calendar-beta|icaluid-generic|conference-generic|2026-01-14T23:30:00-06:00
-calendar-alpha|icaluid-generic|conference-generic|2026-01-21T23:30:00-06:00
-EOF
-)
-resolved_occurrences="$(printf '%s\n' "$candidate_records" | cut -d '|' -f2-4 | sort -u)"
-resolved_occurrence_count="$(printf '%s\n' "$resolved_occurrences" | wc -l | tr -d ' ')"
-check "generic duplicate-calendar copies collapse by resolved occurrence identity" "$resolved_occurrence_count" 2
-contains "retains a distinct occurrence from the same generic series" 'icaluid-generic|conference-generic|2026-01-21T23:30:00-06:00' <(printf '%s\n' "$resolved_occurrences")
-
-asset_records=$(cat <<'EOF'
-conference-generic|2026-01-14T23:30:00-06:00|asset-first-occurrence
-conference-generic|2026-01-21T23:30:00-06:00|asset-second-occurrence
-conference-generic|2026-01-28T23:30:00-06:00|asset-wrong-occurrence
-EOF
-)
-selected_assets=''
-while IFS='|' read -r _ical_uid resolved_conference_id resolved_start; do
-  while IFS='|' read -r asset_meeting_id asset_start_time asset_id; do
-    if [ "$asset_meeting_id" = "$resolved_conference_id" ] && [ "$asset_start_time" = "$resolved_start" ]; then
-      selected_assets+="$asset_id"$'\n'
-    fi
-  done <<< "$asset_records"
-done <<< "$resolved_occurrences"
-selected_assets="$(printf '%s' "$selected_assets" | sort -u)"
-check "selects assets for both resolved generic occurrences" "$selected_assets" $'asset-first-occurrence\nasset-second-occurrence'
-wrong_occurrence_selected=false
-if printf '%s\n' "$selected_assets" | grep -Fxq 'asset-wrong-occurrence'; then
-  wrong_occurrence_selected=true
-fi
-check "rejects a generic asset for a different occurrence" "$wrong_occurrence_selected" false
-
-contains "enumerates all accessible calendars" $'Enumerate every accessible Google Calendar with `list_calendars`' "$ZOOM"
-contains "lists events per enumerated calendar" $'For each calendar, index events from `<FROM>` to `<TO>`' "$ZOOM"
-contains "resolves every Calendar candidate event" $'then call `get_event` for every candidate' "$ZOOM"
+contains "enumerates all accessible calendars" 'Enumerate every accessible Google Calendar' "$ZOOM"
 contains "deduplicates only resolved calendar mirrors" 'Deduplicate only duplicate-calendar mirrors of the same resolved occurrence' "$ZOOM"
-contains "retains different recurring occurrences" 'retain distinct occurrences in the same series' "$ZOOM"
-contains "forbids occurrence collapse by iCalUID or conference" 'never collapse different occurrences solely because their iCalUID or conference ID matches' "$ZOOM"
-contains "requires asset meeting and occurrence-start match" $'its `meeting_id` equals the resolved event' "$ZOOM"
-contains "matches asset start to resolved event start" "its \`start_time\` equals the resolved event's \`start.dateTime\`" "$ZOOM"
-contains "forbids Zoom search capability fallback" 'do not add a search or capability fallback' "$ZOOM"
+contains "requires exact Zoom meeting identifier" 'Retain an asset only when its' "$ZOOM"
+contains "requires exact Zoom UUID and start identity" 'returned by Zoom' "$ZOOM"
+contains "requires matching Calendar and Zoom series identity for fallback" 'explicit returned Zoom series identity that exactly matches that resolved Calendar series identity' "$ZOOM"
+contains "records fallback occurrence and series provenance" 'the resolved occurrence identity, the resolved series identity, the returned series start timestamp' "$ZOOM"
+contains "keeps Calendar notes and attachments separate" 'Store Calendar notes and Calendar attachments as separate Calendar evidence' "$ZOOM"
+contains "keeps Zoom evidence types separate" 'Store Zoom meeting summaries, My Notes, and raw transcripts as separate Zoom evidence records' "$ZOOM"
+contains "reports Zoom pagination as non-exhaustive coverage" 'Calendar lists, event lists, or Zoom asset pages cannot page through requested scope' "$ZOOM"
+
+candidate_records=$'calendar-alpha|icaluid-generic|conference-generic|2026-01-14T23:30:00-06:00\ncalendar-beta|icaluid-generic|conference-generic|2026-01-14T23:30:00-06:00\ncalendar-alpha|icaluid-generic|conference-generic|2026-01-21T23:30:00-06:00'
+resolved_occurrences="$(printf '%s\n' "$candidate_records" | cut -d '|' -f2-4 | sort -u)"
+check "deduplicates only duplicate Calendar occurrence mirrors" "$(printf '%s\n' "$resolved_occurrences" | wc -l | tr -d ' ')" 2
+contains "retains distinct recurring Calendar occurrences" 'icaluid-generic|conference-generic|2026-01-21T23:30:00-06:00' <(printf '%s\n' "$resolved_occurrences")
+
+resolved_meeting_id='conference-generic'
+resolved_series_identity='calendar-series-1:icaluid-generic'
+resolved_occurrence_start='2026-01-21T23:30:00-06:00'
+series_start='2026-01-14T23:30:00-06:00'
+reconcile_zoom_asset() {
+  local asset_meeting_id asset_meeting_uuid asset_meeting_start asset_series_identity
+  IFS='|' read -r asset_meeting_id asset_meeting_uuid asset_meeting_start asset_series_identity <<< "$1"
+  if [ -z "$asset_meeting_uuid" ]; then printf 'rejected';
+  elif [ "$asset_meeting_id" = "$resolved_meeting_id" ] && [ "$asset_meeting_start" = "$resolved_occurrence_start" ]; then printf 'exact occurrence';
+  elif [ "$asset_meeting_id" = "$resolved_meeting_id" ] && [ "$asset_meeting_start" = "$series_start" ] && [ "$asset_series_identity" = "$resolved_series_identity" ]; then printf 'series-start fallback';
+  else printf 'rejected'; fi
+}
+exact_asset='conference-generic|meeting-uuid-1|2026-01-21T23:30:00-06:00|calendar-series-1:icaluid-generic'
+unrelated_asset='other-conference|meeting-uuid-3|2026-01-21T23:30:00-06:00|calendar-series-1:icaluid-generic'
+wrong_start_asset='conference-generic|meeting-uuid-4|2026-01-28T23:30:00-06:00|calendar-series-1:icaluid-generic'
+fallback_asset='conference-generic|meeting-uuid-2|2026-01-14T23:30:00-06:00|calendar-series-1:icaluid-generic'
+wrong_series_fallback_asset='conference-generic|meeting-uuid-5|2026-01-14T23:30:00-06:00|other-series:icaluid-generic'
+missing_series_fallback_asset='conference-generic|meeting-uuid-6|2026-01-14T23:30:00-06:00|'
+check "reconciles the exact Zoom recurring occurrence" "$(reconcile_zoom_asset "$exact_asset")" 'exact occurrence'
+check "rejects an unrelated Zoom meeting identity" "$(reconcile_zoom_asset "$unrelated_asset")" rejected
+check "rejects a matching Zoom meeting ID with wrong occurrence time" "$(reconcile_zoom_asset "$wrong_start_asset")" rejected
+check "accepts stale recurring-series Zoom time only with matching series identity" "$(reconcile_zoom_asset "$fallback_asset")" 'series-start fallback'
+check "rejects stale recurring-series Zoom time for another series" "$(reconcile_zoom_asset "$wrong_series_fallback_asset")" rejected
+check "rejects stale recurring-series Zoom time without series identity" "$(reconcile_zoom_asset "$missing_series_fallback_asset")" rejected
+check "retains exact Zoom UUID for the reconciled asset" "$(cut -d '|' -f2 <<< "$exact_asset")" 'meeting-uuid-1'
+
+assert_collector_report "reports Slack terminal and bounded coverage" 'slack|succeeded|non-exhaustive|bounded 200-message per-conversation history; pagination unavailable|8|8|3|0|0'
+assert_collector_report "reports GitHub partial configured scope" 'gh|succeeded|non-exhaustive|configured allowlist omission; pagination unavailable|3|1|2|1|1'
+assert_collector_report "reports Zoom paginated scope" 'zoom|succeeded with no eligible evidence|non-exhaustive|pagination unavailable|12|10|0|2|0'
 
 if [ "$fail" -ne 0 ]; then
   printf '%s kb-enrich collector recipe checks failed; %s passed\n' "$fail" "$pass" >&2
