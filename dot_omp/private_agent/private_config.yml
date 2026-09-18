@@ -1,6 +1,7 @@
 advisor:
   enabled: true
-  subagents: false
+  immuneTurns: 0
+  maxNotesPerUpdate: 1
 astGrep:
   enabled: true
 autoResume: false
@@ -10,167 +11,171 @@ bash:
   autoBackground:
     enabled: true
   patterns:
-  - approval: prompt
-    match: git -C * reset --hard*
-  - approval: prompt
-    match: git worktree remove*
-  - approval: prompt
-    match: curl * --upload-file*
-  - approval: allow
-    match: gh* search *
-  - approval: prompt
-    match: git reset --merge*
-  - approval: prompt
-    match: "git checkout * -- *"
-  - approval: allow
-    match: gh* list*
-  - approval: prompt
-    match: "git checkout -- *"
-  - approval: prompt
-    match: git reset --hard*
-  - approval: allow
-    match: remindctl status*
-  - approval: allow
-    match: git -C * clean -f*
-  - approval: prompt
-    match: chezmoi destroy*
-  - approval: prompt
-    match: chezmoi upgrade*
-  - approval: allow
-    match: gh* view*
-  - approval: allow
-    match: gh* status*
-  - approval: prompt
-    match: gh api * -X POST*
-  - approval: prompt
-    match: gh api * -X PUT*
-  - approval: prompt
-    match: gh api * -X PATCH*
-  - approval: prompt
-    match: gh api * -X DELETE*
-  - approval: prompt
-    match: gh api graphql*mutation*
-  - approval: allow
-    match: gh api *
-  - approval: prompt
-    match: git stash clear*
-  - approval: allow
-    match: xh-es-search *
-  - approval: prompt
-    match: curl * -X DELETE*
-  - approval: prompt
-    match: chezmoi forget*
-  - approval: prompt
-    match: chezmoi-deploy*
-  - approval: prompt
-    match: gh *
-  - approval: prompt
-    match: git stash drop*
-  - approval: allow
-    match: remindctl list*
-  - approval: allow
-    match: remindctl show*
-  - approval: prompt
-    match: curl * -X PATCH*
-  - approval: prompt
-    match: git -C * commit*
-  - approval: allow
-    match: chezmoi apply --dry-run*
-  - approval: allow
-    match: chezmoi apply -n*
-  - approval: prompt
-    match: chezmoi apply*
-  - approval: prompt
-    match: chezmoi purge*
-  - approval: prompt
-    match: git branch -D*
-  - approval: prompt
-    match: git branch -d*
-  - approval: prompt
-    match: curl * -X POST*
-  - approval: prompt
-    match: chezmoi init*
-  - approval: allow
-    match: git clean -d*
-  - approval: allow
-    match: git clean -f*
-  - approval: allow
-    match: git restore *
-  - approval: prompt
-    match: rm -rf $HOME*
-  - approval: prompt
-    match: curl * --data*
-  - approval: prompt
-    match: curl * -X PUT*
-  - approval: prompt
-    match: git -C * push*
-  - approval: prompt
-    match: chezmoi add*
-  - approval: prompt
-    match: xh *mutation*
-  - approval: prompt
-    match: git commit*
-  - approval: allow
-    match: remindctl *--help*
-  - approval: allow
-    match: remindctl help*
-  - approval: prompt
-    match: remindctl *
-  - approval: prompt
-    match: xh *DELETE *
-  - approval: prompt
-    match: diskutil *
-  - approval: prompt
-    match: curl * -T *
-  - approval: prompt
-    match: curl * -d *
-  - approval: prompt
-    match: xh *PATCH *
-  - approval: prompt
-    match: git push*
-  - approval: prompt
-    match: rm -fr /*
-  - approval: prompt
-    match: rm -fr ~*
-  - approval: prompt
-    match: rm -rf /*
-  - approval: prompt
-    match: rm -rf ~*
-  - approval: prompt
-    match: shutdown*
-  - approval: allow
-    match: xh *HEAD *
-  - approval: prompt
-    match: xh *POST *
-  - approval: allow
-    match: xh *query*
-  - approval: allow
-    match: xh *GET *
-  - approval: prompt
-    match: xh *PUT *
-  - approval: prompt
-    match: dd if=*
-  - approval: prompt
-    match: dd of=*
-  - approval: prompt
-    match: reboot*
-  - approval: prompt
-    match: sudo *
-  - approval: prompt
-    match: wget *
-  - approval: prompt
-    match: mkfs*
-  - approval: prompt
-    match: xh *
-  - approval: allow
-    match: "*"
+    - approval: prompt
+      match: git -C * reset --hard*
+    - approval: prompt
+      match: git worktree remove*
+    - approval: prompt
+      match: curl * --upload-file*
+    - approval: allow
+      match: gh* search *
+    - approval: prompt
+      match: git reset --merge*
+    - approval: prompt
+      match: git checkout * -- *
+    - approval: allow
+      match: gh* list*
+    - approval: prompt
+      match: git checkout -- *
+    - approval: prompt
+      match: git reset --hard*
+    - approval: allow
+      match: remindctl status*
+    - approval: allow
+      match: git -C * clean -f*
+    - approval: prompt
+      match: chezmoi destroy*
+    - approval: prompt
+      match: chezmoi upgrade*
+    - approval: allow
+      match: gh* view*
+    - approval: allow
+      match: gh* status*
+    - approval: prompt
+      match: gh api * -X POST*
+    - approval: prompt
+      match: gh api * -X PUT*
+    - approval: prompt
+      match: gh api * -X PATCH*
+    - approval: prompt
+      match: gh api * -X DELETE*
+    - approval: prompt
+      match: gh api graphql*mutation*
+    - approval: allow
+      match: gh api *
+    - approval: prompt
+      match: git stash clear*
+    - approval: allow
+      match: xh-es-search *
+    - approval: prompt
+      match: curl * -X DELETE*
+    - approval: prompt
+      match: chezmoi forget*
+    - approval: prompt
+      match: chezmoi-deploy*
+    - approval: prompt
+      match: gh *
+    - approval: prompt
+      match: git stash drop*
+    - approval: allow
+      match: remindctl list*
+    - approval: allow
+      match: remindctl show*
+    - approval: prompt
+      match: curl * -X PATCH*
+    - approval: prompt
+      match: git -C * commit*
+    - approval: allow
+      match: chezmoi apply --dry-run*
+    - approval: allow
+      match: chezmoi apply -n*
+    - approval: prompt
+      match: chezmoi apply*
+    - approval: prompt
+      match: chezmoi purge*
+    - approval: prompt
+      match: git branch -D*
+    - approval: prompt
+      match: git branch -d*
+    - approval: prompt
+      match: curl * -X POST*
+    - approval: prompt
+      match: chezmoi init*
+    - approval: allow
+      match: git clean -d*
+    - approval: allow
+      match: git clean -f*
+    - approval: allow
+      match: git restore *
+    - approval: prompt
+      match: rm -rf $HOME*
+    - approval: prompt
+      match: curl * --data*
+    - approval: prompt
+      match: curl * -X PUT*
+    - approval: prompt
+      match: git -C * push*
+    - approval: prompt
+      match: chezmoi add*
+    - approval: prompt
+      match: xh *mutation*
+    - approval: prompt
+      match: git commit*
+    - approval: allow
+      match: remindctl *--help*
+    - approval: allow
+      match: remindctl help*
+    - approval: prompt
+      match: remindctl *
+    - approval: prompt
+      match: xh *DELETE *
+    - approval: prompt
+      match: diskutil *
+    - approval: prompt
+      match: curl * -T *
+    - approval: prompt
+      match: curl * -d *
+    - approval: prompt
+      match: xh *PATCH *
+    - approval: prompt
+      match: git push*
+    - approval: prompt
+      match: rm -fr /*
+    - approval: prompt
+      match: rm -fr ~*
+    - approval: prompt
+      match: rm -rf /*
+    - approval: prompt
+      match: rm -rf ~*
+    - approval: prompt
+      match: shutdown*
+    - approval: allow
+      match: xh *HEAD *
+    - approval: prompt
+      match: xh *POST *
+    - approval: allow
+      match: xh *query*
+    - approval: allow
+      match: xh *GET *
+    - approval: prompt
+      match: xh *PUT *
+    - approval: prompt
+      match: dd if=*
+    - approval: prompt
+      match: dd of=*
+    - approval: prompt
+      match: reboot*
+    - approval: prompt
+      match: sudo *
+    - approval: prompt
+      match: wget *
+    - approval: prompt
+      match: mkfs*
+    - approval: prompt
+      match: xh *
+    - approval: allow
+      match: "*"
+  allowCompoundCommands: true
 browser:
   headless: false
   relay: true
 checkpoint:
   enabled: true
 compaction:
-  strategy: snapcompact
+  methodOrder:
+    - snapcompact
+    - remote
+    - soft
 composer:
   shape: box
 computer:
@@ -182,7 +187,7 @@ display:
   cacheMissMarker: true
   shimmer: classic
   showTokenUsage: false
-doubleEscapeAction: tree
+doubleEscapeAction: rewind
 error:
   notify: "on"
 eval:
@@ -190,7 +195,7 @@ eval:
 extendedContext: true
 features:
   unexpectedStopDetection: smart
-followUpMode: one-at-a-time
+followUpMode: all
 generate_image:
   enabled: true
 github:
@@ -210,7 +215,7 @@ modelRoles:
   slow: openai-codex/gpt-5.6-sol
   smol: openai-codex/gpt-5.6-luna
   vision: openai-codex/gpt-5.6-terra
-personality: pragmatic
+personality: default
 plan:
   defaultOnStartup: false
 prewalk:
@@ -222,6 +227,8 @@ providers:
   tinyModel: lfm2-350m
 read:
   renderMarkdown: true
+  summarize:
+    prose: true
 secrets:
   enabled: true
 security:
@@ -360,4 +367,14 @@ tui:
   tight: false
   titleState: true
 vault:
+  enabled: true
+textVerbosity: low
+includeWorkspaceTree: true
+spelling:
+  autocorrect: true
+edit:
+  mode: hashline
+  autoRepair:
+    enabled: true
+bashInterceptor:
   enabled: true
