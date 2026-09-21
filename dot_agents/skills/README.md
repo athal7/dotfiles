@@ -4,26 +4,9 @@
 
 Edit skills here, never in `~/.agents/skills/`; chezmoi manages each authored skill directly without replacing the shared directory.
 
-See `AGENTS.md` for what earns a line and when something shouldn't be a skill at all.
+## Integration Skills
 
-## Skills
-
-**Workflow** — a process, loaded at a specific moment.
-
-| Skill | Fires when |
-|---|---|
-| **implement** | Optional end-to-end workflow when explicitly requested |
-| **merge-request** | Optional own-request review workflow when explicitly requested |
-| **commit** | About to stage and commit |
-| **push** | About to push; owns the CI and automated-review watch |
-| **architecture** | A multi-option design decision appears |
-| **code-quality** | Grading review-finding severity; the mechanical sweeps |
-| **communication** | Composing human-facing prose through an integration |
-| **qa-report-publish** | Publishing concise QA evidence in GitHub pull request review bodies |
-| **homebrew-release** | Releasing a pull request through semantic-release and Homebrew |
-| **omp-approval-feedback** | OMP: turn the last approved CLI command into a narrow no-prompt rule |
-
-**Integration** — how to drive a specific tool or API.
+How to drive a specific tool or API.
 
 | Skill | Covers |
 |---|---|
@@ -36,21 +19,15 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 
 External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical).
 
-
 ## Other primitives
 
-Not everything is a skill:
-
-- **Agent prompts** live in `dot_agents/prompts/` — role boundaries and workflow guidance. OMP's system prompt lives directly at `dot_omp/private_agent/APPEND_SYSTEM.md`.
+- **System Prompt** lives at `dot_omp/private_agent/APPEND_SYSTEM.md`.
 - **Scripts** carry runtime automation.
 
 ## Commands
 
 | Command | What |
 |---|---|
-| `/implement` | Optional shortcut to load the implement skill |
-| `/mr` | Optional shortcut to load the merge-request skill |
-| `/qa` | Functional QA on the running app; relays the verdict |
 | `/learn` | Capture discoveries into AGENTS.md or a skill |
 | `/rename` | Retitle the session from what it turned out to be about |
 | `/demo` | Build a demo deck from work since the last demo |
