@@ -271,7 +271,7 @@ terminal:
 tools:
   approval:
     bash: allow
-    browser: allow
+    browser: prompt
     eval: allow
     hub: allow
     mcp__linear_create_attachment: prompt

@@ -39,6 +39,7 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-en
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 check "preserves git push approval" "$(yq -r '.bash.patterns[] | select(.match == "git push*") | .approval' "$CONFIG")" prompt
+check "requires browser approval" "$(yq -r '.tools.approval.browser' "$CONFIG")" prompt
 check "preserves browser headless override" "$(yq -r '.browser.headless' "$CONFIG")" false
 check "preserves browser relay override" "$(yq -r '.browser.relay' "$CONFIG")" true
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
