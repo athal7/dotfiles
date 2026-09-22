@@ -371,7 +371,7 @@ vault:
 textVerbosity: low
 includeWorkspaceTree: true
 spelling:
-  autocorrect: true
+  autocorrect: false
 edit:
   mode: hashline
   autoRepair:
