@@ -21,6 +21,7 @@ See `AGENTS.md` for what earns a line and when something shouldn't be a skill at
 | **communication** | Composing human-facing prose through an integration |
 | **qa-report-publish** | Publishing concise QA evidence in GitHub pull request review bodies |
 | **homebrew-release** | Releasing a pull request through semantic-release and Homebrew |
+| **omp-approval-feedback** | OMP: turn the last approved CLI command into a narrow no-prompt rule |
 
 **Integration** — how to drive a specific tool or API.
 
