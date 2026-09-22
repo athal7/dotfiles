@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project=$(basename "$PWD")
+timestamp=${QA_TIMESTAMP:-$(date +%Y%m%d-%H%M%S)}
+session_dir=${QA_SESSION_DIR:-"$HOME/.local/share/qa/$project/qa-$timestamp"}
+
+mkdir -p "$session_dir"
+printf '%s\n' "$session_dir"

@@ -19,18 +19,28 @@ How to drive a specific tool or API.
 
 External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical).
 
+## Workflow Skills
+
+| Skill | Covers |
+|---|---|
+| **implement** | End-to-end implementation workflow when requested. |
+| **communication** | Draft human-facing prose for an integration. |
+| **shipit** | Commit and push completed changes, or deploy this dotfiles repository. |
+| **homebrew-release** | Verify a release, update its Homebrew tap, and verify the local install. |
+| **merge-request** | Maintain a pull request after review feedback or conflicts. |
+| **qa-report-publish** | Publish local QA evidence in a pull request review. |
+| **qa-verification** | Verify a running app in a browser and write local evidence. |
+
 ## Other primitives
 
 - **System Prompt** lives at `dot_omp/private_agent/APPEND_SYSTEM.md`.
-- **Scripts** carry runtime automation.
+- **Scripts** carry deterministic runtime automation.
 
 ## Commands
 
 | Command | What |
 |---|---|
-| `/learn` | Capture discoveries into AGENTS.md or a skill |
-| `/rename` | Retitle the session from what it turned out to be about |
-| `/demo` | Build a demo deck from work since the last demo |
+| `/implement` | Optional end-to-end implementation workflow |
 | `/audit` | Agent-system and cost/latency audit |
 | `/daily-maintenance` | Production-error triage followed by knowledge-base enrichment (scheduled) |
 | `/kb-enrich` | Knowledge-base enrichment |

@@ -19,6 +19,10 @@ set -euo pipefail
 
 case "$1" in
   add)
+    if [[ "${AOE_INVALID_ID:-false}" == true ]]; then
+      printf '  ID: invalid id\n'
+      exit 0
+    fi
     session_path="$AOE_TEST_ROOT/scratch/testsession"
     mkdir -p "$session_path"
     printf '  ID: testsession\n  Path: %s\n' "$session_path"
@@ -69,6 +73,9 @@ run_wrapper() {
     AOE_TEST_LOG="$LOG" \
     AOE_TEST_ROOT="$WORK" \
     XDG_STATE_HOME="$WORK/state" \
+    AOE_SESSION_GROUP="${AOE_SESSION_GROUP:-Scheduled}" \
+    AOE_WORKTREE_BRANCH="${AOE_WORKTREE_BRANCH:-}" \
+    AOE_NEW_BRANCH="${AOE_NEW_BRANCH:-false}" \
     "$REPO_ROOT/dot_local/bin/executable_aoe-scheduled-session" "$@"
 }
 
@@ -80,7 +87,22 @@ if grep -Fqx 'ARG=--extra-args' "$LOG"; then
 else
   ok "omits empty OMP extra arguments"
 fi
-
+git -C "$WORK/project" init -q
+: >"$LOG"
+if AOE_SESSION_GROUP=Attention AOE_WORKTREE_BRANCH=attention/test AOE_NEW_BRANCH=true run_wrapper attention /attention "$WORK/project"; then
+  ok "runs an attention worktree session"
+else
+  bad "runs an attention worktree session"
+fi
+if grep -Fqx 'ARG=--worktree' "$LOG" &&
+  grep -Fqx 'ARG=attention/test' "$LOG" &&
+  grep -Fqx 'ARG=--new-branch' "$LOG" &&
+  grep -Fqx 'ARG=--group' "$LOG" &&
+  grep -Fqx 'ARG=Attention' "$LOG"; then
+  ok "passes attention group and worktree options"
+else
+  bad "passes attention group and worktree options"
+fi
 : >"$LOG"
 : >"$WORK/liveness.err"
 if AOE_START_ERROR_BUT_LIVE=true run_wrapper lifecycle-race /lifecycle-race 2>"$WORK/liveness.err"; then
@@ -122,6 +144,12 @@ if [[ "$(stat -f '%Lp' "$WORK/scratch/testsession/.omp/mcp.json")" == 600 ]]; th
   ok "makes the KB MCP overlay private"
 else
   bad "makes the KB MCP overlay private"
+fi
+
+if AOE_INVALID_ID=true run_wrapper invalid /invalid >/dev/null 2>&1; then
+  bad "rejects an invalid session ID before starting"
+else
+  ok "rejects an invalid session ID before starting"
 fi
 
 if AOE_OMP_PROJECT_MCP_CONFIG="$WORK/kb-mcp.json" run_wrapper invalid /invalid "$WORK/project" >/dev/null 2>&1; then

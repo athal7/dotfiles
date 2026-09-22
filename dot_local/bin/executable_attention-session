@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# attention-session — start a deterministic OMP session from an attention action.
+set -euo pipefail
+
+DISPATCHER=${AOE_SESSION_DISPATCHER:-"$HOME/.local/bin/aoe-scheduled-session"}
+GH_BIN=${GH_BIN:-gh}
+GIT_BIN=${GIT_BIN:-git}
+
+usage() {
+  printf 'usage: %s scratch <title> <prompt>\n' "$0" >&2
+  printf '       %s github <repo-path> <issue-or-pr> <worktree-branch> <title> <prompt> <additional-prompt>\n' "$0" >&2
+  exit 64
+}
+
+fail() {
+  printf 'attention-session: %s\n' "$*" >&2
+  exit 1
+}
+
+[ -x "$DISPATCHER" ] || fail "dispatcher is not executable: $DISPATCHER"
+[ -n "${1:-}" ] || usage
+
+case "$1" in
+  scratch)
+    if [ "$#" -ne 3 ]; then
+      usage
+    fi
+    if [ -z "$2" ] || [ -z "$3" ]; then
+      fail "title and prompt must not be empty"
+    fi
+    exec env AOE_SESSION_GROUP=Attention "$DISPATCHER" "$2" "$3"
+    ;;
+  github)
+    if [ "$#" -ne 7 ]; then
+      usage
+    fi
+    repo_path=$2
+    reference=$3
+    requested_branch=$4
+    title=$5
+    prompt=$6
+    additional_prompt=$7
+
+    if [ ! -d "$repo_path" ]; then
+      fail "repository path is not a directory: $repo_path"
+    fi
+    if [ -z "$reference" ] || [ -z "$requested_branch" ] || [ -z "$title" ] || [ -z "$prompt" ]; then
+      fail "GitHub action arguments must not be empty"
+    fi
+    repo_root=$("$GIT_BIN" -C "$repo_path" rev-parse --show-toplevel 2>/dev/null) || \
+      fail "repository path is not a Git repository: $repo_path"
+
+    "$GIT_BIN" check-ref-format --branch "$requested_branch" >/dev/null || \
+      fail "worktree branch is not valid: $requested_branch"
+    if pr_info=$(cd "$repo_root" && "$GH_BIN" pr view "$reference" --json number,headRefName,headRepositoryOwner,headRepository --jq '[.number, .headRefName, .headRepositoryOwner.login, .headRepository.name] | @tsv' 2>/dev/null); then
+      IFS=$'\t' read -r pr_number head_branch head_owner head_repo <<<"$pr_info"
+      if ! [[ "$pr_number" =~ ^[0-9]+$ && -n "$head_branch" && -n "$head_owner" && -n "$head_repo" ]]; then
+        fail "pull request metadata is incomplete for: $reference"
+      fi
+      "$GIT_BIN" check-ref-format --branch "$head_branch" >/dev/null || \
+        fail "pull request head is not a valid branch: $head_branch"
+      pr_ref="refs/remotes/origin/attention-pr-$pr_number"
+      head_remote="https://github.com/$head_owner/$head_repo.git"
+      "$GIT_BIN" -C "$repo_root" fetch --no-tags "$head_remote" \
+        "+refs/heads/$head_branch:$pr_ref" || \
+        fail "cannot fetch pull request head: $reference"
+      head_sha=$("$GIT_BIN" -C "$repo_root" rev-parse "$pr_ref")
+      if "$GIT_BIN" -C "$repo_root" show-ref --verify --quiet "refs/heads/$requested_branch"; then
+        existing_sha=$("$GIT_BIN" -C "$repo_root" rev-parse "refs/heads/$requested_branch")
+        [ "$existing_sha" = "$head_sha" ] || \
+          fail "existing worktree branch does not point to pull request head: $requested_branch"
+      else
+        "$GIT_BIN" -C "$repo_root" branch "$requested_branch" "$pr_ref" || \
+          fail "cannot create worktree branch: $requested_branch"
+      fi
+      worktree_branch=$requested_branch
+      new_branch=false
+    else
+      (cd "$repo_root" && "$GH_BIN" issue view "$reference" --json number --jq .number >/dev/null) || \
+        fail "reference is not an accessible GitHub issue or pull request: $reference"
+      worktree_branch=$requested_branch
+      new_branch=true
+    fi
+
+    if [ -n "$additional_prompt" ]; then
+      prompt+=$'\n\nAdditional session content:\n'
+      prompt+=$additional_prompt
+    fi
+
+    exec env AOE_SESSION_GROUP=Attention AOE_WORKTREE_BRANCH="$worktree_branch" \
+      AOE_NEW_BRANCH="$new_branch" "$DISPATCHER" "$title" "$prompt" "$repo_root"
+    ;;
+  *)
+    usage
+    ;;
+esac

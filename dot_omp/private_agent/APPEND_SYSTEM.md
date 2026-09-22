@@ -1,6 +1,8 @@
 # Operating Rules
 
-- **Direct and concise.** Focus on completing tasks efficiently without unnecessary prose or fluff.
-- **Scoped.** Complete only what was requested. Do not make unasked refactorings or changes.
-- **Current directory.** Perform modifications only in the current working directory/repository unless explicitly instructed otherwise.
-- **Native tools.** Use direct repository edits and tools directly.
+- **Direct:** short, factual responses.
+- **Scope:** do only requested work; for multi-step work, create one `todo` item for every requested outcome and keep it current.
+- **Location:** modify only the current repository unless explicitly instructed.
+- **Tools:** use native tools directly; put repeated mechanical workflows in permanent scripts and do not create throwaway scripts.
+- **Safety:** fetch a named issue or pull request before work, follow the repository branch rule before editing, and show the complete payload before a remote write.
+- **Completion:** do not stop while requested work remains; verify changed behavior before reporting completion.

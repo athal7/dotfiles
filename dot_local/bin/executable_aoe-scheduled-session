@@ -14,7 +14,9 @@ startup_delay=${AOE_STARTUP_DELAY_SECONDS:-5}
 project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
 omp_model=${AOE_OMP_MODEL:-}
 jq_bin=${JQ_BIN:-/opt/homebrew/bin/jq}
-
+session_group=${AOE_SESSION_GROUP:-Scheduled}
+worktree_branch=${AOE_WORKTREE_BRANCH:-}
+new_branch=${AOE_NEW_BRANCH:-false}
 if [[ ! -x "$jq_bin" ]]; then
   printf 'JQ_BIN is not executable: %s\n' "$jq_bin" >&2
   exit 69
@@ -29,6 +31,25 @@ if [[ ! "$startup_delay" =~ ^[0-9]+$ ]]; then
 fi
 if [[ -n "$omp_model" && ! "$omp_model" =~ ^[@[:alnum:]_./:-]+$ ]]; then
   printf 'AOE_OMP_MODEL contains unsupported characters\n' >&2
+  exit 64
+fi
+case "$session_group" in
+  ""|*[![:alnum:]_.\ /-]*)
+    printf 'AOE_SESSION_GROUP contains unsupported characters\n' >&2
+    exit 64
+    ;;
+esac
+if [[ "$new_branch" != true && "$new_branch" != false ]]; then
+  printf 'AOE_NEW_BRANCH must be true or false\n' >&2
+  exit 64
+fi
+if [[ -n "$worktree_branch" ]]; then
+  if [[ -z "$project_path" ]] || ! git -C "$project_path" check-ref-format --branch "$worktree_branch" >/dev/null 2>&1; then
+    printf 'AOE_WORKTREE_BRANCH requires a valid project path and branch name\n' >&2
+    exit 64
+  fi
+elif [[ "$new_branch" == true ]]; then
+  printf 'AOE_NEW_BRANCH requires AOE_WORKTREE_BRANCH\n' >&2
   exit 64
 fi
 if [[ -n "$project_mcp_config" ]]; then
@@ -51,7 +72,13 @@ if [[ -n "$project_path" ]]; then
 else
   aoe_args+=(--scratch)
 fi
-aoe_args+=(--tool omp --title "$session_title" --group Scheduled)
+if [[ -n "$worktree_branch" ]]; then
+  aoe_args+=(--worktree "$worktree_branch")
+  if [[ "$new_branch" == true ]]; then
+    aoe_args+=(--new-branch)
+  fi
+fi
+aoe_args+=(--tool omp --title "$session_title" --group "$session_group")
 if [[ -n "$omp_model" ]]; then
   aoe_args+=(--extra-args "--model $omp_model")
 fi
