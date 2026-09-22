@@ -52,7 +52,7 @@ command = "lumen diff"
 hotkey = "Alt+d"
 
 [tools.lm]
-command = "lumen"
+command = "lumen diff \"$(git merge-base main HEAD)..-\""
 hotkey = "Alt+m"
 
 [plugins."agent-of-empires.github"]
