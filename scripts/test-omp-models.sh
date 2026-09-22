@@ -14,6 +14,7 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 DATA="$WORK/local.yaml"
 MODELS="$WORK/models.yml"
 MCP="$WORK/mcp.json"
+EMPTY_MCP="$WORK/empty-mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
 AOE="$WORK/aoe.toml"
@@ -27,6 +28,7 @@ exit 44
 EOF
 chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$EMPTY_MCP"
 yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"' "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
@@ -60,6 +62,7 @@ check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
+check "keeps empty Runlayer MCP URLs as placeholders" "$(jq '[.mcpServers["runlayer-bigquery"].url, .mcpServers["runlayer-pagerduty"].url] == ["${RUNLAYER_BIGQUERY_MCP_URL}", "${RUNLAYER_PAGERDUTY_MCP_URL}"]' "$EMPTY_MCP")" true
 runlayer_mcp_urls=(
   "runlayer-bigquery https://bigquery.example.test/mcp"
   "runlayer-pagerduty https://pagerduty.example.test/mcp"
