@@ -43,6 +43,18 @@ show_spans = false
 
 [logging.targets]
 
+[tools.attention]
+command = "attention"
+hotkey = "Alt+a"
+
+[tools.ld]
+command = "lumen diff"
+hotkey = "Alt+d"
+
+[tools.lm]
+command = "lumen"
+hotkey = "Alt+m"
+
 [plugins."agent-of-empires.github"]
 enabled = true
 source = "gh:agent-of-empires/plugin-github"
