@@ -61,13 +61,13 @@ check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugi
 check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
 runlayer_mcp_urls=(
-  "runlayer-bigquery RUNLAYER_BIGQUERY_MCP_URL"
-  "runlayer-pagerduty RUNLAYER_PAGERDUTY_MCP_URL"
+  "runlayer-bigquery https://bigquery.example.test/mcp"
+  "runlayer-pagerduty https://pagerduty.example.test/mcp"
 )
-for connector_and_environment in "${runlayer_mcp_urls[@]}"; do
-  read -r connector environment <<< "$connector_and_environment"
+for connector_and_url in "${runlayer_mcp_urls[@]}"; do
+  read -r connector url <<< "$connector_and_url"
   check "renders $connector MCP entry" "$(jq --arg connector "$connector" '.mcpServers | has($connector)' "$MCP")" true
-  check "renders $connector MCP URL" "$(jq -r --arg connector "$connector" '.mcpServers[$connector].url' "$MCP")" "\${$environment}"
+  check "renders $connector MCP URL" "$(jq -r --arg connector "$connector" '.mcpServers[$connector].url' "$MCP")" "$url"
 done
 rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[]' | sort | paste -sd ' ' -)"
 check "exports configured Runlayer MCP URL variables to AoE sessions" "$rendered_runlayer_environment" "RUNLAYER_BIGQUERY_MCP_URL=https://bigquery.example.test/mcp RUNLAYER_PAGERDUTY_MCP_URL=https://pagerduty.example.test/mcp"

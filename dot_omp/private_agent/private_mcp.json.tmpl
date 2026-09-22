@@ -10,7 +10,16 @@
 {{-   else -}}
 {{-     $_ := set $entry "type" "http" -}}
 {{-     $url := $server.url -}}
-{{-     if kindIs "map" $url -}}{{- $url = printf "${%s}" (index $url "name") -}}{{- end -}}
+{{-     if kindIs "map" $url -}}
+{{-       $environmentName := index $url "name" -}}
+{{-       $url = printf "${%s}" $environmentName -}}
+{{-       if and (hasPrefix "RUNLAYER_" $environmentName) (hasSuffix "_MCP_URL" $environmentName) (hasKey $ "runlayer") -}}
+{{-         $localKey := printf "%s_mcp_url" (lower (trimSuffix "_MCP_URL" (trimPrefix "RUNLAYER_" $environmentName))) -}}
+{{-         if and (hasKey $.runlayer $localKey) (ne (index $.runlayer $localKey) "") -}}
+{{-           $url = index $.runlayer $localKey -}}
+{{-         end -}}
+{{-       end -}}
+{{-     end -}}
 {{-     $_ := set $entry "url" $url -}}
 {{-     if hasKey $server "headers" -}}
 {{-       $headers := dict -}}
