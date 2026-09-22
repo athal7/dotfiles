@@ -47,13 +47,13 @@ show_spans = false
 command = "attention"
 hotkey = "Alt+a"
 
-[tools.ld]
+[tools.lumen-diff]
 command = "lumen diff"
 hotkey = "Alt+d"
 
-[tools.lm]
+[tools.lumen-main-diff]
 command = "lumen diff \"$(git merge-base main HEAD)..-\""
-hotkey = "Alt+m"
+hotkey = "Alt+s"
 
 [plugins."agent-of-empires.github"]
 enabled = true
