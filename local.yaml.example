@@ -72,9 +72,8 @@ runlayer:
   gdocs_mcp_url: ""  # Runlayer MCP proxy URL for the Google Docs connector
   gsheets_mcp_url: ""  # Runlayer MCP proxy URL for the Google Sheets connector
 
-# Runlayer-hosted skills synced into ~/.agents/skills/ by
-# run_onchange_after_external-skills.sh. Each entry names the Runlayer namespace
-# and the skill slug; only used to compute that script's manifest hash.
+# Runlayer-hosted skills installed into ~/.agents/skills/ by
+# run_onchange_after_external-skills.sh. Each entry names a namespace and skill.
 runlayer_skills:
   - namespace: "your-namespace"
     skill: your-skill

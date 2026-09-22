@@ -42,6 +42,13 @@ gh skill install {{ .repo }} {{ .skill }} --dir "$SKILLS_DEST" --force < /dev/nu
 {{- end }}
 
 if command -v uvx >/dev/null 2>&1 && [ -f "$HOME/.runlayer/config.yaml" ]; then
+{{ if hasKey . "runlayer_skills" }}
+{{ range .runlayer_skills }}
+  echo "installing Runlayer-managed skill..."
+  RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills add "{{ .namespace }}" --skill "{{ .skill }}" --global || \
+    echo "WARN: Runlayer skill installation failed; continuing" >&2
+{{ end }}
+{{ end }}
   echo "resyncing runlayer-managed skills..."
   RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills sync || \
     echo "WARN: runlayer skill installation failed; continuing" >&2
