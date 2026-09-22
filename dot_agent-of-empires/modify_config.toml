@@ -172,7 +172,7 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- if hasKey . "runlayer" -}}
 {{-   range $key := keys .runlayer | sortAlpha -}}
 {{-     $url := index $.runlayer $key -}}
-{{-     if and (hasSuffix "_mcp_url" $key) (kindIs "string" $url) -}}
+{{-     if and (hasSuffix "_mcp_url" $key) (kindIs "string" $url) (ne $url "") -}}
 {{-       $name := upper (trimSuffix "_mcp_url" $key) -}}
 {{-       $runlayerEnvironment = append $runlayerEnvironment (printf "RUNLAYER_%s_MCP_URL=%s" $name $url) -}}
 {{-     end -}}

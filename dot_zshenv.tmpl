@@ -9,6 +9,14 @@
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
+{{- if hasKey . "runlayer" }}
+{{- range $key := keys .runlayer | sortAlpha }}
+{{- $url := index $.runlayer $key }}
+{{- if and (hasSuffix "_mcp_url" $key) (kindIs "string" $url) (ne $url "") }}
+export RUNLAYER_{{ upper (trimSuffix "_mcp_url" $key) }}_MCP_URL={{ $url | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
 export XDG_STATE_HOME="$HOME/.local/state"
 
 # GitHub token — always fresh from gh auth, available in all shells including PTY

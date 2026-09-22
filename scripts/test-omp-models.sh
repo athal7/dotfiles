@@ -17,6 +17,7 @@ MCP="$WORK/mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
 AOE="$WORK/aoe.toml"
+ZSHENV="$WORK/zshenv"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
 mkdir -p "$BIN"
@@ -30,6 +31,7 @@ yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runla
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
@@ -67,8 +69,12 @@ for connector_and_environment in "${runlayer_mcp_urls[@]}"; do
   check "renders $connector MCP entry" "$(jq --arg connector "$connector" '.mcpServers | has($connector)' "$MCP")" true
   check "renders $connector MCP URL" "$(jq -r --arg connector "$connector" '.mcpServers[$connector].url' "$MCP")" "\${$environment}"
 done
-rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("RUNLAYER_BIGQUERY_MCP_URL=") or startswith("RUNLAYER_PAGERDUTY_MCP_URL="))' | sort | paste -sd ' ' -)"
-check "exports retained Runlayer MCP URL variables to AoE sessions" "$rendered_runlayer_environment" "RUNLAYER_BIGQUERY_MCP_URL=https://bigquery.example.test/mcp RUNLAYER_PAGERDUTY_MCP_URL=https://pagerduty.example.test/mcp"
+rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[]' | sort | paste -sd ' ' -)"
+check "exports configured Runlayer MCP URL variables to AoE sessions" "$rendered_runlayer_environment" "RUNLAYER_BIGQUERY_MCP_URL=https://bigquery.example.test/mcp RUNLAYER_PAGERDUTY_MCP_URL=https://pagerduty.example.test/mcp"
+if bash -n "$ZSHENV"; then zshenv_valid=true; else zshenv_valid=false; fi
+check "renders a valid shell environment" "$zshenv_valid" true
+rendered_runlayer_shell_environment="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHENV" | sort | paste -sd ' ' -)"
+check "exports configured Runlayer MCP URLs to shell sessions" "$rendered_runlayer_shell_environment" "export RUNLAYER_BIGQUERY_MCP_URL=\"https://bigquery.example.test/mcp\" export RUNLAYER_PAGERDUTY_MCP_URL=\"https://pagerduty.example.test/mcp\""
 check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-gcalendar runlayer-slack runlayer-zoom"
 check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["runlayer-gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
 check "enables the Calendar MCP server" "$(jq -r '.mcpServers["runlayer-gcalendar"].enabled' "$KB_ENRICH_MCP")" true
