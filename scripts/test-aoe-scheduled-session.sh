@@ -67,6 +67,9 @@ bad() { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 check() { local label=$1; shift; if "$@"; then ok "$label"; else bad "$label"; fi; }
 
 run_wrapper() {
+  local title=$1 prompt=$2 prompt_file="$WORK/prompt.md"
+  printf '%s' "$prompt" > "$prompt_file"
+  shift 2
   AOE_BIN="$FAKE_AOE" \
     JQ_BIN="${JQ_BIN:-/opt/homebrew/bin/jq}" \
     AOE_STARTUP_DELAY_SECONDS=0 \
@@ -76,12 +79,12 @@ run_wrapper() {
     AOE_SESSION_GROUP="${AOE_SESSION_GROUP:-Scheduled}" \
     AOE_WORKTREE_BRANCH="${AOE_WORKTREE_BRANCH:-}" \
     AOE_NEW_BRANCH="${AOE_NEW_BRANCH:-false}" \
-    "$REPO_ROOT/dot_local/bin/executable_aoe-scheduled-session" "$@"
+    "$REPO_ROOT/dot_local/bin/executable_aoe-scheduled-session" "$title" "$prompt_file" "$@"
 }
 
 mkdir -p "$WORK/project"
 : >"$LOG"
-check "runs a project session without optional OMP arguments" run_wrapper fix-prod-errors /fix-prod-errors "$WORK/project"
+check "runs a project session without optional OMP arguments" run_wrapper fix-prod-errors "triage production errors"
 if grep -Fqx 'ARG=--extra-args' "$LOG"; then
   bad "omits empty OMP extra arguments"
 else
@@ -120,9 +123,10 @@ else
 fi
 
 printf '{"mcpServers":{"collector":{}}}\n' >"$WORK/kb-mcp.json"
+daily_prompt=$(cat "$REPO_ROOT/dot_agents/prompts/daily-maintenance.md")
 : >"$LOG"
 correlation_id=E4D58213-F415-4A54-B9F9-F7993B6C0CDF
-if AOE_CORRELATION="$correlation_id" AOE_OMP_MODEL=@default AOE_OMP_PROJECT_MCP_CONFIG="$WORK/kb-mcp.json" run_wrapper daily-maintenance /daily-maintenance; then
+if AOE_CORRELATION="$correlation_id" AOE_OMP_MODEL=@default AOE_OMP_PROJECT_MCP_CONFIG="$WORK/kb-mcp.json" run_wrapper daily-maintenance "$daily_prompt"; then
   ok "runs a scratch KB session"
 else
   bad "runs a scratch KB session"
@@ -134,7 +138,10 @@ else
   bad "passes the pinned OMP model without prewalk"
 fi
 if grep -Fqx "ARG=daily-maintenance-E4D58213" "$LOG" &&
-  grep -Fqx "AOE_CORRELATION=$correlation_id" "$LOG" &&
+  grep -Fqx 'ARG=Run both daily maintenance workflows in this session.' "$LOG" &&
+  grep -Fq 'error.grouping_key' "$LOG" &&
+  grep -Fq 'kb journal append|list|show' "$LOG" &&
+  grep -Fq "AOE_CORRELATION=$correlation_id" "$LOG" &&
   grep -Fq "\"correlationId\":\"$correlation_id\"" "$WORK/state/aoe/omp-session-map/testsession.json"; then
   ok "preserves the caller correlation in session state and prompt"
 else

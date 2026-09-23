@@ -100,7 +100,12 @@ check "propagates the configured provider context window" "$(yq -r '.providers.g
 check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
 check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.omp/agent/kb-enrich-mcp.json"
 check "pins daily maintenance to the lower-cost model role" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
-check "invokes the combined daily command" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" /daily-maintenance
+expected_daily_prompt=$(cat "$REPO_ROOT/dot_agents/prompts/daily-maintenance.md")
+check "passes the daily prompt file" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.agents/prompts/daily-maintenance.md"
+check "inlines production triage details in prompt file" "$(grep -Fq 'error.grouping_key' <<<"$expected_daily_prompt" && echo true || echo false)" true
+check "inlines knowledge enrichment details in prompt file" "$(grep -Fq 'kb journal append|list|show' <<<"$expected_daily_prompt" && echo true || echo false)" true
+command_dir='agent/commands/'
+check "avoids command-file indirection" "$(grep -Fq "$command_dir" <<<"$expected_daily_prompt" && echo true || echo false)" false
 check "runs daily maintenance at the original enrichment time" "$(yq -o=json '.launchagents."aoe-daily-maintenance".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [0] then 0 else . end')" 0
 check "removes superseded scheduled sessions" "$(yq -o=json '.launchagents' "$LAUNCH_AGENTS" | jq 'has("aoe-kb-enrich") or has("aoe-fix-prod-errors") or has("aoe-audit")')" false
 check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" /opt/homebrew/bin/llama-server

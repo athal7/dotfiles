@@ -1,8 +1,12 @@
 #!/bin/sh
-# check-error-logs — daily scan of LaunchAgent error logs
+if [ "$#" -ne 1 ] || [ ! -r "$1" ]; then
+  printf 'usage: %s <prompt-file>\n' "$0" >&2
+  exit 64
+fi
+PROMPT_FILE=$1
+
 # When any services have new errors, launch an OMP session through aoe and
-# dispatch `/fix-launchagent-errors` in the dotfiles repo. Dispatch-only: no
-# reminder is filed.
+# dispatch the managed LaunchAgent triage prompt. Dispatch-only: no reminder is filed.
 #
 # State file tracks byte offsets per log file so only new content is read.
 # First run establishes a baseline and exits silently.
@@ -178,7 +182,8 @@ if [ -n "$services_with_errors" ]; then
   # lines/file; keep the dispatch text similarly bounded.
   context=$(printf '%s' "$error_context" | head -c 8000)
 
-  prompt="/fix-launchagent-errors
+  prompt=$(cat "$PROMPT_FILE")
+  prompt="$prompt
 
 Services with new errors: $service_list
 
@@ -202,7 +207,7 @@ $context"
     esac
   fi
   if [ "$dispatch_ok" = true ]; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched /fix-launchagent-errors for: $service_list"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched LaunchAgent triage prompt for: $service_list"
     # Dispatch succeeded — now advance the deferred offsets for error logs.
     printf '%s\n' "$pending_offsets" | while IFS="$TAB" read -r size logfile; do
       [ -n "$logfile" ] || continue

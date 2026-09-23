@@ -19,4 +19,4 @@ Extract:
 ## Extraction rules
 
 - Anchor coding-activity rollups to the project/repo (the session's `cwd`).
-- For action items, always carry the `session_id` and `cwd` alongside the extracted content — `/kb-enrich`'s Step 3 session coordination uses them with the APM ledger disposition centrally.
+- For action items, always carry the session_id and cwd alongside the extracted content; the scheduled daily-maintenance workflow's session coordination uses them with the APM ledger disposition centrally.

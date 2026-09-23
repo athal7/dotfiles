@@ -12,7 +12,6 @@ How to drive a specific tool or API.
 |---|---|
 | **aoe** | Agent of Empires: session creation, worktrees, dispatch |
 | **chezmoi** | This repo's deploy workflow, LaunchAgents, template gotchas |
-| **knowledge-base** | KB ingestion and local CQ projection maintenance. CQ is the normal index; KB is the fallback. |
 | **elasticsearch** | Production triage: logs, APM traces, errors |
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
@@ -35,15 +34,5 @@ External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](
 ## Other primitives
 
 - **System Prompt** lives at `dot_omp/private_agent/APPEND_SYSTEM.md`.
+- **Prompts** live at `dot_agents/prompts/`, deployed to `~/.agents/prompts/` for scheduled agents.
 - **Scripts** carry deterministic runtime automation.
-
-## Commands
-
-| Command | What |
-|---|---|
-| `/implement` | Optional end-to-end implementation workflow |
-| `/audit` | Agent-system and cost/latency audit |
-| `/daily-maintenance` | Production-error triage followed by knowledge-base enrichment (scheduled) |
-| `/kb-enrich` | Knowledge-base enrichment |
-| `/fix-prod-errors` | APM error triage and fix dispatch |
-| `/fix-launchagent-errors` | LaunchAgent error self-heal (watcher-dispatched) |

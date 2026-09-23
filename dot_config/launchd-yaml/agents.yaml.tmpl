@@ -31,7 +31,7 @@ launchagents:
     ProgramArguments:
       - $HOME/.local/bin/aoe-scheduled-session
       - daily-maintenance
-      - /daily-maintenance
+      - $HOME/.agents/prompts/daily-maintenance.md
     StartCalendarInterval:
       - Weekday: 1
         Hour: 20
@@ -75,6 +75,7 @@ launchagents:
     Label: com.$USER.check-error-logs
     ProgramArguments:
       - $HOME/.local/bin/check-error-logs
+      - $HOME/.agents/prompts/fix-launchagent-errors.md
     StartCalendarInterval:
       Hour: 9
       Minute: 0

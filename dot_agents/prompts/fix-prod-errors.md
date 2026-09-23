@@ -1,12 +1,7 @@
----
-description: Triage recurring production errors and dispatch bounded OMP fix sessions
----
-
 Triage production errors and dispatch a fix session for the top recurring error groups in repositories we own.
 
-$ARGUMENTS
 
-An optional argument overrides the default 24-hour time range.
+Use the default 24-hour time range for this scheduled run.
 
 1. Read `chezmoi data --format json` and use only exact `prod_services` `service.name` keys to map a service to its repository under `~/code/`.
 2. Query the APM error index for the requested window. Rank by `error.grouping_key`; select the top three mapped services without a minimum count. For every selected group, retain service name, exception type and message, count, and one trace id. Report the highest-volume unmapped group without dispatching it.

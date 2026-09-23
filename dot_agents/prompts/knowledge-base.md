@@ -1,12 +1,3 @@
----
-name: knowledge-base
-description: "Maintain KB ingestion and upstream CQ projection during /kb-enrich, capability checks, approved projection, verification, or backfill. Do not load for normal agent context unless CQ must fall back to KB."
-license: MIT
-metadata:
-  provides:
-    - knowledge-base
----
-
 `kb` is local ingestion and reconciliation state. CQ is the normal local agent index. Use `kb` as fallback when CQ has no answer or projection verification is incomplete.
 
 `kb` with no subcommand opens an interactive TUI. Never invoke it bare from an agent session.
@@ -19,7 +10,7 @@ metadata:
 | Record or inspect source journal state | `kb journal append|list|show` |
 | Reconcile existing local action items | `kb action-items list`, then `complete`/`progress`/`todo <line_no>` |
 
-Read `kb --help` and `kb <group> --help` on demand. Projects and products have read-only CLI surfaces. Update their Markdown only when the CLI cannot represent the needed local reconciliation.
+For date-range resolution, use `kb journal list` in the caller's local IANA timezone; never derive the range from UTC.
 
 ## Projection operation
 
@@ -51,3 +42,22 @@ Never claim all collectors succeeded unless every configured collector ran succe
 - Journal stats come from git, not from ephemeral session stores.
 - Never invent a source URL or workspace slug.
 - A project is a durable service or named workstream. A feature or issue belongs under its parent.
+## Collector reporting
+
+For every configured collector, emit exactly one report record:
+
+```yaml
+collector: <configured collector name>
+terminal_status: succeeded | succeeded with no eligible evidence | failed
+coverage:
+  state: exhaustive | non-exhaustive | not-applicable
+  reasons: [<concrete reason>]
+counts:
+  discovered: <integer>
+  read: <integer>
+  eligible_evidence: <integer>
+  known_omitted: <integer>
+  out_of_allowlist: <integer>
+```
+
+Always emit every count, including zero. Set coverage to non-exhaustive and include pagination unavailable whenever a paginated source cannot page through requested scope. Never invent counts for unknown unread remainder.

@@ -34,6 +34,9 @@ cat >"$BIN/sleep" <<'EOF'
 exit 0
 EOF
 chmod +x "$BIN/aoe" "$BIN/sleep"
+CHECKER="$REPO_ROOT/dot_local/bin/executable_check-error-logs"
+PROMPT="$REPO_ROOT/dot_agents/prompts/fix-launchagent-errors.md"
+chmod +x "$CHECKER"
 
 printf 'Error: session changed while launch hooks were running\n' >"$LOG_DIR/aoe-old.error.log"
 log_size=$(stat -f%z "$LOG_DIR/aoe-old.error.log")
@@ -44,19 +47,21 @@ run_checker() {
     PATH="$BIN:/usr/bin:/bin" \
     AOE_TEST_LOG="$AOE_LOG" \
     AOE_TEST_MODE="${AOE_TEST_MODE:-success}" \
-    "$REPO_ROOT/dot_local/bin/executable_check-error-logs"
+    "$CHECKER" "$PROMPT"
 }
 
 : >"$AOE_LOG"
 output=$(run_checker)
-printf '%s\n' "$output" | grep -F 'Dispatched /fix-launchagent-errors'
+printf '%s\n' "$output" | grep -F 'Dispatched LaunchAgent triage prompt'
 add_call=$(sed -n '/^add /p' "$AOE_LOG")
 case "$add_call" in
   "add $HOME_DIR/code/dotfiles --title "*) ;;
   *) exit 1 ;;
 esac
 grep -F 'session start test-session' "$AOE_LOG" >/dev/null
-grep -F 'send --no-revive test-session /fix-launchagent-errors' "$AOE_LOG" >/dev/null
+grep -F 'send --no-revive test-session Triage the supplied LaunchAgent error-log lines' "$AOE_LOG" >/dev/null
+grep -F 'Services with new errors: aoe-old' "$AOE_LOG" >/dev/null
+grep -F '[aoe-old] Error: session changed while launch hooks were running' "$AOE_LOG" >/dev/null
 grep -Fqx "$LOG_DIR/aoe-old.error.log:$log_size" "$LOG_DIR/.check-error-logs-state"
 
 printf '%s\n' 'Error: another launch failure' >>"$LOG_DIR/aoe-old.error.log"

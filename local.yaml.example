@@ -38,9 +38,8 @@ local_model:
   compaction_model: openai-codex/gpt-6-sol
   cache_ram: 3G
 
-# Production service → local repo mapping for the daily fix-prod-errors task.
+# Production service to local repo mapping for scheduled maintenance.
 # Keys are Elastic APM service.name values; values are repo directory names under ~/code.
-# Used by the /fix-prod-errors command to decide which repo to create a worktree in.
 prod_services:
   your-api-service: your-api-repo
   your-worker-service: your-worker-repo
