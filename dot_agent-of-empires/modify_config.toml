@@ -47,6 +47,14 @@ show_spans = false
 command = "attention"
 hotkey = "Alt+a"
 
+[tools.github-pr]
+command = "gh pr view --web"
+hotkey = "Alt+p"
+
+[tools.linear-issue]
+command = "url=$(linear issue url) && open \"$url\""
+hotkey = "Alt+i"
+
 [tools.lumen-diff]
 command = "lumen diff"
 hotkey = "Alt+d"
