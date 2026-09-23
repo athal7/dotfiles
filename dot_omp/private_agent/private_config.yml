@@ -1,5 +1,5 @@
 advisor:
-  enabled: true
+  enabled: false
   immuneTurns: 0
   maxNotesPerUpdate: 1
 astGrep:
