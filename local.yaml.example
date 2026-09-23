@@ -35,7 +35,7 @@ local_model:
   max_tokens: 8192
   agent_max_tokens: 8192
   compaction_keep_recent_tokens: 12288
-  compaction_model: openai-codex/gpt-5.6-terra
+  compaction_model: openai-codex/gpt-6-sol
   cache_ram: 3G
 
 # Production service → local repo mapping for the daily fix-prod-errors task.

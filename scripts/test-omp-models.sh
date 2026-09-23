@@ -86,7 +86,7 @@ check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].
 check "renders the local provider" "$(yq -r '.providers.gguf.models[0].id' "$MODELS")" Qwen3-30B-A3B-Instruct-2507
 check "renders the configured context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$MODELS")" 32768
 check "preserves the local output limit" "$(yq -r '.providers.gguf.models[0].maxTokens' "$MODELS")" 8192
-check "renders the GGUF compaction model" "$(yq -r '.providers.gguf.models[0].compactionModel' "$MODELS")" openai-codex/gpt-5.6-terra
+check "renders the GGUF compaction model" "$(yq -r '.providers.gguf.models[0].compactionModel' "$MODELS")" openai-codex/gpt-6-sol
 check "disables unsupported reasoning" "$(yq -r '.providers.gguf.models[0].reasoning' "$MODELS")" false
 
 CUSTOM_DATA="$WORK/custom-local.yaml"
