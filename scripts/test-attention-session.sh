@@ -75,6 +75,8 @@ set -euo pipefail
   for arg in "$@"; do
     printf 'arg=%s\n' "$arg"
   done
+  printf 'prompt=%s\n' "$(cat "$2")"
+  printf 'prompt_mode=%s\n' "$(stat -f '%Lp' "$2")"
 } >>"$ATTENTION_DISPATCH_LOG"
 EOF
 chmod +x "$FAKE_GH" "$FAKE_GIT" "$DISPATCHER"
@@ -100,9 +102,12 @@ run_attention() {
 }
 
 run_attention scratch calendar-title calendar-prompt
+prompt_path=$(sed -n '3s/^arg=//p' "$DISPATCH_LOG")
 if grep -Fqx 'group=Attention branch= new= argc=2' "$DISPATCH_LOG" &&
   grep -Fqx 'arg=calendar-title' "$DISPATCH_LOG" &&
-  grep -Fqx 'arg=calendar-prompt' "$DISPATCH_LOG"; then
+  grep -Fqx 'prompt=calendar-prompt' "$DISPATCH_LOG" &&
+  grep -Fqx 'prompt_mode=600' "$DISPATCH_LOG" &&
+  [[ -n "$prompt_path" && ! -e "$prompt_path" ]]; then
   ok "dispatches scratch attention sessions without a TTY"
 else
   bad "dispatches scratch attention sessions without a TTY"

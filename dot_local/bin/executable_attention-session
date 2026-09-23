@@ -17,6 +17,16 @@ fail() {
   exit 1
 }
 
+dispatch() {
+  local title=$1 prompt=$2
+  shift 2
+  umask 077
+  prompt_file=$(mktemp "${TMPDIR:-/tmp}/attention-session.XXXXXX")
+  trap 'rm -f "$prompt_file"' EXIT
+  printf '%s' "$prompt" >"$prompt_file"
+  env AOE_SESSION_GROUP=Attention "$DISPATCHER" "$title" "$prompt_file" "$@"
+}
+
 [ -x "$DISPATCHER" ] || fail "dispatcher is not executable: $DISPATCHER"
 [ -n "${1:-}" ] || usage
 
@@ -28,7 +38,7 @@ case "$1" in
     if [ -z "$2" ] || [ -z "$3" ]; then
       fail "title and prompt must not be empty"
     fi
-    exec env AOE_SESSION_GROUP=Attention "$DISPATCHER" "$2" "$3"
+    dispatch "$2" "$3"
     ;;
   github)
     if [ "$#" -ne 7 ]; then
@@ -87,8 +97,8 @@ case "$1" in
       prompt+=$additional_prompt
     fi
 
-    exec env AOE_SESSION_GROUP=Attention AOE_WORKTREE_BRANCH="$worktree_branch" \
-      AOE_NEW_BRANCH="$new_branch" "$DISPATCHER" "$title" "$prompt" "$repo_root"
+    AOE_WORKTREE_BRANCH="$worktree_branch" AOE_NEW_BRANCH="$new_branch" \
+      dispatch "$title" "$prompt" "$repo_root"
     ;;
   *)
     usage
