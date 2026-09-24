@@ -13,6 +13,8 @@ bash:
   patterns:
     - approval: allow
       match: '* --help'
+    - approval: allow
+      match: '* --help *'
     - approval: prompt
       match: git -C * reset --hard*
     - approval: prompt
