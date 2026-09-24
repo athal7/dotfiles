@@ -11,6 +11,28 @@ bash:
   autoBackground:
     enabled: true
   patterns:
+    - approval: prompt
+      match: '*sh *--help*'
+    - approval: prompt
+      match: '*python* *--help*'
+    - approval: prompt
+      match: '*node *--help*'
+    - approval: prompt
+      match: '*bun *--help*'
+    - approval: prompt
+      match: '*deno *--help*'
+    - approval: prompt
+      match: '*ruby *--help*'
+    - approval: prompt
+      match: '*perl *--help*'
+    - approval: prompt
+      match: '*php *--help*'
+    - approval: prompt
+      match: '*lua *--help*'
+    - approval: prompt
+      match: '*awk *--help*'
+    - approval: prompt
+      match: '*osascript *--help*'
     - approval: allow
       match: '* --help'
     - approval: allow
