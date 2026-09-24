@@ -47,6 +47,10 @@ show_spans = false
 command = "attention"
 hotkey = "Alt+a"
 
+[tools.review-drafts]
+command = "review-drafts"
+hotkey = "Alt+r"
+
 [tools.github-pr]
 command = "gh pr view --web"
 hotkey = "Alt+p"

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+shopt -s nullglob
+drafts=()
+for path in tmp/*.md; do
+  [[ -f "$path" ]] && drafts+=("$path")
+done
+
+if ((${#drafts[@]} == 0)); then
+  printf 'No Markdown drafts in %s/tmp/\n' "$PWD" >&2
+  exit 1
+fi
+
+selected=$(printf '%s\n' "${drafts[@]}" | fzf --prompt='Draft> ' --preview='bat --color=always --style=plain -- {}') || exit $?
+
+review_repo=$(mktemp -d "${TMPDIR:-/tmp}/review-drafts.XXXXXX")
+trap 'rm -rf "$review_repo"' EXIT
+git -C "$review_repo" init --quiet
+git -C "$review_repo" -c user.name=review-drafts -c user.email=review-drafts@example.invalid -c commit.gpgsign=false commit --allow-empty --quiet -m 'review baseline'
+mkdir -p "$review_repo/$(dirname "$selected")"
+cp "$selected" "$review_repo/$selected"
+git -C "$review_repo" add --intent-to-add --force -- "$selected"
+(cd "$review_repo" && lumen diff --file "$selected" --focus "$selected")
