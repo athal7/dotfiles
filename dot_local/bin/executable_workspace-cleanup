@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Reclaim merged, idle worktrees and disconnected development/test databases."""
+
+import argparse
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+CODE = Path(os.environ.get("WORKSPACE_CLEANUP_CODE_ROOT", Path.home() / "code"))
+DATABASE_NAME = re.compile(r"(?:^|_)(?:development|test)(?:_|$)")
+
+
+def run(*args, check=True):
+    return subprocess.run(args, text=True, capture_output=True, check=check)
+
+
+def registered_sessions():
+    result = run("aoe", "list", "--all", "--json")
+    return {str(Path(entry["path"]).resolve()) for entry in json.loads(result.stdout) if entry.get("path")}
+
+
+def worktrees(dry_run):
+    try:
+        sessions = registered_sessions()
+    except (OSError, subprocess.CalledProcessError, ValueError, KeyError) as error:
+        print(f"Skipping worktrees: cannot read AOE sessions: {error}", file=sys.stderr)
+        return
+
+    for repo in CODE.iterdir():
+        repo = repo.resolve()
+        if not (repo / ".git").exists():
+            continue
+        try:
+            entries = run("git", "-C", str(repo), "worktree", "list", "--porcelain").stdout
+        except (OSError, subprocess.CalledProcessError) as error:
+            print(f"Skipping {repo}: {error}", file=sys.stderr)
+            continue
+        for entry in entries.strip().split("\n\n"):
+            fields = entry.splitlines()
+            path = Path(fields[0].removeprefix("worktree ")).resolve() if fields else repo
+            head = next((line[5:] for line in fields if line.startswith("HEAD ")), None)
+            if path == repo or not path.is_dir() or not head or str(path) in sessions:
+                continue
+            if any(line.startswith("locked") for line in fields):
+                continue
+            if run("git", "-C", str(path), "status", "--porcelain=v1", check=False).stdout.strip():
+                continue
+            if not any(
+                run("git", "-C", str(repo), "merge-base", "--is-ancestor", head, ref, check=False).returncode == 0
+                for ref in ("main", "origin/main")
+            ):
+                continue
+            opened = run("lsof", "-nP", "+D", str(path), check=False)
+            if opened.returncode not in (0, 1) or opened.stdout.strip():
+                continue
+            print(f"worktree: {path}")
+            if not dry_run:
+                removed = run("git", "-C", str(repo), "worktree", "remove", str(path), check=False)
+                if removed.returncode:
+                    print(f"Cannot remove {path}: {removed.stderr.strip()}", file=sys.stderr)
+
+
+def databases(dry_run):
+    try:
+        result = run("psql", "-At", "-d", "postgres", "-c", "SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname")
+        names = (name for name in result.stdout.splitlines() if DATABASE_NAME.search(name))
+        for name in names:
+            # A concurrent connection makes dropdb fail; never terminate sessions.
+            active = run("psql", "-At", "-d", "postgres", "-v", "name=" + name,
+                         "-c", "SELECT 1 FROM pg_stat_activity WHERE datname = :'name' LIMIT 1", check=False)
+            if active.returncode or active.stdout.strip():
+                continue
+            print(f"database: {name}")
+            if not dry_run:
+                dropped = run("dropdb", "--if-exists", "--", name, check=False)
+                if dropped.returncode:
+                    print(f"Cannot drop {name}: {dropped.stderr.strip()}", file=sys.stderr)
+    except (OSError, subprocess.CalledProcessError) as error:
+        print(f"Skipping databases: {error}", file=sys.stderr)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--apply", action="store_true", help="remove eligible resources (default: dry-run)")
+    parser.add_argument("--database-only", action="store_true", help="skip worktree cleanup")
+    args = parser.parse_args()
+    state = Path.home() / ".local/state"
+    state.mkdir(parents=True, exist_ok=True)
+    with (state / "workspace-cleanup.lock").open("w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print("Cleanup already running", file=sys.stderr)
+            return 0
+        if not args.database_only:
+            worktrees(not args.apply)
+        databases(not args.apply)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
