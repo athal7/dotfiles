@@ -4,6 +4,12 @@
         "enabled_by_default": true,
         "transport": "remote",
         "url": "https://mcp.context7.com/mcp",
+        "headers": {
+          "Authorization": {
+            "cmd": "security find-generic-password -s context7 -w",
+            "format": "Bearer %s",
+          },
+        },
         "tools": ["query-docs", "resolve-library-id"],
       },
       {
