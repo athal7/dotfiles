@@ -30,7 +30,7 @@ chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$EMPTY_MCP"
 yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"' "$DATA"
-PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
+OPENROUTER_API_KEY=test-key PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
@@ -82,6 +82,7 @@ check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["runlayer-gcalendar"]
 check "enables the Calendar MCP server" "$(jq -r '.mcpServers["runlayer-gcalendar"].enabled' "$KB_ENRICH_MCP")" true
 check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
 check "renders the local provider" "$(yq -r '.providers.gguf.models[0].id' "$MODELS")" Qwen3-30B-A3B-Instruct-2507
+check "ignores an OpenRouter key when rendering custom providers" "$(yq -r '.providers | keys | join(",")' "$MODELS")" gguf
 check "renders the configured context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$MODELS")" 32768
 check "preserves the local output limit" "$(yq -r '.providers.gguf.models[0].maxTokens' "$MODELS")" 8192
 check "renders the GGUF compaction model" "$(yq -r '.providers.gguf.models[0].compactionModel' "$MODELS")" openai-codex/gpt-6-sol
@@ -111,13 +112,6 @@ check "enables the llama prompt cache" "$(yq -o=json '.launchagents."llama-serve
 check "preserves a single llama request slot" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--parallel")) + 1]')" 1
 check "propagates the llama cache limit" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--cache-ram")) + 1]')" 3G
 check "enables llama metrics" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r 'index("--metrics") != null')" true
-OPENROUTER_MODELS="$WORK/openrouter-models.yml"
-OPENROUTER_API_KEY=test-key chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$OPENROUTER_MODELS"
-check "renders OpenRouter with a key" "$(yq -r '(.providers // {}) | has("openrouter")' "$OPENROUTER_MODELS")" true
-OPENROUTER_LOCAL_MODELS="$WORK/openrouter-local-models.yml"
-echo 'openrouter_api_key: local-test-key' >> "$DATA"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$OPENROUTER_LOCAL_MODELS"
-check "renders OpenRouter from local.yaml" "$(yq -r '(.providers // {}) | has("openrouter")' "$OPENROUTER_LOCAL_MODELS")" true
 
 mkdir -p "$AGENT_DIR"
 cp "$MODELS" "$AGENT_DIR/models.yml"
