@@ -25,9 +25,13 @@
 {{-       $headers := dict -}}
 {{-       range $headerName, $headerSpec := $server.headers -}}
 {{-         $value := output "sh" "-c" $headerSpec.cmd | trim -}}
-{{-         $_ := set $headers $headerName (printf $headerSpec.format $value) -}}
+{{-         if ne $value "" -}}
+{{-           $_ := set $headers $headerName (printf $headerSpec.format $value) -}}
+{{-         end -}}
 {{-       end -}}
-{{-       $_ := set $entry "headers" $headers -}}
+{{-       if gt (len $headers) 0 -}}
+{{-         $_ := set $entry "headers" $headers -}}
+{{-       end -}}
 {{-     end -}}
 {{-   end -}}
 {{-   $_ := set $servers $server.name $entry -}}

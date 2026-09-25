@@ -18,3 +18,12 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 ```
 
 Copy [`local.yaml.example`](local.yaml.example) to `.chezmoidata/local.yaml` for machine-specific data.
+
+For higher Context7 MCP quotas, create a free API key at [Context7](https://context7.com/dashboard) and store it in macOS Keychain:
+
+```bash
+security add-generic-password -U -s context7 -a api-key -w
+```
+
+The final `-w` prompts for the key rather than putting it in shell history. Without a Keychain item under service `context7`, Context7 stays available anonymously.
+Chezmoi renders the key into private `~/.omp/agent/mcp.json`; after adding or rotating it, run `chezmoi apply` and `/mcp reload` in OMP.

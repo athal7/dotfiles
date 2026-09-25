@@ -6,7 +6,7 @@
         "url": "https://mcp.context7.com/mcp",
         "headers": {
           "Authorization": {
-            "cmd": "security find-generic-password -s context7 -w",
+            "cmd": "security find-generic-password -s context7 -w 2>/dev/null || [ $? -eq 44 ]",
             "format": "Bearer %s",
           },
         },
