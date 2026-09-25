@@ -43,10 +43,12 @@ For date-range resolution, use `kb journal list` in the caller's local IANA time
 - CQ verification is complete only when upstream `status` and `verify` report the relevant scope complete. Until every backfill scope completes, retain KB fallback.
 ## Enrichment completion reporting
 
+Before collection, enumerate regular `*.md` files directly under `~/.config/kb/collectors/`. These XDG collector definitions are the registry. For each file separately, read its YAML front-matter `name` with `yq --front-matter=extract -r '.name' <file>` (not one multi-file invocation); require it to match the filename stem and be unique, then load the definition. If the directory is missing or empty, or a definition has an invalid or duplicate name, report the registry prerequisite failure instead of claiming completion. `kb config get collectors` is not a supported lookup.
+
 Every enrichment completion response MUST report every configured collector by name with one of the following statuses:
 - `succeeded` — the collector ran and produced eligible evidence
 - `succeeded with no eligible evidence` — the collector ran but found no extractable facts
-- `failed` — the collector encountered an error
+- `failed` — the collector encountered an error or was not run; give the concrete cause in `coverage.reasons`
 
 Never claim all collectors succeeded unless every configured collector ran successfully. Omitting a collector from the report is a failure.
 
@@ -79,4 +81,4 @@ counts:
   out_of_allowlist: <integer>
 ```
 
-Always emit every count, including zero. Set coverage to non-exhaustive and include pagination unavailable whenever a paginated source cannot page through requested scope. Never invent counts for unknown unread remainder.
+All five counts describe only what this run observed; emit each count, including a known zero, but never count unknown undiscovered or unread remainder as zero. For an unrun or partially read collector, set coverage to non-exhaustive with concrete reasons (including `not run: <cause>` when applicable). Include pagination unavailable whenever a paginated source cannot page through requested scope.
