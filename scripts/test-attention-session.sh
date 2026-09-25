@@ -6,9 +6,11 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/attention-session-test.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT INT TERM
 
 REPO="$WORK/repo"
-mkdir -p "$REPO"
+REGISTERED_REPO="$WORK/nested/remote-repo"
+mkdir -p "$REPO" "$REGISTERED_REPO"
 FAKE_GH="$WORK/gh"
 FAKE_GIT="$WORK/git"
+FAKE_AOE="$WORK/aoe"
 DISPATCHER="$WORK/dispatcher"
 GH_LOG="$WORK/gh.log"
 GIT_LOG="$WORK/git.log"
@@ -36,7 +38,9 @@ cat >"$FAKE_GIT" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 command=$1
+repo=$ATTENTION_REPO
 if [[ "$command" == -C ]]; then
+  repo=$2
   shift 2
   command=$1
 fi
@@ -45,10 +49,14 @@ printf 'command=%s args=%s\n' "$command" "$*" >>"$ATTENTION_GIT_LOG"
 case "$command" in
   rev-parse)
     case "${1:-}" in
-      --show-toplevel) printf '%s\n' "$ATTENTION_REPO" ;;
+      --show-toplevel) printf '%s\n' "$repo" ;;
       refs/remotes/*|refs/heads/*) printf '%s\n' "$ATTENTION_HEAD_SHA" ;;
       *) exit 1 ;;
     esac
+    ;;
+  remote)
+    [[ "$repo" == "$ATTENTION_REGISTERED_REPO" && "$*" == 'get-url origin' ]] || exit 1
+    printf 'git@github.com:example/remote-repo.git\n'
     ;;
   check-ref-format)
     exit 0
@@ -79,7 +87,13 @@ set -euo pipefail
   printf 'prompt_mode=%s\n' "$(stat -f '%Lp' "$2")"
 } >>"$ATTENTION_DISPATCH_LOG"
 EOF
-chmod +x "$FAKE_GH" "$FAKE_GIT" "$DISPATCHER"
+cat >"$FAKE_AOE" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$*" == 'project list --json' ]] || exit 64
+printf '[{"path":"%s"}]\n' "$ATTENTION_REGISTERED_REPO"
+EOF
+chmod +x "$FAKE_GH" "$FAKE_GIT" "$FAKE_AOE" "$DISPATCHER"
 
 pass=0
 fail=0
@@ -93,8 +107,10 @@ run_attention() {
     ATTENTION_DISPATCH_LOG="$DISPATCH_LOG" \
     ATTENTION_BRANCH_STATE="$BRANCH_STATE" \
     ATTENTION_REPO="$REPO" \
+    ATTENTION_REGISTERED_REPO="$REGISTERED_REPO" \
     ATTENTION_HEAD_SHA=deadbeef \
     AOE_SESSION_DISPATCHER="$DISPATCHER" \
+    AOE_BIN="$FAKE_AOE" \
     GH_BIN="$FAKE_GH" \
     GIT_BIN="$FAKE_GIT" \
     ATTENTION_MODE="${ATTENTION_MODE:-}" \
@@ -116,8 +132,8 @@ fi
 : >"$DISPATCH_LOG"
 : >"$GIT_LOG"
 export ATTENTION_MODE=pr
-run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content
-run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content
+run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content example/remote-repo
+run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content example/remote-repo
 unset ATTENTION_MODE
 if grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG" &&
   grep -Fqx 'arg=pr-title' "$DISPATCH_LOG" &&
@@ -138,7 +154,7 @@ fi
 : >"$GIT_LOG"
 : >"$BRANCH_STATE"
 export ATTENTION_MODE=issue
-run_attention github "$REPO" 64 issue/64 issue-title issue-prompt ''
+run_attention github "$REPO" 64 issue/64 issue-title issue-prompt '' example/remote-repo
 unset ATTENTION_MODE
 if grep -Fqx 'group=Attention branch=issue/64 new=true argc=3' "$DISPATCH_LOG" &&
   grep -Fqx 'arg=issue-title' "$DISPATCH_LOG" &&
@@ -148,6 +164,27 @@ else
   bad "creates a new worktree branch for issues"
   printf 'Issue dispatch log:\n%s\nGitHub log:\n%s\n' "$(cat "$DISPATCH_LOG")" "$(cat "$GH_LOG")" >&2
 fi
+export ATTENTION_MODE=pr
+: >"$DISPATCH_LOG"
+: >"$GIT_LOG"
+: >"$BRANCH_STATE"
+run_attention github "$WORK/0din-Loki" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
+if grep -Fqx "arg=$REGISTERED_REPO" "$DISPATCH_LOG" &&
+  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG" &&
+  grep -Fqx 'command=remote args=get-url origin' "$GIT_LOG"; then
+  ok "starts PR work from a registered checkout outside codeDir"
+else
+  bad "starts PR work from a registered checkout outside codeDir"
+fi
+: >"$DISPATCH_LOG"
+if run_attention github "$WORK/0din-Loki" 63 attention/pr-63 pr-title base-prompt '' example/another-repo >"$WORK/missing.out" 2>&1; then
+  bad "rejects an unregistered checkout instead of dispatching the wrong repository"
+elif grep -Fq 'no registered AoE project matches example/another-repo' "$WORK/missing.out" && [[ ! -s "$DISPATCH_LOG" ]]; then
+  ok "rejects an unregistered checkout instead of dispatching the wrong repository"
+else
+  bad "rejects an unregistered checkout instead of dispatching the wrong repository"
+fi
+unset ATTENTION_MODE
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [[ "$fail" -eq 0 ]]

@@ -59,7 +59,7 @@
               "input" (dict "prompt" "Session message" "default" "Help me do the work to complete reminder {title}"))))
       "github" (dict "actions" (list
         (dict "key" "s" "label" "session" "background" true
-              "command" (list "attention-session" "github" "{repo_path}" "{id}" "{slug}" "{slug}" "For issue/PR {id} in this repo, {session_prompt}" "{input}")
+              "command" (list "attention-session" "github" "{repo_path}" "{id}" "{slug}" "{slug}" "For issue/PR {id} in this repo, {session_prompt}" "{input}" "{repo}")
               "input" (dict "prompt" "Additional session content (optional)" "default" ""))
         (dict "key" "l" "label" "lumen"
               "command" (list "lumen" "diff" "{url}"))))

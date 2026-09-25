@@ -5,10 +5,12 @@ set -euo pipefail
 DISPATCHER=${AOE_SESSION_DISPATCHER:-"$HOME/.local/bin/aoe-scheduled-session"}
 GH_BIN=${GH_BIN:-gh}
 GIT_BIN=${GIT_BIN:-git}
+AOE_BIN=${AOE_BIN:-/opt/homebrew/bin/aoe}
+JQ_BIN=${JQ_BIN:-/opt/homebrew/bin/jq}
 
 usage() {
   printf 'usage: %s scratch <title> <prompt>\n' "$0" >&2
-  printf '       %s github <repo-path> <issue-or-pr> <worktree-branch> <title> <prompt> <additional-prompt>\n' "$0" >&2
+  printf '       %s github <repo-path> <issue-or-pr> <worktree-branch> <title> <prompt> <additional-prompt> <owner/repo>\n' "$0" >&2
   exit 64
 }
 
@@ -27,6 +29,29 @@ dispatch() {
   env AOE_SESSION_GROUP=Attention "$DISPATCHER" "$title" "$prompt_file" "$@"
 }
 
+registered_repo_path() {
+  local expected=${1,,} projects paths candidate remote resolved=
+  projects=$("$AOE_BIN" project list --json) || fail "cannot list registered AoE projects"
+  paths=$(printf '%s' "$projects" | "$JQ_BIN" -r '.[] | .path // empty') || \
+    fail "cannot parse registered AoE projects"
+  while IFS= read -r candidate; do
+    [ -d "$candidate" ] || continue
+    remote=$("$GIT_BIN" -C "$candidate" remote get-url origin 2>/dev/null) || continue
+    remote=${remote,,}
+    remote=${remote%.git}
+    case "$remote" in
+      "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected")
+        if [ -n "$resolved" ] && [ "$resolved" != "$candidate" ]; then
+          fail "multiple registered AoE projects match $1"
+        fi
+        resolved=$candidate
+        ;;
+    esac
+  done <<<"$paths"
+  [ -n "$resolved" ] || fail "no registered AoE project matches $1"
+  printf '%s\n' "$resolved"
+}
+
 [ -x "$DISPATCHER" ] || fail "dispatcher is not executable: $DISPATCHER"
 [ -n "${1:-}" ] || usage
 
@@ -41,7 +66,7 @@ case "$1" in
     dispatch "$2" "$3"
     ;;
   github)
-    if [ "$#" -ne 7 ]; then
+    if [ "$#" -ne 8 ]; then
       usage
     fi
     repo_path=$2
@@ -50,12 +75,13 @@ case "$1" in
     title=$5
     prompt=$6
     additional_prompt=$7
+    github_repo=$8
 
-    if [ ! -d "$repo_path" ]; then
-      fail "repository path is not a directory: $repo_path"
+    if [ -z "$reference" ] || [ -z "$requested_branch" ] || [ -z "$title" ] || [ -z "$prompt" ] || ! [[ "$github_repo" =~ ^[[:alnum:]_.-]+/[[:alnum:]_.-]+$ ]]; then
+      fail "GitHub action arguments are invalid"
     fi
-    if [ -z "$reference" ] || [ -z "$requested_branch" ] || [ -z "$title" ] || [ -z "$prompt" ]; then
-      fail "GitHub action arguments must not be empty"
+    if [ ! -d "$repo_path" ]; then
+      repo_path=$(registered_repo_path "$github_repo")
     fi
     repo_root=$("$GIT_BIN" -C "$repo_path" rev-parse --show-toplevel 2>/dev/null) || \
       fail "repository path is not a Git repository: $repo_path"
