@@ -29,6 +29,9 @@ silent_orphan_grace_secs = 120
 [auth]
 persist_sessions = true
 
+[host_hooks]
+before_session = ['if [ "$AOE_TOOL" = omp ]; then if key=$(/usr/bin/security find-generic-password -s chezmoi -a anthropic_api_key -w 2>/dev/null) && [ -n "$key" ]; then printf "ANTHROPIC_API_KEY=%s\n" "$key"; fi; fi']
+
 [diff]
 context_lines = 3
 split_view = true
@@ -201,12 +204,7 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{-   $_ := unset $live "tools" -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $static) $live -}}
-{{- if hasKey $config "host_hooks" -}}
-{{-   $_ := unset (index $config "host_hooks") "before_session" -}}
-{{-   if eq (len (index $config "host_hooks")) 0 -}}
-{{-     $_ := unset $config "host_hooks" -}}
-{{-   end -}}
-{{- end -}}
+{{- $_ := setValueAtPath "host_hooks.before_session" (index (index $static "host_hooks") "before_session") $config -}}
 {{- if gt (len $runlayerEnvironment) 0 -}}
 {{-   $_ := set $config "environment" $runlayerEnvironment -}}
 {{- end -}}

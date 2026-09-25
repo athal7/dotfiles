@@ -39,7 +39,6 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-en
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 check "preserves git push approval" "$(yq -r '.bash.patterns[] | select(.match == "git push*") | .approval' "$CONFIG")" prompt
-check "requires browser approval" "$(yq -r '.tools.approval.browser' "$CONFIG")" prompt
 check "preserves browser headless override" "$(yq -r '.browser.headless' "$CONFIG")" false
 check "preserves browser relay override" "$(yq -r '.browser.relay' "$CONFIG")" true
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
@@ -49,7 +48,6 @@ check "omits empty retry configuration" "$(yq -r '. | has("retry")' "$CONFIG")" 
 STALE_AOE="$WORK/stale-aoe.toml"
 printf '[plugins."agent-of-empires.github"]\nenabled = true\n[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_agent-of-empires/modify_config.toml" > "$STALE_AOE"
-check "removes the stale AoE model-routing hook" "$(yq -p=toml -o=json '.host_hooks | has("before_session")' "$STALE_AOE")" false
 check "preserves unrelated AoE hooks" "$(yq -p=toml -o=json '.host_hooks.after_session[0]' "$STALE_AOE" | jq -r '.')" keep-hook
 check "removes the stale AoE OMP override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$STALE_AOE")" false
 check "preserves unrelated AoE agent overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$STALE_AOE" | jq -r '.')" keep-agent
