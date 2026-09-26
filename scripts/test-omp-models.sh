@@ -28,14 +28,14 @@ exit 44
 EOF
 chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$EMPTY_MCP"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$EMPTY_MCP"
 yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"' "$DATA"
-OPENROUTER_API_KEY=test-key PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/models.yml" > "$MODELS"
-PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/config.yml" > "$CONFIG"
+OPENROUTER_API_KEY=test-key PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/models.yml" > "$MODELS"
+PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/mcp.json" > "$MCP"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$MCP"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 check "preserves git push approval" "$(yq -r '.bash.patterns[] | select(.match == "git push*") | .approval' "$CONFIG")" prompt
@@ -59,8 +59,8 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
-check "keeps foundational MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled] | all(. != false)' "$MCP")" true
-check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq") | .value.enabled == false] | all' "$MCP")" true
+check "keeps always-on MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled, .mcpServers["codebase-memory"].enabled] | all(. != false)' "$MCP")" true
+check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq" and .key != "codebase-memory") | .value.enabled == false] | all' "$MCP")" true
 check "keeps empty Runlayer MCP URLs as placeholders" "$(jq '[.mcpServers["runlayer-bigquery"].url, .mcpServers["runlayer-pagerduty"].url] == ["${RUNLAYER_BIGQUERY_MCP_URL}", "${RUNLAYER_PAGERDUTY_MCP_URL}"]' "$EMPTY_MCP")" true
 runlayer_mcp_urls=(
   "runlayer-bigquery https://bigquery.example.test/mcp"
@@ -77,6 +77,7 @@ if bash -n "$ZSHENV"; then zshenv_valid=true; else zshenv_valid=false; fi
 check "renders a valid shell environment" "$zshenv_valid" true
 rendered_runlayer_shell_environment="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHENV" | sort | paste -sd ' ' -)"
 check "exports configured Runlayer MCP URLs to shell sessions" "$rendered_runlayer_shell_environment" "export RUNLAYER_BIGQUERY_MCP_URL=\"https://bigquery.example.test/mcp\" export RUNLAYER_PAGERDUTY_MCP_URL=\"https://pagerduty.example.test/mcp\""
+check "sets the OMP XDG configuration root" "$(grep -Fxc 'export PI_CONFIG_DIR=".config/omp"' "$ZSHENV")" 1
 check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-gcalendar runlayer-slack runlayer-zoom"
 check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["runlayer-gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
 check "enables the Calendar MCP server" "$(jq -r '.mcpServers["runlayer-gcalendar"].enabled' "$KB_ENRICH_MCP")" true
@@ -93,11 +94,15 @@ CUSTOM_MODELS="$WORK/custom-models.yml"
 LAUNCH_AGENTS="$WORK/agents.yaml"
 cp "$DATA" "$CUSTOM_DATA"
 yq -i '.local_model.context_window = 40960' "$CUSTOM_DATA"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.omp/agent/models.yml" > "$CUSTOM_MODELS"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" "$HOME/.config/omp/agent/models.yml" > "$CUSTOM_MODELS"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$CUSTOM_DATA" --file "$REPO_ROOT/dot_config/launchd-yaml/agents.yaml.tmpl" > "$LAUNCH_AGENTS"
 check "propagates the configured provider context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$CUSTOM_MODELS")" 40960
 check "propagates the configured server context window" "$(yq -o=json '.launchagents."llama-server".ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | $args[($args | index("--ctx-size")) + 1]')" 40960
-check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.omp/agent/kb-enrich-mcp.json"
+check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.config/omp/agent/kb-enrich-mcp.json"
+check "configures Homebridge storage under XDG" "$(yq -r '.launchagents.homebridge.ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
+check "sets the AoE server OMP XDG configuration root" "$(yq -r '.launchagents."aoe-serve".EnvironmentVariables.PI_CONFIG_DIR' "$LAUNCH_AGENTS")" .config/omp
+check "sets the scheduled OMP XDG configuration root" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.PI_CONFIG_DIR' "$LAUNCH_AGENTS")" .config/omp
+check "configures Homebridge UI storage under XDG" "$(yq -r '.launchagents.homebridge.EnvironmentVariables.UIX_STORAGE_PATH' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
 check "pins daily maintenance to the lower-cost model role" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
 expected_daily_prompt=$(cat "$REPO_ROOT/dot_agents/prompts/daily-maintenance.md")
 check "passes the daily prompt file" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.agents/prompts/daily-maintenance.md"

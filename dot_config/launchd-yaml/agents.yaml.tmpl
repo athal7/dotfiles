@@ -24,6 +24,7 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PI_CONFIG_DIR: .config/omp
 
 
   aoe-daily-maintenance:
@@ -52,7 +53,8 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/aoe-daily-maintenance.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      AOE_OMP_PROJECT_MCP_CONFIG: $HOME/.omp/agent/kb-enrich-mcp.json
+      AOE_OMP_PROJECT_MCP_CONFIG: $HOME/.config/omp/agent/kb-enrich-mcp.json
+      PI_CONFIG_DIR: .config/omp
       AOE_OMP_MODEL: "@smol"
 
   babysitter-check:
@@ -118,16 +120,16 @@ launchagents:
     ProgramArguments:
       - $HOME/.local/share/mise/installs/node/24.14.0/bin/homebridge
       - -U
-      - $HOME/.homebridge
+      - $HOME/.config/homebridge
     RunAtLoad: true
     KeepAlive: true
-    WorkingDirectory: $HOME/.homebridge
+    WorkingDirectory: $HOME/.config/homebridge
     StandardOutPath: $HOME/Library/Logs/homebridge.log
     StandardErrorPath: $HOME/Library/Logs/homebridge.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
-      UIX_STORAGE_PATH: $HOME/.homebridge
+      UIX_STORAGE_PATH: $HOME/.config/homebridge
 
 
 {{- if hasKey . "local_model" }}

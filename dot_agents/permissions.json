@@ -1,0 +1,10 @@
+{
+  "$schema": "https://github.com/Mearman/agent-permissions/releases/latest/download/agent-permissions.schema.json",
+  "defaultMode": "standard",
+  "rules": [
+    { "tool": "Read", "tier": "allow" },
+    { "tool": "Grep", "tier": "allow" },
+    { "tool": "Glob", "tier": "allow" },
+    { "tool": "Skill", "tier": "allow" }
+  ]
+}

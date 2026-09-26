@@ -1,8 +1,9 @@
-# Agent Skills
+# Agent Skills and Permissions
 
-[agentskills.io](https://agentskills.io)-compatible skills, deployed to `~/.agents/skills/` for OMP.
+[agentskills.io](https://agentskills.io)-compatible skills, deployed to ~/.agents/skills/. OMP discovers them through its native `agents` provider.
 
 Edit skills here, never in `~/.agents/skills/`; chezmoi manages each authored skill directly without replacing the shared directory.
+The portable permission policy lives at ~/.agents/permissions.json. OMP Bash approvals remain native in ~/.config/omp/agent/config.yml because agent-perms evaluation is deny/ask-first and does not preserve OMP's ordered matching.
 
 ## Integration Skills
 
@@ -33,6 +34,6 @@ External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](
 
 ## Other primitives
 
-- **System Prompt** lives at `dot_omp/private_agent/APPEND_SYSTEM.md`.
+- **System Prompt** lives at dot_config/omp/private_agent/APPEND_SYSTEM.md.
 - **Prompts** live at `dot_agents/prompts/`, deployed to `~/.agents/prompts/` for scheduled agents.
 - **Scripts** carry deterministic runtime automation.

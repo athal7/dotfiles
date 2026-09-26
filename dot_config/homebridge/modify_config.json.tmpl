@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# chezmoi modify script — merges desired config into existing ~/.homebridge/config.json
+# chezmoi modify script — merges desired config into [4m~/.config/homebridge/config.json[0m
 # Reads current file from stdin, writes merged result to stdout.
 
 import json
@@ -21,7 +21,7 @@ if sdm is None:
 
 # Scaffold required credential fields with empty-string defaults.
 # setdefault preserves any real values already present in the deployed config —
-# secrets live only in ~/.homebridge/config.json, never in this public repo.
+# secrets live only in ~/.config/homebridge/config.json, never in this public repo.
 for field in ("clientId", "clientSecret", "projectId", "refreshToken", "subscriptionId"):
     sdm.setdefault(field, "")
 

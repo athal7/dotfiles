@@ -7,6 +7,7 @@
 # Always reasserting here means no inherited value can silently redirect
 # this user's shells.
 export XDG_CONFIG_HOME="$HOME/.config"
+export PI_CONFIG_DIR=".config/omp"
 export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
 {{- if hasKey . "runlayer" }}
