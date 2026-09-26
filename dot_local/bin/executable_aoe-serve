@@ -32,4 +32,5 @@ exec /opt/homebrew/bin/aoe serve \
   --host 127.0.0.1 \
   --port 4097 \
   --allowed-host "$dns_name" \
+  --auth passphrase \
   --passphrase "$passphrase"
