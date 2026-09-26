@@ -20,6 +20,12 @@
         "tools": ["confirm", "flag", "propose", "query", "status"],
       },
       {
+        "name": "codebase-memory",
+        "enabled_by_default": true,
+        "transport": "local",
+        "command": ["npx", "--yes", "codebase-memory-mcp@0.11.0"],
+      },
+      {
         "name": "linear",
         "transport": "remote",
         "url": "https://mcp.linear.app/mcp",
