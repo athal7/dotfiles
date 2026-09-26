@@ -28,6 +28,12 @@ if [ -z "$dns_name" ]; then
   exit 1
 fi
 
+# AoE can restart itself into a detached daemon (e.g. after an update). Keep
+# launchd from repeatedly starting a second server while that daemon is alive;
+# take ownership again when it stops.
+while /opt/homebrew/bin/aoe serve --status >/dev/null 2>&1; do
+  sleep 5
+done
 exec /opt/homebrew/bin/aoe serve \
   --host 127.0.0.1 \
   --port 4097 \
