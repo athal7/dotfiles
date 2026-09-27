@@ -9,8 +9,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
-- `dot_config/omp/private_agent/` stages OMP config under `~/.config/omp/agent/`; active OMP remains on `~/.omp/agent/` until quiescent state migration and symlink cutover.
-- LaunchAgents do not source `.zshenv`; their OMP path remains the legacy default until the post-session symlink cutover.
+- `dot_config/omp/private_agent/` manages OMP config under `~/.config/omp/agent/`; `~/.omp` is a relative symlink to `.config/omp`, preserving the logical OMP path for shells and LaunchAgents.
 - **`.chezmoidata/mcp.yaml`** — neutral MCP server data rendered into OMP templates.
 - **`dot_agents/skills/`** — authored agent skills managed natively at `~/.agents/skills/`; externally installed skills own separate sibling directories.
 - **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh.tmpl`, which chezmoi renders and runs during apply. Individual plists are not chezmoi-managed.

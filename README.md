@@ -16,29 +16,13 @@ macOS development environment managed with [chezmoi](https://chezmoi.io).
 - Packages: [package registry](.chezmoidata/packages.yaml) and [external downloads](.chezmoiexternal.toml.tmpl).
 - KB collectors: [definitions](dot_config/kb/collectors/) deploy to `~/.config/kb/collectors/`; each Markdown file's front-matter `name` is its canonical registry identity.
 
-## OMP XDG Cutover
-
-OMP uses and reports the logical path `~/.omp/agent`; `~/.omp -> .config/omp` resolves it to the physical XDG tree. Do not set `PI_CONFIG_DIR`.
-
-The cutover preserved the legacy state directory by renaming it to `~/.config/omp`, rather than copying or merging live SQLite files. The previous experimental `~/.config/omp` and conflicting managed agent files were backed up separately. The managed files (`config.yml`, `mcp.json`, `models.yml`, `kb-enrich-mcp.json`, `APPEND_SYSTEM.md`) are deployed by chezmoi.
-
-For another machine, stop every OMP/AoE writer first, including `com.$USER.aoe-serve` and `com.$USER.aoe-daily-maintenance` if loaded; verify no writer has open handles in the legacy root. Preserve existing `$XDG_DATA_HOME/omp`, `$XDG_STATE_HOME/omp`, `$XDG_CACHE_HOME/omp`, and `~/.config/omp` as separate timestamped backups. Move the entire quiescent legacy `~/.omp` directory to `~/.config/omp` on the same volume; preserve any conflicting managed files separately before applying chezmoi. Never merge SQLite databases or apply the symlink before the legacy path is free.
-
-Deploy `symlink_dot_omp` with `chezmoi-deploy <branch>`; never run `chezmoi apply` from a worktree. Verify `readlink ~/.omp` is `.config/omp`, `realpath ~/.omp` resolves to `~/.config/omp`, `omp config path` still reports the logical `~/.omp/agent`, the moved databases pass SQLite `PRAGMA quick_check`, and a known old session loads.
-
-Rollback is also post-session: stop all writers, preserve the current XDG tree and category roots as fresh backups, restore the timestamped legacy `~/.omp` backup and separate pre-cutover XDG category and experimental-config backups. Never merge SQLite databases.
-
 ## Setup
-
-This command is for a fresh home directory. If `~/.omp` is an existing directory, omit `--apply`, complete [OMP XDG Cutover](#omp-xdg-cutover) first, then apply from the primary checkout.
 
 ```bash
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 ```
 
 Copy [`local.yaml.example`](local.yaml.example) to `.chezmoidata/local.yaml` for machine-specific data.
-
-For a new machine with legacy OMP state, follow [OMP XDG Cutover](#omp-xdg-cutover) before applying the managed symlink.
 
 For higher Context7 MCP quotas, create a free API key at [Context7](https://context7.com/dashboard) and store it in macOS Keychain:
 
