@@ -16,6 +16,20 @@ macOS development environment managed with [chezmoi](https://chezmoi.io).
 - Packages: [package registry](.chezmoidata/packages.yaml) and [external downloads](.chezmoiexternal.toml.tmpl).
 - KB collectors: [definitions](dot_config/kb/collectors/) deploy to `~/.config/kb/collectors/`; each Markdown file's front-matter `name` is its canonical registry identity.
 
+## OMP XDG Cutover
+
+The staged configuration lives physically under `~/.config/omp/agent`; OMP continues to use and report the logical path `~/.omp/agent`. Do not set `PI_CONFIG_DIR`. After cutover, `~/.omp -> .config/omp` makes the logical path resolve to the physical XDG tree.
+
+Cut over after this OMP session and every other OMP/AoE writer has exited. Boot out `com.$USER.aoe-serve` and `com.$USER.aoe-daily-maintenance` if loaded; verify no OMP/AoE process remains and `lsof +D "$HOME/.omp"` finds no writer.
+Use one timestamp to preserve any existing `$XDG_DATA_HOME/omp`, `$XDG_STATE_HOME/omp`, `$XDG_CACHE_HOME/omp`, and `~/.config/omp` as separate backups. Never merge SQLite databases.
+Copy the complete `~/.omp` tree to `~/.config/omp`, excluding the five managed agent files listed below. Verify the copy with `rsync -anEc --itemize-changes` using identical exclusions and run SQLite `PRAGMA quick_check` on copied databases.
+After checks, deploy the `symlink_dot_omp` source with `chezmoi-deploy <branch>`; never run `chezmoi apply` from a worktree.
+Verify `readlink ~/.omp` is `.config/omp`, `realpath ~/.omp` resolves to `~/.config/omp`, `omp config path` still reports the logical `~/.omp/agent`, and a known old session loads.
+
+The copy excludes the five managed agent files (`config.yml`, `mcp.json`, `models.yml`, `kb-enrich-mcp.json`, `APPEND_SYSTEM.md`); chezmoi recreates them from source after the symlink is applied.
+
+Rollback is also post-session: stop all writers, preserve the current XDG tree and category roots as fresh backups, restore the timestamped legacy `~/.omp` backup and separate pre-cutover XDG category and experimental-config backups. Never merge SQLite databases.
+
 ## Setup
 
 ```bash
@@ -24,9 +38,9 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 
 Copy [`local.yaml.example`](local.yaml.example) to `.chezmoidata/local.yaml` for machine-specific data.
 
-The OMP configuration is deployed to `~/.config/omp/agent`, but does not redirect the live CLI: shells and LaunchAgents keep using `~/.omp/agent`. After this OMP session exits, stop all OMP/AoE writers; preserve existing XDG category directories and the experimental config as timestamped backups.
+OMP state and symlink cutover are separate post-session steps; follow [OMP XDG Cutover](#omp-xdg-cutover). Never apply the symlink while any OMP/AoE writer is active.
 
-Copy the quiescent legacy agent data into `~/.config/omp`, excluding only the five chezmoi-managed agent files (config.yml, mcp.json, models.yml, kb-enrich-mcp.json, APPEND_SYSTEM.md). Verify checksum equality, SQLite integrity and a known old session before renaming `~/.omp` aside and deploying the managed `~/.omp` → `.config/omp` symlink. Keep both roots as rollback backups. Do not use `omp config init-xdg`: it creates empty category roots rather than migrating state.
+See [OMP XDG Cutover](#omp-xdg-cutover) for copy exclusions, integrity checks, activation, and rollback.
 
 For higher Context7 MCP quotas, create a free API key at [Context7](https://context7.com/dashboard) and store it in macOS Keychain:
 
