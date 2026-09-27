@@ -3,7 +3,7 @@ name: omp
 description: omp sessions — all coding activity via the omp CLI in the enrichment window
 ---
 
-OMP persists every session as a JSONL transcript at `~/.config/omp/agent/sessions/<slugified-cwd>/<timestamp>_<session-uuid>.jsonl` — one file per session and the durable historical store. Find candidate sessions for the enrichment window by file mtime (last-write time): `find ~/.config/omp/agent/sessions -name '*.jsonl' -newermt "<FROM>" -not -newermt "<TO, +1 day>"`. Each file's first line is a `{"type":"session"...}` record with its session id and cwd.
+OMP persists every session as a JSONL transcript at `~/.omp/agent/sessions/<slugified-cwd>/<timestamp>_<session-uuid>.jsonl` — one file per session and the durable historical store. Find candidate sessions for the enrichment window by file mtime (last-write time): `find ~/.omp/agent/sessions -name '*.jsonl' -newermt "<FROM>" -not -newermt "<TO, +1 day>"`. Each file's first line is a `{"type":"session"...}` record with its session id and cwd.
 
 ## Triage rules
 

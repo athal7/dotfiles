@@ -24,7 +24,6 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      PI_CONFIG_DIR: .config/omp
 
 
   aoe-daily-maintenance:
@@ -54,7 +53,6 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       AOE_OMP_PROJECT_MCP_CONFIG: $HOME/.config/omp/agent/kb-enrich-mcp.json
-      PI_CONFIG_DIR: .config/omp
       AOE_OMP_MODEL: "@smol"
 
   babysitter-check:

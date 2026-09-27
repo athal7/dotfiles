@@ -9,10 +9,10 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 ## Structure
 
 - **`dot_*`** — home directory files and directories (shell, git, editors, app configs)
-- **[4mdot_config/omp/private_agent/[0m** manages OMP's complete [4m~/.config/omp/agent/[0m configuration; set [4mPI_CONFIG_DIR[0m in shell environments to use this XDG root.
+- `dot_config/omp/private_agent/` stages OMP config under `~/.config/omp/agent/`; active OMP remains on `~/.omp/agent/` until quiescent state migration and symlink cutover.
+- LaunchAgents do not source `.zshenv`; their OMP path remains the legacy default until the post-session symlink cutover.
 - **`.chezmoidata/mcp.yaml`** — neutral MCP server data rendered into OMP templates.
 - **`dot_agents/skills/`** — authored agent skills managed natively at `~/.agents/skills/`; externally installed skills own separate sibling directories.
-- **[4mdot_agents/permissions.json[0m** deploys the portable agent-perms policy to [4m~/.agents/permissions.json[0m; OMP Bash approvals remain native because rule evaluation differs.
 - **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh.tmpl`, which chezmoi renders and runs during apply. Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
 - **`.chezmoidata/local.yaml`** — private machine and organization data, including model defaults and per-org overrides; gitignored and represented publicly only by `local.yaml.example`.

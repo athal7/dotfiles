@@ -1,9 +1,8 @@
-# Agent Skills and Permissions
+# Agent Skills
 
 [agentskills.io](https://agentskills.io)-compatible skills, deployed to ~/.agents/skills/. OMP discovers them through its native `agents` provider.
 
 Edit skills here, never in `~/.agents/skills/`; chezmoi manages each authored skill directly without replacing the shared directory.
-The portable permission policy lives at ~/.agents/permissions.json. OMP Bash approvals remain native in ~/.config/omp/agent/config.yml because agent-perms evaluation is deny/ask-first and does not preserve OMP's ordered matching.
 
 ## Integration Skills
 
