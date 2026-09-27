@@ -30,6 +30,8 @@ Rollback is also post-session: stop all writers, preserve the current XDG tree a
 
 ## Setup
 
+This command is for a fresh home directory. If `~/.omp` is an existing directory, omit `--apply`, complete [OMP XDG Cutover](#omp-xdg-cutover) first, then apply from the primary checkout.
+
 ```bash
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 ```
