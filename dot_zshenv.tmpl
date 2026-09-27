@@ -18,6 +18,7 @@ export RUNLAYER_{{ upper (trimSuffix "_mcp_url" $key) }}_MCP_URL={{ $url | quote
 {{- end }}
 {{- end }}
 export XDG_STATE_HOME="$HOME/.local/state"
+export PI_CODING_AGENT_DIR="$HOME/.config/omp/agent"
 
 # GitHub token — always fresh from gh auth, available in all shells including PTY
 command -v gh >/dev/null 2>&1 && export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
