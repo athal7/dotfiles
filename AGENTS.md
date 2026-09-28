@@ -15,6 +15,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 - **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by `.chezmoiscripts/run_onchange_after_zz-launch-agents.sh.tmpl`, which chezmoi renders and runs during apply. Individual plists are not chezmoi-managed.
 - **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise (including Python tools), github releases
 - **`.chezmoidata/local.yaml`** — private machine and organization data, including model defaults and per-org overrides; gitignored and represented publicly only by `local.yaml.example`.
+- **`dot_config/cal/private_config.json.tmpl`** — renders the private XDG config for standalone cal from gitignored local data; the package itself does not read chezmoi data.
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
 - **`.chezmoiscripts/`** — run on apply only where generation or an external installer is required
 

@@ -1,0 +1,1 @@
+{{ dict "calendars" (get . "calendars" | default (dict)) "feeds" (get . "feeds" | default (dict)) "sites" (get . "sites" | default (dict)) "reminders" (get . "reminders" | default (dict)) | toPrettyJson }}
