@@ -1,0 +1,3 @@
+      PI_CONFIG_DIR: .config/omp
+      PI_CODING_AGENT_DIR: $HOME/.config/omp/agent
+      XDG_DATA_HOME: $HOME/.local/share
