@@ -4,7 +4,7 @@
 # rendered content changes):
 # aoe_plugins: {{ .packages.aoe_plugins | toJson | sha256sum }}
 {{- range .packages.aoe_plugins }}
-# plugin-present: {{ .id }}={{ if (joinPath (env "HOME") ".agent-of-empires/plugins" .id | stat) }}1{{ else }}0{{ end }}
+# plugin-present: {{ .id }}={{ if (joinPath $.chezmoi.homeDir ".config/agent-of-empires/plugins" .id | stat) }}1{{ else }}0{{ end }}
 {{- end }}
 
 # Deliberately not -e: individual plugin install/update failures (missing
@@ -16,6 +16,7 @@ set -uo pipefail
 # Prepend mise shims so the python3 aoe shells out to for its build step is
 # the repo-managed mise one, not a stray system Python.
 export PATH="{{ .chezmoi.homeDir }}/.local/share/mise/shims:$PATH"
+export XDG_CONFIG_HOME="$HOME/.config"
 
 if ! command -v aoe >/dev/null 2>&1; then
   echo "aoe not found on PATH — skipping aoe plugin install/update" >&2
@@ -28,7 +29,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 {{ range .packages.aoe_plugins -}}
-PLUGIN_DIR="$HOME/.agent-of-empires/plugins/{{ .id }}"
+PLUGIN_DIR="$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"
 if [ -d "$PLUGIN_DIR" ]; then
   echo "updating aoe plugin {{ .id }}..."
   if ! aoe plugin update {{ .id }} < /dev/null; then
