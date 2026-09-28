@@ -73,4 +73,34 @@ describe("shared Bash/MCP verb permissions", () => {
     expect(await invoke({ toolName: "bash", input: { command: "xh POST https://example.test" } })).toBeUndefined();
     expect(count).toBe(2);
   });
+  test("requires approval for directory creation and mutating subcommands", async () => {
+    const invoke = createHandler(noPrompt);
+    for (const command of [
+      "mkdir folder",
+      "env MODE=test mkdir -p folder",
+      "gh issue create --title example",
+      "echo ok && mkdir folder",
+      "bash -c 'git push'",
+      "git -C repo push",
+      "gh -R owner/repo issue create --title example",
+      "sh -lc 'echo ok && rm tmp'",
+      "tmux send-keys -t demo 'git push' Enter",
+      "tmux send-keys -t demo 'mkdir folder' C-m",
+      "aoe send --help && git push",
+    ]) expect(await invoke({ toolName: "bash", input: { command } })).toEqual({ block: true, reason: "Action was not approved" });
+  });
+
+  test("does not interpret help, terminal keys, filters, or quoted data as mutations", async () => {
+    const invoke = createHandler(async () => { throw new Error("unexpected prompt"); });
+    for (const command of [
+      "aoe send --help",
+      "tmux send-keys -t demo 'transition' Enter",
+      "tmux send-keys -t demo 'echo transition' Enter",
+      "cargo test test_transition -- --nocapture",
+      "echo 'git push'",
+      "sh -c 'git status --short'",
+      "git -C repo branch --show-current",
+      "mkdir --help",
+    ]) expect(await invoke({ toolName: "bash", input: { command } })).toBeUndefined();
+  });
 });

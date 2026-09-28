@@ -16,8 +16,10 @@ const MUTATING_VERBS = new Set([
   "schedule", "send", "set", "share", "shutdown", "stash", "submit", "transition", "update", "upgrade",
   "upload", "write", "mutation",
 ]);
-const DANGEROUS_PROGRAMS = new Set(["sudo", "diskutil", "dd", "mkfs", "wget", "chezmoi-deploy"]);
-const SCRIPT_INTERPRETERS = new Set(["sh", "bash", "python", "node", "bun", "deno", "ruby", "perl", "php", "lua", "awk", "osascript"]);
+const DANGEROUS_PROGRAMS = new Set(["sudo", "diskutil", "dd", "mkfs", "wget", "chezmoi-deploy", "mkdir", "rm"]);
+const SHELL_INTERPRETERS = new Set(["sh", "bash", "zsh"]);
+const NESTED_SUBCOMMANDS = new Set(["issue", "pr", "repo", "remote", "worktree", "session", "container", "image", "service", "secret", "config"]);
+const SUBCOMMAND_PROGRAMS = new Set(["git", "gh", "chezmoi", "aoe", "docker", "kubectl", "brew", "npm", "pnpm", "yarn", "bun", "cargo", "xh", "tmux"]);
 const COMMAND_PREFIXES = new Set(["command", "env", "exec", "builtin", "nohup", "time", "nice"]);
 const HTTP_METHODS = new Set(["get", "head", "post", "put", "patch", "delete", "options"]);
 const SEGMENT_BREAK = /[;&|()\n]/;
@@ -86,20 +88,55 @@ function executableIndex(tokens: string[]): number {
   return index;
 }
 
+function subcommandIndex(program: string, args: string[]): number {
+  if (program !== "git" && program !== "gh") return 0;
+  let index = 0;
+  while (index < args.length) {
+    const arg = args[index];
+    if ((program === "git" && /^(?:-C|-c|--git-dir|--work-tree)$/.test(arg)) ||
+        (program === "gh" && /^(?:-R|--repo)$/.test(arg))) { index += 2; continue; }
+    if (program === "git" && arg === "--no-pager") { index++; continue; }
+    break;
+  }
+  return index;
+}
+
 function bashNeedsApproval(command: string): boolean {
   for (const tokens of commandSegments(command)) {
     const index = executableIndex(tokens);
     const program = tokens[index]?.split("/").at(-1)?.toLowerCase();
     if (!program) continue;
     const args = tokens.slice(index + 1);
-    if (DANGEROUS_PROGRAMS.has(program)) return true;
+    if (args.length <= 2 && args.at(-1) === "--help" && program !== "sudo") continue;
 
-    if (program === "chezmoi" && args[0] === "apply" && args.some((arg) => arg === "-n" || arg === "--dry-run")) continue;
-    if (program === "git" && args[0] === "branch") {
-      if (args.some((arg) => ["-d", "-D", "-m", "-M", "-c", "-C", "--delete", "--move", "--copy"].includes(arg))) return true;
+    if (SHELL_INTERPRETERS.has(program)) {
+      const commandIndex = args.findIndex((arg) => /^-[a-z]*c[a-z]*$/.test(arg));
+      if (commandIndex !== -1 && bashNeedsApproval(args[commandIndex + 1] ?? "")) return true;
+    }
+
+    // Check a command submitted in this call, but do not treat ordinary keystrokes as verbs.
+    if (program === "tmux" && args[0] === "send-keys") {
+      if (!args.includes("-l")) {
+        const enterIndex = args.findIndex((arg) => arg === "Enter" || arg === "C-m");
+        const targetIndex = args.indexOf("-t");
+        let payload = "";
+        for (let i = 1; i < enterIndex; i++) {
+          if (i === targetIndex || i === targetIndex + 1 || ["-H", "-R"].includes(args[i])) continue;
+          payload += (payload ? " " : "") + args[i];
+        }
+        if (payload.includes(" ") && bashNeedsApproval(payload)) return true;
+      }
       continue;
     }
-    if (program === "git" && args[0] === "stash" && ["list", "show"].includes(args[1] ?? "")) continue;
+    if (DANGEROUS_PROGRAMS.has(program)) return true;
+    const verbIndex = subcommandIndex(program, args);
+
+    if (program === "chezmoi" && args[0] === "apply" && args.some((arg) => arg === "-n" || arg === "--dry-run")) continue;
+    if (program === "git" && args[verbIndex] === "branch") {
+      if (args.some((arg, index) => index > verbIndex && ["-d", "-D", "-m", "-M", "-c", "-C", "--delete", "--move", "--copy"].includes(arg))) return true;
+      continue;
+    }
+    if (program === "git" && args[verbIndex] === "stash" && ["list", "show"].includes(args[verbIndex + 1] ?? "")) continue;
     if (program === "curl") {
       if (args.some((arg) => arg === "-d" || arg === "-T" || arg === "--upload-file" || arg.startsWith("--data"))) return true;
       const methodIndex = args.findIndex((arg) => arg === "-X" || arg === "--request");
@@ -107,13 +144,23 @@ function bashNeedsApproval(command: string): boolean {
       if (["post", "put", "patch", "delete"].includes(method ?? "")) return true;
     }
 
-    const normalizedWords = tokens.filter((token) => !token.startsWith("-")).flatMap(normalize);
+    if (program === "gh" && args[verbIndex] === "api") {
+      const methodIndex = args.findIndex((arg) => arg === "-X" || arg === "--method");
+      if (methodIndex !== -1 && /^(post|put|patch|delete)$/i.test(args[methodIndex + 1] ?? "")) return true;
+    }
+
+    // Only command positions are verbs. Paths, payloads and test filters are data.
+    const commandWords = [program];
+    if (SUBCOMMAND_PROGRAMS.has(program)) {
+      commandWords.push(args[verbIndex] ?? "");
+      if (NESTED_SUBCOMMANDS.has(args[verbIndex] ?? "")) commandWords.push(args[verbIndex + 1] ?? "");
+    }
+    const normalizedWords = commandWords.flatMap(normalize);
     if (normalizedWords.some((word) => MUTATING_VERBS.has(word) || word === "rm")) return true;
     if (program === "xh") {
       const method = args.map((token) => token.toLowerCase()).find((token) => HTTP_METHODS.has(token));
       if (method !== "get" && method !== "head") return true;
     }
-    if (SCRIPT_INTERPRETERS.has(program) && args.includes("--help")) return true;
   }
   return false;
 }
