@@ -2,7 +2,7 @@
 #
 # Each entry's value is the plist payload expressed as YAML, using $HOME and
 # $USER placeholders (substituted with the real home directory and username at
-# apply time). The source template `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh.tmpl`
+# apply time). The source template `.chezmoiscripts/run_onchange_after_zz-launch-agents.sh.tmpl`
 # is rendered and run by chezmoi during apply. It delegates to `launchd-yaml apply`,
 # which renders plist files, writes each plist to
 # ~/Library/LaunchAgents/<name>.plist, reloads only agents whose plist content
@@ -60,9 +60,7 @@ launchagents:
   babysitter-check:
     Label: com.$USER.babysitter-check
     ProgramArguments:
-      - /opt/homebrew/bin/python3
-      - -m
-      - cal
+      - $HOME/.local/share/mise/shims/cal-automation
       - babysitter
     StartCalendarInterval:
       Hour: 8
@@ -71,7 +69,6 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/babysitter-check.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      PYTHONPATH: $HOME/.local/lib
 
   check-error-logs:
     Label: com.$USER.check-error-logs
@@ -90,9 +87,7 @@ launchagents:
   family-scheduler:
     Label: com.$USER.family-scheduler
     ProgramArguments:
-      - python3
-      - -m
-      - cal
+      - $HOME/.local/share/mise/shims/cal-automation
       - family
     StartCalendarInterval:
       Weekday: 2
@@ -102,7 +97,6 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/family-scheduler.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      PYTHONPATH: $HOME/.local/lib
 
 
   git-worktree-sync:
@@ -224,9 +218,7 @@ launchagents:
   sync-calendars:
     Label: com.$USER.sync-calendars
     ProgramArguments:
-      - /opt/homebrew/bin/python3
-      - -m
-      - cal
+      - $HOME/.local/share/mise/shims/cal-automation
       - sync
     StartInterval: 3600
     RunAtLoad: true
@@ -234,7 +226,6 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/sync-calendars.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      PYTHONPATH: $HOME/.local/lib
 
   workspace-cleanup:
     Label: com.$USER.workspace-cleanup

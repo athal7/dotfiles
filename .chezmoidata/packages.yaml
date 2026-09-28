@@ -1,6 +1,6 @@
 # Package registry — single source of truth for all managed dependencies.
-# brew, cask, mise, and GitHub release packages. Install scripts and
-# chezmoi externals are generated from this file.
+# brew, cask, mise (including Python tools), and GitHub release packages.
+# Install scripts and chezmoi externals are generated from this file.
 
 packages:
   taps:
@@ -143,3 +143,5 @@ packages:
       version: latest
     - name: pipx:skills-ref
       version: latest
+    - name: pipx:athal7/cal
+      version: v0.1.0

@@ -4,7 +4,7 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 
 **No pull requests — deploy is the ship step.** Land changes with `chezmoi-deploy <branch>`: it fast-forward-merges the branch into the primary checkout's `main`, runs `chezmoi apply`, and pushes `main` to origin as a mirror. Only `chezmoi apply` mutates your live `~`. Load the chezmoi skill for verify-render-only and deploy mechanics.
 
-**`chezmoi apply` auto-deploys and reloads changed LaunchAgents.** The source template `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh.tmpl` is the generator; during apply, chezmoi renders and runs that template, then it delegates to `launchd-yaml apply` to render every plist from `dot_config/launchd-yaml/agents.yaml.tmpl` (yq → plutil), reload only agents whose plist content actually changed, and prune agents deleted from the YAML — so unchanged agents are never restarted. The individual plists are NOT chezmoi-managed; the generator owns them. To force-run a scheduled job for testing, you can still kickstart it manually: `launchctl kickstart -k gui/$(id -u)/<label>`.
+**`chezmoi apply` auto-deploys and reloads changed LaunchAgents.** The source template `.chezmoiscripts/run_onchange_after_zz-launch-agents.sh.tmpl` is the generator; during apply, chezmoi renders and runs that template after package installation, then it delegates to `launchd-yaml apply` to render every plist from `dot_config/launchd-yaml/agents.yaml.tmpl` (yq → plutil), reload only agents whose plist content actually changed, and prune agents deleted from the YAML — so unchanged agents are never restarted. The individual plists are NOT chezmoi-managed; the generator owns them.
 
 ## Structure
 
@@ -12,8 +12,8 @@ This repo manages `~` via chezmoi. Edit source files here, run `chezmoi apply` t
 - `dot_config/omp/private_agent/` manages OMP config under `~/.config/omp/agent/`; `PI_CONFIG_DIR=.config/omp` selects the global root and `PI_CODING_AGENT_DIR` selects the agent path for shells, AoE sessions, and LaunchAgents.
 - **`.chezmoidata/mcp.yaml`** — neutral MCP server data rendered into OMP templates.
 - **`dot_agents/skills/`** — authored agent skills managed natively at `~/.agents/skills/`; externally installed skills own separate sibling directories.
-- **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by `.chezmoiscripts/run_onchange_after_aa-launch-agents.sh.tmpl`, which chezmoi renders and runs during apply. Individual plists are not chezmoi-managed.
-- **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise, github releases
+- **`dot_config/launchd-yaml/agents.yaml.tmpl`** — macOS services (scheduled jobs and daemons) defined declaratively; deployed, reloaded, and pruned by `.chezmoiscripts/run_onchange_after_zz-launch-agents.sh.tmpl`, which chezmoi renders and runs during apply. Individual plists are not chezmoi-managed.
+- **`.chezmoidata/packages.yaml`** — single package registry: brew, cask, mise (including Python tools), github releases
 - **`.chezmoidata/local.yaml`** — private machine and organization data, including model defaults and per-org overrides; gitignored and represented publicly only by `local.yaml.example`.
 - **`.chezmoiexternal.toml.tmpl`** — generated from packages.yaml, drives chezmoi-native GitHub release downloads
 - **`.chezmoiscripts/`** — run on apply only where generation or an external installer is required
