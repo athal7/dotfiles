@@ -60,10 +60,11 @@ check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "keeps always-on MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled, .mcpServers["codebase-memory"].enabled] | all(. != false)' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq" and .key != "codebase-memory") | .value.enabled == false] | all' "$MCP")" true
-check "keeps empty Runlayer MCP URLs as placeholders" "$(jq '[.mcpServers["runlayer-bigquery"].url, .mcpServers["runlayer-pagerduty"].url] == ["${RUNLAYER_BIGQUERY_MCP_URL}", "${RUNLAYER_PAGERDUTY_MCP_URL}"]' "$EMPTY_MCP")" true
+check "shows concise MCP server names" "$(jq -r '.mcpServers | keys | map(select(. != "context7" and . != "cq" and . != "codebase-memory" and . != "linear")) | join(" ")' "$MCP")" "atlassian bigquery gcalendar gdocs gdrive gmail gsheets pagerduty runlayer slack zoom"
+check "keeps empty Runlayer MCP URLs as placeholders" "$(jq '[.mcpServers["bigquery"].url, .mcpServers["pagerduty"].url] == ["${RUNLAYER_BIGQUERY_MCP_URL}", "${RUNLAYER_PAGERDUTY_MCP_URL}"]' "$EMPTY_MCP")" true
 runlayer_mcp_urls=(
-  "runlayer-bigquery https://bigquery.example.test/mcp"
-  "runlayer-pagerduty https://pagerduty.example.test/mcp"
+  "bigquery https://bigquery.example.test/mcp"
+  "pagerduty https://pagerduty.example.test/mcp"
 )
 for connector_and_url in "${runlayer_mcp_urls[@]}"; do
   read -r connector url <<< "$connector_and_url"
@@ -76,9 +77,9 @@ if bash -n "$ZSHENV"; then zshenv_valid=true; else zshenv_valid=false; fi
 check "renders a valid shell environment" "$zshenv_valid" true
 rendered_runlayer_shell_environment="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHENV" | sort | paste -sd ' ' -)"
 check "exports configured Runlayer MCP URLs to shell sessions" "$rendered_runlayer_shell_environment" "export RUNLAYER_BIGQUERY_MCP_URL=\"https://bigquery.example.test/mcp\" export RUNLAYER_PAGERDUTY_MCP_URL=\"https://pagerduty.example.test/mcp\""
-check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "cq linear runlayer-atlassian runlayer-gcalendar runlayer-slack runlayer-zoom"
-check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["runlayer-gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
-check "enables the Calendar MCP server" "$(jq -r '.mcpServers["runlayer-gcalendar"].enabled' "$KB_ENRICH_MCP")" true
+check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "atlassian cq gcalendar linear slack zoom"
+check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
+check "enables the Calendar MCP server" "$(jq -r '.mcpServers["gcalendar"].enabled' "$KB_ENRICH_MCP")" true
 check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
 check "renders the local provider" "$(yq -r '.providers.gguf.models[0].id' "$MODELS")" Qwen3-30B-A3B-Instruct-2507
 check "ignores an OpenRouter key when rendering custom providers" "$(yq -r '.providers | keys | join(",")' "$MODELS")" gguf
