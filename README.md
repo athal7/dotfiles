@@ -5,7 +5,7 @@ macOS development environment managed with [chezmoi](https://chezmoi.io).
 ## Overview
 
 - Development tools: [shell](dot_zshrc.tmpl), [Neovim](dot_config/nvim/), and [Git](dot_config/git/).
-- AI tools: OMP uses `~/.config/omp/agent/` directly through `PI_CODING_AGENT_DIR` in shells, AoE sessions, and LaunchAgents. MCP servers are defined in [.chezmoidata/mcp.yaml](.chezmoidata/mcp.yaml). Shared [agent skills](dot_agents/skills/) deploy to `~/.agents/skills/`; the OMP pre-tool hook applies one verb policy to Bash and MCP calls.
+- AI tools: OMP uses `~/.config/omp/` as its global root through `PI_CONFIG_DIR=.config/omp`, with agent data under `~/.config/omp/agent/` through `PI_CODING_AGENT_DIR` in shells, AoE sessions, and LaunchAgents. MCP servers are defined in [.chezmoidata/mcp.yaml](.chezmoidata/mcp.yaml). Shared [agent skills](dot_agents/skills/) deploy to `~/.agents/skills/`; the OMP pre-tool hook applies one verb policy to Bash and MCP calls.
   Browser access asks once per OMP session through an [agent instruction](dot_config/omp/private_agent/APPEND_SYSTEM.md); later browser calls are allowed without tool prompts. First-use consent is instruction-based, not enforced by OMP tool approval.
   AoE loads the optional Anthropic API key from Keychain when launching host OMP sessions; restart running sessions to pick up a newly added or rotated key.
   AoE Serve binds to loopback behind private Tailscale Serve and uses the Keychain passphrase with `--auth passphrase`; its dashboard needs no URL token.

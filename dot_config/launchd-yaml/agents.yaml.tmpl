@@ -24,6 +24,8 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PI_CONFIG_DIR: .config/omp
+      XDG_DATA_HOME: $HOME/.local/share
       PI_CODING_AGENT_DIR: $HOME/.config/omp/agent
 
 
@@ -55,7 +57,9 @@ launchagents:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       AOE_OMP_PROJECT_MCP_CONFIG: $HOME/.config/omp/agent/kb-enrich-mcp.json
       AOE_OMP_MODEL: "@smol"
+      PI_CONFIG_DIR: .config/omp
       PI_CODING_AGENT_DIR: $HOME/.config/omp/agent
+      XDG_DATA_HOME: $HOME/.local/share
 
   babysitter-check:
     Label: com.$USER.babysitter-check
@@ -201,6 +205,25 @@ launchagents:
       - $HOME/.config/omp/agent
     RunAtLoad: true
     LimitLoadToSessionType: Aqua
+  setenv-gui-omp-root:
+    Label: com.$USER.setenv-gui-omp-root
+    ProgramArguments:
+      - /bin/launchctl
+      - setenv
+      - PI_CONFIG_DIR
+      - .config/omp
+    RunAtLoad: true
+    LimitLoadToSessionType: Aqua
+  setenv-gui-xdg-data:
+    Label: com.$USER.setenv-gui-xdg-data
+    ProgramArguments:
+      - /bin/launchctl
+      - setenv
+      - XDG_DATA_HOME
+      - $HOME/.local/share
+    RunAtLoad: true
+    LimitLoadToSessionType: Aqua
+
 
   sync-calendars:
     Label: com.$USER.sync-calendars
