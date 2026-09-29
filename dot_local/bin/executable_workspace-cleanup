@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reclaim merged, idle worktrees and disconnected development/test databases."""
+"""Reclaim idle merged worktrees, old build artifacts, and development/test databases."""
 
 import argparse
 import fcntl
@@ -7,11 +7,13 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 
 CODE = Path(os.environ.get("WORKSPACE_CLEANUP_CODE_ROOT", Path.home() / "code"))
 DATABASE_NAME = re.compile(r"(?:^|_)(?:development|test)(?:_|$)")
+TARGET_STALE_DAYS = 30
 
 
 def run(*args, check=True):
@@ -49,19 +51,40 @@ def worktrees(dry_run):
                 continue
             if run("git", "-C", str(path), "status", "--porcelain=v1", check=False).stdout.strip():
                 continue
-            if not any(
+            merged = any(
                 run("git", "-C", str(repo), "merge-base", "--is-ancestor", head, ref, check=False).returncode == 0
                 for ref in ("main", "origin/main")
-            ):
-                continue
+            )
+            target = path / "target"
+            if not merged:
+                if not (path / "Cargo.toml").is_file():
+                    continue
+                if target.is_symlink() or not target.is_dir():
+                    continue
+                if run("git", "-C", str(path), "check-ignore", "-q", "--", "target", check=False).returncode != 0:
+                    continue
+                tracked = run("git", "-C", str(path), "ls-files", "-z", "--", "target", check=False)
+                if tracked.returncode or tracked.stdout:
+                    continue
+                recent = run("find", str(target), "-mtime", f"-{TARGET_STALE_DAYS}", "-print", "-quit", check=False)
+                if recent.returncode or recent.stdout:
+                    continue
             opened = run("lsof", "-nP", "+D", str(path), check=False)
             if opened.returncode not in (0, 1) or opened.stdout.strip():
                 continue
-            print(f"worktree: {path}")
-            if not dry_run:
-                removed = run("git", "-C", str(repo), "worktree", "remove", str(path), check=False)
-                if removed.returncode:
-                    print(f"Cannot remove {path}: {removed.stderr.strip()}", file=sys.stderr)
+            if merged:
+                print(f"worktree: {path}")
+                if not dry_run:
+                    removed = run("git", "-C", str(repo), "worktree", "remove", str(path), check=False)
+                    if removed.returncode:
+                        print(f"Cannot remove {path}: {removed.stderr.strip()}", file=sys.stderr)
+            else:
+                print(f"build artifacts: {target}")
+                if not dry_run:
+                    try:
+                        shutil.rmtree(target)
+                    except OSError as error:
+                        print(f"Cannot remove {target}: {error}", file=sys.stderr)
 
 
 def databases(dry_run):
