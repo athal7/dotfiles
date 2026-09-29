@@ -17,6 +17,7 @@ packages:
     - name: autojump
     - name: bat
     - name: chezmoi
+    - name: colima
     - name: container
     - name: direnv
     - name: docker
@@ -44,7 +45,6 @@ packages:
     - name: opentofu
     - name: ripgrep
     - name: starship
-    - name: socktainer
     - name: talisman
     - name: watch
     - name: worktrunk

@@ -215,14 +215,21 @@ launchagents:
     LimitLoadToSessionType: Aqua
 
 
-  socktainer:
-    Label: com.$USER.socktainer
+  colima:
+    Label: com.$USER.colima
     ProgramArguments:
-      - /opt/homebrew/bin/socktainer
+      - /opt/homebrew/bin/colima
+      - start
+      - --foreground
+      - --activate=false
+      - --memory
+      - "4"
+      - --disk
+      - "30"
     RunAtLoad: true
     KeepAlive: true
-    StandardOutPath: $HOME/Library/Logs/socktainer.log
-    StandardErrorPath: $HOME/Library/Logs/socktainer.error.log
+    StandardOutPath: $HOME/Library/Logs/colima.log
+    StandardErrorPath: $HOME/Library/Logs/colima.error.log
     EnvironmentVariables:
       HOME: $HOME
       PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
