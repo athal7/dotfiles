@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise workspace cleanup against real disposable Git worktrees."""
+"""Exercise workspace and Chrome clone cleanup with disposable resources."""
 
 import contextlib
 import importlib.machinery
@@ -119,6 +119,79 @@ class WorktreeCleanupTest(unittest.TestCase):
         path = self.branch("merged", merged=True)
         self.assertIn(f"worktree: {path}", self.clean(False))
         self.assertFalse(path.exists())
+
+
+class ChromeCloneCleanupTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name) / "com.google.Chrome.code_sign_clone"
+        self.root.mkdir()
+        self.stale = self.root / "code_sign_clone.stale"
+        self.stale.mkdir()
+        old_time = time.time() - cleanup.CHROME_CLONE_STALE_SECONDS - 60
+        os.utime(self.stale, (old_time, old_time))
+        self.recent = self.root / "code_sign_clone.recent"
+        self.recent.mkdir()
+        self.unrelated = self.root / "unrelated"
+        self.unrelated.mkdir()
+        self.link = self.root / "code_sign_clone.link"
+        self.link.symlink_to(self.unrelated, target_is_directory=True)
+        self.root_patch = patch.object(cleanup, "chrome_clone_root", return_value=self.root)
+        self.root_patch.start()
+        self.addCleanup(self.root_patch.stop)
+        self.run_patch = patch.object(cleanup, "run", side_effect=self.no_open_files)
+        self.run_mock = self.run_patch.start()
+        self.addCleanup(self.run_patch.stop)
+
+    @staticmethod
+    def no_open_files(*args, **kwargs):
+        return subprocess.CompletedProcess(args, 1, "", "")
+
+    def clean(self, dry_run):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            cleanup.chrome_clones(dry_run)
+        return output.getvalue()
+
+    def test_dry_run_lists_only_old_real_clone_directories(self):
+        output = self.clean(True)
+        self.assertIn(f"Chrome signing clone: {self.stale}", output)
+        self.assertNotIn(str(self.recent), output)
+        self.assertTrue(self.stale.exists())
+        self.assertTrue(self.recent.exists())
+        self.assertTrue(self.unrelated.exists())
+        self.assertTrue(self.link.is_symlink())
+
+    def test_apply_removes_only_old_clone_directories(self):
+        self.clean(False)
+        self.assertFalse(self.stale.exists())
+        self.assertTrue(self.recent.exists())
+        self.assertTrue(self.unrelated.exists())
+        self.assertTrue(self.link.is_symlink())
+
+    def test_running_chrome_preserves_all_clones(self):
+        self.run_mock.side_effect = [subprocess.CompletedProcess([], 0, "123 Google Chrome\n", "")]
+        error = io.StringIO()
+        with contextlib.redirect_stderr(error):
+            self.clean(False)
+        self.assertIn("Google Chrome is running", error.getvalue())
+        self.assertTrue(self.stale.exists())
+        self.assertEqual(self.run_mock.call_count, 1)
+
+    def test_open_or_uncheckable_clone_tree_is_preserved(self):
+        for lsof_result in (
+            subprocess.CompletedProcess([], 0, "COMMAND PID NAME\nChrome 123 bundle", ""),
+            subprocess.CompletedProcess([], 2, "", "lsof failed"),
+        ):
+            with self.subTest(returncode=lsof_result.returncode):
+                self.run_mock.reset_mock()
+                self.run_mock.side_effect = [self.no_open_files([], check=False), lsof_result]
+                error = io.StringIO()
+                with contextlib.redirect_stderr(error):
+                    self.clean(False)
+                self.assertIn("cannot establish that the clone tree is unused", error.getvalue())
+                self.assertTrue(self.stale.exists())
 
 
 if __name__ == "__main__":
