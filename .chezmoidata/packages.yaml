@@ -14,6 +14,7 @@ packages:
   brews:
     - name: can1357/tap/omp
     - name: aoe
+      args: [HEAD]
     - name: autojump
     - name: bat
     - name: chezmoi
