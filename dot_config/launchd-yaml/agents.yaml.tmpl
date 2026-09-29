@@ -215,6 +215,18 @@ launchagents:
     LimitLoadToSessionType: Aqua
 
 
+  socktainer:
+    Label: com.$USER.socktainer
+    ProgramArguments:
+      - /opt/homebrew/bin/socktainer
+    RunAtLoad: true
+    KeepAlive: true
+    StandardOutPath: $HOME/Library/Logs/socktainer.log
+    StandardErrorPath: $HOME/Library/Logs/socktainer.error.log
+    EnvironmentVariables:
+      HOME: $HOME
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
   sync-calendars:
     Label: com.$USER.sync-calendars
     ProgramArguments:

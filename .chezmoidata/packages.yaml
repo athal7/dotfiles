@@ -19,6 +19,8 @@ packages:
     - name: chezmoi
     - name: container
     - name: direnv
+    - name: docker
+    - name: docker-compose
     - name: ffmpeg
     - name: fzf
     - name: git
@@ -42,6 +44,7 @@ packages:
     - name: opentofu
     - name: ripgrep
     - name: starship
+    - name: socktainer
     - name: talisman
     - name: watch
     - name: worktrunk

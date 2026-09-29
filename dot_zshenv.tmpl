@@ -21,6 +21,9 @@ export XDG_STATE_HOME="$HOME/.local/state"
 export PI_CONFIG_DIR=".config/omp"
 export PI_CODING_AGENT_DIR="$HOME/.config/omp/agent"
 
+# Docker API bridge for the existing Apple Container service.
+export DOCKER_HOST="${DOCKER_HOST:-unix://$HOME/.socktainer/container.sock}"
+
 # GitHub token — always fresh from gh auth, available in all shells including PTY
 command -v gh >/dev/null 2>&1 && export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
 
