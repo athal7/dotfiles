@@ -1,5 +1,12 @@
-import { describe, expect, test } from "bun:test";
-import registerVerbPermissions from "../dot_config/omp/private_agent/hooks/pre/verb-permissions";
+import { describe, expect, mock, test } from "bun:test";
+import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
+
+const root = resolve(import.meta.dir, "..");
+const template = resolve(root, "dot_config/omp/private_agent/hooks/pre/mcp-approval-allows.json.tmpl");
+const approvalAllows = JSON.parse(execFileSync("chezmoi", ["execute-template", "-S", root, "--file", template], { encoding: "utf8" }));
+mock.module("../dot_config/omp/private_agent/hooks/pre/mcp-approval-allows.json", () => ({ default: approvalAllows }));
+const { default: registerVerbPermissions } = await import("../dot_config/omp/private_agent/hooks/pre/verb-permissions");
 
 type Event = { toolName: string; input: Record<string, unknown> };
 type Result = { block: true; reason: string } | undefined;
@@ -20,6 +27,16 @@ describe("shared Bash/MCP verb permissions", () => {
     expect(await invoke({ toolName: "bash", input: { command: "git status --short --branch" } })).toBeUndefined();
     expect(await invoke({ toolName: "mcp__tracker_get_issue", input: { description: "delete this word from the prose" } })).toBeUndefined();
     expect(await invoke({ toolName: "read", input: {} })).toBeUndefined();
+  });
+
+  test("allows configured read-only MCP tools without UI while retaining other approvals", async () => {
+    const invoke = createHandler(async () => { throw new Error("unexpected prompt"); }, false);
+    expect(await invoke({ toolName: "mcp__context7_resolve_library_id", input: { libraryName: "React", query: "API" } })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__context7_query_docs", input: { libraryId: "/react/react", query: "mutation syntax" } })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__linear_get_status_updates", input: {} })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__atlassian_getTransitionsForJiraIssue", input: {} })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__tracker_resolve_issue", input: {} })).toEqual({ block: true, reason: "Verb permission requires interactive approval" });
+    expect(await invoke({ toolName: "mcp__context7_resolve_library_id_write", input: {} })).toEqual({ block: true, reason: "Verb permission requires interactive approval" });
   });
 
   test("confirms mutating verbs across Bash and MCP naming styles", async () => {

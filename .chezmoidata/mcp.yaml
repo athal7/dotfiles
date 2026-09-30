@@ -11,6 +11,7 @@
           },
         },
         "tools": ["query-docs", "resolve-library-id"],
+        "approval_allow": ["query-docs", "resolve-library-id"],
       },
       {
         "name": "cq",
@@ -94,6 +95,7 @@
             "create_issue_label",
             "prepare_attachment_upload",
           ],
+        "approval_allow": ["get_status_updates"],
       },
       {
         "name": "zoom",
@@ -192,6 +194,7 @@
             "transitionJiraIssue",
             "updateConfluencePage",
           ],
+        "approval_allow": ["getTransitionsForJiraIssue"],
       },
       {
         "name": "gmail",

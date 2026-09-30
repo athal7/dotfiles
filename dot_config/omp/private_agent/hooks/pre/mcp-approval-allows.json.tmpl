@@ -1,0 +1,9 @@
+{{- $allow := list -}}
+{{- range $server := .mcp_servers -}}
+{{- if hasKey $server "approval_allow" -}}
+{{- range $tool := $server.approval_allow -}}
+{{- $allow = append $allow (printf "mcp__%s_%s" (replace "-" "_" $server.name) (replace "-" "_" $tool)) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{ $allow | toJson }}

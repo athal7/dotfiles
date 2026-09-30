@@ -1,3 +1,5 @@
+import approvalAllows from "./mcp-approval-allows.json";
+
 type ToolInput = Record<string, unknown>;
 type ToolCallEvent = { toolName: string; input: ToolInput };
 type HookContext = {
@@ -23,6 +25,7 @@ const SUBCOMMAND_PROGRAMS = new Set(["git", "gh", "chezmoi", "aoe", "docker", "k
 const COMMAND_PREFIXES = new Set(["command", "env", "exec", "builtin", "nohup", "time", "nice"]);
 const HTTP_METHODS = new Set(["get", "head", "post", "put", "patch", "delete", "options"]);
 const SEGMENT_BREAK = /[;&|()\n]/;
+const MCP_APPROVAL_ALLOWS = new Set(approvalAllows);
 
 function words(value: string): string[] {
   const result: string[] = [];
@@ -166,6 +169,7 @@ function bashNeedsApproval(command: string): boolean {
 }
 
 function mcpNeedsApproval(toolName: string, input: ToolInput): boolean {
+  if (MCP_APPROVAL_ALLOWS.has(toolName)) return false;
   const toolWords = normalize(toolName);
   if (toolWords.some((token) => [...MUTATING_VERBS].some((verb) => token === verb || token.startsWith(verb)))) return true;
   const method = input.method;
