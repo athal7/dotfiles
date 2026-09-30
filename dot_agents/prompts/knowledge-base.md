@@ -24,6 +24,10 @@ For date-range resolution, use `kb journal list` in the caller's local IANA time
 - CQ verification is complete only when upstream `status` and `verify` report the relevant scope complete. Until every backfill scope completes, retain KB fallback.
 ## Enrichment completion reporting
 
+Run independent eligible collectors without serially waiting for a blocked collector or pending approval. Batch independent reads; a 429, 403, inaccessible attachment, or pagination failure in one source does not halt another. Never retry a timed-out write until its outcome is known, bypass an approval, or substitute a less restrictive source. Record the blocked collector and continue other safe work.
+
+After collection, read CQ verify and status separately from collector results. An applied plan is not complete while project or decision scopes are incomplete; retain KB fallback. Read the actual todo state before reporting its completed/total count; task completion does not imply exhaustive source coverage. Overall enrichment is partial if any collector failed or was non-exhaustive or a projection scope remains incomplete, even when all attempted tasks are marked done.
+
 Before collection, enumerate regular `*.md` files directly under `~/.config/kb/collectors/`. These XDG collector definitions are the registry. For each file separately, read its YAML front-matter `name` with `yq --front-matter=extract -r '.name' <file>` (not one multi-file invocation); require it to match the filename stem and be unique, then load the definition. If the directory is missing or empty, or a definition has an invalid or duplicate name, report the registry prerequisite failure instead of claiming completion. `kb config get collectors` is not a supported lookup.
 
 Every enrichment completion response MUST report every configured collector by name with one of the following statuses:

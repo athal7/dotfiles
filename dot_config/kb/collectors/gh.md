@@ -3,7 +3,7 @@ name: gh
 description: GitHub PRs, reviews, and issues
 ---
 
-Find, within the enrichment window: pull requests authored by the authenticated user, pull requests where the user left a review, and issues opened or updated by the user. Extract kb facts from the result.
+Find, within the enrichment window: pull requests authored by the authenticated user, pull requests where the user left a review, and issues opened or updated by the user. Extract kb facts from the result. For each configured eligible organization and each of these three discovery paths, follow pagination until the requested time window is exhausted (or the source explicitly reports no next page); deduplicate by canonical PR or issue identity across paths only after discovery. If a search result cap prevents paging, partition only that eligible organization/path by time and page each partition; preserve the original window and deduplicate boundary results. A retained result count is not evidence that search was exhaustive. If a page still cannot be fetched or a partition cannot be exhausted, continue other eligible organizations and discovery paths, then report that path as non-exhaustive with the last completed page and the concrete limit or failure. Do not silently stop after the first page or a fixed number of retained PRs.
 
 ### Discover eligible orgs
 
