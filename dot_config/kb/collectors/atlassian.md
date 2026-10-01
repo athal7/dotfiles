@@ -3,7 +3,9 @@ name: atlassian
 description: Confluence and Jira collector input with provenance-safe Decision Log handling
 ---
 
+Resolve the Confluence `cloudId` before any search by calling `mcp__atlassian_getaccessibleatlassianresources({})`; select the configured site resource with Confluence search scope. Never send an empty or guessed `cloudId`. If no unique authorized Confluence resource is available, report the collector failed and do not issue CQL.
 Run a CQL search in the configured Confluence space or spaces for the enrichment window. Prioritize retrospectives, demos, meeting notes, PRDs, and proposals. Pull sales or prospect notes only for explicit decisions or status changes. Use Jira only when its configured collector scope identifies relevant work.
+Call `mcp__atlassian_searchconfluenceusingcql` with that exact `cloudId`, a non-empty CQL query, and bounded `limit`. Follow returned cursors until the requested window and space scope are exhausted; if pagination is unavailable, report non-exhaustive coverage instead of inferring no evidence.
 
 Do not exclude `decision-log` pages by label. For every candidate page, record its stable page ID, URL, version or modification time, normalized body fingerprint, and collector time.
 

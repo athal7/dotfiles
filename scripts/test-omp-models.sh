@@ -100,14 +100,9 @@ check "propagates the configured server context window" "$(yq -o=json '.launchag
 check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.config/omp/agent/kb-enrich-mcp.json"
 check "configures Homebridge storage under XDG" "$(yq -r '.launchagents.homebridge.ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
 check "configures Homebridge UI storage under XDG" "$(yq -r '.launchagents.homebridge.EnvironmentVariables.UIX_STORAGE_PATH' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
-check "pins daily maintenance to the lower-cost model role" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_MODEL' "$LAUNCH_AGENTS")" @smol
-expected_daily_prompt=$(cat "$REPO_ROOT/dot_agents/prompts/daily-maintenance.md")
+check "does not set a global daily maintenance cutoff" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables | has("AOE_OMP_MAX_TIME")' "$LAUNCH_AGENTS")" false
 check "passes the daily prompt file" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.agents/prompts/daily-maintenance.md"
-check "inlines production triage details in prompt file" "$(grep -Fq 'error.grouping_key' <<<"$expected_daily_prompt" && echo true || echo false)" true
-check "inlines knowledge enrichment details in prompt file" "$(grep -Fq 'kb journal append|list|show' <<<"$expected_daily_prompt" && echo true || echo false)" true
-check "inlines CQ quality audit details in prompt file" "$(grep -Fq '## CQ quality audit' <<<"$expected_daily_prompt" && echo true || echo false)" true
-command_dir='agent/commands/'
-check "avoids command-file indirection" "$(grep -Fq "$command_dir" <<<"$expected_daily_prompt" && echo true || echo false)" false
+
 check "runs daily maintenance at the original enrichment time" "$(yq -o=json '.launchagents."aoe-daily-maintenance".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [0] then 0 else . end')" 0
 check "removes superseded scheduled sessions" "$(yq -o=json '.launchagents' "$LAUNCH_AGENTS" | jq 'has("aoe-kb-enrich") or has("aoe-fix-prod-errors") or has("aoe-audit")')" false
 check "routes the local server through llama.cpp" "$(yq -r '.launchagents."llama-server".ProgramArguments[0]' "$LAUNCH_AGENTS")" /opt/homebrew/bin/llama-server

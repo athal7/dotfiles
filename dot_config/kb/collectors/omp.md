@@ -3,7 +3,7 @@ name: omp
 description: omp sessions — all coding activity via the omp CLI in the enrichment window
 ---
 
-OMP persists every session as a JSONL transcript at `~/.config/omp/agent/sessions/<slugified-cwd>/<timestamp>_<session-uuid>.jsonl` — one file per session and the durable historical store. Find candidate sessions for the enrichment window by file mtime (last-write time): `find ~/.config/omp/agent/sessions -name '*.jsonl' -newermt "<FROM>" -not -newermt "<TO, +1 day>"`. Each file's first line is a `{"type":"session"...}` record with its session id and cwd. Enumerate all candidates first, then process every candidate in bounded batches; count a candidate as read only after inspecting enough of its transcript to apply the triage rules. If time, context, or access prevents reading the remainder, report the discovered/read counts and non-exhaustive coverage with the concrete reason, not a completed OMP scan.
+OMP persists session JSONL transcripts under ${XDG_DATA_HOME:-$HOME/.local/share}/omp/sessions/<slugified-cwd>/<timestamp>_<session-uuid>.jsonl. Use the deployed omp-kb-session-files <FROM> <TO> helper to select transcripts whose event timestamps fall in the inclusive local-calendar journal window; file mtimes and session creation time do not determine activity. It reads the configured XDG data root by default and fails on missing/unreadable roots, malformed transcripts, invalid timestamps, or reversed dates. Read each returned transcript through the read tool, count a candidate as read only after inspecting enough transcript to apply the triage rules, and report any remaining unread candidates as non-exhaustive coverage.
 
 ## Triage rules
 

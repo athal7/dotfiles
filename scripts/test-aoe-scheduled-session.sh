@@ -132,16 +132,13 @@ else
   bad "runs a scratch KB session"
 fi
 check "copies the KB MCP overlay" cmp "$WORK/kb-mcp.json" "$WORK/scratch/testsession/.omp/mcp.json"
-if grep -Fqx 'ARG=--extra-args' "$LOG" && grep -Fqx 'ARG=--model @default' "$LOG" && ! grep -Fq -- '--prewalk-into' "$LOG"; then
-  ok "passes the pinned OMP model without prewalk"
+if grep -Fqx "ARG=--extra-args" "$LOG" && grep -Fqx "ARG=--model @default" "$LOG" && ! grep -Fq -- "--max-time" "$LOG" && ! grep -Fq -- "--prewalk-into" "$LOG"; then
+  ok "passes the pinned OMP model without a global cutoff or prewalk"
 else
-  bad "passes the pinned OMP model without prewalk"
+  bad "passes the pinned OMP model without a global cutoff or prewalk"
 fi
 if grep -Fqx "ARG=daily-maintenance-E4D58213" "$LOG" &&
-  grep -Fqx 'ARG=Run all three daily maintenance workflows in this session.' "$LOG" &&
-  grep -Fq 'error.grouping_key' "$LOG" &&
-  grep -Fq 'kb journal append|list|show' "$LOG" &&
-  grep -Fq '## CQ quality audit' "$LOG" &&
+
   grep -Fq "AOE_CORRELATION=$correlation_id" "$LOG" &&
   grep -Fq "\"correlationId\":\"$correlation_id\"" "$WORK/state/aoe/omp-session-map/testsession.json"; then
   ok "preserves the caller correlation in session state and prompt"

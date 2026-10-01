@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail() {
+  printf 'xh-apm-error-groups: %s\n' "$1" >&2
+  exit 1
+}
+
+for command_name in jq xh-es-search chezmoi; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command unavailable: $command_name"
+done
+
+payload=$(jq -cn '{size:0,track_total_hits:true,query:{range:{"@timestamp":{gte:"now-24h",lte:"now"}}},aggs:{services:{terms:{field:"service.name",size:1000,order:{_count:"desc"}},aggs:{groups:{terms:{field:"error.grouping_key",size:1000,order:{_count:"desc"}},aggs:{sample:{top_hits:{size:1,sort:[{"@timestamp":{order:"desc"}}],_source:{includes:["service.name","error.grouping_key","error.exception.type","error.exception.message","trace.id"]}}}}}}}}}')
+error_file=$(mktemp "${TMPDIR:-/tmp}/xh-apm-error-groups.XXXXXX")
+trap 'rm -f "$error_file"' EXIT
+if ! response=$(PAYLOAD="$payload" xh-es-search 'logs-apm.error-*' 2>"$error_file"); then
+  fail "APM query failed; no evidence returned"
+fi
+if ! services=$(chezmoi data --format json 2>"$error_file"); then
+  fail "cannot read configured production service mapping"
+fi
+if ! jq -e '(.prod_services | type == "object")' >/dev/null 2>&1 <<<"$services"; then
+  fail "configured prod_services mapping is missing or malformed"
+fi
+
+jq -e --argjson mapping "$(jq -c '.prod_services' <<<"$services")" '
+  . as $response
+  | if type != "object" then error("response is not an object") else . end
+  | if has("error") then error("Elasticsearch returned an error") else . end
+  | if .timed_out != false then error("query timed out or timed_out is missing") else . end
+  | if ((._shards | type) != "object" or (._shards.failed | type) != "number" or ._shards.failed != 0) then error("shard status is missing or failed") else . end
+  | if ((.hits.total | type) != "object" or (.hits.total.value | type) != "number" or .hits.total.relation != "eq") then error("total hit count is missing or inexact") else . end
+  | if ((.aggregations.services.buckets | type) != "array" or (.aggregations.services.sum_other_doc_count | type) != "number" or .aggregations.services.sum_other_doc_count != 0 or (.aggregations.services.doc_count_error_upper_bound | type) != "number" or .aggregations.services.doc_count_error_upper_bound != 0) then error("service aggregation is missing, truncated, or inexact") else . end
+  | if (.hits.total.value == 0 and (.aggregations.services.buckets | length) != 0) then error("zero hits conflict with nonempty buckets") else . end
+  | [.aggregations.services.buckets[] as $service
+      | if (($service.key | type) != "string" or ($service.doc_count | type) != "number" or $service.doc_count < 1) then error("invalid service bucket") else . end
+      | if ((($service.groups.buckets | type) != "array") or ($service.groups.sum_other_doc_count | type) != "number" or $service.groups.sum_other_doc_count != 0 or ($service.groups.doc_count_error_upper_bound | type) != "number" or $service.groups.doc_count_error_upper_bound != 0) then error("group aggregation is missing, truncated, or inexact") else . end
+      | $service.groups.buckets[] as $group
+      | if (($group.key | type) != "string" or ($group.doc_count | type) != "number" or $group.doc_count < 1) then error("invalid grouping-key bucket") else . end
+      | ($group.sample.hits.hits | if type == "array" and length == 1 then .[0]._source else error("sample evidence is missing") end) as $sample
+      | if ($sample["service.name"] != $service.key or $sample["error.grouping_key"] != $group.key) then error("sample identity does not match its aggregation bucket") else . end
+      | if (([$sample["error.exception.type"],$sample["error.exception.message"],$sample["trace.id"]] | all(.[]; type == "string" and length > 0)) | not) then error("sample is missing exception type, message, or trace id") else . end
+      | {service:$service.key, grouping_key:$group.key, count:$group.doc_count, exception_type:$sample["error.exception.type"], message:$sample["error.exception.message"], trace_id:$sample["trace.id"]}
+    ] as $groups
+  | if (.hits.total.value == 0) then {window:"now-24h..now", total:0, selected:[], highest_unmapped:null} else
+      ($groups | map(select(.service as $service | $mapping | has($service))) | sort_by([-(.count),.service,.grouping_key]) | .[:3]) as $selected
+      | ($groups | map(select(.service as $service | $mapping | has($service) | not)) | sort_by([-(.count),.service,.grouping_key]) | .[0] // null) as $unmapped
+      | {window:"now-24h..now", total:$response.hits.total.value, selected:[$selected[] | . + {repository:$mapping[.service]}], highest_unmapped:$unmapped}
+    end
+' <<<"$response" 2>/dev/null || fail "APM response is invalid or incomplete; no groups dispatched"

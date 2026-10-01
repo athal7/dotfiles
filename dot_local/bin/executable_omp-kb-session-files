@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+"""Print OMP transcript paths with activity in the journal window."""
+
+from __future__ import annotations
+
+import argparse
+from datetime import datetime
+import json
+import os
+from pathlib import Path
+import sys
+
+
+def parse_local_time(value: str) -> datetime:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"invalid ISO-8601 time: {value}") from error
+
+
+def transcript_paths(root: Path, start: datetime, end: datetime) -> list[Path]:
+    if end < start:
+        raise ValueError("TO must not precede FROM")
+
+    start_day = start.astimezone().date() if start.tzinfo else start.date()
+    end_day = end.astimezone().date() if end.tzinfo else end.date()
+    if end_day < start_day:
+        raise ValueError("TO must not precede FROM in the local timezone")
+
+    matches: list[Path] = []
+    pending = [root]
+
+    while pending:
+        directory = pending.pop()
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                path = Path(entry.path)
+                if entry.is_dir(follow_symlinks=False):
+                    pending.append(path)
+                elif entry.name.endswith(".jsonl") and entry.is_file(follow_symlinks=False):
+                    in_window = False
+                    with path.open(encoding="utf-8") as transcript:
+                        for line_number, line in enumerate(transcript, start=1):
+                            try:
+                                event = json.loads(line)
+                            except json.JSONDecodeError as error:
+                                raise ValueError(f"{path}:{line_number}: invalid JSON") from error
+                            if not isinstance(event, dict):
+                                raise ValueError(f"{path}:{line_number}: event must be an object")
+                            timestamp = event.get("timestamp")
+                            if timestamp is None and event.get("type") == "title":
+                                continue
+                            if not isinstance(timestamp, str):
+                                raise ValueError(f"{path}:{line_number}: missing event timestamp")
+                            try:
+                                occurred = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                            except ValueError as error:
+                                raise ValueError(f"{path}:{line_number}: invalid event timestamp") from error
+                            event_day = occurred.astimezone().date() if occurred.tzinfo else occurred.date()
+                            if start_day <= event_day <= end_day:
+                                in_window = True
+                    if in_window:
+                        matches.append(path)
+
+    return sorted(matches)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("from_time", type=parse_local_time, metavar="FROM")
+    parser.add_argument("to_time", type=parse_local_time, metavar="TO")
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "omp/sessions",
+        help="OMP session directory (default: %(default)s)",
+    )
+    args = parser.parse_args()
+
+    try:
+        for path in transcript_paths(args.root, args.from_time, args.to_time):
+            print(path)
+    except (OSError, UnicodeError, ValueError) as error:
+        print(f"omp-kb-session-files: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

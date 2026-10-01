@@ -7,7 +7,7 @@ Retrieve Zoom meeting data for the enrichment window, then extract kb facts from
 
 ## Dispatch step
 
-Before dispatching, resolve the local IANA timezone: `readlink /etc/localtime | sed 's#.*/zoneinfo/##'` (e.g. `America/Chicago`).
+Before dispatching, resolve the local IANA timezone from `readlink /etc/localtime` using shell parameter expansion (`target=$(readlink /etc/localtime); tz=${target##*/zoneinfo/}`). If the target does not contain `zoneinfo/`, report a timezone prerequisite failure rather than using UTC.
 
 Retrieve, per the shape below:
 

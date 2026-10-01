@@ -84,8 +84,12 @@ if [[ -n "$worktree_branch" ]]; then
   fi
 fi
 aoe_args+=(--tool omp --title "$session_title" --group "$session_group")
+omp_extra_args=()
 if [[ -n "$omp_model" ]]; then
-  aoe_args+=(--extra-args "--model $omp_model")
+  omp_extra_args+=(--model "$omp_model")
+fi
+if (( ${#omp_extra_args[@]} > 0 )); then
+  aoe_args+=(--extra-args "${omp_extra_args[*]}")
 fi
 session_output=$("$aoe_bin" "${aoe_args[@]}")
 session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
