@@ -105,6 +105,7 @@ expected_daily_prompt=$(cat "$REPO_ROOT/dot_agents/prompts/daily-maintenance.md"
 check "passes the daily prompt file" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.agents/prompts/daily-maintenance.md"
 check "inlines production triage details in prompt file" "$(grep -Fq 'error.grouping_key' <<<"$expected_daily_prompt" && echo true || echo false)" true
 check "inlines knowledge enrichment details in prompt file" "$(grep -Fq 'kb journal append|list|show' <<<"$expected_daily_prompt" && echo true || echo false)" true
+check "inlines CQ quality audit details in prompt file" "$(grep -Fq '## CQ quality audit' <<<"$expected_daily_prompt" && echo true || echo false)" true
 command_dir='agent/commands/'
 check "avoids command-file indirection" "$(grep -Fq "$command_dir" <<<"$expected_daily_prompt" && echo true || echo false)" false
 check "runs daily maintenance at the original enrichment time" "$(yq -o=json '.launchagents."aoe-daily-maintenance".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [0] then 0 else . end')" 0

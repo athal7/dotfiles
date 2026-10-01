@@ -138,9 +138,10 @@ else
   bad "passes the pinned OMP model without prewalk"
 fi
 if grep -Fqx "ARG=daily-maintenance-E4D58213" "$LOG" &&
-  grep -Fqx 'ARG=Run both daily maintenance workflows in this session.' "$LOG" &&
+  grep -Fqx 'ARG=Run all three daily maintenance workflows in this session.' "$LOG" &&
   grep -Fq 'error.grouping_key' "$LOG" &&
   grep -Fq 'kb journal append|list|show' "$LOG" &&
+  grep -Fq '## CQ quality audit' "$LOG" &&
   grep -Fq "AOE_CORRELATION=$correlation_id" "$LOG" &&
   grep -Fq "\"correlationId\":\"$correlation_id\"" "$WORK/state/aoe/omp-session-map/testsession.json"; then
   ok "preserves the caller correlation in session state and prompt"

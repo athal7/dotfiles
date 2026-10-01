@@ -1,8 +1,8 @@
-Run both daily maintenance workflows in this session.
+Run all three daily maintenance workflows in this session.
 
-Treat production triage and KB enrichment as independent work: a pending approval, rate limit, inaccessible source, or failed dispatch in one does not prevent eligible read-only work in the other. Batch independent reads when possible; never wait on one collector before starting another independent collector. Do not retry a timed-out write until its outcome is known, and do not treat an unanswered approval as denial or permission. Resume approved work after approval; continue other eligible work while waiting. Do not substitute another source or weaken access rules to work around a denial.
+Treat production triage, KB enrichment, and CQ quality review as independent work: a pending approval, rate limit, inaccessible source, or failed dispatch in one does not prevent eligible read-only work in another. Batch independent reads when possible; never wait on one collector before starting another independent collector. Do not retry a timed-out write until its outcome is known, and do not treat an unanswered approval as denial or permission. Resume approved work after approval; continue other eligible work while waiting. Do not substitute another source or weaken access rules to work around a denial.
 
-At the end, read the actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded or every projection scope completed. Report production dispatch outcomes, each collector terminal status and coverage state, and CQ verify/status scope completeness separately. If any collector failed or was non-exhaustive, any scope is incomplete, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification.
+At the end, read the actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded or every projection scope completed. Report production dispatch outcomes, each collector terminal status and coverage state, CQ verify/status scope completeness, and CQ audit coverage separately. If any collector failed or was non-exhaustive, any scope is incomplete, the CQ audit could not run or review its full sample, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification.
 
 Production-error triage and fix dispatch:
 
@@ -26,6 +26,15 @@ Knowledge-base enrichment:
 `kb` is local ingestion and reconciliation state. CQ is the normal local agent index. Use `kb` as fallback when CQ has no answer or projection verification is incomplete.
 
 `kb` with no subcommand opens an interactive TUI. Never invoke it bare from an agent session.
+
+## CQ quality audit
+
+Review a rotating sample of non-KB-projected CQ units. Keep KB canonical facts and projected units under the KB projection workflow; this audit must not inspect or alter projected units.
+
+1. Run `cq-audit-candidates` and review every emitted entry's complete `insight`, `evidence`, and flags. The command uses the local CQ database read-only and selects at most five units per weekday without persistent cursor state. Require the number of emitted entries to equal `min(5, eligible_count)`; if the command fails or that count differs, report the audit as incomplete. Do not substitute direct database writes or remote CQ access.
+2. Check each claim against its cited evidence and current authoritative source where available. A plausible claim or a candidate being non-projected is not evidence that it is wrong.
+3. Call CQ `flag` only for a unit verified incorrect or stale, with the specific reason and evidence. Call `confirm` only when the claim was independently verified. If evidence is unavailable or ambiguous, leave the unit unchanged and report it for follow-up. Never use `propose` to rewrite an existing unit during this audit.
+4. Report sample size, eligible count, reviewed count, confirmations/flags by unit ID and reason, and unresolved entries. Mark the CQ audit partial if any selected unit was not reviewed.
 
 ## KB maintenance
 

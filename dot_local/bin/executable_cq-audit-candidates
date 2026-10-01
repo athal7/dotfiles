@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Select a rotating daily sample of non-KB-projected CQ units for review."""
+
+import argparse
+from datetime import date
+import json
+from pathlib import Path
+import sqlite3
+import sys
+
+
+BATCH_SIZE = 5
+DEFAULT_DB = Path.home() / ".local/share/cq/local.db"
+
+
+def candidates(db_path: Path, audit_day: date) -> dict:
+    # mode=ro must fail on a missing DB rather than creating an empty one.
+    with sqlite3.connect(f"{db_path.resolve().as_uri()}?mode=ro", uri=True) as db:
+        rows = db.execute("SELECT id, data FROM knowledge_units ORDER BY id").fetchall()
+
+    eligible = []
+    for unit_id, data in rows:
+        unit = json.loads(data)
+        domains = unit.get("domains")
+        if unit.get("id") != unit_id or not isinstance(domains, list) or not all(
+            isinstance(domain, str) for domain in domains
+        ):
+            raise ValueError(f"invalid CQ unit metadata: {unit_id}")
+        if any(domain.startswith(("kb-scope-", "kb-projection:")) for domain in domains):
+            continue  # KB owns verification and authorization for projected records.
+        eligible.append(unit)
+
+    # Weekdays advance by one slot even across weekends; no writable cursor state.
+    business_day = ((audit_day.toordinal() - 1) // 7) * 5 + min(audit_day.weekday(), 4)
+    start = business_day * BATCH_SIZE % len(eligible) if eligible else 0
+    selected = [eligible[(start + index) % len(eligible)] for index in range(min(BATCH_SIZE, len(eligible)))]
+    return {"audit_date": audit_day.isoformat(), "eligible_count": len(eligible), "entries": selected}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--db", type=Path, default=DEFAULT_DB, help="local CQ database (for fixture testing)")
+    parser.add_argument("--date", type=date.fromisoformat, default=date.today(), help="local audit day, YYYY-MM-DD")
+    args = parser.parse_args()
+    try:
+        result = candidates(args.db, args.date)
+    except (OSError, sqlite3.Error, ValueError, TypeError) as error:
+        print(f"CQ audit unavailable: {error}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
