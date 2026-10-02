@@ -22,6 +22,16 @@ macOS development environment managed with [chezmoi](https://chezmoi.io).
 - Local containers: Homebrew Docker CLI and Compose use [Colima](https://github.com/abiosoft/colima) with the Docker runtime. Its LaunchAgent starts the default VM with 4 GiB of memory and a 30 GiB disk limit; shells set DOCKER_HOST to $HOME/.colima/default/docker.sock, replacing stale inherited values. Set DOCKER_HOST after shell startup to use another daemon. Compose discovers the Homebrew plugin through ~/.docker/cli-plugins/docker-compose without replacing ~/.docker/config.json. Containers mounting /var/run/docker.sock can control sibling containers through the VM's Docker daemon; treat that mount as privileged. Apple Container remains installed for its own CLI and other consumers; Colima does not migrate or delete its data.
 - KB collectors: [definitions](dot_config/kb/collectors/) deploy to `~/.config/kb/collectors/`; each Markdown file's front-matter `name` is its canonical registry identity. The weekday daily-maintenance session also reviews a rotating read-only sample of non-KB-projected local CQ units; KB projections remain governed by KB authorization and verification.
 
+## OMP and upstream Pi
+
+`omp` is a fork with its own runtime and config at `~/.config/omp/agent/`; `pi` is upstream Pi 1.0 with separate settings, models, packages, and sessions at `~/.pi/agent/`. The [Pi launcher](dot_local/bin/executable_pi) clears OMP’s inherited `PI_*` variables. Pi’s complete settings are managed in [private_settings.json.tmpl](dot_pi/private_agent/private_settings.json.tmpl), including the OMP-like preferences Pi supports. The third-party permission-system package and custom Pi permission extensions are not configured.
+
+Pi follows the latest npm release through mise; its per-tool `minimum_release_age = "0s"` keeps newly published Pi releases eligible without changing other tools’ release-age policy. Homebrew’s Pi formula may lag npm. Pi uses the built-in `read`, `bash`, `edit`, and `write` tools and keeps codemode disabled.
+
+
+Pi’s complete [models.json](dot_pi/private_agent/private_models.json.tmpl) catalog retains the existing MLX model and, when `local_model` is configured, adds llama.cpp as a native OpenAI-compatible provider selected by default. No custom provider extension is needed. This does not change OMP’s model-role configuration; Pi’s local chat model is not a classifier, and OMP Eval, AoE sessions, and scheduled workflows do not transfer to Pi.
+
+
 ## Setup
 
 ```bash

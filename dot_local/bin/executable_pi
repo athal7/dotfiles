@@ -1,0 +1,4 @@
+#!/bin/sh
+# OMP uses PI_* to relocate its own config; upstream Pi must use ~/.pi/agent.
+unset PI_CONFIG_DIR PI_CODING_AGENT_DIR
+exec "$HOME/.local/share/mise/shims/pi" "$@"

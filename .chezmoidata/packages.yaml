@@ -136,6 +136,8 @@ packages:
       version: latest
     - name: npm:@google/jules
       version: latest
+    - name: npm:@earendil-works/pi-coding-agent
+      version: latest
     - name: npm:freebuff
       version: latest
     - name: pipx:pytest

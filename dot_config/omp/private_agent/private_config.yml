@@ -12,7 +12,7 @@ bash:
     enabled: true
   allowCompoundCommands: false
 browser:
-  headless: false
+  headless: true
   relay: true
 checkpoint:
   enabled: true
