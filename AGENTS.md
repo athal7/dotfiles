@@ -25,7 +25,16 @@ All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`
 
 ## Agent Config
 
-[4mdot_config/omp/private_agent/private_config.yml[0m directly manages [4m~/.config/omp/agent/config.yml[0m. [4mdot_config/omp/private_agent/APPEND_SYSTEM.md[0m owns its system prompt.
+`dot_config/omp/private_agent/private_config.yml` directly manages `~/.config/omp/agent/config.yml`. `dot_config/omp/private_agent/APPEND_SYSTEM.md` owns its system prompt.
+
+## Agent Operating Rules
+
+- OMP MCP server names are selector labels. When referring to exposed MCP tools, use server/tool names with hyphens converted to underscores. Server-specific read-only MCP exceptions belong in that server's `approval_allow` field in `.chezmoidata/mcp.yaml`; do not infer permission from the verb hook's Bash matching, which is a heuristic rather than a shell sandbox.
+- Browser use requires affirmative user consent before the first browser API call in each OMP session. This is instruction-based, not enforced by OMP tool approval. Consent does not authorize consequential actions or navigation in the user's visible tab.
+- Keep code-review findings unlabeled; prefix only nits with `nit:`. For pull-request reviews, anchor each finding to a diff line when possible.
+- Daily maintenance runs production-error triage, KB enrichment, and CQ quality review as independent workstreams. Report outcomes separately; a settled worker or scheduled launcher exit does not establish complete coverage. Unanswered approvals and uncertain writes remain pending; do not retry timed-out writes until their outcome is known. The session uses the KB MCP overlay; KB projections remain governed by KB authorization and verification.
+- For GitHub session actions in attention, use a checkout under `codeDir` or a registered AoE project whose GitHub origin matches the item. Register any checkout outside `codeDir` with AoE first.
+- Before changing Homebridge's storage path, stop its LaunchAgent; verify `~/.homebridge/config.json` exists and parses. Preserve an existing `~/.config/homebridge` by renaming it to a unique backup, move the complete legacy directory, verify the moved JSON, then restart.
 
 ## Public Repo — Privacy Guidelines
 
@@ -40,4 +49,4 @@ When writing skills, examples, or documentation: use generic placeholder names (
 
 ## README
 
-Keep `README.md` up to date when making structural changes: adding or removing skills, new LaunchAgents, new config sections, changes to the package registry design, or anything that affects how someone would use or contribute to this repo. The README is the primary entry point for external readers.
+Keep `README.md` up to date when making structural changes: adding or removing skills, new LaunchAgents, new config sections, changes to the package registry design, or anything that affects how someone would use or contribute to this repo. The README is the primary entry point for external readers; keep it focused on information people need to understand, set up, and use the dotfiles. Agent operating rules belong in this file.
