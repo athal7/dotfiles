@@ -68,7 +68,9 @@ packages:
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
 
-  pi_packages: []
+  pi_packages:
+    - id: "@gotgenes/pi-permission-system"
+      source: "npm:@gotgenes/pi-permission-system"
 
   casks:
     - name: mozilla-ai/tap/cq

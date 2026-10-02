@@ -3,14 +3,11 @@
 {{-   $entry := dict -}}
 {{-   if not ((index $server "enabled_by_default") | default false) -}}
 {{-     $_ := set $entry "enabled" false -}}
-{{-     $_ := set $entry "disabled" true -}}
 {{-   end -}}
 {{-   if eq $server.transport "local" -}}
 {{-     $_ := set $entry "command" (first $server.command) -}}
 {{-     $_ := set $entry "args" (rest $server.command) -}}
 {{-   else -}}
-{{-     $_ := set $entry "type" "http" -}}
-{{-     $_ := set $entry "transport" "http" -}}
 {{-     $url := $server.url -}}
 {{-     if kindIs "map" $url -}}
 {{-       $environmentName := index $url "name" -}}
@@ -26,10 +23,8 @@
 {{-     if hasKey $server "headers" -}}
 {{-       $headers := dict -}}
 {{-       range $headerName, $headerSpec := $server.headers -}}
-{{-         $value := output "sh" "-c" $headerSpec.cmd | trim -}}
-{{-         if ne $value "" -}}
-{{-           $_ := set $headers $headerName (printf $headerSpec.format $value) -}}
-{{-         end -}}
+{{-         $value := printf "!printf '%s' \"$(%s)\"" $headerSpec.format $headerSpec.cmd -}}
+{{-         $_ := set $headers $headerName $value -}}
 {{-       end -}}
 {{-       if gt (len $headers) 0 -}}
 {{-         $_ := set $entry "headers" $headers -}}
@@ -37,8 +32,13 @@
 {{-     end -}}
 {{-   end -}}
 {{-   if hasKey $server "tools" -}}
-{{-     $_ := set $entry "includeTools" $server.tools -}}
+{{-     $_ := set $entry "exposure" "hidden" -}}
+{{-     $toolExposure := dict -}}
+{{-     range $tool := $server.tools -}}
+{{-       $_ := set $toolExposure $tool "codemode" -}}
+{{-     end -}}
+{{-     $_ := set $entry "toolExposure" $toolExposure -}}
 {{-   end -}}
 {{-   $_ := set $servers $server.name $entry -}}
 {{- end -}}
-{{ dict "mcpServers" $servers | toJson }}
+{{ dict "mcpServers" $servers | toPrettyJson }}

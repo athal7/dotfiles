@@ -1,7 +1,16 @@
-{ "mcp_servers": [
+{
+  "mcp_mutating_verbs": [
+    "add", "append", "apply", "attach", "autofill", "branch", "checkout", "clean", "commit", "copy",
+    "create", "delete", "deploy", "destroy", "drop", "edit", "forget", "format", "group", "init",
+    "insert", "link", "mark", "merge", "move", "patch", "post", "publish", "purge", "push", "put",
+    "reboot", "remove", "rename", "replace", "reply", "reset", "resolve", "respond", "restore", "save",
+    "schedule", "send", "set", "share", "shutdown", "stash", "submit", "transition", "update", "upgrade",
+    "upload", "write", "mutation",
+  ],
+  "mcp_servers": [
       {
         "name": "context7",
-        "enabled_by_default": true,
+        "enabled_by_default": false,
         "transport": "remote",
         "url": "https://mcp.context7.com/mcp",
         "headers": {
@@ -15,7 +24,7 @@
       },
       {
         "name": "cq",
-        "enabled_by_default": true,
+        "enabled_by_default": false,
         "transport": "local",
         "command": ["/bin/sh", "-c", "exec /usr/bin/env -u CQ_ADDR -u CQ_API_KEY cq mcp --db-path \"$HOME/.local/share/cq/local.db\""],
         "tools": ["confirm", "flag", "propose", "query", "status"],
@@ -117,6 +126,7 @@
       },
       {
         "name": "runlayer",
+        "enabled_by_default": true,
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SELF_MCP_URL" },
       },
@@ -132,6 +142,7 @@
       },
       {
         "name": "slack",
+        "enabled_by_default": true,
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SLACK_MCP_URL" },
         "tools":

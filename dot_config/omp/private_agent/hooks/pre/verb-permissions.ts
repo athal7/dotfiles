@@ -1,4 +1,5 @@
 import approvalAllows from "./mcp-approval-allows.json";
+import mutatingVerbs from "./mcp-mutating-verbs.json";
 
 type ToolInput = Record<string, unknown>;
 type ToolCallEvent = { toolName: string; input: ToolInput };
@@ -10,14 +11,7 @@ type HookAPI = {
   on(event: "tool_call", handler: (event: ToolCallEvent, ctx: HookContext) => unknown): void;
 };
 
-const MUTATING_VERBS = new Set([
-  "add", "append", "apply", "attach", "autofill", "branch", "checkout", "clean", "commit", "copy",
-  "create", "delete", "deploy", "destroy", "drop", "edit", "forget", "format", "group", "init",
-  "insert", "link", "mark", "merge", "move", "patch", "post", "publish", "purge", "push", "put",
-  "reboot", "remove", "rename", "replace", "reply", "reset", "resolve", "respond", "restore", "save",
-  "schedule", "send", "set", "share", "shutdown", "stash", "submit", "transition", "update", "upgrade",
-  "upload", "write", "mutation",
-]);
+const MUTATING_VERBS = new Set(mutatingVerbs);
 const DANGEROUS_PROGRAMS = new Set(["sudo", "diskutil", "dd", "mkfs", "wget", "chezmoi-deploy", "mkdir", "rm"]);
 const SHELL_INTERPRETERS = new Set(["sh", "bash", "zsh"]);
 const NESTED_SUBCOMMANDS = new Set(["issue", "pr", "repo", "remote", "worktree", "session", "container", "image", "service", "secret", "config"]);

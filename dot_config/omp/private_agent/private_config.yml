@@ -60,6 +60,10 @@ modelRoles:
   slow: openai-codex/gpt-6-sol
   smol: openai-codex/gpt-6-luna
   vision: openai-codex/gpt-6-sol
+retry:
+  fallbackChains:
+    judge:
+      - openrouter/~typesafe/jev-latest
 personality: default
 plan:
   defaultOnStartup: false

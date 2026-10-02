@@ -1,0 +1,49 @@
+{{- $policy := dict
+  "*" "ask"
+  "read" "allow"
+  "grep" "allow"
+  "find" "allow"
+  "ls" "allow"
+  "path" (dict "*" "allow" "*.env" "deny" "*.env.*" "deny" "*.env.example" "allow")
+  "bash" "ask"
+  "edit" "ask"
+  "write" "ask"
+  "codemode" "ask"
+  "mcpScript" "ask"
+  "tool_search" "allow"
+  "third_party_tool" "ask"
+  "external_directory" "ask"
+-}}
+{{- range $server := .mcp_servers -}}
+{{-   if hasKey $server "tools" -}}
+{{-     range $tool := $server.tools -}}
+{{-       $allow := false -}}
+{{-       if hasKey $server "approval_allow" -}}
+{{-         range $safe := $server.approval_allow -}}
+{{-           if eq $tool $safe -}}{{- $allow = true -}}{{- end -}}
+{{-         end -}}
+{{-       end -}}
+{{-       if not $allow -}}
+{{-         $normalized := lower (regexReplaceAll "([a-z0-9])([A-Z])" $tool "$1 $2") -}}
+{{-         $tokens := regexSplit "[^a-z0-9]+" $normalized -1 -}}
+{{-         $mutating := eq $tool "fetch" -}}
+{{-         range $token := $tokens -}}
+{{-           range $verb := $.mcp_mutating_verbs -}}
+{{-             if or (eq $token $verb) (hasPrefix $verb $token) -}}{{- $mutating = true -}}{{- end -}}
+{{-           end -}}
+{{-         end -}}
+{{-         if not $mutating -}}{{- $allow = true -}}{{- end -}}
+{{-       end -}}
+{{-       if $allow -}}
+{{-         $serverName := regexReplaceAll "[^A-Za-z0-9_]" $server.name "_" -}}
+{{-         $toolName := regexReplaceAll "[^A-Za-z0-9_]" $tool "_" -}}
+{{-         $_ := set $policy (printf "mcp__%s__%s" $serverName $toolName) "allow" -}}
+{{-       end -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+{{ dict
+  "$schema" "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json"
+  "permissionReviewLog" true
+  "permission" $policy
+| toPrettyJson }}

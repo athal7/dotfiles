@@ -15,7 +15,12 @@ DATA="$WORK/local.yaml"
 MODELS="$WORK/models.yml"
 MCP="$WORK/mcp.json"
 EMPTY_MCP="$WORK/empty-mcp.json"
+EMPTY_PI_MCP="$WORK/empty-pi-mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
+PI_SETTINGS="$WORK/pi-settings.json"
+PI_MODELS="$WORK/pi-models.json"
+PI_POLICY="$WORK/pi-permissions.json"
+PI_MCP="$WORK/pi-mcp.json"
 CONFIG="$WORK/config.yml"
 AOE="$WORK/aoe.toml"
 ZSHENV="$WORK/zshenv"
@@ -29,6 +34,7 @@ EOF
 chmod +x "$BIN/security"
 cp "$REPO_ROOT/local.yaml.example" "$DATA"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$EMPTY_MCP"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.pi/agent/mcp.json" > "$EMPTY_PI_MCP"
 yq -i '.runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" | .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"' "$DATA"
 OPENROUTER_API_KEY=test-key PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/config.yml" > "$CONFIG"
@@ -36,14 +42,24 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/agent-of
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.pi/agent/settings.json" > "$PI_SETTINGS"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.pi/agent/models.json" > "$PI_MODELS"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.pi/agent/mcp.json" > "$PI_MCP"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.pi/agent/extensions/pi-permission-system/config.json" > "$PI_POLICY"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
-check "preserves browser headless override" "$(yq -r '.browser.headless' "$CONFIG")" false
+check "renders managed browser headless mode" "$(yq -r '.browser.headless' "$CONFIG")" true
 check "preserves browser relay override" "$(yq -r '.browser.relay' "$CONFIG")" true
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
 check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
 check "preserves task advisor override" "$(yq -r '.task.agentAdvisor.task' "$CONFIG")" off
-check "omits empty retry configuration" "$(yq -r '. | has("retry")' "$CONFIG")" false
+check "retains the configured TypeSafe judge fallback" "$(yq -r '.retry.fallbackChains.judge[0]' "$CONFIG")" "openrouter/~typesafe/jev-latest"
+check "enables Pi Codemode and deferred tool search" "$(jq '[.defaultTools[]] | any(. == "+codemode") and any(. == "+tool_search")' "$PI_SETTINGS")" true
+check "installs only the Pi permission package" "$(jq '.packages == ["npm:@gotgenes/pi-permission-system"]' "$PI_SETTINGS")" true
+check "selects the configured local Pi provider" "$(jq '.defaultProvider == "local-llama" and .defaultModel == "Qwen3-30B-A3B-Instruct-2507"' "$PI_SETTINGS")" true
+check "renders the local Pi model endpoint" "$(jq '.providers["local-llama"].baseUrl == "http://127.0.0.1:8091/v1" and .providers["local-llama"].models[0].id == "Qwen3-30B-A3B-Instruct-2507"' "$PI_MODELS")" true
+check "allows explicitly read-only native Pi MCP tools; unknown tools use ask fallback" "$(jq '.permission["*"] == "ask" and .permission.mcp__context7__query_docs == "allow" and .permission.mcp__slack__slack_read_channel == "allow" and .permission.mcp__slack__slack_send_message == null and .permission.mcp__linear__save_issue == null and .permission.mcp__atlassian__fetch == null and .permission.codemode == "ask" and .permission.mcpScript == "ask"' "$PI_POLICY")" true
+check "denies Pi .env access except examples" "$(jq '.permission.path["*.env"] == "deny" and .permission.path["*.env.*"] == "deny" and .permission.path["*.env.example"] == "allow"' "$PI_POLICY")" true
 STALE_AOE="$WORK/stale-aoe.toml"
 printf '[plugins."agent-of-empires.github"]\nenabled = true\n[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_config/agent-of-empires/modify_config.toml" > "$STALE_AOE"
@@ -58,10 +74,13 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
-check "keeps always-on MCP servers enabled" "$(jq '[.mcpServers.context7.enabled, .mcpServers.cq.enabled, .mcpServers["codebase-memory"].enabled] | all(. != false)' "$MCP")" true
-check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq" and .key != "codebase-memory") | .value.enabled == false] | all' "$MCP")" true
-check "shows concise MCP server names" "$(jq -r '.mcpServers | keys | map(select(. != "context7" and . != "cq" and . != "codebase-memory" and . != "linear")) | join(" ")' "$MCP")" "atlassian bigquery gcalendar gdocs gdrive gmail gsheets pagerduty runlayer slack zoom"
-check "keeps empty Runlayer MCP URLs as placeholders" "$(jq '[.mcpServers["bigquery"].url, .mcpServers["pagerduty"].url] == ["${RUNLAYER_BIGQUERY_MCP_URL}", "${RUNLAYER_PAGERDUTY_MCP_URL}"]' "$EMPTY_MCP")" true
+check "keeps Context7 and CQ disabled by default" "$(jq '[.mcpServers.context7.enabled, .mcpServers.context7.disabled, .mcpServers.cq.enabled, .mcpServers.cq.disabled] == [false, true, false, true]' "$MCP")" true
+check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled != false and .mcpServers.runlayer.enabled != false and .mcpServers.slack.enabled != false' "$MCP")" true
+check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack") | .value.enabled == false] | all' "$MCP")" true
+check "uses native Pi MCP filtering and disabled state" "$(jq '.mcpServers.atlassian.enabled == false and .mcpServers.context7.toolExposure["query-docs"] == "codemode" and .mcpServers.context7.toolExposure["resolve-library-id"] == "codemode" and .mcpServers.context7.exposure == "hidden"' "$PI_MCP")" true
+check "renders native Pi HTTP MCP fields without adapter fields" "$(jq '.mcpServers.context7.url == "https://mcp.context7.com/mcp" and .mcpServers.context7.transport == null and .mcpServers.context7.includeTools == null and (.mcpServers.context7.headers.Authorization | startswith("!printf "))' "$PI_MCP")" true
+check "shows concise native Pi MCP server names" "$(jq -r '.mcpServers | keys | map(select(. != "context7" and . != "cq" and . != "codebase-memory" and . != "linear")) | join(" ")' "$PI_MCP")" "atlassian bigquery gcalendar gdocs gdrive gmail gsheets pagerduty runlayer slack zoom"
+check "keeps empty Runlayer MCP URLs as placeholders" "$(jq '[.mcpServers["bigquery"].url, .mcpServers["pagerduty"].url] == ["${RUNLAYER_BIGQUERY_MCP_URL}", "${RUNLAYER_PAGERDUTY_MCP_URL}"]' "$EMPTY_PI_MCP")" true
 runlayer_mcp_urls=(
   "bigquery https://bigquery.example.test/mcp"
   "pagerduty https://pagerduty.example.test/mcp"

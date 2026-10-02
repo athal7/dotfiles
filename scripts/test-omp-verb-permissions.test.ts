@@ -5,7 +5,10 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dir, "..");
 const template = resolve(root, "dot_config/omp/private_agent/hooks/pre/mcp-approval-allows.json.tmpl");
 const approvalAllows = JSON.parse(execFileSync("chezmoi", ["execute-template", "-S", root, "--file", template], { encoding: "utf8" }));
+const verbsTemplate = resolve(root, "dot_config/omp/private_agent/hooks/pre/mcp-mutating-verbs.json.tmpl");
+const mutatingVerbs = JSON.parse(execFileSync("chezmoi", ["execute-template", "-S", root, "--file", verbsTemplate], { encoding: "utf8" }));
 mock.module("../dot_config/omp/private_agent/hooks/pre/mcp-approval-allows.json", () => ({ default: approvalAllows }));
+mock.module("../dot_config/omp/private_agent/hooks/pre/mcp-mutating-verbs.json", () => ({ default: mutatingVerbs }));
 const { default: registerVerbPermissions } = await import("../dot_config/omp/private_agent/hooks/pre/verb-permissions");
 
 type Event = { toolName: string; input: Record<string, unknown> };

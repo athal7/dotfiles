@@ -1,6 +1,7 @@
 {{- $settings := dict
-  "packages" (list "npm:@gotgenes/pi-subagents" "npm:pi-mcp-adapter")
-  "defaultTools" (list "read" "bash" "edit" "write")
+  "packages" (list "npm:@gotgenes/pi-permission-system")
+  "defaultTools" (list "read" "bash" "edit" "write" "grep" "find" "ls" "+codemode" "+tool_search")
+  "prompts" (list "~/.agents/prompts/fix-launchagent-errors.md")
   "steeringMode" "all"
   "followUpMode" "all"
   "hideThinkingBlock" true
