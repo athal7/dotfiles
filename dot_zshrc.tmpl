@@ -9,6 +9,8 @@ mkdir -p "$(dirname "$ZSH_COMPDUMP")"
 
 export EDITOR="nvim"
 export GPG_TTY=$(tty)
+# Authenticate 1Password CLI through the desktop app.
+export OP_BIOMETRIC_UNLOCK_ENABLED=true
 _brew_prefix="$(brew --prefix)"
 
 # aliases
