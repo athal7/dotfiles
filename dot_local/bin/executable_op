@@ -1,0 +1,4 @@
+#!/bin/sh
+# Use the desktop app even when op runs outside an interactive shell.
+export OP_BIOMETRIC_UNLOCK_ENABLED="${OP_BIOMETRIC_UNLOCK_ENABLED:-true}"
+exec /opt/homebrew/bin/op "$@"
