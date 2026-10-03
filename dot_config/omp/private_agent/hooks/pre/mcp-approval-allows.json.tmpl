@@ -2,7 +2,7 @@
 {{- range $server := .mcp_servers -}}
 {{- if hasKey $server "approval_allow" -}}
 {{- range $tool := $server.approval_allow -}}
-{{- $allow = append $allow (printf "mcp__%s_%s" (replace "-" "_" $server.name) (replace "-" "_" $tool)) -}}
+{{- $allow = append $allow (printf "mcp__%s_%s" (replace "-" "_" (lower $server.name)) (replace "-" "_" (lower $tool))) -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}

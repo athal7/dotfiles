@@ -35,8 +35,8 @@
 {{-         if not $mutating -}}{{- $allow = true -}}{{- end -}}
 {{-       end -}}
 {{-       if $allow -}}
-{{-         $serverName := regexReplaceAll "[^A-Za-z0-9_]" $server.name "_" -}}
-{{-         $toolName := regexReplaceAll "[^A-Za-z0-9_]" $tool "_" -}}
+{{-         $serverName := regexReplaceAll "[^a-z0-9_]" (lower $server.name) "_" -}}
+{{-         $toolName := regexReplaceAll "[^a-z0-9_]" (lower $tool) "_" -}}
 {{-         $_ := set $policy (printf "mcp__%s__%s" $serverName $toolName) "allow" -}}
 {{-       end -}}
 {{-     end -}}

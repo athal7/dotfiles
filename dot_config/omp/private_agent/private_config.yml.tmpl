@@ -125,7 +125,9 @@ tools:
     eval: allow
     hub: allow
     task: allow
-  approvalMode: write
+{{ range $server := .mcp_servers }}{{ if hasKey $server "approval_allow" }}{{ range $tool := $server.approval_allow }}    mcp__{{ regexReplaceAll "[^a-z0-9_]" (lower $server.name) "_" }}_{{ regexReplaceAll "[^a-z0-9_]" (lower $tool) "_" }}: allow
+{{ end }}{{ end }}{{ end }}
+  approvalMode: yolo
   xdev: true
 tui:
   hyperlinks: auto

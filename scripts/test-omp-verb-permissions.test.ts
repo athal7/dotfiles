@@ -3,124 +3,66 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dir, "..");
-const template = resolve(root, "dot_config/omp/private_agent/hooks/pre/mcp-approval-allows.json.tmpl");
-const approvalAllows = JSON.parse(execFileSync("chezmoi", ["execute-template", "-S", root, "--file", template], { encoding: "utf8" }));
-const verbsTemplate = resolve(root, "dot_config/omp/private_agent/hooks/pre/mcp-mutating-verbs.json.tmpl");
-const mutatingVerbs = JSON.parse(execFileSync("chezmoi", ["execute-template", "-S", root, "--file", verbsTemplate], { encoding: "utf8" }));
+function render(name: string): string[] {
+  const template = resolve(root, `dot_config/omp/private_agent/hooks/pre/${name}.json.tmpl`);
+  return JSON.parse(execFileSync("chezmoi", ["execute-template", "-S", root, "--file", template], { encoding: "utf8" }));
+}
+const approvalAllows = render("mcp-approval-allows");
+const mutatingVerbs = render("mcp-mutating-verbs");
+const remoteMcpPrefixes = render("mcp-remote-servers");
 mock.module("../dot_config/omp/private_agent/hooks/pre/mcp-approval-allows.json", () => ({ default: approvalAllows }));
 mock.module("../dot_config/omp/private_agent/hooks/pre/mcp-mutating-verbs.json", () => ({ default: mutatingVerbs }));
-const { default: registerVerbPermissions } = await import("../dot_config/omp/private_agent/hooks/pre/verb-permissions");
+mock.module("../dot_config/omp/private_agent/hooks/pre/mcp-remote-servers.json", () => ({ default: remoteMcpPrefixes }));
+const { default: registerRemoteWriteApproval } = await import("../dot_config/omp/private_agent/hooks/pre/remote-write-approval");
 
 type Event = { toolName: string; input: Record<string, unknown> };
 type Result = { block: true; reason: string } | undefined;
 
 function createHandler(confirm: (title: string, message: string) => Promise<boolean>, hasUI = true) {
   let handler: ((event: Event, ctx: { hasUI: boolean; ui: { confirm: typeof confirm } }) => Promise<Result | unknown>) | undefined;
-  registerVerbPermissions({ on: (_event, callback) => { handler = callback; } });
+  registerRemoteWriteApproval({ on: (_event, callback) => { handler = callback; } });
   if (!handler) throw new Error("tool_call handler was not registered");
-  const invoke = (event: Event) => handler!(event, { hasUI, ui: { confirm } });
-  return invoke;
+  return (event: Event) => handler!(event, { hasUI, ui: { confirm } });
 }
 
-const noPrompt = async () => false;
-describe("shared Bash/MCP verb permissions", () => {
-  test("allows read-only Bash and MCP calls without UI prompts", async () => {
-    const confirm = async () => { throw new Error("unexpected prompt"); };
-    const invoke = createHandler(confirm);
-    expect(await invoke({ toolName: "bash", input: { command: "git status --short --branch" } })).toBeUndefined();
-    expect(await invoke({ toolName: "mcp__tracker_get_issue", input: { description: "delete this word from the prose" } })).toBeUndefined();
-    expect(await invoke({ toolName: "read", input: {} })).toBeUndefined();
+describe("known remote write approvals", () => {
+  test("prompts for registered remote MCP writes and allows read-only and local MCP calls", async () => {
+    let prompts = 0;
+    const invoke = createHandler(async (title) => { prompts++; expect(title).toBe("Approve remote write"); return true; });
+    expect(await invoke({ toolName: "mcp__slack_send_message", input: {} })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__gmail_send_email", input: {} })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__slack_read_channel", input: {} })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__context7_query_docs", input: { query: "mutation { example }" } })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__cq_confirm", input: {} })).toBeUndefined();
+    expect(prompts).toBe(2);
   });
 
-  test("allows configured read-only MCP tools without UI while retaining other approvals", async () => {
-    const invoke = createHandler(async () => { throw new Error("unexpected prompt"); }, false);
-    expect(await invoke({ toolName: "mcp__context7_resolve_library_id", input: { libraryName: "React", query: "API" } })).toBeUndefined();
-    expect(await invoke({ toolName: "mcp__context7_query_docs", input: { libraryId: "/react/react", query: "mutation syntax" } })).toBeUndefined();
-    expect(await invoke({ toolName: "mcp__linear_get_status_updates", input: {} })).toBeUndefined();
-    expect(await invoke({ toolName: "mcp__atlassian_getTransitionsForJiraIssue", input: {} })).toBeUndefined();
-    expect(await invoke({ toolName: "mcp__tracker_resolve_issue", input: {} })).toEqual({ block: true, reason: "Verb permission requires interactive approval" });
-    expect(await invoke({ toolName: "mcp__context7_resolve_library_id_write", input: {} })).toEqual({ block: true, reason: "Verb permission requires interactive approval" });
+  test("prompts for HTTP method and GraphQL mutations only on remote MCP servers", async () => {
+    let prompts = 0;
+    const invoke = createHandler(async () => { prompts++; return true; });
+    expect(await invoke({ toolName: "mcp__linear_save_issue", input: {} })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__bigquery_query", input: { method: "POST" } })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__pagerduty_query", input: { query: "mutation { updateIncident }" } })).toBeUndefined();
+    expect(await invoke({ toolName: "mcp__codebase_memory_delete_project", input: {} })).toBeUndefined();
+    expect(prompts).toBe(3);
   });
 
-  test("confirms mutating verbs across Bash and MCP naming styles", async () => {
-    let count = 0;
-    const invoke = createHandler(async () => { count++; return true; });
-    for (const event of [
-      { toolName: "bash", input: { command: "git push" } },
-      { toolName: "mcp__tracker_save_issue", input: {} },
-      { toolName: "mcp__provider_add_comment", input: {} },
-      { toolName: "bash", input: { command: "echo ok && rm tmp" } },
-    ]) expect(await invoke(event)).toBeUndefined();
-    expect(count).toBe(4);
+  test("prompts for known remote shell writes but allows local destructive commands", async () => {
+    let prompts = 0;
+    const invoke = createHandler(async () => { prompts++; return true; });
+    for (const command of ["git push origin main", "git -C repo push origin main", "curl -X POST https://example.test", "xh DELETE https://example.test", "gh issue create --title example", "gh -R owner/repo issue create --title example", "bash -lc 'git push'"]) {
+      expect(await invoke({ toolName: "bash", input: { command } })).toBeUndefined();
+    }
+    for (const command of ["rm -rf build", "mkdir folder", "git branch -D old", "brew uninstall old", "curl https://example.test"]) {
+      expect(await invoke({ toolName: "bash", input: { command } })).toBeUndefined();
+    }
+    expect(prompts).toBe(7);
   });
 
-  test("blocks refusal, missing UI, malformed Bash input, and UI failures", async () => {
-    const event = { toolName: "bash", input: { command: "git push" } };
-    expect(await createHandler(noPrompt)(event)).toEqual({ block: true, reason: "Action was not approved" });
-    expect(await createHandler(noPrompt, false)(event)).toEqual({ block: true, reason: "Verb permission requires interactive approval" });
-    expect(await createHandler(async () => { throw new Error("cancelled"); })(event)).toEqual({ block: true, reason: "Verb permission approval failed" });
-    expect(await createHandler(noPrompt)({ toolName: "bash", input: {} })).toEqual({ block: true, reason: "Verb permission requires a valid Bash command" });
-  });
-
-  test("allows read-only Bash commands with mutation-like flag names", async () => {
-    const invoke = createHandler(async () => { throw new Error("unexpected prompt"); });
-    for (const command of [
-      "git branch --show-current",
-      "git stash list",
-      "gh api repos/owner/repo/issues",
-      "curl -X GET https://example.test",
-      "chezmoi apply -n",
-    ]) expect(await invoke({ toolName: "bash", input: { command } })).toBeUndefined();
-  });
-
-  test("prompts for network mutations and GraphQL mutations", async () => {
-    let count = 0;
-    const invoke = createHandler(async () => { count++; return true; });
-    for (const event of [
-      { toolName: "bash", input: { command: "gh api repos/owner/repo/issues -X POST" } },
-      { toolName: "bash", input: { command: "curl --data value=1 https://example.test" } },
-      { toolName: "mcp__generic_api", input: { method: "POST" } },
-      { toolName: "mcp__generic_graphql", input: { query: "mutation { updateThing }" } },
-    ]) expect(await invoke(event)).toBeUndefined();
-    expect(count).toBe(4);
-  });
-
-  test("allows explicit safe xh methods but prompts if method is absent or mutating", async () => {
-    let count = 0;
-    const invoke = createHandler(async () => { count++; return true; });
-    expect(await invoke({ toolName: "bash", input: { command: "xh GET https://example.test" } })).toBeUndefined();
-    expect(await invoke({ toolName: "bash", input: { command: "xh https://example.test" } })).toBeUndefined();
-    expect(await invoke({ toolName: "bash", input: { command: "xh POST https://example.test" } })).toBeUndefined();
-    expect(count).toBe(2);
-  });
-  test("requires approval for directory creation and mutating subcommands", async () => {
-    const invoke = createHandler(noPrompt);
-    for (const command of [
-      "mkdir folder",
-      "env MODE=test mkdir -p folder",
-      "gh issue create --title example",
-      "echo ok && mkdir folder",
-      "bash -c 'git push'",
-      "git -C repo push",
-      "gh -R owner/repo issue create --title example",
-      "sh -lc 'echo ok && rm tmp'",
-      "tmux send-keys -t demo 'git push' Enter",
-      "tmux send-keys -t demo 'mkdir folder' C-m",
-      "aoe send --help && git push",
-    ]) expect(await invoke({ toolName: "bash", input: { command } })).toEqual({ block: true, reason: "Action was not approved" });
-  });
-
-  test("does not interpret help, terminal keys, filters, or quoted data as mutations", async () => {
-    const invoke = createHandler(async () => { throw new Error("unexpected prompt"); });
-    for (const command of [
-      "aoe send --help",
-      "tmux send-keys -t demo 'transition' Enter",
-      "tmux send-keys -t demo 'echo transition' Enter",
-      "cargo test test_transition -- --nocapture",
-      "echo 'git push'",
-      "sh -c 'git status --short'",
-      "git -C repo branch --show-current",
-      "mkdir --help",
-    ]) expect(await invoke({ toolName: "bash", input: { command } })).toBeUndefined();
+  test("fails closed for remote writes when UI is unavailable or declines", async () => {
+    const event = { toolName: "mcp__slack_send_message", input: {} };
+    expect(await createHandler(async () => false)(event)).toEqual({ block: true, reason: "Remote write was not approved" });
+    expect(await createHandler(async () => true, false)(event)).toEqual({ block: true, reason: "Remote write requires interactive approval" });
+    expect(await createHandler(async () => { throw new Error("cancelled"); })(event)).toEqual({ block: true, reason: "Remote write approval failed" });
   });
 });

@@ -1,0 +1,7 @@
+{{- $servers := list -}}
+{{- range $server := .mcp_servers -}}
+{{- if eq $server.transport "remote" -}}
+{{- $servers = append $servers (printf "mcp__%s_" (regexReplaceAll "[^a-z0-9_]" (lower $server.name) "_")) -}}
+{{- end -}}
+{{- end -}}
+{{ $servers | toJson }}
