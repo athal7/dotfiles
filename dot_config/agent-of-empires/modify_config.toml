@@ -85,6 +85,17 @@ capabilities = [
 granted_at = "2026-07-08T19:43:58.777548Z"
 manifest_hash = "sha256:96c3746a11e23975725ffd089e0f57430d97ca605399d3651bc23a402c092aa0"
 
+[plugins."athal7.attention"]
+enabled = true
+source = "gh:athal7/attention"
+
+[plugins."athal7.attention".grant]
+capabilities = [
+    "runtime.worker",
+    "session.read",
+    "net",
+]
+granted_at = "2026-10-04T00:31:57Z"
 
 [plugins."aoe.web"]
 enabled = true
@@ -183,6 +194,7 @@ init_submodules = true
 path_template = "../{repo-name}-worktrees/{branch}"
 workspace_path_template = "../{branch}-workspace-{session-id}"
 ` -}}
+{{- $_ := setValueAtPath "plugins.athal7.attention.grant.manifest_hash" (printf "sha256:%s%s%s%s" "e5fd466ae531c580" "468941842a6caa33" "355fed7313d7bfff" "c183a13cd67bb85f") $static -}}
 {{- $runlayerEnvironment := list -}}
 {{- if hasKey . "runlayer" -}}
 {{-   range $key := keys .runlayer | sortAlpha -}}

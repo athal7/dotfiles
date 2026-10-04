@@ -61,12 +61,13 @@ packages:
     - name: witr
 
   # aoe (Agent of Empires) plugins — installed/updated via
-  # run_onchange_after_plugins-aoe.sh.tmpl. A list from day one (even with a
-  # single entry) so adding another aoe plugin later is a one-line registry
-  # edit, matching the idiom of every other registry key here.
+  # run_onchange_after_plugins-aoe.sh.tmpl. Keep sources and IDs here;
+  # managed enablement and grants live in modify_config.toml.
   aoe_plugins:
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
+    - source: "gh:athal7/attention"
+      id: "athal7.attention"
 
   casks:
     - name: mozilla-ai/tap/cq

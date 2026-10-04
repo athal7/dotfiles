@@ -58,6 +58,7 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
+check "installs the configured AoE Attention plugin" "$(grep -Fxc '  if ! aoe plugin install gh:athal7/attention --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "keeps Context7 and CQ disabled by default" "$(jq '[.mcpServers.context7.enabled, .mcpServers.context7.disabled, .mcpServers.cq.enabled, .mcpServers.cq.disabled] == [false, true, false, true]' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled != false and .mcpServers.runlayer.enabled != false and .mcpServers.slack.enabled != false' "$MCP")" true
 check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack") | .value.enabled == false] | all' "$MCP")" true
