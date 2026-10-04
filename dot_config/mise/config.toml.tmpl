@@ -1,10 +1,6 @@
 [tools]
 {{- range .packages.mise }}
-{{ if eq .name "npm:@earendil-works/pi-coding-agent" }}
-"{{ .name }}" = { version = {{ .version | quote }}, minimum_release_age = "0s" }
-{{ else }}
-{{ if contains ":" .name }}"{{ .name }}"{{ else }}{{ .name }}{{ end }} = {{ .version | quote }}
-{{ end }}
+{{ if contains ":" .name }}"{{ .name }}" = {{ .version | quote }}{{ else }}{{ .name }} = {{ .version | quote }}{{ end }}
 {{- end }}
 
 [settings]
