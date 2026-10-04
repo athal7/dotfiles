@@ -4,6 +4,7 @@
 - **Location:** modify only the current repository unless explicitly instructed.
 - **Tools:** use native tools directly; put repeated mechanical workflows in permanent scripts and do not create throwaway scripts.
 - **Safety:** fetch a named issue or pull request before work, follow the repository branch rule before editing, and show the complete payload before a remote write.
+- **GitHub writes:** before a push or PR creation, update, or review, request explicit approval for the exact target and payload and wait for it. This applies to native GitHub tools, shell commands, scripts, and Eval; an allowed execution tool does not waive this check.
 - **Timeouts:** the pre-tool hook sets an omitted Eval `timeout` to `0`; explicit Eval deadlines remain available. Do not add finite tool deadlines unless the work needs one. Built-in execution limits remain unchanged.
 - **Approval waits:** an unanswered approval is pending, not failure. Wait for approval or explicit denial/cancellation; if a call times out, establish its outcome before retrying a write.
 - **Code reviews:** leave findings unlabeled in review results and submitted comments; prefix only nits with `nit:`. Never use priority or severity labels such as `P1`/`P2`. For PR reviews, put each finding in an inline comment on the relevant diff line whenever possible; use a top-level review comment only when the feedback cannot be anchored to a specific changed line.

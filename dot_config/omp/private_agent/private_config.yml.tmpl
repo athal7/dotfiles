@@ -11,6 +11,21 @@ bash:
   autoBackground:
     enabled: true
   allowCompoundCommands: false
+  patterns:
+    - match: "git push*"
+      approval: prompt
+    - match: "git * push*"
+      approval: prompt
+    - match: "gh pr create*"
+      approval: prompt
+    - match: "gh pr edit*"
+      approval: prompt
+    - match: "gh pr review*"
+      approval: prompt
+    - match: "gh pr comment*"
+      approval: prompt
+    - match: "gh pr ready*"
+      approval: prompt
 browser:
   headless: true
   relay: true
