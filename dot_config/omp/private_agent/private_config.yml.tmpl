@@ -26,6 +26,9 @@ bash:
       approval: prompt
     - match: "gh pr ready*"
       approval: prompt
+    # The API can submit inline reviews or mutate PRs through method and field arguments.
+    - match: "gh api*"
+      approval: prompt
 browser:
   headless: true
   relay: true
