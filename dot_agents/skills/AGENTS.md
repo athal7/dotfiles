@@ -12,15 +12,12 @@ A skill fires at a **specific, named moment**. Guidance that applies to every se
 
 Keep: exact CLI invocations and flags, file paths, auth setup, silent failure modes, wrong-output traps, numeric caps, org conventions, hard-won gotchas. Cut: anything `<binary> --help` says, generic engineering advice, restated model knowledge, and rationale for a rule the reader already accepted.
 
-Fragments over sentences. Tables and bullets over paragraphs. A bulleted list of 5-sentence paragraphs is not brevity.
-
 ## Shape
 
-- **One skill, one trigger, one moment.** Split by *when* it fires, not what topic it covers. Commit-time and push-time are correctly separate; "commit and format conventions" is correctly one skill.
 - **The description is the trigger** — the only thing seen before deciding to load. State the situation, not the topic.
 - **Under ~80 lines.**
-- **Imperative steps, not phase graphs.** A long workflow skill gets read as a menu to skim-select from: action phases get executed, deliberative ones get skipped. When a skill must cover several paths, use a decision tree (here's the question, here's where to go), not "Phase 1… Phase 2…".
-- **Indirection beyond one hop is not followed** — measured at ~4% load for referenced sub-files. Keep the concrete action in the skill that fires. A program too long to inline belongs in `$PATH` as a script, not in a sub-file.
+- **Imperative steps, not phase graphs.** Use a decision tree when a skill has multiple paths.
+- **Keep required action in the triggering skill.** Referenced sub-files are not loaded automatically; put longer programs in `$PATH` as scripts.
 
 ## Public repo
 

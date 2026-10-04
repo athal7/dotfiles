@@ -22,7 +22,6 @@ External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](
 
 | Skill | Covers |
 |---|---|
-| **implement** | End-to-end implementation workflow when requested. |
 | **communication** | Draft human-facing prose for an integration. |
 | **omp-approval-feedback** | Allow a just-approved OMP CLI command without a future prompt. |
 | **shipit** | Commit and push completed changes, or deploy this dotfiles repository. |

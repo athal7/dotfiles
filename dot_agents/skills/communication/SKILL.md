@@ -22,10 +22,6 @@ If the user provides exact final wording and explicitly requests a send, a local
 
 Do not use a remote Slack or Gmail draft as the editing surface when a local draft is requested. Remote draft creation is itself a remote write.
 
-Tailor to the recipient — role, technical depth, your relationship with them. Some want two lines; some need the context.
-
-Surface assumptions as questions, not conclusions: "I'm reading this as X — does that match?" beats "this is X." Informal, contractions fine, no corporate hedging. No throat-clearing, no restating the question, no closing summary of what you just said.
-
 ## AI-authorship marker
 
 When a draft will be posted through an integration on the user's behalf, include this as the last line of the draft body when it applies:

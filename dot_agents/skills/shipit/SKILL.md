@@ -6,8 +6,7 @@ license: MIT
 
 ## Commit
 
-- Verify the user-visible change before committing.
-- Never commit with a failing required check.
+- Do not commit with a failing required check.
 - Never stage globally ignored files such as `.talismanrc`.
 - Use Conventional Commit subjects: `type(scope): description`.
 - Use `feat`, `fix`, `refactor`, `docs`, `test`, or `chore`.
