@@ -125,6 +125,7 @@ tools:
     browser: allow
     hub: allow
     task: allow
+    write: allow
 {{- range $server := .mcp_servers }}
 {{- if eq $server.transport "remote" }}
 {{- $serverName := regexReplaceAll "[^a-z0-9_]" (lower $server.name) "_" }}
