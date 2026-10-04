@@ -28,7 +28,7 @@ OMP uses native `write` approval with explicit `bash: allow`, `browser: allow`, 
 
 AoE stores configuration, plugins, profiles, and runtime state under `~/.config/agent-of-empires/`. On an existing machine, copy the complete `~/.agent-of-empires/` tree there **before** applying chezmoi: AoE switches to XDG as soon as the new directory exists. Check the migration with `aoe settings explain session.default_tool` and `aoe list` before removing the legacy tree. The tmux status line is minimal; use `C-b s` or `C-b w` to select a session or window.
 
-
+AoE plugins are declared in the [package registry](.chezmoidata/packages.yaml) and their enablement and capability grants in the [AoE configuration](dot_config/agent-of-empires/modify_config.toml). The Attention plugin displays prioritized items in each session pane.
 
 Homebridge stores its data at `~/.config/homebridge`. On a machine still using `~/.homebridge`, stop Homebridge before migrating the entire directory, preserve any existing destination as a backup, and check that the moved `config.json` parses before restarting it.
 

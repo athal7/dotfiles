@@ -194,7 +194,7 @@ init_submodules = true
 path_template = "../{repo-name}-worktrees/{branch}"
 workspace_path_template = "../{branch}-workspace-{session-id}"
 ` -}}
-{{- $_ := setValueAtPath "plugins.athal7.attention.grant.manifest_hash" (printf "sha256:%s%s%s%s" "e5fd466ae531c580" "468941842a6caa33" "355fed7313d7bfff" "c183a13cd67bb85f") $static -}}
+{{- $_ := set (index (index (index $static "plugins") "athal7.attention") "grant") "manifest_hash" (printf "sha256:%s%s%s%s" "6cabc6e86f83b879" "b7b00e1f6b6b6e4b" "6872f3d534691393" "a631e4d662d0e884") -}}
 {{- $runlayerEnvironment := list -}}
 {{- if hasKey . "runlayer" -}}
 {{-   range $key := keys .runlayer | sortAlpha -}}
@@ -216,6 +216,7 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{-   $_ := unset $live "tools" -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $static) $live -}}
+{{- $_ := set (index $config "plugins") "athal7.attention" (index (index $static "plugins") "athal7.attention") -}}
 {{- $_ := setValueAtPath "host_hooks.before_session" (index (index $static "host_hooks") "before_session") $config -}}
 {{- if gt (len $runlayerEnvironment) 0 -}}
 {{-   $_ := set $config "environment" $runlayerEnvironment -}}
