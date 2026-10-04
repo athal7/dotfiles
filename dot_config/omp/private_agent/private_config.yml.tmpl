@@ -29,6 +29,20 @@ bash:
       approval: prompt
     - match: "gh pr ready*"
       approval: prompt
+    - match: "gh pr close*"
+      approval: prompt
+    - match: "gh pr lock*"
+      approval: prompt
+    - match: "gh pr merge*"
+      approval: prompt
+    - match: "gh pr reopen*"
+      approval: prompt
+    - match: "gh pr revert*"
+      approval: prompt
+    - match: "gh pr unlock*"
+      approval: prompt
+    - match: "gh pr update-branch*"
+      approval: prompt
     # The API can submit inline reviews or mutate PRs through method and field arguments.
     - match: "gh api*"
       approval: prompt
