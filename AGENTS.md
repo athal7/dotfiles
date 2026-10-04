@@ -29,7 +29,7 @@ All packages are declared in `.chezmoidata/packages.yaml` under `brews`, `casks`
 
 ## Agent Operating Rules
 
-- OMP MCP server names are selector labels. When referring to exposed MCP tools, use server/tool names with hyphens converted to underscores. Server-specific read-only MCP exceptions belong in that server's `approval_allow` field in `.chezmoidata/mcp.yaml`; do not infer permission from the verb hook's Bash matching, which is a heuristic rather than a shell sandbox.
+- OMP MCP server names are selector labels. When referring to exposed MCP tools, use server/tool names with hyphens converted to underscores. Server-specific read-only MCP exceptions belong in that server's `approval_allow` field in `.chezmoidata/mcp.yaml`; OMP prompts for registered remote MCP tools whose names indicate mutation, but native approvals cannot inspect tool arguments.
 - Browser use requires affirmative user consent before the first browser API call in each OMP session. This is instruction-based, not enforced by OMP tool approval. Consent does not authorize consequential actions or navigation in the user's visible tab.
 - Keep code-review findings unlabeled; prefix only nits with `nit:`. For pull-request reviews, anchor each finding to a diff line when possible.
 - Daily maintenance runs production-error triage, KB enrichment, and CQ quality review as independent workstreams. Report outcomes separately; a settled worker or scheduled launcher exit does not establish complete coverage. Unanswered approvals and uncertain writes remain pending; do not retry timed-out writes until their outcome is known. The session uses the KB MCP overlay; KB projections remain governed by KB authorization and verification.

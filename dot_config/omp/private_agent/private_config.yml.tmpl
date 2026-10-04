@@ -121,13 +121,38 @@ terminal:
 tools:
   approval:
     bash: allow
-    browser: allow
     eval: allow
+    browser: allow
     hub: allow
     task: allow
-{{ range $server := .mcp_servers }}{{ if hasKey $server "approval_allow" }}{{ range $tool := $server.approval_allow }}    mcp__{{ regexReplaceAll "[^a-z0-9_]" (lower $server.name) "_" }}_{{ regexReplaceAll "[^a-z0-9_]" (lower $tool) "_" }}: allow
-{{ end }}{{ end }}{{ end }}
-  approvalMode: yolo
+{{- range $server := .mcp_servers }}
+{{- if eq $server.transport "remote" }}
+{{- $serverName := regexReplaceAll "[^a-z0-9_]" (lower $server.name) "_" }}
+{{- if hasKey $server "approval_allow" }}
+{{- range $tool := $server.approval_allow }}
+    mcp__{{ $serverName }}_{{ trimPrefix (printf "%s_" $serverName) (regexReplaceAll "[^a-z0-9_]" (lower $tool) "_") }}: allow
+{{- end }}
+{{- end }}
+{{- if hasKey $server "tools" }}
+{{- range $tool := $server.tools }}
+{{- $toolName := trimPrefix (printf "%s_" $serverName) (regexReplaceAll "[^a-z0-9_]" (lower $tool) "_") }}
+{{- $wordSource := regexReplaceAll "[^a-z0-9_]" (lower (regexReplaceAll "([a-z0-9])([A-Z])" $tool "${1}_${2}")) "_" }}
+{{- $words := splitList "_" (trimPrefix (printf "%s_" $serverName) $wordSource) }}
+{{- $mutating := false }}
+{{- range $index, $word := $words }}{{ range $verb := $.mcp_mutating_verbs }}
+{{- if and (or (eq $index 0) (and (eq $index 1) (eq (index $words 0) "quick")) (and (eq $word "upload") (eq (index $words 0) "prepare"))) (hasPrefix $verb $word) }}{{ $mutating = true }}{{ end }}
+{{- end }}{{ end }}
+{{- if and $mutating (not (and (hasKey $server "approval_allow") (has $tool $server.approval_allow))) }}
+    mcp__{{ $serverName }}_{{ $toolName }}: prompt
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+    # These query tools can send writes through method or GraphQL arguments.
+    mcp__bigquery_query: prompt
+    mcp__pagerduty_query: prompt
+  approvalMode: write
   xdev: true
 tui:
   hyperlinks: auto
