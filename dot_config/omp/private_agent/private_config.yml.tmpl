@@ -16,6 +16,9 @@ bash:
       approval: prompt
     - match: "git * push*"
       approval: prompt
+    # The dotfiles ship command eventually pushes main.
+    - match: "chezmoi-deploy*"
+      approval: prompt
     - match: "gh pr create*"
       approval: prompt
     - match: "gh pr edit*"
