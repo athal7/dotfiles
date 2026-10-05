@@ -24,7 +24,7 @@ The KB Markdown vault is the canonical source for collected facts and evidence. 
 
 ## OMP and AoE
 
-`omp` uses `~/.config/omp/` as its global root and `~/.config/omp/agent/` for agent data. AoE launches OMP sessions with those paths and loads an optional Anthropic API key from Keychain; restart running sessions after adding or rotating the key. AoE Serve binds to loopback behind private Tailscale Serve and uses a Keychain passphrase for its dashboard, not a URL token.
+`omp` uses `~/.config/omp/` as its global root and `~/.config/omp/agent/` for agent data; AoE launches sessions with those paths. OMP credentials use the Keychain-backed secret configuration. AoE Serve binds to loopback behind private Tailscale Serve and uses a Keychain passphrase for its dashboard, not a URL token.
 
 OMP uses native `write` approval with explicit `bash: allow`, `browser: allow`, `eval: allow`, `hub: allow`, `task: allow`, and `write: allow` overrides. Prefer native GitHub tools for operations they support; shell rules prompt for `gh api` because request arguments can send writes, including when the request is intended as a read. Native GitHub writes and PR creation/review use the execution tier and require approval; shell rules also prompt for `git push`, `chezmoi-deploy` (which applies and pushes `main`), and `gh pr create/edit/review/comment/ready/close/lock/merge/reopen/revert/unlock/update-branch`. The generated approval map prompts for registered remote MCP tools whose names indicate mutation, while `approval_allow` keeps specifically approved read-only tools allowed. BigQuery and PagerDuty query tools also prompt because they can send writes through their query arguments.
 

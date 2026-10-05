@@ -1,7 +1,14 @@
-{{- if hasKey . "local_model" -}}
-{{- $localModel := .local_model -}}
-{{- $agentMaxTokens := (index $localModel "agent_max_tokens") | default (index $localModel "max_tokens") | default 4096 -}}
 providers:
+  otari:
+    baseUrl: https://api.otari.ai/api/v1
+    api: openai-completions
+    apiKey: OTARI_API_KEY
+    discovery:
+      type: openai-models-list
+      injectV1: false
+{{ if hasKey . "local_model" }}
+{{ $localModel := .local_model }}
+{{ $agentMaxTokens := (index $localModel "agent_max_tokens") | default (index $localModel "max_tokens") | default 4096 }}
   {{ (index $localModel "provider") | default "gguf" }}:
     baseUrl: http://{{ (index $localModel "host") | default "127.0.0.1" }}:{{ (index $localModel "port") | default 8091 }}/v1
     api: {{ (index $localModel "api") | default "openai-completions" }}
@@ -16,8 +23,8 @@ providers:
         input: [text]
         contextWindow: {{ $localModel.context_window }}
         maxTokens: {{ $agentMaxTokens }}
-        {{- if hasKey $localModel "compaction_model" }}
+        {{ if hasKey $localModel "compaction_model" }}
         compactionModel: {{ $localModel.compaction_model }}
-        {{- end }}
+        {{ end }}
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-{{- end }}
+{{ end }}

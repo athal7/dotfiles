@@ -80,6 +80,8 @@ secrets:
   aoe_serve_passphrase: {}
   es_api_key: {}
   es_url: {}
+  anthropic_api_key: {}
+  otari_api_key: {}
 # Calendar configuration
 calendars:
   personal:

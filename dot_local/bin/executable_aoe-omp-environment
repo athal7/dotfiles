@@ -1,0 +1,16 @@
+#!/bin/sh
+# Emit OMP paths and manifest-backed credentials for AoE sessions.
+set -u
+
+[ "${AOE_TOOL:-}" = omp ] || exit 0
+
+if [ -r "$HOME/.envrc" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.envrc"
+fi
+
+printf 'PI_CONFIG_DIR=.config/omp\nPI_CODING_AGENT_DIR=%s\nXDG_DATA_HOME=%s\n' \
+  "$HOME/.config/omp/agent" "$HOME/.local/share"
+
+[ -z "${ANTHROPIC_API_KEY:-}" ] || printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY"
+[ -z "${OTARI_API_KEY:-}" ] || printf 'OTARI_API_KEY=%s\n' "$OTARI_API_KEY"
