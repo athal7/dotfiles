@@ -44,6 +44,13 @@ check "preserves unexpected stop detection override" "$(yq -r '.features.unexpec
 check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
 check "preserves task advisor override" "$(yq -r '.task.agentAdvisor.task' "$CONFIG")" off
 check "retains the configured TypeSafe judge fallback" "$(yq -r '.retry.fallbackChains.judge[0]' "$CONFIG")" "openrouter/~typesafe/jev-latest"
+check "enables curated Mnemopi memory" "$(yq -r '.memory.backend' "$CONFIG")" mnemopi
+check "uses project-tagged Mnemopi scope" "$(yq -r '.mnemopi.scoping' "$CONFIG")" per-project-tagged
+check "recalls memory automatically" "$(yq -r '.mnemopi.autoRecall' "$CONFIG")" true
+check "disables automatic memory retention" "$(yq -r '.mnemopi.autoRetain' "$CONFIG")" false
+check "caps memory injection" "$(yq -r '.mnemopi.injectionTokenLimit' "$CONFIG")" 1200
+check "does not configure ignored skills" "$(yq -r '(.skills.ignoredSkills // []) | length' "$CONFIG")" 0
+
 STALE_AOE="$WORK/stale-aoe.toml"
 printf '[plugins."agent-of-empires.github"]\nenabled = true\n[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
   | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_config/agent-of-empires/modify_config.toml" > "$STALE_AOE"
@@ -70,9 +77,10 @@ fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "installs the configured AoE Attention plugin" "$(grep -Fxc '  if ! aoe plugin install gh:athal7/attention --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
-check "keeps Context7 and CQ disabled by default" "$(jq '[.mcpServers.context7.enabled, .mcpServers.context7.disabled, .mcpServers.cq.enabled, .mcpServers.cq.disabled] == [false, true, false, true]' "$MCP")" true
+check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
+check "keeps Context7 disabled by default" "$(jq '[.mcpServers.context7.enabled, .mcpServers.context7.disabled] == [false, true]' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled != false and .mcpServers.runlayer.enabled != false and .mcpServers.slack.enabled != false' "$MCP")" true
-check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "cq" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack") | .value.enabled == false] | all' "$MCP")" true
+check "disables integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack") | .value.enabled == false] | all' "$MCP")" true
 runlayer_mcp_urls=(
   "bigquery https://bigquery.example.test/mcp"
   "pagerduty https://pagerduty.example.test/mcp"
@@ -88,10 +96,10 @@ if bash -n "$ZSHENV"; then zshenv_valid=true; else zshenv_valid=false; fi
 check "renders a valid shell environment" "$zshenv_valid" true
 rendered_runlayer_shell_environment="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHENV" | sort | paste -sd ' ' -)"
 check "exports configured Runlayer MCP URLs to shell sessions" "$rendered_runlayer_shell_environment" "export RUNLAYER_BIGQUERY_MCP_URL=\"https://bigquery.example.test/mcp\" export RUNLAYER_PAGERDUTY_MCP_URL=\"https://pagerduty.example.test/mcp\""
-check "limits KB enrichment to its collector MCP allowlist" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "atlassian cq gcalendar linear slack zoom"
+configured_mcp_servers="$(yq -r '.mcp_servers[].name' "$REPO_ROOT/.chezmoidata/mcp.yaml" | sort | paste -sd ' ' -)"
+check "includes every configured MCP server in the KB overlay" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "$configured_mcp_servers"
 check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
-check "enables the Calendar MCP server" "$(jq -r '.mcpServers["gcalendar"].enabled' "$KB_ENRICH_MCP")" true
-check "explicitly enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
+check "enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
 check "renders the local provider" "$(yq -r '.providers.gguf.models[0].id' "$MODELS")" Qwen3-30B-A3B-Instruct-2507
 check "ignores an OpenRouter key when rendering custom providers" "$(yq -r '.providers | keys | join(",")' "$MODELS")" gguf
 check "renders the configured context window" "$(yq -r '.providers.gguf.models[0].contextWindow' "$MODELS")" 32768

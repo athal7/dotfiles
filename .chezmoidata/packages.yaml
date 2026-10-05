@@ -9,7 +9,6 @@ packages:
     - jnsahaj/lumen
     - steipete/tap
     - can1357/tap
-    - mozilla-ai/tap
 
   brews:
     - name: can1357/tap/omp
@@ -70,7 +69,6 @@ packages:
       id: "athal7.attention"
 
   casks:
-    - name: mozilla-ai/tap/cq
     - name: gcloud-cli
     - name: font-monaspace-nf
     - name: tailscale-app

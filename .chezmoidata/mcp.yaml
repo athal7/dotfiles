@@ -23,13 +23,6 @@
         "approval_allow": ["query-docs", "resolve-library-id"],
       },
       {
-        "name": "cq",
-        "enabled_by_default": false,
-        "transport": "local",
-        "command": ["/bin/sh", "-c", "exec /usr/bin/env -u CQ_ADDR -u CQ_API_KEY cq mcp --db-path \"$HOME/.local/share/cq/local.db\""],
-        "tools": ["confirm", "flag", "propose", "query", "status"],
-      },
-      {
         "name": "codebase-memory",
         "enabled_by_default": true,
         "transport": "local",

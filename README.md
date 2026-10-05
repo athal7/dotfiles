@@ -20,11 +20,15 @@ Copy [`local.yaml.example`](local.yaml.example) to `.chezmoidata/local.yaml` and
 - Containers: Docker CLI and Compose use [Colima](https://github.com/abiosoft/colima). Its LaunchAgent starts a default Docker VM with 4 GiB of memory and a 30 GiB disk limit; shells point `DOCKER_HOST` at `$HOME/.colima/default/docker.sock`. Set `DOCKER_HOST` after shell startup to use another daemon. Compose is exposed through `~/.docker/cli-plugins/docker-compose` without replacing `~/.docker/config.json`. A container with `/var/run/docker.sock` mounted can control sibling containers; treat the mount as privileged. Apple Container remains installed independently, and Colima does not migrate or delete its data.
 - Knowledge-base collectors: [definitions](dot_config/kb/collectors/) deploy to `~/.config/kb/collectors/`.
 
+The KB Markdown vault is the canonical source for collected facts and evidence. OMP Mnemopi stores curated agent-learned insights only, with automatic retention disabled and project-tagged memories enabled for cross-project recall.
+
 ## OMP and AoE
 
 `omp` uses `~/.config/omp/` as its global root and `~/.config/omp/agent/` for agent data. AoE launches OMP sessions with those paths and loads an optional Anthropic API key from Keychain; restart running sessions after adding or rotating the key. AoE Serve binds to loopback behind private Tailscale Serve and uses a Keychain passphrase for its dashboard, not a URL token.
 
 OMP uses native `write` approval with explicit `bash: allow`, `browser: allow`, `eval: allow`, `hub: allow`, `task: allow`, and `write: allow` overrides. Prefer native GitHub tools for operations they support; shell rules prompt for `gh api` because request arguments can send writes, including when the request is intended as a read. Native GitHub writes and PR creation/review use the execution tier and require approval; shell rules also prompt for `git push`, `chezmoi-deploy` (which applies and pushes `main`), and `gh pr create/edit/review/comment/ready/close/lock/merge/reopen/revert/unlock/update-branch`. The generated approval map prompts for registered remote MCP tools whose names indicate mutation, while `approval_allow` keeps specifically approved read-only tools allowed. BigQuery and PagerDuty query tools also prompt because they can send writes through their query arguments.
+
+Scheduled KB enrichment's private OMP overlay enables every configured MCP server and renders configured authentication headers into the overlay. Configured name-based mutation prompts still apply; they are not a network sandbox.
 
 AoE stores configuration, plugins, profiles, and runtime state under `~/.config/agent-of-empires/`. On an existing machine, copy the complete `~/.agent-of-empires/` tree there **before** applying chezmoi: AoE switches to XDG as soon as the new directory exists. Check the migration with `aoe settings explain session.default_tool` and `aoe list` before removing the legacy tree. The tmux status line is minimal; use `C-b s` or `C-b w` to select a session or window.
 

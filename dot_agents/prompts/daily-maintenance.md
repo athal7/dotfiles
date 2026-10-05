@@ -1,9 +1,9 @@
-orchestrate all three daily maintenance workflows as the director. Spawn three independent good workers immediately: one for production-error triage, one for knowledge-base enrichment, and one for the CQ quality audit. Give each worker its complete section and the shared safety and reporting rules; workers start without this conversation. Do not perform those workflows in the director. Keep each worker on its own workstream and continue the others while one is blocked. A worker turn settling is not proof that its workflow completed: inspect its full result, follow up in the same worker when evidence is missing, and reconcile outcomes before reporting. Use bounded waits so an unresponsive worker cannot hold the other workflows hostage. Never retry an uncertain dispatch.
+Orchestrate both daily workflows as the director. Spawn two independent workers immediately: one for production-error triage and one for knowledge-base enrichment. Give each worker its complete section and shared safety/reporting rules; workers start without this conversation. Do not perform either workflow in the director. Keep each worker on its own workstream and continue while the other is blocked. A worker turn settling is not proof of completion: inspect its full result, follow up in the same worker when evidence is missing, and reconcile outcomes before reporting. Use bounded waits so an unresponsive worker cannot hold the other hostage. Never retry an uncertain dispatch.
 
-Treat production triage, KB enrichment, and CQ quality review as independent work: a pending approval, rate limit, inaccessible source, or failed dispatch in one does not prevent eligible read-only work in another. Batch independent reads when possible; never wait on one collector before starting another independent collector. Do not retry a timed-out write until its outcome is known, and do not treat an unanswered approval as denial or permission. Resume approved work after approval; continue other eligible work while waiting. Do not substitute another source or weaken access rules to work around a denial.
+Treat production triage and KB enrichment as independent work: a pending approval, rate limit, inaccessible source, or failed dispatch in one does not prevent eligible read-only work in the other. Batch independent reads when possible; never wait on one collector before starting another independent collector. Do not retry a timed-out write until its outcome is known, and do not treat an unanswered approval as denial or permission. Resume approved work after approval; continue other eligible work while waiting. Do not substitute another source or weaken access rules to work around a denial.
 Before any external query, read the relevant source skill and inspect the live tool schema. Validate the actual response shape before parsing or aggregating it; malformed JSON, null where an array is required, parameter validation errors, and missing required fields are source failures, never empty evidence. Preserve successful sibling results when another call fails; use independent calls or settled-result handling, not fail-fast aggregation.
 
-At the end, read the director's actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded or every projection scope completed. Report production dispatch outcomes, each collector terminal status and coverage state, CQ verify/status scope completeness, and CQ audit coverage separately. If a worker has not finished, any collector failed or was non-exhaustive, any projection scope is incomplete, the CQ audit could not run or review its full sample, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification. Do not mark an unfinished worker's work complete merely because another worker finished.
+At the end, read the director's actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded. Report production dispatch outcomes and each collector's terminal status and coverage state separately. If a worker has not finished, any collector failed or was non-exhaustive, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification. Do not mark an unfinished worker's work complete merely because another worker finished.
 
 Production-error triage and fix dispatch:
 
@@ -15,8 +15,8 @@ Use the default 24-hour time range for this scheduled run.
 1. Read `chezmoi data --format json` and use only exact `prod_services` `service.name` keys to map a service to its repository under `~/code/`.
 2. Query the APM error index for the requested window. Rank by `error.grouping_key`; select the top three mapped services without a minimum count. For every selected group, retain service name, exact `error.grouping_key`, exception type and message, count, and one trace id. Report the highest-volume unmapped group without dispatching it.
 Before querying, read the Elasticsearch and xh skills. Run xh-apm-error-groups, which uses the configured xh-es-search helper and returns compact, validated evidence for the default 24-hour window. Inspect that JSON result; if the helper fails or rejects an incomplete, timed-out, or inexact response, report an APM failure and dispatch no groups from that result.
-3. Query CQ for the exact exception signature before dispatching. Skip a group recorded as fixed unless the error recurred; carry prior triage context into a recurrence.
-4. For each group surviving CQ triage, before `aoe add`, search open GitHub PRs in the exact mapped repository and existing Linear issues for the mapped service. Search for the exact `error.grouping_key`, exception type, and distinctive message; try separate searches when one query misses candidates. Inspect each plausible candidate's status, description, links/relations, and recent activity to establish whether it covers this error. A broad keyword match alone is not enough.
+3. Use current APM evidence for error facts and the APM fix ledger, PRs, and issues for prior case context. Consult the KB Markdown vault for canonical source facts; Mnemopi is only for reusable agent-learned investigation insights, not exact exception signatures, incident history, or authoritative KB facts.
+4. Before dispatch, search open GitHub PRs in the exact mapped repository and existing Linear issues for the mapped service. Search for the exact grouping key, exception type, and distinctive message; inspect plausible matches and skip only when active work demonstrably covers the same error. Include backlog matches as prior context and continue.
 Use the native `github.search_prs` tool with the exact repository owner/name; do not guess an MCP tool name or treat a failed search as no matching PRs.
    Skip dispatch only if an open PR or a started/in-progress Linear issue demonstrably covers the same error; record its URL and status. A matching Backlog/Todo issue is prior context, not active implementation: include its URL, status, and relevance in the new-session prompt and continue. Do the same for uncertain matches rather than suppressing dispatch. If the group recurred after a completed fix, include the prior fix and linked follow-up context in the prompt and continue unless separate active work demonstrably covers the recurrence.
 5. For each group not skipped in step 4, run `aoe add <repo> --title apm-<service>-<timestamp> --tool omp --worktree fix/apm-<date>-<service> --new-branch` and capture the returned session ID. Run `aoe session start <session-id>`, wait at least five seconds for OMP to start, then run `aoe send --no-revive <session-id> <prompt>`. If start succeeds but warns that the OMP worker did not report a session ID, inspect session capture after sending; a successful start alone does not prove delivery. If capture cannot establish delivery, report it as uncertain rather than calling the dispatch successful. The prompt must include the error evidence and relevant PR/issue URLs, statuses, and context from step 4, and require a defect-versus-noise decision before making changes. Real defects should be fixed in code; noise is reported with a narrowly scoped APM-ignore recommendation when appropriate.
@@ -26,18 +26,9 @@ Use the native `github.search_prs` tool with the exact repository owner/name; do
 
 
 Knowledge-base enrichment:
-`kb` is local ingestion and reconciliation state. CQ is the normal local agent index. Use `kb` as fallback when CQ has no answer or projection verification is incomplete.
+The kb workflow owns canonical ingestion, reconciliation, source evidence, and access classification in its Markdown vault. OMP Mnemopi is only for curated agent-learned insights; never copy KB records into Mnemopi.
 
 `kb` with no subcommand opens an interactive TUI. Never invoke it bare from an agent session.
-
-## CQ quality audit
-
-Review a rotating sample of non-KB-projected CQ units. Keep KB canonical facts and projected units under the KB projection workflow; this audit must not inspect or alter projected units.
-
-1. Run `cq-audit-candidates` and review every emitted entry's complete `insight`, `evidence`, and flags. The command uses the local CQ database read-only and selects at most five units per weekday without persistent cursor state. Require the number of emitted entries to equal `min(5, eligible_count)`; if the command fails or that count differs, report the audit as incomplete. Do not substitute direct database writes or remote CQ access.
-2. Check each claim against its cited evidence and current authoritative source where available. A plausible claim or a candidate being non-projected is not evidence that it is wrong.
-3. Call CQ `flag` only for a unit verified incorrect or stale, with the specific reason and evidence. Call `confirm` only when the claim was independently verified. If evidence is unavailable or ambiguous, leave the unit unchanged and report it for follow-up. Never use `propose` to rewrite an existing unit during this audit.
-4. Report sample size, eligible count, reviewed count, confirmations/flags by unit ID and reason, and unresolved entries. Mark the CQ audit partial if any selected unit was not reviewed.
 
 ## KB maintenance
 
@@ -49,19 +40,8 @@ Review a rotating sample of non-KB-projected CQ units. Keep KB canonical facts a
 
 For date-range resolution, use `kb journal list` in the caller's local IANA timezone; never derive the range from UTC.
 
-## Projection operation
-
-- Keep canonical facts, source evidence, deduplication, and publication disposition in KB state. Do not use a direct SQLite write for CQ or KB state.
-- Collectors provide source identity, fingerprint, and access classification. KB performs projection after enrichment presents the complete plan.
-- Capability gate: call `/usr/bin/env -u CQ_ADDR -u CQ_API_KEY CQ_LOCAL_DB_PATH="$HOME/.local/share/cq/local.db" kb cq projection plan --help`. If it fails, stop projection safely and retain KB fallback.
-- Normal projection: run upstream `plan --output <owner-only-plan.json>`. Backfill: run upstream `backfill --output <owner-only-plan.json>`. Add `--authorization-policy all-local-agents` only when `kb.local_projection.all_local_agents_authorized_for_classified_content` is true.
-- After the plan is complete, run upstream `approve <plan.json> --output <owner-only-approved.json>`, `apply <approved.json>`, `verify`, then `status` in the same isolated environment.
-- Upstream owns authorization digests, ledger mutation, recovery, replacement, completion, and verification. Do not emulate these mechanics.
-- Upstream fails closed for records whose access classification needs authorization. Never use `CQ_ADDR`, `CQ_API_KEY`, `cq auth`, `cq drain`, another database, credentials, secrets, or access-incompatible content.
-- Run every `kb cq` command with `/usr/bin/env -u CQ_ADDR -u CQ_API_KEY CQ_LOCAL_DB_PATH="$HOME/.local/share/cq/local.db" kb cq ...`; do not rely on inherited CQ endpoint or database settings.
-- CQ verification is complete only when upstream `status` and `verify` report the relevant scope complete. Until every backfill scope completes, retain KB fallback.
 ## Enrichment completion reporting
-Launch independent collector reads as separate workers in one parallel batch as soon as their inputs are available. Give each worker its collector definition, the required source skill, and the exact shared report schema. Collector workers only read sources and return evidence plus one record; record each result independently. Do not create or apply a projection plan until every collector has a terminal status or a bounded timeout explicitly marks a stalled worker failed with non-exhaustive coverage. The KB worker then reconciles all results and is the sole KB/CQ writer.
+Launch independent collector reads as separate workers in one parallel batch as soon as their inputs are available. Give each worker its collector definition, required source skill, and the shared report schema. Collector workers only read sources and return evidence plus one record; record each result independently. Do not reconcile until every collector has a terminal status or a bounded timeout marks a stalled worker failed with non-exhaustive coverage. The KB worker then reconciles the results and is the sole KB writer.
 
 Before collection, enumerate regular `*.md` files directly under `~/.config/kb/collectors/`. These XDG collector definitions are the registry. For each file separately, read its YAML front-matter `name` with `yq --front-matter=extract -r '.name' <file>` (not one multi-file invocation); require it to match the filename stem and be unique, then load the definition. If the directory is missing or empty, or a definition has an invalid or duplicate name, report the registry prerequisite failure instead of claiming completion. `kb config get collectors` is not a supported lookup.
 
@@ -75,7 +55,7 @@ Never claim all collectors succeeded unless every configured collector ran succe
 ## Confluence
 
 - A Decision Log page is eligible source material unless its exact content is a recorded KB write-back echo.
-- Confluence publication is separate. Link a CQ KU only when one exists.
+- Confluence publication is separate. Link the canonical KB note or source record when one exists.
 
 ## Limits
 

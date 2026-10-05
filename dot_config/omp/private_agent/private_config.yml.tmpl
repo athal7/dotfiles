@@ -85,7 +85,13 @@ interruptMode: immediate
 marketplace:
   autoUpdate: auto
 memory:
-  backend: "off"
+  backend: mnemopi
+mnemopi:
+  scoping: per-project-tagged
+  autoRecall: true
+  autoRetain: false
+  recallLimit: 8
+  injectionTokenLimit: 1200
 modelRoleStorage: global
 modelRoles:
   advisor: openai-codex/gpt-6-luna

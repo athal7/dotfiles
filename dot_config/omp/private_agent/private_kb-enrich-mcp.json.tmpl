@@ -1,27 +1,24 @@
-{{- $allowed := dict "cq" true "linear" true "atlassian" true "slack" true "zoom" true "gcalendar" true -}}
 {{- $servers := dict -}}
 {{- range $server := .mcp_servers -}}
-{{-   if hasKey $allowed $server.name -}}
-{{-     $entry := dict -}}
-{{-     $_ := set $entry "enabled" true -}}
-{{-     if eq $server.transport "local" -}}
-{{-       $_ := set $entry "command" (first $server.command) -}}
-{{-       $_ := set $entry "args" (rest $server.command) -}}
-{{-     else -}}
-{{-       $_ := set $entry "type" "http" -}}
-{{-       $url := $server.url -}}
-{{-       if kindIs "map" $url -}}{{- $url = printf "${%s}" (index $url "name") -}}{{- end -}}
-{{-       $_ := set $entry "url" $url -}}
-{{-       if hasKey $server "headers" -}}
-{{-         $headers := dict -}}
-{{-         range $headerName, $headerSpec := $server.headers -}}
-{{-           $value := output "sh" "-c" $headerSpec.cmd | trim -}}
-{{-           $_ := set $headers $headerName (printf $headerSpec.format $value) -}}
-{{-         end -}}
-{{-         $_ := set $entry "headers" $headers -}}
+{{-   $entry := dict -}}
+{{-   $_ := set $entry "enabled" true -}}
+{{-   if eq $server.transport "local" -}}
+{{-     $_ := set $entry "command" (first $server.command) -}}
+{{-     $_ := set $entry "args" (rest $server.command) -}}
+{{-   else -}}
+{{-     $_ := set $entry "type" "http" -}}
+{{-     $url := $server.url -}}
+{{-     if kindIs "map" $url -}}{{- $url = printf "${%s}" (index $url "name") -}}{{- end -}}
+{{-     $_ := set $entry "url" $url -}}
+{{-     if hasKey $server "headers" -}}
+{{-       $headers := dict -}}
+{{-       range $headerName, $headerSpec := $server.headers -}}
+{{-         $value := output "sh" "-c" $headerSpec.cmd | trim -}}
+{{-         $_ := set $headers $headerName (printf $headerSpec.format $value) -}}
 {{-       end -}}
+{{-       $_ := set $entry "headers" $headers -}}
 {{-     end -}}
-{{-     $_ := set $servers $server.name $entry -}}
 {{-   end -}}
+{{-   $_ := set $servers $server.name $entry -}}
 {{- end -}}
 {{ dict "mcpServers" $servers | toJson }}

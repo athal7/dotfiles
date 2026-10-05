@@ -14,7 +14,7 @@ Do not exclude `decision-log` pages by label. For every candidate page, record i
 Treat a Decision Log page as a KB echo only when all conditions match:
 
 1. The body has a `KB projection: ledger:<entry-id>` marker.
-2. KB publication provenance identifies that page ID and entry ID as a KB write-back. Its linked CQ KU is optional.
+2. KB publication provenance identifies that page ID and entry ID as a KB write-back.
 3. The page's current normalized body fingerprint equals the recorded published-content fingerprint.
 
 If any condition fails, process the page as independently authored source material. A human edit to a KB-created page changes the fingerprint and is eligible for fresh extraction.

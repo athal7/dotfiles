@@ -3,7 +3,7 @@ name: communication
 description: Load when composing human-facing prose through an integration — chat messages, review comments, merge request descriptions, emails, doc bodies, ticket descriptions. Carries the AI-authorship attribution rule.
 license: MIT
 ---
-Query CQ for normal context. Load `knowledge-base` when CQ has no answer or its projection verification is incomplete.
+Use Mnemopi recall for relevant agent-learned context. Load `knowledge-base` when a communication needs authoritative collected facts, citations, or source verification; never treat memory as a substitute for KB evidence.
 ## Draft-first workflow
 
 When the user has not provided exact final wording for an external communication, create a local draft before using an integration write tool.

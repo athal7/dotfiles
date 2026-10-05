@@ -1,4 +1,4 @@
-`kb` is local ingestion and reconciliation state. CQ is the normal local agent index. Use `kb` as fallback when CQ has no answer or projection verification is incomplete.
+The kb workflow owns canonical ingestion, reconciliation, source evidence, and access classification in its Markdown vault. OMP Mnemopi stores curated agent-learned insights only; never copy KB records into memory.
 
 `kb` with no subcommand opens an interactive TUI. Never invoke it bare from an agent session.
 
@@ -12,23 +12,12 @@
 
 For date-range resolution, use `kb journal list` in the caller's local IANA timezone; never derive the range from UTC.
 
-## Projection operation
-
-- Keep canonical facts, source evidence, deduplication, and publication disposition in KB state. Do not use a direct SQLite write for CQ or KB state.
-- Collectors provide source identity, fingerprint, and access classification. KB performs projection after enrichment presents the complete plan.
-- Capability gate: call `/usr/bin/env -u CQ_ADDR -u CQ_API_KEY CQ_LOCAL_DB_PATH="$HOME/.local/share/cq/local.db" kb cq projection plan --help`. If it fails, stop projection safely and retain KB fallback.
-- Normal projection: run upstream `plan --output <owner-only-plan.json>`. Backfill: run upstream `backfill --output <owner-only-plan.json>`. Add `--authorization-policy all-local-agents` only when `kb.local_projection.all_local_agents_authorized_for_classified_content` is true.
-- After the plan is complete, run upstream `approve <plan.json> --output <owner-only-approved.json>`, `apply <approved.json>`, `verify`, then `status` in the same isolated environment.
-- Upstream owns authorization digests, ledger mutation, recovery, replacement, completion, and verification. Do not emulate these mechanics.
-- Upstream fails closed for records whose access classification needs authorization. Never use `CQ_ADDR`, `CQ_API_KEY`, `cq auth`, `cq drain`, another database, credentials, secrets, or access-incompatible content.
-- Run every `kb cq` command with `/usr/bin/env -u CQ_ADDR -u CQ_API_KEY CQ_LOCAL_DB_PATH="$HOME/.local/share/cq/local.db" kb cq ...`; never rely on ambient endpoint or database settings.
-- CQ verification is complete only when upstream `status` and `verify` report the relevant scope complete. Until every backfill scope completes, retain KB fallback.
 ## Enrichment completion reporting
 
 A 429, 403, inaccessible attachment, or pagination failure blocks only that collector. Never retry a timed-out write until its outcome is known, bypass an approval, or substitute a less restrictive source. Record the blockage.
-Start every configured collector as an independent read-only worker in one parallel batch after validating the registry. Each worker reads its collector definition and required source skill, uses only configured tools, and returns evidence plus one report record; collector workers never write KB/CQ state. Record each result independently. Do not create or apply a projection plan until every collector has a terminal status or a bounded timeout explicitly marks a stalled worker failed with non-exhaustive coverage. The KB worker then reconciles all returned evidence and is the sole writer; one failed or blocked source never holds up other collectors.
+Start every configured collector as an independent read-only worker in one parallel batch after validating the registry. Each worker reads its collector definition and required source skill, uses only configured tools, and returns evidence plus one report record; collector workers never write KB state. Record each result independently. After every collector has a terminal status or a bounded timeout explicitly marks a stalled worker failed with non-exhaustive coverage, the KB worker reconciles all returned evidence and is the sole writer.
 
-After collection, read CQ verify and status separately from collector results. An applied plan is not complete while project or decision scopes are incomplete; retain KB fallback. Read the actual todo state before reporting its completed/total count; task completion does not imply exhaustive source coverage. Overall enrichment is partial if any collector failed or was non-exhaustive or a projection scope remains incomplete, even when all attempted tasks are marked done.
+Read the actual todo state before reporting its completed/total count; task completion does not imply exhaustive source coverage. Overall enrichment is partial if any collector failed or was non-exhaustive, even when all attempted tasks are marked done.
 
 Before collection, enumerate regular `*.md` files directly under `~/.config/kb/collectors/`. These XDG collector definitions are the registry. For each file separately, read its YAML front-matter `name` with `yq --front-matter=extract -r '.name' <file>` (not one multi-file invocation); require it to match the filename stem and be unique, then load the definition. If the directory is missing or empty, or a definition has an invalid or duplicate name, report the registry prerequisite failure instead of claiming completion. `kb config get collectors` is not a supported lookup.
 
@@ -42,7 +31,7 @@ Never claim all collectors succeeded unless every configured collector ran succe
 ## Confluence
 
 - A Decision Log page is eligible source material unless its exact content is a recorded KB write-back echo.
-- Confluence publication is separate. Link a CQ KU only when one exists.
+- Confluence publication is separate. Link the canonical KB note or source record when one exists.
 
 ## Limits
 
