@@ -33,3 +33,8 @@ EOF
 {{ end -}}
 mise install
 mise reshim
+
+# Install the pinned local judge before launchd starts it.
+OPENJEV_VENV="$HOME/.local/share/openjev/venv"
+uv venv --python {{ .packages.openjev.python | quote }} "$OPENJEV_VENV"
+uv pip install --python "$OPENJEV_VENV/bin/python" {{ printf "openjev[mlx] @ git+https://github.com/razorback16/openjev@%s" .packages.openjev.revision | quote }}

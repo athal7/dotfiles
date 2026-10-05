@@ -17,27 +17,6 @@ orgs:
   your-personal-org:
     kb_eligible: false
 
-# Locally-hosted Apple Silicon model. `server` selects the runtime that owns
-# the shared OpenAI-compatible endpoint consumed by the OMP provider and the
-# local LaunchAgent. Omit this key entirely on machines that should not run a
-# local model.
-#
-# host, port, provider, api, and api_key have template defaults
-# (127.0.0.1:8091, provider "gguf", and OpenAI-compatible protocol).
-# Set only values that need an override.
-local_model:
-  server: llama
-  provider: gguf
-  hf_repo: unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF:UD-Q3_K_XL
-  name: qwen3-30b-a3b-instruct-2507
-  id: Qwen3-30B-A3B-Instruct-2507
-  context_window: 32768
-  max_tokens: 8192
-  agent_max_tokens: 8192
-  compaction_keep_recent_tokens: 12288
-  compaction_model: openai-codex/gpt-6-sol
-  cache_ram: 3G
-
 # Production service to local repo mapping for scheduled maintenance.
 # Keys are Elastic APM service.name values; values are repo directory names under ~/code.
 prod_services:

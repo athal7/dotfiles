@@ -1,8 +1,12 @@
-# Package registry — single source of truth for all managed dependencies.
-# brew, cask, mise (including Python tools), and GitHub release packages.
+# Package registry — single source of truth for managed dependencies.
+# Homebrew, mise, the pinned local judge, and GitHub release packages.
 # Install scripts and chezmoi externals are generated from this file.
 
 packages:
+  # Pinned System One server for the local OMP judge.
+  openjev:
+    revision: dcd20947b5dd
+    python: "3.12"
   taps:
     - athal7/tap
     - github/gh
@@ -33,7 +37,6 @@ packages:
     - name: jc
     - name: jq
     - name: k9s
-    - name: llama.cpp
     - name: kubernetes-cli
     - name: jnsahaj/lumen/lumen
     - name: macos-trash

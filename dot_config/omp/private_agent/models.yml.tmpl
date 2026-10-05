@@ -6,25 +6,15 @@ providers:
     discovery:
       type: openai-models-list
       injectV1: false
-{{ if hasKey . "local_model" }}
-{{ $localModel := .local_model }}
-{{ $agentMaxTokens := (index $localModel "agent_max_tokens") | default (index $localModel "max_tokens") | default 4096 }}
-  {{ (index $localModel "provider") | default "gguf" }}:
-    baseUrl: http://{{ (index $localModel "host") | default "127.0.0.1" }}:{{ (index $localModel "port") | default 8091 }}/v1
-    api: {{ (index $localModel "api") | default "openai-completions" }}
-    apiKey: {{ if hasKey $localModel "api_key" }}{{ $localModel.api_key }}{{ else }}llama-local{{ end }}
-    compat:
-      supportsDeveloperRole: false
-      supportsReasoningEffort: false
+  openjev:
+    baseUrl: http://127.0.0.1:8091
+    api: typesafe
+    auth: none
     models:
-      - id: {{ (index $localModel "id") | default "default_model" }}
-        name: {{ $localModel.name }}
+      - id: openjev-latest
+        name: OpenJev
         reasoning: false
-        input: [text]
-        contextWindow: {{ $localModel.context_window }}
-        maxTokens: {{ $agentMaxTokens }}
-        {{ if hasKey $localModel "compaction_model" }}
-        compactionModel: {{ $localModel.compaction_model }}
-        {{ end }}
+        input: [text, image]
+        contextWindow: 32768
+        maxTokens: 1
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-{{ end }}

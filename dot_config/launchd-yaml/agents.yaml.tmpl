@@ -126,41 +126,24 @@ launchagents:
       UIX_STORAGE_PATH: $HOME/.config/homebridge
 
 
-{{- if hasKey . "local_model" }}
-
-  llama-server:
-    Label: com.$USER.llama-server
+  openjev:
+    Label: com.$USER.openjev
     ProgramArguments:
-      - /opt/homebrew/bin/llama-server
-      - --hf-repo
-      - {{ .local_model.hf_repo }}
-      - --host
-      - {{ (index .local_model "host") | default "127.0.0.1" }}
-      - --port
-      - "{{ (index .local_model "port") | default 8091 }}"
-      - --ctx-size
-      - "{{ .local_model.context_window }}"
-      - --parallel
-      - "1"
-      - --cache-prompt
-      - --cache-ram
-      - {{ (index .local_model "cache_ram") | default "3G" }}
-      - --gpu-layers
-      - all
-      - --fit
-      - "off"
-      - --reasoning
-      - "off"
-      - --metrics
+      - $HOME/.local/share/openjev/venv/bin/python
+      - -m
+      - openjev
     RunAtLoad: true
     KeepAlive: true
     ProcessType: Interactive
-    StandardOutPath: $HOME/Library/Logs/llama-server.log
-    StandardErrorPath: $HOME/Library/Logs/llama-server.error.log
+    StandardOutPath: $HOME/Library/Logs/openjev.log
+    StandardErrorPath: $HOME/Library/Logs/openjev.error.log
     EnvironmentVariables:
-      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
-{{- end }}
+      HF_HUB_DISABLE_XET: "1"
+      OPENJEV_BACKEND: mlx
+      OPENJEV_HOST: 127.0.0.1
+      OPENJEV_PORT: "8091"
+      OPENJEV_MLX_CACHE_LIMIT_GB: "4"
 
   naya-sync:
     Label: com.$USER.naya-sync
