@@ -125,6 +125,7 @@
         "transport": "remote",
         "url": "https://api.githubcopilot.com/mcp/",
         "headers": {
+          "Authorization": { "cmd": "printf %s \"${GITHUB_TOKEN:-}\"", "format": "Bearer %s" },
           "X-MCP-Toolsets": { "value": "context,issues,pull_requests,repos,users,actions" },
         },
         "tools": [
