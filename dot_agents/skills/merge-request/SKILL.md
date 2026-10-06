@@ -10,6 +10,7 @@ license: MIT
 - Batch actionable fixes. Run the lowest suitable verification tier. Run browser QA first for UI changes.
 - Use `shipit` for the commit and push cycle.
 - Resolve a fixed thread only after the fix is pushed.
+- Once every comment thread on a review has been replied to, fixed, or resolved, dismiss that review; do not dismiss it while any thread remains unaddressed.
 - Show the complete payload before every remote write.
 - Do not change draft state, reviewers, or assignment while another reviewer is active.
 - Resolve conflicts by preserving both sides' intent. Run the full required checks after resolution.
