@@ -19,32 +19,7 @@ bash:
     # The dotfiles ship command eventually pushes main.
     - match: "chezmoi-deploy*"
       approval: prompt
-    - match: "gh pr create*"
-      approval: prompt
-    - match: "gh pr edit*"
-      approval: prompt
-    - match: "gh pr review*"
-      approval: prompt
-    - match: "gh pr comment*"
-      approval: prompt
-    - match: "gh pr ready*"
-      approval: prompt
-    - match: "gh pr close*"
-      approval: prompt
-    - match: "gh pr lock*"
-      approval: prompt
-    - match: "gh pr merge*"
-      approval: prompt
-    - match: "gh pr reopen*"
-      approval: prompt
-    - match: "gh pr revert*"
-      approval: prompt
-    - match: "gh pr unlock*"
-      approval: prompt
-    - match: "gh pr update-branch*"
-      approval: prompt
-    # The API can submit inline reviews or mutate PRs through method and field arguments.
-    - match: "gh api*"
+    - match: "gh *"
       approval: prompt
 browser:
   headless: true
@@ -79,7 +54,7 @@ followUpMode: all
 generate_image:
   enabled: true
 github:
-  enabled: true
+  enabled: false
 hideThinkingBlock: true
 interruptMode: immediate
 marketplace:
@@ -172,16 +147,29 @@ tools:
     mcp__{{ $serverName }}_{{ trimPrefix (printf "%s_" $serverName) (regexReplaceAll "[^a-z0-9_]" (lower $tool) "_") }}: allow
 {{- end }}
 {{- end }}
+{{- if hasKey $server "approval_prompt" }}
+{{- range $tool := $server.approval_prompt }}
+    mcp__{{ $serverName }}_{{ trimPrefix (printf "%s_" $serverName) (regexReplaceAll "[^a-z0-9_]" (lower $tool) "_") }}: prompt
+{{- end }}
+{{- end }}
 {{- if hasKey $server "tools" }}
 {{- range $tool := $server.tools }}
 {{- $toolName := trimPrefix (printf "%s_" $serverName) (regexReplaceAll "[^a-z0-9_]" (lower $tool) "_") }}
 {{- $wordSource := regexReplaceAll "[^a-z0-9_]" (lower (regexReplaceAll "([a-z0-9])([A-Z])" $tool "${1}_${2}")) "_" }}
 {{- $words := splitList "_" (trimPrefix (printf "%s_" $serverName) $wordSource) }}
 {{- $mutating := false }}
+{{- $globPrompt := false }}
 {{- range $index, $word := $words }}{{ range $verb := $.mcp_mutating_verbs }}
 {{- if and (or (eq $index 0) (and (eq $index 1) (eq (index $words 0) "quick")) (and (eq $word "upload") (eq (index $words 0) "prepare"))) (hasPrefix $verb $word) }}{{ $mutating = true }}{{ end }}
 {{- end }}{{ end }}
-{{- if and $mutating (not (and (hasKey $server "approval_allow") (has $tool $server.approval_allow))) }}
+{{/* OMP approval keys are exact names; expand these * globs during rendering. */}}
+{{- if hasKey $server "approval_prompt_globs" }}
+{{- range $pattern := $server.approval_prompt_globs }}
+{{- $globRegex := replace "*" ".*" $pattern }}
+{{- if regexMatch (printf "^%s$" $globRegex) (printf "mcp__%s_%s" $serverName $toolName) }}{{ $globPrompt = true }}{{- end }}
+{{- end }}
+{{- end }}
+{{- if and (or $mutating $globPrompt) (not (and (hasKey $server "approval_allow") (has $tool $server.approval_allow))) }}
     mcp__{{ $serverName }}_{{ $toolName }}: prompt
 {{- end }}
 {{- end }}

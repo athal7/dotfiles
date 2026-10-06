@@ -124,6 +124,31 @@
         "url": { "from": "env", "name": "RUNLAYER_SELF_MCP_URL" },
       },
       {
+        "name": "github",
+        "enabled_by_default": true,
+        "transport": "remote",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": {
+          "X-MCP-Toolsets": { "value": "context,issues,pull_requests,repos,users,actions" },
+        },
+        "tools": [
+          "actions_get", "actions_list", "get_job_logs",
+          "list_issues", "list_notifications", "get_notification_details",
+          "pull_request_read", "get_commit", "list_commits", "list_branches",
+          "get_file_contents", "search_code", "search_repositories", "search_commits",
+          "add_issue_comment", "add_comment_to_pending_review", "add_pull_request_review_comment",
+          "create_pull_request_review", "submit_pending_pull_request_review",
+          "delete_pending_pull_request_review", "request_pull_request_reviewers",
+          "resolve_review_thread", "unresolve_review_thread", "actions_run_trigger"
+        ],
+        "approval_prompt_globs": [
+          "mcp__github_*_write", "mcp__github_*_trigger", "mcp__github_add_*",
+          "mcp__github_create_*", "mcp__github_delete_*", "mcp__github_merge_*",
+          "mcp__github_request_*", "mcp__github_resolve_*", "mcp__github_submit_*",
+          "mcp__github_unresolve_*", "mcp__github_update_*"
+        ],
+      },
+      {
         "name": "bigquery",
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_BIGQUERY_MCP_URL" },
