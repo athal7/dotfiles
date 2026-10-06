@@ -12,7 +12,7 @@ license: MIT
 - Resolve a fixed thread only after the fix is pushed.
 - For a review with comment threads, dismiss the review after every thread has been replied to, fixed (and pushed), or resolved.
 - Show the complete payload before every remote write.
-- Keep the request ready while addressing feedback; leave active reviewers' state untouched.
+- Preserve the request's draft state while addressing feedback; leave active reviewers' state untouched.
 - Resolve conflicts by preserving both sides' intent. Run the full required checks after resolution.
 - Re-request review only after the final summary and stable pushed head are ready.
 - Prefer merging over rebasing a reviewed request; rebasing can invalidate inline comment anchors.
