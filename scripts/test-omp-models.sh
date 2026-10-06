@@ -100,6 +100,9 @@ check "enables the official GitHub MCP by default" "$(jq -r '.mcpServers.github.
 check "uses the official GitHub MCP endpoint" "$(jq -r '.mcpServers.github.url' "$MCP")" "https://api.githubcopilot.com/mcp/"
 check "selects the official GitHub MCP toolsets" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")" "context,issues,pull_requests,repos,users,actions"
 check "includes review-thread read and resolution tools" "$(jq -r '[.mcpServers.github.includeTools[] | select(. == "pull_request_read" or . == "resolve_review_thread")] | length' "$MCP")" 2
+expected_github_authorization="Bearer \${GITHUB_TOKEN}"
+check "defers GitHub token expansion to OMP startup" "$(jq -r '.mcpServers.github.headers.Authorization' "$MCP")" "$expected_github_authorization"
+check "preserves GitHub token expansion in KB enrichment" "$(jq -r '.mcpServers.github.headers.Authorization' "$KB_ENRICH_MCP")" "$expected_github_authorization"
 check "includes GitHub MCP in scheduled KB enrichment" "$(jq -r '(.mcpServers | has("github"))' "$KB_ENRICH_MCP")" true
 check "removes the two Runlayer GitHub connectors" "$(jq -r '[.mcpServers | has("github-orgs"), has("github-other-orgs")] | any' "$MCP")" false
 rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[]' | sort | paste -sd ' ' -)"
