@@ -1,10 +1,7 @@
 {{- $servers := dict -}}
 {{- range $server := .mcp_servers -}}
 {{-   $entry := dict -}}
-{{-   if not ((index $server "enabled_by_default") | default false) -}}
-{{-     $_ := set $entry "enabled" false -}}
-{{-     $_ := set $entry "disabled" true -}}
-{{-   end -}}
+{{-   $_ := set $entry "enabled" true -}}
 {{-   if eq $server.transport "local" -}}
 {{-     $_ := set $entry "command" (first $server.command) -}}
 {{-     $_ := set $entry "args" (rest $server.command) -}}

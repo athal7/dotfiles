@@ -10,7 +10,6 @@
   "mcp_servers": [
       {
         "name": "context7",
-        "enabled_by_default": false,
         "transport": "remote",
         "url": "https://mcp.context7.com/mcp",
         "headers": {
@@ -24,7 +23,6 @@
       },
       {
         "name": "codebase-memory",
-        "enabled_by_default": true,
         "transport": "local",
         "command": ["npx", "--yes", "codebase-memory-mcp@0.11.0"],
       },
@@ -119,13 +117,11 @@
       },
       {
         "name": "runlayer",
-        "enabled_by_default": true,
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SELF_MCP_URL" },
       },
       {
         "name": "github",
-        "enabled_by_default": true,
         "transport": "remote",
         "url": "https://api.githubcopilot.com/mcp/",
         "headers": {
@@ -160,7 +156,6 @@
       },
       {
         "name": "slack",
-        "enabled_by_default": true,
         "transport": "remote",
         "url": { "from": "env", "name": "RUNLAYER_SLACK_MCP_URL" },
         "tools":
