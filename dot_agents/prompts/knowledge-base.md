@@ -8,7 +8,8 @@ The kb workflow owns canonical ingestion, reconciliation, source evidence, and a
 |---|---|
 | Reconcile people, projects, or products | `kb people|projects|products show <name>` |
 | Record or inspect source journal state | `kb journal append|list|show` |
-| Reconcile existing local action items | `kb action-items list`, then `complete`/`progress`/`todo <line_no>` |
+
+Evaluate each surfaced action against current state. Take warranted action through the appropriate workflow and approvals, then report its outcome; otherwise report why no action was needed.
 
 For date-range resolution, use `kb journal list` in the caller's local IANA timezone; never derive the range from UTC.
 
