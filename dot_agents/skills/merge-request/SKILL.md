@@ -11,6 +11,8 @@ license: MIT
 - Use `shipit` for the commit and push cycle.
 - Resolve a fixed thread only after the fix is pushed.
 - For a review with comment threads, dismiss the review after every thread has been replied to, fixed (and pushed), or resolved.
+- The configured GitHub MCP lacks review dismissal. Use approval-gated `gh api` for REST `PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/dismissals` with `{"message": "<reason>", "event": "DISMISS"}`; confirm the returned review `state` is `DISMISSED`.
+- On a protected branch, dismissal requires administrator or designated dismissal permission; report a denied dismissal rather than treating thread resolution as equivalent.
 - Show the complete payload before every remote write.
 - Preserve the request's draft state while addressing feedback; leave active reviewers' state untouched.
 - Resolve conflicts by preserving both sides' intent. Run the full required checks after resolution.
