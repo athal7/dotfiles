@@ -1,0 +1,18 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Pin only the mobile terminal key row; AoE owns all other UI/runtime state. */ -}}
+{{- $state := dict -}}
+{{- if and (hasKey .chezmoi "stdin") .chezmoi.stdin -}}
+{{-   $state = fromToml .chezmoi.stdin -}}
+{{- end -}}
+{{- $webState := dict -}}
+{{- if hasKey $state "web_ui_state" -}}
+{{-   $webState = index $state "web_ui_state" -}}
+{{- end -}}
+{{- $webSettings := dict -}}
+{{- if hasKey $webState "aoe-web-settings" -}}
+{{-   $webSettings = fromJson (index $webState "aoe-web-settings") -}}
+{{- end -}}
+{{- $_ := set $webSettings "mobileToolbarKeys" (list "esc" "tab" "ctrl" "enter" "paste") -}}
+{{- $_ := set $webState "aoe-web-settings" ($webSettings | toJson) -}}
+{{- $_ := set $state "web_ui_state" $webState -}}
+{{- $state | toToml -}}
