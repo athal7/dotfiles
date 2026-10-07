@@ -14,3 +14,8 @@ printf 'PI_CONFIG_DIR=.config/omp\nPI_CODING_AGENT_DIR=%s\nXDG_DATA_HOME=%s\n' \
 
 [ -z "${ANTHROPIC_API_KEY:-}" ] || printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY"
 [ -z "${OTARI_API_KEY:-}" ] || printf 'OTARI_API_KEY=%s\n' "$OTARI_API_KEY"
+# AoE starts OMP without a login shell, so .zshenv cannot supply this token.
+if command -v gh >/dev/null 2>&1; then
+  github_token=$(gh auth token 2>/dev/null) || github_token=
+  [ -z "$github_token" ] || printf 'GITHUB_TOKEN=%s\n' "$github_token"
+fi
