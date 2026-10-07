@@ -1,6 +1,10 @@
 [tools]
 {{- range .packages.mise }}
-{{ if contains ":" .name }}"{{ .name }}" = {{ .version | quote }}{{ else }}{{ .name }} = {{ .version | quote }}{{ end }}
+{{- $spec := .version | quote -}}
+{{- if hasKey . "allow_builds" -}}
+{{- $spec = printf "{ version = %s, allow_builds = %s }" $spec (.allow_builds | toJson) -}}
+{{- end }}
+{{ if contains ":" .name }}"{{ .name }}"{{ else }}{{ .name }}{{ end }} = {{ $spec }}
 {{- end }}
 
 [settings]

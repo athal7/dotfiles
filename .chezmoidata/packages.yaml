@@ -138,6 +138,9 @@ packages:
       version: latest
     - name: npm:freebuff
       version: latest
+    - name: npm:codebase-memory-mcp
+      version: "0.11.0"
+      allow_builds: [codebase-memory-mcp]
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema
