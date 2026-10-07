@@ -19,7 +19,7 @@ template's literal content, so no live app-state value can land in git history.
 allow_agent_install = false
 auto_stop_idle_secs = 0
 default_agent = "aoe-agent"
-default_new_session_view = "structured"
+default_new_session_view = "terminal"
 max_concurrent_workers = 10
 node_path = ""
 rate_limit_auto_resume = false
