@@ -74,8 +74,9 @@ modelRoles:
   default: openai-codex/gpt-6-sol
   judge: openjev/openjev-latest
   plan: openai-codex/gpt-6-sol
-  slow: openai-codex/gpt-6-sol
+  slow: anthropic/claude-sonnet-5-5
   smol: openai-codex/gpt-6-luna
+  task: openai-codex/gpt-6-sol
   vision: openai-codex/gpt-6-sol
 personality: default
 plan:
@@ -117,15 +118,6 @@ symbolPreset: unicode
 task:
   agentAdvisor:
     task: "off"
-  agentModelOverrides:
-    designer: "@vision"
-    librarian: "@smol"
-    planner: "@plan"
-    reviewer: "@slow"
-    scout: "@smol"
-    security-reviewer: "@slow"
-    sonic: "@smol"
-    task: "@default"
   disabledAgents: []
   prewalk: true
   showResolvedModelBadge: false

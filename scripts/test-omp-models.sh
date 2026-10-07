@@ -84,9 +84,9 @@ check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "installs the configured AoE GitHub plugin" "$(grep -Fxc '  if ! aoe plugin install gh:agent-of-empires/plugin-github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "installs the configured AoE Attention plugin" "$(grep -Fxc '  if ! aoe plugin install gh:athal7/attention --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
-check "keeps Context7 disabled by default" "$(jq '[.mcpServers.context7.enabled, .mcpServers.context7.disabled] == [false, true]' "$MCP")" true
-check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled != false and .mcpServers.runlayer.enabled != false and .mcpServers.slack.enabled != false' "$MCP")" true
-check "disables other integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack" and .key != "github") | .value.enabled == false] | all' "$MCP")" true
+check "enables Context7 by default" "$(jq '.mcpServers.context7.enabled == true' "$MCP")" true
+check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled == true and .mcpServers.runlayer.enabled == true and .mcpServers.slack.enabled == true' "$MCP")" true
+check "enables other integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack" and .key != "github") | .value.enabled == true] | all' "$MCP")" true
 runlayer_mcp_urls=(
   "bigquery https://bigquery.example.test/mcp"
   "pagerduty https://pagerduty.example.test/mcp"
@@ -96,7 +96,7 @@ for connector_and_url in "${runlayer_mcp_urls[@]}"; do
   check "renders $connector MCP entry" "$(jq --arg connector "$connector" '.mcpServers | has($connector)' "$MCP")" true
   check "renders $connector MCP URL" "$(jq -r --arg connector "$connector" '.mcpServers[$connector].url' "$MCP")" "$url"
 done
-check "enables the official GitHub MCP by default" "$(jq -r '.mcpServers.github.enabled != false and .mcpServers.github.disabled != true' "$MCP")" true
+check "enables the official GitHub MCP by default" "$(jq '.mcpServers.github.enabled == true' "$MCP")" true
 check "uses the official GitHub MCP endpoint" "$(jq -r '.mcpServers.github.url' "$MCP")" "https://api.githubcopilot.com/mcp/"
 check "selects the official GitHub MCP toolsets" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")" "context,issues,pull_requests,repos,users,actions"
 check "includes review-thread read and resolution tools" "$(jq -r '[.mcpServers.github.includeTools[] | select(. == "pull_request_read" or . == "resolve_review_thread")] | length' "$MCP")" 2
