@@ -57,6 +57,18 @@ launchagents:
       AOE_OMP_MODEL: "@smol"
 {{ template "omp-launchd-env" . }}
 
+  brew-maintenance:
+    Label: com.$USER.brew-maintenance
+    ProgramArguments:
+      - $HOME/.local/bin/brew-maintenance
+    StartCalendarInterval:
+      Hour: 4
+      Minute: 0
+    StandardOutPath: $HOME/Library/Logs/brew-maintenance.log
+    StandardErrorPath: $HOME/Library/Logs/brew-maintenance.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
   babysitter-check:
     Label: com.$USER.babysitter-check
     ProgramArguments:
