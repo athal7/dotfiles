@@ -136,6 +136,7 @@ live_send_on_view_switch = true
 merge_hooks_into_selected_agent = true
 mouse_capture = true
 new_session_mode = "live_send"
+prevent_sleep_when_active = true
 restart_wake_message = "wake up: pick up what you were doing"
 row_tag = "none"
 show_diagnostics_pane = true
@@ -231,6 +232,7 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- $_ := setValueAtPath "acp.default_new_session_view" (index (index $static "acp") "default_new_session_view") $config -}}
 {{- $_ := set $session "conversation_summary" (index (index $static "session") "conversation_summary") -}}
 {{- $_ := set $session "delete_to_trash" (index (index $static "session") "delete_to_trash") -}}
+{{- $_ := set $session "prevent_sleep_when_active" (index (index $static "session") "prevent_sleep_when_active") -}}
 {{- $_ := unset $session "trash_retention_days" -}}
 {{- $_ := setValueAtPath "web.notify_on_idle" (index (index $static "web") "notify_on_idle") $config -}}
 {{- if hasKey $session "agent_command_override" -}}
