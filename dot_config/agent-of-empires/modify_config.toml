@@ -7,11 +7,11 @@ chezmoi-managed file makes every apply a conflict against that live drift, and
 risks committing internal project names (e.g. project_group_collapsed) into
 this public repo.
 
-So: every section below except [app_state]/[app_state.web_ui_state] is static,
-chezmoi-managed content. The app_state tables are always taken from whatever
-is currently live (.chezmoi.stdin, empty on a machine's first-ever apply) and
-re-injected verbatim — they never get baked into this template's literal
-content, so no live app-state value can ever land in git history.
+The settings below seed new installations; live settings overlay them except
+where explicitly pinned after the merge. The app_state tables are always taken
+from whatever is currently live (.chezmoi.stdin, empty on a machine's
+first-ever apply) and re-injected verbatim — they never get baked into this
+template's literal content, so no live app-state value can land in git history.
 */ -}}
 {{- $live := dict -}}
 
@@ -19,6 +19,7 @@ content, so no live app-state value can ever land in git history.
 allow_agent_install = false
 auto_stop_idle_secs = 0
 default_agent = "aoe-agent"
+default_new_session_view = "structured"
 max_concurrent_workers = 10
 node_path = ""
 rate_limit_auto_resume = false
@@ -125,9 +126,10 @@ auto_stop_idle_secs = 0
 click_action = "live_send"
 confirm_before_quit = true
 confirm_delete = false
+conversation_summary = true
 default_attach_mode = "tmux"
 default_tool = "omp"
-delete_to_trash = true
+delete_to_trash = false
 live_send_exit_chord = "C-q"
 live_send_leader = "C-b"
 live_send_on_view_switch = true
@@ -141,7 +143,6 @@ show_tips = false
 snooze_duration_minutes = 30
 strict_hotkeys = false
 tie_workdir_to_name = true
-trash_retention_days = 30
 unread_indicator = true
 yolo_mode_default = false
 
@@ -181,7 +182,7 @@ status_bar = "auto"
 [web]
 notifications_enabled = true
 notify_on_error = true
-notify_on_idle = false
+notify_on_idle = true
 notify_on_waiting = true
 notify_on_wake_fire = true
 
@@ -226,6 +227,12 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{- end -}}
 {{- $session := index $config "session" -}}
 {{- $_ := setValueAtPath "acp.default_agent" (index (index $static "acp") "default_agent") $config -}}
+{{- /* AoE shares this default across web and TUI new-session dialogs. */ -}}
+{{- $_ := setValueAtPath "acp.default_new_session_view" (index (index $static "acp") "default_new_session_view") $config -}}
+{{- $_ := set $session "conversation_summary" (index (index $static "session") "conversation_summary") -}}
+{{- $_ := set $session "delete_to_trash" (index (index $static "session") "delete_to_trash") -}}
+{{- $_ := unset $session "trash_retention_days" -}}
+{{- $_ := setValueAtPath "web.notify_on_idle" (index (index $static "web") "notify_on_idle") $config -}}
 {{- if hasKey $session "agent_command_override" -}}
 {{-   $_ := unset (index $session "agent_command_override") "omp" -}}
 {{-   if eq (len (index $session "agent_command_override")) 0 -}}
