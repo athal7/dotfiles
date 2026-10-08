@@ -27,20 +27,12 @@ assert_collector_report() {
   ok "$label has terminal status, coverage state/reason, and counts"
 }
 
-COMMAND="$WORK/kb-enrich.md"
 SLACK="$WORK/slack.md"
 GH="$WORK/gh.md"
 ZOOM="$WORK/zoom.md"
-cp "$REPO_ROOT/dot_agents/prompts/knowledge-base.md" "$COMMAND"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/slack.md" > "$SLACK"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/gh.md" > "$GH"
 chezmoi cat -S "$REPO_ROOT" "$HOME/.config/kb/collectors/zoom.md" > "$ZOOM"
-
-contains "defines shared collector report identity" 'collector: <configured collector name>' "$COMMAND"
-contains "defines shared collector terminal status" 'terminal_status: succeeded | succeeded with no eligible evidence | failed' "$COMMAND"
-contains "defines independent shared coverage state" 'state: exhaustive | non-exhaustive | not-applicable' "$COMMAND"
-contains "defines all shared collector counts" 'out_of_allowlist: <integer>' "$COMMAND"
-contains "requires explicit pagination coverage reason" 'paginated source cannot page through requested scope' "$COMMAND"
 
 contains "discovers Slack conversations before history collection" 'Discover every channel, DM, and group DM that the authenticated user can access' "$SLACK"
 contains "declares Slack 200-message bound" 'read at most the most recent 200 messages' "$SLACK"

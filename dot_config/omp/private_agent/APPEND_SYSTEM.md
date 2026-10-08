@@ -13,6 +13,6 @@
 
 ## Knowledge and memory boundaries
 
-- The KB Markdown vault and kb workflow own canonical collected facts, evidence, source identity, and access classification. Use the KB workflow for those records.
+- Use OMP’s vault feature (`vault://`) for ordinary access to collected facts, evidence, source identity, and access classification, including authorized updates. If the vault is unavailable, report the blockage; do not bypass it through a separate CLI, backing files, or CQ.
 - OMP Mnemopi is only for curated agent-learned insights. Do not copy canonical KB records into memory. CQ is retired; do not query its retained local archive. Use Mnemopi recall for prior agent insights.
 - Store only durable agent insights appropriate for cross-project recall.

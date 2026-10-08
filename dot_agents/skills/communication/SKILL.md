@@ -3,7 +3,7 @@ name: communication
 description: Load when composing human-facing prose through an integration — chat messages, review comments, merge request descriptions, emails, doc bodies, ticket descriptions. Carries the AI-authorship attribution rule.
 license: MIT
 ---
-Use Mnemopi recall for relevant agent-learned context. Load `knowledge-base` when a communication needs authoritative collected facts, citations, or source verification; never treat memory as a substitute for KB evidence.
+Use Mnemopi recall for relevant agent-learned context. For authoritative collected facts, citations, or source verification, use OMP’s `vault://` interface; never substitute memory, CQ, or direct backing-file access for the vault.
 ## Draft-first workflow
 
 When the user has not provided exact final wording for an external communication, create a local draft before using an integration write tool.
