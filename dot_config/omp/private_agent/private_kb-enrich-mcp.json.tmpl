@@ -31,9 +31,6 @@
 {{- end -}}
 {{-   end -}}
 {{- end -}}
-{{- if hasKey $server "tools" -}}
-{{-   $_ := set $entry "includeTools" $server.tools -}}
-{{- end -}}
 {{-   $_ := set $servers $server.name $entry -}}
 {{- end -}}
 {{ dict "mcpServers" $servers | toJson }}

@@ -99,7 +99,6 @@ done
 check "enables the official GitHub MCP by default" "$(jq '.mcpServers.github.enabled == true' "$MCP")" true
 check "uses the official GitHub MCP endpoint" "$(jq -r '.mcpServers.github.url' "$MCP")" "https://api.githubcopilot.com/mcp/"
 check "selects the official GitHub MCP toolsets" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")" "context,issues,pull_requests,repos,users,actions"
-check "includes review-thread read and resolution tools" "$(jq -r '[.mcpServers.github.includeTools[] | select(. == "pull_request_read" or . == "resolve_review_thread")] | length' "$MCP")" 2
 expected_github_authorization="Bearer \${GITHUB_TOKEN}"
 check "defers GitHub token expansion to OMP startup" "$(jq -r '.mcpServers.github.headers.Authorization' "$MCP")" "$expected_github_authorization"
 check "preserves GitHub token expansion in KB enrichment" "$(jq -r '.mcpServers.github.headers.Authorization' "$KB_ENRICH_MCP")" "$expected_github_authorization"
@@ -113,7 +112,6 @@ rendered_runlayer_shell_variables="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHEN
 check "exports only configured Runlayer MCP URLs to shell sessions" "$rendered_runlayer_shell_variables" "export RUNLAYER_BIGQUERY_MCP_URL export RUNLAYER_PAGERDUTY_MCP_URL"
 configured_mcp_servers="$(yq -r '.mcp_servers[].name' "$REPO_ROOT/.chezmoidata/mcp.yaml" | sort | paste -sd ' ' -)"
 check "includes every configured MCP server in the KB overlay" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "$configured_mcp_servers"
-check "preserves GitHub tool allowlist in KB enrichment" "$(jq -c '.mcpServers.github.includeTools' "$KB_ENRICH_MCP")" "$(jq -c '.mcpServers.github.includeTools' "$MCP")"
 check "preserves GitHub toolset header in KB enrichment" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$KB_ENRICH_MCP")" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")"
 check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
 check "enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true

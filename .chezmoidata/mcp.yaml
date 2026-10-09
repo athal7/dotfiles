@@ -1,7 +1,7 @@
 {
   "mcp_mutating_verbs": [
     "add", "append", "apply", "attach", "autofill", "branch", "checkout", "clean", "commit", "copy",
-    "create", "delete", "deploy", "destroy", "drop", "edit", "forget", "format", "group", "init",
+    "create", "delete", "deploy", "destroy", "drop", "edit", "forget", "fork", "format", "group", "init",
     "insert", "link", "mark", "merge", "move", "patch", "post", "publish", "purge", "push", "put",
     "reboot", "remove", "rename", "replace", "reply", "reset", "resolve", "respond", "restore", "save",
     "schedule", "send", "set", "share", "shutdown", "stash", "submit", "transition", "update", "upgrade",
@@ -136,7 +136,12 @@
           "add_issue_comment", "add_comment_to_pending_review", "add_pull_request_review_comment",
           "create_pull_request_review", "submit_pending_pull_request_review",
           "delete_pending_pull_request_review", "request_pull_request_reviewers",
-          "resolve_review_thread", "unresolve_review_thread", "actions_run_trigger"
+          "resolve_review_thread", "unresolve_review_thread", "actions_run_trigger",
+          "add_reply_to_pull_request_comment", "create_branch", "create_or_update_file",
+          "create_pull_request", "create_repository", "delete_file", "fork_repository",
+          "issue_write", "merge_pull_request", "pull_request_review_write", "push_files",
+          "sub_issue_write", "update_issue_comment", "update_pull_request",
+          "update_pull_request_branch"
         ],
         "approval_prompt_globs": [
           "mcp__github_*_write", "mcp__github_*_trigger", "mcp__github_add_*",
