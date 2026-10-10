@@ -26,7 +26,7 @@ OMP’s vault feature (`vault://`) is the agent-facing interface for collected f
 
 `omp` uses `~/.config/omp/` as its global root and `~/.config/omp/agent/` for agent data; AoE launches sessions with those paths. OMP credentials use the Keychain-backed secret configuration. AoE Serve binds to loopback behind private Tailscale Serve and uses a Keychain passphrase for its dashboard, not a URL token.
 
-For repositories directly under `~/code`, new AoE worktrees live at `~/code/.worktrees/<repo>/<branch>` and multi-repo workspaces at `~/code/.worktrees/workspaces/<branch>-workspace-<session-id>`. The paths are relative to each repository, so nested repositories use `.worktrees` in their own parent directory. Existing worktrees are not moved; bare repositories retain their in-repo worktree layout.
+All new non-bare AoE worktrees use `~/code/.worktrees/<repo>/<branch>`, and multi-repo workspaces use `~/code/.worktrees/workspaces/<branch>-workspace-<session-id>`, regardless of where the source repositories live. Existing worktrees are not moved; bare repositories retain their in-repo worktree layout.
 
 The local `judge` role uses OpenJev's native `POST /v1/systemone` API, not chat prompting. The package install script creates a pinned Python 3.12 environment at `~/.local/share/openjev/venv` before `com.$USER.openjev` starts on `127.0.0.1:8091`. Its first start downloads the MLX weights. The LaunchAgent limits MLX's buffer cache to 4 GiB; OpenJev reports a 23.5-GiB working set with that limit on a 48-GiB M4 Pro. Check `GET http://127.0.0.1:8091/health` and `~/Library/Logs/openjev.error.log` after deployment; the judge is not available until model loading completes.
 
