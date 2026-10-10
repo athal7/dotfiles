@@ -193,8 +193,8 @@ bare_repo_path_template = "./{branch}"
 delete_branch_on_cleanup = true
 enabled = true
 init_submodules = true
-path_template = "../{repo-name}-worktrees/{branch}"
-workspace_path_template = "../{branch}-workspace-{session-id}"
+path_template = "../.worktrees/{repo-name}/{branch}"
+workspace_path_template = "../.worktrees/workspaces/{branch}-workspace-{session-id}"
 ` -}}
 {{- $_ := set (index (index (index $static "plugins") "athal7.attention") "grant") "manifest_hash" (printf "sha256:%s%s%s%s" "6cabc6e86f83b879" "b7b00e1f6b6b6e4b" "6872f3d534691393" "a631e4d662d0e884") -}}
 {{- $runlayerEnvironment := list -}}
@@ -218,6 +218,9 @@ workspace_path_template = "../{branch}-workspace-{session-id}"
 {{-   $_ := unset $live "tools" -}}
 {{- end -}}
 {{- $config := mergeOverwrite (deepCopy $static) $live -}}
+{{- /* Move new sessions to the shared root even when live config has the old paths. */ -}}
+{{- $_ := setValueAtPath "worktree.path_template" (index (index $static "worktree") "path_template") $config -}}
+{{- $_ := setValueAtPath "worktree.workspace_path_template" (index (index $static "worktree") "workspace_path_template") $config -}}
 {{- $_ := set (index $config "plugins") "athal7.attention" (index (index $static "plugins") "athal7.attention") -}}
 {{- $_ := setValueAtPath "host_hooks.before_session" (index (index $static "host_hooks") "before_session") $config -}}
 {{- if gt (len $runlayerEnvironment) 0 -}}
