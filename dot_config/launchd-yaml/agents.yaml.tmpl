@@ -72,7 +72,7 @@ launchagents:
   babysitter-check:
     Label: com.$USER.babysitter-check
     ProgramArguments:
-      - $HOME/.local/share/mise/shims/cal-automation
+      - /opt/homebrew/bin/cal-automation
       - babysitter
     StartCalendarInterval:
       Hour: 8
@@ -99,7 +99,7 @@ launchagents:
   family-scheduler:
     Label: com.$USER.family-scheduler
     ProgramArguments:
-      - $HOME/.local/share/mise/shims/cal-automation
+      - /opt/homebrew/bin/cal-automation
       - family
     StartCalendarInterval:
       Weekday: 2
@@ -232,7 +232,7 @@ launchagents:
   sync-calendars:
     Label: com.$USER.sync-calendars
     ProgramArguments:
-      - $HOME/.local/share/mise/shims/cal-automation
+      - /opt/homebrew/bin/cal-automation
       - sync
     StartInterval: 3600
     RunAtLoad: true

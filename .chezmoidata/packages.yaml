@@ -30,6 +30,7 @@ packages:
     - name: git
     - name: gh
     - name: athal7/tap/attention
+    - name: athal7/tap/cal-automation
     - name: athal7/tap/git-worktree-sync
     - name: athal7/tap/launchd-yaml
     - name: athal7/tap/kb
@@ -149,5 +150,3 @@ packages:
       version: latest
     - name: pipx:skills-ref
       version: latest
-    - name: pipx:athal7/cal
-      version: v0.2.2
