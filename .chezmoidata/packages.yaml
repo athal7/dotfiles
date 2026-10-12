@@ -136,6 +136,8 @@ packages:
       version: latest
     - name: argocd
       version: latest
+    - name: fnox
+      version: "1.39.0"
     - name: npm:@google/jules
       version: latest
     - name: npm:freebuff
