@@ -51,6 +51,8 @@ AoE stores configuration, plugins, profiles, and runtime state under `~/.config/
 
 AoE plugins are declared in the [package registry](.chezmoidata/packages.yaml) and their enablement and capability grants in the [AoE configuration](dot_config/agent-of-empires/modify_config.toml). The [web UI state template](dot_config/agent-of-empires/modify_state.toml) pins the mobile terminal key row while preserving AoE's other runtime and UI state. The Attention plugin displays prioritized items in each session pane.
 
+The Attention dashboard's session action reuses a unique live OMP session for the same scratch title or repository worktree branch and sends the current request to it (reviving a stopped agent). Archived/trashed sessions are not resumed; ambiguous matches fail without creating another session. New items still create sessions through the scheduled-session dispatcher.
+
 Homebridge stores its data at `~/.config/homebridge`. On a machine still using `~/.homebridge`, stop Homebridge before migrating the entire directory, preserve any existing destination as a backup, and check that the moved `config.json` parses before restarting it.
 
 ## Optional MCP setup

@@ -16,10 +16,14 @@ GH_LOG="$WORK/gh.log"
 GIT_LOG="$WORK/git.log"
 DISPATCH_LOG="$WORK/dispatch.log"
 BRANCH_STATE="$WORK/branch-state"
+SESSIONS="$WORK/sessions.json"
+AOE_LOG="$WORK/aoe.log"
 : >"$GH_LOG"
 : >"$GIT_LOG"
 : >"$DISPATCH_LOG"
 : >"$BRANCH_STATE"
+printf '[]\n' >"$SESSIONS"
+: >"$AOE_LOG"
 
 cat >"$FAKE_GH" <<'EOF'
 #!/usr/bin/env bash
@@ -55,8 +59,9 @@ case "$command" in
     esac
     ;;
   remote)
-    [[ "$repo" == "$ATTENTION_REGISTERED_REPO" && "$*" == 'get-url origin' ]] || exit 1
-    printf 'git@github.com:example/remote-repo.git\n'
+    [[ "$repo" == "$ATTENTION_REGISTERED_REPO" || "$repo" == "$ATTENTION_REPO" ]] || exit 1
+    [[ "$*" == 'get-url origin' ]] || exit 1
+    printf '%s\n' "${ATTENTION_ORIGIN:-git@github.com:example/remote-repo.git}"
     ;;
   check-ref-format)
     exit 0
@@ -90,8 +95,13 @@ EOF
 cat >"$FAKE_AOE" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-[[ "$*" == 'project list --json' ]] || exit 64
-printf '[{"path":"%s"}]\n' "$ATTENTION_REGISTERED_REPO"
+echo "$*" >>"$ATTENTION_AOE_LOG"
+case "$*" in
+  'project list --json') echo "[{\"path\":\"$ATTENTION_REGISTERED_REPO\"}]" ;;
+  'list --json') cat "$ATTENTION_SESSIONS" ;;
+  send\ *) echo "message=$3" >>"$ATTENTION_AOE_LOG"; [[ "${ATTENTION_SEND_FAIL:-}" != 1 ]] ;;
+  *) exit 64 ;;
+esac
 EOF
 chmod +x "$FAKE_GH" "$FAKE_GIT" "$FAKE_AOE" "$DISPATCHER"
 
@@ -109,6 +119,8 @@ run_attention() {
     ATTENTION_REPO="$REPO" \
     ATTENTION_REGISTERED_REPO="$REGISTERED_REPO" \
     ATTENTION_HEAD_SHA=deadbeef \
+    ATTENTION_SESSIONS="$SESSIONS" \
+    ATTENTION_AOE_LOG="$AOE_LOG" \
     AOE_SESSION_DISPATCHER="$DISPATCHER" \
     AOE_BIN="$FAKE_AOE" \
     GH_BIN="$FAKE_GH" \
@@ -129,6 +141,73 @@ else
   bad "dispatches scratch attention sessions without a TTY"
 fi
 
+cat >"$SESSIONS" <<EOF
+[{"id":"scratch-id","title":"calendar-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/scratch/scratch-id","worktree":null}]
+EOF
+: >"$DISPATCH_LOG"
+run_attention scratch calendar-title 'continue calendar work'
+if [[ ! -s "$DISPATCH_LOG" ]] && grep -Fq 'send scratch-id' "$AOE_LOG" &&
+  grep -Fq 'continue calendar work' "$AOE_LOG"; then
+  ok "reuses the existing scratch session"
+else
+  bad "reuses the existing scratch session"
+fi
+: >"$DISPATCH_LOG"
+export ATTENTION_SEND_FAIL=1
+if run_attention scratch calendar-title 'retry after failure' >"$WORK/send-error.out" 2>&1; then
+  bad "does not create a duplicate when sending fails"
+elif [[ ! -s "$DISPATCH_LOG" ]] && grep -Fq 'cannot send to AoE session scratch-id' "$WORK/send-error.out"; then
+  ok "does not create a duplicate when sending fails"
+else
+  bad "does not create a duplicate when sending fails"
+fi
+unset ATTENTION_SEND_FAIL
+cat >"$SESSIONS" <<EOF
+[
+ {"id":"archived","title":"calendar-title-1234abcd","group":"Attention","tool":"omp","state":"archived","path":"$WORK/scratch/archived","worktree":null},
+ {"id":"trashed","title":"calendar-title-1234abcd","group":"Attention","tool":"omp","state":"trashed","path":"$WORK/scratch/trashed","worktree":null},
+ {"id":"snoozed","title":"calendar-title-1234abcd","group":"Attention","tool":"omp","state":"snoozed","path":"$WORK/scratch/snoozed","worktree":null},
+ {"id":"other-group","title":"calendar-title-1234abcd","group":"Scheduled","tool":"omp","state":"live","path":"$WORK/scratch/other-group","worktree":null},
+ {"id":"other-tool","title":"calendar-title-1234abcd","group":"Attention","tool":"claude","state":"live","path":"$WORK/scratch/other-tool","worktree":null},
+ {"id":"other-title","title":"calendar-title-more-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/scratch/other-title","worktree":null},
+ {"id":"project-path","title":"calendar-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/projects/project-path","worktree":null}
+]
+EOF
+: >"$AOE_LOG"
+: >"$DISPATCH_LOG"
+run_attention scratch calendar-title 'fresh request'
+if grep -Fqx 'prompt=fresh request' "$DISPATCH_LOG" && ! grep -Fq 'send ' "$AOE_LOG"; then
+  ok "ignores retired, snoozed, and unrelated scratch sessions"
+else
+  bad "ignores retired, snoozed, and unrelated scratch sessions"
+fi
+cat >"$SESSIONS" <<EOF
+[
+ {"id":"first","title":"calendar-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/scratch/first","worktree":null},
+ {"id":"second","title":"calendar-title-5678abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/scratch/second","worktree":null}
+]
+EOF
+: >"$AOE_LOG"
+: >"$DISPATCH_LOG"
+if run_attention scratch calendar-title 'ambiguous request' >"$WORK/ambiguous.out" 2>&1; then
+  bad "rejects ambiguous scratch sessions without sending or creating"
+elif [[ ! -s "$DISPATCH_LOG" ]] && ! grep -Fq 'send ' "$AOE_LOG" &&
+  grep -Fq 'cannot select a unique Attention session' "$WORK/ambiguous.out"; then
+  ok "rejects ambiguous scratch sessions without sending or creating"
+else
+  bad "rejects ambiguous scratch sessions without sending or creating"
+fi
+: >"$SESSIONS"
+: >"$DISPATCH_LOG"
+: >"$AOE_LOG"
+if run_attention scratch calendar-title 'unknown list' >"$WORK/list-error.out" 2>&1; then
+  bad "does not create a session when AoE returns an empty listing"
+elif [[ ! -s "$DISPATCH_LOG" ]] && ! grep -Fq 'send ' "$AOE_LOG"; then
+  ok "does not create a session when AoE returns an empty listing"
+else
+  bad "does not create a session when AoE returns an empty listing"
+fi
+echo '[]' >"$SESSIONS"
 : >"$DISPATCH_LOG"
 : >"$GIT_LOG"
 export ATTENTION_MODE=pr
@@ -150,6 +229,59 @@ if [[ "$(grep -c '^command=branch' "$GIT_LOG")" == 1 ]]; then
 else
   bad "reuses a matching PR branch on repeat dispatch"
 fi
+cat >"$SESSIONS" <<EOF
+[
+ {"id":"wrong-repo","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/wrong-repo","worktree":{"branch":"attention/pr-63","main_repo_path":"$WORK/other-repo"}},
+ {"id":"wrong-branch","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/wrong-branch","worktree":{"branch":"attention/pr-64","main_repo_path":"$REPO"}},
+ {"id":"same-title-scratch","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/scratch/same-title-scratch","worktree":null},
+ {"id":"pr-session","title":"renamed-by-user","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/pr-session","worktree":{"branch":"attention/pr-63","main_repo_path":"$REPO/"}}
+]
+EOF
+: >"$DISPATCH_LOG"
+: >"$GH_LOG"
+: >"$GIT_LOG"
+: >"$AOE_LOG"
+export ATTENTION_MODE=pr
+run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content example/remote-repo
+unset ATTENTION_MODE
+if [[ ! -s "$DISPATCH_LOG" && ! -s "$GH_LOG" ]] &&
+  ! grep -Eq 'command=(fetch|branch|show-ref)' "$GIT_LOG" &&
+  grep -Fqx 'send pr-session Continue working on this Attention item in the existing session. Current request:' "$AOE_LOG" &&
+  grep -Fqx 'Additional session content:' "$AOE_LOG" &&
+  grep -Fqx 'extra-content' "$AOE_LOG"; then
+  ok "resumes the matching PR without refetching or creating a worktree"
+else
+  bad "resumes the matching PR without refetching or creating a worktree"
+fi
+: >"$AOE_LOG"
+: >"$DISPATCH_LOG"
+: >"$GH_LOG"
+export ATTENTION_ORIGIN=git@github.com:example/another-repo.git
+if run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo >"$WORK/origin.out" 2>&1; then
+  bad "rejects an unrelated repository before sending"
+elif [[ ! -s "$DISPATCH_LOG" && ! -s "$GH_LOG" ]] && ! grep -Fq 'send ' "$AOE_LOG" &&
+  grep -Fq 'repository origin does not match' "$WORK/origin.out"; then
+  ok "rejects an unrelated repository before sending"
+else
+  bad "rejects an unrelated repository before sending"
+fi
+unset ATTENTION_ORIGIN
+cat >"$SESSIONS" <<EOF
+[
+ {"id":"pr-one","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/one","worktree":{"branch":"attention/pr-63","main_repo_path":"$REPO"}},
+ {"id":"pr-two","title":"pr-title-5678abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/two","worktree":{"branch":"attention/pr-63","main_repo_path":"$REPO"}}
+]
+EOF
+: >"$AOE_LOG"
+: >"$DISPATCH_LOG"
+if run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo >"$WORK/ambiguous-pr.out" 2>&1; then
+  bad "rejects ambiguous PR worktrees"
+elif [[ ! -s "$DISPATCH_LOG" ]] && ! grep -Fq 'send ' "$AOE_LOG"; then
+  ok "rejects ambiguous PR worktrees"
+else
+  bad "rejects ambiguous PR worktrees"
+fi
+echo '[]' >"$SESSIONS"
 : >"$DISPATCH_LOG"
 : >"$GIT_LOG"
 : >"$BRANCH_STATE"
@@ -164,6 +296,22 @@ else
   bad "creates a new worktree branch for issues"
   printf 'Issue dispatch log:\n%s\nGitHub log:\n%s\n' "$(cat "$DISPATCH_LOG")" "$(cat "$GH_LOG")" >&2
 fi
+cat >"$SESSIONS" <<EOF
+[{"id":"issue-session","title":"issue-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/issue-session","worktree":{"branch":"issue/64","main_repo_path":"$REPO"}}]
+EOF
+: >"$DISPATCH_LOG"
+: >"$GH_LOG"
+: >"$GIT_LOG"
+: >"$AOE_LOG"
+run_attention github "$REPO" 64 issue/64 issue-title 'continue issue' '' example/remote-repo
+if [[ ! -s "$DISPATCH_LOG" && ! -s "$GH_LOG" ]] &&
+  ! grep -Eq 'command=(fetch|branch|show-ref)' "$GIT_LOG" &&
+  grep -Fq 'send issue-session' "$AOE_LOG" && grep -Fq 'continue issue' "$AOE_LOG"; then
+  ok "resumes the existing issue worktree without GitHub lookups"
+else
+  bad "resumes the existing issue worktree without GitHub lookups"
+fi
+echo '[]' >"$SESSIONS"
 export ATTENTION_MODE=pr
 : >"$DISPATCH_LOG"
 : >"$GIT_LOG"

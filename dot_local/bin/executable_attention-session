@@ -21,12 +21,50 @@ fail() {
 
 dispatch() {
   local title=$1 prompt=$2
+  [ -x "$DISPATCHER" ] || fail "dispatcher is not executable: $DISPATCHER"
   shift 2
   umask 077
   prompt_file=$(mktemp "${TMPDIR:-/tmp}/attention-session.XXXXXX")
   trap 'rm -f "$prompt_file"' EXIT
   printf '%s' "$prompt" >"$prompt_file"
   env AOE_SESSION_GROUP=Attention "$DISPATCHER" "$title" "$prompt_file" "$@"
+}
+
+existing_session() {
+  local kind=$1 title=$2 repo=$3 branch=$4 sessions
+  sessions=$("$AOE_BIN" list --json) || fail "cannot list AoE sessions"
+  # AoE titles carry a correlation suffix; worktree identity survives title renames.
+  # shellcheck disable=SC2016
+  printf '%s' "$sessions" | "$JQ_BIN" -sr --arg kind "$kind" --arg title "$title" \
+    --arg repo "$repo" --arg branch "$branch" '
+    if length != 1 or (.[0] | type) != "array" then error("invalid AoE list")
+    else .[0] end
+    | [ .[]
+      | select(.group == "Attention" and .tool == "omp" and .state == "live")
+      | select(if $kind == "scratch" then
+                 (.title | startswith($title + "-")) and
+                 (.title[($title | length) + 1:] | test("^[0-9a-fA-F]{8}$")) and
+                 .worktree == null and
+                 (.id as $id | .path | rtrimstr("/") | endswith("/scratch/" + $id))
+               else
+                 .worktree.branch == $branch and
+                 (((.worktree.main_repo_path // "") | rtrimstr("/")) == ($repo | rtrimstr("/")))
+               end)
+      | .id ]
+    | if length > 1 then error("ambiguous Attention sessions")
+      elif length == 1 then .[0] else "" end
+  ' || fail "cannot select a unique Attention session"
+}
+
+resume_existing() {
+  local id
+  id=$(existing_session "$1" "$2" "$3" "$4")
+  if [ -n "$id" ]; then
+    [[ "$id" =~ ^[[:alnum:]-]+$ ]] || fail "invalid AoE session ID"
+    "$AOE_BIN" send "$id" $'Continue working on this Attention item in the existing session. Current request:\n\n'"$5" || \
+      fail "cannot send to AoE session $id"
+    exit 0
+  fi
 }
 
 registered_repo_path() {
@@ -52,7 +90,18 @@ registered_repo_path() {
   printf '%s\n' "$resolved"
 }
 
-[ -x "$DISPATCHER" ] || fail "dispatcher is not executable: $DISPATCHER"
+verify_github_origin() {
+  local expected=${2,,} remote
+  remote=$("$GIT_BIN" -C "$1" remote get-url origin 2>/dev/null) || \
+    fail "cannot read repository origin: $1"
+  remote=${remote,,}
+  remote=${remote%.git}
+  case "$remote" in
+    "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected") ;;
+    *) fail "repository origin does not match $2" ;;
+  esac
+}
+
 [ -n "${1:-}" ] || usage
 
 case "$1" in
@@ -63,6 +112,7 @@ case "$1" in
     if [ -z "$2" ] || [ -z "$3" ]; then
       fail "title and prompt must not be empty"
     fi
+    resume_existing scratch "$2" '' '' "$3"
     dispatch "$2" "$3"
     ;;
   github)
@@ -85,9 +135,15 @@ case "$1" in
     fi
     repo_root=$("$GIT_BIN" -C "$repo_path" rev-parse --show-toplevel 2>/dev/null) || \
       fail "repository path is not a Git repository: $repo_path"
+    verify_github_origin "$repo_root" "$github_repo"
 
     "$GIT_BIN" check-ref-format --branch "$requested_branch" >/dev/null || \
       fail "worktree branch is not valid: $requested_branch"
+    if [ -n "$additional_prompt" ]; then
+      prompt+=$'\n\nAdditional session content:\n'
+      prompt+=$additional_prompt
+    fi
+    resume_existing github "$title" "$repo_root" "$requested_branch" "$prompt"
     if pr_info=$(cd "$repo_root" && "$GH_BIN" pr view "$reference" --json number,headRefName,headRepositoryOwner,headRepository --jq '[.number, .headRefName, .headRepositoryOwner.login, .headRepository.name] | @tsv' 2>/dev/null); then
       IFS=$'\t' read -r pr_number head_branch head_owner head_repo <<<"$pr_info"
       if ! [[ "$pr_number" =~ ^[0-9]+$ && -n "$head_branch" && -n "$head_owner" && -n "$head_repo" ]]; then
@@ -116,11 +172,6 @@ case "$1" in
         fail "reference is not an accessible GitHub issue or pull request: $reference"
       worktree_branch=$requested_branch
       new_branch=true
-    fi
-
-    if [ -n "$additional_prompt" ]; then
-      prompt+=$'\n\nAdditional session content:\n'
-      prompt+=$additional_prompt
     fi
 
     AOE_WORKTREE_BRANCH="$worktree_branch" AOE_NEW_BRANCH="$new_branch" \
