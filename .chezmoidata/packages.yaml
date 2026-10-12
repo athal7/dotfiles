@@ -143,6 +143,8 @@ packages:
     - name: npm:codebase-memory-mcp
       version: "0.11.0"
       allow_builds: [codebase-memory-mcp]
+    - name: npm:@mozilla/firefox-devtools-mcp
+      version: "0.10.5"
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema
