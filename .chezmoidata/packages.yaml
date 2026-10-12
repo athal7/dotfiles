@@ -73,6 +73,7 @@ packages:
       id: "athal7.attention"
 
   casks:
+    - name: firefox
     - name: gcloud-cli
     - name: font-monaspace-nf
     - name: tailscale-app

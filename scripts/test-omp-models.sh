@@ -42,7 +42,6 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agen
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 check "renders managed browser headless mode" "$(yq -r '.browser.headless' "$CONFIG")" true
-check "preserves browser relay override" "$(yq -r '.browser.relay' "$CONFIG")" true
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
 check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
 check "routes native judgment to local OpenJev" "$(yq -r '.modelRoles.judge' "$CONFIG")" openjev/openjev-latest

@@ -27,6 +27,11 @@
         "command": ["codebase-memory-mcp"],
       },
       {
+        "name": "firefox-devtools",
+        "transport": "local",
+        "command": ["npx", "-y", "@mozilla/firefox-devtools-mcp@0.10.5", "--headless", "--tool-preset", "slim"],
+      },
+      {
         "name": "linear",
         "transport": "remote",
         "url": "https://mcp.linear.app/mcp",
