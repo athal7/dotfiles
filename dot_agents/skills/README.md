@@ -13,6 +13,7 @@ How to drive a specific tool or API.
 | **aoe** | Agent of Empires: session creation, worktrees, dispatch |
 | **chezmoi** | This repo's deploy workflow, LaunchAgents, template gotchas |
 | **elasticsearch** | Production triage: logs, APM traces, errors |
+| **gh-stack** | Decide when to use `gh stack`; manage dependent GitHub pull requests safely |
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
 
