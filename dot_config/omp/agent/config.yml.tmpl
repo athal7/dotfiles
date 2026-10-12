@@ -22,7 +22,7 @@ bash:
     - match: "gh *"
       approval: prompt
 browser:
-  headless: true
+  enabled: false
   relay: false
 checkpoint:
   enabled: true
@@ -127,7 +127,6 @@ tools:
   approval:
     bash: allow
     eval: allow
-    browser: allow
     hub: allow
     task: allow
     write: allow
