@@ -19,7 +19,7 @@ Build one concise block:
 <!-- qa:end -->
 ```
 
-For a failure, include exact repro steps, expected result, observed result, URL, and console errors. Never upload or publish report files or screenshots.
+For a failure, include exact repro steps, expected result, observed result, URL, and captured console errors. If console inspection was unavailable, preserve it under `**Could not verify:**` rather than inventing errors. Never upload or publish report files or screenshots.
 
 Before any remote write:
 
