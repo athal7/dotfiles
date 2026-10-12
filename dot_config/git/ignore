@@ -48,6 +48,9 @@ tmp/
 .omp/mcp.json
 .screencast/
 favicon.svg
+# Local secret-provider configuration #
+#######################################
+fnox.local.toml
 
 # Worktrunk (personal worktree config) #
 #########################################
