@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # chezmoi-deploy [branch]
-# Agent-invoked deploy: fast-forward-merge a feature branch into the primary
-# dotfiles checkout's main, apply to ~, and push main to origin as a mirror.
+# Agent-invoked deploy: rebase a feature branch onto the primary dotfiles
+# checkout's main, fast-forward main to it, apply to ~, and push main to origin.
 # Serialized with a lockf lock so concurrent deploys can't collide.
 set -u
 
@@ -30,8 +30,35 @@ main() {
   fi
 
   if ! git -C "$PRIMARY" merge-base --is-ancestor main "$branch"; then
-    echo "chezmoi-deploy: '$branch' does not contain main; rebase it onto main in its worktree, then retry" >&2
-    exit 1
+    local branch_worktree="" candidate="" line=""
+    while IFS= read -r line; do
+      case "$line" in
+        "worktree "*) candidate="${line#worktree }" ;;
+        "branch refs/heads/$branch") branch_worktree="$candidate" ;;
+      esac
+    done < <(git -C "$PRIMARY" worktree list --porcelain)
+
+    if [ -n "$branch_worktree" ]; then
+      if [ -n "$(git -C "$branch_worktree" status --porcelain)" ]; then
+        echo "chezmoi-deploy: worktree for '$branch' has uncommitted changes; aborting" >&2
+        exit 1
+      fi
+      echo "chezmoi-deploy: rebasing '$branch' worktree onto main…"
+      if ! git -C "$branch_worktree" rebase main; then
+        git -C "$branch_worktree" rebase --abort >/dev/null 2>&1 || true
+        echo "chezmoi-deploy: rebase of '$branch' failed; aborted without deploying" >&2
+        exit 1
+      fi
+    else
+      echo "chezmoi-deploy: rebasing '$branch' onto main…"
+      if ! git -C "$PRIMARY" rebase main "$branch"; then
+        git -C "$PRIMARY" rebase --abort >/dev/null 2>&1 || true
+        echo "chezmoi-deploy: rebase of '$branch' failed; aborted without deploying" >&2
+        exit 1
+      fi
+      git -C "$PRIMARY" switch main >/dev/null \
+        || { echo "chezmoi-deploy: unable to return primary checkout to main after rebase" >&2; exit 1; }
+    fi
   fi
 
   echo "chezmoi-deploy: fast-forward merging '$branch' into main…"

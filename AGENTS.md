@@ -2,7 +2,7 @@
 
 This repo manages `~` via chezmoi. Edit source files here.
 
-**No pull requests — deploy is the ship step.** Land changes with `chezmoi-deploy <branch>`: it fast-forward-merges the branch into the primary checkout's `main`, runs `chezmoi apply`, and pushes `main` to origin as a mirror. Only `chezmoi apply` mutates your live `~`. Load the chezmoi skill for verify-render-only and deploy mechanics.
+**No pull requests — deploy is the ship step.** Land changes with `chezmoi-deploy <branch>`: it rebases a stale branch onto the primary checkout's `main`, fast-forward-merges it, runs `chezmoi apply`, and pushes `main` to origin as a mirror. Only `chezmoi apply` mutates your live `~`. Load the chezmoi skill for verify-render-only and deploy mechanics.
 
 **LaunchAgents:** Edit `dot_config/launchd-yaml/agents.yaml.tmpl`, not generated plists. `.chezmoiscripts/run_onchange_after_zz-launch-agents.sh.tmpl` delegates to `launchd-yaml apply` after package installation; it reloads only changed plists and prunes removed agents.
 
