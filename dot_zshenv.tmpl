@@ -24,11 +24,6 @@ export PI_CODING_AGENT_DIR="$HOME/.config/omp/agent"
 # Use Colima's Docker socket even in shells inheriting a stale DOCKER_HOST.
 export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
 
-# GitHub token — always fresh from gh auth, available in all shells including PTY
-command -v gh >/dev/null 2>&1 && export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
-
-# Load Keychain-backed secrets in all shells, including agent PTYs.
-[[ -r "$HOME/.envrc" ]] && source "$HOME/.envrc"
 
 # Silence direnv load messages (must be set before direnv hook fires)
 export DIRENV_LOG_FORMAT=

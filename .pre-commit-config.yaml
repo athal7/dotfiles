@@ -38,10 +38,9 @@ repos:
         # sh/bash/zsh shebang, so template-driven scripts still get linted.
         # Renders with local.yaml.example layered on top via
         # --override-data-file: `.chezmoidata/local.yaml` is gitignored, so
-        # git worktrees never receive it, and templates reading `.runlayer`,
-        # `.secrets`, or `.orgs` would otherwise fail this hook in every
-        # worktree but the primary checkout. The example file already ships
-        # placeholder values for every key those templates need.
+        # git worktrees never receive it, and templates reading private data
+        # such as .runlayer or .orgs would otherwise fail this hook outside
+        # the primary checkout. The example supplies placeholder values.
         # --override-data-file needs a real .yaml extension to autodetect
         # format, hence the temp copy. Uses a PID-scoped path with `cp`
         # (never `mktemp`): pre-commit launches this hook as several

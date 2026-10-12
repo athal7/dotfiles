@@ -46,6 +46,19 @@ _brew_prefix="$(brew --prefix)"
 # Private shell config (not tracked in dotfiles)
 [[ -f ~/.config/zsh/private.zsh ]] && source ~/.config/zsh/private.zsh
 
+# Load the opt-in Keychain helper without exporting credentials.
+[[ -r "$HOME/.envrc" ]] && source "$HOME/.envrc"
+
+# Give only OMP its GitHub token, not every shell and child process.
+omp() {
+  local github_token
+  if command -v gh >/dev/null 2>&1 && github_token=$(gh auth token 2>/dev/null) && [[ -n "$github_token" ]]; then
+    GITHUB_TOKEN="$github_token" command omp "$@"
+  else
+    command omp "$@"
+  fi
+}
+
 # plugins
   eval "$(starship init zsh)"
   export DIRENV_LOG_FORMAT=

@@ -31,9 +31,22 @@ This also restricts externally managed app bundles. Run `chezmoi apply` after ch
 
 OMP’s vault feature (`vault://`) is the agent-facing interface for collected facts and evidence. OMP Mnemopi stores curated agent-learned insights only, with automatic retention disabled and project-tagged memories enabled for cross-project recall.
 
+## Secrets and per-repository environment
+
+Apple Passwords and 1Password remain the primary stores. Shell startup does not read Keychain or export a GitHub token. The managed `~/.envrc` defines `keychain_env VAR ACCOUNT` but loads no credentials until called. `ACCOUNT` names a macOS generic-password item under service `chezmoi`; use a separate Keychain item only when noninteractive access is needed. Never put secret values in tracked files or `.chezmoidata/local.yaml`.
+
+For a trusted repository, keep its `.envrc` untracked and review it before allowing direnv:
+
+```sh
+source "$HOME/.envrc"
+keychain_env MYAPP_API_KEY myapp_api_key
+```
+
+Run `direnv allow` in that repository. Global `.env` auto-loading and the all-path direnv whitelist are disabled. Work credentials that stay in 1Password can instead use the ignored, command-scoped Fnox config described below.
+
 ## OMP and AoE
 
-`omp` uses `~/.config/omp/` as its global root and `~/.config/omp/agent/` for agent data; AoE launches sessions with those paths. OMP credentials use the Keychain-backed secret configuration. AoE Serve binds to loopback behind private Tailscale Serve and uses a Keychain passphrase for its dashboard, not a URL token.
+`omp` uses `~/.config/omp/` as its global root and `~/.config/omp/agent/` for agent data; AoE launches sessions with those paths. AoE requests only OMP's named Keychain credentials and a GitHub token. The interactive `omp` function supplies a GitHub token only to the launched process. Direct non-shell invocations must supply their own environment, including `GITHUB_TOKEN` for the GitHub MCP. AoE Serve binds to loopback behind private Tailscale Serve and uses a Keychain passphrase for its dashboard, not a URL token.
 
 All new non-bare AoE worktrees use `~/code/.worktrees/<repo>/<branch>`, and multi-repo workspaces use `~/code/.worktrees/workspaces/<branch>-workspace-<session-id>`, regardless of where the source repositories live. Existing worktrees are not moved; bare repositories retain their in-repo worktree layout.
 

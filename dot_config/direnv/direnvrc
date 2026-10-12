@@ -1,2 +1,1 @@
-# Global secrets are exported via ~/.envrc (managed by chezmoi).
-# This file is for per-project direnv helpers only.
+# Repo-local .envrc files may source ~/.envrc for the opt-in keychain_env helper.
