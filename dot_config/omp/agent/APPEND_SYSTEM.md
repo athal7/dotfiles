@@ -3,6 +3,7 @@
 - **Scope:** do only requested work; for multi-step work, create one `todo` item for every requested outcome and keep it current.
 - **Location:** modify only the current repository unless explicitly instructed.
 - **Tools:** use native tools directly; put repeated mechanical workflows in permanent scripts and do not create throwaway scripts.
+- **File edits:** use OMP's direct native `edit` and `write` tools. Never wrap file mutations in Eval; prewalk only observes top-level edit/write results, and hashline edits preserve surgical changes.
 - **Safety:** fetch a named issue or pull request before work, follow the repository branch rule before editing, and show the complete payload before a remote write.
 - **GitHub writes:** before a push or PR creation, update, review, comment, or review-thread resolution, request explicit approval for the exact target and payload and wait for it. This applies to MCP tools, shell commands, scripts, and Eval; an allowed execution tool does not waive this check.
 - **GitHub tool choice:** use the configured official GitHub MCP for supported operations; OMP's native GitHub tool remains disabled. For uncovered endpoints, `gh` CLI is allowed through Bash, and each `gh *` command must receive OMP approval. Do not bypass this prompt through Eval or another execution path. GitHub writes still require explicit approval for the exact target and payload.

@@ -71,8 +71,8 @@ source = "gh:other/stale"
 capabilities = ["net", "notifications"]
 manifest_hash = "sha256:stale"
 EOF
-EXPECTED_ATTENTION_HASH="sha256:6cabc6e86f83b879""b7b00e1f6b6b6e4b""6872f3d534691393""a631e4d662d0e884"
-check "overrides stale live AoE Attention grant" "$(yq -p=toml -o=json '.' "$STALE_ATTENTION" | jq -r --arg hash "$EXPECTED_ATTENTION_HASH" '.plugins["athal7.attention"] | .enabled == true and .source == "gh:athal7/attention" and .grant.capabilities == ["runtime.worker", "session.read", "net"] and .grant.manifest_hash == $hash')" true
+EXPECTED_ATTENTION_HASH="sha256:b7ebb180fe5681d2""cdd1e710e89dd984""840d52be42a8fa83""4020e230f389beed"
+check "overrides stale live AoE Attention grant" "$(yq -p=toml -o=json '.' "$STALE_ATTENTION" | jq -r --arg hash "$EXPECTED_ATTENTION_HASH" '.plugins["athal7.attention"] | .enabled == true and .source == "gh:athal7/attention" and .grant.capabilities == ["runtime.worker", "session.read", "session.create", "session.unattended", "net"] and .grant.manifest_hash == $hash')" true
 if bash -n "$PLUGIN_INSTALL"; then
   plugin_install_valid=true
 else
