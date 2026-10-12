@@ -9,7 +9,7 @@ This repo manages `~` via chezmoi. Edit source files here.
 ## Source of truth
 
 - Packages: edit only `.chezmoidata/packages.yaml`; install scripts and `.chezmoiexternal.toml.tmpl` are generated from it.
-- OMP: `dot_config/omp/private_agent/private_config.yml.tmpl` renders agent config; `APPEND_SYSTEM.md` in that directory owns its system prompt. `PI_CONFIG_DIR=.config/omp` selects the global root and `PI_CODING_AGENT_DIR` selects the agent path for shells, AoE, and LaunchAgents. MCP server data lives in `.chezmoidata/mcp.yaml`.
+- OMP: `dot_config/omp/agent/config.yml.tmpl` renders agent config; `APPEND_SYSTEM.md` in that directory owns its system prompt. `PI_CONFIG_DIR=.config/omp` selects the global root and `PI_CODING_AGENT_DIR` selects the agent path for shells, AoE, and LaunchAgents. MCP server data lives in `.chezmoidata/mcp.yaml`.
 - Authored skills: `dot_agents/skills/` manages `~/.agents/skills/`; externally installed skills own separate siblings.
 - Private machine/org values: gitignored `.chezmoidata/local.yaml`; public shape in `local.yaml.example`.
 

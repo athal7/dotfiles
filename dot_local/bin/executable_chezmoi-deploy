@@ -38,7 +38,6 @@ main() {
   git -C "$PRIMARY" merge --ff-only --quiet "$branch" \
     || { echo "chezmoi-deploy: failed to fast-forward main with '$branch'" >&2; exit 1; }
 
-
   echo "chezmoi-deploy: applying to ~…"
   chezmoi apply --force --no-tty \
     || { echo "chezmoi-deploy: chezmoi apply failed; primary main has the merge but ~ may be partially applied" >&2; exit 1; }

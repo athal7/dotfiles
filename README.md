@@ -8,15 +8,24 @@ A macOS development environment managed with [chezmoi](https://chezmoi.io).
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
 ```
 
-Copy [`local.yaml.example`](local.yaml.example) to `.chezmoidata/local.yaml` and fill in machine-specific values. Run `chezmoi apply` after changing the source files.
+Copy [`local.yaml.example`](local.yaml.example) to `.chezmoidata/local.yaml` and fill in machine-specific values.
+
+This chezmoi source sets `umask = 0o077`, making managed files `0600` and directories `0700`. Before applying on an existing installation, set the same value in its active TOML config without regenerating other settings:
+
+```bash
+config="$(chezmoi data | jq -r '.chezmoi.configFile')"
+yq -i -p=toml -o=toml '.umask = 63' "$config"
+```
+
+This also restricts externally managed app bundles. Run `chezmoi apply` after changing source files.
 
 ## What's included
 
 - Development tools: [shell](dot_zshrc.tmpl), [Neovim](dot_config/nvim/), and [Git](dot_config/git/).
-- AI tools: [OMP configuration](dot_config/omp/private_agent/), [MCP servers](.chezmoidata/mcp.yaml), and [shared skills](dot_agents/skills/) installed at `~/.agents/skills/`. AoE (Agent of Empires) manages OMP sessions.
-- Local AI: [OpenJev](https://github.com/razorback16/openjev) runs an MLX System One server on loopback for OMP's native [judge role](dot_config/omp/private_agent/private_config.yml.tmpl); its pinned Python environment is installed from the [package registry](.chezmoidata/packages.yaml) before the [LaunchAgent](dot_config/launchd-yaml/agents.yaml.tmpl) starts.
+- AI tools: [OMP configuration](dot_config/omp/agent/), [MCP servers](.chezmoidata/mcp.yaml), and [shared skills](dot_agents/skills/) installed at `~/.agents/skills/`. AoE (Agent of Empires) manages OMP sessions.
+- Local AI: [OpenJev](https://github.com/razorback16/openjev) runs an MLX System One server on loopback for OMP's native [judge role](dot_config/omp/agent/config.yml.tmpl); its pinned Python environment is installed from the [package registry](.chezmoidata/packages.yaml) before the [LaunchAgent](dot_config/launchd-yaml/agents.yaml.tmpl) starts.
 - Automation: [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) run the weekday [daily maintenance](dot_agents/prompts/daily-maintenance.md) session for independent production-error triage and KB enrichment, a separate daily Homebrew update and upgrade at 04:00, and weekly cleanup of old Chrome signing clones, idle worktrees, build artifacts, and disconnected development databases. The repo also configures an [attention dashboard](dot_config/attention/config.json.tmpl), [calendar tools](https://github.com/athal7/cal), and [Homebridge](dot_config/homebridge/).
-- Packages: [one registry](.chezmoidata/packages.yaml) for Homebrew, mise, the pinned OpenJev Python service, and GitHub releases, with [external downloads](.chezmoiexternal.toml.tmpl). The `cal-automation` package is installed from `athal7/tap` via Homebrew; its [private configuration](dot_config/cal/private_config.json.tmpl) renders from `.chezmoidata/local.yaml` to `~/.config/cal/config.json`. The pinned `codebase-memory-mcp` npm tool is also installed via mise with its native-binary postinstall script explicitly allowed, avoiding an `npx` wrapper per OMP session.
+- Packages: [one registry](.chezmoidata/packages.yaml) for Homebrew, mise, the pinned OpenJev Python service, and GitHub releases, with [external downloads](.chezmoiexternal.toml.tmpl). The `cal-automation` package is installed from `athal7/tap` via Homebrew; its [private configuration](dot_config/cal/config.json.tmpl) renders from `.chezmoidata/local.yaml` to `~/.config/cal/config.json`. The pinned `codebase-memory-mcp` npm tool is also installed via mise with its native-binary postinstall script explicitly allowed, avoiding an `npx` wrapper per OMP session.
 - Containers: Docker CLI and Compose use [Colima](https://github.com/abiosoft/colima). Its LaunchAgent starts a default Docker VM with 4 GiB of memory and a 30 GiB disk limit; shells point `DOCKER_HOST` at `$HOME/.colima/default/docker.sock`. Set `DOCKER_HOST` after shell startup to use another daemon. Compose is exposed through `~/.docker/cli-plugins/docker-compose` without replacing `~/.docker/config.json`. A container with `/var/run/docker.sock` mounted can control sibling containers; treat the mount as privileged. Apple Container remains installed independently, and Colima does not migrate or delete its data.
 - Knowledge-base collectors: [definitions](dot_config/kb/collectors/) deploy to `~/.config/kb/collectors/`.
 

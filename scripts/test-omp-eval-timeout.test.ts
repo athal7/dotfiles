@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import defaultEvalTimeout from "../dot_config/omp/private_agent/hooks/pre/eval-timeout";
+import defaultEvalTimeout from "../dot_config/omp/agent/hooks/pre/eval-timeout";
 
 type Event = { toolName: string; input: Record<string, unknown> };
 
