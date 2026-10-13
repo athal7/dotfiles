@@ -185,7 +185,7 @@ status_bar = "auto"
 [web]
 notifications_enabled = true
 notify_on_error = true
-notify_on_idle = true
+notify_on_idle = false
 notify_on_waiting = true
 notify_on_wake_fire = true
 
