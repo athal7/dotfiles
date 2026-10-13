@@ -65,7 +65,7 @@ packages:
 
   # aoe (Agent of Empires) plugins — installed/updated via
   # run_onchange_after_plugins-aoe.sh.tmpl. Keep sources and IDs here;
-  # managed enablement and grants live in modify_config.toml.
+  # managed enablement and grants live in config.toml.tmpl.
   aoe_plugins:
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"

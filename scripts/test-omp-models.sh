@@ -42,6 +42,10 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agen
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
+check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
+check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.host_hooks.before_session[0]' "$AOE" | jq -r '.')" "if [ \"\$AOE_TOOL\" = omp ]; then \"\$HOME/.local/bin/aoe-omp-environment\"; fi"
+check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has("app_state")' "$AOE")" false
+check "does not retain AoE live agent overrides" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$AOE")" false
 check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
 check "routes native judgment to local OpenJev" "$(yq -r '.modelRoles.judge' "$CONFIG")" openjev/openjev-latest
 check "preserves task advisor override" "$(yq -r '.task.agentAdvisor.task' "$CONFIG")" off
@@ -55,24 +59,6 @@ check "disables automatic memory retention" "$(yq -r '.mnemopi.autoRetain' "$CON
 check "caps memory injection" "$(yq -r '.mnemopi.injectionTokenLimit' "$CONFIG")" 1200
 check "does not configure ignored skills" "$(yq -r '(.skills.ignoredSkills // []) | length' "$CONFIG")" 0
 
-STALE_AOE="$WORK/stale-aoe.toml"
-printf '[plugins."agent-of-empires.github"]\nenabled = true\n[host_hooks]\nbefore_session = ["stale-router"]\nafter_session = ["keep-hook"]\n[session.agent_command_override]\nomp = "stale-omp"\nother = "keep-agent"\n' \
-  | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_config/agent-of-empires/modify_config.toml" > "$STALE_AOE"
-check "preserves unrelated AoE hooks" "$(yq -p=toml -o=json '.host_hooks.after_session[0]' "$STALE_AOE" | jq -r '.')" keep-hook
-check "removes the stale AoE OMP override" "$(yq -p=toml -o=json '.session.agent_command_override | has("omp")' "$STALE_AOE")" false
-check "preserves unrelated AoE agent overrides" "$(yq -p=toml -o=json '.session.agent_command_override.other' "$STALE_AOE" | jq -r '.')" keep-agent
-check "preserves the configured AoE GitHub plugin" "$(yq -p=toml -o=json '.plugins | has("agent-of-empires.github")' "$STALE_AOE")" true
-STALE_ATTENTION="$WORK/stale-attention.toml"
-cat <<'EOF' | chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --with-stdin --file "$REPO_ROOT/dot_config/agent-of-empires/modify_config.toml" > "$STALE_ATTENTION"
-[plugins."athal7.attention"]
-enabled = false
-source = "gh:other/stale"
-[plugins."athal7.attention".grant]
-capabilities = ["net", "notifications"]
-manifest_hash = "sha256:stale"
-EOF
-EXPECTED_ATTENTION_HASH="sha256:b7ebb180fe5681d2""cdd1e710e89dd984""840d52be42a8fa83""4020e230f389beed"
-check "overrides stale live AoE Attention grant" "$(yq -p=toml -o=json '.' "$STALE_ATTENTION" | jq -r --arg hash "$EXPECTED_ATTENTION_HASH" '.plugins["athal7.attention"] | .enabled == true and .source == "gh:athal7/attention" and .grant.capabilities == ["runtime.worker", "session.read", "session.create", "session.unattended", "net"] and .grant.manifest_hash == $hash')" true
 if bash -n "$PLUGIN_INSTALL"; then
   plugin_install_valid=true
 else
@@ -135,7 +121,7 @@ check "preserves GitHub token expansion in KB enrichment" "$(jq -r '.mcpServers.
 check "includes GitHub MCP in scheduled KB enrichment" "$(jq -r '(.mcpServers | has("github"))' "$KB_ENRICH_MCP")" true
 check "removes the two Runlayer GitHub connectors" "$(jq -r '[.mcpServers | has("github-orgs"), has("github-other-orgs")] | any' "$MCP")" false
 rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[]' | sort | paste -sd ' ' -)"
-check "exports configured Runlayer MCP URL variables to AoE sessions" "$rendered_runlayer_environment" "RUNLAYER_BIGQUERY_MCP_URL=https://bigquery.example.test/mcp RUNLAYER_PAGERDUTY_MCP_URL=https://pagerduty.example.test/mcp"
+check "exports configured Runlayer URLs and the OMP agent directory to AoE sessions" "$rendered_runlayer_environment" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent RUNLAYER_BIGQUERY_MCP_URL=https://bigquery.example.test/mcp RUNLAYER_PAGERDUTY_MCP_URL=https://pagerduty.example.test/mcp"
 if bash -n "$ZSHENV"; then zshenv_valid=true; else zshenv_valid=false; fi
 check "renders a valid shell environment" "$zshenv_valid" true
 rendered_runlayer_shell_variables="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHENV" | cut -d= -f1 | sort | paste -sd ' ' -)"
