@@ -29,7 +29,7 @@ The OpenFlow profile's 211 keyboard-key bindings match the preserved Naya databa
 
 The preserved Naya database snapshot stores four Tune settings as numeric sliders. The pinned OpenFlow 0.7.0 converter maps them by slot order, but its `MS-14 → pointer_accel_on` and `MS-17 → toggle_ticks` mappings conflict with the source rows: both are `numboxSlider` values, while OpenFlow defines those destination fields as toggles ([converter](https://github.com/create-collective/openflow/blob/8fc8a95011702b7d39038a7bd26051367f0e5479/backend/openflow_backend/db/nayaflow_convert.py), [field schema](https://github.com/create-collective/openflow/blob/8fc8a95011702b7d39038a7bd26051367f0e5479/backend/openflow_backend/db/userdata.py)). The profile therefore preserves `MS-14=20` and `MS-17=50` under their raw IDs, including their numeric-slider types; it does not guess replacement meanings or coerce either value to `false`. Those two settings remain unverified for firmware use.
 
-Read-only comparison against `dot_config/openflow/import/naya-create-profile.db` confirms all 211 keyboard bindings, all 10 layer/module assignments, and the Naya Touch/Tune gesture bindings match the snapshot. The settings below are the only identified mapping correction:
+Read-only comparison against `dot_config/openflow/import/naya-create-profile.db` confirms all 211 keyboard bindings and 10 layer/module assignments match after resolving OpenFlow-regenerated IDs. Every snapshot-defined Naya Touch/Tune gesture remains present; OpenFlow-side profiles may include additional gestures. The settings below are the only identified mapping correction:
 
 | Naya row | Value | Source type | Repository profile field |
 | --- | ---: | --- | --- |

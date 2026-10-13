@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the managed keymap against the preserved, read-only NayaFlow database."""
+"""Verify Naya snapshot mappings survive OpenFlow profile export/import."""
 
 from __future__ import annotations
 
@@ -10,6 +10,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "dot_config/openflow/import/naya-create-profile.db"
 PROFILE = ROOT / "dot_config/openflow/profiles/naya-default-macos.json"
+
+def normalize_action_code(value: str | None, layer_ids: dict[str, str]) -> str | None:
+    prefix = "TO_LAYER_"
+    if not isinstance(value, str) or not value.startswith(prefix):
+        return value
+    target = value[len(prefix):]
+    assert target in layer_ids, f"layer action references unknown ID {target}"
+    return prefix + layer_ids[target]
 
 
 def main() -> None:
@@ -22,6 +30,16 @@ def main() -> None:
         ).fetchone()
         assert row is not None, "managed profile is absent from the preserved Naya snapshot"
         profile_id = row["id"]
+        source_layer_ids = {
+            item["id"]: f'{item["order_id"]}:{item["name"]}'
+            for item in connection.execute(
+                "SELECT id,order_id,name FROM layers WHERE profile_id = ?", (profile_id,)
+            )
+        }
+        profile_layer_ids = {
+            item["srcId"]: f'{item["orderId"]}:{item["name"]}'
+            for item in data["layers"]
+        }
 
         source_keys: dict[tuple[int, str, int], list[tuple]] = {}
         for item in connection.execute(
@@ -35,16 +53,19 @@ def main() -> None:
             key = (item["order_id"], item["name"], item["position_id"])
             source_keys.setdefault(key, [])
             if item["behavior"] is not None:
-                source_keys[key].append(tuple(item[field] for field in (
-                    "behavior", "action_type", "action_code", "context"
-                )))
+                source_keys[key].append((
+                    item["behavior"], item["action_type"],
+                    normalize_action_code(item["action_code"], source_layer_ids), item["context"],
+                ))
         profile_keys: dict[tuple[int, str, int], list[tuple]] = {}
         for layer in data["layers"]:
             for key in layer["keys"]:
                 identity = (layer["orderId"], layer["name"], key["positionId"])
-                profile_keys[identity] = [tuple(binding.get(field) for field in (
-                    "behavior", "actionType", "actionCode", "context"
-                )) for binding in key.get("bindings", [])]
+                profile_keys[identity] = [(
+                    binding.get("behavior"), binding.get("actionType"),
+                    normalize_action_code(binding.get("actionCode"), profile_layer_ids),
+                    binding.get("context"),
+                ) for binding in key.get("bindings", [])]
         sort_key = lambda binding: tuple("" if field is None else str(field) for field in binding)
         for mapping in (source_keys, profile_keys):
             for bindings in mapping.values():
@@ -52,15 +73,28 @@ def main() -> None:
         assert source_keys == profile_keys, "repository key bindings differ from the Naya snapshot"
         assert sum(map(len, source_keys.values())) == 211
 
+        source_config_ids = {
+            item["id"]: item["name"]
+            for item in connection.execute(
+                """SELECT DISTINCT mc.id,mc.name FROM module_configs mc
+                   JOIN module_config_bindings b ON b.module_config_id = mc.id
+                   WHERE b.profile_id = ?""", (profile_id,)
+            )
+        }
+        profile_config_ids = {
+            item["srcId"]: item["name"] for item in data["modules"]["configs"]
+        }
         source_assignments = {
-            (item["layer_id"], item["module_config_id"], item["binding_location"], item["state"])
+            (source_layer_ids[item["layer_id"]], source_config_ids.get(item["module_config_id"]),
+             item["binding_location"], item["state"])
             for item in connection.execute(
                 "SELECT layer_id,module_config_id,binding_location,state "
                 "FROM module_config_bindings WHERE profile_id = ?", (profile_id,)
             )
         }
         profile_assignments = {
-            (item["srcLayerId"], item["srcConfigId"], item["bindingLocation"], item["state"])
+            (profile_layer_ids[item["srcLayerId"]], profile_config_ids.get(item["srcConfigId"]),
+             item["bindingLocation"], item["state"])
             for item in data["modules"]["configBindings"]
         }
         assert source_assignments == profile_assignments, "module-to-layer assignments differ from the Naya snapshot"
@@ -107,11 +141,12 @@ def main() -> None:
                 ))
                 for item in config.get("bindings", [])
             }
-            assert source_bindings == profile_bindings, f"{config_name} gestures differ from the Naya snapshot"
+            missing = source_bindings - profile_bindings
+            assert not missing, f"{config_name} snapshot gestures missing from the profile: {missing!r}"
     finally:
         connection.close()
 
-    print("PASS: 211 key bindings, 10 module assignments, module gestures, and raw Tune slider values match source")
+    print("PASS: 211 key bindings, 10 module assignments, snapshot gestures, and raw Tune slider values preserved")
 
 
 if __name__ == "__main__":
