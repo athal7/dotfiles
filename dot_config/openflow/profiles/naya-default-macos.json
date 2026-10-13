@@ -7,7 +7,7 @@
   },
   "layers": [
     {
-      "srcId": "9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
+      "srcId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
       "name": "QWERTY",
       "orderId": 0,
       "iconId": "move_down",
@@ -788,7 +788,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_c4aaaf85-4ef7-4309-862f-88645c50f00e",
+              "actionCode": "TO_LAYER_f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
               "context": null
             }
           ]
@@ -932,7 +932,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_79d1e021-3ea2-421f-be04-d0d226be778d",
+              "actionCode": "TO_LAYER_bf165dc3-dd85-449d-a26d-109482e445bd",
               "context": null
             }
           ]
@@ -1055,7 +1055,7 @@
       ]
     },
     {
-      "srcId": "c4aaaf85-4ef7-4309-862f-88645c50f00e",
+      "srcId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
       "name": "Keypad + Arrow Keys",
       "orderId": 1,
       "iconId": "masks",
@@ -1749,7 +1749,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
+              "actionCode": "TO_LAYER_f66391d4-76ae-4320-ba8b-f9acf76b28f9",
               "context": null
             }
           ]
@@ -1825,7 +1825,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_79d1e021-3ea2-421f-be04-d0d226be778d",
+              "actionCode": "TO_LAYER_bf165dc3-dd85-449d-a26d-109482e445bd",
               "context": null
             }
           ]
@@ -1948,7 +1948,7 @@
       ]
     },
     {
-      "srcId": "79d1e021-3ea2-421f-be04-d0d226be778d",
+      "srcId": "bf165dc3-dd85-449d-a26d-109482e445bd",
       "name": "System",
       "orderId": 2,
       "iconId": "move_down",
@@ -2837,7 +2837,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
+              "actionCode": "TO_LAYER_f66391d4-76ae-4320-ba8b-f9acf76b28f9",
               "context": null
             }
           ]
@@ -2964,235 +2964,69 @@
   "modules": {
     "configBindings": [
       {
-        "srcLayerId": "9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
-        "srcConfigId": "14e08d36-f7e9-4fc4-b47c-2af052b5abc4",
+        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+        "srcConfigId": "5287c100-3f60-4a5d-9b40-564ac96332d8",
         "bindingLocation": "touch:keyboard_left",
         "state": null
       },
       {
-        "srcLayerId": "9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
+        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
         "srcConfigId": null,
         "bindingLocation": "track:keyboard_left",
         "state": "disabled"
       },
       {
-        "srcLayerId": "9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
+        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
         "srcConfigId": null,
         "bindingLocation": "track:keyboard_right",
         "state": "disabled"
       },
       {
-        "srcLayerId": "9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
-        "srcConfigId": "df73838f-0bd9-4035-9b42-d04b04bbd3e9",
+        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+        "srcConfigId": "093f8f3d-1799-4a35-8c9d-cb53b8d5d861",
         "bindingLocation": "tune:keyboard_left",
         "state": null
       },
       {
-        "srcLayerId": "9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
-        "srcConfigId": "df73838f-0bd9-4035-9b42-d04b04bbd3e9",
+        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+        "srcConfigId": "093f8f3d-1799-4a35-8c9d-cb53b8d5d861",
         "bindingLocation": "tune:keyboard_right",
         "state": null
       },
       {
-        "srcLayerId": "9d8a1005-7594-4c69-9a20-ab7e8d5b6daa",
-        "srcConfigId": "14e08d36-f7e9-4fc4-b47c-2af052b5abc4",
+        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+        "srcConfigId": "5287c100-3f60-4a5d-9b40-564ac96332d8",
         "bindingLocation": "touch:keyboard_right",
         "state": null
       },
       {
-        "srcLayerId": "79d1e021-3ea2-421f-be04-d0d226be778d",
+        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
         "srcConfigId": null,
         "bindingLocation": "touch:keyboard_left",
         "state": "transparent"
       },
       {
-        "srcLayerId": "79d1e021-3ea2-421f-be04-d0d226be778d",
+        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
         "srcConfigId": null,
         "bindingLocation": "touch:keyboard_right",
         "state": "transparent"
       },
       {
-        "srcLayerId": "79d1e021-3ea2-421f-be04-d0d226be778d",
-        "srcConfigId": "6300355c-cf0b-4df3-8230-f6f727256b78",
+        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
+        "srcConfigId": "2cdb4ab8-dcc8-46b7-a5bf-89e89463f4fa",
         "bindingLocation": "tune:keyboard_left",
         "state": null
       },
       {
-        "srcLayerId": "79d1e021-3ea2-421f-be04-d0d226be778d",
-        "srcConfigId": "6300355c-cf0b-4df3-8230-f6f727256b78",
+        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
+        "srcConfigId": "2cdb4ab8-dcc8-46b7-a5bf-89e89463f4fa",
         "bindingLocation": "tune:keyboard_right",
         "state": null
       }
     ],
     "configs": [
       {
-        "srcId": "df73838f-0bd9-4035-9b42-d04b04bbd3e9",
-        "name": "Naya Tune",
-        "type": "TUNE",
-        "size": 0,
-        "orderId": 0,
-        "iconId": "move_down",
-        "description": "---",
-        "bindings": [
-          {
-            "action_id": null,
-            "action_code": "mouse - SCROLL_UP - SCROLL_DOWN",
-            "action_type": "value",
-            "behavior": "rotate:tune:dial",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "M2",
-            "action_type": "mouse",
-            "behavior": "tap:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "LCTRL + RIGHT",
-            "action_type": "shortcut_alias",
-            "behavior": "swipe_left:tune:1_finger",
-            "invert": 1,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "LCTRL + DOWN",
-            "action_type": "shortcut_alias",
-            "behavior": "swipe_down:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "LCTRL + UP",
-            "action_type": "shortcut_alias",
-            "behavior": "swipe_up:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "LCTRL + LEFT",
-            "action_type": "shortcut_alias",
-            "behavior": "swipe_right:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          }
-        ],
-        "settings": [
-          {
-            "value": "25",
-            "type": "numboxSlider",
-            "correlation_id": "pointer_speed"
-          },
-          {
-            "value": "20",
-            "type": "numboxSlider",
-            "correlation_id": "MS-14"
-          },
-          {
-            "value": "72",
-            "type": "numboxSlider",
-            "correlation_id": "tick_strength"
-          },
-          {
-            "value": "50",
-            "type": "numboxSlider",
-            "correlation_id": "MS-17"
-          }
-        ]
-      },
-      {
-        "srcId": "14e08d36-f7e9-4fc4-b47c-2af052b5abc4",
-        "name": "Naya Touch MacOS",
-        "type": "TOUCH",
-        "size": 0,
-        "orderId": 2,
-        "iconId": "move_down",
-        "description": "---",
-        "bindings": [
-          {
-            "action_id": null,
-            "action_code": null,
-            "action_type": null,
-            "behavior": "vertical:touch:4_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "M2",
-            "action_type": "mouse",
-            "behavior": "tap:touch:2_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "mouse - SCROLL_LEFT - SCROLL_RIGHT",
-            "action_type": "value",
-            "behavior": "horizontal:touch:2_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "mouse - SCROLL_UP - SCROLL_DOWN",
-            "action_type": "value",
-            "behavior": "vertical:touch:2_fingers",
-            "invert": 1,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          }
-        ],
-        "settings": [
-          {
-            "value": "10",
-            "type": "numboxSlider",
-            "correlation_id": "scroll_speed"
-          },
-          {
-            "value": "10",
-            "type": "numboxSlider",
-            "correlation_id": "pointer_accel"
-          },
-          {
-            "value": "10",
-            "type": "numboxSlider",
-            "correlation_id": "pointer_speed"
-          },
-          {
-            "value": "false",
-            "type": "toggle",
-            "correlation_id": "pointer_accel_on"
-          }
-        ]
-      },
-      {
-        "srcId": "6300355c-cf0b-4df3-8230-f6f727256b78",
+        "srcId": "2cdb4ab8-dcc8-46b7-a5bf-89e89463f4fa",
         "name": "media",
         "type": "TUNE",
         "size": 0,
@@ -3259,9 +3093,275 @@
             "threshold": 0,
             "direction": "+",
             "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "pinch&spread:tune:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "counter_clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
           }
         ],
         "settings": []
+      },
+      {
+        "srcId": "093f8f3d-1799-4a35-8c9d-cb53b8d5d861",
+        "name": "Naya Tune",
+        "type": "TUNE",
+        "size": 0,
+        "orderId": 0,
+        "iconId": "move_down",
+        "description": "---",
+        "bindings": [
+          {
+            "action_id": null,
+            "action_code": "mouse - SCROLL_UP - SCROLL_DOWN",
+            "action_type": "value",
+            "behavior": "rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "M2",
+            "action_type": "mouse",
+            "behavior": "tap:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "LCTRL + RIGHT",
+            "action_type": "shortcut_alias",
+            "behavior": "swipe_left:tune:1_finger",
+            "invert": 1,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "LCTRL + DOWN",
+            "action_type": "shortcut_alias",
+            "behavior": "swipe_down:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "LCTRL + UP",
+            "action_type": "shortcut_alias",
+            "behavior": "swipe_up:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "LCTRL + LEFT",
+            "action_type": "shortcut_alias",
+            "behavior": "swipe_right:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "pinch&spread:tune:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "counter_clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          }
+        ],
+        "settings": [
+          {
+            "value": "25",
+            "type": "numboxSlider",
+            "correlation_id": "pointer_speed"
+          },
+          {
+            "value": "20",
+            "type": "numboxSlider",
+            "correlation_id": "MS-14"
+          },
+          {
+            "value": "72",
+            "type": "numboxSlider",
+            "correlation_id": "tick_strength"
+          },
+          {
+            "value": "50",
+            "type": "numboxSlider",
+            "correlation_id": "MS-17"
+          }
+        ]
+      },
+      {
+        "srcId": "5287c100-3f60-4a5d-9b40-564ac96332d8",
+        "name": "Naya Touch MacOS",
+        "type": "TOUCH",
+        "size": 0,
+        "orderId": 2,
+        "iconId": "move_down",
+        "description": "---",
+        "bindings": [
+          {
+            "action_id": null,
+            "action_code": null,
+            "action_type": null,
+            "behavior": "vertical:touch:4_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "M2",
+            "action_type": "mouse",
+            "behavior": "tap:touch:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - SCROLL_LEFT - SCROLL_RIGHT",
+            "action_type": "value",
+            "behavior": "horizontal:touch:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - SCROLL_UP - SCROLL_DOWN",
+            "action_type": "value",
+            "behavior": "vertical:touch:2_fingers",
+            "invert": 1,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - MOUSE_DOWN - MOUSE_UP",
+            "action_type": "value",
+            "behavior": "vertical:touch:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - MOUSE_LEFT - MOUSE_RIGHT",
+            "action_type": "value",
+            "behavior": "horizontal:touch:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "M1",
+            "action_type": "mouse",
+            "behavior": "tap:touch:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "pinch&spread:touch:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          }
+        ],
+        "settings": [
+          {
+            "value": "10",
+            "type": "numboxSlider",
+            "correlation_id": "scroll_speed"
+          },
+          {
+            "value": "10",
+            "type": "numboxSlider",
+            "correlation_id": "pointer_accel"
+          },
+          {
+            "value": "10",
+            "type": "numboxSlider",
+            "correlation_id": "pointer_speed"
+          },
+          {
+            "value": "false",
+            "type": "toggle",
+            "correlation_id": "pointer_accel_on"
+          }
+        ]
       }
     ]
   }
