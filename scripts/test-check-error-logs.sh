@@ -20,9 +20,9 @@ case "$1" in
     printf 'ID: test-session\n'
     ;;
   session)
-    [[ "${AOE_TEST_MODE:-success}" != fail-start ]]
     ;;
   send)
+    [[ "${AOE_TEST_MODE:-success}" != fail-send ]]
     ;;
   *)
     exit 64
@@ -41,6 +41,12 @@ chmod +x "$CHECKER"
 printf 'Error: session changed while launch hooks were running\n' >"$LOG_DIR/aoe-old.error.log"
 log_size=$(stat -f%z "$LOG_DIR/aoe-old.error.log")
 printf '%s:%s\n' "$LOG_DIR/aoe-old.error.log" 0 >"$LOG_DIR/.check-error-logs-state"
+printf '%s\n' \
+  '[10/12/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed, there was a failure with event subscription. Did you read the readme: https://github.com/potmat/homebridge-google-nest-sdm#where-do-the-config-values-come-from ChannelError: Failed to connect to channel. Reason: Failed to connect before the deadline' \
+  "  details: 'Failed to connect before the deadline'," \
+  >"$LOG_DIR/homebridge.error.log"
+homebridge_log_size=$(stat -f%z "$LOG_DIR/homebridge.error.log")
+printf '%s:%s\n' "$LOG_DIR/homebridge.error.log" 0 >>"$LOG_DIR/.check-error-logs-state"
 
 run_checker() {
   HOME="$HOME_DIR" \
@@ -63,9 +69,17 @@ grep -F 'send --no-revive test-session Triage the supplied LaunchAgent error-log
 grep -F 'Services with new errors: aoe-old' "$AOE_LOG" >/dev/null
 grep -F '[aoe-old] Error: session changed while launch hooks were running' "$AOE_LOG" >/dev/null
 grep -Fqx "$LOG_DIR/aoe-old.error.log:$log_size" "$LOG_DIR/.check-error-logs-state"
+grep -Fqx "$LOG_DIR/homebridge.error.log:$homebridge_log_size" "$LOG_DIR/.check-error-logs-state"
+if grep -F '[homebridge]' "$AOE_LOG"; then
+  exit 1
+fi
+
+printf '%s\n' \
+  '[10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed, there was a failure with event subscription. Did you read the readme: https://github.com/potmat/homebridge-google-nest-sdm#where-do-the-config-values-come-from ChannelError: Failed to connect to channel. Reason: Permission denied' \
+  >>"$LOG_DIR/homebridge.error.log"
 
 printf '%s\n' 'Error: another launch failure' >>"$LOG_DIR/aoe-old.error.log"
-AOE_TEST_MODE=fail-start
+AOE_TEST_MODE=fail-send
 export AOE_TEST_MODE
 : >"$AOE_LOG"
 output=$(run_checker)
@@ -73,8 +87,9 @@ printf '%s\n' "$output" | grep -F 'WARNING: dispatch failed'
 state_after_failure=$(grep -F "$LOG_DIR/aoe-old.error.log:" "$LOG_DIR/.check-error-logs-state")
 expected_state="$LOG_DIR/aoe-old.error.log:$log_size"
 [[ "$state_after_failure" == "$expected_state" ]]
-if grep -F 'send --no-revive' "$AOE_LOG"; then
-  exit 1
-fi
+grep -F 'Services with new errors: aoe-old,homebridge' "$AOE_LOG" >/dev/null
+grep -F '[homebridge] [10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed' "$AOE_LOG" >/dev/null
+grep -F 'send --no-revive test-session' "$AOE_LOG" >/dev/null
+grep -Fqx "$LOG_DIR/homebridge.error.log:$homebridge_log_size" "$LOG_DIR/.check-error-logs-state"
 
 printf 'check-error-logs dispatcher test passed\n'

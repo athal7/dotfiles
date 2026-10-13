@@ -35,6 +35,8 @@ homebridge|Token refresh failed using Google account for connection
 homebridge|Error: send EADDRNOTAVAIL
 homebridge|Error: send EPIPE
 homebridge|TypeError: Cannot read properties of undefined
+homebridge|^\[[^]]+\] \[homebridge-google-nest-sdm\] Plugin initialization failed, there was a failure with event subscription\..* ChannelError: Failed to connect to channel\. Reason: Failed to connect before the deadline$
+homebridge|^[[:space:]]+details: 'Failed to connect before the deadline',$
 aoe-daily-maintenance|Error: session [[:xdigit:]]+ changed while launch hooks were running$
 "
 
