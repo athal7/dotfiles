@@ -1,0 +1,516 @@
+#!/usr/bin/env python3
+"""Exchange repository-owned OpenFlow profile JSON with the local OpenFlow app.
+
+This command imports/exports profile data only. It never calls a keyboard or firmware route.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+import uuid
+import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
+from pathlib import Path
+from typing import Any
+from openflow_profile_sync_state import (
+    direction,
+    profile_digest,
+    read_state,
+    semantic_profile,
+    state_dir,
+    sync_lock,
+    write_state,
+)
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str) -> None:
+        return None
+
+
+def api_url(value: str) -> str:
+    parsed = urllib.parse.urlsplit(value)
+    if (parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost", "::1"}
+            or parsed.username or parsed.password or parsed.path not in {"", "/"}
+            or parsed.query or parsed.fragment):
+        raise ValueError("OpenFlow API URL must be a plain HTTP loopback address")
+    return value.rstrip("/")
+
+
+def request_json(base: str, path: str, method: str = "GET", body: dict[str, Any] | None = None) -> Any:
+    payload = json.dumps(body).encode("utf-8") if body is not None else None
+    request = urllib.request.Request(
+        base + path,
+        data=payload,
+        headers={"Content-Type": "application/json"} if payload is not None else {},
+        method=method,
+    )
+    try:
+        with urllib.request.build_opener(NoRedirect).open(request) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"OpenFlow returned HTTP {exc.code}: {detail}") from exc
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise RuntimeError(f"Cannot reach OpenFlow at {base}: {exc}") from exc
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"OpenFlow returned invalid JSON for {path}") from exc
+
+
+def verify_app(base: str) -> None:
+    info = request_json(base, "/api/info/system")
+    if info.get("app") != "OpenFlow":
+        raise RuntimeError(f"Refusing unexpected local API: app={info.get('app')!r}")
+
+
+def source_root(option: str | None) -> Path:
+    if option:
+        root = Path(option).expanduser().resolve()
+    elif os.environ.get("CHEZMOI_SOURCE_DIR"):
+        root = Path(os.environ["CHEZMOI_SOURCE_DIR"]).expanduser().resolve()
+    else:
+        try:
+            result = subprocess.run(
+                ["chezmoi", "source-path"], check=True, capture_output=True, text=True
+            )
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise RuntimeError("Cannot locate chezmoi source; pass --source-dir") from exc
+        root = Path(result.stdout.strip()).expanduser().resolve()
+    if not root.is_dir():
+        raise RuntimeError(f"Not a source directory: {root}")
+    return root
+
+
+def source_file(root: Path, value: str) -> Path:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = root / path
+    path = path.resolve()
+    try:
+        path.relative_to(root)
+    except ValueError as exc:
+        raise RuntimeError(f"Profile path must stay inside the chezmoi source: {path}") from exc
+    return path
+
+
+def read_profile(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Cannot read profile JSON {path}: {exc}") from exc
+    validate_profile(data)
+    return data
+
+
+def validate_profile(data: Any) -> None:
+    if (not isinstance(data, dict) or data.get("kind") != "profile"
+            or not isinstance(data.get("profile"), dict)
+            or not isinstance(data["profile"].get("name"), str)
+            or not isinstance(data.get("layers"), list)):
+        raise RuntimeError("Expected an OpenFlow profile export (kind=profile, profile.name, layers)")
+
+
+def profiles(base: str) -> list[dict[str, Any]]:
+    data = request_json(base, "/api/userdata")
+    found = data.get("profiles") if isinstance(data, dict) else None
+    if not isinstance(found, list):
+        raise RuntimeError("OpenFlow /api/userdata did not return a profile list")
+    return found
+
+
+def profile_by_id(base: str, profile_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    matches = [item for item in profiles(base) if item.get("id") == profile_id]
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected one OpenFlow profile with id {profile_id}; found {len(matches)}")
+    exported = request_json(
+        base, "/api/export-profile?" + urllib.parse.urlencode({"profileId": profile_id})
+    )
+    validate_profile(exported)
+    return matches[0], exported
+
+
+
+def changed_paths(left: Any, right: Any, path: str = "$", limit: int = 20) -> list[str]:
+    changes: list[str] = []
+
+    def walk(a: Any, b: Any, current: str) -> None:
+        if len(changes) >= limit:
+            return
+        if type(a) is not type(b):
+            changes.append(current)
+        elif isinstance(a, dict):
+            for key in sorted(a.keys() | b.keys()):
+                if len(changes) >= limit:
+                    break
+                if key not in a or key not in b:
+                    changes.append(f"{current}.{key}")
+                else:
+                    walk(a[key], b[key], f"{current}.{key}")
+        elif isinstance(a, list):
+            if len(a) != len(b):
+                changes.append(f"{current}.length")
+            for index, (av, bv) in enumerate(zip(a, b)):
+                if len(changes) >= limit:
+                    break
+                walk(av, bv, f"{current}[{index}]")
+        elif a != b:
+            changes.append(current)
+
+    walk(left, right, path)
+    return changes
+
+
+def write_export(root: Path, destination: Path, data: dict[str, Any], overwrite: bool) -> None:
+    destination = source_file(root, str(destination))
+    rendered = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    if destination.exists():
+        existing = read_profile(destination)
+        if existing == data:
+            print(f"Already current: {destination.relative_to(root)}")
+            return
+        if not overwrite:
+            raise RuntimeError(
+                f"Refusing to replace {destination.relative_to(root)}; inspect with status, "
+                "then pass --overwrite to accept the OpenFlow copy"
+            )
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=".openflow-profile-", dir=destination.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(rendered)
+        os.replace(temp_name, destination)
+    except BaseException:
+        try:
+            os.unlink(temp_name)
+        except FileNotFoundError:
+            pass
+        raise
+    print(f"Exported {data['profile']['name']!r} to {destination.relative_to(root)}")
+
+def write_private_json(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(data, stream, ensure_ascii=False, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def set_sync_record(source: Path, root: Path, profile_id: str, name: str, digest: str) -> None:
+    state = read_state()
+    key = source.relative_to(root).as_posix()
+    state["profiles"][key] = {"id": profile_id, "name": name, "digest": digest}
+    write_state(state)
+
+
+def named_profiles(base: str, name: str) -> list[dict[str, Any]]:
+    return [item for item in profiles(base) if item.get("name") == name]
+
+
+def verify_named_profile(base: str, name: str, expected_digest: str) -> str:
+    matches = named_profiles(base, name)
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected exactly one OpenFlow profile named {name!r}; found {len(matches)}")
+    profile_id = str(matches[0].get("id", ""))
+    if not profile_id:
+        raise RuntimeError(f"OpenFlow profile {name!r} has no ID")
+    _, exported = profile_by_id(base, profile_id)
+    if profile_digest(exported) != expected_digest:
+        raise RuntimeError(f"Imported OpenFlow profile {name!r} does not match the repository JSON")
+    return profile_id
+
+
+def rename_profile(base: str, profile_id: str, name: str) -> None:
+    request_json(base, "/rpc/rename-profile", "POST", {"profileId": profile_id, "name": name})
+
+
+def delete_profile(base: str, profile_id: str) -> None:
+    request_json(base, "/rpc/delete-profile", "POST", {"profileId": profile_id})
+
+
+def remove_named_profile(base: str, name: str) -> None:
+    matches = named_profiles(base, name)
+    if len(matches) == 1 and matches[0].get("id"):
+        delete_profile(base, str(matches[0]["id"]))
+
+
+def ensure_openflow_running(base: str) -> None:
+    try:
+        verify_app(base)
+        return
+    except RuntimeError as exc:
+        if not str(exc).startswith("Cannot reach OpenFlow"):
+            raise
+
+    candidates = (
+        Path.home() / "Applications/OpenFlow.app",
+        Path("/Applications/OpenFlow.app"),
+    )
+    app = next((candidate for candidate in candidates if candidate.is_dir()), None)
+    if app is None:
+        raise RuntimeError("OpenFlow is not running and OpenFlow.app was not found in ~/Applications or /Applications")
+    try:
+        subprocess.run(["/usr/bin/open", "-g", "-a", str(app)], check=True, capture_output=True, text=True)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError(f"Could not start {app}: {exc}") from exc
+
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        try:
+            verify_app(base)
+            return
+        except RuntimeError as exc:
+            if not str(exc).startswith("Cannot reach OpenFlow"):
+                raise
+            time.sleep(0.5)
+    raise RuntimeError(f"OpenFlow did not start its API at {base} within 60 seconds")
+
+
+def replace_managed_profile(
+    base: str, source: Path, root: Path, expected: dict[str, Any],
+    old_id: str, old_export: dict[str, Any], expected_digest: str,
+) -> None:
+    name = expected["profile"]["name"]
+    token = uuid.uuid4().hex[:10]
+    stage_name = f"{name} [dotfiles staging {token}]"
+    backup_name = f"{name} [previous {token}]"
+    all_names = {str(item.get("name", "")) for item in profiles(base)}
+    if stage_name in all_names or backup_name in all_names:
+        raise RuntimeError("Generated temporary OpenFlow profile name already exists; retry sync")
+
+    backup_path = state_dir() / "backups" / f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}-{token}.json"
+    write_private_json(backup_path, old_export)
+    request_json(base, "/rpc/import-profile", "POST", {"data": expected, "name": stage_name})
+    try:
+        new_id = verify_named_profile(base, stage_name, expected_digest)
+    except RuntimeError:
+        try:
+            remove_named_profile(base, stage_name)
+        except RuntimeError as cleanup_error:
+            print(f"Could not remove unverified staging profile {stage_name!r}: {cleanup_error}", file=sys.stderr)
+        raise
+
+    rename_profile(base, old_id, backup_name)
+    try:
+        rename_profile(base, new_id, name)
+        current_id = verify_named_profile(base, name, expected_digest)
+    except RuntimeError as exc:
+        try:
+            if any(item.get("id") == new_id and item.get("name") == name for item in profiles(base)):
+                rename_profile(base, new_id, stage_name)
+            rename_profile(base, old_id, name)
+            remove_named_profile(base, stage_name)
+        except RuntimeError as rollback_error:
+            raise RuntimeError(
+                f"Profile replacement failed ({exc}); rollback also failed ({rollback_error}). "
+                f"Old export is preserved at {backup_path}"
+            ) from exc
+        raise RuntimeError(f"Profile replacement failed; the prior profile was restored: {exc}") from exc
+
+    set_sync_record(source, root, current_id, name, expected_digest)
+    try:
+        delete_profile(base, old_id)
+    except RuntimeError as exc:
+        print(f"Retained prior profile {backup_name!r} after replacement: {exc}", file=sys.stderr)
+    print(f"Updated repository-managed profile {name!r}; prior export: {backup_path}")
+
+
+def sync_profile(
+    base: str, root: Path, source: Path, expected: dict[str, Any], accept_repository: bool = False,
+) -> None:
+    name = expected["profile"]["name"]
+    expected_digest = profile_digest(expected)
+    key = source.relative_to(root).as_posix()
+    state = read_state()
+    record = state["profiles"].get(key)
+    if record is not None and not isinstance(record, dict):
+        raise RuntimeError(f"Malformed sync state for {key}")
+
+    current = profiles(base)
+    matches = [item for item in current if item.get("name") == name]
+    if len(matches) > 1:
+        raise RuntimeError(f"OpenFlow has multiple profiles named {name!r}; refusing to choose one")
+    if not matches:
+        if record:
+            managed_id = record.get("id")
+            if any(item.get("id") == managed_id for item in current):
+                raise RuntimeError(
+                    f"Repository-managed profile {managed_id} was renamed in OpenFlow; "
+                    "restore its exact name or resolve it manually before syncing"
+                )
+        request_json(base, "/rpc/import-profile", "POST", {"data": expected, "name": name})
+        try:
+            profile_id = verify_named_profile(base, name, expected_digest)
+        except RuntimeError:
+            try:
+                remove_named_profile(base, name)
+            except RuntimeError as cleanup_error:
+                print(f"Could not remove unverified imported profile {name!r}: {cleanup_error}", file=sys.stderr)
+            raise
+        set_sync_record(source, root, profile_id, name, expected_digest)
+        print(f"Imported repository profile {name!r} as {profile_id}; no device or firmware route was called")
+        return
+
+    app_profile = matches[0]
+    profile_id = str(app_profile.get("id", ""))
+    if not profile_id:
+        raise RuntimeError(f"OpenFlow profile {name!r} has no ID")
+    _, exported = profile_by_id(base, profile_id)
+    live_digest = profile_digest(exported)
+    if live_digest == expected_digest:
+        set_sync_record(source, root, profile_id, name, expected_digest)
+        print(f"OpenFlow profile {name!r} already matches the repository")
+        return
+
+    if not record or record.get("id") != profile_id or not isinstance(record.get("digest"), str):
+        raise RuntimeError(
+            f"OpenFlow profile {name!r} differs from the repository but is not managed by this sync; "
+            "no profile was changed"
+        )
+    selected_direction = direction(expected_digest, live_digest, record["digest"])
+    if selected_direction == "openflow" and not accept_repository:
+        print(f"OpenFlow profile {name!r} has newer local edits; left unchanged for the GUI-to-repository watcher")
+        return
+    if selected_direction == "conflict" and not accept_repository:
+        raise RuntimeError(
+            f"Repository and OpenFlow profile {name!r} both changed since the last sync; "
+            "resolve the divergence or explicitly pass --accept-repository"
+        )
+    if selected_direction not in {"repository", "openflow", "conflict"}:
+        raise RuntimeError(f"Cannot determine a safe sync direction for {name!r}")
+    replace_managed_profile(base, source, root, expected, profile_id, exported, expected_digest)
+
+
+
+def add_common(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--api-url", default=os.environ.get("OPENFLOW_API_URL", "http://127.0.0.1:3001"),
+        help="OpenFlow loopback API URL (default: %(default)s)",
+    )
+    parser.add_argument("--source-dir", help="chezmoi source directory; defaults to chezmoi source-path")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common(parser)
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    commands.add_parser("list", help="list local OpenFlow profiles")
+
+    status = commands.add_parser("status", help="compare an app profile with a source JSON profile")
+    status.add_argument("--profile-file", required=True, help="profile JSON path inside the chezmoi source")
+    status.add_argument("--profile-id", help="select an exact OpenFlow profile ID instead of matching its name")
+
+    export = commands.add_parser("export", help="export a local profile to the chezmoi source")
+    export.add_argument("--profile-id", required=True)
+    export.add_argument("--output", help="source-relative output path; omit to print JSON")
+    export.add_argument("--overwrite", action="store_true", help="replace an existing source profile after review")
+
+    imp = commands.add_parser("import", help="import a source profile as a new local OpenFlow profile")
+    imp.add_argument("--profile-file", required=True, help="profile JSON path inside the chezmoi source")
+    imp.add_argument("--name", required=True, help="name for the new OpenFlow profile")
+
+    sync = commands.add_parser(
+        "sync", help="load a repository profile into OpenFlow and safely replace managed updates"
+    )
+    sync.add_argument("--profile-file", required=True, help="profile JSON path inside the chezmoi source")
+    sync.add_argument("--launch-app", action="store_true", help="start OpenFlow if its local API is not running")
+    sync.add_argument(
+        "--accept-repository", action="store_true",
+        help="replace divergent edits with the repository profile after preserving the current OpenFlow export",
+    )
+
+    args = parser.parse_args()
+    try:
+        base = api_url(args.api_url)
+        if args.command == "sync":
+            root = source_root(args.source_dir)
+            source = source_file(root, args.profile_file)
+            expected = read_profile(source)
+            with sync_lock():
+                if args.launch_app:
+                    ensure_openflow_running(base)
+                verify_app(base)
+                sync_profile(base, root, source, expected, args.accept_repository)
+            return 0
+
+        verify_app(base)
+        if args.command == "list":
+            for item in profiles(base):
+                print(f"{item.get('id', '?')}\t{item.get('name', '?')}\t{item.get('state', '?')}")
+            return 0
+
+        root = source_root(args.source_dir)
+        if args.command == "status":
+            source = source_file(root, args.profile_file)
+            expected = read_profile(source)
+            if args.profile_id:
+                app_profile, exported = profile_by_id(base, args.profile_id)
+            else:
+                matches = [p for p in profiles(base) if p.get("name") == expected["profile"]["name"]]
+                if len(matches) != 1:
+                    raise RuntimeError(
+                        f"Expected one app profile named {expected['profile']['name']!r}; "
+                        f"found {len(matches)}. Use list and pass --profile-id."
+                    )
+                app_profile, exported = profile_by_id(base, matches[0]["id"])
+            changes = changed_paths(semantic_profile(expected), semantic_profile(exported))
+            result = "MATCH" if not changes else "DIFFERENT"
+            print(f"{result}: {app_profile.get('name')} ({app_profile.get('id')})")
+            print(f"Source: {source.relative_to(root)}")
+            for path in changes:
+                print(f"  {path}")
+            if len(changes) == 20:
+                print("  … additional differences omitted")
+            return 0 if not changes else 1
+
+        if args.command == "export":
+            _, exported = profile_by_id(base, args.profile_id)
+            if args.output:
+                write_export(root, Path(args.output), exported, args.overwrite)
+            else:
+                sys.stdout.write(json.dumps(exported, ensure_ascii=False, indent=2) + "\n")
+            return 0
+
+        if args.command == "import":
+            source = source_file(root, args.profile_file)
+            data = read_profile(source)
+            if not args.name.strip():
+                raise RuntimeError("New OpenFlow profile name must not be empty")
+            existing = [item for item in profiles(base) if item.get("name") == args.name]
+            if existing:
+                raise RuntimeError(
+                    f"OpenFlow already has a profile named {args.name!r}; no import was made. "
+                    "Rename/remove the old profile yourself after preserving it, or choose a new name."
+                )
+            result = request_json(
+                base, "/rpc/import-profile", "POST", {"data": data, "name": args.name}
+            )
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0
+
+        parser.error("unknown command")
+    except (RuntimeError, ValueError) as exc:
+        print(f"openflow-profile-sync: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

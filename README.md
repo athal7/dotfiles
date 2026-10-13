@@ -19,6 +19,48 @@ yq -i -p=toml -o=toml '.umask = 63' "$config"
 
 This also restricts externally managed app bundles. Run `chezmoi apply` after changing source files.
 
+## Keyboard settings
+
+OpenFlow and Create Companion are managed from pinned, checksum-verified public releases in the package registry. Chezmoi downloads the OpenFlow Apple-Silicon disk image to `~/Applications/OpenFlow-0.7.0.dmg` and installs `Create Companion.app`. Open the disk image and copy `OpenFlow.app` into `~/Applications`. macOS requires Input Monitoring and Accessibility permissions for Create Companion; its repository-owned config currently leaves start-at-login disabled.
+
+The repository owns the OpenFlow keymap profile at `dot_config/openflow/profiles/naya-default-macos.json` and Create Companion's host config at `Library/Application Support/CreateCompanion/config.toml`. The Companion config intentionally has no per-app profiles yet; only its general `System` bindings are configured.
+
+The OpenFlow profile's 211 keyboard-key bindings match the preserved Naya database snapshot. Its QWERTY layer uses the original `Naya Touch MacOS` config on both Touch sides; no custom Create Companion Touch gesture mapping is included. The original database snapshot at `dot_config/openflow/import/naya-create-profile.db` remains preserved for recovery and contains Naya-only records not represented in the OpenFlow profile.
+
+The preserved Naya database snapshot stores four Tune settings as numeric sliders. The pinned OpenFlow 0.7.0 converter maps them by slot order, but its `MS-14 → pointer_accel_on` and `MS-17 → toggle_ticks` mappings conflict with the source rows: both are `numboxSlider` values, while OpenFlow defines those destination fields as toggles ([converter](https://github.com/create-collective/openflow/blob/8fc8a95011702b7d39038a7bd26051367f0e5479/backend/openflow_backend/db/nayaflow_convert.py), [field schema](https://github.com/create-collective/openflow/blob/8fc8a95011702b7d39038a7bd26051367f0e5479/backend/openflow_backend/db/userdata.py)). The profile therefore preserves `MS-14=20` and `MS-17=50` under their raw IDs, including their numeric-slider types; it does not guess replacement meanings or coerce either value to `false`. Those two settings remain unverified for firmware use.
+
+Read-only comparison against `dot_config/openflow/import/naya-create-profile.db` confirms all 211 keyboard bindings, all 10 layer/module assignments, and the Naya Touch/Tune gesture bindings match the snapshot. The settings below are the only identified mapping correction:
+
+| Naya row | Value | Source type | Repository profile field |
+| --- | ---: | --- | --- |
+| `MS-12` | 25 | `numboxSlider` | `pointer_speed` (converter mapping) |
+| `MS-14` | 20 | `numboxSlider` | `MS-14` (raw; no verified semantic field) |
+| `MS-16` | 72 | `numboxSlider` | `tick_strength` (converter mapping) |
+| `MS-17` | 50 | `numboxSlider` | `MS-17` (raw; no verified semantic field) |
+
+After deployment, two `WatchPaths` agents capture live edits in the repository: `companion-config-sync` watches `~/Library/Application Support/CreateCompanion/config.toml`, and `openflow-profile-sync` watches OpenFlow's `user-data.db` and WAL file. Each validates its input, updates only its matching repository file, and makes a local Git commit containing only that path; neither agent pushes. The OpenFlow watcher only considers the profile whose name exactly matches the repository profile; a differently named review candidate is ignored.
+
+After every `chezmoi apply`, `.chezmoiscripts/run_after_openflow-profile-sync.sh.tmpl` loads the repository profile into OpenFlow's local profile store. If OpenFlow.app is not installed yet, the hook skips cleanly; copy it from the downloaded DMG, then run `chezmoi apply` again. If the app is installed but not running, the helper starts it and waits for its loopback API.
+
+The first sync imports the profile under its repository name. Later applies update that profile only when its prior state is managed and there are no unresolved GUI/repository edits. Each replacement saves the previous profile export locally before swapping in and verifying the new profile. An unexpected same-name profile, duplicate name, or concurrent edit stops the sync rather than overwriting an unmanaged profile. Resolve the reported conflict in OpenFlow or the repository, then apply again.
+
+The helper uses OpenFlow profile RPCs only; it has no device or firmware route. **No keyboard is flashed by `chezmoi apply`.** Review the profile in OpenFlow before using an OpenFlow device-write control.
+
+To inspect the loaded profile and compare it with the source:
+
+```bash
+openflow-profile-sync --source-dir "$PWD" list
+openflow-profile-sync --source-dir "$PWD" status \
+  --profile-file dot_config/openflow/profiles/naya-default-macos.json
+```
+
+`MATCH` means the settings agree. `DIFFERENT` exits 1 and lists semantic differences. The `companion-config-sync` watcher captures GUI edits to Create Companion's TOML back into the repository; `openflow-profile-sync` captures OpenFlow profile edits. Each watcher validates its input and makes a local Git commit containing only its matching repository file; neither pushes. Repository profile changes flow into OpenFlow on the next `chezmoi apply`. If both copies changed since the last sync, the sync stops and preserves the existing profile export for recovery.
+
+OpenFlow sync state is stored at `~/Library/Application Support/OpenFlowSettingsSync/repository-profiles.json`; backups are under `~/Library/Application Support/OpenFlowSettingsSync/backups/`. Never commit profile IDs or local sync state; review watcher-created commits before a later deploy.
+
+
+The NayaFlow package and automatic database-sync LaunchAgent are no longer managed. Removing them does not uninstall an existing NayaFlow app or erase its live database; the original database snapshot remains a recovery source. This migration manages OpenFlow keymaps, module settings, and host-side gesture dispatch, not firmware updates or recovery writes. Keep NayaFlow installed until OpenFlow's firmware/recovery path is verified for this exact hardware. QMK/VIA are not substitutes; repository searches found no supported Naya Create target.
+
 ## What's included
 
 - Development tools: [shell](dot_zshrc.tmpl), [Neovim](dot_config/nvim/), and [Git](dot_config/git/).

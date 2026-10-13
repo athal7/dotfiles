@@ -1,0 +1,14 @@
+#!/bin/sh
+# Load the repository-managed OpenFlow profile after every chezmoi apply.
+# This updates OpenFlow's local profile only; it never writes to keyboard firmware.
+
+set -eu
+
+if [ ! -d "$HOME/Applications/OpenFlow.app" ] && [ ! -d "/Applications/OpenFlow.app" ]; then
+  printf '%s\n' "openflow-profile-sync: OpenFlow.app is not installed; profile sync skipped. Install it from the downloaded DMG, then run chezmoi apply." >&2
+  exit 0
+fi
+
+"$HOME/.local/bin/openflow-profile-sync" sync \
+  --profile-file dot_config/openflow/profiles/naya-default-macos.json \
+  --launch-app

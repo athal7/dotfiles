@@ -157,18 +157,32 @@ launchagents:
       OPENJEV_PORT: "8091"
       OPENJEV_MLX_CACHE_LIMIT_GB: "4"
 
-  naya-sync:
-    Label: com.$USER.naya-sync
+  companion-config-sync:
+    Label: com.$USER.companion-config-sync
     ProgramArguments:
-      - $HOME/.local/bin/naya-sync
+      - $HOME/.local/bin/openflow-settings-sync
+      - companion
     WatchPaths:
-      - $HOME/Library/Application Support/NayaFlow/user-data.db
-      - $HOME/Library/Application Support/NayaFlow-Beta/user-data-beta.db
-    StandardOutPath: $HOME/Library/Logs/naya-sync.log
-    StandardErrorPath: $HOME/Library/Logs/naya-sync.error.log
+      - $HOME/Library/Application Support/CreateCompanion/config.toml
+    StandardOutPath: $HOME/Library/Logs/companion-config-sync.log
+    StandardErrorPath: $HOME/Library/Logs/companion-config-sync.error.log
     EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+  openflow-profile-sync:
+    Label: com.$USER.openflow-profile-sync
+    ProgramArguments:
+      - $HOME/.local/bin/openflow-settings-sync
+      - openflow
+    WatchPaths:
+      - $HOME/Library/Application Support/OpenFlow/user-data.db
+      - $HOME/Library/Application Support/OpenFlow/user-data.db-wal
+    StandardOutPath: $HOME/Library/Logs/openflow-profile-sync.log
+    StandardErrorPath: $HOME/Library/Logs/openflow-profile-sync.error.log
+    EnvironmentVariables:
+      HOME: $HOME
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
 
   setenv-gui-path:

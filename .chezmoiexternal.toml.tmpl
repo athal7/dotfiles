@@ -10,8 +10,13 @@
     type = {{ .type | quote }}
     url = {{ $url | quote }}
     stripComponents = 1
+    {{- if index . "checksum" }}
+    [{{ printf "Applications/%s" .app | quote }}.checksum]
+        sha256 = {{ .checksum | quote }}
+    {{- end }}
+    {{- if index . "refresh_period" }}
     refreshPeriod = {{ .refresh_period | quote }}
-
+    {{- end }}
 
 {{ else -}}
 [{{ .target | quote }}]
@@ -23,7 +28,13 @@
     {{- if index . "executable" }}
     executable = true
     {{- end }}
+    {{- if index . "checksum" }}
+    [{{ .target | quote }}.checksum]
+        sha256 = {{ .checksum | quote }}
+    {{- end }}
+    {{- if index . "refresh_period" }}
     refreshPeriod = {{ .refresh_period | quote }}
+    {{- end }}
 
 {{ end -}}
 {{ end -}}

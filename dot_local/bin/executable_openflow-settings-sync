@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+"""Sync selected live OpenFlow and Create Companion settings into chezmoi source."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shlex
+import shutil
+import sqlite3
+import subprocess
+import sys
+import tempfile
+import tomllib
+import urllib.parse
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from openflow_profile_sync_state import direction, profile_digest, read_state, sync_lock, write_state
+
+COMPANION_REL = Path("Library/Application Support/CreateCompanion/config.toml")
+PROFILE_REL = Path("dot_config/openflow/profiles/naya-default-macos.json")
+OPENFLOW_DB = Path.home() / "Library/Application Support/OpenFlow/user-data.db"
+COMPANION_LIVE = Path.home() / "Library/Application Support/CreateCompanion/config.toml"
+API_URL = os.environ.get("OPENFLOW_SETTINGS_SYNC_API_URL", "http://127.0.0.1:3001")
+
+
+def run(args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(args, check=True, capture_output=True, text=True)
+
+
+def source_root() -> Path:
+    try:
+        path = Path(run(["chezmoi", "source-path"]).stdout.strip()).expanduser().resolve()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError("Cannot resolve chezmoi source path") from exc
+    if not path.is_dir() or not (path / ".git").exists():
+        raise RuntimeError(f"Chezmoi source is not a Git repository: {path}")
+    return path
+
+
+def git(root: Path, *args: str) -> str:
+    try:
+        return run(["git", "-C", str(root), *args]).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:
+        detail = getattr(exc, "stderr", None)
+        raise RuntimeError(f"Git command failed: {detail or exc}") from exc
+
+
+def require_clean_tracked_target(root: Path, rel: Path) -> Path:
+    target = (root / rel).resolve()
+    try:
+        target.relative_to(root)
+    except ValueError as exc:
+        raise RuntimeError(f"Refusing path outside source: {rel}") from exc
+    if not target.is_file():
+        raise RuntimeError(f"Repository target is missing: {rel}")
+    git(root, "ls-files", "--error-unmatch", "--", rel.as_posix())
+    status = git(root, "status", "--porcelain", "--untracked-files=all", "--", rel.as_posix())
+    if status:
+        raise RuntimeError(f"Refusing to replace locally edited repository file: {rel}")
+    return target
+
+
+def atomic_write(path: Path, data: bytes) -> None:
+    mode = path.stat().st_mode & 0o777
+    fd, name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        os.fchmod(fd, mode)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+    except BaseException:
+        try:
+            os.unlink(name)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def commit_target(root: Path, rel: Path, message: str) -> None:
+    git(root, "add", "--", rel.as_posix())
+    git(root, "commit", "--only", "-m", message, "--", rel.as_posix())
+
+
+def sync_companion(root: Path) -> None:
+    if not COMPANION_LIVE.is_file():
+        raise RuntimeError(f"Live Create Companion config not found: {COMPANION_LIVE}")
+    live = COMPANION_LIVE.read_bytes()
+    try:
+        tomllib.loads(live.decode("utf-8"))
+    except (UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        raise RuntimeError(f"Live Create Companion config is not valid TOML: {exc}") from exc
+    source = root / COMPANION_REL
+    if not source.is_file():
+        raise RuntimeError(f"Repository Create Companion config not found: {COMPANION_REL}")
+    current = source.read_bytes()
+    if current == live:
+        print("Create Companion: already current")
+        return
+    try:
+        tomllib.loads(current.decode("utf-8"))
+    except (UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        raise RuntimeError(f"Repository Create Companion config is invalid; refusing replacement: {exc}") from exc
+    require_clean_tracked_target(root, COMPANION_REL)
+    atomic_write(source, live)
+    commit_target(root, COMPANION_REL, "chore: sync Create Companion settings")
+    print(f"Create Companion: synced and committed {COMPANION_REL}")
+
+
+def verify_openflow_process() -> None:
+    try:
+        parsed = urllib.parse.urlsplit(API_URL)
+        port = parsed.port or 80
+    except ValueError as exc:
+        raise RuntimeError("Invalid OpenFlow API port") from exc
+    if (parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or parsed.path not in ("", "/")
+            or parsed.query or parsed.fragment or parsed.username or parsed.password):
+        raise RuntimeError("OpenFlow API must be plain HTTP on 127.0.0.1")
+    lsof = "/usr/sbin/lsof"
+    if not Path(lsof).is_file():
+        raise RuntimeError("Cannot verify the local OpenFlow API process: lsof is unavailable")
+    try:
+        pids = sorted(set(run([lsof, "-nP", f"-iTCP:{port}", "-sTCP:LISTEN", "-t"]).stdout.split()))
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError("No OpenFlow process is listening on the configured loopback port") from exc
+    if len(pids) != 1:
+        raise RuntimeError(f"Expected one listener on OpenFlow port {port}; found {len(pids)}")
+    try:
+        command = run(["/bin/ps", "-p", pids[0], "-o", "command="]).stdout.strip()
+        executable = shlex.split(command)[0]
+    except (OSError, subprocess.CalledProcessError, IndexError, ValueError) as exc:
+        raise RuntimeError("Cannot identify the OpenFlow API listener process") from exc
+    trusted = {
+        (Path.home() / "Applications/OpenFlow.app/Contents/Resources/backend/openflow-backend").resolve(),
+        Path("/Applications/OpenFlow.app/Contents/Resources/backend/openflow-backend").resolve(),
+    }
+    if Path(executable).resolve() not in trusted:
+        raise RuntimeError(f"Refusing API listener outside the installed OpenFlow app: {executable}")
+
+
+def live_db_profiles() -> set[tuple[str, str, str]]:
+    if not OPENFLOW_DB.is_file():
+        raise RuntimeError(f"OpenFlow database not found: {OPENFLOW_DB}")
+    uri = OPENFLOW_DB.as_uri() + "?mode=ro"
+    try:
+        connection = sqlite3.connect(uri, uri=True, timeout=2)
+        try:
+            return {(str(row[0]), str(row[1]), str(row[2])) for row in connection.execute(
+                "SELECT id, name, state FROM profiles"
+            )}
+        finally:
+            connection.close()
+    except sqlite3.Error as exc:
+        raise RuntimeError(f"Cannot read OpenFlow profile index safely: {exc}") from exc
+
+
+def profile_api(root: Path, *command: str) -> subprocess.CompletedProcess[str]:
+    helper = root / "dot_local/bin/executable_openflow-profile-sync"
+    if not helper.is_file():
+        raise RuntimeError(f"OpenFlow profile API helper not found: {helper}")
+    try:
+        return run([sys.executable, str(helper), "--api-url", API_URL, "--source-dir", str(root), *command])
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or str(exc)).strip()
+        raise RuntimeError(f"OpenFlow profile API request failed: {detail}") from exc
+
+
+def sync_openflow(root: Path) -> None:
+    source = root / PROFILE_REL
+    if not source.is_file():
+        raise RuntimeError(f"Repository OpenFlow profile not found: {PROFILE_REL}")
+    try:
+        expected: dict[str, Any] = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Cannot read repository OpenFlow profile: {exc}") from exc
+    profile_name = expected.get("profile", {}).get("name")
+    if not isinstance(profile_name, str) or not profile_name:
+        raise RuntimeError("Repository OpenFlow profile has no profile.name")
+
+    verify_openflow_process()
+    database_profiles = live_db_profiles()
+    listed = profile_api(root, "list").stdout.splitlines()
+    api_profiles: set[tuple[str, str, str]] = set()
+    for line in listed:
+        fields = line.split("\t", 2)
+        if len(fields) == 3:
+            api_profiles.add((fields[0], fields[1], fields[2]))
+    if not api_profiles or api_profiles != database_profiles:
+        raise RuntimeError("OpenFlow API profile index does not match the live user-data.db; refusing stale or unrelated API data")
+
+    matches = [item for item in api_profiles if item[1] == profile_name]
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected exactly one live OpenFlow profile named {profile_name!r}; found {len(matches)}")
+    profile_id = matches[0][0]
+    status = subprocess.run(
+        [sys.executable, str(root / "dot_local/bin/executable_openflow-profile-sync"),
+         "--api-url", API_URL, "--source-dir", str(root), "status",
+         "--profile-file", PROFILE_REL.as_posix(), "--profile-id", profile_id],
+        capture_output=True, text=True,
+    )
+    if status.returncode != 1 or not status.stdout.startswith("DIFFERENT:"):
+        if status.returncode == 0 and status.stdout.startswith("MATCH:"):
+            candidate_output = profile_api(root, "export", "--profile-id", profile_id).stdout
+            try:
+                candidate = json.loads(candidate_output)
+            except json.JSONDecodeError as exc:
+                raise RuntimeError("OpenFlow returned invalid profile JSON") from exc
+            digest = profile_digest(candidate)
+            state = read_state()
+            state["profiles"][PROFILE_REL.as_posix()] = {
+                "id": profile_id, "name": profile_name, "digest": digest,
+            }
+            write_state(state)
+            print("OpenFlow: already current")
+            return
+        raise RuntimeError(f"Cannot compare OpenFlow profile safely: {(status.stderr or status.stdout).strip()}")
+
+    exported = profile_api(root, "export", "--profile-id", profile_id).stdout
+    try:
+        candidate = json.loads(exported)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("OpenFlow returned invalid profile JSON") from exc
+    if (not isinstance(candidate, dict) or candidate.get("kind") != "profile"
+            or candidate.get("profile", {}).get("name") != profile_name
+            or not isinstance(candidate.get("layers"), list)):
+        raise RuntimeError("OpenFlow export does not match the selected repository profile")
+
+    state = read_state()
+    record = state["profiles"].get(PROFILE_REL.as_posix())
+    if record is not None:
+        if not isinstance(record, dict) or record.get("id") != profile_id:
+            raise RuntimeError("OpenFlow profile identity changed; refusing an automatic GUI-to-repository update")
+        source_digest = profile_digest(expected)
+        live_digest = profile_digest(candidate)
+        selected_direction = direction(source_digest, live_digest, record.get("digest"))
+        if selected_direction == "repository":
+            print("OpenFlow: repository profile changed; leaving it for repository-to-GUI sync")
+            return
+        if selected_direction == "conflict":
+            raise RuntimeError("Repository and OpenFlow profile both changed; refusing to overwrite either copy")
+        if selected_direction == "match":
+            record["digest"] = source_digest
+            write_state(state)
+            print("OpenFlow: already current")
+            return
+
+    require_clean_tracked_target(root, PROFILE_REL)
+    atomic_write(source, (json.dumps(candidate, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    commit_target(root, PROFILE_REL, "chore: sync OpenFlow profile")
+    state["profiles"][PROFILE_REL.as_posix()] = {
+        "id": profile_id, "name": profile_name, "digest": profile_digest(candidate),
+    }
+    write_state(state)
+    print(f"OpenFlow: synced profile {profile_name!r} ({profile_id}) and committed {PROFILE_REL}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("source", choices=("companion", "openflow"))
+    args = parser.parse_args()
+    try:
+        root = source_root()
+        with sync_lock():
+            if args.source == "companion":
+                sync_companion(root)
+            else:
+                sync_openflow(root)
+        return 0
+    except (OSError, RuntimeError) as exc:
+        print(f"openflow-settings-sync: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

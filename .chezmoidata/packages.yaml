@@ -82,16 +82,22 @@ packages:
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
-    # Note: com.apple.provenance on Apple Silicon prevents chezmoi's atomic
-    # rename from updating files inside this bundle. On version updates, run:
-    #   rm -rf ~/Applications/NayaFlow-Beta.app && chezmoi apply
-    - name: naya-flow-beta
-      repo: NayaTech/NayaFlow-beta-releases
+    - name: openflow
+      repo: create-collective/openflow
+      target: Applications/OpenFlow-0.7.0.dmg
+      tag: openflow-v0.7.0
+      asset: OpenFlow-0.7.0-mac-arm64.dmg
+      checksum: a022e08c6b7983f6ee33f6997bebb44c1b32697e3762bd5e34bc73f16458dfb9
+      type: file
+
+    - name: create-companion
+      repo: create-collective/create-companion
       target: Applications
-      app: NayaFlow-Beta.app
-      asset: NayaFlow-Beta-*-arm64-mac.zip
+      app: Create Companion.app
+      tag: v1.0.0
+      asset: Create.Companion_1.0.0_universal.app.tar.gz
+      checksum: 1bab285db7605bdcdffe71b6371b1ef1a87c7cee53d5ae2d94fdf17ea109b41b
       type: archive
-      refresh_period: 24h
 
     - name: ical
       repo: BRO3886/ical
@@ -101,6 +107,7 @@ packages:
       path: ical
       executable: true
       refresh_period: 24h
+
 
   # Non-authored skills synced into the global skill dir.
   skills:
