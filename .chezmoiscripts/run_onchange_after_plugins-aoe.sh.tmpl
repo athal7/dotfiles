@@ -27,18 +27,33 @@ if ! command -v python3 >/dev/null 2>&1; then
   echo "python3 not found on PATH — skipping aoe plugin install/update" >&2
   exit 0
 fi
+plugin_synced=false
 
 {{ range .packages.aoe_plugins -}}
 PLUGIN_DIR="$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"
 if [ -d "$PLUGIN_DIR" ]; then
   echo "updating aoe plugin {{ .id }}..."
-  if ! aoe plugin update {{ .id }} < /dev/null; then
+  if aoe plugin update {{ .id }} < /dev/null; then
+    plugin_synced=true
+  else
     echo "WARN: aoe plugin update {{ .id }} failed" >&2
   fi
 else
   echo "installing aoe plugin {{ .id }} from {{ .source }}..."
-  if ! aoe plugin install {{ .source }} --yes < /dev/null; then
+  if aoe plugin install {{ .source }} --yes < /dev/null; then
+    plugin_synced=true
+  else
     echo "WARN: aoe plugin install {{ .source }} failed" >&2
   fi
 fi
 {{ end -}}
+
+# A running daemon may have loaded its pane registry before these plugins
+# were installed. Reload once, only when its LaunchAgent is already running.
+if [ "$plugin_synced" = true ] && aoe serve --status > /dev/null 2>&1; then
+  serve_job="gui/$(id -u)/com.$(id -un).aoe-serve"
+  if launchctl print "$serve_job" > /dev/null 2>&1; then
+    launchctl kickstart -k "$serve_job" ||
+      echo "WARN: could not reload AoE Serve after plugin sync" >&2
+  fi
+fi
