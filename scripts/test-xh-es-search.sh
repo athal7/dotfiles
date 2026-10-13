@@ -11,7 +11,13 @@ cat > "$WORK/bin/xh" <<'STUB'
 #!/bin/sh
 printf '%s\n' "$@" > "$XH_LOG"
 STUB
-chmod +x "$WORK/bin/xh"
+cat > "$WORK/bin/chezmoi" <<'STUB'
+#!/bin/sh
+[ "$1" = data ] && [ "$2" = --format=json ] || exit 64
+printf '%s\n' "${CHEZMOI_DATA:-}"
+STUB
+chmod +x "$WORK/bin/xh" "$WORK/bin/chezmoi"
+command -v jq >/dev/null 2>&1 || { printf 'jq is required for this test\n' >&2; exit 1; }
 
 pass=0
 fail=0
@@ -43,8 +49,30 @@ expect_rejected() {
     ok "$name"
   fi
 }
+run_host_fallback() {
+  : > "$WORK/xh.log"
+  env -u ES_URL PATH="$WORK/bin:$PATH" XH_LOG="$WORK/xh.log" \
+    CHEZMOI_DATA='{"esHost":"es.example"}' PAYLOAD='{"size":0}' \
+    sh "$WRAPPER" 'logs-apm.error-*'
+}
 
-run_valid
+expect_host_rejected() {
+  name=$1
+  data=$2
+  : > "$WORK/xh.log"
+  if env -u ES_URL PATH="$WORK/bin:$PATH" XH_LOG="$WORK/xh.log" \
+    CHEZMOI_DATA="$data" PAYLOAD='{"size":0}' \
+    sh "$WRAPPER" 'logs-apm.error-*' >/dev/null 2>&1; then
+    bad "$name exits non-zero"
+    return
+  fi
+  if [ -s "$WORK/xh.log" ]; then
+    bad "$name does not invoke xh"
+  else
+    ok "$name"
+  fi
+}
+
 expected='--ignore-stdin
 --session-read-only=agent
 POST
@@ -52,12 +80,35 @@ https://es.example/logs-apm.error-*/_search
 Content-Type:application/json
 --raw
 {"size":0}'
+
+run_valid
 actual="$(cat "$WORK/xh.log")"
 if [ "$actual" = "$expected" ]; then
   ok "constructs the fixed read-only search request"
 else
   bad "constructs the fixed read-only search request"
   printf 'expected:\n%s\nactual:\n%s\n' "$expected" "$actual"
+fi
+
+run_host_fallback
+actual="$(cat "$WORK/xh.log")"
+if [ "$actual" = "$expected" ]; then
+  ok "derives the read-only endpoint from chezmoi esHost"
+else
+  bad "derives the read-only endpoint from chezmoi esHost"
+  printf 'expected:\n%s\nactual:\n%s\n' "$expected" "$actual"
+fi
+
+expect_host_rejected "missing chezmoi esHost" '{}'
+expect_host_rejected "invalid chezmoi esHost" '{"esHost":"../other"}'
+expect_host_rejected "leading dash in chezmoi esHost" '{"esHost":"-leading"}'
+
+CHEZMOI_DATA='not json' run_valid
+actual="$(cat "$WORK/xh.log")"
+if [ "$actual" = "$expected" ]; then
+  ok "explicit ES_URL overrides chezmoi data"
+else
+  bad "explicit ES_URL overrides chezmoi data"
 fi
 
 expect_rejected "missing index"

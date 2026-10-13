@@ -14,7 +14,20 @@ case "$index" in
     ;;
 esac
 
-if [ -z "${ES_URL:-}" ]; then
+if [ "${ES_URL+x}" != x ]; then
+  host=$(chezmoi data --format=json 2>/dev/null | jq -er '.esHost | select(type == "string" and length > 0)' 2>/dev/null) || {
+    printf 'xh-es-search: ES_URL is required; configure chezmoi esHost\n' >&2
+    exit 2
+  }
+  case $host in
+    *[!A-Za-z0-9.-]*|[-.]*|*[-.]|*..*|*.-*|*-.*)
+      printf 'xh-es-search: invalid chezmoi esHost\n' >&2
+      exit 2
+      ;;
+  esac
+  export ES_URL="https://$host"
+fi
+if [ -z "$ES_URL" ]; then
   printf 'xh-es-search: ES_URL is required\n' >&2
   exit 2
 fi

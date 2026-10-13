@@ -3,10 +3,10 @@ name: elasticsearch
 description: Load when investigating production errors, latency, or trace data — triage order, index patterns, field names, and time-range syntax. Use before hand-rolling a query DSL call or guessing field names.
 license: MIT
 ---
-Load `xh` before querying. Use `xh-es-search '<index-expression>'` with JSON in the Bash `PAYLOAD` environment variable.
+Load `xh` before querying. Use `xh-es-search '<index-expression>'` with JSON in the Bash `PAYLOAD` environment variable. `xh-apm-error-groups` builds its own payload.
 
 
-Query application logs, APM traces, and errors via the Elasticsearch REST API. Endpoint `$ES_URL` varies per environment.
+The wrapper uses `ES_URL` when set; otherwise it derives `https://<esHost>` from `chezmoi data`. Configure the hostname with chezmoi and ensure the matching xh session is provisioned. It fails closed when `esHost` is missing or invalid.
 
 ## Triage order
 
