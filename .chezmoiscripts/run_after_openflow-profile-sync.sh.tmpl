@@ -1,5 +1,5 @@
 #!/bin/sh
-# Load the repository-managed OpenFlow profile after every chezmoi apply.
+# Load the repository-managed OpenFlow profile after apply only if OpenFlow is running.
 # This updates OpenFlow's local profile only; it never writes to keyboard firmware.
 
 set -eu
@@ -11,4 +11,4 @@ fi
 
 "$HOME/.local/bin/openflow-profile-sync" sync \
   --profile-file dot_config/openflow/profiles/naya-default-macos.json \
-  --launch-app
+  --skip-if-not-running

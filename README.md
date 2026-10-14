@@ -40,7 +40,7 @@ Read-only comparison against `dot_config/openflow/import/naya-create-profile.db`
 
 After deployment, two `WatchPaths` agents capture live edits in the repository: `companion-config-sync` watches `~/Library/Application Support/CreateCompanion/config.toml`, and `openflow-profile-sync` watches OpenFlow's `user-data.db` and WAL file. Each validates its input, updates only its matching repository file, and makes a local Git commit containing only that path; neither agent pushes. The OpenFlow watcher only considers the profile whose name exactly matches the repository profile; a differently named review candidate is ignored.
 
-After every `chezmoi apply`, `.chezmoiscripts/run_after_openflow-profile-sync.sh.tmpl` loads the repository profile into OpenFlow's local profile store. If OpenFlow.app is not installed yet, the hook skips cleanly; copy it from the downloaded DMG, then run `chezmoi apply` again. If the app is installed but not running, the helper starts it and waits for its loopback API.
+After every `chezmoi apply`, `.chezmoiscripts/run_after_openflow-profile-sync.sh.tmpl` loads the repository profile into OpenFlow's local profile store only if OpenFlow is already running. The hook never starts the app; it skips cleanly if the app is not installed or its loopback API is unreachable. Open OpenFlow manually, then run `chezmoi apply` again to sync.
 
 The first sync imports the profile under its repository name. Later applies update that profile only when its prior state is managed and there are no unresolved GUI/repository edits. Each replacement saves the previous profile export locally before swapping in and verifying the new profile. An unexpected same-name profile, duplicate name, or concurrent edit stops the sync rather than overwriting an unmanaged profile. Resolve the reported conflict in OpenFlow or the repository, then apply again.
 
@@ -54,7 +54,7 @@ openflow-profile-sync --source-dir "$PWD" status \
   --profile-file dot_config/openflow/profiles/naya-default-macos.json
 ```
 
-`MATCH` means the settings agree. `DIFFERENT` exits 1 and lists semantic differences. The `companion-config-sync` watcher captures GUI edits to Create Companion's TOML back into the repository; `openflow-profile-sync` captures OpenFlow profile edits. Each watcher validates its input and makes a local Git commit containing only its matching repository file; neither pushes. Repository profile changes flow into OpenFlow on the next `chezmoi apply`. If both copies changed since the last sync, the sync stops and preserves the existing profile export for recovery.
+`MATCH` means the settings agree. `DIFFERENT` exits 1 and lists semantic differences. The `companion-config-sync` watcher captures GUI edits to Create Companion's TOML back into the repository; `openflow-profile-sync` captures OpenFlow profile edits. Each watcher validates its input and makes a local Git commit containing only its matching repository file; neither pushes. Repository profile changes flow into OpenFlow on the next `chezmoi apply` while OpenFlow is running. If both copies changed since the last sync, the sync stops and preserves the existing profile export for recovery.
 
 OpenFlow sync state is stored at `~/Library/Application Support/OpenFlowSettingsSync/repository-profiles.json`; backups are under `~/Library/Application Support/OpenFlowSettingsSync/backups/`. Never commit profile IDs or local sync state; review watcher-created commits before a later deploy.
 

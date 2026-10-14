@@ -431,7 +431,12 @@ def main() -> int:
         "sync", help="load a repository profile into OpenFlow and safely replace managed updates"
     )
     sync.add_argument("--profile-file", required=True, help="profile JSON path inside the chezmoi source")
-    sync.add_argument("--launch-app", action="store_true", help="start OpenFlow if its local API is not running")
+    availability = sync.add_mutually_exclusive_group()
+    availability.add_argument("--launch-app", action="store_true", help="start OpenFlow if its local API is not running")
+    availability.add_argument(
+        "--skip-if-not-running", action="store_true",
+        help="skip sync successfully if the OpenFlow API is unreachable; never start the app",
+    )
     sync.add_argument(
         "--accept-repository", action="store_true",
         help="replace divergent edits with the repository profile after preserving the current OpenFlow export",
@@ -447,7 +452,13 @@ def main() -> int:
             with sync_lock():
                 if args.launch_app:
                     ensure_openflow_running(base)
-                verify_app(base)
+                try:
+                    verify_app(base)
+                except RuntimeError as exc:
+                    if args.skip_if_not_running and str(exc).startswith("Cannot reach OpenFlow"):
+                        print("OpenFlow is not running; profile sync skipped. Open it, then run chezmoi apply again.")
+                        return 0
+                    raise
                 sync_profile(base, root, source, expected, args.accept_repository)
             return 0
 

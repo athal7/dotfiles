@@ -101,12 +101,15 @@ def source_fixture(root: Path, marker: str) -> Path:
 
 def run_sync(
     root: Path, state: Path, api_url: str, *, success: bool, accept_repository: bool = False,
+    skip_if_not_running: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     env = dict(os.environ, OPENFLOW_PROFILE_SYNC_STATE_DIR=str(state))
     command = [
         sys.executable, str(HELPER), "--api-url", api_url, "--source-dir", str(root),
         "sync", "--profile-file", "dot_config/openflow/profiles/test-profile.json",
     ]
+    if skip_if_not_running:
+        command.append("--skip-if-not-running")
     if accept_repository:
         command.append("--accept-repository")
     result = subprocess.run(command, env=env, capture_output=True, text=True)
@@ -203,8 +206,12 @@ def run() -> None:
             assert set(OpenFlowFixture.calls[calls_before_import:]) <= {
                 "/api/info/system", "/api/userdata", "/rpc/import-profile", "/api/export-profile",
             }
+            offline = run_sync(
+                source, state, "http://127.0.0.1:0", success=True, skip_if_not_running=True,
+            )
+            assert "profile sync skipped" in offline.stdout
         assert all(not ("flash" in call or "device" in call or "firmware" in call) for call in OpenFlowFixture.calls)
-        print("PASS: guarded profile sync, separate review candidate, semantic MATCH, and no device routes")
+        print("PASS: guarded profile sync, separate review candidate, offline skip, semantic MATCH, and no device routes")
     finally:
         server.shutdown()
         server.server_close()
