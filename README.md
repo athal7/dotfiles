@@ -111,6 +111,10 @@ AoE stores configuration, plugins, profiles, and runtime state under `~/.config/
 
 AoE's [`config.toml`](dot_config/agent-of-empires/config.toml.tmpl) is a full-file TOML template; its settings are declared directly, with home paths and private Runlayer URLs rendered only where needed. AoE keeps UI/runtime state in `state.toml`, not `config.toml`; the [web UI state template](dot_config/agent-of-empires/modify_state.toml) pins the mobile terminal key row while preserving AoE's other state. AoE plugins are declared in `.chezmoidata/packages.yaml` and installed/updated by the chezmoi plugin script; enabled plugins and capability grants are managed in `config.toml.tmpl`. The template enables AoE's startup plugin auto-updater; it updates clean plugins and preserves AoE's trust and approval checks. The chezmoi script also updates managed plugins with `--yes`, re-approving changed capability sets; its template declares the granted capability set and manifest hash. The Attention plugin displays prioritized items in each session pane.
 
+The AoE web session wizard defaults to the structured view via `acp.default_new_session_view = "structured"`; choosing `auto` would use the web UI's structured default too, but this makes the preference explicit.
+
+The AoE Attention plugin's **New session agent** is explicitly set to OMP through `[plugins."athal7.attention".settings]` → `agent_id = "omp"`. This selection is separate from `acp.default_agent`; the plugin does not inherit the global default.
+
 The Attention dashboard's session action reuses a unique live OMP session for the same scratch title or repository worktree branch and sends the current request to it (reviving a stopped agent). Archived/trashed sessions are not resumed; ambiguous matches fail without creating another session. New items still create sessions through the scheduled-session dispatcher.
 
 Homebridge stores its data at `~/.config/homebridge`. On a machine still using `~/.homebridge`, stop Homebridge before migrating the entire directory, preserve any existing destination as a backup, and check that the moved `config.json` parses before restarting it.

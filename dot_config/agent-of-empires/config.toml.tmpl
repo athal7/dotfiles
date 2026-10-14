@@ -19,7 +19,7 @@ compaction_reminder = false
 compaction_reminder_percent = 75
 auto_stop_idle_secs = 0
 default_agent = "omp"
-default_new_session_view = "terminal"
+default_new_session_view = "structured"
 offer_structured_in_new_session = false
 restrict_agents = false
 max_concurrent_workers = 10
@@ -71,6 +71,9 @@ manifest_hash = {{ printf "sha256:%s%s%s%s" "78c76fd828003b3c" "91f57674295713ca
 [plugins."athal7.attention"]
 enabled = true
 source = "gh:athal7/attention"
+
+[plugins."athal7.attention".settings]
+agent_id = "omp"
 
 [plugins."athal7.attention".grant]
 capabilities = [
