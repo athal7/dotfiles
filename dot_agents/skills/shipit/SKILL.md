@@ -4,6 +4,13 @@ description: Load before committing and pushing a completed change
 license: MIT
 ---
 
+## Shape the change
+
+- Keep each pull request tiny and independently reviewable without splitting one coherent behavior across arbitrary layers.
+- When related changes depend on one another, use `gh stack` for bottom-to-top branch order and stacked PR bases. Load `gh-stack` for stack operations and their hazards.
+- One independent PR: use the normal GitHub workflow, not `gh stack`.
+- This dotfiles repository is the exception: no PRs; deploy with `chezmoi-deploy <branch>`.
+
 ## Commit
 
 - Do not commit with a failing required check.
@@ -26,24 +33,18 @@ After review feedback, add commits instead of rewriting history.
 
 ## Push or deploy
 
-- Show unpushed commits in chat first.
-- State the branch name and one subject per line.
+- Show unpushed commits in chat first: branch name and one subject per line.
 - Do not rerun the full suite during push unless a push-time check fails and needs a fix.
-- Show the full remote-write payload before creating or updating a pull request, comment, or review.
 - Never flip draft or ready state during a push.
-
-For this dotfiles repository:
-
-- Do not create a pull request.
-- Ship with `chezmoi-deploy <branch>`.
-- Keep deployment separate from the commit.
 
 For repositories that use pull requests:
 
-- Create one from the branch commits when none exists.
-- Write the description in 1 or 2 sentences.
+- Use `gh stack submit` for a dependent stack; follow `gh-stack` for PR state, branch, and remote-operation details.
+- Keep each PR description to 1 or 2 sentences.
 - Use `Resolves`, `Fixes`, or `Closes` for auto-close.
 - Never reference private issue keys in public repositories.
+
+For this dotfiles repository, keep deployment separate from the commit.
 
 ## After push
 

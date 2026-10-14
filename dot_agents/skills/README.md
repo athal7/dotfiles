@@ -24,8 +24,7 @@ External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](
 | Skill | Covers |
 |---|---|
 | **communication** | Draft human-facing prose for an integration. |
-| **omp-approval-feedback** | Allow a just-approved OMP CLI command without a future prompt. |
-| **shipit** | Commit and push completed changes, or deploy this dotfiles repository. |
+| **shipit** | Commit and ship small changes as stacked pull requests, or deploy this dotfiles repository. |
 | **homebrew-release** | Verify a release, update its Homebrew tap, and verify the local install. |
 | **merge-request** | Maintain a pull request after review feedback or conflicts. |
 | **qa-report-publish** | Publish local QA evidence in a pull request review. |

@@ -12,7 +12,6 @@ Use this only for the named release.
 - Read the semantic-release configuration and both workflows before any write.
 - Verify the pull request is open, not draft, reviewed, mergeable, conflict-free, and green.
 - Verify the intended head commit and squash target.
-- Show the complete merge payload before merging.
 
 ## Release gate
 
@@ -26,7 +25,6 @@ Use this only for the named release.
 - Read the tap workflow declaration.
 - Verify its repository, default branch, dispatch inputs, and expected tag or version.
 - Discover the formula from configuration. Do not guess an input or repository.
-- Show the complete dispatch payload before sending it.
 - Verify the new run, formula version, source URL, checksum, and branch commit.
 
 ## Local install
