@@ -12,10 +12,10 @@ const config = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8
 const tools = config.tools;
 
 describe("native OMP approval configuration", () => {
-  test("uses write baseline and preserves explicit execution-tool allows", () => {
+  test("uses write baseline and preserves explicit tool allows", () => {
     expect(tools.approvalMode).toBe("write");
     expect(tools.approval.bash).toBe("allow");
-    expect(tools.approval.browser).toBe("allow");
+    expect(tools.approval.browser).toBeUndefined();
     expect(tools.approval.eval).toBe("allow");
     expect(tools.approval.hub).toBe("allow");
     expect(tools.approval.task).toBe("allow");

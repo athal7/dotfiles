@@ -108,7 +108,9 @@ startup:
   setupWizard: false
 statusLine:
   compactThinkingLevel: true
-  preset: ascii
+  preset: custom
+  leftSegments: [git]
+  rightSegments: [cost]
   separator: ascii
   sessionAccent: true
   showHookStatus: true
@@ -178,7 +180,7 @@ tools:
 tui:
   hyperlinks: auto
   renderMermaid: true
-  tight: false
+  tight: true
   titleState: true
 vault:
   enabled: true
