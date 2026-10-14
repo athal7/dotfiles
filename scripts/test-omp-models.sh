@@ -65,40 +65,45 @@ else
   plugin_install_valid=false
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
-check "updates the configured AoE GitHub plugin" "$(grep -Fxc '  if aoe plugin update agent-of-empires.github < /dev/null; then' "$PLUGIN_INSTALL")" 1
-check "updates the configured AoE Attention plugin" "$(grep -Fxc '  if aoe plugin update athal7.attention < /dev/null; then' "$PLUGIN_INSTALL")" 1
+check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
+check "pins the updated GitHub plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' '78c76fd828003b3c' '91f57674295713ca' 'c96690a156521a05' 'd83f890ed47e77ac')"
+check "preserves the Attention plugin grants" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.capabilities | join(" ")')" "runtime.worker session.read session.create session.unattended net"
 check "reloads the supervised AoE daemon after plugin sync" "$(grep -Fxc "if [ \"\$plugin_synced\" = true ] && aoe serve --status > /dev/null 2>&1; then" "$PLUGIN_INSTALL")" 1
 check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl kickstart -k \"\$serve_job\" ||" "$PLUGIN_INSTALL")" 1
 
 MOCK_HOME="$WORK/mock-home"
 mkdir -p "$MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.github" "$MOCK_HOME/.config/agent-of-empires/plugins/athal7.attention"
-MOCK_COMMANDS="$WORK/plugin-commands.sh"
-cat > "$MOCK_COMMANDS" <<'EOF'
-aoe() {
-  case "$*" in
-    "serve --status") [ "${AOE_RUNNING:-false}" = true ] ;;
-    "plugin update "*|"plugin install "*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-launchctl() {
-  printf '%s\n' "$*" >> "$LAUNCHCTL_LOG"
-  case "$1" in
-    print) [ "${AOE_LAUNCHD:-false}" = true ] ;;
-    kickstart) return 0 ;;
-    *) return 1 ;;
-  esac
-}
+MOCK_BIN="$MOCK_HOME/.local/share/mise/shims"
+mkdir -p "$MOCK_BIN"
+cat > "$MOCK_BIN/aoe" <<'EOF'
+#!/usr/bin/env bash
+case "$*" in
+  "serve --status") [ "${AOE_RUNNING:-false}" = true ] ;;
+  "plugin update "*|"plugin install "*) exit 0 ;;
+  *) exit 1 ;;
+esac
 EOF
+cat > "$MOCK_BIN/launchctl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$LAUNCHCTL_LOG"
+case "$1" in
+  print) [ "${AOE_LAUNCHD:-false}" = true ] ;;
+  kickstart) exit 0 ;;
+  *) exit 1 ;;
+esac
+EOF
+chmod +x "$MOCK_BIN/aoe" "$MOCK_BIN/launchctl"
 LAUNCHCTL_LOG="$WORK/launchctl.log"
 : > "$LAUNCHCTL_LOG"
-BASH_ENV="$MOCK_COMMANDS" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
+PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
   AOE_RUNNING=false AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
 check "does not restart AoE when no daemon is running" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 0
 : > "$LAUNCHCTL_LOG"
-BASH_ENV="$MOCK_COMMANDS" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
+PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
   AOE_RUNNING=true AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
 check "restarts AoE once after successful plugin sync" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 1
+check "auto-approves changed GitHub plugin capabilities" "$(grep -Fxc '  if aoe plugin update agent-of-empires.github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
+check "auto-approves changed Attention plugin capabilities" "$(grep -Fxc '  if aoe plugin update athal7.attention --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
 check "enables Context7 by default" "$(jq '.mcpServers.context7.enabled == true' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled == true and .mcpServers.runlayer.enabled == true and .mcpServers.slack.enabled == true' "$MCP")" true

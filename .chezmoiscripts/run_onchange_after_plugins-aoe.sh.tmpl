@@ -8,14 +8,15 @@
 {{- end }}
 
 # Deliberately not -e: individual plugin install/update failures (missing
-# host capability, incompatible aoe version, upstream re-consent requirement)
-# must never abort the rest of chezmoi apply. See design.md Decision 2/4.
+# host capability or incompatible aoe version) must never abort chezmoi apply.
+# Every plugin in the managed inventory is updated with --yes. Capability
+# grants and approved manifest hashes remain declared in config.toml.tmpl.
 set -uo pipefail
 
 {{ template "brewenv" . }}
 # Prepend mise shims so the python3 aoe shells out to for its build step is
 # the repo-managed mise one, not a stray system Python.
-export PATH="{{ .chezmoi.homeDir }}/.local/share/mise/shims:$PATH"
+export PATH="$HOME/.local/share/mise/shims:$PATH"
 export XDG_CONFIG_HOME="$HOME/.config"
 
 if ! command -v aoe >/dev/null 2>&1; then
@@ -33,7 +34,7 @@ plugin_synced=false
 PLUGIN_DIR="$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"
 if [ -d "$PLUGIN_DIR" ]; then
   echo "updating aoe plugin {{ .id }}..."
-  if aoe plugin update {{ .id }} < /dev/null; then
+  if aoe plugin update {{ .id }} --yes < /dev/null; then
     plugin_synced=true
   else
     echo "WARN: aoe plugin update {{ .id }} failed" >&2
