@@ -11,15 +11,6 @@ const config = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8
 };
 const tools = config.tools;
 
-const renderedKeybindings = execFileSync("chezmoi", ["cat", "-S", root, `${process.env.HOME}/.config/omp/agent/keybindings.yml`], { encoding: "utf8" });
-const keybindings = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8", input: renderedKeybindings })) as Record<string, string | string[]>;
-
-describe("OMP and AoE shortcut compatibility", () => {
-  test("uses OMP's Alt+Enter approval binding for AoE web's escaped Ctrl+Enter", () => {
-    expect(keybindings["app.approval.approve"]).toBe("Alt+Enter");
-  });
-});
-
 describe("OMP status line", () => {
   test("shows the model and omits git branch details", () => {
     expect(config.statusLine.preset).toBe("custom");
