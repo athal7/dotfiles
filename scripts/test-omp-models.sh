@@ -41,6 +41,9 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agen
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
+check "uses the live custom OMP status-line preset" "$(yq -r '.statusLine.preset' "$CONFIG")" custom
+check "shows model and cost in the OMP status line" "$(yq -r '[.statusLine.leftSegments[], .statusLine.rightSegments[]] | join(" ")' "$CONFIG")" "model cost"
+check "preserves tight OMP TUI layout" "$(yq -r '.tui.tight' "$CONFIG")" true
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
 check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
 check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.host_hooks.before_session[0]' "$AOE" | jq -r '.')" "if [ \"\$AOE_TOOL\" = omp ]; then \"\$HOME/.local/bin/aoe-omp-environment\"; fi"

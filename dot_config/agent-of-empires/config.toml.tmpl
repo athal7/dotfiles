@@ -10,18 +10,25 @@
 {{- end -}}
 {{- $environment := append $runlayerEnvironment (printf "PI_CODING_AGENT_DIR=%s/.config/omp/agent" .chezmoi.homeDir) -}}
 environment = {{ $environment | toToml }}
+default_profile = ""
 
 [acp]
 allow_agent_install = false
+allowed_agents = []
+compaction_reminder = false
+compaction_reminder_percent = 75
 auto_stop_idle_secs = 0
 default_agent = "omp"
 default_new_session_view = "terminal"
+offer_structured_in_new_session = false
+restrict_agents = false
 max_concurrent_workers = 10
 node_path = ""
 rate_limit_auto_resume = false
 replay_events = 0
 show_tool_durations = true
 silent_orphan_grace_secs = 120
+wrap_tool_output = false
 
 [auth]
 persist_sessions = true
@@ -29,6 +36,8 @@ persist_sessions = true
 [diff]
 context_lines = 3
 split_view = true
+
+[hooks]
 
 [host_hooks]
 before_session = ['if [ "$AOE_TOOL" = omp ]; then "$HOME/.local/bin/aoe-omp-environment"; fi']
@@ -86,6 +95,7 @@ enabled_by_default = false
 environment = ["TERM", "COLORTERM", "FORCE_COLOR", "NO_COLOR"]
 extra_volumes = []
 mount_ssh = false
+privileged = false
 selinux_relabel = false
 volume_ignores = []
 volume_ignores_strategy = "anonymous"
@@ -98,23 +108,39 @@ click_action = "live_send"
 confirm_before_quit = true
 confirm_delete = false
 conversation_summary = true
+daemon_sidebar = true
 default_attach_mode = "tmux"
 default_tool = "omp"
 delete_to_trash = false
+favorites_first = true
+host_tab_title = true
+inherit_host_environment = false
 live_send_exit_chord = "C-q"
 live_send_leader = "C-b"
 live_send_on_view_switch = true
 merge_hooks_into_selected_agent = true
 mouse_capture = true
+name_agent_session = false
+opencode_preassign_session_id = false
+pre_trust_agent_folders = false
+prevent_sleep_idle_grace_minutes = 15
 new_session_mode = "live_send"
 prevent_sleep_when_active = true
 restart_wake_message = "wake up: pick up what you were doing"
 row_tag = "none"
+scratch_smart_rename = "inherit"
+session_id_poller_max_threads = 50
+show_activity_age = true
+show_session_colors = true
 show_diagnostics_pane = true
 show_tips = false
 snooze_duration_minutes = 30
+sidebar_position = "left"
+smart_rename = true
+smart_rename_agent = ""
 strict_hotkeys = false
 tie_workdir_to_name = true
+trash_retention_minutes = 43200
 unread_indicator = true
 yolo_mode_default = false
 
@@ -127,6 +153,9 @@ jules = "jules"
 
 [session.agent_detect_as]
 jules = "jules"
+
+[skills]
+auto_propagate = false
 
 [sound]
 enabled = false
@@ -146,6 +175,7 @@ name = "zinc"
 clipboard = "auto"
 mouse = "auto"
 status_bar = "auto"
+vt_live = true
 
 [tools.attention]
 command = "attention"
@@ -173,6 +203,7 @@ hotkey = "Alt+r"
 
 [updates]
 auto_update_plugins = true
+update_check_mode = "notify"
 [web]
 notifications_enabled = true
 notify_on_error = true
