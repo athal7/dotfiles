@@ -50,11 +50,8 @@ check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.hos
 check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has("app_state")' "$AOE")" false
 check "does not retain AoE live agent overrides" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$AOE")" false
 check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
-check "routes native judgment to local OpenJev" "$(yq -r '.modelRoles.judge' "$CONFIG")" openjev/openjev-latest
-check "preserves task advisor override" "$(yq -r '.task.agentAdvisor.task' "$CONFIG")" off
-check "registers OpenJev with the native decision API" "$(yq -r ".providers.openjev.api" "$MODELS")" typesafe
-check "uses the unversioned local System One API root" "$(yq -r ".providers.openjev.baseUrl" "$MODELS")" http://127.0.0.1:8091
-check "selects OpenJev model id" "$(yq -r ".providers.openjev.models[0].id" "$MODELS")" openjev-latest
+check "does not configure a judge model role" "$(yq -r '.modelRoles | has("judge")' "$CONFIG")" false
+check "does not configure a local OpenJev provider" "$(yq -r 'has("openjev")' "$MODELS")" false
 check "enables curated Mnemopi memory" "$(yq -r '.memory.backend' "$CONFIG")" mnemopi
 check "uses project-tagged Mnemopi scope" "$(yq -r '.mnemopi.scoping' "$CONFIG")" per-project-tagged
 check "recalls memory automatically" "$(yq -r '.mnemopi.autoRecall' "$CONFIG")" true
@@ -144,8 +141,7 @@ check "enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | 
 LAUNCH_AGENTS="$WORK/agents.yaml"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/dot_config/launchd-yaml/agents.yaml.tmpl" > "$LAUNCH_AGENTS"
 check "removes replaced llama LaunchAgent" "$(yq -o=json ".launchagents" "$LAUNCH_AGENTS" | jq "has(\"llama-server\")")" false
-check "runs OpenJev on loopback and the reserved port" "$(yq -r ".launchagents.openjev.EnvironmentVariables | [.OPENJEV_HOST, .OPENJEV_PORT] | join(\":\")" "$LAUNCH_AGENTS")" 127.0.0.1:8091
-check "limits OpenJev MLX cache" "$(yq -r ".launchagents.openjev.EnvironmentVariables.OPENJEV_MLX_CACHE_LIMIT_GB" "$LAUNCH_AGENTS")" 4
+check "does not run the OpenJev memory-intensive local judge" "$(yq -o=json ".launchagents" "$LAUNCH_AGENTS" | jq "has(\"openjev\")")" false
 check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.config/omp/agent/kb-enrich-mcp.json"
 check "configures Homebridge storage under XDG" "$(yq -r '.launchagents.homebridge.ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
 check "configures Homebridge UI storage under XDG" "$(yq -r '.launchagents.homebridge.EnvironmentVariables.UIX_STORAGE_PATH' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"

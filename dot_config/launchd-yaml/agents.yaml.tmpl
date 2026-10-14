@@ -138,24 +138,6 @@ launchagents:
       UIX_STORAGE_PATH: $HOME/.config/homebridge
 
 
-  openjev:
-    Label: com.$USER.openjev
-    ProgramArguments:
-      - $HOME/.local/share/openjev/venv/bin/python
-      - -m
-      - openjev
-    RunAtLoad: true
-    KeepAlive: true
-    ProcessType: Interactive
-    StandardOutPath: $HOME/Library/Logs/openjev.log
-    StandardErrorPath: $HOME/Library/Logs/openjev.error.log
-    EnvironmentVariables:
-      HOME: $HOME
-      HF_HUB_DISABLE_XET: "1"
-      OPENJEV_BACKEND: mlx
-      OPENJEV_HOST: 127.0.0.1
-      OPENJEV_PORT: "8091"
-      OPENJEV_MLX_CACHE_LIMIT_GB: "4"
 
   companion-config-sync:
     Label: com.$USER.companion-config-sync

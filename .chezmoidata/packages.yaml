@@ -1,12 +1,8 @@
 # Package registry — single source of truth for managed dependencies.
-# Homebrew, mise, the pinned local judge, and GitHub release packages.
+# Homebrew, mise, and GitHub release packages.
 # Install scripts and chezmoi externals are generated from this file.
 
 packages:
-  # Pinned System One server for the local OMP judge.
-  openjev:
-    revision: dcd20947b5dd
-    python: "3.12"
   taps:
     - athal7/tap
     - github/gh

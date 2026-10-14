@@ -6,15 +6,3 @@ providers:
     discovery:
       type: openai-models-list
       injectV1: false
-  openjev:
-    baseUrl: http://127.0.0.1:8091
-    api: typesafe
-    auth: none
-    models:
-      - id: openjev-latest
-        name: OpenJev
-        reasoning: false
-        input: [text, image]
-        contextWindow: 32768
-        maxTokens: 1
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
