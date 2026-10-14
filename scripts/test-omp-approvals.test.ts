@@ -5,11 +5,28 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dir, "..");
 const rendered = execFileSync("chezmoi", ["cat", "-S", root, `${process.env.HOME}/.config/omp/agent/config.yml`], { encoding: "utf8" });
 const config = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8", input: rendered })) as {
-  bash: { patterns: Array<{ match: string; approval: string }> };
   github: { enabled: boolean };
+  statusLine: { preset: string; leftSegments: string[] };
   tools: { approval: Record<string, string>; approvalMode: string };
 };
 const tools = config.tools;
+
+const renderedKeybindings = execFileSync("chezmoi", ["cat", "-S", root, `${process.env.HOME}/.config/omp/agent/keybindings.yml`], { encoding: "utf8" });
+const keybindings = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8", input: renderedKeybindings })) as Record<string, string | string[]>;
+
+describe("OMP and AoE shortcut compatibility", () => {
+  test("uses OMP's Alt+Enter approval binding for AoE web's escaped Ctrl+Enter", () => {
+    expect(keybindings["app.approval.approve"]).toBe("Alt+Enter");
+  });
+});
+
+describe("OMP status line", () => {
+  test("shows the model and omits git branch details", () => {
+    expect(config.statusLine.preset).toBe("custom");
+    expect(config.statusLine.leftSegments).toContain("model");
+    expect(config.statusLine.leftSegments).not.toContain("git");
+  });
+});
 
 describe("native OMP approval configuration", () => {
   test("uses write baseline and preserves explicit tool allows", () => {
