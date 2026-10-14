@@ -1,0 +1,47 @@
+# Fully managed default Colima profile.
+# Keep all host and VM preferences explicit; raise disk if a VM already exceeds 64 GiB.
+arch: aarch64
+autoActivate: false
+binfmt: true
+cpu: 2
+cpuType: ""
+disk: 64
+diskImage: ""
+docker:
+  builder:
+    gc:
+      enabled: true
+      defaultKeepStorage: 4GB
+env: {}
+forceDiskImage: false
+forwardAgent: false
+hostname: colima
+kubernetes:
+  enabled: false
+  k3sArgs:
+    - --disable=traefik
+  port: 0
+  version: v1.35.0+k3s1
+memory: 4
+modelRunner: docker
+mountInotify: false
+mountType: virtiofs
+mounts: []
+nestedVirtualization: false
+network:
+  address: false
+  dns: null
+  dnsHosts: {}
+  gatewayAddress: 192.168.5.2
+  hostAddresses: false
+  interface: en0
+  mode: shared
+  preferredRoute: false
+portForwarder: ssh
+provision: null
+rootDisk: 20
+rosetta: false
+runtime: docker
+sshConfig: true
+sshPort: 0
+vmType: vz
