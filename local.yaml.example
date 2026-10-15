@@ -4,14 +4,15 @@
 # Per-org metadata keyed by GitHub org login. Orgs not listed use GitHub
 # Issues for issue tracking and do not use automated code review.
 #
-#   kb_eligible      : whether GitHub activity from the organization may enrich this KB; omit or false to exclude it.
-#   issues           : "linear" if the org uses Linear (anything else → default GitHub Issues)
-#   automated_review : config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
-#     bot_login : the GitHub user.login the bot posts as (used to filter PR review comments)
+#   attention       : dashboard group name for this organization's GitHub issues and PRs.
+#                    "Work" places them in the Work group; omit for Open source.
+#   automated_review: config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
+#     bot_login     : the GitHub user.login the bot posts as (used to filter PR review comments)
 orgs:
   your-work-org:
     kb_eligible: true
     issues: linear
+    attention: Work
     automated_review:
       bot_login: copilot-pull-request-reviewer
   your-personal-org:
