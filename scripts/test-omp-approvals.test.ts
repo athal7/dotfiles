@@ -12,9 +12,10 @@ const config = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8
 const tools = config.tools;
 
 describe("OMP status line", () => {
-  test("shows the model and omits git branch details", () => {
+  test("shows the model and prewalk mode while omitting git branch details", () => {
     expect(config.statusLine.preset).toBe("custom");
     expect(config.statusLine.leftSegments).toContain("model");
+    expect(config.statusLine.leftSegments).toContain("mode");
     expect(config.statusLine.leftSegments).not.toContain("git");
   });
 });
