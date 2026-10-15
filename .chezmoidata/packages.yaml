@@ -105,12 +105,10 @@ packages:
       refresh_period: 24h
 
 
-  # External skill sources and local overlays in the global skill dir.
+  # Non-authored skills synced into the global skill dir.
   skills:
     - repo: BRO3886/ical
       skill: ical-cli
-    - source: dot_agents/skills
-      match: argocd-promotion
 
   # npm-managed global packages
   npm:
