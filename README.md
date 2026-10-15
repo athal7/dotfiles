@@ -117,6 +117,8 @@ The AoE Attention plugin's **New session agent** is explicitly set to OMP throug
 
 The Attention dashboard's session action reuses a unique live OMP session for the same scratch title or repository worktree branch and sends the current request to it (reviving a stopped agent). Archived/trashed sessions are not resumed; ambiguous matches fail without creating another session. New items still create sessions through the scheduled-session dispatcher.
 
+GitHub session actions match the item's repository against any checkout fetch remote, including `upstream` when `origin` is a fork. GitHub issue and PR lookups explicitly use the item's `owner/repo`, rather than inferring it from the checkout's default remote.
+
 AoE Cron runs the [PR review-request prompt](dot_agents/prompts/pr-review-requests.md) every 15 minutes. It checks GitHub notifications for outstanding `review_requested` PRs, then uses `attention-session` to create OMP review worktrees in the matching registered repository. Existing review worktrees, including archived or trashed ones, are skipped; repository identity and PR number distinguish requests. The Cron plugin, job, and grants are managed in `config.toml.tmpl`; its prompt source is versioned with the other agent prompts. Review requests need an authenticated GitHub MCP connection and an AoE-registered checkout whose origin matches each PR's base repository. The review sessions report findings only; they do not submit reviews or change GitHub.
 
 Homebridge stores its data at `~/.config/homebridge`. On a machine still using `~/.homebridge`, stop Homebridge before migrating the entire directory, preserve any existing destination as a backup, and check that the moved `config.json` parses before restarting it.

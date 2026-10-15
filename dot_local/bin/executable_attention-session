@@ -67,39 +67,37 @@ resume_existing() {
   fi
 }
 
+matches_github_remote() {
+  local expected=${2,,} remotes _name remote direction
+  remotes=$("$GIT_BIN" -C "$1" remote -v 2>/dev/null) || return 1
+  while read -r _name remote direction; do
+    [ "$direction" = '(fetch)' ] || continue
+    remote=${remote,,}
+    remote=${remote%.git}
+    case "$remote" in
+      "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected")
+        return 0
+        ;;
+    esac
+  done <<<"$remotes"
+  return 1
+}
+
 registered_repo_path() {
-  local expected=${1,,} projects paths candidate remote resolved=
+  local projects paths candidate resolved=
   projects=$("$AOE_BIN" project list --json) || fail "cannot list registered AoE projects"
   paths=$(printf '%s' "$projects" | "$JQ_BIN" -r '.[] | .path // empty') || \
     fail "cannot parse registered AoE projects"
   while IFS= read -r candidate; do
     [ -d "$candidate" ] || continue
-    remote=$("$GIT_BIN" -C "$candidate" remote get-url origin 2>/dev/null) || continue
-    remote=${remote,,}
-    remote=${remote%.git}
-    case "$remote" in
-      "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected")
-        if [ -n "$resolved" ] && [ "$resolved" != "$candidate" ]; then
-          fail "multiple registered AoE projects match $1"
-        fi
-        resolved=$candidate
-        ;;
-    esac
+    matches_github_remote "$candidate" "$1" || continue
+    if [ -n "$resolved" ] && [ "$resolved" != "$candidate" ]; then
+      fail "multiple registered AoE projects match $1"
+    fi
+    resolved=$candidate
   done <<<"$paths"
   [ -n "$resolved" ] || fail "no registered AoE project matches $1"
   printf '%s\n' "$resolved"
-}
-
-verify_github_origin() {
-  local expected=${2,,} remote
-  remote=$("$GIT_BIN" -C "$1" remote get-url origin 2>/dev/null) || \
-    fail "cannot read repository origin: $1"
-  remote=${remote,,}
-  remote=${remote%.git}
-  case "$remote" in
-    "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected") ;;
-    *) fail "repository origin does not match $2" ;;
-  esac
 }
 
 [ -n "${1:-}" ] || usage
@@ -135,7 +133,8 @@ case "$1" in
     fi
     repo_root=$("$GIT_BIN" -C "$repo_path" rev-parse --show-toplevel 2>/dev/null) || \
       fail "repository path is not a Git repository: $repo_path"
-    verify_github_origin "$repo_root" "$github_repo"
+    matches_github_remote "$repo_root" "$github_repo" || \
+      fail "repository remotes do not match $github_repo"
 
     "$GIT_BIN" check-ref-format --branch "$requested_branch" >/dev/null || \
       fail "worktree branch is not valid: $requested_branch"
@@ -144,7 +143,7 @@ case "$1" in
       prompt+=$additional_prompt
     fi
     resume_existing github "$title" "$repo_root" "$requested_branch" "$prompt"
-    if pr_info=$(cd "$repo_root" && "$GH_BIN" pr view "$reference" --json number,headRefName,headRepositoryOwner,headRepository --jq '[.number, .headRefName, .headRepositoryOwner.login, .headRepository.name] | @tsv' 2>/dev/null); then
+    if pr_info=$(cd "$repo_root" && "$GH_BIN" pr view "$reference" --repo "$github_repo" --json number,headRefName,headRepositoryOwner,headRepository --jq '[.number, .headRefName, .headRepositoryOwner.login, .headRepository.name] | @tsv' 2>/dev/null); then
       IFS=$'\t' read -r pr_number head_branch head_owner head_repo <<<"$pr_info"
       if ! [[ "$pr_number" =~ ^[0-9]+$ && -n "$head_branch" && -n "$head_owner" && -n "$head_repo" ]]; then
         fail "pull request metadata is incomplete for: $reference"
@@ -168,7 +167,7 @@ case "$1" in
       worktree_branch=$requested_branch
       new_branch=false
     else
-      (cd "$repo_root" && "$GH_BIN" issue view "$reference" --json number --jq .number >/dev/null) || \
+      (cd "$repo_root" && "$GH_BIN" issue view "$reference" --repo "$github_repo" --json number --jq .number >/dev/null) || \
         fail "reference is not an accessible GitHub issue or pull request: $reference"
       worktree_branch=$requested_branch
       new_branch=true

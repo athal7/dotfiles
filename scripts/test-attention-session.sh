@@ -29,6 +29,12 @@ cat >"$FAKE_GH" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s %s\n' "$1" "$2" >>"$ATTENTION_GH_LOG"
+if [[ -n "${ATTENTION_EXPECTED_REPO:-}" ]]; then
+  case " $* " in
+    *" --repo $ATTENTION_EXPECTED_REPO "*) ;;
+    *) exit 1 ;;
+  esac
+fi
 if [[ "$ATTENTION_MODE" == pr && "$1" == pr && "$2" == view ]]; then
   printf '63\tfeature/fork\thead-owner\thead-repo\n'
 elif [[ "$ATTENTION_MODE" == issue && "$1" == issue && "$2" == view ]]; then
@@ -60,8 +66,8 @@ case "$command" in
     ;;
   remote)
     [[ "$repo" == "$ATTENTION_REGISTERED_REPO" || "$repo" == "$ATTENTION_REPO" ]] || exit 1
-    [[ "$*" == 'get-url origin' ]] || exit 1
-    printf '%s\n' "${ATTENTION_ORIGIN:-git@github.com:example/remote-repo.git}"
+    [[ "$*" == -v ]] || exit 1
+    printf 'origin\t%s (fetch)\n' "${ATTENTION_ORIGIN:-git@github.com:example/remote-repo.git}"
     ;;
   check-ref-format)
     exit 0
@@ -124,7 +130,7 @@ run_attention() {
     AOE_SESSION_DISPATCHER="$DISPATCHER" \
     AOE_BIN="$FAKE_AOE" \
     GH_BIN="$FAKE_GH" \
-    GIT_BIN="$FAKE_GIT" \
+    GIT_BIN="${ATTENTION_GIT_BIN:-$FAKE_GIT}" \
     ATTENTION_MODE="${ATTENTION_MODE:-}" \
     "$REPO_ROOT/dot_local/bin/executable_attention-session" "$@"
 }
@@ -259,8 +265,7 @@ fi
 export ATTENTION_ORIGIN=git@github.com:example/another-repo.git
 if run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo >"$WORK/origin.out" 2>&1; then
   bad "rejects an unrelated repository before sending"
-elif [[ ! -s "$DISPATCH_LOG" && ! -s "$GH_LOG" ]] && ! grep -Fq 'send ' "$AOE_LOG" &&
-  grep -Fq 'repository origin does not match' "$WORK/origin.out"; then
+elif [[ ! -s "$DISPATCH_LOG" && ! -s "$GH_LOG" ]] && ! grep -Fq 'send ' "$AOE_LOG"; then
   ok "rejects an unrelated repository before sending"
 else
   bad "rejects an unrelated repository before sending"
@@ -318,8 +323,7 @@ export ATTENTION_MODE=pr
 : >"$BRANCH_STATE"
 run_attention github "$WORK/0din-Loki" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
 if grep -Fqx "arg=$REGISTERED_REPO" "$DISPATCH_LOG" &&
-  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG" &&
-  grep -Fqx 'command=remote args=get-url origin' "$GIT_LOG"; then
+  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG"; then
   ok "starts PR work from a registered checkout outside codeDir"
 else
   bad "starts PR work from a registered checkout outside codeDir"
@@ -333,6 +337,48 @@ else
   bad "rejects an unregistered checkout instead of dispatching the wrong repository"
 fi
 unset ATTENTION_MODE
+
+# Use real Git repositories to prove upstream PR branches contain the fetched head.
+git init --quiet --initial-branch=feature/fork "$WORK/head"
+git -C "$WORK/head" -c user.name=Test -c user.email=test@example.com -c commit.gpgsign=false \
+  commit --quiet --allow-empty -m 'Upstream PR head'
+head_sha=$(git -C "$WORK/head" rev-parse HEAD)
+for checkout in "$REPO" "$REGISTERED_REPO"; do
+  git init --quiet --initial-branch=main "$checkout"
+  git -C "$checkout" remote add origin git@github.com:myfork/remote-repo.git
+  git -C "$checkout" remote add upstream https://github.com/example/remote-repo.git
+  git -C "$checkout" config "url.$WORK/head.insteadOf" https://github.com/head-owner/head-repo.git
+done
+export ATTENTION_GIT_BIN
+ATTENTION_GIT_BIN=$(command -v git)
+export ATTENTION_EXPECTED_REPO=example/remote-repo
+export ATTENTION_MODE=pr
+: >"$DISPATCH_LOG"
+if run_attention github "$REPO" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo &&
+  [[ "$(git -C "$REPO" rev-parse refs/heads/attention/upstream-pr)" == "$head_sha" ]] &&
+  grep -Fqx 'group=Attention branch=attention/upstream-pr new=false argc=3' "$DISPATCH_LOG"; then
+  ok "creates PR work for upstream rather than the checkout's fork"
+else
+  bad "creates PR work for upstream rather than the checkout's fork"
+fi
+
+: >"$DISPATCH_LOG"
+if run_attention github "$WORK/missing-repo" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo &&
+  [[ "$(git -C "$REGISTERED_REPO" rev-parse refs/heads/attention/upstream-pr)" == "$head_sha" ]]; then
+  ok "finds a registered checkout by upstream when the suggested path is missing"
+else
+  bad "finds a registered checkout by upstream when the suggested path is missing"
+fi
+
+export ATTENTION_MODE=issue
+: >"$DISPATCH_LOG"
+if run_attention github "$REPO" 64 attention/upstream-issue upstream-issue upstream-prompt '' example/remote-repo &&
+  grep -Fqx 'group=Attention branch=attention/upstream-issue new=true argc=3' "$DISPATCH_LOG"; then
+  ok "looks up upstream issues in the requested repository rather than the fork"
+else
+  bad "looks up upstream issues in the requested repository rather than the fork"
+fi
+unset ATTENTION_MODE ATTENTION_GIT_BIN ATTENTION_EXPECTED_REPO
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [[ "$fail" -eq 0 ]]
