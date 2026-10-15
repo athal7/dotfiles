@@ -1,5 +1,5 @@
 #!/bin/sh
-# Installs only skills that chezmoi does not own.
+# Refresh external skills, then reapply repository-owned overlays.
 # external-skill manifest: {{ .packages.skills | toJson | sha256sum }}
 # runlayer-skill manifest: {{ if hasKey . "runlayer_skills" }}{{ .runlayer_skills | toJson | sha256sum }}{{ else }}{{ list | toJson | sha256sum }}{{ end }}
 {{- range .packages.skills }}
@@ -21,18 +21,6 @@ SKILLS_DEST="$HOME/.agents/skills"
 mkdir -p "$SKILLS_DEST"
 
 
-{{- range .packages.skills }}
-{{- if hasKey . "source" }}
-LOCAL_SKILLS_SRC="{{ $.chezmoi.sourceDir }}/{{ .source }}"
-if [ -d "$LOCAL_SKILLS_SRC" ]; then
-  for skill_dir in "$LOCAL_SKILLS_SRC"/{{ .match }}/; do
-    [ -d "$skill_dir" ] || continue
-    cp -r "${skill_dir%/}" "$SKILLS_DEST/"
-    echo "mirrored local skill: $(basename "$skill_dir")"
-  done
-fi
-{{- end }}
-{{- end }}
 
 {{ range .packages.skills -}}
 {{- if hasKey . "repo" }}
@@ -53,6 +41,18 @@ if command -v uvx >/dev/null 2>&1 && [ -f "$HOME/.runlayer/config.yaml" ]; then
   RUNLAYER_TELEMETRY_DISABLED=1 uvx runlayer skills sync || \
     echo "WARN: runlayer skill installation failed; continuing" >&2
 fi
+{{- range .packages.skills }}
+{{- if hasKey . "source" }}
+LOCAL_SKILLS_SRC="{{ $.chezmoi.sourceDir }}/{{ .source }}"
+if [ -d "$LOCAL_SKILLS_SRC" ]; then
+  for skill_dir in "$LOCAL_SKILLS_SRC"/{{ .match }}/; do
+    [ -d "$skill_dir" ] || continue
+    cp -r "${skill_dir%/}" "$SKILLS_DEST/"
+    echo "mirrored local skill: $(basename "$skill_dir")"
+  done
+fi
+{{- end }}
+{{- end }}
 
 PRIVATE_SKILLS_INSTALL="$HOME/.config/agentskills/private-install.sh"
 if [ -f "$PRIVATE_SKILLS_INSTALL" ]; then

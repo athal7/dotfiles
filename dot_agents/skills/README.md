@@ -10,6 +10,7 @@ How to drive a specific tool or API.
 
 | Skill | Covers |
 |---|---|
+| **argocd-promotion** | Check tag selection and Argo CD sync policy independently before claiming a deployment is live. |
 | **aoe** | Agent of Empires: session creation, worktrees, dispatch |
 | **chezmoi** | This repo's deploy workflow, LaunchAgents, template gotchas |
 | **elasticsearch** | Production triage: logs, APM traces, errors |
@@ -17,7 +18,7 @@ How to drive a specific tool or API.
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
 
-External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical).
+External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical). The repository overlays its authored `argocd-promotion` skill after Runlayer-managed skill synchronization, so this local, reviewed guidance takes precedence.
 
 ## Workflow Skills
 
