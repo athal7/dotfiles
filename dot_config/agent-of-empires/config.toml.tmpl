@@ -68,6 +68,30 @@ capabilities = [
 granted_at = "2026-07-08T19:43:58.777548Z"
 manifest_hash = {{ printf "sha256:%s%s%s%s" "78c76fd828003b3c" "91f57674295713ca" "c96690a156521a05" "d83f890ed47e77ac" | quote }}
 
+[plugins."agent-of-empires.cron"]
+enabled = true
+source = "gh:agent-of-empires/plugin-cron"
+
+[[plugins."agent-of-empires.cron".settings.jobs]]
+id = "pr-review-requests"
+name = "PR review requests"
+schedule = "*/15 * * * *"
+agent_id = "omp"
+project_paths = []
+prompt = {{ include "dot_agents/prompts/pr-review-requests.md" | toJson }}
+group = "Scheduled"
+enabled = true
+
+[plugins."agent-of-empires.cron".grant]
+capabilities = [
+    "runtime.worker",
+    "session.create",
+    "session.prompt",
+    "session.unattended",
+]
+granted_at = "2026-10-14T00:00:00Z"
+manifest_hash = {{ printf "sha256:%s%s%s%s" "c883c7ae0cf24405" "bdebb4d3a9fa5714" "f3663afe7c13edf7" "9a4008eeadbfcefb" | quote }}
+
 [plugins."athal7.attention"]
 enabled = true
 source = "gh:athal7/attention"

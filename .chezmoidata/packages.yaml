@@ -65,6 +65,8 @@ packages:
   aoe_plugins:
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
+    - source: "gh:agent-of-empires/plugin-cron"
+      id: "agent-of-empires.cron"
     - source: "gh:athal7/attention"
       id: "athal7.attention"
 
