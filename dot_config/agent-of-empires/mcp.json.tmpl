@@ -1,0 +1,44 @@
+{{- $servers := dict -}}
+{{- range $server := .mcp_servers -}}
+{{-   $entry := dict -}}
+{{-   if eq $server.transport "local" -}}
+{{-     $_ := set $entry "command" (first $server.command) -}}
+{{-     $_ := set $entry "args" (rest $server.command) -}}
+{{-   else -}}
+{{-     $_ := set $entry "type" "http" -}}
+{{-     $url := $server.url -}}
+{{-     if kindIs "map" $url -}}
+{{-       $environmentName := index $url "name" -}}
+{{-       $url = printf "${%s}" $environmentName -}}
+{{-       if and (hasPrefix "RUNLAYER_" $environmentName) (hasSuffix "_MCP_URL" $environmentName) (hasKey $ "runlayer") -}}
+{{-         $localKey := printf "%s_mcp_url" (lower (trimSuffix "_MCP_URL" (trimPrefix "RUNLAYER_" $environmentName))) -}}
+{{-         if and (hasKey $.runlayer $localKey) (ne (index $.runlayer $localKey) "") -}}
+{{-           $url = index $.runlayer $localKey -}}
+{{-         end -}}
+{{-       end -}}
+{{-     end -}}
+{{-     $_ := set $entry "url" $url -}}
+{{-     if hasKey $server "headers" -}}
+{{-       $headers := dict -}}
+{{-       range $headerName, $headerSpec := $server.headers -}}
+{{-         $value := "" -}}
+{{-         if hasKey $headerSpec "value" -}}
+{{-           $value = $headerSpec.value | toString -}}
+{{-         else -}}
+{{-           $value = output "sh" "-c" $headerSpec.cmd | trim -}}
+{{-           if ne $value "" -}}
+{{-             $value = printf $headerSpec.format $value -}}
+{{-           end -}}
+{{-         end -}}
+{{-         if ne $value "" -}}
+{{-           $_ := set $headers $headerName $value -}}
+{{-         end -}}
+{{-       end -}}
+{{-       if gt (len $headers) 0 -}}
+{{-         $_ := set $entry "headers" $headers -}}
+{{-       end -}}
+{{-     end -}}
+{{-   end -}}
+{{-   $_ := set $servers $server.name $entry -}}
+{{- end -}}
+{{ dict "mcpServers" $servers | toJson }}
