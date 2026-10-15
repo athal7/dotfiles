@@ -29,10 +29,9 @@
 {{- end -}}
 {{- end -}}
 {{- end -}}
-{{- $githubKinds := list "issue" "pull_request" -}}
 {{- $workMatches := list (dict "plugins" (list "linear")) -}}
 {{- if gt (len $workGitHubPrefixes) 0 -}}
-{{- $workMatches = append $workMatches (dict "plugins" (list "github") "kinds" $githubKinds "contextPrefixes" $workGitHubPrefixes) -}}
+{{- $workMatches = append $workMatches (dict "plugins" (list "github") "contextPrefixes" $workGitHubPrefixes) -}}
 {{- end -}}
 {{- if gt (len $workReminderLists) 0 -}}
 {{- $workMatches = append $workMatches (dict "plugins" (list "reminders") "contexts" $workReminderLists) -}}
@@ -40,7 +39,7 @@
 {{- $workMatch := dict "any" $workMatches -}}
 {{- $groups := list
       (dict "name" "Work" "match" $workMatch)
-      (dict "name" "Open source" "match" (dict "plugins" (list "github") "kinds" $githubKinds))
+      (dict "name" "Open source" "match" (dict "plugins" (list "github")))
       (dict "name" "Everything else" "fallback" true) -}}
 {{- $config := dict
       "codeDir" .codeDir

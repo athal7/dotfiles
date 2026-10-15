@@ -120,7 +120,7 @@ The AoE Attention plugin's **New session agent** is explicitly set to OMP throug
 
 The Attention dashboard's session action reuses a unique live OMP session for the same scratch title or repository worktree branch and sends the current request to it (reviving a stopped agent). Archived/trashed sessions are not resumed; ambiguous matches fail without creating another session. New items still create sessions through the scheduled-session dispatcher.
 
-The Attention dashboard shows **Work** (Linear, GitHub issues and PRs from organizations marked `attention: Work` in private `local.yaml`, and the Work reminders list), **Open source** (other GitHub issues and PRs), and **Everything else**. Calendar events are not loaded by Attention.
+The Attention dashboard shows **Work** (Linear, GitHub items from organizations marked `attention: Work` in private `local.yaml`, and the Work reminders list), **Open source** (all other GitHub items, including issues, pull requests, and notifications), and **Everything else**. Calendar events are not loaded by Attention.
 
 GitHub session actions match the item's repository against any checkout fetch remote, including `upstream` when `origin` is a fork. GitHub issue and PR lookups explicitly use the item's `owner/repo`, rather than inferring it from the checkout's default remote.
 Homebridge stores its data at `~/.config/homebridge`. On a machine still using `~/.homebridge`, stop Homebridge before migrating the entire directory, preserve any existing destination as a backup, and check that the moved `config.json` parses before restarting it.
