@@ -25,6 +25,19 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 {{ template "omp-launchd-env" . }}
+  omp-stats:
+    Label: com.$USER.omp-stats
+    ProgramArguments:
+      - /opt/homebrew/bin/omp
+      - stats
+    RunAtLoad: true
+    KeepAlive: true
+    StandardOutPath: $HOME/Library/Logs/omp-stats.log
+    StandardErrorPath: $HOME/Library/Logs/omp-stats.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+{{ template "omp-launchd-env" . }}
+
 
 
   aoe-daily-maintenance:
