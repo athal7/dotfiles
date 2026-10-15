@@ -33,6 +33,7 @@
       },
       {
         "name": "linear",
+        "aoe_acp": false,
         "transport": "remote",
         "url": "https://mcp.linear.app/mcp",
         "tools":

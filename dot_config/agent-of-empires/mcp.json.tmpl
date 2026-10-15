@@ -1,6 +1,7 @@
 {{- $servers := dict -}}
 {{- range $server := .mcp_servers -}}
-{{-   $entry := dict -}}
+{{-   if or (not (hasKey $server "aoe_acp")) $server.aoe_acp -}}
+{{-     $entry := dict -}}
 {{-   if eq $server.transport "local" -}}
 {{-     $_ := set $entry "command" (first $server.command) -}}
 {{-     $_ := set $entry "args" (rest $server.command) -}}
@@ -39,6 +40,7 @@
 {{-       end -}}
 {{-     end -}}
 {{-   end -}}
-{{-   $_ := set $servers $server.name $entry -}}
+{{-     $_ := set $servers $server.name $entry -}}
+{{-   end -}}
 {{- end -}}
 {{ dict "mcpServers" $servers | toJson }}
