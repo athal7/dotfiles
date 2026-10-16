@@ -97,7 +97,7 @@ Fnox is pinned via mise for command-scoped repository credentials. Keep provider
 
 
 OMP configures Bash, tool, and GitHub MCP permissions in `dot_config/omp/agent/config.yml.tmpl` and `.chezmoidata/mcp.yaml`. OMP's native GitHub integration is disabled. The GitHub MCP tool catalog expands mutation globs into exact OMP permission keys; it is not an access-control boundary because OMP 18.8.5 has no working `includeTools` filter, and native approvals cannot inspect tool arguments. Allowed Eval subprocesses do not inherit Bash command rules, so run uncovered `gh` commands through Bash. The custom OMP status line shows the model but omits Git branch/status; AoE remains the source for worktree context. AoE's `C-q` live-send exit chord is handled by the TUI, not the web terminal; the web terminal sends `Ctrl+Q` to the pane.
-For native OMP terminal sessions in Ghostty, approval uses the default `Ctrl+Enter` and `Ctrl+Q` shortcuts. Plain `Enter` does not approve. `Esc` denies. These OMP keybindings do not control AoE's structured ACP permission UI, which is handled by AoE.
+OMP terminal approval shortcuts use upstream defaults; dotfiles do not override them. These keybindings do not control AoE's structured ACP permission UI, which is handled by AoE.
 
 Codex Code Mode normally wraps file edits in `eval`. The OMP config exposes native `edit` and `write` as direct tools instead, so hashline edits remain surgical and prewalk can observe edit/write results. This setting is Codex-specific; other providers use their normal tool-call integration.
 

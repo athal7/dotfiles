@@ -1,2 +1,3 @@
 .agents/prompts/pr-review-requests.md
 .config/agent-of-empires/plugins/agent-of-empires.cron
+.config/omp/agent/keybindings.yml
