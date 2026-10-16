@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 
 const root = resolve(import.meta.dir, "..");
 const rendered = execFileSync("chezmoi", ["cat", "-S", root, `${process.env.HOME}/.config/omp/agent/config.yml`], { encoding: "utf8" });
+const keybindingsRendered = execFileSync("chezmoi", ["cat", "-S", root, `${process.env.HOME}/.config/omp/agent/keybindings.yml`], { encoding: "utf8" });
+const keybindings = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8", input: keybindingsRendered })) as Record<string, string[]>;
 const config = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8", input: rendered })) as {
   github: { enabled: boolean };
   statusLine: { preset: string; leftSegments: string[] };
@@ -29,6 +31,10 @@ describe("native OMP approval configuration", () => {
     expect(tools.approval.hub).toBe("allow");
     expect(tools.approval.task).toBe("allow");
   });
+  test("adds Enter to approval shortcuts without dropping the existing chords", () => {
+    expect(keybindings["app.approval.approve"]).toEqual(["Ctrl+Enter", "Ctrl+Q", "Enter"]);
+  });
+
 
   test("prompts for registered remote MCP mutation tools, not read-tool nouns", () => {
     expect(tools.approval.mcp__slack_send_message).toBe("prompt");
