@@ -29,7 +29,7 @@
       {
         "name": "firefox-devtools",
         "transport": "local",
-        "command": ["firefox-devtools-mcp", "--headless", "--tool-preset", "slim"],
+        "command": ["firefox-devtools-mcp", "--tool-preset", "slim"],
       },
       {
         "name": "linear",
