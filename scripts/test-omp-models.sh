@@ -17,6 +17,7 @@ MCP="$WORK/mcp.json"
 EMPTY_MCP="$WORK/empty-mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
+EXTERNAL="$WORK/external.toml"
 AOE="$WORK/aoe.toml"
 ZSHENV="$WORK/zshenv"
 AGENT_DIR="$WORK/agent"
@@ -41,10 +42,18 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agen
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
+chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiexternal.toml.tmpl" > "$EXTERNAL"
+extension_external="$(yq -p=toml -o=json '.' "$EXTERNAL")"
+extension_url="$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | "https://raw.githubusercontent.com/\(.repo)/\(.ref)/\(.path)"' "$REPO_ROOT/.chezmoidata/packages.yaml")"
+extension_checksum="$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | .checksum' "$REPO_ROOT/.chezmoidata/packages.yaml")"
+
 check "uses the live custom OMP status-line preset" "$(yq -r '.statusLine.preset' "$CONFIG")" custom
 check "shows model, prewalk mode, and cost in the OMP status line" "$(yq -r '[.statusLine.leftSegments[], .statusLine.rightSegments[]] | join(" ")' "$CONFIG")" "model mode cost"
 check "preserves tight OMP TUI layout" "$(yq -r '.tui.tight' "$CONFIG")" true
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
+check "loads the provider-native OMP extension" "$(yq -r '.extensions[0]' "$CONFIG")" "$HOME/.local/share/omp/extensions/agent-of-empires.ts"
+check "renders the pinned OMP extension source URL" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"].url' <<< "$extension_external")" "$extension_url"
+check "renders the OMP extension SHA-256 pin" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"].checksum.sha256' <<< "$extension_external")" "$extension_checksum"
 check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
 check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.host_hooks.before_session[0]' "$AOE" | jq -r '.')" "if [ \"\$AOE_TOOL\" = omp ]; then \"\$HOME/.local/bin/aoe-omp-environment\"; fi"
 check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has("app_state")' "$AOE")" false

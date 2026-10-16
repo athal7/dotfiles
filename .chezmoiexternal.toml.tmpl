@@ -38,3 +38,14 @@
 
 {{ end -}}
 {{ end -}}
+{{ range .packages.github_files -}}
+{{ $url := printf "https://raw.githubusercontent.com/%s/%s/%s" .repo .ref .path -}}
+[{{ .target | quote }}]
+    type = "file"
+    url = {{ $url | quote }}
+    {{- if index . "checksum" }}
+    [{{ .target | quote }}.checksum]
+        sha256 = {{ .checksum | quote }}
+    {{- end }}
+
+{{ end -}}

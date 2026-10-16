@@ -1,5 +1,5 @@
 # Package registry — single source of truth for managed dependencies.
-# Homebrew, mise, and GitHub release packages.
+# Homebrew, mise, GitHub releases, and pinned source files.
 # Install scripts and chezmoi externals are generated from this file.
 
 packages:
@@ -104,6 +104,15 @@ packages:
       path: ical
       executable: true
       refresh_period: 24h
+  # GitHub source files are installed through .chezmoiexternal.toml.tmpl.
+  github_files:
+    - name: aoe-omp-extension
+      repo: athal7/agent-of-empires
+      ref: be8e1c439e06878800491839ce328669800d2e12
+      path: plugins/agent-omp/omp-extension/index.ts
+      target: .local/share/omp/extensions/agent-of-empires.ts
+      checksum: bd68e34fea4c8e3da566313ece08e9f3ced7a49e03a7e1d1817181ef6aac5c08
+
 
 
   # Non-authored skills synced into the global skill dir.
