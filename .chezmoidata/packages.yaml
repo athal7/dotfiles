@@ -70,6 +70,7 @@ packages:
 
   casks:
     - name: firefox
+    - name: ghostty
     - name: gcloud-cli
     - name: font-monaspace-nf
     - name: tailscale-app
