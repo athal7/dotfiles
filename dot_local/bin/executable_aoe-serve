@@ -17,6 +17,13 @@ if [ -z "$passphrase" ]; then
   exit 1
 fi
 
+# Optional Linear QA credential; keep inherited credentials and serve without it.
+if [ -z "${LINEAR_API_KEY:-}" ] && [ -z "${LINEAR_TOKEN:-}" ] && [ -r "$HOME/.envrc" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.envrc"
+  keychain_env LINEAR_API_KEY linear_api_key 2>/dev/null || :
+fi
+
 dns_name=$(/opt/homebrew/bin/tailscale status --json | /opt/homebrew/bin/jq -er '.Self.DNSName')
 dns_name=${dns_name%.}
 
