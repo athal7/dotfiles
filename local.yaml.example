@@ -94,5 +94,5 @@ reminders:
     name: "Work"
     attention_check: true
 
-# Optional extension modules for the isolated OMP pairing smoke profile.
+# Optional OMP extension modules.
 omp_approval_extension_paths: []

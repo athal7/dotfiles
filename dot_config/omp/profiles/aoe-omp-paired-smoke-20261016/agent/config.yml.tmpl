@@ -1,4 +1,0 @@
-# Isolated test profile. Approval prompts remain native to OMP.
-extensions: {{ if .omp_approval_extension_paths }}{{ toJson .omp_approval_extension_paths }}{{ else }}[]{{ end }}
-tools:
-  approvalMode: always-ask

@@ -1,3 +1,4 @@
+extensions: {{ if .omp_approval_extension_paths }}{{ toJson .omp_approval_extension_paths }}{{ else }}[]{{ end }}
 advisor:
   enabled: false
   immuneTurns: 0
