@@ -4,6 +4,11 @@ description: Load when composing human-facing prose through an integration — c
 license: MIT
 ---
 Use Mnemopi recall for relevant agent-learned context. For authoritative collected facts, citations, or source verification, use OMP’s `vault://` interface; never substitute memory, CQ, or direct backing-file access for the vault.
+
+## Concision
+
+- For external communications—including initial issue/proposal bodies and replies—lead with the main point and keep the default short. For longer messages, use Minto Pyramid framing: conclusion first, grouped reasons next, supporting evidence last. For complex proposals, use an issue tree to group non-overlapping concerns, cover necessary scope, and prioritize high-impact branches; omit speculative branches and low-value detail. Keep the problem, recommendation, essential tradeoffs/evidence, and decision needed; cut repetition and tangents. Expand only for accuracy or when requested.
+
 ## Draft-first workflow
 
 When the user has not provided exact final wording for an external communication, create a local draft before using an integration write tool.
