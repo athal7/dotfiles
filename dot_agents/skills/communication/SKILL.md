@@ -9,6 +9,11 @@ Use Mnemopi recall for relevant agent-learned context. For authoritative collect
 
 - For external communications—including initial issue/proposal bodies and replies—lead with the main point and keep the default short. For longer messages, use Minto Pyramid framing: conclusion first, grouped reasons next, supporting evidence last. For complex proposals, use an issue tree to group non-overlapping concerns, cover necessary scope, and prioritize high-impact branches; omit speculative branches and low-value detail. Keep the problem, recommendation, essential tradeoffs/evidence, and decision needed; cut repetition and tangents. Expand only for accuracy or when requested.
 
+## Rollout announcements
+
+- For rollout-completion announcements, lead with what is now live. Once the rollout is complete and verified, send one brief, conversational update with a single canonical guide link; keep operational detail in the guide.
+- Do not repost or duplicate an announcement already sent. If people need advance notice or approval before activation, send that separately before rollout; a post-rollout update does not replace it.
+
 ## Draft-first workflow
 
 When the user has not provided exact final wording for an external communication, create a local draft before using an integration write tool.
