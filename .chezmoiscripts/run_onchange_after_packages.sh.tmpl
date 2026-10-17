@@ -8,6 +8,14 @@
 {{ range .packages.taps -}}
 brew trust --tap {{ . | quote }}
 {{ end }}
+
+# Homebrew Bundle cannot pin a formula version. Extract the selected OMP
+# release into this user's versions tap, then install that versioned formula.
+if brew list --formula --versions can1357/tap/omp >/dev/null 2>&1; then
+  brew uninstall --formula can1357/tap/omp
+fi
+brew version-install can1357/tap/omp@18.10.4
+
 brew bundle --file=/dev/stdin <<'EOF'
 {{ range .packages.taps -}}
 tap {{ . | quote }}

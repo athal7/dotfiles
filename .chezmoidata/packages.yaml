@@ -5,13 +5,14 @@
 packages:
   taps:
     - athal7/tap
+    - athal7/versions
     - github/gh
     - jnsahaj/lumen
     - steipete/tap
     - can1357/tap
 
   brews:
-    - name: can1357/tap/omp
+    - name: athal7/versions/omp@18.10.4
     - name: aoe
     - name: autojump
     - name: bat
