@@ -8,7 +8,7 @@ license: MIT
 
 - **`add` then `session start` are two calls.** `aoe add <path> --title <t>` creates the record; `aoe session start <id>` starts the worker. `aoe add --launch` tries to attach interactively and fails in any non-TTY context (scripts, LaunchAgents).
 - **Sleep ~5s after `session start` before the first `send`.** The TUI takes seconds to boot; an early `send` is silently dropped and still reports success.
-- **Worktrees are mandatory for branch or parallel work.** Concurrent sessions in one directory clobber each other's checkout, stashes, and index. `--worktree <branch> --new-branch` (plus `--base-branch` to base it elsewhere).
+- **Every session and subagent doing repository work needs a dedicated git worktree**, not just branch or parallel work. Use `aoe add <registered-path> --worktree <branch> --new-branch` (plus `--base-branch` when needed); for an existing session, `aoe session add-project <session> <project>` creates a worktree but restarts the agent. If attachment is refused because its conversation is bound to the current directory, stop and ask whether to start a new session; never proceed without isolation or clear the resume target.
 - **`<path>` is canonicalized, never resolved back to the main repo.** Point `aoe add` at a worktree and it silently creates a bogus project rooted there. Pass the exact registered path (`aoe project list`) plus `--worktree`. `--project`/`--repo` add *extra* repos to a multi-repo workspace — they don't select the primary target.
 - **`send` is fire-and-forget.** No wait verb. Check back with `aoe session capture <id>` or attach. One task per session — check `aoe list` before starting overlapping work.
 

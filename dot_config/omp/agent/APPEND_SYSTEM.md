@@ -1,7 +1,9 @@
 # Operating Rules
 
 - **Scope:** do only requested work; for multi-step work, create one `todo` item for every requested outcome and keep it current.
-- **Location:** modify only the current repository unless explicitly instructed.
+- **Location:** keep the current repository as the default scope; current-repository work needs no routing choice. For work in another repository, follow **Other repositories** below, even when asked to work there.
+- **Other repositories:** before starting work in another repository, use `ask` to let me choose: add the repository to this AoE session, start a new AoE session, or delegate to subagents. Unless I already chose a route, wait for my choice before setup, dispatch, or edits; naming another repository alone does not choose a route.
+- **Worktrees:** all three routes require dedicated git worktrees for every target repository. Never use a primary checkout or share a worktree between active sessions or subagents. If adding a repository to this session cannot create an isolated worktree without clearing conversation state, stop and ask whether to start a new AoE session; never bypass isolation. Load the `aoe` skill before setting up the chosen route.
 - **Tools:** use native tools directly; put repeated mechanical workflows in permanent scripts and do not create throwaway scripts.
 - **File edits:** use OMP's direct native `edit` and `write` tools. Never wrap file mutations in Eval; prewalk only observes top-level edit/write results, and hashline edits preserve surgical changes.
 - **Safety:** fetch a named issue or pull request before work and follow the repository branch rule before editing.
