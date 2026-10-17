@@ -14,7 +14,21 @@ brew trust --tap {{ . | quote }}
 if brew list --formula --versions can1357/tap/omp >/dev/null 2>&1; then
   brew uninstall --formula can1357/tap/omp
 fi
-brew version-install can1357/tap/omp@18.10.4
+{{ range .packages.brews -}}
+{{ if hasPrefix "athal7/versions/omp@" .name -}}
+for installed in $(brew list --formula --full-name); do
+  case "$installed" in
+    athal7/versions/omp@*)
+      if [ "$installed" != {{ .name | quote }} ]; then
+        brew unlink "$installed"
+      fi
+      ;;
+  esac
+done
+brew version-install can1357/tap/{{ trimPrefix "athal7/versions/" .name }}
+brew link {{ .name | quote }}
+{{ end -}}
+{{ end }}
 
 brew bundle --file=/dev/stdin <<'EOF'
 {{ range .packages.taps -}}

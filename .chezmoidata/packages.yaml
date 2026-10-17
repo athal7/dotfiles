@@ -12,7 +12,7 @@ packages:
     - can1357/tap
 
   brews:
-    - name: athal7/versions/omp@18.10.4
+    - name: athal7/versions/omp@18.10.3
     - name: aoe
     - name: autojump
     - name: bat
