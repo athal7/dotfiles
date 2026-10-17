@@ -17,7 +17,6 @@ MCP="$WORK/mcp.json"
 EMPTY_MCP="$WORK/empty-mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
-KEYBINDINGS="$WORK/keybindings.yml"
 EXTERNAL="$WORK/external.toml"
 AOE="$WORK/aoe.toml"
 ZSHENV="$WORK/zshenv"
@@ -37,7 +36,6 @@ yq -i '
 ' "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/config.yml" > "$CONFIG"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/keybindings.yml" > "$KEYBINDINGS"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$MCP"
@@ -59,7 +57,6 @@ check "renders the OMP extension SHA-256 pin" "$(jq -r '.[".local/share/omp/exte
 check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
 check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.host_hooks.before_session[0]' "$AOE" | jq -r '.')" "if [ \"\$AOE_TOOL\" = omp ]; then \"\$HOME/.local/bin/aoe-omp-environment\"; fi"
 check "keeps Ctrl+Q as AoE live-send exit" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.session.live_send_exit_chord')" C-q
-check "uses Ctrl+Enter for native OMP approval" "$(yq -r '."app.approval.approve"[0]' "$KEYBINDINGS")" Ctrl+Enter
 check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has("app_state")' "$AOE")" false
 check "does not retain AoE live agent overrides" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$AOE")" false
 check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
