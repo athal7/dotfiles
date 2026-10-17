@@ -103,6 +103,8 @@ OMP configures Bash, tool, and GitHub MCP permissions in `dot_config/omp/agent/c
 
 The Homebrew registry pins OMP to `18.10.4`, the last release before `18.11.0` changed the docked tool-approval panel. The package script extracts that release from OMP's tap history into `athal7/versions` before Brewfile installation. This keeps OMP on its pre-change terminal approval view until AoE's pending [PR #4604](https://github.com/agent-of-empires/agent-of-empires/pull/4604) lands; the separate structured ACP permission UI is unchanged.
 
+OMP's advisor runtime is enabled by default (`advisor.enabled: true` in `dot_config/omp/agent/config.yml.tmpl`); its advisor model is selected by `modelRoles.advisor`.
+
 Codex Code Mode normally wraps file edits in `eval`. The OMP config exposes native `edit` and `write` as direct tools instead, so hashline edits remain surgical and prewalk can observe edit/write results. This setting is Codex-specific; other providers use their normal tool-call integration.
 
 GitHub uses the official remote MCP at https://api.githubcopilot.com/mcp/. Its selected toolsets expose PR, issue, repository, user, and Actions operations; locally enumerated permissions are configuration inputs, not an exhaustive filter on exposed tools. The remote uses the GitHub identity authorized through OMP; ensure it can access both organization scopes. Use `gh` through Bash for uncovered endpoints, not OMP's native GitHub tool.

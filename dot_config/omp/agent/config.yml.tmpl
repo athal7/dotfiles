@@ -1,6 +1,6 @@
 extensions: {{ if .omp_approval_extension_paths }}{{ toJson .omp_approval_extension_paths }}{{ else }}["{{ .chezmoi.homeDir }}/.local/share/omp/extensions/agent-of-empires.ts"]{{ end }}
 advisor:
-  enabled: false
+  enabled: true
   immuneTurns: 0
   maxNotesPerUpdate: 1
 astGrep:
