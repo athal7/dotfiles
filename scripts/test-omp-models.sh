@@ -76,6 +76,7 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "preserves the configured AoE default agent" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.default_agent')" omp
+check "preserves live AoE settings across deployment" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '[.acp.notice_display, (.acp.notice_timeout_secs | tostring), (.session.show_shortcut_bar | tostring), (.systemd.enabled | tostring), .systemd.slice, (.systemd.survive_daemon_restart | tostring), (.systemd.tasks_max | tostring)] | join(" ")')" "persistent 10 true true background-aoe-{profile}.slice true 0"
 check "enables AoE plugin auto-updates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.updates.auto_update_plugins')" true
 check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
 check "pins the updated GitHub plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' 'f3ed73671fdbf502' 'a9ed47988b13c2c2' 'f7f3c9d1cdee0cba' '9bae7f11011aa39e')"

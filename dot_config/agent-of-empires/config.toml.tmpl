@@ -24,6 +24,8 @@ offer_structured_in_new_session = false
 restrict_agents = false
 max_concurrent_workers = 10
 node_path = ""
+notice_display = "persistent"
+notice_timeout_secs = 10
 rate_limit_auto_resume = false
 replay_events = 0
 show_tool_durations = true
@@ -137,6 +139,7 @@ session_id_poller_max_threads = 50
 show_activity_age = true
 show_session_colors = true
 show_diagnostics_pane = true
+show_shortcut_bar = true
 show_tips = false
 snooze_duration_minutes = 30
 sidebar_position = "left"
@@ -166,6 +169,12 @@ enabled = false
 
 [status_hooks]
 enabled = false
+
+[systemd]
+enabled = true
+slice = "background-aoe-{profile}.slice"
+survive_daemon_restart = true
+tasks_max = 0
 
 [telemetry]
 enabled = false
