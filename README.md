@@ -105,7 +105,7 @@ The Homebrew registry pins OMP to `18.10.3`, the last release before `18.10.4` r
 
 OMP's advisor runtime is enabled by default (`advisor.enabled: true` in `dot_config/omp/agent/config.yml.tmpl`); its advisor model is selected by `modelRoles.advisor`.
 
-Codex Code Mode normally wraps file edits in `eval`. The OMP config exposes native `edit` and `write` as direct tools instead, so hashline edits remain surgical and prewalk can observe edit/write results. This setting is Codex-specific; other providers use their normal tool-call integration.
+Codex Code Mode normally wraps file edits in `eval`. The OMP config exposes native `edit` and `write` as direct tools, so hashline edits remain surgical. This setting is Codex-specific; other providers use their normal tool-call integration.
 
 GitHub uses the official remote MCP at https://api.githubcopilot.com/mcp/. Its selected toolsets expose PR, issue, repository, user, and Actions operations; locally enumerated permissions are configuration inputs, not an exhaustive filter on exposed tools. The remote uses the GitHub identity authorized through OMP; ensure it can access both organization scopes. Use `gh` through Bash for uncovered endpoints, not OMP's native GitHub tool.
 
