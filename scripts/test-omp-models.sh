@@ -78,7 +78,7 @@ check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "preserves the configured AoE default agent" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.default_agent')" omp
 check "enables AoE plugin auto-updates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.updates.auto_update_plugins')" true
 check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
-check "pins the updated GitHub plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' '78c76fd828003b3c' '91f57674295713ca' 'c96690a156521a05' 'd83f890ed47e77ac')"
+check "pins the updated GitHub plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' 'f3ed73671fdbf502' 'a9ed47988b13c2c2' 'f7f3c9d1cdee0cba' '9bae7f11011aa39e')"
 check "preserves the Attention plugin grants" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.capabilities | join(" ")')" "runtime.worker session.read session.create session.unattended net"
 check "reloads the supervised AoE daemon after plugin sync" "$(grep -Fxc "if [ \"\$plugin_synced\" = true ] && aoe serve --status > /dev/null 2>&1; then" "$PLUGIN_INSTALL")" 1
 check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl kickstart -k \"\$serve_job\" ||" "$PLUGIN_INSTALL")" 1

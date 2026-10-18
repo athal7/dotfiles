@@ -119,6 +119,8 @@ AoE stores configuration, plugins, profiles, and runtime state under `~/.config/
 
 AoE's [`config.toml`](dot_config/agent-of-empires/config.toml.tmpl) is a full-file TOML template; its settings are declared directly, with home paths and private Runlayer URLs rendered only where needed. AoE keeps UI/runtime state in `state.toml`, which is AoE-owned and intentionally not managed by chezmoi. AoE plugins are declared in `.chezmoidata/packages.yaml` and installed/updated by the chezmoi plugin script; enabled plugins and capability grants are managed in `config.toml.tmpl`. The template enables AoE's startup plugin auto-updater; it updates clean plugins and preserves AoE's trust and approval checks. The chezmoi script also updates managed plugins with `--yes`, re-approving changed capability sets; its template declares the granted capability set and manifest hash. The Attention plugin displays prioritized items in each session pane.
 
+The GitHub plugin is pinned to `v2.0.4`, the newest release verified by AoE `1.20.0`'s bundled featured index. Newer unverified releases are rejected because `agent-of-empires.github` uses a reserved namespace. Advance the source pin in both the package registry and config template, and update the grant's manifest hash, only when the installed AoE release verifies the newer plugin.
+
 Retired plugin files and prompts are listed in `.chezmoiremove` so the next deployment removes their installed copies.
 
 The AoE web session wizard defaults to the terminal view (`acp.default_new_session_view = "terminal"`); choose structured view only when the ACP path is healthy. The configured OMP tool remains the default, independent of view selection.

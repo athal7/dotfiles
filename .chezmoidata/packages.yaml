@@ -64,7 +64,7 @@ packages:
   # run_onchange_after_plugins-aoe.sh.tmpl. Keep sources and IDs here;
   # managed enablement and grants live in config.toml.tmpl.
   aoe_plugins:
-    - source: "gh:agent-of-empires/plugin-github"
+    - source: "gh:agent-of-empires/plugin-github@v2.0.4"
       id: "agent-of-empires.github"
     - source: "gh:athal7/attention"
       id: "athal7.attention"
