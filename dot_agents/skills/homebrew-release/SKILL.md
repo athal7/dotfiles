@@ -8,10 +8,8 @@ Use this only for the named release.
 
 ## Discover and verify
 
-- Discover the source pull request, tap, formula, release workflow, tap workflow, workflow inputs, and version manifest from repository configuration.
+- Discover the tap, formula, release workflow, tap workflow, workflow inputs, and version manifest from repository configuration.
 - Read the semantic-release configuration and both workflows before any write.
-- Verify the pull request is open, not draft, reviewed, mergeable, conflict-free, and green.
-- Verify the intended head commit and squash target.
 
 ## Release gate
 
