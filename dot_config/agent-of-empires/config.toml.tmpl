@@ -92,6 +92,26 @@ manifest_hash = {{ printf "sha256:%s%s%s%s" "8ecaf613cc128827" "13c0bf03d56ce730
 [plugins."aoe.web"]
 enabled = true
 
+# Preserve AoE-owned plugin settings, sources, and approval receipts.
+{{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
+{{ if stat $configPath -}}
+{{ $existing := include $configPath | fromToml -}}
+{{ $managed := list "aoe.web" -}}
+{{ range .packages.aoe_plugins -}}
+{{ $managed = append $managed .id -}}
+{{ end -}}
+{{ $unmanaged := dict -}}
+{{ range $id, $plugin := $existing.plugins -}}
+{{ if not (has $id $managed) -}}
+{{ $_ := set $unmanaged $id $plugin -}}
+{{ end -}}
+{{ end -}}
+{{ if $unmanaged -}}
+{{ dict "plugins" $unmanaged | toToml }}
+{{ end -}}
+{{ end }}
+
+
 [sandbox]
 auto_cleanup = true
 container_runtime = "apple_container"
