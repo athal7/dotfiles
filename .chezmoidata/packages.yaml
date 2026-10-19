@@ -150,6 +150,8 @@ packages:
       version: latest
     - name: argocd
       version: latest
+    - name: spacectl
+      version: latest
     - name: fnox
       version: "1.39.0"
     - name: npm:@google/jules
