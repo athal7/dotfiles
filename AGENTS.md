@@ -12,6 +12,7 @@ This repo manages `~` via chezmoi. Edit source files here.
 - OMP: `dot_config/omp/agent/config.yml.tmpl` renders agent config; `APPEND_SYSTEM.md` in that directory owns its system prompt. `PI_CONFIG_DIR=.config/omp` selects the global root and `PI_CODING_AGENT_DIR` selects the agent path for shells, AoE, and LaunchAgents. MCP server data lives in `.chezmoidata/mcp.yaml`.
 - Authored skills: `dot_agents/skills/` manages `~/.agents/skills/`; externally installed skills own separate siblings.
 - Private machine/org values: gitignored `.chezmoidata/local.yaml`; public shape in `local.yaml.example`.
+- AoE owns `~/.config/agent-of-empires/hooks/pre/aoe-status.ts` and `state.toml`; do not manage them with chezmoi.
 
 ## Agent Operating Rules
 
@@ -28,4 +29,4 @@ This is a **public repository**. Never commit employer/internal names, URLs, hos
 
 ## README
 
-Update `README.md` for structural changes affecting setup or use (skills, LaunchAgents, config sections, package registry design); keep agent operating rules here.
+Keep `README.md` newcomer-focused: setup, supported use, and essential safety notes. Keep agent operating rules here. Keep behavior specifications in tests and implementation details in their owning source/config; do not turn the README into a changelog or verification log.

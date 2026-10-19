@@ -1,149 +1,73 @@
 # athal7's dotfiles
 
-A macOS development environment managed with [chezmoi](https://chezmoi.io).
+A personal macOS development environment managed with [chezmoi](https://chezmoi.io). Review the configuration before applying: it installs software, changes settings, and starts background services.
+
+## What's included
+
+- [Zsh](dot_zshrc.tmpl), [Neovim](dot_config/nvim/), Git, and Ghostty.
+- [One package registry](.chezmoidata/packages.yaml) for Homebrew, mise, and release downloads.
+- [OMP](dot_config/omp/agent/), [MCP servers](.chezmoidata/mcp.yaml), [shared skills](dot_agents/skills/), and [AoE session management](dot_config/agent-of-empires/config.toml.tmpl).
+- [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) for maintenance, updates, and local services.
+- [Colima containers](dot_colima/default/colima.yaml), [Homebridge](dot_config/homebridge/), and Naya Create keyboard settings.
 
 ## Setup
 
-```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply athal7
+Install chezmoi and initialize the source without applying it:
+
+```sh
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init athal7
+cd "$(chezmoi source-path)"
+cp local.yaml.example .chezmoidata/local.yaml
 ```
 
-Copy [`local.yaml.example`](local.yaml.example) to `.chezmoidata/local.yaml` and fill in machine-specific values.
+Fill in [machine-specific values](local.yaml.example) in `.chezmoidata/local.yaml`. That file is gitignored, but isn't a secret store.
 
-This chezmoi source sets `umask = 0o077`, making managed files `0600` and directories `0700`. Before applying on an existing installation, set the same value in its active TOML config without regenerating other settings:
+Before applying on an existing machine, set `umask = 0o077` in the active chezmoi TOML config without running `chezmoi init` (which regenerates it). Managed files become `0600` and directories `0700`, including external app bundles:
 
-```bash
+```sh
 config="$(chezmoi data | jq -r '.chezmoi.configFile')"
 yq -i -p=toml -o=toml '.umask = 63' "$config"
 ```
 
-This also restricts externally managed app bundles. Run `chezmoi apply` after changing source files.
+Also check for these existing-machine risks:
 
-## Keyboard settings
+- If `~/.agent-of-empires/` exists, copy its complete contents to `~/.config/agent-of-empires/` before the first apply. AoE switches as soon as the destination exists. Verify `aoe list` and `aoe settings explain session.default_tool` before removing the old tree.
+- If Homebridge uses `~/.homebridge`, stop its LaunchAgent, back up any existing `~/.config/homebridge`, and move the entire legacy directory there. Verify `config.json` parses before restarting.
+- Colima cannot shrink disks. If the existing VM is larger than the managed 64 GiB default, raise the [profile's disk size](dot_colima/default/colima.yaml) to at least its current size. Review `colima status` and free space before a planned restart.
 
-OpenFlow and Create Companion are managed from pinned, checksum-verified public releases in the package registry. Chezmoi downloads the OpenFlow Apple-Silicon disk image to `~/Applications/OpenFlow-0.7.0.dmg` and installs `Create Companion.app`. Open the disk image and copy `OpenFlow.app` into `~/Applications`. macOS requires Input Monitoring and Accessibility permissions for Create Companion; its repository-owned config currently leaves start-at-login disabled.
+Preview the changes, then apply:
 
-The repository owns the OpenFlow keymap profile at `dot_config/openflow/profiles/naya-default-macos.json` and Create Companion's host config at `Library/Application Support/CreateCompanion/config.toml`. The Companion config intentionally has no per-app profiles yet; only its general `System` bindings are configured.
-
-The OpenFlow profile's 211 keyboard-key bindings match the preserved Naya database snapshot. Its QWERTY layer uses the original `Naya Touch MacOS` config on both Touch sides; no custom Create Companion Touch gesture mapping is included. The original database snapshot at `dot_config/openflow/import/naya-create-profile.db` remains preserved for recovery and contains Naya-only records not represented in the OpenFlow profile.
-
-The preserved Naya database snapshot stores four Tune settings as numeric sliders. The pinned OpenFlow 0.7.0 converter maps them by slot order, but its `MS-14 → pointer_accel_on` and `MS-17 → toggle_ticks` mappings conflict with the source rows: both are `numboxSlider` values, while OpenFlow defines those destination fields as toggles ([converter](https://github.com/create-collective/openflow/blob/8fc8a95011702b7d39038a7bd26051367f0e5479/backend/openflow_backend/db/nayaflow_convert.py), [field schema](https://github.com/create-collective/openflow/blob/8fc8a95011702b7d39038a7bd26051367f0e5479/backend/openflow_backend/db/userdata.py)). The profile therefore preserves `MS-14=20` and `MS-17=50` under their raw IDs, including their numeric-slider types; it does not guess replacement meanings or coerce either value to `false`. Those two settings remain unverified for firmware use.
-
-Read-only comparison against `dot_config/openflow/import/naya-create-profile.db` confirms all 211 keyboard bindings and 10 layer/module assignments match after resolving OpenFlow-regenerated IDs. Every snapshot-defined Naya Touch/Tune gesture remains present; OpenFlow-side profiles may include additional gestures. The settings below are the only identified mapping correction:
-
-| Naya row | Value | Source type | Repository profile field |
-| --- | ---: | --- | --- |
-| `MS-12` | 25 | `numboxSlider` | `pointer_speed` (converter mapping) |
-| `MS-14` | 20 | `numboxSlider` | `MS-14` (raw; no verified semantic field) |
-| `MS-16` | 72 | `numboxSlider` | `tick_strength` (converter mapping) |
-| `MS-17` | 50 | `numboxSlider` | `MS-17` (raw; no verified semantic field) |
-
-After deployment, two `WatchPaths` agents capture live edits in the repository: `companion-config-sync` watches `~/Library/Application Support/CreateCompanion/config.toml`, and `openflow-profile-sync` watches OpenFlow's `user-data.db` and WAL file. Each validates its input, updates only its matching repository file, and makes a local Git commit containing only that path; neither agent pushes. The OpenFlow watcher only considers the profile whose name exactly matches the repository profile; a differently named review candidate is ignored.
-
-After every `chezmoi apply`, `.chezmoiscripts/run_after_openflow-profile-sync.sh.tmpl` loads the repository profile into OpenFlow's local profile store only if OpenFlow is already running. The hook never starts the app; it skips cleanly if the app is not installed or its loopback API is unreachable. Open OpenFlow manually, then run `chezmoi apply` again to sync.
-For manual syncs that must not launch OpenFlow, pass `--skip-if-not-running`; a loopback API connection failure then reports a successful skip. This option is mutually exclusive with `--launch-app`.
-
-The first sync imports the profile under its repository name. Later applies update that profile only when its prior state is managed and there are no unresolved GUI/repository edits. Each replacement saves the previous profile export locally before swapping in and verifying the new profile. An unexpected same-name profile, duplicate name, or concurrent edit stops the sync rather than overwriting an unmanaged profile. Resolve the reported conflict in OpenFlow or the repository, then apply again.
-
-The helper uses OpenFlow profile RPCs only; it has no device or firmware route. **No keyboard is flashed by `chezmoi apply`.** Review the profile in OpenFlow before using an OpenFlow device-write control.
-
-To inspect the loaded profile and compare it with the source:
-
-```bash
-openflow-profile-sync --source-dir "$PWD" list
-openflow-profile-sync --source-dir "$PWD" status \
-  --profile-file dot_config/openflow/profiles/naya-default-macos.json
+```sh
+chezmoi diff
+chezmoi apply
 ```
 
-`MATCH` means the settings agree. `DIFFERENT` exits 1 and lists semantic differences. The `companion-config-sync` watcher captures GUI edits to Create Companion's TOML back into the repository; `openflow-profile-sync` captures OpenFlow profile edits. Each watcher validates its input and makes a local Git commit containing only its matching repository file; neither pushes. Repository profile changes flow into OpenFlow on the next `chezmoi apply` while OpenFlow is running. If both copies changed since the last sync, the sync stops and preserves the existing profile export for recovery.
+## Making changes
 
-OpenFlow sync state is stored at `~/Library/Application Support/OpenFlowSettingsSync/repository-profiles.json`; backups are under `~/Library/Application Support/OpenFlowSettingsSync/backups/`. Never commit profile IDs or local sync state; review watcher-created commits before a later deploy.
+Edit the source files in this repository. From a worktree, preview that worktree explicitly:
 
+```sh
+chezmoi diff -S "$PWD"
+chezmoi apply --dry-run --verbose -S "$PWD"
+```
 
-The NayaFlow package and automatic database-sync LaunchAgent are no longer managed. Removing them does not uninstall an existing NayaFlow app or erase its live database; the original database snapshot remains a recovery source. This migration manages OpenFlow keymaps, module settings, and host-side gesture dispatch, not firmware updates or recovery writes. Keep NayaFlow installed until OpenFlow's firmware/recovery path is verified for this exact hardware. QMK/VIA are not substitutes; repository searches found no supported Naya Create target.
+Land committed changes with `chezmoi-deploy <branch>`, not a pull request. It rebases onto `main` if needed, fast-forward-merges, applies, and pushes `main`. A bare `chezmoi apply` reads the primary checkout, not your worktree.
 
-## What's included
+## Credentials
 
-- Development tools: [shell](dot_zshrc.tmpl), [Neovim](dot_config/nvim/), and [Git](dot_config/git/).
-- Terminal: Ghostty is installed via the [package registry](.chezmoidata/packages.yaml). Apple Terminal preferences are no longer managed; existing profiles are left untouched.
-- AI tools: [OMP configuration](dot_config/omp/agent/), [MCP servers](.chezmoidata/mcp.yaml), and [shared skills and index](dot_agents/skills/) installed at `~/.agents/skills/`. AoE (Agent of Empires) manages OMP sessions. A LaunchAgent keeps the OMP usage dashboard available at `http://127.0.0.1:3847` while the Mac is awake and logged in.
-- Automation: [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) run the weekday [daily maintenance](dot_agents/prompts/daily-maintenance.md) session for independent production-error triage and KB enrichment, a separate daily Homebrew update and upgrade at 04:00, and weekly cleanup of old Chrome signing clones, idle worktrees, build artifacts, and disconnected development databases. The repo also configures an [attention dashboard](dot_config/attention/config.json.tmpl), [calendar tools](https://github.com/athal7/cal), and [Homebridge](dot_config/homebridge/).
-- Packages: [one registry](.chezmoidata/packages.yaml) for Homebrew, mise, and GitHub release packages, with [external downloads](.chezmoiexternal.toml.tmpl). The `cal-automation` package is installed from `athal7/tap` via Homebrew; its [private configuration](dot_config/cal/config.json.tmpl) renders from `.chezmoidata/local.yaml` to `~/.config/cal/config.json`. The pinned `codebase-memory-mcp` npm tool is also installed via mise with its native-binary postinstall script explic...
-- Containers: Docker CLI and Compose use [Colima](https://github.com/abiosoft/colima). The complete default profile is managed in [dot_colima/default/colima.yaml](dot_colima/default/colima.yaml); edit it in the repository to change Colima settings. It configures a 64 GiB VM disk, 4 GiB memory, and Docker BuildKit garbage collection with a 4 GB cache target. Colima can grow a VM disk but cannot shrink one; before applying to a VM already larger than 64 GiB, set the profile disk value to at least its existing size. A disk increase takes effect only after a planned Colima restart; review `colima status` and host free space first. BuildKit GC reclaims eligible build cache, not images, containers, or volumes; active build references are retained, so cache-heavy builds may need to rebuild layers. The target is a GC policy, not reserved free space or a hard cap on total Docker storage. Check usage with `docker system df -v` and `colima ssh -- df -h /var/lib/docker`. Retained images and container data can still exhaust VM disk or host capacity. Shells point `DOCKER_HOST` at `$HOME/.colima/default/docker.sock`; set `DOCKER_HOST` after shell startup to use another daemon. Compose is exposed through `~/.docker/cli-plugins/docker-compose` without replacing `~/.docker/config.json`. A container with `/var/run/docker.sock` mounted can control sibling containers; treat the mount as privileged. Apple Container remains installed independently, and Colima does not migrate or delete its data.
-- Knowledge-base collectors: [definitions](dot_config/kb/collectors/) deploy to `~/.config/kb/collectors/`.
-
-OMP’s vault feature (`vault://`) is the agent-facing interface for collected facts and evidence. OMP Mnemopi stores curated agent-learned insights only, with automatic retention disabled and project-tagged memories enabled for cross-project recall.
-
-## Secrets and per-repository environment
-
-Apple Passwords and 1Password remain the primary stores. Shell startup does not read Keychain or export a GitHub token. The managed `~/.envrc` defines `keychain_env VAR ACCOUNT` but loads no credentials until called. `ACCOUNT` names a macOS generic-password item under service `chezmoi`; use a separate Keychain item only when noninteractive access is needed. Never put secret values in tracked files or `.chezmoidata/local.yaml`.
-
-For a trusted repository, keep its `.envrc` untracked and review it before allowing direnv:
+Keep secrets in Apple Passwords or 1Password, never tracked files or `.chezmoidata/local.yaml`. For noninteractive access, `keychain_env` reads macOS Keychain items under service `chezmoi`. In a trusted repository's untracked `.envrc`:
 
 ```sh
 source "$HOME/.envrc"
 keychain_env MYAPP_API_KEY myapp_api_key
 ```
 
-Run `direnv allow` in that repository. Global `.env` auto-loading and the all-path direnv whitelist are disabled. Work credentials that stay in 1Password can instead use the ignored, command-scoped Fnox config described below.
+Review it, then run `direnv allow`. Shell startup doesn't load credentials globally. Alternatively, keep 1Password references in an ignored `fnox.local.toml` and use `fnox exec -- <command>` for command-scoped credentials.
 
-## OMP and AoE
+## Naya Create keyboard
 
-`omp` uses `~/.config/omp/` as its global root and `~/.config/omp/agent/` for agent data; AoE launches sessions with those paths and receives the same `PI_CODING_AGENT_DIR` in its profile environment so its managed `hooks/pre/aoe-status.ts` lands in OMP's discovered hook directory. Keep that status module AoE-owned; chezmoi manages the separate `eval-timeout.ts` hook. OMP's session directory remains on its existing managed/XDG default. AoE requests only OMP's named Keychain credentials and a GitHub token. The interactive `omp` function supplies a GitHub token only to the launched process. Direct non-shell invocations must supply their own environment, including `GITHUB_TOKEN` for the GitHub MCP. AoE Serve binds to loopback behind private Tailscale Serve and uses a Keychain passphrase for its dashboard, not a URL token.
+Open the downloaded `~/Applications/OpenFlow-*.dmg` and copy `OpenFlow.app` into `~/Applications`. Grant Create Companion Input Monitoring and Accessibility permissions in macOS settings.
 
-The provider-native OMP companion is installed from a pinned, checksummed source file at `~/.local/share/omp/extensions/agent-of-empires.ts` and loaded through OMP's `extensions` setting. The separate AoE plugin publishes session status and sends the existing pane-based quick responses; OMP keeps approval authority and provider-specific response keybindings. The OMP extension does not approve tool calls or bypass native prompts. Its pinned download is declared in `.chezmoidata/packages.yaml` and rendered by `.chezmoiexternal.toml.tmpl`.
+Open OpenFlow manually, then run `chezmoi apply` to load the repository profile. GUI edits to OpenFlow and Create Companion are captured as local Git commits; review them before deploying. The watchers don't push. If GUI and repository edits conflict, resolve the reported conflict before applying again.
 
-All new non-bare AoE worktrees use `~/code/.worktrees/<repo>/<branch>`, and multi-repo workspaces use `~/code/.worktrees/workspaces/<branch>-workspace-<session-id>`, regardless of where the source repositories live. Existing worktrees are not moved; bare repositories retain their in-repo worktree layout.
-
-Fnox is pinned via mise for command-scoped repository credentials. Keep provider references in an ignored `fnox.local.toml` at the repository root; run `fnox exec -- <command>` so only that command receives them. For trusted AoE worktrees, a symlink at `~/code/.worktrees/<repo>/fnox.local.toml` pointing to `../../<repo>/fnox.local.toml` makes the same provider references discoverable by existing and future branches without copying secret material. Older `<repo>-worktrees/` roots need a link to `../<repo>/fnox.local.toml` while they remain. Do not commit these local configs or export their values in the shell.
-
-AoE keeps `Ctrl+Q` as its live-send exit chord. The pinned OMP release uses list-based native approvals: arrows select Approve or Deny, and Enter submits. The `Ctrl+Enter` approval override applies only to newer OMP releases. AoE handles its structured ACP permission UI separately.
-
-OMP configures Bash, tool, and GitHub MCP permissions in `dot_config/omp/agent/config.yml.tmpl` and `.chezmoidata/mcp.yaml`. OMP's native GitHub integration is disabled. The GitHub MCP tool catalog expands mutation globs into exact OMP permission keys; it is not an access-control boundary because OMP 18.8.5 has no working `includeTools` filter, and native approvals cannot inspect tool arguments. Allowed Eval subprocesses do not inherit Bash command rules, so run uncovered `gh` commands through Bash. The custom OMP status line shows the model but omits Git branch/status; AoE remains the source for worktree context. AoE's `C-q` live-send exit chord is handled by the TUI, not the web terminal; the web terminal sends `Ctrl+Q` to the pane.
-
-The Homebrew registry pins OMP to `18.10.3`, the last release before `18.10.4` replaced list-based tool approvals with shortcut-based approvals. The package script derives the selected version from the registry, extracts it from OMP's tap history into `athal7/versions`, and unlinks other versions before linking it. This restores the selector-based approval UI supported by the installed AoE while its native-terminal [PR #4604](https://github.com/agent-of-empires/agent-of-empires/pull/4604) and web-terminal [PR #4667](https://github.com/agent-of-empires/agent-of-empires/pull/4667) remain pending. Existing OMP processes keep their running version; start a new session to use the pin.
-
-OMP's advisor runtime is enabled by default (`advisor.enabled: true` in `dot_config/omp/agent/config.yml.tmpl`); its advisor model is selected by `modelRoles.advisor`.
-
-Codex Code Mode normally wraps file edits in `eval`. The OMP config exposes native `edit` and `write` as direct tools instead, so hashline edits remain surgical and prewalk can observe edit/write results. This setting is Codex-specific; other providers use their normal tool-call integration.
-
-GitHub uses the official remote MCP at https://api.githubcopilot.com/mcp/. Its selected toolsets expose PR, issue, repository, user, and Actions operations; locally enumerated permissions are configuration inputs, not an exhaustive filter on exposed tools. The remote uses the GitHub identity authorized through OMP; ensure it can access both organization scopes. Use `gh` through Bash for uncovered endpoints, not OMP's native GitHub tool.
-
-AoE structured sessions receive MCP servers through ACP's `session/new` request; OMP intentionally disables its on-disk MCP discovery in ACP mode. `dot_config/agent-of-empires/mcp.json.tmpl` renders AoE's MCP set from `.chezmoidata/mcp.yaml`, including resolved headers and Runlayer URLs. OAuth-only servers cannot be forwarded through ACP's URL-and-header representation; mark them `aoe_acp: false` in the registry (currently Linear). Keep the shared server catalog in `.chezmoidata/mcp.yaml`; after changing registrations or credentials, apply chezmoi and start a fresh structured session.
-
-OMP and scheduled KB enrichment enable every configured MCP server with the same server definitions and headers. Connectors that require credentials or environment URLs still need those values configured. The optional Runlayer MCP entries for GitHub are not used; the remaining Runlayer connectors stay independently configured.
-
-OMP disables its native browser and Browser Relay, using Mozilla’s `firefox-devtools` MCP server as the only browser path. The package registry installs Firefox and pins the server with mise; OMP runs its installed binary with a separate Firefox profile in visible mode. The `slim` preset exposes page navigation, snapshots, input, and screenshots, but not console inspection, page-script evaluation, or extension installation. Start a new OMP session after deployment to pick up the native browser setting; `/mcp reload` only refreshes MCP servers in an existing session.
-
-AoE stores configuration, plugins, profiles, and runtime state under `~/.config/agent-of-empires/`. On an existing machine, copy the complete `~/.agent-of-empires/` tree there **before** applying chezmoi: AoE switches to XDG as soon as the new directory exists. Check the migration with `aoe settings explain session.default_tool` and `aoe list` before removing the legacy tree. The tmux status line is minimal; use `C-b s` or `C-b w` to select a session or window.
-
-AoE's [`config.toml`](dot_config/agent-of-empires/config.toml.tmpl) is a full-file TOML template; its settings are declared directly, with home paths and private Runlayer URLs rendered only where needed. AoE keeps UI/runtime state in `state.toml`, which is AoE-owned and intentionally not managed by chezmoi. AoE plugins are declared in `.chezmoidata/packages.yaml` and installed/updated by the chezmoi plugin script; enabled plugins and capability grants are managed in `config.toml.tmpl`. The template enables AoE's startup plugin auto-updater; it updates clean plugins and preserves AoE's trust and approval checks. The chezmoi script also updates managed plugins with `--yes`, re-approving changed capability sets; its template declares the granted capability set and manifest hash. The Attention plugin displays prioritized items in each session pane.
-
-The GitHub plugin is pinned to `v2.0.4`, the newest release verified by AoE `1.20.0`'s bundled featured index. Newer unverified releases are rejected because `agent-of-empires.github` uses a reserved namespace. Advance the source pin in both the package registry and config template, and update the grant's manifest hash, only when the installed AoE release verifies the newer plugin.
-
-Retired plugin files and prompts are listed in `.chezmoiremove` so the next deployment removes their installed copies.
-
-The AoE web session wizard defaults to the terminal view (`acp.default_new_session_view = "terminal"`); choose structured view only when the ACP path is healthy. The configured OMP tool remains the default, independent of view selection.
-
-The AoE Attention plugin's **New session agent** is explicitly set to OMP through `[plugins."athal7.attention".settings]` → `agent_id = "omp"`. This selection is separate from `acp.default_agent`; the plugin does not inherit the global default.
-
-The Attention dashboard's session action reuses a unique live OMP session for the same scratch title or repository worktree branch and sends the current request to it (reviving a stopped agent). Archived/trashed sessions are not resumed; ambiguous matches fail without creating another session. New items still create sessions through the scheduled-session dispatcher.
-
-The Attention dashboard shows **Work** (Linear, GitHub items from organizations marked `attention: Work` in private `local.yaml`, and the Work reminders list), **Open source** (all other GitHub items, including issues, pull requests, and notifications), and **Everything else**. Calendar events are not loaded by Attention.
-
-GitHub session actions match the item's repository against any checkout fetch remote, including `upstream` when `origin` is a fork. GitHub issue and PR lookups explicitly use the item's `owner/repo`, rather than inferring it from the checkout's default remote.
-Homebridge stores its data at `~/.config/homebridge`. On a machine still using `~/.homebridge`, stop Homebridge before migrating the entire directory, preserve any existing destination as a backup, and check that the moved `config.json` parses before restarting it.
-
-## Optional MCP setup
-
-For higher Context7 quotas, create a free key at [Context7](https://context7.com/dashboard) and store it in macOS Keychain:
-
-```bash
-security add-generic-password -U -s context7 -a api-key -w
-```
-
-The final `-w` prompts for the key rather than putting it in shell history. Without a Keychain item under service `context7`, Context7 remains available anonymously. Chezmoi renders the key into private `~/.config/omp/agent/mcp.json`; after adding or rotating it, run `chezmoi apply` and `/mcp reload` in OMP.
-
-The official GitHub MCP is enabled by default and uses OMP remote authentication with the GitHub identity you authorize. Its toolset and approval catalog live in .chezmoidata/mcp.yaml; listed write operations prompt through exact-name approval policies. Confirm that the identity can access both organization scopes before using it.
-
-The `codebase-memory` MCP server keeps a local index under `~/.cache/codebase-memory-mcp`. New-project auto-indexing is off by default: run its `index_repository` tool once per project. Separate worktrees have separate indexes.
+**Applying dotfiles never flashes the keyboard.** Review profiles before writing to a device, and keep NayaFlow installed until OpenFlow's firmware and recovery support is verified for your hardware.
