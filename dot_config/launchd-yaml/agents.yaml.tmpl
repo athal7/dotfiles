@@ -23,7 +23,7 @@ launchagents:
     StandardOutPath: $HOME/Library/Logs/aoe-serve.log
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
     EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
 {{ template "omp-launchd-env" . }}
   omp-stats:
     Label: com.$USER.omp-stats
