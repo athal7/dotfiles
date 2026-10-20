@@ -15,6 +15,8 @@ import time
 CODE = Path(os.environ.get("WORKSPACE_CLEANUP_CODE_ROOT", Path.home() / "code"))
 DATABASE_NAME = re.compile(r"(?:^|_)(?:development|test)(?:_|$)")
 TARGET_STALE_DAYS = 30
+TARGET_PRESSURE_STALE_DAYS = 7
+TARGET_PRESSURE_MIN_FREE_BYTES = 20 * 1024**3
 CHROME_CLONE_STALE_SECONDS = 24 * 60 * 60
 
 
@@ -51,7 +53,8 @@ def worktrees(dry_run):
                 continue
             if any(line.startswith("locked") for line in fields):
                 continue
-            if run("git", "-C", str(path), "status", "--porcelain=v1", check=False).stdout.strip():
+            status = run("git", "-C", str(path), "status", "--porcelain=v1", check=False)
+            if status.returncode or status.stdout.strip():
                 continue
             merged = any(
                 run("git", "-C", str(repo), "merge-base", "--is-ancestor", head, ref, check=False).returncode == 0
@@ -68,11 +71,22 @@ def worktrees(dry_run):
                 tracked = run("git", "-C", str(path), "ls-files", "-z", "--", "target", check=False)
                 if tracked.returncode or tracked.stdout:
                     continue
-                recent = run("find", str(target), "-mtime", f"-{TARGET_STALE_DAYS}", "-print", "-quit", check=False)
+                try:
+                    usage = shutil.disk_usage(CODE)
+                except OSError as error:
+                    print(f"Skipping target cleanup for {path}: cannot check free space: {error}", file=sys.stderr)
+                    continue
+                pressure_free = max(TARGET_PRESSURE_MIN_FREE_BYTES, usage.total // 10)
+                stale_days = TARGET_PRESSURE_STALE_DAYS if usage.free < pressure_free else TARGET_STALE_DAYS
+                recent = run("find", str(target), "-mtime", f"-{stale_days}", "-print", "-quit", check=False)
                 if recent.returncode or recent.stdout:
                     continue
-            opened = run("lsof", "-nP", "+D", str(path), check=False)
-            if opened.returncode not in (0, 1) or opened.stdout.strip():
+            try:
+                opened = run("/usr/sbin/lsof", "-nP", "+D", str(path), check=False)
+            except OSError as error:
+                print(f"Skipping {path}: cannot check for active use: {error}", file=sys.stderr)
+                continue
+            if opened.returncode not in (0, 1) or opened.stdout.strip() or opened.stderr.strip():
                 continue
             if merged:
                 print(f"worktree: {path}")
@@ -147,7 +161,7 @@ def chrome_clones(dry_run):
         if processes.returncode != 1 or processes.stdout.strip() or processes.stderr.strip():
             print("Skipping Chrome clones: cannot establish that Google Chrome is stopped", file=sys.stderr)
             return
-        opened = run("lsof", "-nP", "+D", str(root), check=False)
+        opened = run("/usr/sbin/lsof", "-nP", "+D", str(root), check=False)
     except OSError as error:
         print(f"Skipping Chrome clones: cannot check for active use: {error}", file=sys.stderr)
         return

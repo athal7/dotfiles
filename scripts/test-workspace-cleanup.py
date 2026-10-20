@@ -5,6 +5,7 @@ import contextlib
 import importlib.machinery
 import importlib.util
 import io
+from types import SimpleNamespace
 import os
 from pathlib import Path
 import shutil
@@ -119,6 +120,52 @@ class WorktreeCleanupTest(unittest.TestCase):
         path = self.branch("merged", merged=True)
         self.assertIn(f"worktree: {path}", self.clean(False))
         self.assertFalse(path.exists())
+
+    def test_missing_or_unreliable_activity_check_preserves_worktrees(self):
+        path = self.branch("activity-unknown")
+        target = self.old_target(path)
+        real_run = cleanup.run
+        for failure in (
+            FileNotFoundError("lsof"),
+            subprocess.CompletedProcess([], 1, "", "cannot inspect processes"),
+            subprocess.CompletedProcess([], 2, "", ""),
+        ):
+            def run(*args, **kwargs):
+                if str(args[0]).endswith("lsof"):
+                    if isinstance(failure, Exception):
+                        raise failure
+                    return failure
+                return real_run(*args, **kwargs)
+            with self.subTest(failure=failure), patch.object(cleanup, "run", side_effect=run):
+                with contextlib.redirect_stderr(io.StringIO()):
+                    self.clean(False)
+                self.assertTrue((target / "artifact").exists())
+
+    def test_pressure_shortens_stale_age_at_free_space_floor_and_fraction(self):
+        gib = 1024**3
+        cases = (("small-disk", 128 * gib), ("large-disk", 2 * 1024**4))
+        for name, total in cases:
+            with self.subTest(name=name):
+                path = self.branch(name)
+                target = self.old_target(path)
+                artifact = target / "artifact"
+                ten_days_ago = time.time() - 10 * 86400
+                os.utime(artifact, (ten_days_ago, ten_days_ago))
+                os.utime(target, (ten_days_ago, ten_days_ago))
+                pressure_free = max(cleanup.TARGET_PRESSURE_MIN_FREE_BYTES, total // 10)
+                with patch.object(cleanup.shutil, "disk_usage", return_value=SimpleNamespace(free=pressure_free + 1, total=total)):
+                    self.clean(False)
+                self.assertTrue(artifact.exists())
+
+                with patch.object(cleanup.shutil, "disk_usage", return_value=SimpleNamespace(free=pressure_free - 1, total=total)):
+                    output = self.clean(True)
+                self.assertIn(f"build artifacts: {target}", output)
+                self.assertTrue(artifact.exists())
+
+                with patch.object(cleanup.shutil, "disk_usage", return_value=SimpleNamespace(free=pressure_free - 1, total=total)):
+                    self.clean(False)
+                self.assertFalse(target.exists())
+
 
 
 class ChromeCloneCleanupTest(unittest.TestCase):
