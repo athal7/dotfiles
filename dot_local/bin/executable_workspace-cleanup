@@ -29,6 +29,18 @@ def registered_sessions():
     return {str(Path(entry["path"]).resolve()) for entry in json.loads(result.stdout) if entry.get("path")}
 
 
+def worktree_is_idle(path):
+    try:
+        opened = run("/usr/sbin/lsof", "-nP", "+D", str(path), check=False)
+    except OSError as error:
+        print(f"Skipping {path}: cannot check for active use: {error}", file=sys.stderr)
+        return False
+    if opened.returncode not in (0, 1) or opened.stdout.strip() or opened.stderr.strip():
+        print(f"Skipping {path}: cannot establish that the worktree is unused", file=sys.stderr)
+        return False
+    return True
+
+
 def worktrees(dry_run):
     try:
         sessions = registered_sessions()
@@ -49,58 +61,51 @@ def worktrees(dry_run):
             fields = entry.splitlines()
             path = Path(fields[0].removeprefix("worktree ")).resolve() if fields else repo
             head = next((line[5:] for line in fields if line.startswith("HEAD ")), None)
-            if path == repo or not path.is_dir() or not head or str(path) in sessions:
+            if path == repo or not path.is_dir() or not head:
                 continue
             if any(line.startswith("locked") for line in fields):
                 continue
             status = run("git", "-C", str(path), "status", "--porcelain=v1", check=False)
-            if status.returncode or status.stdout.strip():
+            if status.returncode:
                 continue
+            dirty = bool(status.stdout.strip())
+            if dirty:
+                continue
+            registered = str(path) in sessions
             merged = any(
                 run("git", "-C", str(repo), "merge-base", "--is-ancestor", head, ref, check=False).returncode == 0
                 for ref in ("main", "origin/main")
             )
             target = path / "target"
-            if not merged:
-                if not (path / "Cargo.toml").is_file():
-                    continue
-                if target.is_symlink() or not target.is_dir():
-                    continue
-                if run("git", "-C", str(path), "check-ignore", "-q", "--", "target", check=False).returncode != 0:
-                    continue
-                tracked = run("git", "-C", str(path), "ls-files", "-z", "--", "target", check=False)
-                if tracked.returncode or tracked.stdout:
-                    continue
-                try:
-                    usage = shutil.disk_usage(CODE)
-                except OSError as error:
-                    print(f"Skipping target cleanup for {path}: cannot check free space: {error}", file=sys.stderr)
-                    continue
-                pressure_free = max(TARGET_PRESSURE_MIN_FREE_BYTES, usage.total // 10)
-                stale_days = TARGET_PRESSURE_STALE_DAYS if usage.free < pressure_free else TARGET_STALE_DAYS
-                recent = run("find", str(target), "-mtime", f"-{stale_days}", "-print", "-quit", check=False)
-                if recent.returncode or recent.stdout:
-                    continue
-            try:
-                opened = run("/usr/sbin/lsof", "-nP", "+D", str(path), check=False)
-            except OSError as error:
-                print(f"Skipping {path}: cannot check for active use: {error}", file=sys.stderr)
+            if (not merged or registered) and (path / "Cargo.toml").is_file() and not target.is_symlink() and target.is_dir():
+                ignored = run("git", "-C", str(path), "check-ignore", "-q", "--", "target", check=False)
+                if not ignored.returncode:
+                    tracked = run("git", "-C", str(path), "ls-files", "-z", "--", "target", check=False)
+                    if not tracked.returncode and not tracked.stdout:
+                        try:
+                            usage = shutil.disk_usage(CODE)
+                        except OSError as error:
+                            print(f"Skipping target cleanup for {path}: cannot check free space: {error}", file=sys.stderr)
+                        else:
+                            pressure_free = max(TARGET_PRESSURE_MIN_FREE_BYTES, usage.total // 10)
+                            stale_days = TARGET_PRESSURE_STALE_DAYS if usage.free < pressure_free else TARGET_STALE_DAYS
+                            recent = run("find", str(target), "-mtime", f"-{stale_days}", "-print", "-quit", check=False)
+                            if not recent.returncode and not recent.stdout and worktree_is_idle(path):
+                                print(f"build artifacts: {target}")
+                                if not dry_run:
+                                    try:
+                                        shutil.rmtree(target)
+                                    except OSError as error:
+                                        print(f"Cannot remove {target}: {error}", file=sys.stderr)
+
+            if registered:
                 continue
-            if opened.returncode not in (0, 1) or opened.stdout.strip() or opened.stderr.strip():
-                continue
-            if merged:
+            if merged and worktree_is_idle(path):
                 print(f"worktree: {path}")
                 if not dry_run:
                     removed = run("git", "-C", str(repo), "worktree", "remove", str(path), check=False)
                     if removed.returncode:
                         print(f"Cannot remove {path}: {removed.stderr.strip()}", file=sys.stderr)
-            else:
-                print(f"build artifacts: {target}")
-                if not dry_run:
-                    try:
-                        shutil.rmtree(target)
-                    except OSError as error:
-                        print(f"Cannot remove {target}: {error}", file=sys.stderr)
 
 
 def databases(dry_run):

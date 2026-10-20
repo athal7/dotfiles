@@ -85,14 +85,15 @@ class WorktreeCleanupTest(unittest.TestCase):
         self.assertEqual("", self.git(path, "status", "--porcelain=v1"))
         self.assertTrue(self.git(self.repo, "branch", "--list", "old-artifact").strip())
 
-    def test_recent_dirty_registered_locked_and_tracked_outputs_are_preserved(self):
+    def test_registered_and_dirty_sources_survive_target_cleanup(self):
         recent = self.branch("recent")
         recent_target = self.old_target(recent)
         (recent_target / "nested").mkdir()
         (recent_target / "nested" / "new-artifact").write_text("recent work")
         dirty = self.branch("dirty")
         dirty_target = self.old_target(dirty)
-        (dirty / "uncommitted.txt").write_text("preserve")
+        dirty_source = dirty / "uncommitted.txt"
+        dirty_source.write_text("preserve")
         registered = self.branch("registered")
         registered_target = self.old_target(registered)
         self.sessions.add(str(registered.resolve()))
@@ -104,27 +105,85 @@ class WorktreeCleanupTest(unittest.TestCase):
         self.git(tracked, "add", "-f", "target/artifact")
         self.git(tracked, "commit", "-qm", "tracked target")
 
-        self.assertEqual("", self.clean(False))
-        for target in (recent_target, dirty_target, registered_target, locked_target, tracked_target):
+        output = self.clean(False)
+        self.assertNotIn(f"build artifacts: {dirty_target}", output)
+        self.assertIn(f"build artifacts: {registered_target}", output)
+        self.assertTrue(recent_target.exists())
+        self.assertTrue(dirty_target.exists())
+        self.assertTrue(dirty_source.exists())
+        self.assertTrue(dirty.exists())
+        self.assertFalse(registered_target.exists())
+        self.assertTrue(registered.exists())
+        for target in (locked_target, tracked_target):
             self.assertTrue((target / "artifact").exists(), str(target))
 
+    def test_registered_and_dirty_sources_survive_pressure_target_cleanup(self):
+        registered = self.branch("registered-pressure")
+        registered_target = self.old_target(registered)
+        dirty = self.branch("dirty-pressure")
+        dirty_target = self.old_target(dirty)
+        dirty_source = dirty / "source-change.txt"
+        dirty_source.write_text("retain source")
+        self.sessions.add(str(registered.resolve()))
+        ten_days_ago = time.time() - 10 * 86400
+        for target in (registered_target, dirty_target):
+            artifact = target / "artifact"
+            os.utime(artifact, (ten_days_ago, ten_days_ago))
+            os.utime(target, (ten_days_ago, ten_days_ago))
+
+        real_run = cleanup.run
+        def run(*args, **kwargs):
+            if str(args[0]).endswith("lsof"):
+                return subprocess.CompletedProcess(args, 1, "", "")
+            return real_run(*args, **kwargs)
+        usage = SimpleNamespace(free=0, total=128 * 1024**3)
+        with patch.object(cleanup.shutil, "disk_usage", return_value=usage), patch.object(cleanup, "run", side_effect=run):
+            output = self.clean(True)
+        self.assertIn(f"build artifacts: {registered_target}", output)
+        self.assertNotIn(f"build artifacts: {dirty_target}", output)
+        self.assertTrue(registered_target.exists())
+        self.assertTrue(dirty_target.exists())
+
+        with patch.object(cleanup.shutil, "disk_usage", return_value=usage), patch.object(cleanup, "run", side_effect=run):
+            self.clean(False)
+        self.assertFalse(registered_target.exists())
+        self.assertTrue(registered.exists())
+        self.assertTrue(dirty_target.exists())
+        self.assertTrue(dirty.exists())
+        self.assertTrue(dirty_source.exists())
+
     @unittest.skipUnless(shutil.which("lsof"), "lsof required for open-file check")
-    def test_open_artifact_is_preserved(self):
-        path = self.branch("open")
+    def test_open_registered_artifact_is_preserved(self):
+        path = self.branch("open-registered")
         target = self.old_target(path)
-        with (target / "artifact").open("rb"):
+        self.sessions.add(str(path.resolve()))
+        usage = SimpleNamespace(free=0, total=128 * 1024**3)
+        with patch.object(cleanup.shutil, "disk_usage", return_value=usage), (target / "artifact").open("rb"):
             self.assertEqual("", self.clean(False))
             self.assertTrue(target.exists())
+            self.assertTrue(path.exists())
 
     def test_merged_worktree_is_removed_as_before(self):
         path = self.branch("merged", merged=True)
         self.assertIn(f"worktree: {path}", self.clean(False))
         self.assertFalse(path.exists())
 
-    def test_missing_or_unreliable_activity_check_preserves_worktrees(self):
+    def test_registered_merged_worktree_only_loses_target(self):
+        path = self.branch("registered-merged", merged=True)
+        target = self.old_target(path)
+        self.sessions.add(str(path.resolve()))
+        output = self.clean(False)
+        self.assertIn(f"build artifacts: {target}", output)
+        self.assertNotIn(f"worktree: {path}", output)
+        self.assertFalse(target.exists())
+        self.assertTrue((path / "Cargo.toml").exists())
+
+    def test_missing_or_unreliable_activity_check_preserves_registered_targets(self):
         path = self.branch("activity-unknown")
         target = self.old_target(path)
+        self.sessions.add(str(path.resolve()))
         real_run = cleanup.run
+        usage = SimpleNamespace(free=0, total=128 * 1024**3)
         for failure in (
             FileNotFoundError("lsof"),
             subprocess.CompletedProcess([], 1, "", "cannot inspect processes"),
@@ -136,10 +195,11 @@ class WorktreeCleanupTest(unittest.TestCase):
                         raise failure
                     return failure
                 return real_run(*args, **kwargs)
-            with self.subTest(failure=failure), patch.object(cleanup, "run", side_effect=run):
+            with self.subTest(failure=failure), patch.object(cleanup.shutil, "disk_usage", return_value=usage), patch.object(cleanup, "run", side_effect=run):
                 with contextlib.redirect_stderr(io.StringIO()):
                     self.clean(False)
                 self.assertTrue((target / "artifact").exists())
+                self.assertTrue(path.exists())
 
     def test_pressure_shortens_stale_age_at_free_space_floor_and_fraction(self):
         gib = 1024**3
