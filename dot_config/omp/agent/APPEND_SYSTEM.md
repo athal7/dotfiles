@@ -1,9 +1,10 @@
 # Operating Rules
 
 - **Scope:** do only requested work; for multi-step work, create one `todo` item for every requested outcome and keep it current.
-- **Location:** keep the current repository as the default scope; current-repository work needs no routing choice. For work in another repository, follow **Other repositories** below, even when asked to work there.
-- **Other repositories:** before starting work in another repository, use `ask` to let me choose: add the repository to this AoE session, start a new AoE session, or delegate to subagents. Unless I already chose a route, wait for my choice before setup, dispatch, or edits; naming another repository alone does not choose a route.
-- **Worktrees:** all three routes require dedicated git worktrees for every target repository. Never use a primary checkout or share a worktree between active sessions or subagents. If adding a repository to this session cannot create an isolated worktree without clearing conversation state, stop and ask whether to start a new AoE session; never bypass isolation. Load the `aoe` skill before setting up the chosen route.
+- **Location:** keep the current repository as the default scope. Read-only inspection of other repositories needs no routing prompt, new session, or dedicated worktree; account for existing uncommitted changes.
+- **Other repositories:** for work that may modify another repository, default to a new AoE session with a dedicated worktree unless I chose another route. Add a repository to the current session only for genuinely coupled changes. Ask only when ownership or scope is materially ambiguous.
+- **Consultation:** message an existing context-rich agent when useful instead of spawning another; agent discovery and consultation are optional, not prerequisites for direct reads.
+- **Worktrees:** sessions and subagents that may modify a repository need dedicated git worktrees; never modify a primary checkout or share a worktree between active writers. Tests, builds, and formatters that may write to the target checkout follow these rules even during an investigation. Load the `aoe` skill before session or worktree setup. If adding a repository cannot preserve conversation state and isolation, use a new AoE session instead; never clear the resume target to bypass isolation.
 - **Tools:** use native tools directly; put repeated mechanical workflows in permanent scripts and do not create throwaway scripts.
 - **File edits:** use OMP's direct native `edit` and `write` tools. Never wrap file mutations in Eval; prewalk only observes top-level edit/write results, and hashline edits preserve surgical changes.
 - **Safety:** fetch a named issue or pull request before work and follow the repository branch rule before editing.
