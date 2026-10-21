@@ -33,9 +33,16 @@ brew link {{ .name | quote }}
 # Homebrew Bundle won't switch an installed stable formula to HEAD.
 if installed_aoe="$(brew list --formula --versions aoe 2>/dev/null)"; then
   case "$installed_aoe" in
-    "aoe HEAD-"*) ;;
-    *) brew uninstall --formula aoe || exit 1
-       brew install --HEAD aoe || exit 1 ;;
+    "aoe HEAD"*)
+      if [ ! -x "$(brew --prefix aoe)/bin/aoe" ]; then
+        brew uninstall --formula aoe || exit 1
+        brew install --HEAD aoe || exit 1
+      fi
+      ;;
+    *)
+      brew uninstall --formula aoe || exit 1
+      brew install --HEAD aoe || exit 1
+      ;;
   esac
 fi
 
