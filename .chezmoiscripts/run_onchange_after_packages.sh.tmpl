@@ -34,7 +34,8 @@ brew link {{ .name | quote }}
 if installed_aoe="$(brew list --formula --versions aoe 2>/dev/null)"; then
   case "$installed_aoe" in
     "aoe HEAD-"*) ;;
-    *) brew reinstall --HEAD aoe ;;
+    *) brew uninstall --formula aoe || exit 1
+       brew install --HEAD aoe || exit 1 ;;
   esac
 fi
 
