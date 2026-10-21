@@ -25,3 +25,6 @@ bench-*.md
 __pycache__/
 
 *.pyc
+
+# Firefox broker dependencies are installed by chezmoi.
+node_modules/

@@ -10,6 +10,10 @@ A personal macOS development environment managed with [chezmoi](https://chezmoi.
 - [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) for maintenance, updates, and local services.
 - [Colima containers](dot_colima/default/colima.yaml), [Homebridge](dot_config/homebridge/), and Naya Create keyboard settings.
 
+## Shared Firefox automation
+
+OMP sessions share one Firefox Nightly process and persistent, agent-only automation profile, including its login; sign in once in that profile. This is separate from the user's normal browser. Each session owns only the tabs it opens. Call `cleanup_session` when finished. Cleanup or disconnect closes only that session's tabs, restores a surviving session's selected tab, and exits Firefox when no session-owned tabs remain. Tabs may remain open while a session stays connected and does not clean up.
+
 The daily `workspace-cleanup` LaunchAgent may remove an ignored, untracked Cargo `target/` from a clean unmerged worktree, or from a registered worktree without removing that worktree or its source. Targets must be at least 30 days old, or 7 days old when free space is below `max(20 GiB, 10% of the volume)`. Dirty or locked worktrees, symlinked or tracked targets, and targets with open or unverifiable `lsof` checks are preserved. Unregistered merged worktrees retain the separate whole-worktree cleanup rule. This is age-based cleanup, not a hard size cap or a shared Cargo cache.
 
 ## Setup

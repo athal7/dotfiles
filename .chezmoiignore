@@ -16,3 +16,7 @@ index.html
 # Python bytecode caches — regenerated at runtime, never managed config
 **/__pycache__
 **/__pycache__/**
+
+# Firefox broker dependencies are installed locally by the package hook.
+**/node_modules
+**/node_modules/**

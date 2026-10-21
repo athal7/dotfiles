@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+# Pinned runtime: Firefox DevTools MCP 0.10.5; npm ci installs its locked dependencies.
+# npm ci enforces the committed transitive dependency lockfile.
+# manifest: {{ include "dot_local/share/firefox-mcp-broker/package.json" | sha256sum }}
+# lockfile: {{ include "dot_local/share/firefox-mcp-broker/package-lock.json" | sha256sum }}
+# Run from the target: npm ci --prefix misidentifies the lockfile package root.
+cd "$HOME/.local/share/firefox-mcp-broker"
+npm ci --omit=dev

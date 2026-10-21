@@ -25,6 +25,19 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
 {{ template "omp-launchd-env" . }}
+  firefox-mcp-broker:
+    Label: com.$USER.firefox-mcp-broker
+    ProgramArguments:
+      - /usr/bin/env
+      - node
+      - $HOME/.local/share/firefox-mcp-broker/broker.mjs
+      - --daemon
+    RunAtLoad: true
+    KeepAlive: true
+    StandardOutPath: $HOME/Library/Logs/firefox-mcp-broker.log
+    StandardErrorPath: $HOME/Library/Logs/firefox-mcp-broker.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
   omp-stats:
     Label: com.$USER.omp-stats
     ProgramArguments:

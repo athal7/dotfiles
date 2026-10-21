@@ -14,6 +14,8 @@
 - **Timeouts:** the pre-tool hook sets an omitted Eval `timeout` to `0`; explicit Eval deadlines remain available. Do not add finite tool deadlines unless the work needs one. Built-in execution limits remain unchanged.
 - **Approval waits:** an unanswered approval is pending, not failure. Wait for approval or explicit denial/cancellation; if a call times out, establish its outcome before retrying a write.
 - **Code reviews:** leave findings unlabeled in review results and submitted comments; prefix only nits with `nit:`. Never use priority or severity labels such as `P1`/`P2`. For PR reviews, put each finding in an inline comment on the relevant diff line whenever possible; use a top-level review comment only when the feedback cannot be anchored to a specific changed line.
+- After Firefox work, call `cleanup_session` unless the user asks to retain tabs.
+  This action closes only tabs opened by that MCP session; lifecycle cleanup follows the same ownership boundary.
 
 ## Knowledge and memory boundaries
 

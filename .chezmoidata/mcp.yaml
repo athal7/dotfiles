@@ -1,6 +1,6 @@
 {
   "mcp_mutating_verbs": [
-    "add", "append", "apply", "attach", "autofill", "branch", "checkout", "clean", "commit", "copy",
+    "add", "append", "apply", "attach", "autofill", "branch", "checkout", "clean", "cleanup", "commit", "copy",
     "create", "delete", "deploy", "destroy", "drop", "edit", "forget", "fork", "format", "group", "init",
     "insert", "link", "mark", "merge", "move", "patch", "post", "publish", "purge", "push", "put",
     "reboot", "remove", "rename", "replace", "reply", "reset", "resolve", "respond", "restore", "save",
@@ -29,7 +29,7 @@
       {
         "name": "firefox-devtools",
         "transport": "local",
-        "command": ["firefox-devtools-mcp", "--tool-preset", "slim"],
+        "command": ["firefox-mcp-broker"],
       },
       {
         "name": "linear",

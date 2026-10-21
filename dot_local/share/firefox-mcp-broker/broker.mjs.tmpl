@@ -1,0 +1,504 @@
+#!/usr/bin/env node
+import { createServer, connect as connectSocket } from 'node:net';
+import { chmod, lstat, mkdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { FirefoxDevTools } from '@mozilla/firefox-devtools-mcp';
+import { spawn } from 'node:child_process';
+const newline = String.fromCharCode(10);
+
+const daemonMode = process.argv[2] === '--daemon';
+const root = process.env.FIREFOX_MCP_BROKER_DIR || join(homedir(), '.local', 'share', 'firefox-mcp-broker');
+const socketPath = join(root, 'broker.sock');
+const profilePath = join(root, 'profile');
+const firefoxPath = process.env.FIREFOX_NIGHTLY_BINARY || '/Applications/Firefox Nightly.app/Contents/MacOS/firefox';
+const clients = new Map();
+let browser;
+let requestQueue = Promise.resolve();
+let closing = false;
+
+const lockPath = `${socketPath}.owner`;
+const ownerPidPath = `${lockPath}.pid`;
+let ownerLock;
+let ownerLockExited;
+let releasingOwnerLock = false;
+const mcpOutputDir = join(homedir(), '.firefox-devtools-mcp', 'output');
+function within(rootPath, candidatePath) {
+  const rel = relative(rootPath, candidatePath);
+  return rel === '' || (!rel.startsWith(`..${sep}`) && rel !== '..' && !isAbsolute(rel));
+}
+function safeNavigationUrl(value) {
+  let url;
+  try { url = new URL(value); } catch { throw new Error('URL must be absolute'); }
+  if (['javascript:', 'chrome:', 'resource:', 'moz-extension:', 'view-source:'].includes(url.protocol)
+      || (url.protocol === 'about:' && url.href !== 'about:blank')) {
+    throw new Error(`Privileged URL is blocked: ${url.protocol}`);
+  }
+}
+async function realpathThroughMissing(path) {
+  let current = resolve(path);
+  const missing = [];
+  for (;;) {
+    try { return resolve(await realpath(current), ...missing); }
+    catch (error) {
+      if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') throw error;
+      const parent = dirname(current);
+      if (parent === current) return resolve(current, ...missing);
+      missing.unshift(current.slice(parent.length + 1));
+      current = parent;
+    }
+  }
+}
+async function safeOutputPath(input, destination) {
+  const outputRoot = await realpathThroughMissing(mcpOutputDir);
+  const rootPath = isAbsolute(input) ? outputRoot : await realpath(process.cwd());
+  const candidate = await realpathThroughMissing(destination);
+  if (!within(rootPath, candidate)) throw new Error('saveTo path is outside the allowed output directory or current working directory');
+  const protectedProfile = await realpathThroughMissing(profilePath);
+  if (within(protectedProfile, candidate)) throw new Error('saveTo cannot write inside the Firefox automation profile');
+  const homePath = await realpath(homedir());
+  if (within(homePath, candidate) && !within(outputRoot, candidate)) throw new Error('saveTo cannot write inside the home directory');
+  return candidate;
+}
+async function safeUploadPath(input) {
+  const candidate = await realpath(input);
+  if (!(await stat(candidate)).isFile()) throw new Error('filePath must point to a regular file');
+  const cwd = await realpath(process.cwd());
+  const downloads = await realpathThroughMissing(join(homedir(), 'Downloads'));
+  const profile = await realpathThroughMissing(profilePath);
+  if ((!within(cwd, candidate) && !within(downloads, candidate)) || within(profile, candidate)) {
+    throw new Error('filePath must be a regular file in the current working directory or Downloads, outside the Firefox profile');
+  }
+  return candidate;
+}
+const descriptions = {
+  list_pages: 'List open tabs (index, title, URL). Selected tab is marked.',
+  new_page: 'Open new tab at URL. Returns tab index.',
+  navigate_page: 'Navigate selected tab to URL.',
+  select_page: 'Select active tab by index, URL, or title. Index takes precedence.',
+  close_page: 'Close tab by index.',
+  get_page_text: 'Get the visible text of the page (document.body.innerText). Caps at maxLength (default 20000 chars); saveTo saves the full text to a file.',
+  take_snapshot: 'Capture DOM snapshot with stable UIDs. A UID stays valid across snapshots until its element is removed or the page navigates. Output caps at maxLines (default 100); scope with selector or dump the full tree with saveTo.',
+  resolve_uid_to_selector: 'Resolve UID to CSS selector. Fails if the element is gone.',
+  clear_snapshot: 'Clear snapshot UIDs. Usually not needed.',
+  click_by_uid: 'Click element by UID. Set dblClick for double-click.',
+  hover_by_uid: 'Hover over element by UID.',
+  fill_by_uid: 'Fill text input/textarea by UID.',
+  drag_by_uid_to_uid: 'Drag element to another (HTML5 drag events).',
+  fill_form_by_uid: 'Fill multiple form fields at once.',
+  upload_file_by_uid: 'Upload file to file input by UID.',
+  press_key: 'Press a single key, optionally with modifiers, to submit, dismiss, navigate or trigger a shortcut. Not for entering text: use fill_by_uid instead.',
+  type_text: 'Type text key by key into the focused element, optionally followed by a key such as Enter. Use fill_by_uid to set the value of a known input; use this for elements that only react to real typing, such as autocomplete fields and rich text editors.',
+  screenshot_page: 'Capture viewport screenshot as base64 PNG. Set fullPage for the whole scrollable document.',
+  screenshot_by_uid: 'Capture element screenshot by UID as base64 PNG.',
+  cleanup_session: 'Call when browser work is complete. Close only tabs opened by this MCP session; stop Firefox when no session-owned tabs remain.',
+};
+const s = (type, description, extra = {}) => ({ type, description, ...extra });
+const string = description => s('string', description);
+const number = description => s('number', description);
+const bool = description => s('boolean', description);
+const wait = s('string', "When to return: 'none' (navigation started), 'interactive' (DOMContentLoaded), 'complete' (load event fired, including subresources). Omit for the default: 'interactive' for http/https/data/blob/file, 'none' for other schemes. Use 'complete' when the page must be fully loaded, e.g. before stopping a performance recording.", { enum: ['none', 'interactive', 'complete'] });
+const saveTo = s(['boolean', 'string'], 'Save the full untruncated output to a file instead of returning it inline. Pass a file path, existing directory, or true for a generated file under ~/.firefox-devtools-mcp/output/. Relative paths resolve against the current working directory.');
+const uid = description => string(description);
+const schemas = {
+  list_pages: {},
+  new_page: { url: string('Target URL'), wait },
+  navigate_page: { url: string('Target URL'), wait },
+  select_page: { pageIdx: number('Tab index (0-based, most reliable)'), url: string('URL substring (case-insensitive)'), title: string('Title substring (case-insensitive)') },
+  close_page: { pageIdx: number('Tab index to close') },
+  get_page_text: { maxLength: number('Max characters to return inline (default: 20000). Ignored when saveTo is used.'), saveTo, preview: number('Number of characters of the saved text to return inline as a preview when saveTo is used. Omit for no preview.') },
+  take_snapshot: { maxLines: number('Max lines (default: 100)'), includeAttributes: bool('Include ARIA attributes (default: false)'), includeText: bool('Include text (default: true)'), maxDepth: number('Max tree depth'), includeAll: bool('Include all visible elements without relevance filtering. Useful for Vue/Livewire apps (default: false)'), selector: string('CSS selector to scope snapshot to specific element (e.g., "#app")'), saveTo: { ...saveTo, description: 'Save the complete snapshot text to a file (ignores maxLines) instead of returning it inline.' }, preview: number('Number of characters of the saved output to return inline as a preview when saveTo is used. Omit for no preview.') },
+  resolve_uid_to_selector: { uid: uid('UID from snapshot') },
+  clear_snapshot: {},
+  click_by_uid: { uid: uid('Element UID from snapshot'), dblClick: bool('Double-click (default: false)') },
+  hover_by_uid: { uid: uid('Element UID from snapshot') },
+  fill_by_uid: { uid: uid('Input element UID from snapshot'), value: string('Text to fill') },
+  drag_by_uid_to_uid: { fromUid: uid('Source element UID'), toUid: uid('Target element UID') },
+  fill_form_by_uid: { elements: s('array', 'Array of {uid, value} pairs', { items: { type: 'object', properties: { uid: uid('Field UID'), value: string('Field value') }, required: ['uid', 'value'] } }) },
+  upload_file_by_uid: { uid: uid('File input UID from snapshot'), filePath: string('Local file path') },
+  press_key: { key: string('One key, optionally preceded by "+"-separated modifiers, such as "Escape", "Enter" or "ctrl+shift+t". Modifiers: ctrl, alt, shift, meta. Named keys: Enter, Return, NumpadEnter, Tab, Backspace, Delete, Insert, Space, Escape, Home, End, PageUp, PageDown, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, F1-F12, Numpad0-Numpad9, Clear, Pause, Help, Cancel, Semicolon, Equals, Add, Subtract, Multiply, Divide, Decimal, Separator. Anything else must be a single character. Any number of modifiers, but only one key.'), uid: uid('Focusable element UID from snapshot to focus before pressing (default: the already focused element)') },
+  type_text: { text: string('Text to type'), uid: uid('Focusable element UID from snapshot to focus before typing (default: the already focused element)'), submitKey: string('Key to press after the text, such as "Enter" or "Tab". Same syntax as press_key.') },
+  screenshot_page: { fullPage: bool('Capture the whole scrollable document (default: false)'), saveTo: { ...saveTo, description: 'Save the screenshot to a file instead of returning it as image data.' } },
+  screenshot_by_uid: { uid: uid('Element UID from snapshot'), saveTo: { ...saveTo, description: 'Save the screenshot to a file instead of returning it as image data.' } },
+  cleanup_session: {},
+};
+const requiredFields = { new_page: ['url'], navigate_page: ['url'], close_page: ['pageIdx'], resolve_uid_to_selector: ['uid'], click_by_uid: ['uid'], hover_by_uid: ['uid'], fill_by_uid: ['uid', 'value'], drag_by_uid_to_uid: ['fromUid', 'toUid'], fill_form_by_uid: ['elements'], upload_file_by_uid: ['uid', 'filePath'], press_key: ['key'], type_text: ['text'] };
+const toolNames = Object.keys(descriptions);
+const toolDefinitions = toolNames.map(name => ({ name, description: descriptions[name], annotations: { readOnlyHint: !['new_page', 'navigate_page', 'close_page', 'clear_snapshot', 'click_by_uid', 'hover_by_uid', 'fill_by_uid', 'drag_by_uid_to_uid', 'fill_form_by_uid', 'upload_file_by_uid', 'press_key', 'type_text', 'cleanup_session'].includes(name) }, inputSchema: { type: 'object', properties: schemas[name], ...(requiredFields[name] ? { required: requiredFields[name] } : {}) } }));
+
+function send(socket, message) { if (!socket.destroyed) socket.write(JSON.stringify(message) + newline); }
+function toolError(message) { return { content: [{ type: 'text', text: message }], isError: true }; }
+function stateFor(socket) {
+  let state = clients.get(socket);
+  if (!state) { state = { tabs: new Map(), selected: null, nextTab: 0, uids: new Map() }; clients.set(socket, state); }
+  return state;
+}
+function keyAtPageIdx(state, pageIdx) {
+  if (!Number.isInteger(pageIdx) || pageIdx < 0) return undefined;
+  return [...state.tabs.keys()][pageIdx];
+}
+async function ensureBrowser() {
+  if (browser) return browser;
+  await mkdir(root, { recursive: true, mode: 0o700 });
+  await chmod(root, 0o700);
+  const existingProfile = await lstat(profilePath).catch(error => error.code === 'ENOENT' ? null : Promise.reject(error));
+  if (existingProfile?.isSymbolicLink() || (existingProfile && !existingProfile.isDirectory())) throw new Error('Automation profile path must be a real directory, not a symlink');
+  await mkdir(profilePath, { recursive: true, mode: 0o700 });
+  await chmod(profilePath, 0o700);
+  const instance = new FirefoxDevTools({ firefoxPath, profilePath, headless: false, args: ['-no-remote'] });
+  await instance.connect();
+  browser = instance;
+  return instance;
+}
+async function selectOwnedTab(state, pageIdx = state.selected) {
+  if (pageIdx === null || pageIdx === undefined) throw new Error('No caller-owned tab selected; call new_page or select_page first');
+  const handle = state.tabs.get(pageIdx);
+  if (handle === undefined) throw new Error(`No caller-owned tab at page index ${pageIdx}`);
+  const ff = await ensureBrowser();
+  const handles = await ff.getDriver().getAllWindowHandles();
+  if (!handles.includes(handle)) {
+    state.tabs.delete(pageIdx); state.uids.delete(pageIdx);
+    if (state.selected === pageIdx) state.selected = null;
+    throw new Error(`Caller-owned tab ${pageIdx} has disappeared; no replacement was selected`);
+  }
+  await ff.getDriver().switchTo().window(handle);
+  ff.setCurrentContextId(handle);
+  return ff;
+}
+async function stopBrowserIfIdle() {
+  if ([...clients.values()].some(state => state.tabs.size) || !browser) return;
+  const current = browser; browser = undefined;
+  await current.close();
+}
+async function restoreSurvivingTab(ff, departing) {
+  let live;
+  try { live = await ff.getDriver().getAllWindowHandles(); }
+  catch { return; }
+  for (const candidate of clients.values()) {
+    if (candidate === departing) continue;
+    const keys = [...candidate.tabs.keys()];
+    if (candidate.tabs.has(candidate.selected)) {
+      keys.splice(keys.indexOf(candidate.selected), 1);
+      keys.unshift(candidate.selected);
+    }
+    for (const key of keys) {
+      const handle = candidate.tabs.get(key);
+      if (!live.includes(handle)) {
+        candidate.tabs.delete(key); candidate.uids.delete(key);
+        if (candidate.selected === key) candidate.selected = null;
+        continue;
+      }
+      try {
+        await ff.getDriver().switchTo().window(handle);
+        ff.setCurrentContextId(handle);
+        candidate.selected = key;
+        return;
+      } catch {}
+    }
+  }
+}
+async function cleanupClient(socket) {
+  const state = clients.get(socket);
+  if (!state) return;
+  const ff = browser;
+  if (ff) {
+    const live = await ff.getDriver().getAllWindowHandles().catch(() => []);
+    for (const handle of state.tabs.values()) {
+      if (!live.includes(handle)) continue;
+      await ff.getDriver().switchTo().window(handle).catch(() => {});
+      await ff.getDriver().close().catch(() => {});
+    }
+  }
+  state.tabs.clear(); state.uids.clear(); state.selected = null;
+  if (ff) await restoreSurvivingTab(ff, state);
+  await stopBrowserIfIdle();
+}
+async function listPages(state) {
+  if (!browser) return [...state.tabs.keys()].map((_, pageIdx) => `[${pageIdx}]`).join(newline) || 'No tabs open.';
+  const actual = await browser.getDriver().getAllWindowHandles();
+  for (const [key, handle] of state.tabs) {
+    if (!actual.includes(handle)) {
+      state.tabs.delete(key); state.uids.delete(key);
+      if (state.selected === key) state.selected = null;
+    }
+  }
+  const lines = [];
+  let pageIdx = 0;
+  for (const [key, handle] of state.tabs) {
+    await browser.getDriver().switchTo().window(handle);
+    browser.setCurrentContextId(handle);
+    const title = await browser.getDriver().getTitle().catch(() => '');
+    const url = await browser.getDriver().getCurrentUrl().catch(() => '');
+    lines.push(`${state.selected === key ? '→ ' : '  '}[${pageIdx++}] ${title} — ${url}`);
+  }
+  return lines.join(newline) || 'No tabs open.';
+}
+async function outputPath(destination, name, extension) {
+  let filePath = destination === true ? join(mcpOutputDir, `${name}-${Date.now()}${extension}`) : resolve(process.cwd(), destination);
+  if (destination && typeof destination === 'string') {
+    try { if ((await lstat(filePath)).isDirectory()) filePath = join(filePath, `${name}-${Date.now()}${extension}`); } catch {}
+  }
+  filePath = await safeOutputPath(destination === true ? filePath : destination, filePath);
+  await mkdir(dirname(filePath), { recursive: true, mode: 0o700 });
+  return filePath;
+}
+async function saveOutput(text, destination, name) {
+  const filePath = await outputPath(destination, name, '.txt');
+  await writeFile(filePath, text, { mode: 0o600 });
+  return filePath;
+}
+async function saveScreenshot(base64, destination, name) {
+  const filePath = await outputPath(destination, name, '.png');
+  await writeFile(filePath, Buffer.from(base64, 'base64'), { mode: 0o600 });
+  return `Screenshot saved to: ${filePath}`;
+}
+function collectUids(node, result) {
+  if (!node || typeof node !== 'object') return;
+  if (node.uid !== undefined && node.uid !== null) result.add(String(node.uid));
+  for (const child of node.children || []) collectUids(child, result);
+}
+async function callTool(socket, name, args) {
+  const state = stateFor(socket);
+  if (name === 'cleanup_session') { await cleanupClient(socket); return 'Closed this session’s tabs; Firefox stopped when no session-owned tabs remained.'; }
+  if (!toolNames.includes(name)) throw new Error(`Tool is not available: ${name}`);
+  if (name === 'list_pages') return listPages(state);
+  if (name === 'new_page') {
+    if (typeof args.url !== 'string' || !args.url) throw new Error('url parameter is required and must be a string');
+    safeNavigationUrl(args.url);
+    const ff = await ensureBrowser();
+    const before = await ff.getDriver().getAllWindowHandles();
+    await ff.getDriver().switchTo().newWindow('tab');
+    const handle = await ff.getDriver().getWindowHandle();
+    if (before.includes(handle)) throw new Error('Firefox returned an existing handle for a new tab');
+    const pageIdx = state.tabs.size;
+    const ownerKey = state.nextTab++;
+    state.tabs.set(ownerKey, handle); state.selected = ownerKey;
+    ff.setCurrentContextId(handle);
+    await ff.navigate(args.url, args.wait || 'interactive');
+    return `new page [${pageIdx}] → ${args.url}`;
+  }
+  if (name === 'select_page') {
+    const pages = await listPages(state);
+    let pageIdx;
+    if (typeof args.pageIdx === 'number') pageIdx = args.pageIdx;
+    else if (args.url) {
+      const match = pages.split(newline).find(line => line.toLowerCase().includes(args.url.toLowerCase()));
+      if (match) pageIdx = Number(match.match(/\[(\d+)\]/)?.[1]);
+    } else if (args.title) {
+      const match = pages.split(newline).find(line => line.toLowerCase().includes(args.title.toLowerCase()));
+      if (match) pageIdx = Number(match.match(/\[(\d+)\]/)?.[1]);
+    }
+    const ownerKey = keyAtPageIdx(state, pageIdx);
+    if (ownerKey === undefined) throw new Error('No matching caller-owned tab');
+    await selectOwnedTab(state, ownerKey); state.selected = ownerKey;
+    return `selected [${pageIdx}]`;
+  }
+  if (name === 'close_page') {
+    const pageIdx = args.pageIdx;
+    const ownerKey = keyAtPageIdx(state, pageIdx);
+    if (ownerKey === undefined) throw new Error(`No caller-owned tab at page index ${pageIdx}`);
+    const ff = await selectOwnedTab(state, ownerKey);
+    await ff.getDriver().close(); state.tabs.delete(ownerKey); state.uids.delete(ownerKey);
+    if (state.selected === ownerKey) state.selected = state.tabs.keys().next().value ?? null;
+    await stopBrowserIfIdle();
+    return `closed [${pageIdx}]`;
+  }
+  const ff = await selectOwnedTab(state);
+  const pageIdx = state.selected;
+  switch (name) {
+    case 'navigate_page':
+      if (typeof args.url !== 'string' || !args.url) throw new Error('url parameter is required and must be a string');
+      safeNavigationUrl(args.url);
+      return await ff.navigate(args.url, args.wait || 'interactive');
+    case 'get_page_text': {
+      const text = await ff.evaluate('document.body ? document.body.innerText : document.documentElement.innerText');
+      if (args.saveTo) {
+        const path = await saveOutput(String(text ?? ''), args.saveTo, 'page-text');
+        return `Saved ${String(text ?? '').length} characters to ${path}${args.preview ? newline + String(text ?? '').slice(0, args.preview) : ''}`;
+      }
+      return String(text ?? '').slice(0, args.maxLength ?? 20000);
+    }
+    case 'take_snapshot': {
+      const snapshot = await ff.takeSnapshot({
+        selector: args.selector,
+        includeAttributes: args.includeAttributes,
+        includeText: args.includeText,
+        maxDepth: args.maxDepth,
+        includeAll: args.includeAll,
+      });
+      const allowed = state.uids.get(pageIdx) || new Set();
+      collectUids(snapshot.json?.root, allowed);
+      state.uids.set(pageIdx, allowed);
+      const text = String(snapshot.text ?? '');
+      if (args.saveTo) {
+        const path = await saveOutput(text, args.saveTo, 'snapshot');
+        return `Snapshot saved to: ${path} (${(Buffer.byteLength(text) / 1024).toFixed(1)}KB${snapshot.json?.truncated ? ' [DOM truncated]' : ''}${args.preview ? newline + text.slice(0, args.preview) : ''}`;
+      }
+      const lines = text.split(newline).slice(0, Math.max(1, args.maxLines ?? 100));
+      return lines.join(newline) + (snapshot.json?.truncated || lines.length < text.split(newline).length ? newline + '… [snapshot truncated]' : '');
+    }
+    case 'resolve_uid_to_selector':
+      if (!state.uids.get(pageIdx)?.has(String(args.uid))) throw new Error('UID was not issued to this client for this tab');
+      return await ff.resolveUidToSelector(args.uid);
+    case 'clear_snapshot': await ff.clearSnapshot(); state.uids.delete(pageIdx); return 'Snapshot UIDs cleared.';
+    case 'click_by_uid':
+    case 'hover_by_uid':
+    case 'fill_by_uid':
+    case 'press_key':
+    case 'type_text':
+    case 'upload_file_by_uid':
+    case 'screenshot_by_uid': {
+      if (!state.uids.get(pageIdx)?.has(String(args.uid))) throw new Error('UID was not issued to this client for this tab');
+      if (name === 'click_by_uid') return await ff.clickByUid(args.uid, args.dblClick);
+      if (name === 'hover_by_uid') return await ff.hoverByUid(args.uid);
+      if (name === 'fill_by_uid') return await ff.fillByUid(args.uid, args.value);
+      if (name === 'press_key') return await ff.pressKey(args.key, args.uid);
+      if (name === 'type_text') return await ff.typeText(args.text, { uid: args.uid, submitKey: args.submitKey });
+      if (name === 'upload_file_by_uid') return await ff.uploadFileByUid(args.uid, await safeUploadPath(args.filePath));
+      const image = await ff.takeScreenshotByUid(args.uid);
+      return args.saveTo ? await saveScreenshot(image, args.saveTo, 'element-screenshot') : { data: image, mimeType: 'image/png' };
+    }
+    case 'fill_form_by_uid':
+      for (const item of args.elements || []) if (!state.uids.get(pageIdx)?.has(String(item.uid))) throw new Error('UID was not issued to this client for this tab');
+      return await ff.fillFormByUid(args.elements);
+    case 'drag_by_uid_to_uid':
+      for (const value of [args.fromUid, args.toUid]) if (!state.uids.get(pageIdx)?.has(String(value))) throw new Error('UID was not issued to this client for this tab');
+      return await ff.dragByUidToUid(args.fromUid, args.toUid);
+    case 'screenshot_page': {
+      const image = await ff.takeScreenshotPage(args.fullPage);
+      return args.saveTo ? await saveScreenshot(image, args.saveTo, 'page-screenshot') : { data: image, mimeType: 'image/png' };
+    }
+    default: throw new Error(`Unimplemented tool: ${name}`);
+  }
+}
+async function dispatch(socket, request) {
+  const { id, method, params = {} } = request;
+  if (method === 'initialize') return { protocolVersion: '2025-03-26', capabilities: { tools: {} }, serverInfo: { name: 'shared-firefox-mcp-broker', version: '1.0.0' } };
+  if (method === 'notifications/initialized' || method === 'notifications/cancelled') return null;
+  if (method === 'ping') return {};
+  if (method === 'tools/list') return { tools: toolDefinitions };
+  if (method !== 'tools/call') throw new Error(`Unsupported MCP method: ${method}`);
+  try {
+    const value = await callTool(socket, params.name, params.arguments || {});
+    if (value && typeof value.data === 'string' && value.mimeType) return { content: [{ type: 'image', data: value.data, mimeType: value.mimeType }] };
+    return { content: [{ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value ?? {}) }] };
+  }
+  catch (error) { return toolError(error.message); }
+}
+
+async function acquireOwnerLock() {
+  // Keep the inode: unlinking a lock file can create two independent locks.
+  // cat acknowledges acquisition and holds it until this process closes stdin.
+  ownerLock = spawn('/usr/bin/lockf', ['-k', '-t', '0', lockPath, '/bin/cat'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  ownerLock.stdin.on('error', () => {});
+  let diagnostics = '';
+  ownerLock.stderr.on('data', chunk => { diagnostics += chunk; });
+  ownerLockExited = new Promise(resolveExit => ownerLock.once('exit', resolveExit));
+  await new Promise((resolveLock, rejectLock) => {
+    let acquired = false;
+    ownerLock.once('error', rejectLock);
+    ownerLock.stdout.once('data', () => { acquired = true; resolveLock(); });
+    ownerLock.once('exit', code => {
+      if (!acquired) {
+        rejectLock(new Error(code === 75 ? 'Firefox broker is already running' : `Firefox owner lock failed (${code}): ${diagnostics.trim()}`));
+      } else if (!releasingOwnerLock) {
+        process.kill(process.pid, 'SIGTERM');
+      }
+    });
+    ownerLock.stdin.write(newline);
+  });
+  try {
+    await chmod(lockPath, 0o600);
+    await writeFile(ownerPidPath, `${process.pid}${newline}`, { mode: 0o600 });
+  } catch (error) {
+    await releaseOwnerLock();
+    throw error;
+  }
+}
+async function releaseOwnerLock() {
+  await rm(ownerPidPath, { force: true });
+  releasingOwnerLock = true;
+  ownerLock.stdin.end();
+  await ownerLockExited;
+}
+async function assertNoLiveBroker() {
+  await new Promise((resolveProbe, rejectProbe) => {
+    const probe = connectSocket(socketPath);
+    probe.setTimeout(1000, () => { probe.destroy(); rejectProbe(new Error('Timed out checking Firefox broker socket')); });
+    probe.once('connect', () => { probe.destroy(); rejectProbe(new Error('A Firefox broker already owns the socket')); });
+    probe.once('error', error => {
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOENT') resolveProbe();
+      else rejectProbe(error);
+    });
+  });
+  try {
+    if ((await lstat(socketPath)).isSocket()) await rm(socketPath);
+  } catch (error) { if (error.code !== 'ENOENT') throw error; }
+}
+async function daemon() {
+  await mkdir(root, { recursive: true, mode: 0o700 });
+  await chmod(root, 0o700);
+  await acquireOwnerLock();
+  let ownerReleased = false;
+  try {
+    await assertNoLiveBroker();
+    const server = createServer(socket => {
+      socket.setEncoding('utf8'); let buffer = '';
+      socket.on('data', chunk => {
+        buffer += chunk;
+        for (let nl; (nl = buffer.indexOf(newline)) >= 0;) {
+          const line = buffer.slice(0, nl); buffer = buffer.slice(nl + 1);
+          if (!line) continue;
+          let request; try { request = JSON.parse(line); } catch { continue; }
+          requestQueue = requestQueue.then(async () => {
+            try { const result = await dispatch(socket, request); if (request.id !== undefined && result !== null) send(socket, { jsonrpc: '2.0', id: request.id, result }); }
+            catch (error) { if (request.id !== undefined) send(socket, { jsonrpc: '2.0', id: request.id, error: { code: -32000, message: error.message } }); }
+          });
+        }
+      });
+      socket.on('close', () => {
+        requestQueue = requestQueue.then(async () => { await cleanupClient(socket).catch(() => {}); clients.delete(socket); });
+      });
+    });
+    await new Promise((resolveListen, rejectListen) => {
+      server.once('error', rejectListen);
+      server.listen(socketPath, async () => { await chmod(socketPath, 0o600); resolveListen(); });
+    });
+    const shutdown = async () => {
+      if (closing) return; closing = true;
+      for (const socket of clients.keys()) await cleanupClient(socket).catch(() => {});
+      if (browser) { const instance = browser; browser = undefined; await instance.close().catch(() => {}); }
+      for (const socket of clients.keys()) socket.destroy();
+      await new Promise(resolveClose => server.close(resolveClose));
+      await rm(socketPath, { force: true });
+      await releaseOwnerLock(); ownerReleased = true;
+    };
+    process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown);
+  } catch (error) {
+    if (!ownerReleased) await releaseOwnerLock();
+    throw error;
+  }
+}
+async function client() {
+  const socket = connectSocket(socketPath);
+  socket.once('error', error => {
+    process.stderr.write(`Firefox broker unavailable (${socketPath}): ${error.message}` + newline);
+    process.stdin.destroy();
+    socket.destroy();
+    process.exitCode = 1;
+  });
+  socket.on('connect', () => { process.stdin.pipe(socket); socket.pipe(process.stdout); });
+  process.stdin.on('end', () => socket.end());
+}
+const entryPoint = process.argv[1] ? await realpath(process.argv[1]).catch(() => '') : '';
+if (entryPoint === fileURLToPath(import.meta.url)) {
+  if (daemonMode) {
+    try { await daemon(); }
+    catch (error) {
+      process.stdin.destroy();
+      process.stderr.write(`${error.stack || error}${newline}`);
+      process.exit(1);
+    }
+  } else await client();
+}

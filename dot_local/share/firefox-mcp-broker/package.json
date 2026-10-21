@@ -1,0 +1,9 @@
+{
+  "name": "shared-firefox-mcp-broker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@mozilla/firefox-devtools-mcp": "0.10.5"
+  }
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+set -eu
+exec node "$HOME/.local/share/firefox-mcp-broker/broker.mjs"
