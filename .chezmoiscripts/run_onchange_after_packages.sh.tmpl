@@ -46,7 +46,7 @@ if installed_aoe="$(brew list --formula --versions aoe 2>/dev/null)"; then
   esac
 fi
 
-brew bundle --file=/dev/stdin <<'EOF'
+brew bundle --file=/dev/stdin <<'EOF' || exit 1
 {{ range .packages.taps -}}
 tap {{ . | quote }}
 {{ end -}}
