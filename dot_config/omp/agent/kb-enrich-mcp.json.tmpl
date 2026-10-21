@@ -1,6 +1,7 @@
 {{- $servers := dict -}}
 {{- range $server := .mcp_servers -}}
-{{-   $entry := dict -}}
+{{-   if or (not (hasKey $server "kb_enrich")) $server.kb_enrich -}}
+{{-     $entry := dict -}}
 {{-   $_ := set $entry "enabled" true -}}
 {{-   if eq $server.transport "local" -}}
 {{-     $_ := set $entry "command" (first $server.command) -}}
@@ -32,5 +33,6 @@
 {{-   end -}}
 {{- end -}}
 {{-   $_ := set $servers $server.name $entry -}}
+{{-   end -}}
 {{- end -}}
 {{ dict "mcpServers" $servers | toJson }}

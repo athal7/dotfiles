@@ -51,11 +51,14 @@ _brew_prefix="$(brew --prefix)"
 
 # Give only OMP its GitHub token, not every shell and child process.
 omp() {
-  local github_token
+  local github_token spacelift_mcp_url
+  if command -v spacectl >/dev/null 2>&1 && command -v spacelift-mcp-url >/dev/null 2>&1; then
+    spacelift_mcp_url=$(spacelift-mcp-url 2>/dev/null) || spacelift_mcp_url=
+  fi
   if command -v gh >/dev/null 2>&1 && github_token=$(gh auth token 2>/dev/null) && [[ -n "$github_token" ]]; then
-    GITHUB_TOKEN="$github_token" command omp "$@"
+    GITHUB_TOKEN="$github_token" SPACELIFT_MCP_URL="$spacelift_mcp_url" command omp "$@"
   else
-    command omp "$@"
+    SPACELIFT_MCP_URL="$spacelift_mcp_url" command omp "$@"
   fi
 }
 

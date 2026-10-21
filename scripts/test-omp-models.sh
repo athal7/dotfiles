@@ -145,8 +145,8 @@ if bash -n "$ZSHENV"; then zshenv_valid=true; else zshenv_valid=false; fi
 check "renders a valid shell environment" "$zshenv_valid" true
 rendered_runlayer_shell_variables="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHENV" | cut -d= -f1 | sort | paste -sd ' ' -)"
 check "exports only configured Runlayer MCP URLs to shell sessions" "$rendered_runlayer_shell_variables" "export RUNLAYER_BIGQUERY_MCP_URL export RUNLAYER_PAGERDUTY_MCP_URL"
-configured_mcp_servers="$(yq -r '.mcp_servers[].name' "$REPO_ROOT/.chezmoidata/mcp.yaml" | sort | paste -sd ' ' -)"
-check "includes every configured MCP server in the KB overlay" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "$configured_mcp_servers"
+configured_kb_mcp_servers="$(yq -r '.mcp_servers[] | select(.kb_enrich != false) | .name' "$REPO_ROOT/.chezmoidata/mcp.yaml" | sort | paste -sd ' ' -)"
+check "includes every configured KB-enrichment MCP server" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "$configured_kb_mcp_servers"
 check "preserves GitHub toolset header in KB enrichment" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$KB_ENRICH_MCP")" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")"
 check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
 check "enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true

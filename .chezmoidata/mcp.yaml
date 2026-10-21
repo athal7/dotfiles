@@ -32,6 +32,15 @@
         "command": ["firefox-mcp-broker"],
       },
       {
+        "name": "spacelift",
+        "aoe_acp": false,
+        "kb_enrich": false,
+        "transport": "remote",
+        "url": { "from": "env", "name": "SPACELIFT_MCP_URL" },
+        "tools": ["discover", "query", "provider", "mutate", "intent"],
+        "approval_prompt": ["mutate", "intent"],
+      },
+      {
         "name": "linear",
         "aoe_acp": false,
         "transport": "remote",

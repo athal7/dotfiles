@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+current_profile=$(spacectl profile current)
+profiles=$(spacectl profile list)
+
+while IFS='|' read -r selected alias endpoint _; do
+  selected=${selected//[[:space:]]/}
+  alias=${alias#"${alias%%[![:space:]]*}"}
+  alias=${alias%"${alias##*[![:space:]]}"}
+  endpoint=${endpoint#"${endpoint%%[![:space:]]*}"}
+  endpoint=${endpoint%"${endpoint##*[![:space:]]}"}
+  if [[ $selected == '*' && $alias == "$current_profile" ]]; then
+    case "$endpoint" in
+      https://*.app.spacelift.io|https://*.app.us.spacelift.io)
+        printf '%s/mcp\n' "${endpoint%/}"
+        exit 0
+        ;;
+      *)
+        printf 'spacelift-mcp-url: unexpected current profile endpoint\n' >&2
+        exit 1
+        ;;
+    esac
+  fi
+done <<<"$profiles"
+
+printf 'spacelift-mcp-url: current profile endpoint not found\n' >&2
+exit 1
