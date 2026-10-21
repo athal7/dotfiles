@@ -30,6 +30,14 @@ brew link {{ .name | quote }}
 {{ end -}}
 {{ end }}
 
+# Homebrew Bundle won't switch an installed stable formula to HEAD.
+if installed_aoe="$(brew list --formula --versions aoe 2>/dev/null)"; then
+  case "$installed_aoe" in
+    "aoe HEAD-"*) ;;
+    *) brew reinstall --HEAD aoe ;;
+  esac
+fi
+
 brew bundle --file=/dev/stdin <<'EOF'
 {{ range .packages.taps -}}
 tap {{ . | quote }}

@@ -14,6 +14,7 @@ packages:
   brews:
     - name: athal7/versions/omp@18.10.3
     - name: aoe
+      args: [HEAD]
     - name: autojump
     - name: bat
     - name: chezmoi
