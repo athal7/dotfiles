@@ -11,6 +11,7 @@ license: MIT
 - **Every session and subagent that may modify a repository needs a dedicated git worktree.** Read-only inspection needs neither a new session nor a worktree. Use `aoe add <registered-path> --worktree <branch> --new-branch` (plus `--base-branch` when needed); for an existing session, `aoe session add-project <session> <project>` creates a worktree but restarts the agent. If attachment is refused because its conversation is bound to the current directory, use a new session; never clear the resume target or proceed without write isolation.
 - **`<path>` is canonicalized, never resolved back to the main repo.** Point `aoe add` at a worktree and it silently creates a bogus project rooted there. Pass the exact registered path (`aoe project list`) plus `--worktree`. `--project`/`--repo` add *extra* repos to a multi-repo workspace — they don't select the primary target.
 - **`send` is fire-and-forget.** No wait verb. Check back with `aoe session capture <id>` or attach. One task per session — check `aoe list` before starting overlapping work.
+- **Identify AoE messages:** prefix every message to another AoE session, including replies, with `[AoE: <session> | id=<id> | profile=<profile>]`. Get the values from `aoe session current --json`; if unavailable, verify them in your entry in `aoe list --all --json`. Never guess.
 
 ## Troubleshooting
 
