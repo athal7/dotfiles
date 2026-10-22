@@ -10,7 +10,7 @@
 # Deliberately not -e: individual plugin install/update failures (missing
 # host capability or incompatible aoe version) must never abort chezmoi apply.
 # Every plugin in the managed inventory is updated with --yes. Capability
-# grants and approved manifest hashes remain declared in config.toml.tmpl.
+# grants and approved manifest hashes stay in the local AoE configuration.
 set -uo pipefail
 
 {{ template "brewenv" . }}

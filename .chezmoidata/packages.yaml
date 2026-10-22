@@ -63,12 +63,14 @@ packages:
 
   # aoe (Agent of Empires) plugins — installed/updated via
   # run_onchange_after_plugins-aoe.sh.tmpl. Keep sources and IDs here;
-  # managed enablement and grants live in config.toml.tmpl.
+  # managed enablement/settings live in config.toml.tmpl; grants stay local.
   aoe_plugins:
     - source: "gh:agent-of-empires/plugin-github@v2.0.4"
       id: "agent-of-empires.github"
-    - source: "gh:athal7/attention"
-      id: "athal7.attention"
+    - source: "gh:agent-of-empires/plugin-kanban"
+      id: "agent-of-empires.kanban"
+    - source: "gh:agent-of-empires/plugin-linear"
+      id: "community.linear"
 
   casks:
     - name: firefox

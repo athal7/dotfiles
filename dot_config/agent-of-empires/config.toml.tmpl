@@ -55,61 +55,26 @@ show_spans = false
 
 [logging.targets]
 
-[plugins."agent-of-empires.github"]
-enabled = true
-source = "gh:agent-of-empires/plugin-github@v2.0.4"
-
-[plugins."agent-of-empires.github".grant]
-capabilities = [
-    "net",
-    "runtime.worker",
-    "session.read",
-    "notifications",
-    "browser_open",
-]
-granted_at = "2026-07-08T19:43:58.777548Z"
-manifest_hash = {{ printf "sha256:%s%s%s%s" "f3ed73671fdbf502" "a9ed47988b13c2c2" "f7f3c9d1cdee0cba" "9bae7f11011aa39e" | quote }}
-
-[plugins."athal7.attention"]
-enabled = true
-source = "gh:athal7/attention"
-
-[plugins."athal7.attention".settings]
-agent_id = "omp"
-
-[plugins."athal7.attention".grant]
-capabilities = [
-    "runtime.worker",
-    "session.read",
-    "session.create",
-    "session.prompt",
-    "session.unattended",
-    "net",
-]
-granted_at = "2026-10-18T00:11:41.302530Z"
-manifest_hash = {{ printf "sha256:%s%s%s%s" "8ecaf613cc128827" "13c0bf03d56ce730" "b273467d0324143e" "20d2c1d220321edc" | quote }}
-
-[plugins."aoe.web"]
-enabled = true
-
-# Preserve AoE-owned plugin settings, sources, and approval receipts.
+# Manage portable plugin declarations; preserve local plugins and approval receipts.
+{{ $plugins := dict "aoe.web" (dict "enabled" true) -}}
+{{ range .packages.aoe_plugins -}}
+{{ $_ := set $plugins .id (dict "enabled" true "source" .source) -}}
+{{ end -}}
+{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (dict "ci_required_checks_only" true) -}}
 {{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
 {{ if stat $configPath -}}
 {{ $existing := include $configPath | fromToml -}}
-{{ $managed := list "aoe.web" -}}
-{{ range .packages.aoe_plugins -}}
-{{ $managed = append $managed .id -}}
-{{ end -}}
-{{ $unmanaged := dict -}}
 {{ range $id, $plugin := $existing.plugins -}}
-{{ if not (has $id $managed) -}}
-{{ $_ := set $unmanaged $id $plugin -}}
+{{ if hasKey $plugins $id -}}
+{{ if hasKey $plugin "grant" -}}
+{{ $_ := set (index $plugins $id) "grant" $plugin.grant -}}
+{{ end -}}
+{{ else -}}
+{{ $_ := set $plugins $id $plugin -}}
 {{ end -}}
 {{ end -}}
-{{ if $unmanaged -}}
-{{ dict "plugins" $unmanaged | toToml }}
 {{ end -}}
-{{ end }}
+{{ dict "plugins" $plugins | toToml }}
 
 
 [sandbox]
@@ -152,6 +117,7 @@ pre_trust_agent_folders = false
 prevent_sleep_idle_grace_minutes = 15
 new_session_mode = "live_send"
 prevent_sleep_when_active = true
+preview_link_prefixes = []
 restart_wake_message = "wake up: pick up what you were doing"
 row_tag = "none"
 scratch_smart_rename = "inherit"
@@ -186,6 +152,8 @@ auto_propagate = false
 
 [sound]
 enabled = false
+browser_enabled = true
+server_enabled = true
 
 [status_hooks]
 enabled = false
@@ -238,6 +206,7 @@ hotkey = "Alt+r"
 auto_update_plugins = true
 update_check_mode = "notify"
 [web]
+mcp_enabled = false
 notifications_enabled = true
 notify_on_error = true
 notify_on_idle = true
