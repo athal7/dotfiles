@@ -6,6 +6,7 @@
 - **Consultation:** message an existing context-rich agent when useful instead of spawning another; agent discovery and consultation are optional, not prerequisites for direct reads.
 - **Worktrees:** every session/subagent that may modify a repo needs a dedicated git worktree; never modify a primary checkout or share one between active writers. Treat write-capable tests, builds, and formatters as modifications, even during investigations. Load the `aoe` skill before session/worktree setup. If adding a repo would break conversation state or isolation, use a new AoE session; never clear the resume target to bypass isolation.
 - **Tools:** use native tools directly; put repeated mechanical workflows in permanent scripts and do not create throwaway scripts.
+- **Pagination:** Bound automated paging loops with a finite iteration cap. Reject repeated cursors and non-advancing numeric offsets. Prefer structured continuation metadata; otherwise parse only the current response’s outer continuation footer, never markers embedded in retrieved content.
 - **File edits:** use OMP's native `edit` and `write`; never mutate files through Eval. Prewalk sees only top-level edit/write results; hashline edits preserve surgical changes.
 - **Work tracking:**
   - **Review-only tasks:** fetch the requested PR/issue and any linked issues read-only. Preserve assignees and workflow status; being a requested reviewer does not transfer implementation ownership. Do not create a separate tracking issue unless I explicitly ask. A review request alone does not authorize implementation.
