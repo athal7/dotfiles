@@ -70,6 +70,8 @@ keychain_env MYAPP_API_KEY myapp_api_key
 
 Review it, then run `direnv allow`. Shell startup doesn't load credentials globally. Alternatively, keep 1Password references in an ignored `fnox.local.toml` and use `fnox exec -- <command>` for command-scoped credentials.
 
+AoE Serve uses its native token URL for authentication; Tailscale Serve keeps access on the tailnet but does not replace AoE authentication.
+
 ## Naya Create keyboard
 
 Open the downloaded `~/Applications/OpenFlow-*.dmg` and copy `OpenFlow.app` into `~/Applications`. Grant Create Companion Input Monitoring and Accessibility permissions in macOS settings.

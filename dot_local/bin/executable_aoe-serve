@@ -2,22 +2,10 @@
 # Run AoE behind the node's private Tailscale Serve proxy.
 set -eu
 
-# A non-loopback allowed host requires a persistent passphrase. Store it in
-# the login keychain rather than in the public dotfiles repository.
-if passphrase=$(security find-generic-password -s chezmoi -a aoe_serve_passphrase -w 2>/dev/null); then
-  status=0
-else
-  status=$?
-fi
-if [ -z "$passphrase" ]; then
-  mkdir -p "$HOME/Library/Logs" 2>/dev/null
-  printf '%s aoe-serve: keychain read failed (exit %s) — refusing to start remote AoE Serve without AOE_SERVE_PASSPHRASE\n' \
-    "$(date '+%Y-%m-%d %H:%M:%S')" "$status" >> "$HOME/Library/Logs/aoe-serve.error.log" 2>/dev/null
-  printf 'aoe-serve: keychain read for chezmoi/aoe_serve_passphrase failed (security exit %s) — unlock the login keychain and retry.\n' "$status" >&2
-  exit 1
-fi
+# Use AoE's native token auth even if launchd inherited an old passphrase.
+unset AOE_SERVE_PASSPHRASE
 
-# Optional Linear QA credential; keep inherited credentials and serve without it.
+# The full Linear plugin uses these inherited or Keychain-backed credentials.
 if [ -z "${LINEAR_API_KEY:-}" ] && [ -z "${LINEAR_TOKEN:-}" ] && [ -r "$HOME/.envrc" ]; then
   # shellcheck disable=SC1091
   . "$HOME/.envrc"
@@ -45,5 +33,6 @@ exec /opt/homebrew/bin/aoe serve \
   --host 127.0.0.1 \
   --port 4097 \
   --allowed-host "$dns_name" \
-  --auth passphrase \
-  --passphrase "$passphrase"
+  --behind-proxy \
+  --allowed-origin "https://$dns_name:4097" \
+  --auth token
