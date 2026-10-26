@@ -20,6 +20,7 @@ project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
 omp_model=${AOE_OMP_MODEL:-}
 jq_bin=${JQ_BIN:-/opt/homebrew/bin/jq}
 session_group=${AOE_SESSION_GROUP:-Scheduled}
+agent_tool=${AOE_TOOL:-omp}
 worktree_branch=${AOE_WORKTREE_BRANCH:-}
 new_branch=${AOE_NEW_BRANCH:-false}
 if [[ ! -x "$jq_bin" ]]; then
@@ -32,6 +33,10 @@ if [[ ! -x "$aoe_bin" ]]; then
 fi
 if [[ ! "$startup_delay" =~ ^[0-9]+$ ]]; then
   printf 'AOE_STARTUP_DELAY_SECONDS must be a non-negative integer\n' >&2
+  exit 64
+fi
+if [[ ! "$agent_tool" =~ ^[[:alnum:]_.-]+$ ]]; then
+  printf 'AOE_TOOL must name a single agent (e.g. omp or freebuff)\n' >&2
   exit 64
 fi
 if [[ -n "$omp_model" && ! "$omp_model" =~ ^[@[:alnum:]_./:-]+$ ]]; then
@@ -83,9 +88,9 @@ if [[ -n "$worktree_branch" ]]; then
     aoe_args+=(--new-branch)
   fi
 fi
-aoe_args+=(--tool omp --title "$session_title" --group "$session_group")
+aoe_args+=(--tool "$agent_tool" --title "$session_title" --group "$session_group")
 omp_extra_args=()
-if [[ -n "$omp_model" ]]; then
+if [[ -n "$omp_model" && "$agent_tool" == omp ]]; then
   omp_extra_args+=(--model "$omp_model")
 fi
 if (( ${#omp_extra_args[@]} > 0 )); then

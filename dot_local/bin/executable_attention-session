@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# attention-session — start a deterministic OMP session from an attention action.
+# attention-session — start a deterministic AoE session from an attention action.
 set -euo pipefail
 
 DISPATCHER=${AOE_SESSION_DISPATCHER:-"$HOME/.local/bin/aoe-scheduled-session"}
@@ -27,20 +27,20 @@ dispatch() {
   prompt_file=$(mktemp "${TMPDIR:-/tmp}/attention-session.XXXXXX")
   trap 'rm -f "$prompt_file"' EXIT
   printf '%s' "$prompt" >"$prompt_file"
-  env AOE_SESSION_GROUP=Attention "$DISPATCHER" "$title" "$prompt_file" "$@"
+  env AOE_SESSION_GROUP=Attention AOE_TOOL="${AOE_TOOL:-omp}" "$DISPATCHER" "$title" "$prompt_file" "$@"
 }
 
 existing_session() {
-  local kind=$1 title=$2 repo=$3 branch=$4 sessions
+  local kind=$1 title=$2 repo=$3 branch=$4 tool=${AOE_TOOL:-omp} sessions
   sessions=$("$AOE_BIN" list --json) || fail "cannot list AoE sessions"
   # AoE titles carry a correlation suffix; worktree identity survives title renames.
   # shellcheck disable=SC2016
   printf '%s' "$sessions" | "$JQ_BIN" -sr --arg kind "$kind" --arg title "$title" \
-    --arg repo "$repo" --arg branch "$branch" '
+    --arg repo "$repo" --arg branch "$branch" --arg tool "$tool" '
     if length != 1 or (.[0] | type) != "array" then error("invalid AoE list")
     else .[0] end
     | [ .[]
-      | select(.group == "Attention" and .tool == "omp" and .state == "live")
+      | select(.group == "Attention" and .tool == $tool and .state == "live")
       | select(if $kind == "scratch" then
                  (.title | startswith($title + "-")) and
                  (.title[($title | length) + 1:] | test("^[0-9a-fA-F]{8}$")) and

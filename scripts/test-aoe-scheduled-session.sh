@@ -85,6 +85,11 @@ run_wrapper() {
 mkdir -p "$WORK/project"
 : >"$LOG"
 check "runs a project session without optional OMP arguments" run_wrapper fix-prod-errors "triage production errors"
+if grep -Fqx 'ARG=--tool' "$LOG" && grep -Fqx 'ARG=omp' "$LOG"; then
+  ok "defaults to the omp agent"
+else
+  bad "defaults to the omp agent"
+fi
 if grep -Fqx 'ARG=--extra-args' "$LOG"; then
   bad "omits empty OMP extra arguments"
 else
@@ -105,6 +110,22 @@ if grep -Fqx 'ARG=--worktree' "$LOG" &&
   ok "passes attention group and worktree options"
 else
   bad "passes attention group and worktree options"
+fi
+: >"$LOG"
+if AOE_TOOL=freebuff AOE_OMP_MODEL=@default run_wrapper personal /personal "$WORK/project"; then
+  ok "runs a project session with a configured agent"
+else
+  bad "runs a project session with a configured agent"
+fi
+if grep -Fqx 'ARG=--tool' "$LOG" && grep -Fqx 'ARG=freebuff' "$LOG" && ! grep -Fqx 'ARG=--extra-args' "$LOG"; then
+  ok "uses the configured agent without OMP-only arguments"
+else
+  bad "uses the configured agent without OMP-only arguments"
+fi
+if AOE_TOOL='omp --title injected' run_wrapper invalid-agent /invalid >/dev/null 2>&1; then
+  bad "rejects an unsupported agent name"
+else
+  ok "rejects an unsupported agent name"
 fi
 : >"$LOG"
 : >"$WORK/liveness.err"

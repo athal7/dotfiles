@@ -91,6 +91,7 @@ cat >"$DISPATCHER" <<'EOF'
 set -euo pipefail
 {
   printf 'group=%s branch=%s new=%s argc=%s\n' "${AOE_SESSION_GROUP:-}" "${AOE_WORKTREE_BRANCH:-}" "${AOE_NEW_BRANCH:-}" "$#"
+  printf 'tool=%s\n' "${AOE_TOOL:-}"
   for arg in "$@"; do
     printf 'arg=%s\n' "$arg"
   done
@@ -261,6 +262,18 @@ else
 fi
 : >"$AOE_LOG"
 : >"$DISPATCH_LOG"
+: >"$GIT_LOG"
+export ATTENTION_MODE=pr AOE_TOOL=freebuff
+run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
+unset ATTENTION_MODE AOE_TOOL
+if grep -Fqx 'tool=freebuff' "$DISPATCH_LOG" && ! grep -Fq 'send ' "$AOE_LOG"; then
+  ok "starts the configured agent instead of resuming another agent's session"
+else
+  bad "starts the configured agent instead of resuming another agent's session"
+  cat "$DISPATCH_LOG" "$AOE_LOG" >&2
+fi
+: >"$AOE_LOG"
+: >"$DISPATCH_LOG"
 : >"$GH_LOG"
 export ATTENTION_ORIGIN=git@github.com:example/another-repo.git
 if run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo >"$WORK/origin.out" 2>&1; then
@@ -379,6 +392,31 @@ else
   bad "looks up upstream issues in the requested repository rather than the fork"
 fi
 unset ATTENTION_MODE ATTENTION_GIT_BIN ATTENTION_EXPECTED_REPO
+
+echo '[]' >"$SESSIONS"
+export AOE_TOOL=freebuff
+export ATTENTION_MODE=pr
+: >"$DISPATCH_LOG"
+run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
+unset ATTENTION_MODE AOE_TOOL
+if grep -Fqx 'tool=freebuff' "$DISPATCH_LOG" &&
+  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG"; then
+  ok "forwards the agent Attention resolved for the repo"
+else
+  bad "forwards the agent Attention resolved for the repo"
+  cat "$DISPATCH_LOG" >&2
+fi
+export ATTENTION_MODE=pr
+: >"$DISPATCH_LOG"
+run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
+unset ATTENTION_MODE
+if grep -Fqx 'tool=omp' "$DISPATCH_LOG" &&
+  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG"; then
+  ok "keeps the default agent for unconfigured repos"
+else
+  bad "keeps the default agent for unconfigured repos"
+  cat "$DISPATCH_LOG" >&2
+fi
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [[ "$fail" -eq 0 ]]

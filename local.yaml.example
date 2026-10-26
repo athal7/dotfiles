@@ -6,6 +6,9 @@
 #
 #   attention       : dashboard group name for this organization's GitHub issues and PRs.
 #                    "Work" places them in the Work group; omit for Open source.
+#                    Orgs without "Work" are personal: their repos start the freebuff
+#                    agent in Attention sessions. Work orgs need no entry and keep
+#                    AoE's default agent (omp).
 #   automated_review: config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login     : the GitHub user.login the bot posts as (used to filter PR review comments)
 orgs:

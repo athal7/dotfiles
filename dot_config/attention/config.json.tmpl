@@ -22,10 +22,15 @@
 {{- end -}}
 {{- $linearToken := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
 {{- $workGitHubPrefixes := list -}}
+{{- $sessionAgents := list -}}
 {{- if hasKey . "orgs" -}}
 {{- range $org, $settings := .orgs -}}
-{{- if and (kindIs "map" $settings) (eq (dig "attention" "" $settings) "Work") -}}
+{{- if kindIs "map" $settings -}}
+{{- if eq (dig "attention" "" $settings) "Work" -}}
 {{- $workGitHubPrefixes = append $workGitHubPrefixes (printf "%s/" $org) -}}
+{{- else -}}
+{{- $sessionAgents = append $sessionAgents (dict "repo" (printf "%s/*" $org) "tool" "freebuff") -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -43,6 +48,7 @@
       (dict "name" "Everything else" "fallback" true) -}}
 {{- $config := dict
       "codeDir" .codeDir
+      "session" (dict "agents" $sessionAgents)
       "plugins" (list "reminders" "github" "linear")
       "dashboard" (dict "groups" $groups)
       "reminders" (dict "lists" $remLists "actions" (list
