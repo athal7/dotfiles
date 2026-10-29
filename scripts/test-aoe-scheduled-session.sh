@@ -7,6 +7,7 @@ trap 'rm -rf "$WORK"' EXIT INT TERM
 
 FAKE_AOE="$WORK/aoe"
 LOG="$WORK/aoe.log"
+START_LOG="$WORK/start.log"
 cat >"$FAKE_AOE" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -28,27 +29,10 @@ case "$1" in
     printf '  ID: testsession\n  Path: %s\n' "$session_path"
     ;;
   session)
-    if [[ "${AOE_START_ERROR_BUT_LIVE:-false}" == true ]]; then
-      printf 'session start reported a lost lifecycle reservation\n' >&2
-      exit 1
-    fi
-    ;;
-  ps)
-    if [[ "${AOE_START_ERROR_BUT_LIVE:-false}" == true ]]; then
-      ps_count_file="$AOE_TEST_ROOT/ps-count"
-      ps_count=0
-      if [[ -f "$ps_count_file" ]]; then
-        ps_count=$(<"$ps_count_file")
-      fi
-      ps_count=$((ps_count + 1))
-      printf '%s\n' "$ps_count" >"$ps_count_file"
-      if [[ "$ps_count" -ge 2 ]]; then
-        printf '[{"session":"testsession","pid":1234}]\n'
-      else
-        printf '[]\n'
-      fi
+    if [[ -f "$AOE_TEST_ROOT/scratch/testsession/.omp/mcp.json" ]]; then
+      printf 'overlay=present\n' >>"$AOE_TEST_START_LOG"
     else
-      printf '[]\n'
+      printf 'overlay=absent\n' >>"$AOE_TEST_START_LOG"
     fi
     ;;
   send)
@@ -71,11 +55,9 @@ run_wrapper() {
   printf '%s' "$prompt" > "$prompt_file"
   shift 2
   AOE_BIN="$FAKE_AOE" \
-    JQ_BIN="${JQ_BIN:-/opt/homebrew/bin/jq}" \
-    AOE_STARTUP_DELAY_SECONDS=0 \
     AOE_TEST_LOG="$LOG" \
+    AOE_TEST_START_LOG="$START_LOG" \
     AOE_TEST_ROOT="$WORK" \
-    XDG_STATE_HOME="$WORK/state" \
     AOE_SESSION_GROUP="${AOE_SESSION_GROUP:-Scheduled}" \
     AOE_WORKTREE_BRANCH="${AOE_WORKTREE_BRANCH:-}" \
     AOE_NEW_BRANCH="${AOE_NEW_BRANCH:-false}" \
@@ -84,17 +66,44 @@ run_wrapper() {
 
 mkdir -p "$WORK/project"
 : >"$LOG"
+: >"$START_LOG"
 check "runs a project session without optional OMP arguments" run_wrapper fix-prod-errors "triage production errors"
 if grep -Fqx 'ARG=--tool' "$LOG" && grep -Fqx 'ARG=omp' "$LOG"; then
   ok "defaults to the omp agent"
 else
   bad "defaults to the omp agent"
 fi
+if grep -Fqx 'ARG=--scratch' "$LOG"; then
+  ok "uses a scratch directory without a project path"
+else
+  bad "uses a scratch directory without a project path"
+fi
 if grep -Fqx 'ARG=--extra-args' "$LOG"; then
   bad "omits empty OMP extra arguments"
 else
   ok "omits empty OMP extra arguments"
 fi
+if grep -Fqx 'ARG=session' "$LOG" && grep -Fqx 'ARG=start' "$LOG" && grep -Fqx 'ARG=send' "$LOG"; then
+  ok "creates, starts and prompts the session"
+else
+  bad "creates, starts and prompts the session"
+fi
+if [[ "$(grep -Fc 'ARG=start' "$LOG" || true)" == 1 ]] && [[ "$(grep -Fc 'ARG=send' "$LOG" || true)" == 1 ]]; then
+  ok "starts and sends exactly once"
+else
+  bad "starts and sends exactly once"
+fi
+if grep -Fqx 'ARG=triage production errors' "$LOG"; then
+  ok "sends the prompt file contents"
+else
+  bad "sends the prompt file contents"
+fi
+if grep -Eq 'ARG=fix-prod-errors-[0-9A-Fa-f]{8}$' "$LOG"; then
+  ok "suffixes the session title uniquely"
+else
+  bad "suffixes the session title uniquely"
+fi
+
 git -C "$WORK/project" init -q
 : >"$LOG"
 if AOE_SESSION_GROUP=Attention AOE_WORKTREE_BRANCH=attention/test AOE_NEW_BRANCH=true run_wrapper attention /attention "$WORK/project"; then
@@ -106,11 +115,13 @@ if grep -Fqx 'ARG=--worktree' "$LOG" &&
   grep -Fqx 'ARG=attention/test' "$LOG" &&
   grep -Fqx 'ARG=--new-branch' "$LOG" &&
   grep -Fqx 'ARG=--group' "$LOG" &&
-  grep -Fqx 'ARG=Attention' "$LOG"; then
-  ok "passes attention group and worktree options"
+  grep -Fqx 'ARG=Attention' "$LOG" &&
+  grep -Fqx "ARG=$WORK/project" "$LOG"; then
+  ok "passes the project path, group and worktree options"
 else
-  bad "passes attention group and worktree options"
+  bad "passes the project path, group and worktree options"
 fi
+
 : >"$LOG"
 if AOE_TOOL=freebuff AOE_OMP_MODEL=@default run_wrapper personal /personal "$WORK/project"; then
   ok "runs a project session with a configured agent"
@@ -122,54 +133,42 @@ if grep -Fqx 'ARG=--tool' "$LOG" && grep -Fqx 'ARG=freebuff' "$LOG" && ! grep -F
 else
   bad "uses the configured agent without OMP-only arguments"
 fi
+
 if AOE_TOOL='omp --title injected' run_wrapper invalid-agent /invalid >/dev/null 2>&1; then
   bad "rejects an unsupported agent name"
 else
   ok "rejects an unsupported agent name"
 fi
-: >"$LOG"
-: >"$WORK/liveness.err"
-if AOE_START_ERROR_BUT_LIVE=true run_wrapper lifecycle-race /lifecycle-race 2>"$WORK/liveness.err"; then
-  ok "accepts a live session when start reports a lost reservation"
-else
-  bad "accepts a live session when start reports a lost reservation"
-fi
-if [[ "$(grep -Fc 'ARG=session' "$LOG" || true)" == 1 ]] &&
-  grep -Fqx 'ARG=ps' "$LOG" &&
-  grep -Fqx 'ARG=send' "$LOG" &&
-  [[ ! -s "$WORK/liveness.err" ]]; then
-  ok "does not retry or surface a false startup error"
-else
-  bad "does not retry or surface a false startup error"
-fi
 
 printf '{"mcpServers":{"collector":{}}}\n' >"$WORK/kb-mcp.json"
 daily_prompt=$(cat "$REPO_ROOT/dot_agents/prompts/daily-maintenance.md")
 : >"$LOG"
-correlation_id=E4D58213-F415-4A54-B9F9-F7993B6C0CDF
-if AOE_CORRELATION="$correlation_id" AOE_OMP_MODEL=@default AOE_OMP_PROJECT_MCP_CONFIG="$WORK/kb-mcp.json" run_wrapper daily-maintenance "$daily_prompt"; then
+: >"$START_LOG"
+if AOE_OMP_MODEL=@default AOE_OMP_PROJECT_MCP_CONFIG="$WORK/kb-mcp.json" run_wrapper daily-maintenance "$daily_prompt"; then
   ok "runs a scratch KB session"
 else
   bad "runs a scratch KB session"
 fi
 check "copies the KB MCP overlay" cmp "$WORK/kb-mcp.json" "$WORK/scratch/testsession/.omp/mcp.json"
-if grep -Fqx "ARG=--extra-args" "$LOG" && grep -Fqx "ARG=--model @default" "$LOG" && ! grep -Fq -- "--max-time" "$LOG" && ! grep -Fq -- "--prewalk-into" "$LOG"; then
-  ok "passes the pinned OMP model without a global cutoff or prewalk"
+if grep -Fqx 'overlay=present' "$START_LOG"; then
+  ok "installs the overlay before starting the agent"
 else
-  bad "passes the pinned OMP model without a global cutoff or prewalk"
-fi
-if grep -Fqx "ARG=daily-maintenance-E4D58213" "$LOG" &&
-
-  grep -Fq "AOE_CORRELATION=$correlation_id" "$LOG" &&
-  grep -Fq "\"correlationId\":\"$correlation_id\"" "$WORK/state/aoe/omp-session-map/testsession.json"; then
-  ok "preserves the caller correlation in session state and prompt"
-else
-  bad "preserves the caller correlation in session state and prompt"
+  bad "installs the overlay before starting the agent"
 fi
 if [[ "$(stat -f '%Lp' "$WORK/scratch/testsession/.omp/mcp.json")" == 600 ]]; then
   ok "makes the KB MCP overlay private"
 else
   bad "makes the KB MCP overlay private"
+fi
+if grep -Fqx 'ARG=--scratch' "$LOG" && grep -Fqx 'ARG=--extra-args' "$LOG" && grep -Fqx 'ARG=--model @default' "$LOG"; then
+  ok "passes the pinned OMP model as one extra argument"
+else
+  bad "passes the pinned OMP model as one extra argument"
+fi
+if grep -Fq 'AOE_CORRELATION' "$LOG"; then
+  bad "keeps the prompt free of retired correlation tokens"
+else
+  ok "keeps the prompt free of retired correlation tokens"
 fi
 
 if AOE_INVALID_ID=true run_wrapper invalid /invalid >/dev/null 2>&1; then

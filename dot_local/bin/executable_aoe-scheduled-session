@@ -1,4 +1,9 @@
 #!/bin/bash
+# Start an AoE session that works a prompt file unattended.
+#
+# `aoe session start` returns once the agent process is up, so the prompt can
+# be sent straight after it: no startup sleep, liveness polling or retry loop.
+
 set -euo pipefail
 
 if [[ $# -lt 2 || $# -gt 3 ]]; then
@@ -15,25 +20,15 @@ fi
 prompt=$(/bin/cat "$prompt_file")
 project_path=${3:-}
 aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
-startup_delay=${AOE_STARTUP_DELAY_SECONDS:-5}
 project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
 omp_model=${AOE_OMP_MODEL:-}
-jq_bin=${JQ_BIN:-/opt/homebrew/bin/jq}
 session_group=${AOE_SESSION_GROUP:-Scheduled}
 agent_tool=${AOE_TOOL:-omp}
 worktree_branch=${AOE_WORKTREE_BRANCH:-}
 new_branch=${AOE_NEW_BRANCH:-false}
-if [[ ! -x "$jq_bin" ]]; then
-  printf 'JQ_BIN is not executable: %s\n' "$jq_bin" >&2
-  exit 69
-fi
 if [[ ! -x "$aoe_bin" ]]; then
   printf 'AOE_BIN is not executable: %s\n' "$aoe_bin" >&2
   exit 69
-fi
-if [[ ! "$startup_delay" =~ ^[0-9]+$ ]]; then
-  printf 'AOE_STARTUP_DELAY_SECONDS must be a non-negative integer\n' >&2
-  exit 64
 fi
 if [[ ! "$agent_tool" =~ ^[[:alnum:]_.-]+$ ]]; then
   printf 'AOE_TOOL must name a single agent (e.g. omp or freebuff)\n' >&2
@@ -73,9 +68,9 @@ if [[ -n "$project_mcp_config" ]]; then
   fi
 fi
 
-state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/aoe/omp-session-map"
-correlation_id=${AOE_CORRELATION:-$(/usr/bin/uuidgen)}
-session_title="${title}-${correlation_id%%-*}"
+# The session title carries a short unique suffix so repeated dispatches of the
+# same title stay distinguishable, and a re-dispatch can find its own session.
+session_title="${title}-$(/usr/bin/uuidgen | /usr/bin/cut -c1-8)"
 aoe_args=(add)
 if [[ -n "$project_path" ]]; then
   aoe_args+=("$project_path")
@@ -89,12 +84,8 @@ if [[ -n "$worktree_branch" ]]; then
   fi
 fi
 aoe_args+=(--tool "$agent_tool" --title "$session_title" --group "$session_group")
-omp_extra_args=()
 if [[ -n "$omp_model" && "$agent_tool" == omp ]]; then
-  omp_extra_args+=(--model "$omp_model")
-fi
-if (( ${#omp_extra_args[@]} > 0 )); then
-  aoe_args+=(--extra-args "${omp_extra_args[*]}")
+  aoe_args+=(--extra-args "--model $omp_model")
 fi
 session_output=$("$aoe_bin" "${aoe_args[@]}")
 session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
@@ -104,6 +95,8 @@ if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
   exit 1
 fi
 
+# The project MCP overlay lives in the session directory and is read when the
+# agent starts, so it has to be in place before the session is started.
 umask 077
 if [[ -n "$project_mcp_config" ]]; then
   session_path=$(/usr/bin/sed -n 's/^[[:space:]]*Path:[[:space:]]*//p' <<<"$session_output")
@@ -117,47 +110,5 @@ if [[ -n "$project_mcp_config" ]]; then
   chmod 600 "$session_path/.omp/mcp.json"
 fi
 
-mkdir -p "$state_dir"
-created_at=$(/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
-mapping_path="$state_dir/$session_id.json"
-mapping_temp=$(mktemp "$state_dir/.${session_id}.XXXXXX")
-printf '{"aoeSessionId":"%s","correlationId":"%s","createdAt":"%s"}\n' \
-  "$session_id" "$correlation_id" "$created_at" >"$mapping_temp"
-mv "$mapping_temp" "$mapping_path"
-
-start_output=
-started=false
-session_is_running() {
-  "$aoe_bin" ps --json 2>/dev/null |
-    "$jq_bin" -e --arg session_id "$session_id" \
-      "any(.[]; .session == \$session_id and .pid != null)" >/dev/null
-}
-for attempt in 1 2 3; do
-  if start_output=$("$aoe_bin" session start "$session_id" 2>&1); then
-    printf '%s\n' "$start_output"
-    started=true
-    break
-  fi
-  for probe in 1 2 3 4 5; do
-    if session_is_running; then
-      started=true
-      break 2
-    fi
-    if [[ "$probe" -lt 5 ]]; then
-      sleep 1
-    fi
-  done
-  if [[ "$attempt" -eq 3 ]]; then
-    printf '%s\n' "$start_output" >&2
-    printf 'aoe session failed to start after %s attempts\n' "$attempt" >&2
-    exit 1
-  fi
-  sleep 5
-done
-if [[ "$started" != true ]]; then
-  printf 'aoe session failed to start\n' >&2
-  exit 1
-fi
-sleep "$startup_delay"
-"$aoe_bin" send --no-revive "$session_id" \
-  "$prompt"$'\n\n'"AOE_CORRELATION=$correlation_id"
+"$aoe_bin" session start "$session_id"
+"$aoe_bin" send --no-revive "$session_id" "$prompt"
