@@ -157,8 +157,6 @@ packages:
       version: latest
     - name: fnox
       version: "1.39.0"
-    - name: npm:@google/jules
-      version: latest
     - name: npm:freebuff
       version: latest
     - name: npm:codebase-memory-mcp
