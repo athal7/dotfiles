@@ -85,8 +85,8 @@ check "preserves live AoE settings across deployment" "$(yq -p=toml -o=json '.' 
 check "enables AoE plugin auto-updates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.updates.auto_update_plugins')" true
 check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
 check "pins the updated GitHub plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' 'f3ed73671fdbf502' 'a9ed47988b13c2c2' 'f7f3c9d1cdee0cba' '9bae7f11011aa39e')"
-check "preserves the Attention plugin grant capabilities" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.capabilities | join(" ")')" "runtime.worker session.read session.create session.prompt session.unattended net"
-check "pins the current Attention plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' '8ecaf613cc128827' '13c0bf03d56ce730' 'b273467d0324143e' '20d2c1d220321edc')"
+check "preserves the Attention plugin grant capabilities" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.capabilities | join(" ")')" "runtime.worker session.read process.spawn fs.read fs.write clipboard.write browser_open net"
+check "pins the current Attention plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' '48f031715b625bcc' 'e4daed71c74a1948' 'db0ab07151123263' '44d05fa9e42f0060')"
 check "reloads the supervised AoE daemon after plugin sync" "$(grep -Fxc "if [ \"\$plugin_synced\" = true ] && aoe serve --status > /dev/null 2>&1; then" "$PLUGIN_INSTALL")" 1
 check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl kickstart -k \"\$serve_job\" ||" "$PLUGIN_INSTALL")" 1
 
@@ -122,7 +122,8 @@ PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
   AOE_RUNNING=true AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
 check "restarts AoE once after successful plugin sync" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 1
 check "auto-approves changed GitHub plugin capabilities" "$(grep -Fxc '  if aoe plugin update agent-of-empires.github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
-check "auto-approves changed Attention plugin capabilities" "$(grep -Fxc '  if aoe plugin update athal7.attention --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
+check "auto-approves changed Kanban plugin capabilities" "$(grep -Fxc '  if aoe plugin update agent-of-empires.kanban --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
+check "auto-approves changed Linear plugin capabilities" "$(grep -Fxc '  if aoe plugin update community.linear --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
 check "enables GitMCP by default" "$(jq '.mcpServers.gitmcp.enabled == true' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled == true and .mcpServers.runlayer.enabled == true and .mcpServers.slack.enabled == true' "$MCP")" true
