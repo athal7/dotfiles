@@ -5,9 +5,30 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dir, "..");
 const rendered = execFileSync("chezmoi", ["cat", "-S", root, `${process.env.HOME}/.config/omp/agent/config.yml`], { encoding: "utf8" });
 const config = JSON.parse(execFileSync("yq", ["-o=json", "."], { encoding: "utf8", input: rendered })) as {
+  bash: { patterns: { match: string; approval: string }[] };
   github: { enabled: boolean };
   statusLine: { preset: string; leftSegments: string[] };
   tools: { approval: Record<string, string>; approvalMode: string };
+};
+
+// OMP matches bash.patterns in order against each segment of a compound command
+// with * globs; the first matching rule wins and an unmatched command keeps the
+// bash allow baseline.
+const globToRegExp = (glob: string): RegExp =>
+  new RegExp(
+    `^${glob
+      .split("*")
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join(".*")}$`,
+  );
+
+const ghApproval = (command: string): string | undefined => {
+  const segments = command.split(/&&|\|\||;/).map((segment) => segment.trim());
+  for (const pattern of config.bash.patterns) {
+    const matcher = globToRegExp(pattern.match);
+    if (segments.some((segment) => matcher.test(segment))) return pattern.approval;
+  }
+  return undefined;
 };
 const tools = config.tools;
 
@@ -46,9 +67,54 @@ describe("native OMP approval configuration", () => {
     expect(tools.approval.mcp__slack_read_channel).toBeUndefined();
   });
 
-  test("disables native GitHub and prompts for gh shell commands", () => {
+  test("disables native GitHub", () => {
     expect(config.github.enabled).toBe(false);
-    expect(config.bash.patterns).toContainEqual({ match: "gh *", approval: "prompt" });
+  });
+
+  test("lets the listed read-only gh commands run without an approval prompt", () => {
+    for (const command of [
+      "gh pr view 4534 --json number,title,body",
+      "gh pr diff 4534",
+      "gh pr list --state open",
+      "gh pr checks",
+      "gh issue view 7",
+      "gh search issues 'repo:me/app cost precision' --limit 5",
+      "gh api repos/me/app/contents/README.md",
+      "gh repo view me/app",
+      "gh run view 123 --log",
+      "gh release list",
+      "gh auth status",
+      "gh stack --help",
+    ]) {
+      expect(ghApproval(command)).toBe("allow");
+    }
+  });
+
+  test("prompts for the catch-all rule instead of enumerating mutations", () => {
+    for (const command of [
+      "gh pr create --draft --title 'fix it'",
+      "gh pr merge 42 --squash",
+      "gh issue comment 7 --body 'done'",
+      "gh release create v1.2.3",
+      "gh workflow run deploy.yml",
+      "gh secret set TOKEN",
+      "gh stack submit --auto",
+      "gh auth switch",
+      "gh repo delete me/app",
+      // Unlisted reads stay gated until someone adds them to the allowlist.
+      "gh workflow list",
+      "cd /Users/me/code/app && gh api repos/me/app/issues --method POST -f title=bug",
+      "gh api repos/me/app/issues -f title=bug",
+    ]) {
+      expect(ghApproval(command)).toBe("prompt");
+    }
+  });
+
+  test("keeps the gh catch-all prompt last so no allow can follow it", () => {
+    const ghRules = config.bash.patterns.filter((pattern) => pattern.match.startsWith("gh "));
+    expect(ghRules.at(-1)).toEqual({ match: "gh *", approval: "prompt" });
+    expect(ghRules.filter((rule) => rule.approval === "prompt" && rule.match !== "gh *"))
+      .toHaveLength(6);
   });
 
   test("expands GitHub MCP write globs into exact OMP prompt keys", () => {

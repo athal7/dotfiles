@@ -20,6 +20,57 @@ bash:
     # The dotfiles ship command eventually pushes main.
     - match: "chezmoi-deploy*"
       approval: prompt
+    # gh writes prompt; only the read shapes below run silently. Order matters:
+    # first match wins, and the trailing catch-all keeps every unlisted gh
+    # subcommand (current or future) behind an approval.
+    - match: "gh api*--method *"
+      approval: prompt
+    - match: "gh api*-X *"
+      approval: prompt
+    - match: "gh api*--field*"
+      approval: prompt
+    - match: "gh api*-f *"
+      approval: prompt
+    - match: "gh api*-F *"
+      approval: prompt
+    - match: "gh api*--input*"
+      approval: prompt
+    - match: "gh api*"
+      approval: allow
+    - match: "gh pr view*"
+      approval: allow
+    - match: "gh pr list*"
+      approval: allow
+    - match: "gh pr diff*"
+      approval: allow
+    - match: "gh pr checks*"
+      approval: allow
+    - match: "gh pr status*"
+      approval: allow
+    - match: "gh issue view*"
+      approval: allow
+    - match: "gh issue list*"
+      approval: allow
+    - match: "gh search*"
+      approval: allow
+    - match: "gh repo view*"
+      approval: allow
+    - match: "gh repo list*"
+      approval: allow
+    - match: "gh run view*"
+      approval: allow
+    - match: "gh run list*"
+      approval: allow
+    - match: "gh release view*"
+      approval: allow
+    - match: "gh release list*"
+      approval: allow
+    - match: "gh auth status*"
+      approval: allow
+    - match: "gh *--help*"
+      approval: allow
+    - match: "gh --version*"
+      approval: allow
     - match: "gh *"
       approval: prompt
 browser:
