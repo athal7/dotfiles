@@ -62,7 +62,7 @@ describe("native OMP approval configuration", () => {
   });
 
   test("preserves explicit read-only MCP allows and leaves other read tools at the write baseline", () => {
-    expect(tools.approval.mcp__context7_query_docs).toBe("allow");
+    expect(tools.approval.mcp__gitmcp_search_generic_documentation).toBe("allow");
     expect(tools.approval.mcp__linear_get_status_updates).toBe("allow");
     expect(tools.approval.mcp__slack_read_channel).toBeUndefined();
   });

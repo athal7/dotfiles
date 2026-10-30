@@ -14,7 +14,7 @@ chezmoi cat -S "$REPO_ROOT" ~/.config/agent-of-empires/mcp.json >"$aoe_rendered"
 jq -e '
   .mcpServers.linear == null and
   .mcpServers.spacelift == null and
-  .mcpServers.context7 != null and
+  .mcpServers.gitmcp != null and
   .mcpServers.github != null and
   .mcpServers["codebase-memory"] != null and
   .mcpServers["firefox-devtools"] != null

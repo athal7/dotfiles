@@ -124,9 +124,9 @@ check "restarts AoE once after successful plugin sync" "$(grep -c '^kickstart -k
 check "auto-approves changed GitHub plugin capabilities" "$(grep -Fxc '  if aoe plugin update agent-of-empires.github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "auto-approves changed Attention plugin capabilities" "$(grep -Fxc '  if aoe plugin update athal7.attention --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
-check "enables Context7 by default" "$(jq '.mcpServers.context7.enabled == true' "$MCP")" true
+check "enables GitMCP by default" "$(jq '.mcpServers.gitmcp.enabled == true' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled == true and .mcpServers.runlayer.enabled == true and .mcpServers.slack.enabled == true' "$MCP")" true
-check "enables other integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "context7" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack" and .key != "github") | .value.enabled == true] | all' "$MCP")" true
+check "enables other integration MCP servers by default" "$(jq '[.mcpServers | to_entries[] | select(.key != "gitmcp" and .key != "codebase-memory" and .key != "runlayer" and .key != "slack" and .key != "github") | .value.enabled == true] | all' "$MCP")" true
 runlayer_mcp_urls=(
   "bigquery https://bigquery.example.test/mcp"
   "pagerduty https://pagerduty.example.test/mcp"

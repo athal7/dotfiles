@@ -9,17 +9,25 @@
   ],
   "mcp_servers": [
       {
-        "name": "context7",
+        "name": "gitmcp",
         "transport": "remote",
-        "url": "https://mcp.context7.com/mcp",
-        "headers": {
-          "Authorization": {
-            "cmd": "security find-generic-password -s context7 -w 2>/dev/null || [ $? -eq 44 ]",
-            "format": "Bearer %s",
-          },
-        },
-        "tools": ["query-docs", "resolve-library-id"],
-        "approval_allow": ["query-docs", "resolve-library-id"],
+        "url": "https://gitmcp.io/docs",
+        "tools":
+          [
+            "match_common_libs_owner_repo_mapping",
+            "fetch_generic_documentation",
+            "search_generic_documentation",
+            "search_generic_code",
+            "fetch_generic_url_content",
+          ],
+        "approval_allow":
+          [
+            "match_common_libs_owner_repo_mapping",
+            "fetch_generic_documentation",
+            "search_generic_documentation",
+            "search_generic_code",
+            "fetch_generic_url_content",
+          ],
       },
       {
         "name": "codebase-memory",
