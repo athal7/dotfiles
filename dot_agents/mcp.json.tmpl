@@ -1,0 +1,61 @@
+{{/* Global MCP servers for the .agents convention (Freebuff Desktop, Freebuff
+CLI, Codebuff). Read from {repo}/.agents/mcp.json, {parent}/.agents/mcp.json
+and ~/.agents/mcp.json, in the standard mcpServers format. Rendered from the
+same registry as OMP's mcp.json, so both agents share one source of truth.
+
+This loader has no env-var interpolation outside a stdio server's env block, so
+a remote server is written only when its URL and headers resolve to literal
+values at apply time. Servers whose auth depends on a shell-only variable
+(github's GITHUB_TOKEN) are omitted rather than written unauthenticated. */}}
+{{- $servers := dict -}}
+{{- range $server := .mcp_servers -}}
+{{-   $entry := dict -}}
+{{-   if eq $server.transport "local" -}}
+{{-     $_ := set $entry "type" "stdio" -}}
+{{-     $_ := set $entry "command" (first $server.command) -}}
+{{-     $_ := set $entry "args" (rest $server.command) -}}
+{{-     $_ := set $servers $server.name $entry -}}
+{{-   else -}}
+{{-     $url := $server.url -}}
+{{-     if kindIs "map" $url -}}
+{{-       $environmentName := index $url "name" -}}
+{{-       $url = printf "${%s}" $environmentName -}}
+{{-       if and (hasPrefix "RUNLAYER_" $environmentName) (hasSuffix "_MCP_URL" $environmentName) (hasKey $ "runlayer") -}}
+{{-         $localKey := printf "%s_mcp_url" (lower (trimSuffix "_MCP_URL" (trimPrefix "RUNLAYER_" $environmentName))) -}}
+{{-         if and (hasKey $.runlayer $localKey) (ne (index $.runlayer $localKey) "") -}}
+{{-           $url = index $.runlayer $localKey -}}
+{{-         end -}}
+{{-       end -}}
+{{-     end -}}
+{{-     $headers := dict -}}
+{{-     $headersComplete := true -}}
+{{-     if hasKey $server "headers" -}}
+{{-       range $headerName, $headerSpec := $server.headers -}}
+{{-         $value := "" -}}
+{{-         if hasKey $headerSpec "value" -}}
+{{-           $value = $headerSpec.value | toString -}}
+{{-         else -}}
+{{-           $value = output "sh" "-c" $headerSpec.cmd | trim -}}
+{{-           if ne $value "" -}}
+{{-             $value = printf $headerSpec.format $value -}}
+{{-           end -}}
+{{-         end -}}
+{{-         if and (ne $value "") (not (contains "${" $value)) -}}
+{{-           $_ := set $headers $headerName $value -}}
+{{-         end -}}
+{{-       end -}}
+{{-       if ne (len $headers) (len $server.headers) -}}
+{{-         $headersComplete = false -}}
+{{-       end -}}
+{{-     end -}}
+{{-     if and $headersComplete (not (contains "${" $url)) -}}
+{{-       $_ := set $entry "type" "http" -}}
+{{-       $_ := set $entry "url" $url -}}
+{{-       if gt (len $headers) 0 -}}
+{{-         $_ := set $entry "headers" $headers -}}
+{{-       end -}}
+{{-       $_ := set $servers $server.name $entry -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+{{ dict "mcpServers" $servers | toJson }}

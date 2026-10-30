@@ -100,6 +100,15 @@ packages:
       checksum: 1bab285db7605bdcdffe71b6371b1ef1a87c7cee53d5ae2d94fdf17ea109b41b
       type: archive
 
+    - name: freebuff-desktop
+      repo: CodebuffAI/codebuff-community
+      target: Applications
+      app: Freebuff.app
+      tag: freebuff-desktop-v0.0.192
+      asset: Freebuff-0.0.192-mac-arm64.zip
+      checksum: cd701307058e79101627fbc253ed39aa271151d9c99ad4f0e7aa1c67e1c90898
+      type: archive
+
     - name: ical
       repo: BRO3886/ical
       target: .local/bin/ical

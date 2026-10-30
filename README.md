@@ -7,6 +7,7 @@ A personal macOS development environment managed with [chezmoi](https://chezmoi.
 - [Zsh](dot_zshrc.tmpl), [Neovim](dot_config/nvim/), Git, and Ghostty.
 - [One package registry](.chezmoidata/packages.yaml) for Homebrew, mise, and release downloads.
 - [OMP](dot_config/omp/agent/), [MCP servers](.chezmoidata/mcp.yaml), [shared skills](dot_agents/skills/), and [AoE session management](dot_config/agent-of-empires/config.toml.tmpl).
+- [Freebuff Desktop](.chezmoidata/packages.yaml) as a pinned release download, sharing the same skills and MCP registry through `~/.agents/`.
 - [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) for maintenance, updates, and local services.
 - [Colima containers](dot_colima/default/colima.yaml), [Homebridge](dot_config/homebridge/), and Naya Create keyboard settings.
 

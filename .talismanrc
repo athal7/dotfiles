@@ -1,7 +1,7 @@
 threshold: medium
 fileignoreconfig:
 - filename: .chezmoidata/packages.yaml
-  checksum: 91aa840b76f912e3b099fa75ca608307f114d99f12599276caf9df523a259ed6
+  checksum: 7bc7053a50f8cf1a42e512ccb5e3e6d1d5222a93d10ba5f2e19df5d0b502c5ca
 - filename: README.md
   checksum: 506627350a3f65c020a655718f175fd4c871b54ddca7adab0e44a7693defbe6a
 - filename: dot_local/share/firefox-mcp-broker/package-lock.json
