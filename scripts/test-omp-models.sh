@@ -19,6 +19,7 @@ KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
 EXTERNAL="$WORK/external.toml"
 AOE="$WORK/aoe.toml"
+AOE_SERVE="$WORK/aoe-serve"
 ZSHENV="$WORK/zshenv"
 AGENT_DIR="$WORK/agent"
 BIN="$WORK/bin"
@@ -38,6 +39,7 @@ PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOM
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
+chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.local/bin/aoe-serve" > "$AOE_SERVE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$MCP"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
@@ -76,6 +78,9 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "preserves the configured AoE default agent" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.default_agent')" omp
+check "offers structured ACP sessions in new sessions" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.offer_structured_in_new_session')" true
+check "renders a valid AoE serve launcher" "$(sh -n "$AOE_SERVE" && printf true)" true
+check "forwards OMP credentials to structured ACP workers" "$(grep -Fxc "      ANTHROPIC_API_KEY|OTARI_API_KEY|GITHUB_TOKEN|SPACELIFT_MCP_URL) export \"\$key=\${assignment#*=}\" ;;" "$AOE_SERVE")" 1
 check "preserves live AoE settings across deployment" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '[.acp.notice_display, (.acp.notice_timeout_secs | tostring), (.session.show_shortcut_bar | tostring), (.systemd.enabled | tostring), .systemd.slice, (.systemd.survive_daemon_restart | tostring), (.systemd.tasks_max | tostring)] | join(" ")')" "persistent 10 true true background-aoe-{profile}.slice true 0"
 check "enables AoE plugin auto-updates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.updates.auto_update_plugins')" true
 check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
@@ -166,6 +171,7 @@ check "removes superseded scheduled sessions" "$(yq -o=json '.launchagents' "$LA
 mkdir -p "$AGENT_DIR"
 cp "$MODELS" "$AGENT_DIR/models.yml"
 cp "$CONFIG" "$AGENT_DIR/config.yml"
+check "reads OMP credentials from the environment helper before serving" "$(grep -Fxc "  omp_environment=\$(AOE_TOOL=omp \"\$HOME/.local/bin/aoe-omp-environment\" 2>/dev/null) || omp_environment=" "$AOE_SERVE")" 1
 auto_resume="$(PI_CODING_AGENT_DIR="$AGENT_DIR" omp config get autoResume --json | jq -r '.value')"
 check "OMP accepts disabled automatic resume" "$auto_resume" false
 

@@ -12,6 +12,21 @@ if [ -z "${LINEAR_API_KEY:-}" ] && [ -z "${LINEAR_TOKEN:-}" ] && [ -r "$HOME/.en
   keychain_env LINEAR_API_KEY linear_api_key 2>/dev/null || :
 fi
 
+# Structured (ACP) workers inherit this daemon's environment instead of running
+# the before_session hook, so export the credentials that hook gives terminal
+# OMP sessions. The OMP config roots already arrive from the launchd environment.
+if [ -x "$HOME/.local/bin/aoe-omp-environment" ]; then
+  omp_environment=$(AOE_TOOL=omp "$HOME/.local/bin/aoe-omp-environment" 2>/dev/null) || omp_environment=
+  while IFS= read -r assignment; do
+    key=${assignment%%=*}
+    case $key in
+      ANTHROPIC_API_KEY|OTARI_API_KEY|GITHUB_TOKEN|SPACELIFT_MCP_URL) export "$key=${assignment#*=}" ;;
+    esac
+  done <<EOF
+$omp_environment
+EOF
+fi
+
 dns_name=$(/opt/homebrew/bin/tailscale status --json | /opt/homebrew/bin/jq -er '.Self.DNSName')
 dns_name=${dns_name%.}
 
