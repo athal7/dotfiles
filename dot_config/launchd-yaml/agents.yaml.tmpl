@@ -150,7 +150,8 @@ launchagents:
   homebridge:
     Label: com.$USER.homebridge
     ProgramArguments:
-      - $HOME/.local/share/mise/installs/node/24.14.0/bin/homebridge
+      - $HOME/.local/share/mise/installs/node/24.14.0/bin/node
+      - $HOME/.local/share/mise/installs/node/24.14.0/lib/node_modules/homebridge/bin/homebridge
       - -U
       - $HOME/.config/homebridge
     RunAtLoad: true
@@ -161,6 +162,21 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
       HOME: $HOME
+      UIX_STORAGE_PATH: $HOME/.config/homebridge
+
+  homebridge-ui:
+    Label: com.$USER.homebridge-ui
+    ProgramArguments:
+      - $HOME/.local/share/mise/installs/node/24.14.0/bin/node
+      - $HOME/.local/share/mise/installs/node/24.14.0/lib/node_modules/homebridge-config-ui-x/dist/main.js
+    RunAtLoad: true
+    KeepAlive: true
+    StandardOutPath: $HOME/Library/Logs/homebridge-ui.log
+    StandardErrorPath: $HOME/Library/Logs/homebridge-ui.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+      HOME: $HOME
+      UIX_CONFIG_PATH: $HOME/.config/homebridge/config.json
       UIX_STORAGE_PATH: $HOME/.config/homebridge
 
 
