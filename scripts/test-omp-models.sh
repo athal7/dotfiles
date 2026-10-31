@@ -161,7 +161,7 @@ chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$R
 check "removes replaced llama LaunchAgent" "$(yq -o=json ".launchagents" "$LAUNCH_AGENTS" | jq "has(\"llama-server\")")" false
 check "does not run the OpenJev memory-intensive local judge" "$(yq -o=json ".launchagents" "$LAUNCH_AGENTS" | jq "has(\"openjev\")")" false
 check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.config/omp/agent/kb-enrich-mcp.json"
-check "configures Homebridge storage under XDG" "$(yq -r '.launchagents.homebridge.ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
+check "configures Homebridge storage under XDG" "$(yq -o=json '.launchagents.homebridge.ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | [range(0; length) | select($args[.] == "-U") | $args[. + 1]] | if length == 1 then .[0] else null end')" "\$HOME/.config/homebridge"
 check "configures Homebridge UI storage under XDG" "$(yq -r '.launchagents.homebridge.EnvironmentVariables.UIX_STORAGE_PATH' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
 check "does not set a global daily maintenance cutoff" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables | has("AOE_OMP_MAX_TIME")' "$LAUNCH_AGENTS")" false
 check "passes the daily prompt file" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.agents/prompts/daily-maintenance.md"
