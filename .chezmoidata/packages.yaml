@@ -74,6 +74,11 @@ packages:
     # explicitly so `aoe plugin update` keeps working.
     - source: "gh:agent-of-empires/plugin-linear@main"
       id: "community.linear"
+    # Same no-release situation as Linear: track the branch so updates resolve.
+    # Installed from a local staged copy before the org repo existed; this is
+    # the canonical source.
+    - source: "gh:agent-of-empires/plugin-freebuf@main"
+      id: "dev.example.aoe-freebuf"
 
   casks:
     - name: firefox
