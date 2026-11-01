@@ -1,0 +1,9 @@
+#!/bin/bash
+set -eu
+
+{{ template "brewenv" . }}
+export PATH="$HOME/.local/share/mise/shims:$PATH"
+
+# Runtime settings live in codebase-memory's database, not its XDG config.json.
+# New MCP sessions automatically index their project; watcher settings are unchanged.
+codebase-memory-mcp config set auto_index true
