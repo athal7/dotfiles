@@ -69,7 +69,10 @@ packages:
       id: "agent-of-empires.github"
     - source: "gh:agent-of-empires/plugin-kanban"
       id: "agent-of-empires.kanban"
-    - source: "gh:agent-of-empires/plugin-linear"
+    # No published releases upstream, so update cannot resolve a bare slug (it
+    # falls back to the default branch only on first install). Track the branch
+    # explicitly so `aoe plugin update` keeps working.
+    - source: "gh:agent-of-empires/plugin-linear@main"
       id: "community.linear"
 
   casks:
