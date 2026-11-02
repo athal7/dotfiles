@@ -149,8 +149,8 @@ case "$1" in
       fi
       "$GIT_BIN" check-ref-format --branch "$head_branch" >/dev/null || \
         fail "pull request head is not a valid branch: $head_branch"
-      # PR sessions follow the authoritative head; the requested branch is an issue slug.
-      worktree_branch=$head_branch
+      # PR numbers isolate sessions even when fork branches have the same name.
+      worktree_branch="attention/pr-$pr_number"
       resume_existing github "$title" "$repo_root" "$worktree_branch" "$prompt"
       pr_ref="refs/remotes/origin/attention-pr-$pr_number"
       head_remote="https://github.com/$head_owner/$head_repo.git"
