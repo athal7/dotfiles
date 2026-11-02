@@ -221,7 +221,7 @@ export ATTENTION_MODE=pr
 run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content example/remote-repo
 run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content example/remote-repo
 unset ATTENTION_MODE
-if grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG" &&
+if grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG" &&
   grep -Fqx 'arg=pr-title' "$DISPATCH_LOG" &&
   grep -Fq 'Additional session content:' "$DISPATCH_LOG" &&
   grep -Fq 'https://github.com/head-owner/head-repo.git' "$GIT_LOG" &&
@@ -238,10 +238,10 @@ else
 fi
 cat >"$SESSIONS" <<EOF
 [
- {"id":"wrong-repo","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/wrong-repo","worktree":{"branch":"attention/pr-63","main_repo_path":"$WORK/other-repo"}},
- {"id":"wrong-branch","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/wrong-branch","worktree":{"branch":"attention/pr-64","main_repo_path":"$REPO"}},
+ {"id":"wrong-repo","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/wrong-repo","worktree":{"branch":"feature/fork","main_repo_path":"$WORK/other-repo"}},
+ {"id":"wrong-branch","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/wrong-branch","worktree":{"branch":"attention/pr-63","main_repo_path":"$REPO"}},
  {"id":"same-title-scratch","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/scratch/same-title-scratch","worktree":null},
- {"id":"pr-session","title":"renamed-by-user","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/pr-session","worktree":{"branch":"attention/pr-63","main_repo_path":"$REPO/"}}
+ {"id":"pr-session","title":"renamed-by-user","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/pr-session","worktree":{"branch":"feature/fork","main_repo_path":"$REPO/"}}
 ]
 EOF
 : >"$DISPATCH_LOG"
@@ -251,7 +251,7 @@ EOF
 export ATTENTION_MODE=pr
 run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt extra-content example/remote-repo
 unset ATTENTION_MODE
-if [[ ! -s "$DISPATCH_LOG" && ! -s "$GH_LOG" ]] &&
+if [[ ! -s "$DISPATCH_LOG" ]] &&
   ! grep -Eq 'command=(fetch|branch|show-ref)' "$GIT_LOG" &&
   grep -Fqx 'send pr-session Continue working on this Attention item in the existing session. Current request:' "$AOE_LOG" &&
   grep -Fqx 'Additional session content:' "$AOE_LOG" &&
@@ -286,13 +286,13 @@ fi
 unset ATTENTION_ORIGIN
 cat >"$SESSIONS" <<EOF
 [
- {"id":"pr-one","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/one","worktree":{"branch":"attention/pr-63","main_repo_path":"$REPO"}},
- {"id":"pr-two","title":"pr-title-5678abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/two","worktree":{"branch":"attention/pr-63","main_repo_path":"$REPO"}}
+ {"id":"pr-one","title":"pr-title-1234abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/one","worktree":{"branch":"feature/fork","main_repo_path":"$REPO"}},
+ {"id":"pr-two","title":"pr-title-5678abcd","group":"Attention","tool":"omp","state":"live","path":"$WORK/trees/two","worktree":{"branch":"feature/fork","main_repo_path":"$REPO"}}
 ]
 EOF
 : >"$AOE_LOG"
 : >"$DISPATCH_LOG"
-if run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo >"$WORK/ambiguous-pr.out" 2>&1; then
+if ATTENTION_MODE="pr" run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo >"$WORK/ambiguous-pr.out" 2>&1; then
   bad "rejects ambiguous PR worktrees"
 elif [[ ! -s "$DISPATCH_LOG" ]] && ! grep -Fq 'send ' "$AOE_LOG"; then
   ok "rejects ambiguous PR worktrees"
@@ -321,13 +321,13 @@ EOF
 : >"$GH_LOG"
 : >"$GIT_LOG"
 : >"$AOE_LOG"
-run_attention github "$REPO" 64 issue/64 issue-title 'continue issue' '' example/remote-repo
-if [[ ! -s "$DISPATCH_LOG" && ! -s "$GH_LOG" ]] &&
+ATTENTION_MODE=issue run_attention github "$REPO" 64 issue/64 issue-title 'continue issue' '' example/remote-repo
+if [[ ! -s "$DISPATCH_LOG" ]] &&
   ! grep -Eq 'command=(fetch|branch|show-ref)' "$GIT_LOG" &&
   grep -Fq 'send issue-session' "$AOE_LOG" && grep -Fq 'continue issue' "$AOE_LOG"; then
-  ok "resumes the existing issue worktree without GitHub lookups"
+  ok "resumes the existing issue worktree without creating another"
 else
-  bad "resumes the existing issue worktree without GitHub lookups"
+  bad "resumes the existing issue worktree without creating another"
 fi
 echo '[]' >"$SESSIONS"
 export ATTENTION_MODE=pr
@@ -336,7 +336,7 @@ export ATTENTION_MODE=pr
 : >"$BRANCH_STATE"
 run_attention github "$WORK/0din-Loki" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
 if grep -Fqx "arg=$REGISTERED_REPO" "$DISPATCH_LOG" &&
-  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG"; then
+  grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG"; then
   ok "starts PR work from a registered checkout outside codeDir"
 else
   bad "starts PR work from a registered checkout outside codeDir"
@@ -354,6 +354,9 @@ unset ATTENTION_MODE
 # Use real Git repositories to prove upstream PR branches contain the fetched head.
 git init --quiet --initial-branch=feature/fork "$WORK/head"
 git -C "$WORK/head" -c user.name=Test -c user.email=test@example.com -c commit.gpgsign=false \
+  commit --quiet --allow-empty -m 'Original title-slug branch'
+stale_sha=$(git -C "$WORK/head" rev-parse HEAD)
+git -C "$WORK/head" -c user.name=Test -c user.email=test@example.com -c commit.gpgsign=false \
   commit --quiet --allow-empty -m 'Upstream PR head'
 head_sha=$(git -C "$WORK/head" rev-parse HEAD)
 for checkout in "$REPO" "$REGISTERED_REPO"; do
@@ -361,6 +364,8 @@ for checkout in "$REPO" "$REGISTERED_REPO"; do
   git -C "$checkout" remote add origin git@github.com:myfork/remote-repo.git
   git -C "$checkout" remote add upstream https://github.com/example/remote-repo.git
   git -C "$checkout" config "url.$WORK/head.insteadOf" https://github.com/head-owner/head-repo.git
+  git -C "$checkout" fetch --quiet --no-tags "$WORK/head" feature/fork
+  git -C "$checkout" branch attention/upstream-pr "$stale_sha"
 done
 export ATTENTION_GIT_BIN
 ATTENTION_GIT_BIN=$(command -v git)
@@ -368,19 +373,32 @@ export ATTENTION_EXPECTED_REPO=example/remote-repo
 export ATTENTION_MODE=pr
 : >"$DISPATCH_LOG"
 if run_attention github "$REPO" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo &&
-  [[ "$(git -C "$REPO" rev-parse refs/heads/attention/upstream-pr)" == "$head_sha" ]] &&
-  grep -Fqx 'group=Attention branch=attention/upstream-pr new=false argc=3' "$DISPATCH_LOG"; then
-  ok "creates PR work for upstream rather than the checkout's fork"
+  [[ "$(git -C "$REPO" rev-parse refs/heads/feature/fork)" == "$head_sha" ]] &&
+  [[ "$(git -C "$REPO" rev-parse refs/heads/attention/upstream-pr)" == "$stale_sha" ]] &&
+  grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG"; then
+  ok "uses the actual PR head without changing a divergent title-slug branch"
 else
-  bad "creates PR work for upstream rather than the checkout's fork"
+  bad "uses the actual PR head without changing a divergent title-slug branch"
 fi
 
 : >"$DISPATCH_LOG"
 if run_attention github "$WORK/missing-repo" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo &&
-  [[ "$(git -C "$REGISTERED_REPO" rev-parse refs/heads/attention/upstream-pr)" == "$head_sha" ]]; then
+  [[ "$(git -C "$REGISTERED_REPO" rev-parse refs/heads/feature/fork)" == "$head_sha" ]] &&
+  [[ "$(git -C "$REGISTERED_REPO" rev-parse refs/heads/attention/upstream-pr)" == "$stale_sha" ]]; then
   ok "finds a registered checkout by upstream when the suggested path is missing"
 else
   bad "finds a registered checkout by upstream when the suggested path is missing"
+fi
+
+git -C "$REPO" update-ref refs/heads/feature/fork "$stale_sha"
+: >"$DISPATCH_LOG"
+if run_attention github "$REPO" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo >"$WORK/diverged-head.out" 2>&1; then
+  bad "rejects a divergent actual PR branch without overwriting it"
+elif [[ ! -s "$DISPATCH_LOG" ]] &&
+  [[ "$(git -C "$REPO" rev-parse refs/heads/feature/fork)" == "$stale_sha" ]]; then
+  ok "rejects a divergent actual PR branch without overwriting it"
+else
+  bad "rejects a divergent actual PR branch without overwriting it"
 fi
 
 export ATTENTION_MODE=issue
@@ -400,7 +418,7 @@ export ATTENTION_MODE=pr
 run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
 unset ATTENTION_MODE AOE_TOOL
 if grep -Fqx 'tool=freebuff' "$DISPATCH_LOG" &&
-  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG"; then
+  grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG"; then
   ok "forwards the agent Attention resolved for the repo"
 else
   bad "forwards the agent Attention resolved for the repo"
@@ -411,12 +429,13 @@ export ATTENTION_MODE=pr
 run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
 unset ATTENTION_MODE
 if grep -Fqx 'tool=omp' "$DISPATCH_LOG" &&
-  grep -Fqx 'group=Attention branch=attention/pr-63 new=false argc=3' "$DISPATCH_LOG"; then
+  grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG"; then
   ok "keeps the default agent for unconfigured repos"
 else
   bad "keeps the default agent for unconfigured repos"
   cat "$DISPATCH_LOG" >&2
 fi
+
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [[ "$fail" -eq 0 ]]

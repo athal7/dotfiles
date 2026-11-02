@@ -142,7 +142,6 @@ case "$1" in
       prompt+=$'\n\nAdditional session content:\n'
       prompt+=$additional_prompt
     fi
-    resume_existing github "$title" "$repo_root" "$requested_branch" "$prompt"
     if pr_info=$(cd "$repo_root" && "$GH_BIN" pr view "$reference" --repo "$github_repo" --json number,headRefName,headRepositoryOwner,headRepository --jq '[.number, .headRefName, .headRepositoryOwner.login, .headRepository.name] | @tsv' 2>/dev/null); then
       IFS=$'\t' read -r pr_number head_branch head_owner head_repo <<<"$pr_info"
       if ! [[ "$pr_number" =~ ^[0-9]+$ && -n "$head_branch" && -n "$head_owner" && -n "$head_repo" ]]; then
@@ -150,26 +149,29 @@ case "$1" in
       fi
       "$GIT_BIN" check-ref-format --branch "$head_branch" >/dev/null || \
         fail "pull request head is not a valid branch: $head_branch"
+      # PR sessions follow the authoritative head; the requested branch is an issue slug.
+      worktree_branch=$head_branch
+      resume_existing github "$title" "$repo_root" "$worktree_branch" "$prompt"
       pr_ref="refs/remotes/origin/attention-pr-$pr_number"
       head_remote="https://github.com/$head_owner/$head_repo.git"
       "$GIT_BIN" -C "$repo_root" fetch --no-tags "$head_remote" \
         "+refs/heads/$head_branch:$pr_ref" || \
         fail "cannot fetch pull request head: $reference"
       head_sha=$("$GIT_BIN" -C "$repo_root" rev-parse "$pr_ref")
-      if "$GIT_BIN" -C "$repo_root" show-ref --verify --quiet "refs/heads/$requested_branch"; then
-        existing_sha=$("$GIT_BIN" -C "$repo_root" rev-parse "refs/heads/$requested_branch")
+      if "$GIT_BIN" -C "$repo_root" show-ref --verify --quiet "refs/heads/$worktree_branch"; then
+        existing_sha=$("$GIT_BIN" -C "$repo_root" rev-parse "refs/heads/$worktree_branch")
         [ "$existing_sha" = "$head_sha" ] || \
-          fail "existing worktree branch does not point to pull request head: $requested_branch"
+          fail "existing worktree branch does not point to pull request head: $worktree_branch"
       else
-        "$GIT_BIN" -C "$repo_root" branch "$requested_branch" "$pr_ref" || \
-          fail "cannot create worktree branch: $requested_branch"
+        "$GIT_BIN" -C "$repo_root" branch "$worktree_branch" "$pr_ref" || \
+          fail "cannot create worktree branch: $worktree_branch"
       fi
-      worktree_branch=$requested_branch
       new_branch=false
     else
       (cd "$repo_root" && "$GH_BIN" issue view "$reference" --repo "$github_repo" --json number --jq .number >/dev/null) || \
         fail "reference is not an accessible GitHub issue or pull request: $reference"
       worktree_branch=$requested_branch
+      resume_existing github "$title" "$repo_root" "$worktree_branch" "$prompt"
       new_branch=true
     fi
 
