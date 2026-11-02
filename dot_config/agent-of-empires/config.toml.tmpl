@@ -15,21 +15,22 @@ default_profile = ""
 [acp]
 allow_agent_install = false
 allowed_agents = []
+auto_stop_idle_secs = 0
 compaction_reminder = false
 compaction_reminder_percent = 75
-auto_stop_idle_secs = 0
 default_agent = "omp"
-default_new_session_view = "terminal"
-offer_structured_in_new_session = true
-restrict_agents = false
 max_concurrent_workers = 10
 node_path = ""
 notice_display = "persistent"
 notice_timeout_secs = 10
 rate_limit_auto_resume = false
 replay_events = 0
+restrict_agents = false
 show_tool_durations = true
 silent_orphan_grace_secs = 120
+# Replaced default_new_session_view + offer_structured_in_new_session in the
+# current schema; the old pair is ignored by aoe 1.21.
+structured_view = "structured"
 wrap_tool_output = false
 
 [auth]
@@ -79,6 +80,7 @@ show_spans = false
 
 
 [sandbox]
+allow_image_pull = true
 auto_cleanup = true
 container_runtime = "apple_container"
 default_image = "ghcr.io/agent-of-empires/aoe-sandbox:latest"
@@ -100,7 +102,6 @@ click_action = "live_send"
 confirm_before_quit = true
 confirm_delete = false
 conversation_summary = true
-daemon_sidebar = true
 default_attach_mode = "tmux"
 default_tool = "omp"
 delete_to_trash = false
@@ -132,6 +133,7 @@ snooze_duration_minutes = 30
 sidebar_position = "left"
 smart_rename = true
 smart_rename_agent = ""
+startup_recovery_wake = false
 strict_hotkeys = false
 tie_workdir_to_name = true
 trash_retention_minutes = 43200
@@ -145,9 +147,18 @@ freebuff = "freebuff"
 auto_propagate = false
 
 [sound]
-enabled = false
+browser_approval_enabled = true
 browser_enabled = true
+browser_error_enabled = true
+browser_idle_enabled = true
+browser_waiting_enabled = true
+enabled = false
 server_enabled = true
+server_error_enabled = true
+server_idle_enabled = true
+server_running_enabled = true
+server_start_enabled = true
+server_waiting_enabled = true
 
 [status_hooks]
 enabled = false
