@@ -20,6 +20,13 @@
 {{- $workReminderLists = append $workReminderLists (dig "name" "" $workReminder) -}}
 {{- end -}}
 {{- end -}}
+{{- $openSourceReminderLists := list -}}
+{{- if and (hasKey . "reminders") (kindIs "map" .reminders) -}}
+{{- $aoeReminder := get .reminders "aoe" -}}
+{{- if and (kindIs "map" $aoeReminder) (dig "attention_check" false $aoeReminder) -}}
+{{- $openSourceReminderLists = append $openSourceReminderLists (dig "name" "" $aoeReminder) -}}
+{{- end -}}
+{{- end -}}
 {{- $linearToken := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
 {{- $workGitHubPrefixes := list -}}
 {{- $sessionAgents := list -}}
@@ -42,9 +49,13 @@
 {{- $workMatches = append $workMatches (dict "plugins" (list "reminders") "contexts" $workReminderLists) -}}
 {{- end -}}
 {{- $workMatch := dict "any" $workMatches -}}
+{{- $openSourceMatches := list (dict "plugins" (list "github")) -}}
+{{- if gt (len $openSourceReminderLists) 0 -}}
+{{- $openSourceMatches = append $openSourceMatches (dict "plugins" (list "reminders") "contexts" $openSourceReminderLists) -}}
+{{- end -}}
 {{- $groups := list
       (dict "name" "Work" "match" $workMatch)
-      (dict "name" "Open source" "match" (dict "plugins" (list "github")))
+      (dict "name" "Open source" "match" (dict "any" $openSourceMatches))
       (dict "name" "Everything else" "fallback" true) -}}
 {{- $config := dict
       "codeDir" .codeDir
