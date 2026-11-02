@@ -61,6 +61,7 @@ show_spans = false
 {{ $_ := set $plugins .id (dict "enabled" true "source" .source) -}}
 {{ end -}}
 {{ $_ := set (index $plugins "agent-of-empires.github") "settings" (dict "ci_required_checks_only" true) -}}
+{{ $_ := set (index $plugins "community.linear") "settings" (dict "include_snoozed" true) -}}
 {{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
 {{ if stat $configPath -}}
 {{ $existing := include $configPath | fromToml -}}
