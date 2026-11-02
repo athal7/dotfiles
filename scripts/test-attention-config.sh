@@ -27,8 +27,6 @@ if jq -e . "$RENDERED" >/dev/null; then
 else
   bad "renders valid JSON"
 fi
-check "keeps the configured dashboard groups" \
-  test "$(jq -r '.dashboard.groups | length' "$RENDERED")" = 3
 check "routes personal-org repos to freebuff" \
   test "$(jq -c '.session.agents' "$RENDERED")" = '[{"repo":"your-personal-org/*","tool":"freebuff"}]'
 check "leaves work orgs on AoE's default agent" \

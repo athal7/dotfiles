@@ -54,6 +54,7 @@
 {{- $openSourceMatches = append $openSourceMatches (dict "plugins" (list "reminders") "contexts" $openSourceReminderLists) -}}
 {{- end -}}
 {{- $groups := list
+      (dict "name" "Dependencies" "match" (dict "plugins" (list "github") "kinds" (list "pull_request") "authors" (list "dependabot[bot]" "renovate[bot]")))
       (dict "name" "Work" "match" $workMatch)
       (dict "name" "Open source" "match" (dict "any" $openSourceMatches))
       (dict "name" "Everything else" "fallback" true) -}}
