@@ -61,6 +61,10 @@ packages:
     - name: yaml-language-server
     - name: witr
 
+  # OMP plugins installed by run_onchange_after_plugins-omp.sh.tmpl.
+  omp_plugins:
+    - "@mozilla-ai/pi-otari@0.6.0"
+
   # aoe (Agent of Empires) plugins — installed/updated via
   # run_onchange_after_plugins-aoe.sh.tmpl. Keep sources and IDs here;
   # managed enablement/settings live in config.toml.tmpl; grants stay local.

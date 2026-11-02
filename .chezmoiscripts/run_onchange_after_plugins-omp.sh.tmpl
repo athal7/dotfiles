@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+{{ range .packages.omp_plugins -}}
+omp plugin install {{ . | quote }}
+{{ end -}}

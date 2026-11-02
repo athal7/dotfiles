@@ -12,7 +12,6 @@ bad() { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2')"; fi; }
 
 DATA="$WORK/local.yaml"
-MODELS="$WORK/models.yml"
 MCP="$WORK/mcp.json"
 EMPTY_MCP="$WORK/empty-mcp.json"
 KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
@@ -35,7 +34,6 @@ yq -i '
   .runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" |
   .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"
 ' "$DATA"
-PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/models.yml" > "$MODELS"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/agent-of-empires/config.toml" > "$AOE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
@@ -63,7 +61,6 @@ check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has
 check "does not retain AoE live agent overrides" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$AOE")" false
 check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
 check "does not configure a judge model role" "$(yq -r '.modelRoles | has("judge")' "$CONFIG")" false
-check "does not configure a local OpenJev provider" "$(yq -r 'has("openjev")' "$MODELS")" false
 check "enables curated Mnemopi memory" "$(yq -r '.memory.backend' "$CONFIG")" mnemopi
 check "uses project-tagged Mnemopi scope" "$(yq -r '.mnemopi.scoping' "$CONFIG")" per-project-tagged
 check "recalls memory automatically" "$(yq -r '.mnemopi.autoRecall' "$CONFIG")" true
@@ -173,7 +170,6 @@ check "runs daily maintenance at the original enrichment time" "$(yq -o=json '.l
 check "removes superseded scheduled sessions" "$(yq -o=json '.launchagents' "$LAUNCH_AGENTS" | jq 'has("aoe-kb-enrich") or has("aoe-fix-prod-errors") or has("aoe-audit")')" false
 
 mkdir -p "$AGENT_DIR"
-cp "$MODELS" "$AGENT_DIR/models.yml"
 cp "$CONFIG" "$AGENT_DIR/config.yml"
 check "reads OMP credentials from the environment helper before serving" "$(grep -Fxc "  omp_environment=\$(AOE_TOOL=omp \"\$HOME/.local/bin/aoe-omp-environment\" 2>/dev/null) || omp_environment=" "$AOE_SERVE")" 1
 auto_resume="$(PI_CODING_AGENT_DIR="$AGENT_DIR" omp config get autoResume --json | jq -r '.value')"
