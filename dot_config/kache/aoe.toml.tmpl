@@ -1,0 +1,8 @@
+{{- if hasKey . "rust_cache" }}
+[cache.remote]
+type = "s3"
+bucket = {{ .rust_cache.bucket | quote }}
+region = {{ .rust_cache.region | quote }}
+prefix = {{ .rust_cache.prefix | quote }}
+profile = {{ .rust_cache.profile | quote }}
+{{- end }}

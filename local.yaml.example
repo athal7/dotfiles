@@ -1,6 +1,16 @@
 # Machine-specific config for chezmoi.
 # Copy this shape to the private `.chezmoidata/local.yaml` file in your
 # chezmoi source directory and fill in your values.
+#
+# Optional shared Rust cache. Omit rust_cache for local-only caching.
+# Credentials stay in the named local AWS profile, not in this file.
+rust_cache:
+  bucket: your-build-cache
+  region: us-east-1
+  prefix: maintainers
+  profile: your-build-cache
+  repository: /path/to/agent-of-empires
+
 # Per-org metadata keyed by GitHub org login. Orgs not listed use GitHub
 # Issues for issue tracking and do not use automated code review.
 #

@@ -10,6 +10,7 @@ packages:
     - jnsahaj/lumen
     - steipete/tap
     - can1357/tap
+    - kunobi-ninja/kunobi
 
   brews:
     - name: athal7/versions/omp@18.10.3
@@ -36,6 +37,7 @@ packages:
     - name: jc
     - name: jq
     - name: k9s
+    - name: kunobi-ninja/kunobi/kache
     - name: kubernetes-cli
     - name: jnsahaj/lumen/lumen
     - name: macos-trash

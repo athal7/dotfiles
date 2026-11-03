@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+{{- if hasKey . "rust_cache" }}
+repository={{ .rust_cache.repository | quote }}
+expected=$(git -C "$repository" rev-parse --path-format=absolute --git-common-dir)
+actual=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || {
+  echo 'cargo-shared: run from a configured repository worktree' >&2
+  exit 1
+}
+if [ "$actual" != "$expected" ]; then
+  echo 'cargo-shared: this worktree does not belong to the configured repository' >&2
+  exit 1
+fi
+case "${1:-}" in
+  build|check|test|bench|clippy|doc|run) ;;
+  *)
+    echo 'cargo-shared: use build, check, test, bench, clippy, doc, or run' >&2
+    exit 1
+    ;;
+esac
+for arg do
+  case "$arg" in
+    --manifest-path|--manifest-path=*|--config|--config=*|-C|-C?*)
+      echo 'cargo-shared: manifest, config, and directory overrides are not supported' >&2
+      exit 1
+      ;;
+  esac
+done
+config="$HOME/.config/kache/aoe.toml"
+if [ ! -f "$config" ]; then
+  echo 'cargo-shared: shared cache configuration is missing' >&2
+  exit 1
+fi
+cache="$HOME/Library/Caches/kache-aoe"
+mkdir -p "$cache"
+export KACHE_CONFIG="$config" KACHE_CACHE_DIR="$cache" KACHE_SOCKET_PATH="$cache/daemon.sock"
+export KACHE_HOST_CONFIG=""
+unset KACHE_S3_BUCKET KACHE_S3_ENDPOINT KACHE_S3_REGION KACHE_S3_PREFIX KACHE_S3_PROFILE KACHE_S3_ACCESS_KEY KACHE_S3_SECRET_KEY KACHE_LOCAL_ONLY
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_ENDPOINT_URL_S3
+exec cargo "$@"
+{{- else }}
+echo 'cargo-shared: configure rust_cache in private machine data first' >&2
+exit 1
+{{- end }}

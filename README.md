@@ -17,6 +17,17 @@ OMP sessions share one Firefox Nightly process and persistent, agent-only automa
 
 The daily `workspace-cleanup` LaunchAgent may remove an ignored, untracked Cargo `target/` from a clean unmerged worktree, or from a registered worktree without removing that worktree or its source. Targets must be at least 30 days old, or 7 days old when free space is below `max(20 GiB, 10% of the volume)`. Dirty or locked worktrees, symlinked or tracked targets, and targets with open or unverifiable `lsof` checks are preserved. Unregistered merged worktrees retain the separate whole-worktree cleanup rule. This is age-based cleanup, not a hard size cap or a shared Cargo cache.
 
+## Shared Rust build cache
+
+Kache uses a local-only cache by default. For an opt-in shared S3 cache, add
+`rust_cache` to private machine data using the shape in `local.yaml.example`,
+and store credentials in the named local AWS profile. From a worktree of that
+repository, run `cargo-shared build` (or another Cargo subcommand). It uses a
+separate cache and daemon; ordinary `cargo` commands do not use that remote.
+Manifest, Cargo config, and directory overrides are rejected. This guard does
+not sandbox build scripts or prevent deliberate bypass. Existing worktree
+targets are not removed.
+
 ## Setup
 
 Install chezmoi and initialize the source without applying it:
