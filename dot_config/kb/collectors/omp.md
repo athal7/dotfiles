@@ -5,6 +5,8 @@ description: omp sessions — all coding activity via the omp CLI in the enrichm
 
 OMP persists session JSONL transcripts under ${XDG_DATA_HOME:-$HOME/.local/share}/omp/sessions/<slugified-cwd>/<timestamp>_<session-uuid>.jsonl. Use the deployed omp-kb-session-files <FROM> <TO> helper to select transcripts whose event timestamps fall in the inclusive local-calendar journal window; file mtimes and session creation time do not determine activity. It reads the configured XDG data root by default and fails on missing/unreadable roots, malformed transcripts, invalid timestamps, or reversed dates. Read each returned transcript through the read tool, count a candidate as read only after inspecting enough transcript to apply the triage rules, and report any remaining unread candidates as non-exhaustive coverage.
 
+Journal extracts are selective, not complete transcript backups or evidence that source files can be removed. `omp-log-archive` can make a verified gzip copy of one selected tool log outside the session store; it preserves the original, does not archive the session or establish resumability, and does not reclaim space. Restore a copy with `gzip -dc <archive> > <new-file>`; never overwrite a live session file.
+
 ## Triage rules
 
 Skip:

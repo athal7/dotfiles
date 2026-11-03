@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Copy one OMP .log to a verified gzip archive; originals are never removed.
+
+This archives only the selected log, not its session, transcript, or sidecars.
+It does not establish that the log is unused or that a session is resumable.
+"""
+
+import argparse
+import gzip
+import hashlib
+import os
+from pathlib import Path
+import stat
+import sys
+import tempfile
+
+
+CHUNK = 1024 * 1024
+
+
+def identity(st):
+    return (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+
+
+def source_path(root, source):
+    root = root.resolve(strict=True)
+    path = Path(os.path.abspath(source))
+    try:
+        relative = path.relative_to(root)
+    except ValueError as error:
+        raise ValueError("source must be inside the session root") from error
+    current = root
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(f"symlink in source path: {current}")
+    if not relative.parts or path.suffix != ".log":
+        raise ValueError("source must be a .log file inside the session root")
+    return root, path
+
+
+def archive(root, source, destination, apply):
+    root, source = source_path(root, source)
+    destination = destination.absolute()
+    parent = destination.parent.resolve(strict=True)
+    if parent == root or root in parent.parents:
+        raise ValueError("archive destination must be outside the session root")
+    destination = parent / destination.name
+    if destination.exists() or destination.is_symlink():
+        raise FileExistsError(f"destination already exists: {destination}")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    with os.fdopen(os.open(source, flags), "rb") as original:
+        before = os.fstat(original.fileno())
+        if not stat.S_ISREG(before.st_mode) or identity(before) != identity(source.lstat()):
+            raise ValueError("source is not a stable regular file")
+        print(f"source: {source}\nlogical bytes: {before.st_size}\narchive: {destination}")
+        if not apply:
+            print("dry run: no files written; source remains in place")
+            return
+        temp = None
+        try:
+            fd, name = tempfile.mkstemp(prefix=".omp-log-archive-", dir=parent)
+            temp = Path(name)
+            digest = hashlib.sha256()
+            with os.fdopen(fd, "wb") as raw:
+                with gzip.GzipFile(filename="", mode="wb", fileobj=raw) as compressed:
+                    while data := original.read(CHUNK):
+                        digest.update(data)
+                        compressed.write(data)
+                raw.flush()
+                os.fsync(raw.fileno())
+            if identity(before) != identity(os.fstat(original.fileno())) or identity(before) != identity(source.lstat()):
+                raise ValueError("source changed during archival")
+            restored = hashlib.sha256()
+            with gzip.open(temp, "rb") as compressed:
+                while data := compressed.read(CHUNK):
+                    restored.update(data)
+            if restored.digest() != digest.digest():
+                raise ValueError("archive verification failed")
+            if identity(before) != identity(os.fstat(original.fileno())) or identity(before) != identity(source.lstat()):
+                raise ValueError("source changed during verification")
+            # Atomic, exclusive publication; unlike rename, link cannot overwrite.
+            os.link(temp, destination)
+            print(f"verified sha256: {digest.hexdigest()}\noriginal preserved: {source}")
+        finally:
+            if temp is not None:
+                temp.unlink(missing_ok=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("source", type=Path, help="one .log file in the OMP session store")
+    parser.add_argument("destination", type=Path, help="new gzip file outside the session store")
+    parser.add_argument("--root", type=Path, default=Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "omp/sessions", help="session store root")
+    parser.add_argument("--apply", action="store_true", help="write the archive; never remove the source")
+    args = parser.parse_args()
+    try:
+        archive(args.root, args.source, args.destination, args.apply)
+    except (OSError, ValueError, EOFError) as error:
+        print(f"omp-log-archive: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
