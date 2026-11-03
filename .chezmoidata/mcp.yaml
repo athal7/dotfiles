@@ -166,11 +166,16 @@
           "sub_issue_write", "update_issue_comment", "update_pull_request",
           "update_pull_request_branch"
         ],
+        "approval_allow": [
+          "create_pull_request", "create_branch", "create_or_update_file", "delete_file",
+          "fork_repository", "push_files", "create_repository", "resolve_review_thread",
+          "unresolve_review_thread", "delete_pending_pull_request_review",
+          "update_pull_request_branch"
+        ],
         "approval_prompt_globs": [
           "mcp__github_*_write", "mcp__github_*_trigger", "mcp__github_add_*",
-          "mcp__github_create_*", "mcp__github_delete_*", "mcp__github_merge_*",
-          "mcp__github_request_*", "mcp__github_resolve_*", "mcp__github_submit_*",
-          "mcp__github_unresolve_*", "mcp__github_update_*"
+          "mcp__github_create_pull_request_review", "mcp__github_merge_*",
+          "mcp__github_request_*", "mcp__github_submit_*", "mcp__github_update_*"
         ],
       },
       {

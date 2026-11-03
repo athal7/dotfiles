@@ -13,16 +13,64 @@ bash:
     enabled: true
   allowCompoundCommands: false
   patterns:
-    - match: "git push*"
+    # Approval policy: prompt only when the command reaches another person
+    # (comments, reviews, ready or merged PRs, releases, deploys) or destroys
+    # shared state. Read-only, local, and draft-scoped GitHub work runs
+    # unattended. First match wins; unmatched commands keep the `bash: allow`
+    # baseline in tools.approval, so this list is the whole prompt surface.
+    #
+    # Native approvals cannot inspect arguments or remote PR state, so
+    # draft-scoped shapes are matched by their flags. Push is always allowed:
+    # keeping the PR draft is what keeps a push from notifying reviewers, and
+    # the shipit skill owns that invariant.
+    - match: "gh pr create*--draft*"
+      approval: allow
+    - match: "gh stack submit*--auto*"
+      approval: allow
+    # Person-visible GitHub writes notify reviewers, assignees, or watchers.
+    - match: "gh pr create*"
       approval: prompt
-    - match: "git * push*"
+    - match: "gh pr comment*"
       approval: prompt
-    # The dotfiles ship command eventually pushes main.
-    - match: "chezmoi-deploy*"
+    - match: "gh pr review*"
       approval: prompt
-    # gh writes prompt; only the read shapes below run silently. Order matters:
-    # first match wins, and the trailing catch-all keeps every unlisted gh
-    # subcommand (current or future) behind an approval.
+    - match: "gh pr merge*"
+      approval: prompt
+    - match: "gh pr ready*"
+      approval: prompt
+    - match: "gh pr edit*"
+      approval: prompt
+    - match: "gh pr close*"
+      approval: prompt
+    - match: "gh pr reopen*"
+      approval: prompt
+    - match: "gh issue comment*"
+      approval: prompt
+    - match: "gh issue edit*"
+      approval: prompt
+    - match: "gh issue close*"
+      approval: prompt
+    - match: "gh issue reopen*"
+      approval: prompt
+    - match: "gh issue transfer*"
+      approval: prompt
+    - match: "gh release create*"
+      approval: prompt
+    - match: "gh release edit*"
+      approval: prompt
+    - match: "gh release delete*"
+      approval: prompt
+    - match: "gh workflow run*"
+      approval: prompt
+    - match: "gh secret set*"
+      approval: prompt
+    - match: "gh secret delete*"
+      approval: prompt
+    - match: "gh repo edit*"
+      approval: prompt
+    - match: "gh repo delete*"
+      approval: prompt
+    # gh api writes are argument-shaped; only the read shapes stay silent.
     - match: "gh api*--method *"
       approval: prompt
     - match: "gh api*-X *"
@@ -35,46 +83,16 @@ bash:
       approval: prompt
     - match: "gh api*--input*"
       approval: prompt
-    - match: "gh api*"
-      approval: allow
-    - match: "gh pr view*"
-      approval: allow
-    - match: "gh pr list*"
-      approval: allow
-    - match: "gh pr diff*"
-      approval: allow
-    - match: "gh pr checks*"
-      approval: allow
-    - match: "gh pr status*"
-      approval: allow
-    - match: "gh issue view*"
-      approval: allow
-    - match: "gh issue list*"
-      approval: allow
-    - match: "gh search*"
-      approval: allow
-    - match: "gh repo view*"
-      approval: allow
-    - match: "gh repo list*"
-      approval: allow
-    - match: "gh run view*"
-      approval: allow
-    - match: "gh run list*"
-      approval: allow
-    - match: "gh run watch*"
-      approval: allow
-    - match: "gh release view*"
-      approval: allow
-    - match: "gh release list*"
-      approval: allow
-    - match: "gh auth status*"
-      approval: allow
-    - match: "gh *--help*"
-      approval: allow
-    - match: "gh --version*"
-      approval: allow
-    - match: "gh *"
+    # Interactive submit defaults new PRs to ready; --auto keeps them draft.
+    - match: "gh stack submit*"
       approval: prompt
+    - match: "gh stack merge*"
+      approval: prompt
+    # The dotfiles ship command eventually pushes main.
+    - match: "chezmoi-deploy*"
+      approval: prompt
+    - match: "gh *"
+      approval: allow
 browser:
   enabled: false
   relay: false

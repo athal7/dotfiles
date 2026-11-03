@@ -36,6 +36,7 @@ After review feedback, add commits instead of rewriting history.
 - Show unpushed commits in chat first: branch name and one subject per line.
 - Do not rerun the full suite during push unless a push-time check fails and needs a fix.
 - Never flip draft or ready state during a push.
+- Approval prompts follow person-visibility: creating and pushing a draft, and updating its branch, run unattended, while marking ready, commenting, requesting review, and merging prompt. Keep the PR draft across the push so reviewers are not notified by work in progress.
 
 For repositories that use pull requests:
 
