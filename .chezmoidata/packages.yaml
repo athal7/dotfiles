@@ -73,7 +73,7 @@ packages:
   aoe_plugins:
     # Reserved-namespace plugin: aoe refuses an @ref install here (unverified
     # code cannot claim agent-of-empires.*), so this tracks the latest release.
-    # The dense glyph row setting waits on a release that ships it.
+    # v2.4.0 ships the one-character row-badge marks (dense_row_badge_glyphs).
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
     - source: "gh:agent-of-empires/plugin-kanban"
@@ -102,10 +102,10 @@ packages:
   github_releases:
     - name: openflow
       repo: create-collective/openflow
-      target: Applications/OpenFlow-0.7.0.dmg
-      tag: openflow-v0.7.0
-      asset: OpenFlow-0.7.0-mac-arm64.dmg
-      checksum: a022e08c6b7983f6ee33f6997bebb44c1b32697e3762bd5e34bc73f16458dfb9
+      target: Applications/OpenFlow-0.7.1.dmg
+      tag: openflow-v0.7.1
+      asset: OpenFlow-0.7.1-mac-arm64.dmg
+      checksum: 2e14c83dc195f4271ebb19f367d23fb3f2de74007f612dbc7a3595b873b5dfd6
       type: file
 
     - name: create-companion
@@ -115,15 +115,6 @@ packages:
       tag: v1.0.0
       asset: Create.Companion_1.0.0_universal.app.tar.gz
       checksum: 1bab285db7605bdcdffe71b6371b1ef1a87c7cee53d5ae2d94fdf17ea109b41b
-      type: archive
-
-    - name: freebuff-desktop
-      repo: CodebuffAI/codebuff-community
-      target: Applications
-      app: Freebuff.app
-      tag: freebuff-desktop-v0.0.192
-      asset: Freebuff-0.0.192-mac-arm64.zip
-      checksum: cd701307058e79101627fbc253ed39aa271151d9c99ad4f0e7aa1c67e1c90898
       type: archive
 
     - name: ical
