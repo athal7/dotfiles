@@ -75,7 +75,7 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "preserves the configured AoE default agent" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.default_agent')" omp
-check "offers structured ACP sessions in new sessions" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.structured_view')" structured
+check "disables structured view for new sessions" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.structured_view')" off
 check "renders a valid AoE serve launcher" "$(sh -n "$AOE_SERVE" && printf true)" true
 check "forwards OMP credentials to structured ACP workers" "$(grep -Fxc "      ANTHROPIC_API_KEY|OTARI_API_KEY|GITHUB_TOKEN|SPACELIFT_MCP_URL) export \"\$key=\${assignment#*=}\" ;;" "$AOE_SERVE")" 1
 check "preserves live AoE settings across deployment" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '[.acp.notice_display, (.acp.notice_timeout_secs | tostring), (.session.show_shortcut_bar | tostring), (.systemd.enabled | tostring), .systemd.slice, (.systemd.survive_daemon_restart | tostring), (.systemd.tasks_max | tostring)] | join(" ")')" "persistent 10 true true background-aoe-{profile}.slice true 0"
