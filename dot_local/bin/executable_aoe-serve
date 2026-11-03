@@ -5,11 +5,30 @@ set -eu
 # Use AoE's native token auth even if launchd inherited an old passphrase.
 unset AOE_SERVE_PASSPHRASE
 
-# The full Linear plugin uses these inherited or Keychain-backed credentials.
-if [ -z "${LINEAR_API_KEY:-}" ] && [ -z "${LINEAR_TOKEN:-}" ] && [ -r "$HOME/.envrc" ]; then
-  # shellcheck disable=SC1091
-  . "$HOME/.envrc"
-  keychain_env LINEAR_API_KEY linear_api_key 2>/dev/null || :
+# The full Linear plugin resolves LINEAR_API_KEY only from this daemon's
+# environment, so supply it here before the daemon (and its plugin workers)
+# inherit it. The item is service "chezmoi", account "linear_api_key"; a
+# failed lookup is logged instead of silently leaving the plugin unauthenticated.
+if [ -z "${LINEAR_API_KEY:-}" ] && [ -z "${LINEAR_TOKEN:-}" ]; then
+  linear_ok=
+  if [ -r "$HOME/.envrc" ]; then
+    # shellcheck disable=SC1091
+    . "$HOME/.envrc"
+    if keychain_env LINEAR_API_KEY linear_api_key 2>/dev/null && [ -n "${LINEAR_API_KEY:-}" ]; then
+      linear_ok=1
+    fi
+  fi
+  if [ -z "$linear_ok" ]; then
+    linear_key=$(/usr/bin/security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null) || linear_key=
+    if [ -n "${linear_key:-}" ]; then
+      LINEAR_API_KEY=$linear_key
+      export LINEAR_API_KEY
+      linear_ok=1
+    fi
+  fi
+  if [ -z "$linear_ok" ]; then
+    printf 'aoe-serve: no LINEAR_API_KEY in the environment or Keychain (service chezmoi, account linear_api_key)\n' >&2
+  fi
 fi
 
 # Structured (ACP) workers inherit this daemon's environment instead of running
