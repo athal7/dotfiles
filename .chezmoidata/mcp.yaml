@@ -35,6 +35,12 @@
         "command": ["codebase-memory-mcp"],
       },
       {
+        "name": "1password",
+        "transport": "local",
+        # Use the desktop app's bundled server; it need not be on PATH.
+        "command": ["/Applications/1Password.app/Contents/MacOS/onepassword-mcp"],
+      },
+      {
         "name": "firefox-devtools",
         "transport": "local",
         "command": ["firefox-mcp-broker"],
