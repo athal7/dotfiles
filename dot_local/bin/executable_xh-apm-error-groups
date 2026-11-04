@@ -38,13 +38,33 @@ jq -e --argjson mapping "$(jq -c '.prod_services' <<<"$services")" '
       | $service.groups.buckets[] as $group
       | if (($group.key | type) != "string" or ($group.doc_count | type) != "number" or $group.doc_count < 1) then error("invalid grouping-key bucket") else . end
       | ($group.sample.hits.hits | if type == "array" and length == 1 then .[0]._source else error("sample evidence is missing") end) as $sample
-      | if ($sample["service.name"] != $service.key or $sample["error.grouping_key"] != $group.key) then error("sample identity does not match its aggregation bucket") else . end
-      | if (([$sample["error.exception.type"],$sample["error.exception.message"],$sample["trace.id"]] | all(.[]; type == "string" and length > 0)) | not) then error("sample is missing exception type, message, or trace id") else . end
-      | {service:$service.key, grouping_key:$group.key, count:$group.doc_count, exception_type:$sample["error.exception.type"], message:$sample["error.exception.message"], trace_id:$sample["trace.id"]}
+      | if ($sample.service.name != $service.key or $sample.error.grouping_key != $group.key) then error("sample identity does not match its aggregation bucket") else . end
+      | ($sample.error.exception | if type == "array" then .[0] else null end) as $exception
+      | if (([$exception.type,$exception.message,$sample.trace.id] | all(.[]; type == "string" and length > 0)) | not) then error("sample is missing exception type, message, or trace id") else . end
+      | {service:$service.key, grouping_key:$group.key, count:$group.doc_count, exception_type:$exception.type, message:$exception.message, trace_id:$sample.trace.id}
     ] as $groups
   | if (.hits.total.value == 0) then {window:"now-24h..now", total:0, selected:[], highest_unmapped:null} else
       ($groups | map(select(.service as $service | $mapping | has($service))) | sort_by([-(.count),.service,.grouping_key]) | .[:3]) as $selected
       | ($groups | map(select(.service as $service | $mapping | has($service) | not)) | sort_by([-(.count),.service,.grouping_key]) | .[0] // null) as $unmapped
       | {window:"now-24h..now", total:$response.hits.total.value, selected:[$selected[] | . + {repository:$mapping[.service]}], highest_unmapped:$unmapped}
     end
-' <<<"$response" 2>/dev/null || fail "APM response is invalid or incomplete; no groups dispatched"
+' <<<"$response" 2>"$error_file" || {
+  diagnostic=$(<"$error_file")
+  case "$diagnostic" in
+    *"response is not an object"*) reason="response is not an object" ;;
+    *"Elasticsearch returned an error"*) reason="Elasticsearch returned an error" ;;
+    *"query timed out or timed_out is missing"*) reason="query timed out or timed_out is missing" ;;
+    *"shard status is missing or failed"*) reason="shard status is missing or failed" ;;
+    *"total hit count is missing or inexact"*) reason="total hit count is missing or inexact" ;;
+    *"service aggregation is missing, truncated, or inexact"*) reason="service aggregation is missing, truncated, or inexact" ;;
+    *"zero hits conflict with nonempty buckets"*) reason="zero hits conflict with nonempty buckets" ;;
+    *"invalid service bucket"*) reason="invalid service bucket" ;;
+    *"group aggregation is missing, truncated, or inexact"*) reason="group aggregation is missing, truncated, or inexact" ;;
+    *"invalid grouping-key bucket"*) reason="invalid grouping-key bucket" ;;
+    *"sample evidence is missing"*) reason="sample evidence is missing" ;;
+    *"sample identity does not match its aggregation bucket"*) reason="sample identity does not match its aggregation bucket" ;;
+    *"sample is missing exception type, message, or trace id"*) reason="sample is missing exception type, message, or trace id" ;;
+    *) reason="malformed or incomplete response" ;;
+  esac
+  fail "APM response is invalid or incomplete ($reason); no groups dispatched"
+}

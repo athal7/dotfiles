@@ -20,6 +20,13 @@ chmod +x "$WORK/bin/xh-es-search" "$WORK/bin/chezmoi"
 cat >"$WORK/valid.json" <<'JSON'
 {"timed_out":false,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0},"hits":{"total":{"value":8,"relation":"eq"},"hits":[]},"aggregations":{"services":{"doc_count_error_upper_bound":0,"sum_other_doc_count":0,"buckets":[{"key":"svc-b","doc_count":4,"groups":{"doc_count_error_upper_bound":0,"sum_other_doc_count":0,"buckets":[{"key":"group-b","doc_count":4,"sample":{"hits":{"hits":[{"_source":{"service.name":"svc-b","error.grouping_key":"group-b","error.exception.type":"TypeB","error.exception.message":"message B","trace.id":"trace-b","stacktrace":"MUST_NOT_LEAK"}}]}}}]}},{"key":"unmapped","doc_count":2,"groups":{"doc_count_error_upper_bound":0,"sum_other_doc_count":0,"buckets":[{"key":"group-x","doc_count":2,"sample":{"hits":{"hits":[{"_source":{"service.name":"unmapped","error.grouping_key":"group-x","error.exception.type":"TypeX","error.exception.message":"message X","trace.id":"trace-x"}}]}}}]}},{"key":"svc-a","doc_count":2,"groups":{"doc_count_error_upper_bound":0,"sum_other_doc_count":0,"buckets":[{"key":"group-a","doc_count":2,"sample":{"hits":{"hits":[{"_source":{"service.name":"svc-a","error.grouping_key":"group-a","error.exception.type":"TypeA","error.exception.message":"message A","trace.id":"trace-a"}}]}}}]}}]}}}
 JSON
+jq '(.aggregations.services.buckets[].groups.buckets[].sample.hits.hits[]._source) |= {
+  service: {name: .["service.name"]},
+  error: {grouping_key: .["error.grouping_key"], exception: [{type: .["error.exception.type"], message: .["error.exception.message"]}]},
+  trace: {id: .["trace.id"]},
+  stacktrace: .stacktrace
+}' "$WORK/valid.json" >"$WORK/nested.json"
+mv "$WORK/nested.json" "$WORK/valid.json"
 
 pass=0
 fail=0
@@ -52,10 +59,14 @@ jq '.aggregations.services.buckets[0].groups.doc_count_error_upper_bound=1' "$WO
 expect_fail "inexact grouping counts"
 jq 'del(.aggregations.services)' "$WORK/valid.json" >"$WORK/input.json"
 expect_fail "missing aggregations"
-jq '.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source["service.name"]="wrong"' "$WORK/valid.json" >"$WORK/input.json"
+jq '.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.service.name="wrong"' "$WORK/valid.json" >"$WORK/input.json"
 expect_fail "sample identity mismatch"
-jq 'del(.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source["trace.id"])' "$WORK/valid.json" >"$WORK/input.json"
+if grep -q 'sample identity does not match its aggregation bucket' "$WORK/err"; then ok "reports safe identity diagnostic"; else bad "reports safe identity diagnostic"; fi
+jq 'del(.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.trace.id)' "$WORK/valid.json" >"$WORK/input.json"
 expect_fail "missing trace ID"
+if grep -q 'sample is missing exception type, message, or trace id' "$WORK/err"; then ok "reports safe missing evidence diagnostic"; else bad "reports safe missing evidence diagnostic"; fi
+jq '.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.error.exception += [{"type":"Inner","message":"inner message"}]' "$WORK/valid.json" >"$WORK/input.json"
+if output=$(run 2>"$WORK/err") && jq -e '.selected[0].exception_type=="TypeB" and .selected[0].message=="message B"' <<<"$output" >/dev/null; then ok "retains the first paired exception"; else bad "retains the first paired exception"; fi
 printf '{"error":{"reason":"private source details"}}\n' >"$WORK/input.json"
 expect_fail "Elasticsearch error"
 if ! grep -q 'private source details' "$WORK/err"; then ok "does not leak source response details"; else bad "does not leak source response details"; fi

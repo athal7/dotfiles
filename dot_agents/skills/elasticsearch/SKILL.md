@@ -4,6 +4,7 @@ description: Load when investigating production errors, latency, or trace data â
 license: MIT
 ---
 Load `xh` before querying. Use `xh-es-search '<index-expression>'` with JSON in the Bash `PAYLOAD` environment variable. `xh-apm-error-groups` builds its own payload.
+The APM helper reads nested `_source` fields and pairs the first exception's type and message. A missing exception or trace in any sampled group fails the whole result; its diagnostic is safe to report but does not recover evidence or authorize dispatch.
 
 
 The wrapper uses `ES_URL` when set; otherwise it derives `https://<esHost>` from `chezmoi data`. Configure the hostname with chezmoi and ensure the matching xh session is provisioned. It fails closed when `esHost` is missing or invalid.
