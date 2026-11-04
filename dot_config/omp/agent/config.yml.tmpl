@@ -20,9 +20,7 @@ bash:
     # baseline in tools.approval, so this list is the whole prompt surface.
     #
     # Native approvals cannot inspect arguments or remote PR state, so
-    # draft-scoped shapes are matched by their flags. Push is always allowed:
-    # keeping the PR draft is what keeps a push from notifying reviewers, and
-    # the shipit skill owns that invariant.
+    # draft-scoped shapes are matched by their flags. Push is always allowed.
     - match: "gh pr create*--draft*"
       approval: allow
     - match: "gh stack submit*--auto*"

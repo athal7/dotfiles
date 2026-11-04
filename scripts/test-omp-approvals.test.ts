@@ -93,7 +93,7 @@ describe("native OMP approval configuration", () => {
       "gh stack submit --auto",
       "gh issue create --title 'bug' --assignee @me",
       "gh auth switch",
-      // Push stays unattended; keeping the PR draft is what keeps it quiet.
+      // Push stays unattended.
       "git push origin fix-thing",
       "git push --force-with-lease origin fix-thing",
     ]) {
