@@ -456,7 +456,6 @@ def main() -> int:
                     verify_app(base)
                 except RuntimeError as exc:
                     if args.skip_if_not_running and str(exc).startswith("Cannot reach OpenFlow"):
-                        print("OpenFlow is not running; profile sync skipped. Open it, then run chezmoi apply again.")
                         return 0
                     raise
                 sync_profile(base, root, source, expected, args.accept_repository)

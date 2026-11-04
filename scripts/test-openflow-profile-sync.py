@@ -209,7 +209,8 @@ def run() -> None:
             offline = run_sync(
                 source, state, "http://127.0.0.1:0", success=True, skip_if_not_running=True,
             )
-            assert "profile sync skipped" in offline.stdout
+            assert not offline.stdout.strip(), offline.stdout
+            assert not offline.stderr.strip(), offline.stderr
         assert all(not ("flash" in call or "device" in call or "firmware" in call) for call in OpenFlowFixture.calls)
         print("PASS: guarded profile sync, separate review candidate, offline skip, semantic MATCH, and no device routes")
     finally:
