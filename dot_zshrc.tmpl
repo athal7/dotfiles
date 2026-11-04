@@ -19,6 +19,12 @@ _brew_prefix="$(brew --prefix)"
   alias g='git'
   alias ld='lumen diff'
   alias ldm='lumen diff "$(git merge-base main HEAD)..-"'
+  # Paired-terminal replacements for AoE's PR and issue tools.
+  alias prw='gh pr view --web'
+  issuew() {
+    local issue_url
+    issue_url=$(linear issue url "$@") && open "$issue_url"
+  }
   alias k="kubectl"
   alias less="less -R"
   alias lf="less +F"
