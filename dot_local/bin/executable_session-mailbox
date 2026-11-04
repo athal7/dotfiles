@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""Store peer messages locally without sending input to an agent session.
+
+Messages are polled, not pushed. Cache contents may be deleted by the system.
+Sender and recipient names are labels, not authenticated identities.
+"""
+
+import argparse
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import sys
+import tempfile
+import uuid
+
+
+def label(value):
+    if not value.strip() or len(value) > 256 or any(ord(c) < 32 for c in value):
+        raise argparse.ArgumentTypeError("label must be 1–256 printable characters")
+    return value
+
+
+def message_id(value):
+    if not re.fullmatch(r"[0-9a-f]{32}", value):
+        raise argparse.ArgumentTypeError("message id must be 32 lowercase hexadecimal characters")
+    return value
+
+
+def mailbox(recipient):
+    cache = os.environ.get("XDG_CACHE_HOME", "")
+    root = Path(cache) if cache and Path(cache).is_absolute() else Path.home() / ".cache"
+    return root / "session-mailbox" / hashlib.sha256(recipient.encode()).hexdigest()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    send = commands.add_parser("send", help="publish a message; use - to read its body from stdin")
+    send.add_argument("--from", dest="sender", type=label, required=True)
+    send.add_argument("--to", type=label, required=True)
+    send.add_argument("--reply-to", type=message_id)
+    send.add_argument("body")
+    inbox = commands.add_parser("inbox", help="print unread messages as a JSON array without acknowledging them")
+    inbox.add_argument("--for", dest="recipient", type=label, required=True)
+    inbox.add_argument("--all", action="store_true", help="include acknowledged messages")
+    ack = commands.add_parser("ack", help="acknowledge a message after processing it")
+    ack.add_argument("--for", dest="recipient", type=label, required=True)
+    ack.add_argument("id", type=message_id)
+    args = parser.parse_args()
+    try:
+        if args.command == "send":
+            body = sys.stdin.read() if args.body == "-" else args.body
+            if not body.strip():
+                parser.error("message body must not be empty")
+            folder = mailbox(args.to)
+            folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+            msg = {"id": uuid.uuid4().hex, "from": args.sender, "to": args.to,
+                   "time": datetime.now(timezone.utc).isoformat(), "reply_to": args.reply_to, "body": body}
+            fd, temp = tempfile.mkstemp(prefix=".message-", dir=folder)
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                    json.dump(msg, stream, ensure_ascii=False)
+                    stream.write("\n")
+                os.link(temp, folder / (msg["id"] + ".json"))
+            finally:
+                os.unlink(temp)
+            print(json.dumps(msg, ensure_ascii=False))
+        elif args.command == "inbox":
+            folder = mailbox(args.recipient)
+            messages = []
+            for path in folder.glob("*.json"):
+                if not args.all and (folder / (path.stem + ".ack")).exists():
+                    continue
+                with path.open(encoding="utf-8") as stream:
+                    msg = json.load(stream)
+                if msg["to"] != args.recipient:
+                    raise ValueError("recipient mismatch in mailbox")
+                messages.append(msg)
+            messages.sort(key=lambda msg: (msg["time"], msg["id"]))
+            print(json.dumps(messages, ensure_ascii=False))
+        else:
+            folder = mailbox(args.recipient)
+            path = folder / (args.id + ".json")
+            with path.open(encoding="utf-8") as stream:
+                msg = json.load(stream)
+            if msg["to"] != args.recipient:
+                raise ValueError("recipient mismatch in mailbox")
+            (folder / (args.id + ".ack")).touch(mode=0o600, exist_ok=True)
+    except (OSError, ValueError, KeyError) as error:
+        print(f"session-mailbox: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

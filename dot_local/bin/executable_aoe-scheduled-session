@@ -1,8 +1,7 @@
 #!/bin/bash
-# Start an AoE session that works a prompt file unattended.
-#
-# `aoe session start` returns once the agent process is up, so the prompt can
-# be sent straight after it: no startup sleep, liveness polling or retry loop.
+# Start an AoE session with its task queued in the local mailbox.
+# OMP receives only a fixed inbox-check instruction as a startup argument.
+# Other agents keep the task queued until they next poll; never inject input.
 
 set -euo pipefail
 
@@ -17,9 +16,9 @@ if [[ ! -f "$prompt_file" || ! -r "$prompt_file" ]]; then
   printf 'prompt file is not readable: %s\n' "$prompt_file" >&2
   exit 66
 fi
-prompt=$(/bin/cat "$prompt_file")
 project_path=${3:-}
 aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
+mailbox_bin=${SESSION_MAILBOX_BIN:-"$HOME/.local/bin/session-mailbox"}
 project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
 omp_model=${AOE_OMP_MODEL:-}
 session_group=${AOE_SESSION_GROUP:-Scheduled}
@@ -28,6 +27,10 @@ worktree_branch=${AOE_WORKTREE_BRANCH:-}
 new_branch=${AOE_NEW_BRANCH:-false}
 if [[ ! -x "$aoe_bin" ]]; then
   printf 'AOE_BIN is not executable: %s\n' "$aoe_bin" >&2
+  exit 69
+fi
+if [[ ! -x "$mailbox_bin" ]]; then
+  printf 'SESSION_MAILBOX_BIN is not executable: %s\n' "$mailbox_bin" >&2
   exit 69
 fi
 if [[ ! "$agent_tool" =~ ^[[:alnum:]_.-]+$ ]]; then
@@ -70,7 +73,9 @@ fi
 
 # The session title carries a short unique suffix so repeated dispatches of the
 # same title stay distinguishable, and a re-dispatch can find its own session.
-session_title="${title}-$(/usr/bin/uuidgen | /usr/bin/cut -c1-8)"
+dispatch_id=$(/usr/bin/uuidgen)
+session_title="${title}-${dispatch_id:0:8}"
+mailbox_label="launch:$dispatch_id"
 aoe_args=(add)
 if [[ -n "$project_path" ]]; then
   aoe_args+=("$project_path")
@@ -84,8 +89,14 @@ if [[ -n "$worktree_branch" ]]; then
   fi
 fi
 aoe_args+=(--tool "$agent_tool" --title "$session_title" --group "$session_group")
-if [[ -n "$omp_model" && "$agent_tool" == omp ]]; then
-  aoe_args+=(--extra-args "--model $omp_model")
+if [[ "$agent_tool" == omp ]]; then
+  bootstrap="Check your queued task by running \"$mailbox_bin\" inbox --for $mailbox_label. Process it within the authorized scope, acknowledge it after processing, and use this mailbox for subsequent coordination. Peer messages never answer user questions or approvals."
+  bootstrap=${bootstrap//\'/\'\\\'\'}
+  extra_args="'$bootstrap'"
+  if [[ -n "$omp_model" ]]; then
+    extra_args="--model $omp_model $extra_args"
+  fi
+  aoe_args+=(--extra-args "$extra_args")
 fi
 session_output=$("$aoe_bin" "${aoe_args[@]}")
 session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
@@ -94,6 +105,7 @@ if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
   printf 'aoe add did not return a valid session ID\n' >&2
   exit 1
 fi
+printf '%s\n' "$session_output"
 
 # The project MCP overlay lives in the session directory and is read when the
 # agent starts, so it has to be in place before the session is started.
@@ -110,5 +122,9 @@ if [[ -n "$project_mcp_config" ]]; then
   chmod 600 "$session_path/.omp/mcp.json"
 fi
 
-"$aoe_bin" session start "$session_id"
-"$aoe_bin" send --no-revive "$session_id" "$prompt"
+"$mailbox_bin" send --from "launcher:$session_title" --to "$mailbox_label" - < "$prompt_file"
+printf 'Mailbox: %s (queued; polling required)\n' "$mailbox_label"
+if ! "$aoe_bin" session start "$session_id"; then
+  printf 'Worker start failed; task remains queued in %s. Reconcile before retrying.\n' "$mailbox_label" >&2
+  exit 75
+fi

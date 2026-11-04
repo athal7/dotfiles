@@ -29,34 +29,16 @@ if ! /usr/bin/git check-ref-format --branch "$LINEAR_ISSUE_BRANCH_NAME" >/dev/nu
   exit 65
 fi
 
-worktree_args=(--worktree "$LINEAR_ISSUE_BRANCH_NAME")
+new_branch=false
 if ! /usr/bin/git -C "$repo_root" show-ref --verify --quiet "refs/heads/$LINEAR_ISSUE_BRANCH_NAME"; then
-  worktree_args+=(--new-branch)
+  new_branch=true
 fi
 
-session_output=$("$aoe_bin" add "$repo_root" \
-  --tool omp \
-  --title "$LINEAR_ISSUE_IDENTIFIER" \
-  --group Linear \
-  "${worktree_args[@]}")
-session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
-if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
-  printf '%s\n' "$session_output" >&2
-  printf 'aoe add did not return a valid session ID\n' >&2
-  exit 1
-fi
-
-for attempt in 1 2 3; do
-  if "$aoe_bin" session start "$session_id"; then
-    break
-  fi
-  if [[ "$attempt" -eq 3 ]]; then
-    printf 'aoe session failed to start after %s attempts\n' "$attempt" >&2
-    exit 1
-  fi
-  /bin/sleep 5
-done
-
-/bin/sleep 5
-"$aoe_bin" send --no-revive "$session_id" "$LINEAR_PROMPT"
-printf 'Started AOE session %s for %s\n' "$session_id" "$LINEAR_ISSUE_IDENTIFIER"
+prompt_file=$(mktemp "${TMPDIR:-/tmp}/linear-task.XXXXXXXX")
+trap 'rm -f "$prompt_file"' EXIT
+printf '%s\n' "$LINEAR_PROMPT" > "$prompt_file"
+scheduled_bin=${AOE_SCHEDULED_SESSION_BIN:-"$HOME/.local/bin/aoe-scheduled-session"}
+AOE_BIN="$aoe_bin" AOE_TOOL=omp AOE_SESSION_GROUP=Linear \
+  AOE_WORKTREE_BRANCH="$LINEAR_ISSUE_BRANCH_NAME" AOE_NEW_BRANCH="$new_branch" \
+  "$scheduled_bin" "$LINEAR_ISSUE_IDENTIFIER" "$prompt_file" "$repo_root"
+printf 'Queued mailbox task for %s\n' "$LINEAR_ISSUE_IDENTIFIER"
