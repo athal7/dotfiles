@@ -5,7 +5,6 @@
 packages:
   taps:
     - athal7/tap
-    - athal7/versions
     - github/gh
     - jnsahaj/lumen
     - steipete/tap
@@ -13,7 +12,7 @@ packages:
     - kunobi-ninja/kunobi
 
   brews:
-    - name: athal7/versions/omp@18.16.0
+    - name: can1357/tap/omp
     - name: aoe
       args: [HEAD]
     - name: autojump
