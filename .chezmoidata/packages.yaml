@@ -13,7 +13,7 @@ packages:
     - kunobi-ninja/kunobi
 
   brews:
-    - name: athal7/versions/omp@18.10.3
+    - name: athal7/versions/omp@18.16.0
     - name: aoe
       args: [HEAD]
     - name: autojump
