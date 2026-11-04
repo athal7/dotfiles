@@ -23,9 +23,19 @@ for installed in $(brew list --formula --full-name); do
         brew unlink "$installed"
       fi
       ;;
+    omp|can1357/tap/omp)
+      # The tap-head shortcut below can leave this plain formula behind.
+      brew unlink "$installed" || true
+      ;;
   esac
 done
-brew version-install can1357/tap/{{ trimPrefix "athal7/versions/" .name }}
+# `brew version-install` installs the plain tap-head formula instead of
+# extracting when the pin is the current release, leaving nothing to link, so
+# extract the pinned release explicitly and install that versioned formula.
+if ! brew list --formula --versions {{ .name | quote }} >/dev/null 2>&1; then
+  HOMEBREW_DEV_CMD_RUN=1 brew extract --version={{ trimPrefix "athal7/versions/omp@" .name }} can1357/tap/omp athal7/homebrew-versions
+fi
+brew install {{ .name | quote }}
 brew link {{ .name | quote }}
 {{ end -}}
 {{ end }}
