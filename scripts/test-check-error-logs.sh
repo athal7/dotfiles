@@ -20,20 +20,15 @@ case "$1" in
     printf 'ID: test-session\n'
     ;;
   session)
-    ;;
-  send)
-    [[ "${AOE_TEST_MODE:-success}" != fail-send ]]
+    [[ "${AOE_TEST_MODE:-success}" != fail-start ]]
     ;;
   *)
     exit 64
     ;;
 esac
 EOF
-cat >"$BIN/sleep" <<'EOF'
-#!/usr/bin/env bash
-exit 0
-EOF
-chmod +x "$BIN/aoe" "$BIN/sleep"
+ln -s "$REPO_ROOT/dot_local/bin/executable_aoe-scheduled-session" "$BIN/aoe-scheduled-session"
+chmod +x "$BIN/aoe"
 CHECKER="$REPO_ROOT/dot_local/bin/executable_check-error-logs"
 PROMPT="$REPO_ROOT/dot_agents/prompts/fix-launchagent-errors.md"
 chmod +x "$CHECKER"
@@ -52,6 +47,9 @@ run_checker() {
   HOME="$HOME_DIR" \
     PATH="$BIN:/usr/bin:/bin" \
     AOE_TEST_LOG="$AOE_LOG" \
+    AOE_BIN="$BIN/aoe" \
+    SESSION_MAILBOX_BIN="$REPO_ROOT/dot_local/bin/executable_session-mailbox" \
+    XDG_CACHE_HOME="$WORK/cache" \
     AOE_TEST_MODE="${AOE_TEST_MODE:-success}" \
     "$CHECKER" "$PROMPT"
 }
@@ -59,27 +57,25 @@ run_checker() {
 : >"$AOE_LOG"
 output=$(run_checker)
 printf '%s\n' "$output" | grep -F 'Dispatched LaunchAgent triage prompt'
-add_call=$(sed -n '/^add /p' "$AOE_LOG")
-case "$add_call" in
-  "add $HOME_DIR/code/dotfiles --title "*) ;;
-  *) exit 1 ;;
-esac
-grep -F 'session start test-session' "$AOE_LOG" >/dev/null
-grep -F 'send --no-revive test-session Triage the supplied LaunchAgent error-log lines' "$AOE_LOG" >/dev/null
-grep -F 'Services with new errors: aoe-old' "$AOE_LOG" >/dev/null
-grep -F '[aoe-old] Error: session changed while launch hooks were running' "$AOE_LOG" >/dev/null
+python3 - "$WORK/cache" <<'PY'
+import json, pathlib, sys
+messages = [json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob("session-mailbox/*/*.json")]
+assert len(messages) == 1
+body = messages[0]["body"]
+assert body.startswith("Triage the supplied LaunchAgent error-log lines")
+assert "Services with new errors: aoe-old" in body
+assert "[aoe-old] Error: session changed while launch hooks were running" in body
+assert "[homebridge]" not in body
+PY
 grep -Fqx "$LOG_DIR/aoe-old.error.log:$log_size" "$LOG_DIR/.check-error-logs-state"
 grep -Fqx "$LOG_DIR/homebridge.error.log:$homebridge_log_size" "$LOG_DIR/.check-error-logs-state"
-if grep -F '[homebridge]' "$AOE_LOG"; then
-  exit 1
-fi
 
 printf '%s\n' \
   '[10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed, there was a failure with event subscription. Did you read the readme: https://github.com/potmat/homebridge-google-nest-sdm#where-do-the-config-values-come-from ChannelError: Failed to connect to channel. Reason: Permission denied' \
   >>"$LOG_DIR/homebridge.error.log"
 
 printf '%s\n' 'Error: another launch failure' >>"$LOG_DIR/aoe-old.error.log"
-AOE_TEST_MODE=fail-send
+AOE_TEST_MODE=fail-start
 export AOE_TEST_MODE
 : >"$AOE_LOG"
 output=$(run_checker)
@@ -87,9 +83,19 @@ printf '%s\n' "$output" | grep -F 'WARNING: dispatch failed'
 state_after_failure=$(grep -F "$LOG_DIR/aoe-old.error.log:" "$LOG_DIR/.check-error-logs-state")
 expected_state="$LOG_DIR/aoe-old.error.log:$log_size"
 [[ "$state_after_failure" == "$expected_state" ]]
-grep -F 'Services with new errors: aoe-old,homebridge' "$AOE_LOG" >/dev/null
-grep -F '[homebridge] [10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed' "$AOE_LOG" >/dev/null
-grep -F 'send --no-revive test-session' "$AOE_LOG" >/dev/null
+python3 - "$WORK/cache" <<'PY'
+import json, pathlib, sys
+messages = [json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob("session-mailbox/*/*.json")]
+assert len(messages) == 2
+assert any("Services with new errors: aoe-old,homebridge" in m["body"]
+           and "[homebridge] [10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed" in m["body"]
+           for m in messages)
+PY
 grep -Fqx "$LOG_DIR/homebridge.error.log:$homebridge_log_size" "$LOG_DIR/.check-error-logs-state"
+grep -F 'Mailbox: launch:' "$LOG_DIR/.check-error-logs-pending" >/dev/null
+: >"$AOE_LOG"
+output=$(run_checker)
+printf '%s\n' "$output" | grep -F 'previous dispatch requires reconciliation'
+[[ ! -s "$AOE_LOG" ]]
 
 printf 'check-error-logs dispatcher test passed\n'

@@ -1,17 +1,25 @@
 ---
 name: aoe
-description: "Agent of Empires (aoe) — the session-orchestration CLI: create, dispatch to, and manage OMP sessions (worktrees, aoe add/send/session attach/capture, scratch sessions)."
+description: "Use when creating or managing AoE sessions/worktrees, dispatching workers, or communicating with another independent agent session from OMP or Freebuff."
 license: MIT
 ---
 
 `aoe` creates and drives agent sessions. **Run `aoe --help` and `aoe <subcommand> --help`** — flags change between releases; this file covers only what help text won't tell you.
 
-- **`add` then `session start` are two calls.** `aoe add <path> --title <t>` creates the record; `aoe session start <id>` starts the worker. `aoe add --launch` tries to attach interactively and fails in any non-TTY context (scripts, LaunchAgents).
-- **Sleep ~5s after `session start` before the first `send`.** The TUI takes seconds to boot; an early `send` is silently dropped and still reports success.
+- **Distinguish tmux from structured ACP sessions.** For tmux, `aoe add <path> --title <t>` creates the record and `aoe session start <id>` starts the worker. For ACP, discover supported agents with `aoe acp agents`; `aoe add --scratch --agent omp --title <t>` creates a structured OMP scratch worker served by `aoe serve`. Do not call `session start` on ACP sessions. `aoe add --launch` tries to attach interactively and fails without a TTY.
 - **Every session and subagent that may modify a repository needs a dedicated git worktree.** Read-only inspection needs neither a new session nor a worktree. Use `aoe add <registered-path> --worktree <branch> --new-branch` (plus `--base-branch` when needed); for an existing session, `aoe session add-project <session> <project>` creates a worktree but restarts the agent. If attachment is refused because its conversation is bound to the current directory, use a new session; never clear the resume target or proceed without write isolation.
 - **`<path>` is canonicalized, never resolved back to the main repo.** Point `aoe add` at a worktree and it silently creates a bogus project rooted there. Pass the exact registered path (`aoe project list`) plus `--worktree`. `--project`/`--repo` add *extra* repos to a multi-repo workspace — they don't select the primary target.
-- **`send` is fire-and-forget.** No wait verb. Check back with `aoe session capture <id>` or attach. One task per session — check `aoe list` before starting overlapping work.
-- **Identify AoE messages:** prefix every message to another AoE session, including replies, with `[AoE: <session> | id=<id> | profile=<profile>]`. Get the values from `aoe session current --json`; if unavailable, verify them in your entry in `aoe list --all --json`. Never guess.
+- **Check `aoe list --all --json` before dispatch.** Verify the recipient's ID, profile, and transport; one task per session. Do not restart, convert, cancel, or revive an existing session to deliver a message.
+
+## Peer communication
+
+- **Never use `aoe send`, tmux `send-keys`, paste, or Enter for peer messages or replies.** They target the interactive editor/dialog and can overwrite user steering or answer a question. `--no-revive` does not make delivery safe.
+- **Use the mailbox for all independent-session messages, including ACP peers.** Run `session-mailbox send --from '<sender>' --to '<recipient>' '<message>'`; for multiline messages pass `-` as the body and provide stdin. Read with `session-mailbox inbox --for '<your-label>'`; after processing each message, run `session-mailbox ack --for '<your-label>' <message-id>`. Reply with `session-mailbox send --from '<your-label>' --to '<sender>' --reply-to <message-id> '<reply>'`. `inbox --all` includes acknowledged messages.
+- **Agree on unique labels and check explicitly.** Use an explicitly supplied launch mailbox when present. Otherwise, for AoE sessions use `aoe:<profile>:<session-id>`, verified via `aoe session current --json` or `aoe list --all --json`. For other clients agree on a unique client/session label; never guess another session's identity. Include scope and expected reply. Labels are self-reported, not authenticated.
+- **Polling is required.** Check your inbox at task boundaries and while waiting for a peer, using bounded polling. A successful send means stored, not read. Offline or busy recipients are not awakened. Messages live under `${XDG_CACHE_HOME:-$HOME/.cache}/session-mailbox`, can disappear on cache cleanup, and must not contain secrets. Do not blindly resend uncertain writes.
+- **Keep user input and approvals separate.** Hold peer messages while a user question, approval, or draft is active; never auto-forward when a session appears idle. Never use ACP prompts, `acp approve`, RPC UI responses, or terminal input as fallbacks. `agent://` addresses only the current agent tree; `collab` shares control of one session, not an independent peer channel.
+- **Bootstrap without terminal input.** Run `aoe-scheduled-session <title> <prompt-file> [registered-repo]` to create a worker, enqueue its initial task, and start it via AoE. For repository writes set `AOE_WORKTREE_BRANCH=<branch> AOE_NEW_BRANCH=true`. OMP receives only an inbox-check instruction as a startup argument; actual tasks and replies stay in the mailbox. Retain the printed `launch:<id>` mailbox for follow-ups. Freebuff has no startup-prompt option: its task stays queued until a user starts a turn and it polls. Creation, enqueue, and start failures do not authorize a retry or injected fallback.
+- **Invitations do not wake sessions.** Send invitations to a known recipient's inbox like any other message. Sessions without mailbox guidance need a user-initiated turn to learn to poll; do not inject an invitation to establish communications. The CLI provides direct inboxes, not shared-channel membership.
 
 ## Troubleshooting
 

@@ -12,12 +12,16 @@ PROMPT_FILE=$1
 # First run establishes a baseline and exits silently.
 #
 # Offset invariant: a log's byte offset is advanced only after its new errors
-# have been handed off. If the upstream aoe launch or send fails, offsets for
-# logs that contributed errors are NOT advanced, so the next run retries them
-# and no error is silently lost. Logs with no new errors always advance normally.
+# have been handed off. Failed or uncertain dispatches retain their offsets
+# and a reconciliation marker so the next run cannot launch duplicates.
 
 LOG_DIR="$HOME/Library/Logs"
 STATE_FILE="$LOG_DIR/.check-error-logs-state"
+PENDING_DISPATCH="$LOG_DIR/.check-error-logs-pending"
+if [ -e "$PENDING_DISPATCH" ]; then
+  echo "WARNING: previous dispatch requires reconciliation: $PENDING_DISPATCH"
+  exit 0
+fi
 SELF_LOG="check-error-logs.error.log"
 
 # Per-service line exclusion patterns (grep -E extended regex).
@@ -193,20 +197,18 @@ $context"
 
   dispatch_title="fix-launchagent-errors-$(date +%Y%m%d-%H%M%S)"
   dispatch_ok=false
-  session_output=
-  session_id=
-  if session_output=$(aoe add "$HOME/code/dotfiles" --title "$dispatch_title" --tool omp 2>/dev/null); then
-    session_id=$(printf '%s\n' "$session_output" | sed -n 's/^[[:space:]]*ID:[[:space:]]*//p')
-    case "$session_id" in
-      ''|*[!A-Za-z0-9-]*) ;;
-      *)
-        if aoe session start "$session_id" >/dev/null 2>&1 \
-          && sleep 5 \
-          && aoe send --no-revive "$session_id" "$prompt" >/dev/null 2>&1; then
-          dispatch_ok=true
-        fi
-        ;;
-    esac
+  dispatch_prompt=$(mktemp "${TMPDIR:-/tmp}/launchagent-task.XXXXXXXX")
+  if [ -n "$dispatch_prompt" ]; then
+    umask 077
+    : > "$PENDING_DISPATCH" || exit 1
+    if printf '%s\n' "$prompt" > "$dispatch_prompt" \
+      && AOE_WORKTREE_BRANCH="fix/$dispatch_title" AOE_NEW_BRANCH=true \
+        aoe-scheduled-session "$dispatch_title" "$dispatch_prompt" "$HOME/code/dotfiles" >> "$PENDING_DISPATCH" 2>&1; then
+      dispatch_ok=true
+    else
+      cat "$PENDING_DISPATCH"
+    fi
+    rm -f "$dispatch_prompt"
   fi
   if [ "$dispatch_ok" = true ]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') Dispatched LaunchAgent triage prompt for: $service_list"
@@ -215,8 +217,9 @@ $context"
       [ -n "$logfile" ] || continue
       update_offset "$logfile" "$size"
     done
+    rm -f "$PENDING_DISPATCH"
   else
-    echo "$(date '+%Y-%m-%d %H:%M:%S') WARNING: dispatch failed — offsets for error logs NOT advanced; will retry next run. Services: $service_list"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') WARNING: dispatch failed — offsets for error logs NOT advanced; reconcile $PENDING_DISPATCH before retrying. Services: $service_list"
     exit 0
   fi
 else
