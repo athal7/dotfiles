@@ -128,11 +128,11 @@ packages:
   # GitHub source files are installed through .chezmoiexternal.toml.tmpl.
   github_files:
     - name: aoe-omp-extension
-      repo: athal7/agent-of-empires
-      ref: be8e1c439e06878800491839ce328669800d2e12
-      path: plugins/agent-omp/omp-extension/index.ts
+      repo: agent-of-empires/plugin-omp
+      ref: 27a679c05dbe4a55cce3a4b192a25f8007f98d9d
+      path: omp-extension/index.ts
       target: .local/share/omp/extensions/agent-of-empires.ts
-      checksum: bd68e34fea4c8e3da566313ece08e9f3ced7a49e03a7e1d1817181ef6aac5c08
+      checksum: 47777b03622a87038c1ec53f4fc0b119d3d01e01d1cf084a5a5f3d13c2aa7787
 
 
 
