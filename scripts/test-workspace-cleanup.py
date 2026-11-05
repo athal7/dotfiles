@@ -201,10 +201,9 @@ class WorktreeCleanupTest(unittest.TestCase):
                 self.assertTrue((target / "artifact").exists())
                 self.assertTrue(path.exists())
 
-    def test_pressure_shortens_stale_age_at_free_space_floor_and_fraction(self):
+    def test_pressure_shortens_stale_age_at_fixed_free_space_trigger(self):
         gib = 1024**3
-        cases = (("small-disk", 128 * gib), ("large-disk", 2 * 1024**4))
-        for name, total in cases:
+        for name, total in (("small-disk", 128 * gib), ("large-disk", 2 * 1024**4)):
             with self.subTest(name=name):
                 path = self.branch(name)
                 target = self.old_target(path)
@@ -212,7 +211,7 @@ class WorktreeCleanupTest(unittest.TestCase):
                 ten_days_ago = time.time() - 10 * 86400
                 os.utime(artifact, (ten_days_ago, ten_days_ago))
                 os.utime(target, (ten_days_ago, ten_days_ago))
-                pressure_free = max(cleanup.TARGET_PRESSURE_MIN_FREE_BYTES, total // 10)
+                pressure_free = cleanup.TARGET_PRESSURE_MIN_FREE_BYTES
                 with patch.object(cleanup.shutil, "disk_usage", return_value=SimpleNamespace(free=pressure_free + 1, total=total)):
                     self.clean(False)
                 self.assertTrue(artifact.exists())
@@ -226,6 +225,37 @@ class WorktreeCleanupTest(unittest.TestCase):
                     self.clean(False)
                 self.assertFalse(target.exists())
 
+    def test_pressure_stops_after_recovery_goal(self):
+        path = self.branch("recovered")
+        target = self.old_target(path)
+        gib = 1024**3
+        usage = [
+            SimpleNamespace(free=99 * gib, total=1000 * gib),
+            SimpleNamespace(free=150 * gib, total=1000 * gib),
+        ]
+        with patch.object(cleanup.shutil, "disk_usage", side_effect=usage):
+            self.assertNotIn(f"build artifacts: {target}", self.clean(False))
+        self.assertTrue(target.exists())
+
+
+
+class CleanupCommandTest(unittest.TestCase):
+    def test_database_cleanup_requires_explicit_opt_in(self):
+        with tempfile.TemporaryDirectory() as home, \
+             patch.object(Path, "home", return_value=Path(home)), \
+             patch.object(cleanup, "CODE", Path(home)), \
+             patch.object(cleanup, "worktrees") as worktrees, \
+             patch.object(cleanup, "chrome_clones") as clones, \
+             patch.object(cleanup, "databases") as databases, \
+             patch("sys.argv", ["workspace-cleanup", "--apply"]), \
+             contextlib.redirect_stdout(io.StringIO()):
+            cleanup.main()
+            worktrees.assert_called_once_with(False)
+            clones.assert_called_once_with(False)
+            databases.assert_not_called()
+            with patch("sys.argv", ["workspace-cleanup", "--database-only", "--apply"]):
+                cleanup.main()
+            databases.assert_called_once_with(False)
 
 
 class ChromeCloneCleanupTest(unittest.TestCase):

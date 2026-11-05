@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reclaim idle worktrees, stale Chrome clones, and development/test databases."""
+"""Reclaim idle worktrees, stale generated Cargo output, and Chrome signing clones."""
 
 import argparse
 import fcntl
@@ -16,7 +16,8 @@ CODE = Path(os.environ.get("WORKSPACE_CLEANUP_CODE_ROOT", Path.home() / "code"))
 DATABASE_NAME = re.compile(r"(?:^|_)(?:development|test)(?:_|$)")
 TARGET_STALE_DAYS = 30
 TARGET_PRESSURE_STALE_DAYS = 7
-TARGET_PRESSURE_MIN_FREE_BYTES = 20 * 1024**3
+TARGET_PRESSURE_MIN_FREE_BYTES = 100 * 1024**3
+TARGET_PRESSURE_GOAL_BYTES = 150 * 1024**3
 CHROME_CLONE_STALE_SECONDS = 24 * 60 * 60
 
 
@@ -46,6 +47,11 @@ def worktrees(dry_run):
         sessions = registered_sessions()
     except (OSError, subprocess.CalledProcessError, ValueError, KeyError) as error:
         print(f"Skipping worktrees: cannot read AOE sessions: {error}", file=sys.stderr)
+        return
+    try:
+        pressure = shutil.disk_usage(CODE).free < TARGET_PRESSURE_MIN_FREE_BYTES
+    except OSError as error:
+        print(f"Skipping worktrees: cannot check free space: {error}", file=sys.stderr)
         return
 
     for repo in CODE.iterdir():
@@ -87,8 +93,9 @@ def worktrees(dry_run):
                         except OSError as error:
                             print(f"Skipping target cleanup for {path}: cannot check free space: {error}", file=sys.stderr)
                         else:
-                            pressure_free = max(TARGET_PRESSURE_MIN_FREE_BYTES, usage.total // 10)
-                            stale_days = TARGET_PRESSURE_STALE_DAYS if usage.free < pressure_free else TARGET_STALE_DAYS
+                            stale_days = TARGET_PRESSURE_STALE_DAYS if pressure else TARGET_STALE_DAYS
+                            if pressure and usage.free >= TARGET_PRESSURE_GOAL_BYTES:
+                                continue
                             recent = run("find", str(target), "-mtime", f"-{stale_days}", "-print", "-quit", check=False)
                             if not recent.returncode and not recent.stdout and worktree_is_idle(path):
                                 print(f"build artifacts: {target}")
@@ -185,7 +192,7 @@ def chrome_clones(dry_run):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="remove eligible resources (default: dry-run)")
-    parser.add_argument("--database-only", action="store_true", help="skip worktree and Chrome clone cleanup")
+    parser.add_argument("--database-only", action="store_true", help="explicitly opt into database cleanup; skip worktrees and Chrome clones")
     args = parser.parse_args()
     state = Path.home() / ".local/state"
     state.mkdir(parents=True, exist_ok=True)
@@ -196,9 +203,16 @@ def main():
             print("Cleanup already running", file=sys.stderr)
             return 0
         if not args.database_only:
+            before = shutil.disk_usage(CODE).free
+            print(f"Free space before: {before / 1024**3:.1f} GiB; pressure trigger: 100 GiB; recovery goal: 150 GiB")
             worktrees(not args.apply)
             chrome_clones(not args.apply)
-        databases(not args.apply)
+            after = shutil.disk_usage(CODE).free
+            print(f"Free space after: {after / 1024**3:.1f} GiB; change: {(after - before) / 1024**3:+.1f} GiB")
+            if before < TARGET_PRESSURE_MIN_FREE_BYTES and after < TARGET_PRESSURE_GOAL_BYTES:
+                print("Recovery goal not reached; active, recent, dirty, or unverifiable artifacts are preserved. Inspect disk usage manually; no databases, container volumes, or VMs were changed.")
+        else:
+            databases(not args.apply)
     return 0
 
 
