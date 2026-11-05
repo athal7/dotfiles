@@ -90,6 +90,12 @@ packages:
     # plugin cannot claim the org namespace.
     - source: "gh:agent-of-empires/plugin-freebuf@main"
       id: "dev.example.aoe-freebuf"
+    # Paired OMP integration: its manifest gates which OMP releases may reply
+    # through AoE, so a stale copy silently disables the approval dialog.
+    # Track the branch (no releases upstream) and pair it with the extension
+    # pinned in github_files below.
+    - source: "gh:agent-of-empires/plugin-omp@main"
+      id: "omp.agent-of-empires"
 
   casks:
     - name: firefox
