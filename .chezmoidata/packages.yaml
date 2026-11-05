@@ -83,8 +83,11 @@ packages:
     - source: "gh:agent-of-empires/plugin-linear@main"
       id: "community.linear"
     # Same no-release situation as Linear: track the branch so updates resolve.
-    # Installed from a local staged copy before the org repo existed; this is
-    # the canonical source.
+    # The upstream manifest ships api_version 19 with the freebuff agent
+    # integration, which the host only reads from aoe-plugin.toml.
+    # `dev.example.aoe-freebuf` is upstream's own id, not a local placeholder:
+    # aoe reserves `agent-of-empires.*` for featured plugins, so a community
+    # plugin cannot claim the org namespace.
     - source: "gh:agent-of-empires/plugin-freebuf@main"
       id: "dev.example.aoe-freebuf"
 
