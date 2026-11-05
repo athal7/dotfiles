@@ -104,6 +104,10 @@ launchagents:
       - /opt/homebrew/bin/mise
       - upgrade
       - --yes
+      # Node stays put: Homebridge's global packages live under whichever node
+      # install was current when they were installed, so bump it deliberately.
+      - -x
+      - node
     StartCalendarInterval:
       Hour: 4
       Minute: 30
@@ -166,9 +170,12 @@ launchagents:
 
   homebridge:
     Label: com.$USER.homebridge
+    # Follow mise's `lts` alias instead of a patch version: hardcoding one left
+    # the agent running Homebridge 1.x out of an old node install after lts
+    # moved, while the upgrade landed in the new one.
     ProgramArguments:
-      - $HOME/.local/share/mise/installs/node/24.14.0/bin/node
-      - $HOME/.local/share/mise/installs/node/24.14.0/lib/node_modules/homebridge/bin/homebridge
+      - $HOME/.local/share/mise/installs/node/lts/bin/node
+      - $HOME/.local/share/mise/installs/node/lts/lib/node_modules/homebridge/bin/homebridge
       - -U
       - $HOME/.config/homebridge
     RunAtLoad: true
@@ -184,8 +191,8 @@ launchagents:
   homebridge-ui:
     Label: com.$USER.homebridge-ui
     ProgramArguments:
-      - $HOME/.local/share/mise/installs/node/24.14.0/bin/node
-      - $HOME/.local/share/mise/installs/node/24.14.0/lib/node_modules/homebridge-config-ui-x/dist/main.js
+      - $HOME/.local/share/mise/installs/node/lts/bin/node
+      - $HOME/.local/share/mise/installs/node/lts/lib/node_modules/homebridge-config-ui-x/dist/main.js
     RunAtLoad: true
     KeepAlive: true
     StandardOutPath: $HOME/Library/Logs/homebridge-ui.log
