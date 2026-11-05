@@ -45,7 +45,6 @@ chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$R
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiexternal.toml.tmpl" > "$EXTERNAL"
 extension_external="$(yq -p=toml -o=json '.' "$EXTERNAL")"
 extension_url="$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | "https://raw.githubusercontent.com/\(.repo)/\(.ref)/\(.path)"' "$REPO_ROOT/.chezmoidata/packages.yaml")"
-extension_checksum="$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | .checksum' "$REPO_ROOT/.chezmoidata/packages.yaml")"
 
 check "uses the live custom OMP status-line preset" "$(yq -r '.statusLine.preset' "$CONFIG")" custom
 check "shows model, prewalk mode, and cost in the OMP status line" "$(yq -r '[.statusLine.leftSegments[], .statusLine.rightSegments[]] | join(" ")' "$CONFIG")" "model mode cost"
@@ -53,9 +52,11 @@ check "preserves tight OMP TUI layout" "$(yq -r '.tui.tight' "$CONFIG")" true
 check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
 check "loads the provider-native OMP extension" "$(yq -r '.extensions[0]' "$CONFIG")" "$HOME/.local/share/omp/extensions/agent-of-empires.ts"
 check "renders the pinned OMP extension source URL" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"].url' <<< "$extension_external")" "$extension_url"
-check "renders the OMP extension SHA-256 pin" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"].checksum.sha256' <<< "$extension_external")" "$extension_checksum"
+check "tracks the OMP extension branch instead of pinning a commit" "$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | .ref' "$REPO_ROOT/.chezmoidata/packages.yaml")" main
+check "leaves the moving OMP extension unpinned by checksum" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"] | has("checksum")' <<< "$extension_external")" false
 check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
 check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.host_hooks.before_session[0]' "$AOE" | jq -r '.')" "if [ \"\$AOE_TOOL\" = omp ]; then \"\$HOME/.local/bin/aoe-omp-environment\"; fi"
+check "installs the published aoe release instead of HEAD" "$(yq -r '.packages.brews[] | select(.name == "aoe") | has("args")' "$REPO_ROOT/.chezmoidata/packages.yaml")" false
 check "keeps Ctrl+Q as AoE live-send exit" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.session.live_send_exit_chord')" C-q
 check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has("app_state")' "$AOE")" false
 check "does not retain AoE live agent overrides" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$AOE")" false

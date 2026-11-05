@@ -20,18 +20,13 @@ for installed in $(brew list --formula --full-name); do
 done
 brew untap athal7/versions >/dev/null 2>&1 || true
 
-# Homebrew Bundle won't switch an installed stable formula to HEAD.
+# Homebrew Bundle won't switch an installed HEAD formula to stable, so migrate
+# an existing HEAD install to the published release before bundling.
 if installed_aoe="$(brew list --formula --versions aoe 2>/dev/null)"; then
   case "$installed_aoe" in
     "aoe HEAD"*)
-      if [ ! -x "$(brew --prefix aoe)/bin/aoe" ]; then
-        brew uninstall --formula aoe || exit 1
-        brew install --HEAD aoe || exit 1
-      fi
-      ;;
-    *)
       brew uninstall --formula aoe || exit 1
-      brew install --HEAD aoe || exit 1
+      brew install aoe || exit 1
       ;;
   esac
 fi

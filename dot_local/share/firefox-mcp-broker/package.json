@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@mozilla/firefox-devtools-mcp": "0.10.5"
+    "@mozilla/firefox-devtools-mcp": "latest"
   }
 }

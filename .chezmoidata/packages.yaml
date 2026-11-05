@@ -14,7 +14,6 @@ packages:
   brews:
     - name: can1357/tap/omp
     - name: aoe
-      args: [HEAD]
     - name: autojump
     - name: bat
     - name: chezmoi
@@ -64,7 +63,7 @@ packages:
 
   # OMP plugins installed by run_onchange_after_plugins-omp.sh.tmpl.
   omp_plugins:
-    - "@mozilla-ai/pi-otari@0.6.0"
+    - "@mozilla-ai/pi-otari"
 
   # aoe (Agent of Empires) plugins — installed/updated via
   # run_onchange_after_plugins-aoe.sh.tmpl. Keep sources and IDs here;
@@ -137,10 +136,12 @@ packages:
   github_files:
     - name: aoe-omp-extension
       repo: agent-of-empires/plugin-omp
-      ref: 27a679c05dbe4a55cce3a4b192a25f8007f98d9d
+      # No releases or tags upstream, so track the branch the paired AoE plugin
+      # installs from. No checksum: it would fail the apply on every upstream
+      # commit, so integrity now rests on the repo rather than a pinned digest.
+      ref: main
       path: omp-extension/index.ts
       target: .local/share/omp/extensions/agent-of-empires.ts
-      checksum: 47777b03622a87038c1ec53f4fc0b119d3d01e01d1cf084a5a5f3d13c2aa7787
 
 
 
@@ -149,12 +150,13 @@ packages:
     - repo: BRO3886/ical
       skill: ical-cli
 
-  # npm-managed global packages
+  # npm-managed global packages — unpinned, so each install takes the current
+  # published release.
   npm:
-    homebridge_version: "1.11.4"
-    ui_version: "5.21.0"
-    nest_sdm_version: "1.1.23"
-    ffmpeg_for_homebridge_version: "2.2.2"
+    homebridge_version: "latest"
+    ui_version: "latest"
+    nest_sdm_version: "latest"
+    ffmpeg_for_homebridge_version: "latest"
 
   # mise-managed runtimes and tools
   mise:
@@ -184,14 +186,14 @@ packages:
     - name: spacectl
       version: latest
     - name: fnox
-      version: "1.39.0"
+      version: latest
     - name: npm:freebuff
       version: latest
     - name: npm:codebase-memory-mcp
-      version: "0.11.0"
+      version: latest
       allow_builds: [codebase-memory-mcp]
     - name: npm:@mozilla/firefox-devtools-mcp
-      version: "0.10.5"
+      version: latest
     - name: pipx:pytest
       version: latest
     - name: pipx:check-jsonschema
