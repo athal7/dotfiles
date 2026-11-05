@@ -189,6 +189,14 @@ packages:
       version: latest
     - name: npm:freebuff
       version: latest
+      # The vendor publishes from a GitHub Actions OIDC trusted publisher but
+      # sets `publishConfig.provenance: false`, so the 0.2 line carries publisher
+      # metadata without Sigstore attestations. aube reads that as a downgrade
+      # from the signed 0.0.11 and refuses. Reviewed 2026-11-05: maintainers,
+      # repo (CodebuffAI/freebuff) and tarball integrity are unchanged from the
+      # signed releases. The exemption is scoped to this minor line so a new
+      # major re-opens the review instead of silently inheriting trust.
+      trust_policy_excludes: ["freebuff@^0.2.36"]
     - name: npm:codebase-memory-mcp
       version: latest
       allow_builds: [codebase-memory-mcp]

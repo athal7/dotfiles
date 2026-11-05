@@ -108,11 +108,6 @@ launchagents:
       # install was current when they were installed, so bump it deliberately.
       - -x
       - node
-      # freebuff fails mise's npm trust check (aube cannot reconcile its
-      # published metadata); that needs a human security review, not a nightly
-      # retry that leaves the agent exiting 1 every morning.
-      - -x
-      - npm:freebuff
     StartCalendarInterval:
       Hour: 4
       Minute: 30

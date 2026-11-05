@@ -5,6 +5,9 @@
 {{- if hasKey . "allow_builds" -}}
 {{- $extra = printf ", allow_builds = %s" (.allow_builds | toJson) -}}
 {{- end -}}
+{{- if hasKey . "trust_policy_excludes" -}}
+{{- $extra = printf "%s, trust_policy_excludes = %s" $extra (.trust_policy_excludes | toJson) -}}
+{{- end -}}
 {{- if hasKey . "postinstall" -}}
 {{- $extra = printf "%s, postinstall = %s" $extra (.postinstall | quote) -}}
 {{- end -}}
