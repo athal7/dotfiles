@@ -9,6 +9,13 @@
 {{-   end -}}
 {{- end -}}
 {{- $environment := append $runlayerEnvironment (printf "PI_CODING_AGENT_DIR=%s/.config/omp/agent" .chezmoi.homeDir) -}}
+{{- /* The Linear plugin worker reads LINEAR_API_KEY from the environment AoE
+       builds for its processes; the launchd-spawned daemon does not inherit the
+       wrapper's export. Render it from the same Keychain item the wrapper uses. */ -}}
+{{- $linearKey := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
+{{- if $linearKey -}}
+{{-   $environment = append $environment (printf "LINEAR_API_KEY=%s" $linearKey) -}}
+{{- end -}}
 environment = {{ $environment | toToml }}
 default_profile = ""
 
@@ -37,7 +44,7 @@ persist_sessions = true
 
 [diff]
 context_lines = 3
-split_view = true
+split_view = false
 
 [hooks]
 
@@ -124,9 +131,9 @@ row_tag = "none"
 scratch_smart_rename = "inherit"
 session_id_poller_max_threads = 50
 show_activity_age = true
-show_session_colors = true
+show_session_colors = false
 show_diagnostics_pane = true
-show_shortcut_bar = true
+show_shortcut_bar = false
 show_tips = false
 snooze_duration_minutes = 30
 sidebar_position = "left"
@@ -136,7 +143,7 @@ startup_recovery_wake = false
 strict_hotkeys = false
 tie_workdir_to_name = true
 trash_retention_minutes = 43200
-unread_indicator = true
+unread_indicator = false
 yolo_mode_default = false
 
 [session.custom_agents]
@@ -186,7 +193,7 @@ vt_live = true
 auto_update_plugins = true
 update_check_mode = "notify"
 [web]
-mcp_enabled = false
+mcp_enabled = true
 notifications_enabled = true
 notify_on_error = true
 notify_on_idle = true
