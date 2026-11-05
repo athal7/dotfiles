@@ -3,7 +3,7 @@ Orchestrate both daily workflows as the director. Spawn two independent workers 
 Treat production triage and KB enrichment as independent work: a pending approval, rate limit, inaccessible source, or failed dispatch in one does not prevent eligible read-only work in the other. Batch independent reads when possible; never wait on one collector before starting another independent collector. Do not retry a timed-out write until its outcome is known, and do not treat an unanswered approval as denial or permission. Resume approved work after approval; continue other eligible work while waiting. Do not substitute another source or weaken access rules to work around a denial.
 Before any external query, read the relevant source skill and inspect the live tool schema. Validate the actual response shape before parsing or aggregating it; malformed JSON, null where an array is required, parameter validation errors, and missing required fields are source failures, never empty evidence. Preserve successful sibling results when another call fails; use independent calls or settled-result handling, not fail-fast aggregation.
 
-At the end, read the director's actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded. Report production dispatch outcomes and each collector's terminal status and coverage state separately. If a worker has not finished, any collector failed or was non-exhaustive, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification. Do not mark an unfinished worker's work complete merely because another worker finished.
+At the end, read the director's actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded. Report production dispatch outcomes and each collector's terminal status and coverage state separately. If a worker has not finished, any collector is partial or failed or has non-exhaustive coverage, reconciliation is unfinished, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification. Report optional skips explicitly without presenting them as successful reads. Do not mark an unfinished worker's work complete merely because another worker finished.
 
 Production-error triage and fix dispatch:
 
@@ -42,16 +42,20 @@ Evaluate each surfaced action against current state. Take warranted action throu
 For date-range resolution, use `kb journal list` in the caller's local IANA timezone; never derive the range from UTC.
 
 ## Enrichment completion reporting
-Launch independent collector reads as separate workers in one parallel batch as soon as their inputs are available. Give each worker its collector definition, required source skill, and the shared report schema. Collector workers only read sources and return evidence plus one record; record each result independently. Do not reconcile until every collector has a terminal status or a bounded timeout marks a stalled worker failed with non-exhaustive coverage. The KB worker then reconciles the results and is the sole KB writer.
+Launch independent collector reads as separate workers in one parallel batch as soon as their inputs are available. Give each worker its collector definition, required source skill, and the shared report schema. Collector workers only read sources and return evidence plus one record; record each result independently. Before launch, declare each collector's finite work budget and deadline, reserving time to return evidence and its report. Request incremental evidence checkpoints before the deadline; bound pages and individual reads within the remaining budget rather than placing an entire collection behind one opaque deadline. Do not increase deadlines or retry a collection merely because it timed out. At the deadline, stop admitting new reads and settle or cancel outstanding read workers using supported lifecycle controls. Preserve validated checkpoints: a timeout with usable evidence is `partial`, without usable evidence is `failed`; both are non-exhaustive. A timeout is not proof that the worker stopped: record outstanding worker identity and state, do not relaunch it, and keep the overall run partial until settled. Do not reconcile until each collector has a recorded terminal disposition, including deadline dispositions. The KB worker then reconciles the available results and is the sole KB writer; late evidence requires an explicit follow-up reconciliation, never an untracked competing write.
 
 Before collection, enumerate regular `*.md` files directly under `~/.config/kb/collectors/`. These XDG collector definitions are the registry. For each file separately, read its YAML front-matter `name` with `yq --front-matter=extract -r '.name' <file>` (not one multi-file invocation); require it to match the filename stem and be unique, then load the definition. If the directory is missing or empty, or a definition has an invalid or duplicate name, report the registry prerequisite failure instead of claiming completion. `kb config get collectors` is not a supported lookup.
+For this daily workflow, the collector status and coverage contract below supersedes the knowledge-base skill's older three-status enrichment reporting list. Continue to follow that skill's applicable source and safety instructions; this clarification changes reporting only, not access or collection permissions. Include this clarification and the complete shared report schema when delegating collectors.
 
-Every enrichment completion response MUST report every configured collector by name with one of the following statuses:
-- `succeeded` — the collector ran and produced eligible evidence
-- `succeeded with no eligible evidence` — the collector ran but found no extractable facts
-- `failed` — the collector encountered an error or was not run; give the concrete cause in `coverage.reasons`
 
-Never claim all collectors succeeded unless every configured collector ran successfully. Omitting a collector from the report is a failure.
+Every enrichment completion response MUST report every configured collector by name with one of the following statuses, evaluated in this order:
+- `skipped` — an optional collector has no configured sources; report the configuration reason and `not-applicable` coverage, not empty-source evidence. Missing required configuration or access is not an optional skip.
+- `partial` — validated usable evidence survived, but an unresolved read, parse, access, identity, or runtime failure prevented other attempted work. Retain evidence and name every unresolved failure; coverage is non-exhaustive.
+- `failed` — a required prerequisite failed, the collector did not run for a non-optional reason, or execution failed without usable evidence. Give the concrete cause; coverage is non-exhaustive.
+- `succeeded` — the collector ran and produced eligible evidence without unresolved execution failures.
+- `succeeded with no eligible evidence` — valid reads found no eligible facts without unresolved execution failures; never infer this from inaccessible, malformed, unrun, or unknown data.
+
+Evaluate coverage independently: bounded history, an unrequested historical range, or unavailable pagination makes coverage non-exhaustive but does not alone make execution failed or partial. An attempted page that errors is an unresolved execution failure as well as a coverage gap. A corrected read that successfully replaces a failed read is recovered, not unresolved; retain the original error and recovery evidence in `execution.recovered_errors`. Never call a collector successful while unresolved errors remain. Never claim all collectors succeeded unless every configured collector ran successfully. Omitting a collector from the report is a failure. Optional skips do not establish coverage or a successful collection.
 
 ## Confluence
 
@@ -70,16 +74,21 @@ For every configured collector, emit exactly one report record:
 
 ```yaml
 collector: <configured collector name>
-terminal_status: succeeded | succeeded with no eligible evidence | failed
+terminal_status: succeeded | succeeded with no eligible evidence | partial | failed | skipped
+execution:
+  recovered_errors: [<failed operation, error, and successful replacement evidence>]
+  unresolved_errors: [<operation or prerequisite, concrete error, and affected scope>]
+  deadline: <declared deadline>
+  worker_state: <settled or outstanding worker identity and state>
 coverage:
   state: exhaustive | non-exhaustive | not-applicable
   reasons: [<concrete reason>]
 counts:
-  discovered: <integer>
-  read: <integer>
-  eligible_evidence: <integer>
-  known_omitted: <integer>
-  out_of_allowlist: <integer>
+  discovered: <integer or null>
+  read: <integer or null>
+  eligible_evidence: <integer or null>
+  known_omitted: <integer or null>
+  out_of_allowlist: <integer or null>
 ```
 
-All five counts describe only what this run observed; emit each count, including a known zero, but never count unknown undiscovered or unread remainder as zero. For an unrun or partially read collector, set coverage to non-exhaustive with concrete reasons (including `not run: <cause>` when applicable). Include pagination unavailable whenever a paginated source cannot page through requested scope.
+All five counts describe only what this run observed; emit each count, including a known zero, but never count unknown undiscovered or unread remainder as zero. Use `null` when a count is unknown and explain why in `coverage.reasons`. Retain observed counts even for partial or failed outcomes; counts alone do not establish coverage. For an unrun or partially read required collector, set coverage to non-exhaustive with concrete reasons (including `not run: <cause>` when applicable). An optional unconfigured collector has not-applicable coverage, zero observed work, and no inferred source facts. Include pagination unavailable whenever a paginated source cannot page through requested scope. Report reconciliation separately from collection: evidence returned is not evidence persisted, and a settled worker is not proof of either.

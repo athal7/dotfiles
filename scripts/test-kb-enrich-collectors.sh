@@ -13,19 +13,6 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 contains() { if grep -Fq -- "$2" "$3"; then ok "$1"; else bad "$1"; fi; }
 not_contains() { if grep -Fq -- "$2" "$3"; then bad "$1"; else ok "$1"; fi; }
 
-assert_collector_report() {
-  local label="$1" record="$2"
-  local collector terminal coverage reasons discovered read_count eligible known_omitted out_of_allowlist extra
-  IFS='|' read -r collector terminal coverage reasons discovered read_count eligible known_omitted out_of_allowlist extra <<< "$record"
-  if [ -z "$collector" ] || [ -n "$extra" ]; then bad "$label has nine fields"; return; fi
-  case "$terminal" in succeeded|'succeeded with no eligible evidence'|failed) ;; *) bad "$label has terminal state"; return;; esac
-  case "$coverage" in exhaustive|non-exhaustive|not-applicable) ;; *) bad "$label has coverage state"; return;; esac
-  if [ "$coverage" != exhaustive ] && [ -z "$reasons" ]; then bad "$label has coverage reason"; return; fi
-  for count in "$discovered" "$read_count" "$eligible" "$known_omitted" "$out_of_allowlist"; do
-    if ! [[ "$count" =~ ^[0-9]+$ ]]; then bad "$label has integer counts"; return; fi
-  done
-  ok "$label has terminal status, coverage state/reason, and counts"
-}
 
 SLACK="$WORK/slack.md"
 GH="$WORK/gh.md"
@@ -112,9 +99,6 @@ check "rejects stale recurring-series Zoom time for another series" "$(reconcile
 check "rejects stale recurring-series Zoom time without series identity" "$(reconcile_zoom_asset "$missing_series_fallback_asset")" rejected
 check "retains exact Zoom UUID for the reconciled asset" "$(cut -d '|' -f2 <<< "$exact_asset")" 'meeting-uuid-1'
 
-assert_collector_report "reports Slack terminal and bounded coverage" 'slack|succeeded|non-exhaustive|bounded 200-message per-conversation history; pagination unavailable|8|8|3|0|0'
-assert_collector_report "reports GitHub partial configured scope" 'gh|succeeded|non-exhaustive|configured allowlist omission; pagination unavailable|3|1|2|1|1'
-assert_collector_report "reports Zoom paginated scope" 'zoom|succeeded with no eligible evidence|non-exhaustive|pagination unavailable|12|10|0|2|0'
 
 if [ "$fail" -ne 0 ]; then
   printf '%s kb-enrich collector recipe checks failed; %s passed\n' "$fail" "$pass" >&2

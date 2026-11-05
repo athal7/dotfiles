@@ -65,6 +65,13 @@ if grep -q 'sample identity does not match its aggregation bucket' "$WORK/err"; 
 jq 'del(.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.trace.id)' "$WORK/valid.json" >"$WORK/input.json"
 expect_fail "missing trace ID"
 if grep -q 'sample is missing exception type, message, or trace id' "$WORK/err"; then ok "reports safe missing evidence diagnostic"; else bad "reports safe missing evidence diagnostic"; fi
+jq 'del(.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.error.exception)' "$WORK/valid.json" >"$WORK/input.json"
+expect_fail "missing exception"
+if grep -q 'sample is missing exception type, message, or trace id' "$WORK/err"; then ok "reports missing exception diagnostic"; else bad "reports missing exception diagnostic"; fi
+jq 'del(.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.error.exception[0].type)' "$WORK/valid.json" >"$WORK/input.json"
+expect_fail "missing exception type"
+jq 'del(.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.error.exception[0].message)' "$WORK/valid.json" >"$WORK/input.json"
+expect_fail "missing exception message"
 jq '.aggregations.services.buckets[0].groups.buckets[0].sample.hits.hits[0]._source.error.exception += [{"type":"Inner","message":"inner message"}]' "$WORK/valid.json" >"$WORK/input.json"
 if output=$(run 2>"$WORK/err") && jq -e '.selected[0].exception_type=="TypeB" and .selected[0].message=="message B"' <<<"$output" >/dev/null; then ok "retains the first paired exception"; else bad "retains the first paired exception"; fi
 printf '{"error":{"reason":"private source details"}}\n' >"$WORK/input.json"
