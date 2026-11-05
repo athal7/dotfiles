@@ -19,4 +19,6 @@ license: MIT
 - Do not use `gh stack sync` as a read or routine update: it fetches, cascade-rebases, force-with-lease pushes branches atomically, and syncs PR/stack state. `gh stack push` also uses force-with-lease and can partially update branches. Inspect the entire stack before either command; after review, avoid rebasing away comment anchors.
 - `gh stack merge` includes every PR below the selected one. Inspect all downstack members before merging; non-interactive or `--yes` can merge the whole stack without a picker. A merge queue may only enqueue it. Verify PRs show merged through the MCP before claiming completion.
 
+A bot such as Copilot Agent Merge can push to any member branch, including a mid-stack one, without touching local tracking. Fetch and compare each member branch against its local branch before any `gh stack` operation, and never let a stack push race a watcher that is already fixing the same branch.
+
 OMP permissions configuration governs prompts. Do not add conversational approval requests or bypass configured gates. Re-read remote state after a partial or uncertain write before retrying it.

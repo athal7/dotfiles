@@ -59,6 +59,7 @@ For this dotfiles repository, keep deployment separate from the commit.
 - If a bot says it only runs on ready PRs, check its comment, repository instructions, workflow, and recent PRs for a draft-compatible command or override (often a specific PR comment); use that supported trigger and verify it starts on the current head. If no override exists, mark the PR ready once the other readiness gates are met, then trigger the bot and verify its current-head result before merging.
 - Use the repository's supported CI and review interfaces.
 - Resolve base-branch conflicts before waiting for checks.
+- Turn on Agent Merge ("Watch and fix" in the merge box, or for all PRs in Copilot settings) by default when you open a PR: it clears failing workflows and base conflicts without a polling loop, so prefer it over babysitting checks or waiting for a reviewer to report red CI. It pushes to this branch, so check commit authors before diagnosing a failure it may already be fixing, fetch before pushing so you do not fight its commits, and review what it pushed as you would a contributor's. Enabling auto-merge or letting Copilot approve in your place is a separate decision: those change who acts on the branch.
 - If no checks exist on the current head, treat the pre-push suite as the gate.
 - If checks fail, fix through the normal commit and push cycle.
 - Verify each automated review result—including any documented clean-result signal—applies to the current head.
