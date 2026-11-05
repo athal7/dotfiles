@@ -266,6 +266,18 @@ launchagents:
       - .config/omp
     RunAtLoad: true
     LimitLoadToSessionType: Aqua
+  # `aoe serve` detaches into its own daemon, so the environment the aoe-serve
+  # wrapper exports does not survive to the plugin workers that read it. Publish
+  # the Linear key into the GUI session environment (memory only) instead of
+  # writing a secret into the plist, which launchd creates world-readable.
+  setenv-gui-linear-key:
+    Label: com.$USER.setenv-gui-linear-key
+    ProgramArguments:
+      - /bin/sh
+      - -c
+      - '/usr/bin/security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null | { read -r key && [ -n "$key" ] && /bin/launchctl setenv LINEAR_API_KEY "$key"; } || true'
+    RunAtLoad: true
+    LimitLoadToSessionType: Aqua
   setenv-gui-xdg-data:
     Label: com.$USER.setenv-gui-xdg-data
     ProgramArguments:

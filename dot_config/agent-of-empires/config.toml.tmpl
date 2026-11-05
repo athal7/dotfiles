@@ -9,13 +9,6 @@
 {{-   end -}}
 {{- end -}}
 {{- $environment := append $runlayerEnvironment (printf "PI_CODING_AGENT_DIR=%s/.config/omp/agent" .chezmoi.homeDir) -}}
-{{- /* The Linear plugin worker reads LINEAR_API_KEY from the environment AoE
-       builds for its processes; the launchd-spawned daemon does not inherit the
-       wrapper's export. Render it from the same Keychain item the wrapper uses. */ -}}
-{{- $linearKey := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
-{{- if $linearKey -}}
-{{-   $environment = append $environment (printf "LINEAR_API_KEY=%s" $linearKey) -}}
-{{- end -}}
 environment = {{ $environment | toToml }}
 default_profile = ""
 
