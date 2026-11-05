@@ -151,6 +151,9 @@ packages:
   mise:
     - name: ruby
       version: "3.4"
+      # ruby-lsp must exist under whichever Ruby a project selects via
+      # .ruby-version, so install it into every Ruby rather than once with gem:.
+      postinstall: "gem install ruby-lsp --version 0.26.9"
     - name: node
       version: lts
     - name: bun
