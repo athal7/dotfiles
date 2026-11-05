@@ -30,5 +30,12 @@ npm uninstall -g homebridge-nest-accfactory 2>/dev/null || true
 # Ensure the homebridge shim exists in mise's shims directory
 mise reshim
 
+# npm swaps the files under the global prefix, but a running Homebridge keeps
+# the build it loaded at start in memory, so an upgrade would not take effect
+# until the next login without bouncing both agents here.
+uid=$(id -u)
+launchctl kickstart -k "gui/$uid/com.${USER}.homebridge" 2>/dev/null || true
+launchctl kickstart -k "gui/$uid/com.${USER}.homebridge-ui" 2>/dev/null || true
+
 echo "Homebridge packages installed successfully."
 echo "UI available at http://localhost:8581 once the service is running."

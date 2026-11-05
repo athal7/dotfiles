@@ -95,6 +95,23 @@ launchagents:
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
+  # `mise install` treats an already-installed `latest` spec as satisfied, so
+  # tools drift until something explicitly upgrades them. Run that upgrade daily
+  # (after brew-maintenance) and keep the logs the error-log check reads.
+  mise-upgrade:
+    Label: com.$USER.mise-upgrade
+    ProgramArguments:
+      - /opt/homebrew/bin/mise
+      - upgrade
+      - --yes
+    StartCalendarInterval:
+      Hour: 4
+      Minute: 30
+    StandardOutPath: $HOME/Library/Logs/mise-upgrade.log
+    StandardErrorPath: $HOME/Library/Logs/mise-upgrade.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
   babysitter-check:
     Label: com.$USER.babysitter-check
     ProgramArguments:
