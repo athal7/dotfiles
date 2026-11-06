@@ -61,12 +61,11 @@ show_spans = false
 {{ $_ := set $plugins .id (dict "enabled" true "source" .source) -}}
 {{ end -}}
 # Ignore bot-authored review-state signals, not unresolved-thread counts.
-{{ $ignoredCommenters := list "coderabbitai" "codecov" -}}
+{{ $ignoredCommenters := list "coderabbitai" "codecov" "chatgpt-codex-connector" "github-code-quality" -}}
 {{ range $org := (get . "orgs" | default dict) -}}
 {{ $bot := dig "automated_review" "bot_login" "" $org | trim | lower | trimSuffix "[bot]" -}}
 {{ if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
 {{ end -}}
-{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", ")) -}}
 {{ $_ := set (index $plugins "community.linear") "settings" (dict "include_snoozed" true) -}}
 {{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
 {{ if stat $configPath -}}
@@ -76,11 +75,18 @@ show_spans = false
 {{ if hasKey $plugin "grant" -}}
 {{ $_ := set (index $plugins $id) "grant" $plugin.grant -}}
 {{ end -}}
+{{ if eq $id "agent-of-empires.github" -}}
+{{ range $login := regexSplit "[,[:space:]]+" (dig "settings" "ignored_commenters" "" $plugin) -1 -}}
+{{ $bot := $login | trim | lower | trimSuffix "[bot]" -}}
+{{ if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
+{{ end -}}
+{{ end -}}
 {{ else -}}
 {{ $_ := set $plugins $id $plugin -}}
 {{ end -}}
 {{ end -}}
 {{ end -}}
+{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", ")) -}}
 {{ dict "plugins" $plugins | toToml }}
 
 

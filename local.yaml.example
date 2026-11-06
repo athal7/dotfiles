@@ -22,6 +22,7 @@ rust_cache:
 #   automated_review: config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login     : the GitHub user.login the bot posts as; merged into AoE's
 #                     ignored commenters without hiding unresolved threads.
+# Additional logins in AoE's local ignored_commenters setting are preserved.
 orgs:
   your-work-org:
     kb_eligible: true

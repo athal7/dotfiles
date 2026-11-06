@@ -85,7 +85,7 @@ check "enables AoE plugin auto-updates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r
 check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
 check "draws GitHub session-row status as single-character glyph marks" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.dense_row_badge_glyphs')" true
 check "ignores GitHub bot approval recommendations in review state" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.ignore_bot_approval_recommendations')" true
-check "merges configured review bots with default ignored commenters without duplicates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.ignored_commenters')" "codecov, coderabbitai, copilot-pull-request-reviewer"
+check "merges known and configured review bots without duplicates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.ignored_commenters')" "chatgpt-codex-connector, codecov, coderabbitai, copilot-pull-request-reviewer, github-code-quality"
 check "tracks the latest GitHub plugin release instead of a pinned ref" "$(yq -r '.packages.aoe_plugins[] | select(.id == "agent-of-empires.github") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-github"
 check "tracks the Linear plugin branch because upstream publishes no releases" "$(yq -r '.packages.aoe_plugins[] | select(.id == "community.linear") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-linear@main"
 check "tracks the Freebuf plugin branch from the org repo, not a local path" "$(yq -r '.packages.aoe_plugins[] | select(.id == "dev.example.aoe-freebuf") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-freebuf@main"
@@ -97,6 +97,12 @@ check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl k
 
 MOCK_HOME="$WORK/mock-home"
 mkdir -p "$MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.github" "$MOCK_HOME/.config/agent-of-empires/plugins/athal7.attention"
+cat > "$MOCK_HOME/.config/agent-of-empires/config.toml" <<'EOF'
+[plugins."agent-of-empires.github".settings]
+ignored_commenters = "ReviewBot[bot], CODERABBITAI"
+EOF
+HOME="$MOCK_HOME" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$MOCK_HOME/.config/agent-of-empires/config.toml" > "$WORK/custom-aoe.toml"
+check "preserves locally added commenters while normalizing and merging bot logins" "$(yq -p=toml -o=json '.' "$WORK/custom-aoe.toml" | jq -r '.plugins["agent-of-empires.github"].settings.ignored_commenters')" "chatgpt-codex-connector, codecov, coderabbitai, copilot-pull-request-reviewer, github-code-quality, reviewbot"
 MOCK_BIN="$MOCK_HOME/.local/share/mise/shims"
 mkdir -p "$MOCK_BIN"
 cat > "$MOCK_BIN/aoe" <<'EOF'
