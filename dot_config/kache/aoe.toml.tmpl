@@ -1,4 +1,13 @@
 {{- if hasKey . "rust_cache" }}
+# cargo-shared captures build/check evidence and prunes in that same environment.
+# Never delete entire targets, or fall back to fingerprint access-time evidence.
+[cache]
+target_liveness = true
+auto_clean_orphaned_targets = false
+auto_clean_idle_targets_days = 0
+auto_recover_targets = false
+auto_clean_unused_units_days = 0
+
 [cache.remote]
 type = "s3"
 bucket = {{ .rust_cache.bucket | quote }}

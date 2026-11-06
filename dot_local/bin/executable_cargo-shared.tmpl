@@ -31,13 +31,35 @@ if [ ! -f "$config" ]; then
   echo 'cargo-shared: shared cache configuration is missing' >&2
   exit 1
 fi
-cache="$HOME/Library/Caches/kache-aoe"
+# Use a fresh store so a daemon started with older cleanup settings is never
+# reused; a running daemon retains its original configuration until restarted.
+cache="$HOME/Library/Caches/kache-aoe-receipts"
 mkdir -p "$cache"
 export KACHE_CONFIG="$config" KACHE_CACHE_DIR="$cache" KACHE_SOCKET_PATH="$cache/daemon.sock"
 export KACHE_HOST_CONFIG=""
 unset KACHE_S3_BUCKET KACHE_S3_ENDPOINT KACHE_S3_REGION KACHE_S3_PREFIX KACHE_S3_PROFILE KACHE_S3_ACCESS_KEY KACHE_S3_SECRET_KEY KACHE_LOCAL_ONLY
 unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_ENDPOINT_URL_S3
-exec cargo "$@"
+# Every command holds Kache's target-use lease, including the lifetime of run
+# and test binaries. Compiler-wrapper-only builds do not provide that lease.
+export RUSTC_WRAPPER=kache KACHE_TARGET_LIVENESS=1
+# Never permit daemon whole-target cleanup or age-based unit pruning here.
+export KACHE_AUTO_CLEAN_ORPHANED_TARGETS=0 KACHE_AUTO_CLEAN_IDLE_TARGETS_DAYS=0
+export KACHE_AUTO_RECOVER_TARGETS=0 KACHE_AUTO_CLEAN_UNUSED_UNITS_DAYS=0
+case "$1" in
+  build|check)
+    kache cargo -- "$@" || exit "$?"
+    # Capture and cleanup must inherit the same environment. Kache rechecks
+    # receipts under native Cargo locks and its command-wide exclusive lease.
+    if ! manifest=$(cargo locate-project --workspace --message-format plain); then
+      echo 'cargo-shared: cannot locate workspace for unit cleanup; build succeeded' >&2
+      exit 0
+    fi
+    if ! kache clean --units --yes "$(dirname "$manifest")" >&2; then
+      echo 'cargo-shared: unit cleanup unavailable; build succeeded' >&2
+    fi
+    ;;
+  *) exec kache cargo -- "$@" ;;
+esac
 {{- else }}
 echo 'cargo-shared: configure rust_cache in private machine data first' >&2
 exit 1
