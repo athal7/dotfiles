@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -91,6 +92,24 @@ class OmpKbSessionFilesTest(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.splitlines(), [str(transcript)])
+
+    def test_manifest_reports_fingerprints_without_changing_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            transcript = root / "legacy" / "session.jsonl"
+            self.write_transcript(transcript, {"type": "session", "timestamp": "2026-09-30T12:00:00Z"})
+            original = transcript.read_bytes()
+            result = subprocess.run(
+                [str(COMMAND), "2026-09-30", "2026-09-30", "--root", str(root), "--manifest"],
+                check=False, capture_output=True, text=True,
+                env={**os.environ, "TZ": "UTC"},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout), {
+                "path": str(transcript), "size": len(original),
+                "sha256": hashlib.sha256(original).hexdigest(),
+            })
+            self.assertEqual(transcript.read_bytes(), original)
 
     def test_fails_instead_of_claiming_coverage_for_malformed_transcripts_or_ranges(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

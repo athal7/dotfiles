@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Print OMP transcript paths with activity in the journal window."""
+"""Print OMP transcript paths with activity in the journal window.
+
+An optional SHA-256 manifest identifies bytes read for inventory only. It is
+not a collection, reconciliation, resumability, or deletion receipt.
+"""
 
 from __future__ import annotations
 
 import argparse
 from datetime import datetime
 import json
+import hashlib
 import os
 from pathlib import Path
 import sys
@@ -65,6 +70,22 @@ def transcript_paths(root: Path, start: datetime, end: datetime) -> list[Path]:
     return sorted(matches)
 
 
+def manifest_record(path: Path) -> dict[str, object]:
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    with os.fdopen(os.open(path, flags), "rb") as source:
+        before = os.fstat(source.fileno())
+        digest = hashlib.sha256()
+        while data := source.read(1024 * 1024):
+            digest.update(data)
+        after = os.fstat(source.fileno())
+        current = path.lstat()
+    def identity(st):
+        return st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns
+    if identity(before) != identity(after) or identity(before) != identity(current):
+        raise ValueError(f"{path}: transcript changed during fingerprinting")
+    return {"path": str(path), "size": before.st_size, "sha256": digest.hexdigest()}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("from_time", type=parse_local_time, metavar="FROM")
@@ -75,11 +96,18 @@ def main() -> int:
         default=Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "omp/sessions",
         help="OMP session directory (default: %(default)s)",
     )
+    parser.add_argument("--manifest", action="store_true", help="print JSONL inventory with SHA-256 fingerprints, not coverage receipts")
     args = parser.parse_args()
 
     try:
-        for path in transcript_paths(args.root, args.from_time, args.to_time):
-            print(path)
+        paths = transcript_paths(args.root, args.from_time, args.to_time)
+        if args.manifest:
+            records = [manifest_record(path) for path in paths]
+            for record in records:
+                print(json.dumps(record))
+        else:
+            for path in paths:
+                print(path)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"omp-kb-session-files: {error}", file=sys.stderr)
         return 1
