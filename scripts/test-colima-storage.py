@@ -9,6 +9,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "dot_colima/default/colima.yaml"
+PACKAGES = ROOT / ".chezmoidata/packages.yaml"
 
 
 def render() -> dict[str, object]:
@@ -22,6 +23,12 @@ def render() -> dict[str, object]:
 
 
 class ColimaStoragePolicyTest(unittest.TestCase):
+    def test_managed_packages_select_colima_without_apple_container(self):
+        packages = yaml.safe_load(PACKAGES.read_text())["packages"]["brews"]
+        names = {package["name"] for package in packages}
+        self.assertTrue({"colima", "docker", "docker-compose"} <= names)
+        self.assertNotIn("container", names)
+
     def test_managed_profile_preserves_vm_settings_and_bounds_build_cache(self):
         profile = render()
         self.assertEqual(64, profile["disk"])

@@ -17,8 +17,9 @@ packages:
     - name: autojump
     - name: bat
     - name: chezmoi
+    # Colima supplies the Docker runtime; preserve any existing Apple container
+    # installation and its data until a separately verified migration.
     - name: colima
-    - name: container
     - name: direnv
     - name: docker
     - name: docker-compose
