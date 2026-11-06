@@ -10,6 +10,7 @@ packages:
     - steipete/tap
     - can1357/tap
     - kunobi-ninja/kunobi
+    - saffsanity/sill
 
   brews:
     - name: can1357/tap/omp
@@ -105,6 +106,8 @@ packages:
     - name: tailscale-app
     - name: obsidian
     - name: figma
+    # Pair devices and grant macOS permissions in Sill after installation.
+    - name: saffsanity/sill/sill
 
   # GitHub releases — installed via .chezmoiexternal.toml.tmpl
   github_releases:
