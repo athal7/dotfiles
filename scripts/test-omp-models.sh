@@ -32,7 +32,8 @@ cp "$REPO_ROOT/local.yaml.example" "$DATA"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$EMPTY_MCP"
 yq -i '
   .runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" |
-  .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp"
+  .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp" |
+  .orgs.your-personal-org.automated_review.bot_login = "CodeRabbitAI[bot]"
 ' "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/agent-of-empires/config.toml" > "$AOE"
@@ -84,6 +85,7 @@ check "enables AoE plugin auto-updates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r
 check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
 check "draws GitHub session-row status as single-character glyph marks" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.dense_row_badge_glyphs')" true
 check "ignores GitHub bot approval recommendations in review state" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.ignore_bot_approval_recommendations')" true
+check "merges configured review bots with default ignored commenters without duplicates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.ignored_commenters')" "codecov, coderabbitai, copilot-pull-request-reviewer"
 check "tracks the latest GitHub plugin release instead of a pinned ref" "$(yq -r '.packages.aoe_plugins[] | select(.id == "agent-of-empires.github") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-github"
 check "tracks the Linear plugin branch because upstream publishes no releases" "$(yq -r '.packages.aoe_plugins[] | select(.id == "community.linear") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-linear@main"
 check "tracks the Freebuf plugin branch from the org repo, not a local path" "$(yq -r '.packages.aoe_plugins[] | select(.id == "dev.example.aoe-freebuf") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-freebuf@main"

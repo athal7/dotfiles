@@ -60,7 +60,13 @@ show_spans = false
 {{ range .packages.aoe_plugins -}}
 {{ $_ := set $plugins .id (dict "enabled" true "source" .source) -}}
 {{ end -}}
-{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true) -}}
+# Ignore bot-authored review-state signals, not unresolved-thread counts.
+{{ $ignoredCommenters := list "coderabbitai" "codecov" -}}
+{{ range $org := (get . "orgs" | default dict) -}}
+{{ $bot := dig "automated_review" "bot_login" "" $org | trim | lower | trimSuffix "[bot]" -}}
+{{ if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
+{{ end -}}
+{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", ")) -}}
 {{ $_ := set (index $plugins "community.linear") "settings" (dict "include_snoozed" true) -}}
 {{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
 {{ if stat $configPath -}}
