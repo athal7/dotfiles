@@ -6,6 +6,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import plistlib
 import subprocess
 import tempfile
 import unittest
@@ -27,6 +28,13 @@ class AerialCleanupTest(unittest.TestCase):
         self.root.mkdir(parents=True)
         self.video = self.root / "100858D2-FE01-4B70-8E2D-3FCF20AFE6B5.mov"
         self.video.write_bytes(b"downloaded video")
+        self.index = self.root.parent.parent / "Store/Index.plist"
+        self.index.parent.mkdir()
+        self.save_saver("com.apple.wallpaper.choice.image")
+
+    def save_saver(self, provider):
+        with self.index.open("wb") as stream:
+            plistlib.dump({"SystemDefault": {"Idle": {"Content": {"Choices": [{"Provider": provider}]}}}}, stream)
 
     def invoke(self, apply=False, selected=None, opened=None):
         selected = ["/System/Library/CoreServices/DefaultDesktop.heic"] if selected is None else selected
@@ -63,6 +71,23 @@ class AerialCleanupTest(unittest.TestCase):
             with self.subTest(result=result), self.assertRaises(SystemExit):
                 self.invoke(apply=True, opened=result)
             self.assertEqual(self.video.read_bytes(), b"downloaded video")
+
+    def test_aerial_or_unknown_screensaver_preserves_downloads(self):
+        for provider in ("com.apple.wallpaper.choice.aerials", "default", "unknown"):
+            self.save_saver(provider)
+            with self.subTest(provider=provider), self.assertRaises(SystemExit):
+                self.invoke(apply=True)
+            self.assertEqual(self.video.read_bytes(), b"downloaded video")
+
+    def test_missing_or_corrupt_screensaver_settings_preserve_downloads(self):
+        self.index.unlink()
+        with self.assertRaises(SystemExit):
+            self.invoke(apply=True)
+        self.assertEqual(self.video.read_bytes(), b"downloaded video")
+        self.index.write_bytes(b"not a property list")
+        with self.assertRaises(SystemExit):
+            self.invoke(apply=True)
+        self.assertEqual(self.video.read_bytes(), b"downloaded video")
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ OMP sessions share one Firefox Nightly process and persistent, agent-only automa
 
 The daily `workspace-cleanup` LaunchAgent reports eligible clean worktrees and ignored, untracked Cargo `target/` directories for manual review; it does not remove either automatically, because an activity check cannot prevent a build from starting afterward. Targets are reported after 30 days, or 7 days when free space falls below 100 GiB; the recovery goal is 150 GiB. Databases are never removed automatically; `workspace-cleanup --database-only --apply` explicitly opts in. Container volumes and VMs are not touched.
 
-`aerial-cleanup` previews unused downloaded Aerial videos; `--apply` removes eligible videos while retaining open files. Select a non-Aerial wallpaper and screensaver first. The helper does not change settings or prevent downloads; in Wallpaper settings, “Show on all Spaces” applies your static selection to every Space and display.
+`aerial-cleanup` previews unused downloaded Aerial videos; `--apply` removes eligible videos while retaining open files. It requires verified non-Aerial desktops and explicit static screensaver selections; unknown or inherited `default` screensavers preserve all videos. The helper does not change settings or prevent downloads; in Wallpaper settings, “Show on all Spaces” applies your static selection to every Space and display.
 
 ## Shared Rust build cache
 
