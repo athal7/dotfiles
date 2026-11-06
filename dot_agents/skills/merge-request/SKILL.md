@@ -18,4 +18,6 @@ license: MIT
 - Leave pending reviewer requests untouched.
 - Resolve conflicts by preserving both sides' intent. Run the full required checks after resolution.
 - After the final summary and stable head are pushed, use `shipit` to request or trigger configured bot reviews for that head. Once its readiness gates are met, mark a draft PR ready before requesting or waiting for human review; re-request only affected completed human reviews—not reviewers still pending. Treat prior-head results as stale.
+- Inspect auto-merge and merge-queue state before and after each fix push. Preserve valid existing intent; pushes can disable auto-merge or remove queue membership, so verify against the new head rather than trusting the earlier setting.
+- Once ready, follow `shipit`'s deferred-merge policy to enable or re-arm auto-merge or the required queue before waiting for protected human approvals. Confirm the server's armed/queued state and report it; do not leave an eligible PR needing another manual visit to merge.
 - Prefer merging over rebasing a reviewed request; rebasing can invalidate inline comment anchors.
