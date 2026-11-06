@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reclaim idle worktrees, stale generated Cargo output, and Chrome signing clones."""
+"""Report idle worktrees and Cargo output; reclaim stale Chrome signing clones."""
 
 import argparse
 import fcntl
@@ -98,21 +98,12 @@ def worktrees(dry_run):
                                 continue
                             recent = run("find", str(target), "-mtime", f"-{stale_days}", "-print", "-quit", check=False)
                             if not recent.returncode and not recent.stdout and worktree_is_idle(path):
-                                print(f"build artifacts: {target}")
-                                if not dry_run:
-                                    try:
-                                        shutil.rmtree(target)
-                                    except OSError as error:
-                                        print(f"Cannot remove {target}: {error}", file=sys.stderr)
+                                print(f"build artifacts (manual review only): {target}")
 
             if registered:
                 continue
             if merged and worktree_is_idle(path):
-                print(f"worktree: {path}")
-                if not dry_run:
-                    removed = run("git", "-C", str(repo), "worktree", "remove", str(path), check=False)
-                    if removed.returncode:
-                        print(f"Cannot remove {path}: {removed.stderr.strip()}", file=sys.stderr)
+                print(f"worktree (manual review only): {path}")
 
 
 def databases(dry_run):

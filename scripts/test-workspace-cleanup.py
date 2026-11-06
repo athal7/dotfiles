@@ -74,13 +74,13 @@ class WorktreeCleanupTest(unittest.TestCase):
             cleanup.worktrees(dry_run)
         return output.getvalue()
 
-    def test_old_ignored_output_is_removed_without_losing_unmerged_branch(self):
+    def test_old_ignored_output_is_reported_but_never_removed(self):
         path = self.branch("old-artifact")
         target = self.old_target(path)
-        self.assertIn(f"build artifacts: {target}", self.clean(True))
+        self.assertIn(f"build artifacts (manual review only): {target}", self.clean(True))
         self.assertTrue(target.exists())
-        self.assertIn(f"build artifacts: {target}", self.clean(False))
-        self.assertFalse(target.exists())
+        self.assertIn(f"build artifacts (manual review only): {target}", self.clean(False))
+        self.assertTrue(target.exists())
         self.assertTrue((path / "branch.txt").exists())
         self.assertEqual("", self.git(path, "status", "--porcelain=v1"))
         self.assertTrue(self.git(self.repo, "branch", "--list", "old-artifact").strip())
@@ -106,13 +106,13 @@ class WorktreeCleanupTest(unittest.TestCase):
         self.git(tracked, "commit", "-qm", "tracked target")
 
         output = self.clean(False)
-        self.assertNotIn(f"build artifacts: {dirty_target}", output)
-        self.assertIn(f"build artifacts: {registered_target}", output)
+        self.assertNotIn(str(dirty_target), output)
+        self.assertIn(f"build artifacts (manual review only): {registered_target}", output)
         self.assertTrue(recent_target.exists())
         self.assertTrue(dirty_target.exists())
         self.assertTrue(dirty_source.exists())
         self.assertTrue(dirty.exists())
-        self.assertFalse(registered_target.exists())
+        self.assertTrue(registered_target.exists())
         self.assertTrue(registered.exists())
         for target in (locked_target, tracked_target):
             self.assertTrue((target / "artifact").exists(), str(target))
@@ -139,14 +139,14 @@ class WorktreeCleanupTest(unittest.TestCase):
         usage = SimpleNamespace(free=0, total=128 * 1024**3)
         with patch.object(cleanup.shutil, "disk_usage", return_value=usage), patch.object(cleanup, "run", side_effect=run):
             output = self.clean(True)
-        self.assertIn(f"build artifacts: {registered_target}", output)
-        self.assertNotIn(f"build artifacts: {dirty_target}", output)
+        self.assertIn(f"build artifacts (manual review only): {registered_target}", output)
+        self.assertNotIn(str(dirty_target), output)
         self.assertTrue(registered_target.exists())
         self.assertTrue(dirty_target.exists())
 
         with patch.object(cleanup.shutil, "disk_usage", return_value=usage), patch.object(cleanup, "run", side_effect=run):
             self.clean(False)
-        self.assertFalse(registered_target.exists())
+        self.assertTrue(registered_target.exists())
         self.assertTrue(registered.exists())
         self.assertTrue(dirty_target.exists())
         self.assertTrue(dirty.exists())
@@ -163,19 +163,19 @@ class WorktreeCleanupTest(unittest.TestCase):
             self.assertTrue(target.exists())
             self.assertTrue(path.exists())
 
-    def test_merged_worktree_is_removed_as_before(self):
+    def test_merged_worktree_is_reported_but_never_removed(self):
         path = self.branch("merged", merged=True)
-        self.assertIn(f"worktree: {path}", self.clean(False))
-        self.assertFalse(path.exists())
+        self.assertIn(f"worktree (manual review only): {path}", self.clean(False))
+        self.assertTrue(path.exists())
 
-    def test_registered_merged_worktree_only_loses_target(self):
+    def test_registered_merged_worktree_and_target_are_preserved(self):
         path = self.branch("registered-merged", merged=True)
         target = self.old_target(path)
         self.sessions.add(str(path.resolve()))
         output = self.clean(False)
-        self.assertIn(f"build artifacts: {target}", output)
-        self.assertNotIn(f"worktree: {path}", output)
-        self.assertFalse(target.exists())
+        self.assertIn(f"build artifacts (manual review only): {target}", output)
+        self.assertNotIn(f"worktree (manual review only): {path}", output)
+        self.assertTrue(target.exists())
         self.assertTrue((path / "Cargo.toml").exists())
 
     def test_missing_or_unreliable_activity_check_preserves_registered_targets(self):
@@ -218,12 +218,12 @@ class WorktreeCleanupTest(unittest.TestCase):
 
                 with patch.object(cleanup.shutil, "disk_usage", return_value=SimpleNamespace(free=pressure_free - 1, total=total)):
                     output = self.clean(True)
-                self.assertIn(f"build artifacts: {target}", output)
+                self.assertIn(f"build artifacts (manual review only): {target}", output)
                 self.assertTrue(artifact.exists())
 
                 with patch.object(cleanup.shutil, "disk_usage", return_value=SimpleNamespace(free=pressure_free - 1, total=total)):
                     self.clean(False)
-                self.assertFalse(target.exists())
+                self.assertTrue(target.exists())
 
     def test_pressure_stops_after_recovery_goal(self):
         path = self.branch("recovered")
@@ -234,7 +234,7 @@ class WorktreeCleanupTest(unittest.TestCase):
             SimpleNamespace(free=150 * gib, total=1000 * gib),
         ]
         with patch.object(cleanup.shutil, "disk_usage", side_effect=usage):
-            self.assertNotIn(f"build artifacts: {target}", self.clean(False))
+            self.assertNotIn(f"build artifacts (manual review only): {target}", self.clean(False))
         self.assertTrue(target.exists())
 
 
