@@ -48,8 +48,6 @@ run_checker() {
     PATH="$BIN:/usr/bin:/bin" \
     AOE_TEST_LOG="$AOE_LOG" \
     AOE_BIN="$BIN/aoe" \
-    SESSION_MAILBOX_BIN="$REPO_ROOT/dot_local/bin/executable_session-mailbox" \
-    XDG_CACHE_HOME="$WORK/cache" \
     AOE_TEST_MODE="${AOE_TEST_MODE:-success}" \
     "$CHECKER" "$PROMPT"
 }
@@ -57,12 +55,10 @@ run_checker() {
 : >"$AOE_LOG"
 output=$(run_checker)
 printf '%s\n' "$output" | grep -F 'Dispatched LaunchAgent triage prompt'
-python3 - "$WORK/cache" <<'PY'
-import json, pathlib, sys
-messages = [json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob("session-mailbox/*/*.json")]
-assert len(messages) == 1
-body = messages[0]["body"]
-assert body.startswith("Triage the supplied LaunchAgent error-log lines")
+python3 - "$AOE_LOG" <<'PY'
+import pathlib, sys
+body = pathlib.Path(sys.argv[1]).read_text()
+assert "Triage the supplied LaunchAgent error-log lines" in body
 assert "Services with new errors: aoe-old" in body
 assert "[aoe-old] Error: session changed while launch hooks were running" in body
 assert "[homebridge]" not in body
@@ -83,16 +79,14 @@ printf '%s\n' "$output" | grep -F 'WARNING: dispatch failed'
 state_after_failure=$(grep -F "$LOG_DIR/aoe-old.error.log:" "$LOG_DIR/.check-error-logs-state")
 expected_state="$LOG_DIR/aoe-old.error.log:$log_size"
 [[ "$state_after_failure" == "$expected_state" ]]
-python3 - "$WORK/cache" <<'PY'
-import json, pathlib, sys
-messages = [json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob("session-mailbox/*/*.json")]
-assert len(messages) == 2
-assert any("Services with new errors: aoe-old,homebridge" in m["body"]
-           and "[homebridge] [10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed" in m["body"]
-           for m in messages)
+python3 - "$AOE_LOG" <<'PY'
+import pathlib, sys
+body = pathlib.Path(sys.argv[1]).read_text()
+assert "Services with new errors: aoe-old,homebridge" in body
+assert "[homebridge] [10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed" in body
 PY
 grep -Fqx "$LOG_DIR/homebridge.error.log:$homebridge_log_size" "$LOG_DIR/.check-error-logs-state"
-grep -F 'Mailbox: launch:' "$LOG_DIR/.check-error-logs-pending" >/dev/null
+grep -F 'ID: test-session' "$LOG_DIR/.check-error-logs-pending" >/dev/null
 : >"$AOE_LOG"
 output=$(run_checker)
 printf '%s\n' "$output" | grep -F 'previous dispatch requires reconciliation'

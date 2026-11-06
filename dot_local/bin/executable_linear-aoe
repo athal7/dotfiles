@@ -41,4 +41,4 @@ scheduled_bin=${AOE_SCHEDULED_SESSION_BIN:-"$HOME/.local/bin/aoe-scheduled-sessi
 AOE_BIN="$aoe_bin" AOE_TOOL=omp AOE_SESSION_GROUP=Linear \
   AOE_WORKTREE_BRANCH="$LINEAR_ISSUE_BRANCH_NAME" AOE_NEW_BRANCH="$new_branch" \
   "$scheduled_bin" "$LINEAR_ISSUE_IDENTIFIER" "$prompt_file" "$repo_root"
-printf 'Queued mailbox task for %s\n' "$LINEAR_ISSUE_IDENTIFIER"
+printf 'Started session for %s\n' "$LINEAR_ISSUE_IDENTIFIER"

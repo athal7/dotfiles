@@ -68,11 +68,12 @@ resume_existing() {
 }
 
 matches_github_remote() {
-  local expected=${2,,} remotes _name remote direction
+  local expected remotes _name remote direction
+  expected=$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')
   remotes=$("$GIT_BIN" -C "$1" remote -v 2>/dev/null) || return 1
   while read -r _name remote direction; do
     [ "$direction" = '(fetch)' ] || continue
-    remote=${remote,,}
+    remote=$(printf '%s' "$remote" | tr '[:upper:]' '[:lower:]')
     remote=${remote%.git}
     case "$remote" in
       "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected")
