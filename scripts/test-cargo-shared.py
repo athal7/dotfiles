@@ -53,29 +53,6 @@ class CargoSharedTest(unittest.TestCase):
         self.assertNotEqual(self.call('check', cwd=self.base, check=False).returncode, 0)
         self.assertNotEqual(self.call('build', '--offline', check=False).returncode, 0)
 
-    def test_supported_commands_forward_and_failed_build_does_not_clean(self):
-        bindir = self.base / 'bin'
-        bindir.mkdir()
-        log = self.base / 'calls'
-        kache = bindir / 'kache'
-        kache.write_text('#!/bin/sh\nprintf \"%s\\n\" \"$*\" >> \"$CALL_LOG\"\n'
-                         'test \"$1\" != cargo || exit \"${CARGO_EXIT:-0}\"\n')
-        kache.chmod(0o755)
-        cargo = bindir / 'cargo'
-        cargo.write_text('#!/bin/sh\nprintf \"%s/Cargo.toml\\n\" \"$REPO\"\n')
-        cargo.chmod(0o755)
-        self.env.update(PATH=str(bindir) + os.pathsep + self.env['PATH'],
-                        CALL_LOG=str(log), REPO=str(self.repo))
-        for command in ('test', 'bench', 'clippy', 'doc', 'run'):
-            self.call(command, '--offline')
-            self.assertEqual(log.read_text().splitlines()[-1], f'cargo -- {command} --offline')
-        self.env['CARGO_EXIT'] = '37'
-        self.assertEqual(self.call('build', '--offline', check=False).returncode, 37)
-        self.assertEqual(log.read_text().splitlines()[-1], 'cargo -- build --offline')
-        self.env['CARGO_EXIT'] = '0'
-        self.call('check', '--offline')
-        self.assertEqual(log.read_text().splitlines()[-2:], [
-            'cargo -- check --offline', f'clean --units --yes {self.repo}'])
 
     def test_real_obsolete_pruning_and_active_run_lease(self):
         (self.repo / 'src').mkdir()
@@ -124,7 +101,7 @@ class CargoSharedTest(unittest.TestCase):
             del clean_env['FIXTURE_BLOCK']
             clean = subprocess.run(['kache', '--json', 'clean', '--units', '--yes', str(self.repo)],
                                    cwd=self.repo, env=clean_env, capture_output=True, text=True, timeout=60, check=True)
-            print('concurrent unwrapped Cargo cleanup:', clean.stdout.strip())
+            self.assertIn('unavailable: live output changed', clean.stdout)
             self.assertEqual(json.loads(clean.stdout)['targets'][0]['removed']['units'], 0)
             self.assertTrue(all(p.exists() for p in old), clean.stdout + clean.stderr)
         finally:

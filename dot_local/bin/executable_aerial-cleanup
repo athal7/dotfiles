@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Remove downloaded aerial videos only when connected desktops use other images.
+
+Defaults to preview. Keeps open videos, symlinks, thumbnails and selection metadata.
+Select a static wallpaper first; this command never edits wallpaper preferences.
+"""
+import argparse
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--apply", action="store_true")
+    args = parser.parse_args()
+    root = Path.home() / "Library/Application Support/com.apple.wallpaper/aerials/videos"
+    if root.is_symlink() or not root.is_dir():
+        raise SystemExit("No real aerial video directory found")
+    query = '''ObjC.import("AppKit"); var screens=$.NSScreen.screens; var result=[];
+for(var i=0;i<screens.count;i++){var u=$.NSWorkspace.sharedWorkspace.desktopImageURLForScreen(screens.objectAtIndex(i));result.push(u ? ObjC.unwrap(u.path) : null);} JSON.stringify(result)'''
+    selected = json.loads(subprocess.run(["osascript", "-l", "JavaScript", "-e", query], check=True, capture_output=True, text=True).stdout)
+    if not selected or any(not p or "/aerials/" in p for p in selected):
+        raise SystemExit("Preserving aerials: cannot verify non-aerial connected desktops")
+    opened = subprocess.run(["/usr/sbin/lsof", "-nP", "-F", "n", "+D", str(root)], capture_output=True, text=True)
+    if opened.returncode not in (0, 1) or opened.stderr.strip():
+        raise SystemExit("Preserving aerials: cannot inspect open videos: " + opened.stderr.strip())
+    in_use = {line[1:] for line in opened.stdout.splitlines() if line.startswith("n")}
+    before = shutil.disk_usage(root).free
+    count = 0
+    for path in sorted(root.iterdir()):
+        if not re.fullmatch(r"[0-9A-Fa-f-]{36}\.mov", path.name) or path.is_symlink() or not path.is_file():
+            continue
+        if str(path) in in_use or str(path) in selected:
+            print(f"Keeping open or selected video: {path.name}")
+            continue
+        print(f"{'Removing' if args.apply else 'Would remove'}: {path.name}")
+        if args.apply:
+            path.unlink()
+        count += 1
+    after = shutil.disk_usage(root).free
+    print(f"{'Removed' if args.apply else 'Eligible'} videos: {count}; host free-space change: {(after - before) / 1024**3:.2f} GiB; free: {after / 1024**3:.2f} GiB")
+
+
+if __name__ == "__main__":
+    main()

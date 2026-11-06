@@ -17,16 +17,21 @@ OMP sessions share one Firefox Nightly process and persistent, agent-only automa
 
 The daily `workspace-cleanup` LaunchAgent reports eligible clean worktrees and ignored, untracked Cargo `target/` directories for manual review; it does not remove either automatically, because an activity check cannot prevent a build from starting afterward. Targets are reported after 30 days, or 7 days when free space falls below 100 GiB; the recovery goal is 150 GiB. Databases are never removed automatically; `workspace-cleanup --database-only --apply` explicitly opts in. Container volumes and VMs are not touched.
 
+`aerial-cleanup` previews unused downloaded Aerial videos; `--apply` removes eligible videos while retaining open files. Select a non-Aerial wallpaper and screensaver first. The helper does not change settings or prevent downloads; in Wallpaper settings, “Show on all Spaces” applies your static selection to every Space and display.
+
 ## Shared Rust build cache
 
 Kache uses a local-only cache by default. For an opt-in shared S3 cache, add
 `rust_cache` to private machine data using the shape in `local.yaml.example`,
 and store credentials in the named local AWS profile. From a worktree of that
-repository, run `cargo-shared build` (or another Cargo subcommand). It uses a
-separate cache and daemon; ordinary `cargo` commands do not use that remote.
-Manifest, Cargo config, and directory overrides are rejected. This guard does
-not sandbox build scripts or prevent deliberate bypass. Existing worktree
-targets are not removed.
+repository, run `cargo-shared build` (or another supported Cargo subcommand).
+It uses a separate receipt-aware cache and daemon; ordinary `cargo` commands
+do not use that remote. Successful `build` and `check` commands prune only
+obsolete units validated by Kache's recorded command evidence and Cargo locks.
+Missing or changed evidence preserves artifacts. Wrapped `run` and `test`
+commands hold a command-wide target-use lease; independently launched binaries
+are outside that lease. Manifest, Cargo config, and directory overrides are
+rejected. This guard does not sandbox build scripts or prevent deliberate bypass.
 
 ## Setup
 
