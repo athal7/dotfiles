@@ -42,7 +42,8 @@ split_view = false
 [hooks]
 
 [host_hooks]
-before_session = ['if [ "$AOE_TOOL" = omp ]; then "$HOME/.local/bin/aoe-omp-environment"; fi']
+before_session = ['if [ "$AOE_TOOL" = omp ]; then "$HOME/.local/bin/aoe-omp-environment"; fi', '"$HOME/.local/bin/aoe-pr-track"']
+before_start = ['"$HOME/.local/bin/aoe-pr-track"']
 
 [logging]
 default_level = "info"

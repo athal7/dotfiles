@@ -30,41 +30,99 @@ dispatch() {
   env AOE_SESSION_GROUP=Attention AOE_TOOL="${AOE_TOOL:-omp}" "$DISPATCHER" "$title" "$prompt_file" "$@"
 }
 
+# Reuse by live checkout identity, not titles or AoE's creation-time branch.
+# A user-initiated Attention action may wake a session, but must not type into
+# its editor or answer a pending approval.
 existing_session() {
-  local kind=$1 title=$2 repo=$3 branch=$4 tool=${AOE_TOOL:-omp} sessions
-  sessions=$("$AOE_BIN" list --json) || fail "cannot list AoE sessions"
-  # AoE titles carry a correlation suffix; worktree identity survives title renames.
+  local kind=$1 title=$2 repo=$3 branch=$4 expected_head=${5:-} sessions candidates
+  local id profile lifecycle path snoozed actual common expected_common matched=
+  sessions=$("$AOE_BIN" list --all --json) || fail "cannot list AoE sessions"
+  # jq variables are expanded by jq, not by the shell.
   # shellcheck disable=SC2016
-  printf '%s' "$sessions" | "$JQ_BIN" -sr --arg kind "$kind" --arg title "$title" \
-    --arg repo "$repo" --arg branch "$branch" --arg tool "$tool" '
+  candidates=$(printf '%s' "$sessions" | "$JQ_BIN" -sr \
+    --arg kind "$kind" --arg title "$title" --arg tool "${AOE_TOOL:-omp}" '
     if length != 1 or (.[0] | type) != "array" then error("invalid AoE list")
-    else .[0] end
-    | [ .[]
-      | select(.group == "Attention" and .tool == $tool and .state == "live")
-      | select(if $kind == "scratch" then
-                 (.title | startswith($title + "-")) and
-                 (.title[($title | length) + 1:] | test("^[0-9a-fA-F]{8}$")) and
-                 .worktree == null and
-                 (.id as $id | .path | rtrimstr("/") | endswith("/scratch/" + $id))
-               else
-                 .worktree.branch == $branch and
-                 (((.worktree.main_repo_path // "") | rtrimstr("/")) == ($repo | rtrimstr("/")))
-               end)
-      | .id ]
-    | if length > 1 then error("ambiguous Attention sessions")
-      elif length == 1 then .[0] else "" end
-  ' || fail "cannot select a unique Attention session"
+    else .[0] end |
+    .[] | select(.state == "live" or .state == "archived") |
+    select(if $kind == "scratch" then
+      .group == "Attention" and .tool == $tool and .worktree == null and
+      (.title | startswith($title + "-")) and
+      (.title[($title | length) + 1:] | test("^[0-9a-fA-F]{8}$")) and
+      (.id as $id | .path | rtrimstr("/") | endswith("/scratch/" + $id))
+    else true end) |
+    [.id, (.profile // "main"), .state, .path, (if .snoozed_until != null then "yes" else "no" end)] | @tsv') || fail "cannot select AoE sessions"
+  if [ "$kind" != scratch ]; then
+    expected_common=$("$GIT_BIN" -C "$repo" rev-parse --path-format=absolute --git-common-dir) || \
+      fail "cannot identify repository $repo"
+  fi
+  while IFS=$'\t' read -r id profile lifecycle path snoozed; do
+    [ -n "$id" ] || continue
+    [ -d "$path" ] || continue
+    if [ "$kind" != scratch ]; then
+      actual=$("$GIT_BIN" -C "$path" symbolic-ref --quiet --short HEAD 2>/dev/null) || continue
+      [ "$actual" = "$branch" ] || continue
+      common=$("$GIT_BIN" -C "$path" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
+      [ "$common" = "$expected_common" ] || continue
+      if [ -n "$expected_head" ]; then
+        matches_origin "$path" "$expected_head" || \
+          fail "existing checkout origin does not match PR head repository"
+      fi
+    fi
+    [ -z "$matched" ] || fail "multiple sessions match this Attention item"
+    matched=$(printf '%s\t%s\t%s\t%s' "$id" "$profile" "$lifecycle" "$snoozed")
+  done <<<"$candidates"
+  printf '%s' "$matched"
 }
 
 resume_existing() {
-  local id
-  id=$(existing_session "$1" "$2" "$3" "$4")
-  if [ -n "$id" ]; then
-    [[ "$id" =~ ^[[:alnum:]-]+$ ]] || fail "invalid AoE session ID"
-    "$AOE_BIN" send "$id" $'Continue working on this Attention item in the existing session. Current request:\n\n'"$5" || \
-      fail "cannot send to AoE session $id"
-    exit 0
+  local match id profile lifecycle runtime state snoozed substrate
+  match=$(existing_session "$1" "$2" "$3" "$4" "${5:-}")
+  [ -n "$match" ] || return 0
+  IFS=$'\t' read -r id profile lifecycle snoozed <<<"$match"
+  [[ "$id" =~ ^[[:alnum:]-]+$ ]] || fail "invalid AoE session ID"
+  runtime=$("$AOE_BIN" -p "$profile" session show "$id" --json) || fail "cannot inspect AoE session $id"
+  state=$(printf '%s' "$runtime" | "$JQ_BIN" -er '.status | ascii_downcase') || fail "invalid AoE runtime state"
+  case "$state" in
+    running|idle|waiting) ;;
+    stopped)
+      runtime=$("$AOE_BIN" -p "$profile" ps --json "$id") || fail "cannot inspect AoE runtime $id"
+      substrate=$(printf '%s' "$runtime" | "$JQ_BIN" -er '.substrate') || fail "invalid AoE runtime substrate"
+      [ "$substrate" = tmux ] || fail "open stopped structured session $id in AoE"
+      ;;
+    *) fail "cannot reuse AoE session $id (state: $state)" ;;
+  esac
+  if [ "$lifecycle" = archived ]; then
+    "$AOE_BIN" -p "$profile" session unarchive "$id" || fail "cannot unarchive AoE session $id"
   fi
+  if [ "$snoozed" = yes ]; then
+    "$AOE_BIN" -p "$profile" session unsnooze "$id" || fail "cannot wake AoE session $id"
+  fi
+  if [ "$state" = stopped ]; then
+    "$AOE_BIN" -p "$profile" session start "$id" || fail "cannot start AoE session $id"
+  fi
+  printf 'Reusing AoE session %s (profile %s); no prompt was sent.\n' "$id" "$profile"
+  exit 0
+}
+
+existing_worktree() {
+  "$GIT_BIN" -C "$1" worktree list --porcelain -z |
+    while IFS= read -r -d '' field; do
+      case "$field" in
+        "worktree "*) checkout=${field#worktree } ;;
+        "branch refs/heads/$2") printf '%s\n' "$checkout" ;;
+      esac
+    done
+}
+
+matches_origin() {
+  local remote expected
+  remote=$("$GIT_BIN" -C "$1" remote get-url origin 2>/dev/null) || return 1
+  remote=$(printf '%s' "${remote%.git}" | tr '[:upper:]' '[:lower:]')
+  expected=$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')
+  case "$remote" in
+    "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected") return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 matches_github_remote() {
@@ -111,7 +169,7 @@ case "$1" in
     if [ -z "$2" ] || [ -z "$3" ]; then
       fail "title and prompt must not be empty"
     fi
-    resume_existing scratch "$2" '' '' "$3"
+    resume_existing scratch "$2" '' ''
     dispatch "$2" "$3"
     ;;
   github)
@@ -150,9 +208,18 @@ case "$1" in
       fi
       "$GIT_BIN" check-ref-format --branch "$head_branch" >/dev/null || \
         fail "pull request head is not a valid branch: $head_branch"
-      # PR numbers isolate sessions even when fork branches have the same name.
-      worktree_branch="attention/pr-$pr_number"
-      resume_existing github "$title" "$repo_root" "$worktree_branch" "$prompt"
+      worktree_branch="$head_branch"
+      resume_existing github "$title" "$repo_root" "$head_branch" "$head_owner/$head_repo"
+      checkout=$(existing_worktree "$repo_root" "$head_branch") || fail "cannot list worktrees"
+      if [ -n "$checkout" ]; then
+        matches_origin "$checkout" "$head_owner/$head_repo" || \
+          fail "existing worktree origin does not match PR head repository"
+        # AoE adopts the branch's existing checkout. Do not fetch/reset an
+        # in-progress worktree just because its local commits differ from GitHub.
+        AOE_WORKTREE_BRANCH="$head_branch" AOE_NEW_BRANCH=false \
+          dispatch "$title" "$prompt" "$repo_root"
+        exit 0
+      fi
       pr_ref="refs/remotes/origin/attention-pr-$pr_number"
       head_remote="https://github.com/$head_owner/$head_repo.git"
       "$GIT_BIN" -C "$repo_root" fetch --no-tags "$head_remote" \
@@ -172,7 +239,7 @@ case "$1" in
       (cd "$repo_root" && "$GH_BIN" issue view "$reference" --repo "$github_repo" --json number --jq .number >/dev/null) || \
         fail "reference is not an accessible GitHub issue or pull request: $reference"
       worktree_branch=$requested_branch
-      resume_existing github "$title" "$repo_root" "$worktree_branch" "$prompt"
+      resume_existing github "$title" "$repo_root" "$worktree_branch"
       new_branch=true
     fi
 

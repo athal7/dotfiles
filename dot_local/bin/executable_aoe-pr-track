@@ -1,0 +1,23 @@
+#!/bin/sh
+# Best-effort PR association for AoE worktrees; never block an agent launch.
+project=${AOE_PROJECT_PATH:-}
+[ -n "$project" ] && [ -d "$project" ] || exit 0
+gitdir=$(git -C "$project" rev-parse --path-format=absolute --git-dir 2>/dev/null) || exit 0
+common=$(git -C "$project" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
+[ "$gitdir" != "$common" ] || exit 0
+python3 -c 'import os, signal, subprocess, sys
+try:
+    child = subprocess.Popen([sys.argv[1]], cwd=sys.argv[2], stdin=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True)
+    try:
+        child.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(child.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        child.wait()
+except OSError:
+    pass' "$HOME/.local/bin/pr-track" "$project" || :
+exit 0

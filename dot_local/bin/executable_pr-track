@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Track the PR head on its real branch without resetting local work.
+set -u
+
+if (( $# > 1 )) || [[ -n ${1:-} && ! ${1:-} =~ ^[0-9]+$ ]]; then
+  printf '%s\n' 'usage: pr-track [<pr-number>]' >&2
+  exit 2
+fi
+pr=${1:-}
+git rev-parse --show-toplevel >/dev/null 2>&1 || exit 1
+if [[ -z $pr ]]; then
+  sha=$(git rev-parse HEAD) || exit 1
+  # A full page cannot establish uniqueness; never guess among truncated PRs.
+  pr=$(gh api "repos/{owner}/{repo}/commits/$sha/pulls?per_page=100" \
+    --jq "if length >= 100 then empty else [.[] | select(.state == \"open\" and .head.sha == \"$sha\") | .number] | if length == 1 then .[0] else empty end end" 2>/dev/null) || exit 1
+  if [[ ! $pr =~ ^[0-9]+$ ]]; then
+    printf '%s\n' 'pr-track: no unique open PR for HEAD, pass a number' >&2
+    exit 2
+  fi
+fi
+info=$(gh pr view "$pr" --json headRefName,headRepositoryOwner,headRepository \
+  --jq '[.headRefName, .headRepositoryOwner.login, .headRepository.name] | @tsv') || exit 1
+IFS=$'\t' read -r branch owner repo <<< "$info"
+if [[ -z $branch || -z $owner || -z $repo ]]; then
+  printf '%s\n' 'pr-track: invalid PR metadata' >&2
+  exit 1
+fi
+remote_url=$(git remote get-url origin) || exit 1
+remote_url=${remote_url%.git}
+remote_url=$(printf '%s' "$remote_url" | tr '[:upper:]' '[:lower:]')
+expected=$(printf '%s/%s' "$owner" "$repo" | tr '[:upper:]' '[:lower:]')
+case "$remote_url" in
+  "https://github.com/$expected"|"git@github.com:$expected"|"ssh://git@github.com/$expected") ;;
+  *) printf '%s\n' 'pr-track: origin is not the PR head repository' >&2; exit 1 ;;
+esac
+current=$(git symbolic-ref --quiet --short HEAD) || {
+  printf '%s\n' 'pr-track: detached HEAD' >&2
+  exit 1
+}
+if [[ $current != "$branch" ]]; then
+  status=$(git status --porcelain) || exit 1
+  if [[ -n $status ]]; then
+    printf '%s\n' 'pr-track: worktree has uncommitted changes' >&2
+    exit 1
+  fi
+elif git rev-parse --abbrev-ref '@{upstream}' >/dev/null 2>&1; then
+  exit 0
+fi
+git fetch --no-tags origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" || exit 1
+if [[ $current != "$branch" ]]; then
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    [[ $(git rev-parse HEAD) = $(git rev-parse "refs/heads/$branch") ]] || {
+      printf '%s\n' 'pr-track: existing PR branch has a different commit' >&2
+      exit 1
+    }
+    git switch "$branch" || exit 1
+  else
+    git merge-base --is-ancestor "refs/remotes/origin/$branch" HEAD || {
+      printf '%s\n' 'pr-track: HEAD does not contain the PR head' >&2
+      exit 1
+    }
+    git switch -c "$branch" || exit 1
+  fi
+fi
+git rev-parse --abbrev-ref '@{upstream}' >/dev/null 2>&1 || \
+  git branch --set-upstream-to="origin/$branch"

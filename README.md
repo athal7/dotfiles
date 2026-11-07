@@ -11,6 +11,8 @@ A personal macOS development environment managed with [chezmoi](https://chezmoi.
 - [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) for maintenance, updates, and local services.
 - [Colima containers](dot_colima/default/colima.yaml), [Homebridge](dot_config/homebridge/), and Naya Create keyboard settings.
 
+`pr-track [number]` aligns a clean worktree with a PR head branch; AoE attempts this automatically at worktree startup. When an Attention action reuses a session, enter the new prompt in that session: it is not sent automatically.
+
 ## Shared Firefox automation
 
 OMP sessions share one Firefox Nightly process and persistent, agent-only automation profile, including its login; sign in once in that profile. This is separate from the user's normal browser. Each session owns only the tabs it opens. Call `cleanup_session` when finished. Cleanup or disconnect closes only that session's tabs, restores a surviving session's selected tab, and exits Firefox when no session-owned tabs remain. Tabs may remain open while a session stays connected and does not clean up.
