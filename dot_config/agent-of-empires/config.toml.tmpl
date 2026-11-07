@@ -66,7 +66,7 @@ show_spans = false
 {{ $bot := dig "automated_review" "bot_login" "" $org | trim | lower | trimSuffix "[bot]" -}}
 {{ if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
 {{ end -}}
-{{ $_ := set (index $plugins "community.linear") "settings" (dict "include_snoozed" true) -}}
+{{ $linearSettings := dict "include_snoozed" true -}}
 {{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
 {{ if stat $configPath -}}
 {{ $existing := include $configPath | fromToml -}}
@@ -74,6 +74,14 @@ show_spans = false
 {{ if hasKey $plugins $id -}}
 {{ if hasKey $plugin "grant" -}}
 {{ $_ := set (index $plugins $id) "grant" $plugin.grant -}}
+{{ end -}}
+{{ if hasKey $plugin "settings" -}}
+{{ if eq $id "community.linear" -}}
+{{ $linearSettings = mergeOverwrite (deepCopy $plugin.settings) $linearSettings -}}
+{{ else if eq $id "agent-of-empires.github" -}}
+{{ else -}}
+{{ $_ := set (index $plugins $id) "settings" $plugin.settings -}}
+{{ end -}}
 {{ end -}}
 {{ if eq $id "agent-of-empires.github" -}}
 {{ range $login := regexSplit "[,[:space:]]+" (dig "settings" "ignored_commenters" "" $plugin) -1 -}}
@@ -86,7 +94,12 @@ show_spans = false
 {{ end -}}
 {{ end -}}
 {{ end -}}
-{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", ")) -}}
+{{ $_ := set (index $plugins "community.linear") "settings" $linearSettings -}}
+{{ $githubSettings := dict -}}
+{{ if stat $configPath -}}
+{{ $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
+{{ end -}}
+{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
 {{ dict "plugins" $plugins | toToml }}
 
 
@@ -148,7 +161,7 @@ startup_recovery_wake = false
 strict_hotkeys = false
 tie_workdir_to_name = true
 trash_retention_minutes = 43200
-unread_indicator = false
+unread_indicator = true
 yolo_mode_default = false
 
 [session.custom_agents]

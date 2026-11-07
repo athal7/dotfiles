@@ -67,9 +67,9 @@ packages:
   omp_plugins:
     - "@mozilla-ai/pi-otari"
 
-  # aoe (Agent of Empires) plugins — installed/updated via
-  # run_onchange_after_plugins-aoe.sh.tmpl. Keep sources and IDs here;
-  # managed enablement/settings live in config.toml.tmpl; grants stay local.
+  # AoE plugins: these sources are trusted for unattended install and updates,
+  # including future capabilities, build steps, UI and agent integrations.
+  # Grants remain AoE-owned local receipts; unknown local plugins are excluded.
   aoe_plugins:
     # Reserved-namespace plugin: aoe refuses an @ref install here (unverified
     # code cannot claim agent-of-empires.*), so this tracks the latest release.

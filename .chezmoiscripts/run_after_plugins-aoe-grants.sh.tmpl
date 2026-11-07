@@ -1,0 +1,68 @@
+#!/bin/bash
+# Check every apply, not just inventory changes: AoE auto-updates and local
+# configuration writes can invalidate a receipt without changing this script.
+set -euo pipefail
+
+{{ template "brewenv" . }}
+export PATH="$HOME/.local/share/mise/shims:$PATH"
+export XDG_CONFIG_HOME="$HOME/.config"
+
+python3 - <<'PY'
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import tomllib
+
+# Standing source trust is limited to this inventory, including future
+# capabilities, build steps, UI and agent integrations. Never approve a
+# discovered local plugin or synthesize an AoE capability receipt.
+managed = json.loads(r'''{{ .packages.aoe_plugins | toJson }}''')
+root = Path(os.environ["XDG_CONFIG_HOME"]) / "agent-of-empires"
+
+
+def check(plugin):
+    config = tomllib.loads((root / "config.toml").read_text())
+    entry = config.get("plugins", {}).get(plugin["id"], {})
+    if entry.get("source") != plugin["source"]:
+        raise RuntimeError(f'{plugin["id"]}: source differs from managed inventory; refusing approval')
+    raw = (root / "plugins" / plugin["id"] / "aoe-plugin.toml").read_bytes()
+    manifest = tomllib.loads(raw.decode())
+    if manifest["id"] != plugin["id"]:
+        raise RuntimeError(f'{plugin["id"]}: installed manifest ID differs; refusing approval')
+    grant = entry.get("grant", {})
+    return (grant.get("manifest_hash") == "sha256:" + hashlib.sha256(raw).hexdigest()
+            and set(manifest.get("capabilities", [])) <= set(grant.get("capabilities", [])))
+
+
+for plugin in managed:
+    if not (root / "plugins" / plugin["id"]).is_dir():
+        config = tomllib.loads((root / "config.toml").read_text())
+        if config.get("plugins", {}).get(plugin["id"], {}).get("source") != plugin["source"]:
+            raise RuntimeError(f'{plugin["id"]}: source differs from managed inventory; refusing install')
+        print(f'Installing managed AoE plugin {plugin["id"]} from {plugin["source"]}', flush=True)
+        subprocess.run(["aoe", "plugin", "install", plugin["source"], "--yes"],
+                       stdin=subprocess.DEVNULL, check=True)
+        if not check(plugin):
+            raise RuntimeError(f'{plugin["id"]}: install left an invalid capability receipt')
+        if subprocess.run(["aoe", "serve", "--status"], stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL).returncode == 0:
+            subprocess.run(["aoe", "--no-autostart", "plugin", "enable", plugin["id"]],
+                           stdin=subprocess.DEVNULL, check=True)
+        continue
+    if check(plugin):
+        continue
+    print(f'Reconciling AoE authorization for {plugin["id"]} from {plugin["source"]}', flush=True)
+    # This is a source update, not installed-only reapproval. AoE fetches and
+    # validates the managed source, generates its own grant, and hot-reloads
+    # only this worker when a daemon is running. Fail apply visibly on error.
+    result = subprocess.run(["aoe", "plugin", "update", plugin["id"], "--yes"],
+                            stdin=subprocess.DEVNULL, text=True, stdout=subprocess.PIPE,
+                            check=True)
+    print(result.stdout, end="", flush=True)
+    if "a daemon is running but did not reload the plugin" in result.stdout:
+        raise RuntimeError(f'{plugin["id"]}: running daemon did not reload the plugin')
+    if not check(plugin):
+        raise RuntimeError(f'{plugin["id"]}: update left an invalid capability receipt')
+PY
