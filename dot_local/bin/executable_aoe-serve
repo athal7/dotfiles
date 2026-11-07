@@ -11,9 +11,9 @@ unset AOE_SERVE_PASSPHRASE
 # failed lookup is logged instead of silently leaving the plugin unauthenticated.
 if [ -z "${LINEAR_API_KEY:-}" ] && [ -z "${LINEAR_TOKEN:-}" ]; then
   linear_ok=
-  if [ -r "$HOME/.envrc" ]; then
+  if [ -r "$HOME/.config/direnv/lib/keychain.sh" ]; then
     # shellcheck disable=SC1091
-    . "$HOME/.envrc"
+    . "$HOME/.config/direnv/lib/keychain.sh"
     if keychain_env LINEAR_API_KEY linear_api_key 2>/dev/null && [ -n "${LINEAR_API_KEY:-}" ]; then
       linear_ok=1
     fi

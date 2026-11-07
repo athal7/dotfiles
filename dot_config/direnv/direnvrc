@@ -1,1 +1,1 @@
-# Repo-local .envrc files may source ~/.envrc for the opt-in keychain_env helper.
+# direnv automatically loads the opt-in keychain_env helper from lib/keychain.sh.

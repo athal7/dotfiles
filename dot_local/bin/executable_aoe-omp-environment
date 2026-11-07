@@ -4,9 +4,9 @@ set -u
 
 [ "${AOE_TOOL:-}" = omp ] || exit 0
 
-if [ -r "$HOME/.envrc" ]; then
+if [ -r "$HOME/.config/direnv/lib/keychain.sh" ]; then
   # shellcheck disable=SC1091
-  . "$HOME/.envrc"
+  . "$HOME/.config/direnv/lib/keychain.sh"
   keychain_env ANTHROPIC_API_KEY anthropic_api_key 2>/dev/null || :
   keychain_env OTARI_API_KEY otari_api_key 2>/dev/null || :
 fi

@@ -2,3 +2,11 @@
 .config/agent-of-empires/plugins/agent-of-empires.cron
 .config/omp/agent/models.yml
 .local/bin/review-drafts
+{{ $legacyEnvrc := joinPath .chezmoi.homeDir ".envrc" -}}
+{{ if lstat $legacyEnvrc -}}
+{{ $helper := include (joinPath .chezmoi.sourceDir "dot_config/direnv/lib/keychain.sh") -}}
+{{ $legacyHelper := replace "# Managed by chezmoi. Sourcing this helper does not load credentials." "# Managed by chezmoi. Source only from a trusted project .envrc or command." $helper -}}
+{{ if eq (include $legacyEnvrc) $legacyHelper -}}
+.envrc
+{{ end -}}
+{{ end -}}

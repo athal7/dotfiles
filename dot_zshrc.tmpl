@@ -46,9 +46,6 @@ _brew_prefix="$(brew --prefix)"
 # Private shell config (not tracked in dotfiles)
 [[ -f ~/.config/zsh/private.zsh ]] && source ~/.config/zsh/private.zsh
 
-# Load the opt-in Keychain helper without exporting credentials.
-[[ -r "$HOME/.envrc" ]] && source "$HOME/.envrc"
-
 # Give only OMP its GitHub token, not every shell and child process.
 omp() {
   local github_token spacelift_mcp_url

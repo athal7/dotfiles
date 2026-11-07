@@ -83,7 +83,7 @@ Land committed changes with `chezmoi-deploy <branch>`, not a pull request. It re
 Keep secrets in Apple Passwords or 1Password, never tracked files or `.chezmoidata/local.yaml`. For noninteractive access, `keychain_env` reads macOS Keychain items under service `chezmoi`. In a trusted repository's untracked `.envrc`:
 
 ```sh
-source "$HOME/.envrc"
+source "$HOME/.config/direnv/lib/keychain.sh"
 keychain_env MYAPP_API_KEY myapp_api_key
 ```
 

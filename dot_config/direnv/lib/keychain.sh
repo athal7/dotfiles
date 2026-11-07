@@ -1,4 +1,4 @@
-# Managed by chezmoi. Source only from a trusted project .envrc or command.
+# Managed by chezmoi. Sourcing this helper does not load credentials.
 # Keychain uses service "chezmoi"; ACCOUNT is explicit, not inferred from VAR.
 keychain_env() {
   if [ "$#" -ne 2 ] || [ -z "$2" ]; then
