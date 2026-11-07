@@ -48,8 +48,8 @@ for plugin in managed:
             raise RuntimeError(f'{plugin["id"]}: install left an invalid capability receipt')
         if subprocess.run(["aoe", "serve", "--status"], stdout=subprocess.DEVNULL,
                           stderr=subprocess.DEVNULL).returncode == 0:
-            subprocess.run(["aoe", "--no-autostart", "plugin", "enable", plugin["id"]],
-                           stdin=subprocess.DEVNULL, check=True)
+            job = f"gui/{os.getuid()}/com.{os.environ['USER']}.aoe-serve"
+            subprocess.run(["launchctl", "kickstart", "-k", job], check=True)
         continue
     if check(plugin):
         continue
