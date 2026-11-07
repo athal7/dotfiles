@@ -76,8 +76,6 @@ packages:
     # v2.4.0 ships the one-character row-badge marks (dense_row_badge_glyphs).
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
-    - source: "gh:agent-of-empires/plugin-kanban"
-      id: "agent-of-empires.kanban"
     # No published releases upstream, so update cannot resolve a bare slug (it
     # falls back to the default branch only on first install). Track the branch
     # explicitly so `aoe plugin update` keeps working.
