@@ -24,6 +24,7 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
+      SHELL: /bin/zsh
 {{ template "omp-launchd-env" . }}
   firefox-mcp-broker:
     Label: com.$USER.firefox-mcp-broker
