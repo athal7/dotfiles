@@ -84,38 +84,18 @@ launchagents:
       AOE_OMP_MODEL: "@smol"
 {{ template "omp-launchd-env" . }}
 
-  brew-maintenance:
-    Label: com.$USER.brew-maintenance
+  agent-plugin-upgrade:
+    Label: com.$USER.agent-plugin-upgrade
     ProgramArguments:
-      - $HOME/.local/bin/brew-maintenance
+      - $HOME/.local/bin/agent-plugin-upgrade
     StartCalendarInterval:
       Hour: 4
       Minute: 0
-    StandardOutPath: $HOME/Library/Logs/brew-maintenance.log
-    StandardErrorPath: $HOME/Library/Logs/brew-maintenance.error.log
+    StandardOutPath: $HOME/Library/Logs/agent-plugin-upgrade.log
+    StandardErrorPath: $HOME/Library/Logs/agent-plugin-upgrade.error.log
     EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
 
-  # `mise install` treats an already-installed `latest` spec as satisfied, so
-  # tools drift until something explicitly upgrades them. Run that upgrade daily
-  # (after brew-maintenance) and keep the logs the error-log check reads.
-  mise-upgrade:
-    Label: com.$USER.mise-upgrade
-    ProgramArguments:
-      - /opt/homebrew/bin/mise
-      - upgrade
-      - --yes
-      # Node stays put: Homebridge's global packages live under whichever node
-      # install was current when they were installed, so bump it deliberately.
-      - -x
-      - node
-    StartCalendarInterval:
-      Hour: 4
-      Minute: 30
-    StandardOutPath: $HOME/Library/Logs/mise-upgrade.log
-    StandardErrorPath: $HOME/Library/Logs/mise-upgrade.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 
   babysitter-check:
     Label: com.$USER.babysitter-check

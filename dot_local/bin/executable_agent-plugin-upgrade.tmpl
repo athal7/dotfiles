@@ -1,0 +1,76 @@
+#!/bin/bash
+# Upgrade package managers and declared plugins; preserve unrelated plugins.
+set -uo pipefail
+status=0
+export XDG_CONFIG_HOME="$HOME/.config"
+export PI_CONFIG_DIR=".config/omp"
+export PI_CODING_AGENT_DIR="$HOME/.config/omp/agent"
+
+if ! brew update; then
+  echo "Homebrew update failed; skipping Homebrew upgrade" >&2
+  status=1
+elif ! brew upgrade --no-ask; then
+  echo "Homebrew upgrade failed" >&2
+  status=1
+fi
+if ! mise upgrade --yes -x node; then
+  echo "mise upgrade failed" >&2
+  status=1
+fi
+
+{{ range .packages.omp_plugins -}}
+if ! omp plugin upgrade {{ . | quote }}; then
+  echo "Failed to upgrade OMP plugin {{ . }}" >&2
+  status=1
+fi
+{{ end }}
+if ! aoe_outdated=$(aoe plugin outdated); then
+  echo "Failed to check AoE plugin updates" >&2
+  aoe_outdated=
+  status=1
+fi
+
+{{ range .packages.aoe_plugins -}}
+# Do not approve updates if the installed source differs from the trusted inventory.
+if python3 - {{ .id | quote }} {{ .source | quote }} <<'PY'
+import os
+from pathlib import Path
+import sys
+import tomllib
+
+try:
+    config = tomllib.loads((Path(os.environ["XDG_CONFIG_HOME"]) / "agent-of-empires/config.toml").read_text())
+    source = config.get("plugins", {}).get(sys.argv[1], {}).get("source")
+    if source != sys.argv[2]:
+        raise ValueError(f"{sys.argv[1]}: source differs from managed inventory")
+except (OSError, ValueError) as error:
+    print(error, file=sys.stderr)
+    sys.exit(1)
+PY
+then
+  aoe_state=unknown
+  while read -r first second third rest; do
+    if [[ "$first" == "needs" && "$second" == "update" && "$third" == {{ .id | quote }} ]]; then
+      aoe_state=outdated
+    elif [[ "$first" == "up" && "$second" == "to" && "$third" == "date" ]]; then
+      read -r _ _ _ found _ <<< "$first $second $third $rest"
+      [[ "$found" != {{ .id | quote }} ]] || aoe_state=current
+    elif [[ "$first" == "error" && "$second" == {{ .id | quote }} ]]; then
+      aoe_state=error
+    fi
+  done <<< "$aoe_outdated"
+  case "$aoe_state" in
+    current) ;;
+    outdated)
+      if ! aoe plugin update {{ .id | quote }} --yes < /dev/null; then
+        echo "Failed to upgrade AoE plugin {{ .id }}" >&2
+        status=1
+      fi
+      ;;
+    *) echo "Cannot determine update status for {{ .id }}" >&2; status=1 ;;
+  esac
+else
+  status=1
+fi
+{{ end }}
+exit "$status"
