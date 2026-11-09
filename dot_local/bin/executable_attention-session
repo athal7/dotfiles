@@ -34,7 +34,7 @@ dispatch() {
 # A user-initiated Attention action may wake a session, but must not type into
 # its editor or answer a pending approval.
 existing_session() {
-  local kind=$1 title=$2 repo=$3 branch=$4 expected_head=${5:-} sessions candidates
+  local kind=$1 title=$2 repo=$3 branch=$4 expected_head=${5:-} pr_number=${6:-} sessions candidates
   local id profile lifecycle path snoozed actual common expected_common matched=
   sessions=$("$AOE_BIN" list --all --json) || fail "cannot list AoE sessions"
   # jq variables are expanded by jq, not by the shell.
@@ -64,8 +64,8 @@ existing_session() {
       common=$("$GIT_BIN" -C "$path" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
       [ "$common" = "$expected_common" ] || continue
       if [ -n "$expected_head" ]; then
-        matches_origin "$path" "$expected_head" || \
-          fail "existing checkout origin does not match PR head repository"
+        matches_pr_checkout "$path" "$expected_head" "$pr_number" || \
+          fail "existing checkout does not match PR head repository"
       fi
     fi
     [ -z "$matched" ] || fail "multiple sessions match this Attention item"
@@ -76,7 +76,7 @@ existing_session() {
 
 resume_existing() {
   local match id profile lifecycle runtime state snoozed substrate
-  match=$(existing_session "$1" "$2" "$3" "$4" "${5:-}")
+  match=$(existing_session "$1" "$2" "$3" "$4" "${5:-}" "${6:-}")
   [ -n "$match" ] || return 0
   IFS=$'\t' read -r id profile lifecycle snoozed <<<"$match"
   [[ "$id" =~ ^[[:alnum:]-]+$ ]] || fail "invalid AoE session ID"
@@ -140,6 +140,14 @@ matches_github_remote() {
     esac
   done <<<"$remotes"
   return 1
+}
+
+# A fork head can be checked out in the upstream repository. Accept it only
+# when the locally fetched PR ref is an ancestor of the checkout.
+matches_pr_checkout() {
+  matches_origin "$1" "$2" && return 0
+  [ -n "$3" ] && matches_github_remote "$1" "$2" &&
+    "$GIT_BIN" -C "$1" merge-base --is-ancestor "refs/remotes/origin/attention-pr-$3" HEAD
 }
 
 registered_repo_path() {
@@ -209,11 +217,11 @@ case "$1" in
       "$GIT_BIN" check-ref-format --branch "$head_branch" >/dev/null || \
         fail "pull request head is not a valid branch: $head_branch"
       worktree_branch="$head_branch"
-      resume_existing github "$title" "$repo_root" "$head_branch" "$head_owner/$head_repo"
+      resume_existing github "$title" "$repo_root" "$head_branch" "$head_owner/$head_repo" "$pr_number"
       checkout=$(existing_worktree "$repo_root" "$head_branch") || fail "cannot list worktrees"
       if [ -n "$checkout" ]; then
-        matches_origin "$checkout" "$head_owner/$head_repo" || \
-          fail "existing worktree origin does not match PR head repository"
+        matches_pr_checkout "$checkout" "$head_owner/$head_repo" "$pr_number" || \
+          fail "existing worktree does not match PR head repository"
         # AoE adopts the branch's existing checkout. Do not fetch/reset an
         # in-progress worktree just because its local commits differ from GitHub.
         AOE_WORKTREE_BRANCH="$head_branch" AOE_NEW_BRANCH=false \
@@ -228,8 +236,12 @@ case "$1" in
       head_sha=$("$GIT_BIN" -C "$repo_root" rev-parse "$pr_ref")
       if "$GIT_BIN" -C "$repo_root" show-ref --verify --quiet "refs/heads/$worktree_branch"; then
         existing_sha=$("$GIT_BIN" -C "$repo_root" rev-parse "refs/heads/$worktree_branch")
-        [ "$existing_sha" = "$head_sha" ] || \
-          fail "existing worktree branch does not point to pull request head: $worktree_branch"
+        if [ "$existing_sha" != "$head_sha" ]; then
+          "$GIT_BIN" -C "$repo_root" merge-base --is-ancestor "$existing_sha" "$head_sha" || \
+            fail "existing worktree branch does not point to pull request head: $worktree_branch"
+          "$GIT_BIN" -C "$repo_root" branch -f "$worktree_branch" "$head_sha" || \
+            fail "cannot fast-forward worktree branch: $worktree_branch"
+        fi
       else
         "$GIT_BIN" -C "$repo_root" branch "$worktree_branch" "$pr_ref" || \
           fail "cannot create worktree branch: $worktree_branch"

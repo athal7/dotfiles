@@ -294,7 +294,7 @@ export ATTENTION_HEAD_ORIGIN=https://github.com/other-owner/head-repo.git ATTENT
 if run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo >"$WORK/head-origin.out" 2>&1; then
   bad "rejects a matching branch from another PR head repository"
 elif [[ ! -s "$DISPATCH_LOG" ]] && ! grep -Fq 'session start' "$AOE_LOG" &&
-  grep -Fq 'origin does not match PR head repository' "$WORK/head-origin.out"; then
+  grep -Fq 'does not match PR head repository' "$WORK/head-origin.out"; then
   ok "rejects a matching branch from another PR head repository"
 else
   bad "rejects a matching branch from another PR head repository"
@@ -479,16 +479,37 @@ if run_attention github "$REPO" 63 attention/upstream-pr upstream-pr upstream-pr
 else
   bad "adopts an existing worktree without losing commits or untracked files"
 fi
+git -C "$REPO" remote add fork https://github.com/head-owner/head-repo.git
+git -C "$REPO" remote set-url origin https://github.com/example/remote-repo.git
+: >"$DISPATCH_LOG"
+if run_attention github "$REPO" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo &&
+  [[ "$(git -C "$WORK/existing worktree" rev-parse HEAD)" == "$local_sha" ]] &&
+  grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG"; then
+  ok "adopts an upstream worktree containing the fetched fork PR head"
+else
+  bad "adopts an upstream worktree containing the fetched fork PR head"
+fi
+git -C "$REPO" remote set-url origin https://github.com/head-owner/head-repo.git
+git -C "$REPO" remote remove fork
 rm "$WORK/existing worktree/untracked"
 git -C "$REPO" worktree remove "$WORK/existing worktree"
 git -C "$REPO" config "url.$WORK/head.insteadOf" https://github.com/head-owner/head-repo.git
 
 git -C "$REPO" update-ref refs/heads/feature/fork "$stale_sha"
 : >"$DISPATCH_LOG"
+if run_attention github "$REPO" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo &&
+  [[ "$(git -C "$REPO" rev-parse refs/heads/feature/fork)" == "$head_sha" ]] &&
+  grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG"; then
+  ok "fast-forwards an unattached PR branch behind the fetched head"
+else
+  bad "fast-forwards an unattached PR branch behind the fetched head"
+fi
+git -C "$REPO" update-ref refs/heads/feature/fork "$local_sha"
+: >"$DISPATCH_LOG"
 if run_attention github "$REPO" 63 attention/upstream-pr upstream-pr upstream-prompt '' example/remote-repo >"$WORK/diverged-head.out" 2>&1; then
   bad "rejects a divergent actual PR branch without overwriting it"
 elif [[ ! -s "$DISPATCH_LOG" ]] &&
-  [[ "$(git -C "$REPO" rev-parse refs/heads/feature/fork)" == "$stale_sha" ]]; then
+  [[ "$(git -C "$REPO" rev-parse refs/heads/feature/fork)" == "$local_sha" ]]; then
   ok "rejects a divergent actual PR branch without overwriting it"
 else
   bad "rejects a divergent actual PR branch without overwriting it"

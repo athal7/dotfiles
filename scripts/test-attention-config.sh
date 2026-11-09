@@ -41,10 +41,8 @@ if jq -e . "$RENDERED" >/dev/null; then
 else
   bad "renders valid JSON"
 fi
-check "routes personal-org repos to freebuff" \
-  test "$(jq -c '.session.agents' "$RENDERED")" = '[{"repo":"your-personal-org/*","tool":"freebuff"}]'
-check "leaves work orgs on AoE's default agent" \
-  test "$(jq -r '[.session.agents[].repo] | index("your-work-org/*")' "$RENDERED")" = null
+check "routes personal-org sessions to omp" \
+  test "$(jq -r '.session.agents[] | select(.repo == "your-personal-org/*") | .tool' "$RENDERED")" = omp
 
 cat >"$DATA" <<'EOF'
 orgs:
@@ -52,7 +50,7 @@ orgs:
     attention: Work
 EOF
 render_config
-check "renders no agent overrides when only work orgs are configured" \
+check "leaves work orgs on the default agent" \
   test "$(jq -c '.session.agents' "$RENDERED")" = '[]'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"

@@ -36,7 +36,7 @@
 {{- if eq (dig "attention" "" $settings) "Work" -}}
 {{- $workGitHubPrefixes = append $workGitHubPrefixes (printf "%s/" $org) -}}
 {{- else -}}
-{{- $sessionAgents = append $sessionAgents (dict "repo" (printf "%s/*" $org) "tool" "freebuff") -}}
+{{- $sessionAgents = append $sessionAgents (dict "repo" (printf "%s/*" $org) "tool" "omp") -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
