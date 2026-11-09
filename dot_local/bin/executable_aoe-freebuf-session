@@ -12,7 +12,8 @@
 # so the session is created and started like aoe-scheduled-session, then the
 # task is typed into the fresh composer once the TUI is actually ready. Same
 # arguments and environment as aoe-scheduled-session, so attention-session can
-# use it:
+# use it; attention-session selects it whenever the item's AoE tool is freebuff.
+# Setting AOE_SESSION_DISPATCHER to this path forces it for any tool:
 #
 #   AOE_SESSION_DISPATCHER=$HOME/.local/bin/aoe-freebuf-session \
 #     attention-session github "$PWD" 63 attention/pr-63 title "$prompt" '' org/repo

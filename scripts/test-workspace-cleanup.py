@@ -163,6 +163,31 @@ class WorktreeCleanupTest(unittest.TestCase):
             self.assertTrue(target.exists())
             self.assertTrue(path.exists())
 
+    def test_stale_registration_without_a_directory_is_reported_then_pruned(self):
+        path = self.branch("stale")
+        shutil.rmtree(path)
+        output = self.clean(True)
+        self.assertIn(f"stale worktree registration (missing directory): {path}", output)
+        self.assertIn(str(path), self.git(self.repo, "worktree", "list"))
+        self.clean(False)
+        self.assertNotIn(str(path), self.git(self.repo, "worktree", "list"))
+        self.assertTrue(self.git(self.repo, "branch", "--list", "stale").strip())
+
+    def test_locked_stale_registration_is_unlocked_before_pruning(self):
+        path = self.branch("locked-stale")
+        self.git(self.repo, "worktree", "lock", str(path))
+        shutil.rmtree(path)
+        self.assertIn(f"stale worktree registration (missing directory): {path}", self.clean(True))
+        self.assertIn(str(path), self.git(self.repo, "worktree", "list"))
+        self.clean(False)
+        self.assertNotIn(str(path), self.git(self.repo, "worktree", "list"))
+
+    def test_apply_never_removes_a_live_worktree(self):
+        path = self.branch("live", merged=True)
+        self.clean(False)
+        self.assertIn(str(path), self.git(self.repo, "worktree", "list"))
+        self.assertTrue((path / "Cargo.toml").exists())
+
     def test_merged_worktree_is_reported_but_never_removed(self):
         path = self.branch("merged", merged=True)
         self.assertIn(f"worktree (manual review only): {path}", self.clean(False))

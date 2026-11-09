@@ -42,6 +42,29 @@ def worktree_is_idle(path):
     return True
 
 
+def prune_stale(repo, stale, dry_run):
+    """Clear worktree registrations whose directories are gone.
+
+    A torn-down workspace or a manual delete leaves the registration behind and
+    the branch stays claimed, so checking that branch out again fails until the
+    entry is pruned. Nothing can be lost here -- the directory is already gone --
+    but a locked, AoE-managed entry needs its lock removed before prune drops it.
+    """
+    for path, _locked in stale:
+        print(f"stale worktree registration (missing directory): {path}")
+    if dry_run:
+        return
+    for path, locked in stale:
+        if locked:
+            unlocked = run("git", "-C", str(repo), "worktree", "unlock", str(path), check=False)
+            if unlocked.returncode:
+                print(f"Cannot unlock {path}: {unlocked.stderr.strip()}", file=sys.stderr)
+                continue
+        pruned = run("git", "-C", str(repo), "worktree", "prune", check=False)
+        if pruned.returncode:
+            print(f"Cannot prune {path}: {pruned.stderr.strip()}", file=sys.stderr)
+
+
 def worktrees(dry_run):
     try:
         sessions = registered_sessions()
@@ -63,13 +86,18 @@ def worktrees(dry_run):
         except (OSError, subprocess.CalledProcessError) as error:
             print(f"Skipping {repo}: {error}", file=sys.stderr)
             continue
+        stale = []
         for entry in entries.strip().split("\n\n"):
             fields = entry.splitlines()
             path = Path(fields[0].removeprefix("worktree ")).resolve() if fields else repo
             head = next((line[5:] for line in fields if line.startswith("HEAD ")), None)
-            if path == repo or not path.is_dir() or not head:
+            if path == repo or not head:
                 continue
-            if any(line.startswith("locked") for line in fields):
+            locked = any(line.startswith("locked") for line in fields)
+            if not path.is_dir():
+                stale.append((path, locked))
+                continue
+            if locked:
                 continue
             status = run("git", "-C", str(path), "status", "--porcelain=v1", check=False)
             if status.returncode:
@@ -104,6 +132,8 @@ def worktrees(dry_run):
                 continue
             if merged and worktree_is_idle(path):
                 print(f"worktree (manual review only): {path}")
+
+        prune_stale(repo, stale, dry_run)
 
 
 def databases(dry_run):

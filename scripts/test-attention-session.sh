@@ -15,6 +15,16 @@ DISPATCHER="$WORK/dispatcher"
 GH_LOG="$WORK/gh.log"
 GIT_LOG="$WORK/git.log"
 DISPATCH_LOG="$WORK/dispatch.log"
+STATE_DIR="$WORK/state"
+NOTIFY="$WORK/notify"
+NOTIFY_LOG="$WORK/notify.log"
+export NOTIFY_LOG
+: >"$NOTIFY_LOG"
+cat >"$NOTIFY" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$NOTIFY_LOG"
+EOF
+chmod +x "$NOTIFY"
 BRANCH_STATE="$WORK/branch-state"
 SESSIONS="$WORK/sessions.json"
 AOE_LOG="$WORK/aoe.log"
@@ -154,7 +164,10 @@ run_attention() {
     ATTENTION_HEAD_SHA=deadbeef \
     ATTENTION_SESSIONS="$SESSIONS" \
     ATTENTION_AOE_LOG="$AOE_LOG" \
-    AOE_SESSION_DISPATCHER="$DISPATCHER" \
+    AOE_SESSION_DISPATCHER="${ATTENTION_DISPATCHER-$DISPATCHER}" \
+    HOME="${ATTENTION_HOME:-$HOME}" \
+    ATTENTION_STATE_DIR="$STATE_DIR" \
+    ATTENTION_NOTIFY_BIN="$NOTIFY" \
     AOE_BIN="$FAKE_AOE" \
     GH_BIN="$FAKE_GH" \
     GIT_BIN="${ATTENTION_GIT_BIN:-$FAKE_GIT}" \
@@ -244,6 +257,77 @@ else
   bad "does not create a session when AoE returns an empty listing"
 fi
 echo '[]' >"$SESSIONS"
+# The agent AoE resolved for the item decides the dispatcher: OMP takes its task
+# at startup, but freebuff's CLI is TUI-only and needs the wait-and-send wrapper.
+ATTENTION_HOME="$WORK/home"
+mkdir -p "$ATTENTION_HOME/.local/bin"
+FREEBUF_LOG="$WORK/freebuf.log"
+export FREEBUF_LOG
+: >"$FREEBUF_LOG"
+cat >"$ATTENTION_HOME/.local/bin/aoe-freebuf-session" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'tool=%s argc=%s title=%s\n' "\${AOE_TOOL:-}" "\$#" "\$1" >>"$FREEBUF_LOG"
+printf 'group=%s\n' "\${AOE_SESSION_GROUP:-}" >>"$FREEBUF_LOG"
+printf 'prompt=%s\n' "\$(cat "\$2")" >>"$FREEBUF_LOG"
+EOF
+chmod +x "$ATTENTION_HOME/.local/bin/aoe-freebuf-session"
+: >"$DISPATCH_LOG"
+export AOE_TOOL=freebuff ATTENTION_DISPATCHER=
+run_attention scratch calendar-title 'freebuf task'
+if grep -Fqx 'tool=freebuff argc=2 title=calendar-title' "$FREEBUF_LOG" &&
+  grep -Fqx 'group=Attention' "$FREEBUF_LOG" &&
+  grep -Fqx 'prompt=freebuf task' "$FREEBUF_LOG" &&
+  [[ ! -s "$DISPATCH_LOG" ]]; then
+  ok "routes a resolved freebuff agent to the freebuff dispatcher"
+else
+  bad "routes a resolved freebuff agent to the freebuff dispatcher"
+  printf 'freebuf log:\n%s\ndispatch log:\n%s\n' "$(cat "$FREEBUF_LOG")" "$(cat "$DISPATCH_LOG")" >&2
+fi
+: >"$FREEBUF_LOG"
+export AOE_TOOL=claude
+if run_attention scratch calendar-title 'unsupported agent' >"$WORK/unsupported-agent.out" 2>&1; then
+  bad "refuses an agent with no dispatcher instead of silently dropping the task"
+elif [[ ! -s "$FREEBUF_LOG" && ! -s "$DISPATCH_LOG" ]] &&
+  grep -Fq "no dispatcher supports AoE tool 'claude'" "$WORK/unsupported-agent.out"; then
+  ok "refuses an agent with no dispatcher instead of silently dropping the task"
+else
+  bad "refuses an agent with no dispatcher instead of silently dropping the task"
+fi
+# A backgrounded action has no visible exit status, so a failure has to reach
+# the user: the dispatcher's own last error, a notification, and a durable log.
+FAILING_DISPATCHER="$WORK/failing-dispatcher"
+cat >"$FAILING_DISPATCHER" <<'EOF'
+#!/usr/bin/env bash
+printf 'cannot start the session: freebuff is not signed in\n' >&2
+exit 75
+EOF
+chmod +x "$FAILING_DISPATCHER"
+rm -rf "$STATE_DIR"
+: >"$NOTIFY_LOG"
+: >"$DISPATCH_LOG"
+if ATTENTION_DISPATCHER="$FAILING_DISPATCHER" run_attention scratch calendar-title 'failing dispatch' \
+    >"$WORK/failed-dispatch.out" 2>&1; then
+  bad "surfaces a failed dispatch instead of leaving it in a temp log"
+elif [[ ! -s "$DISPATCH_LOG" ]] &&
+  grep -Fq 'cannot start the session: freebuff is not signed in' "$WORK/failed-dispatch.out" &&
+  grep -Fq 'cannot start the session: freebuff is not signed in' "$NOTIFY_LOG" &&
+  grep -Fq 'Attention session failed' "$NOTIFY_LOG" &&
+  grep -Fq "$(printf '\t75\t')" "$STATE_DIR/failures.log"; then
+  ok "surfaces a failed dispatch instead of leaving it in a temp log"
+else
+  bad "surfaces a failed dispatch instead of leaving it in a temp log"
+  printf 'output:\n%s\nnotify log:\n%s\nfailures log:\n%s\n' \
+    "$(cat "$WORK/failed-dispatch.out")" "$(cat "$NOTIFY_LOG")" "$(cat "$STATE_DIR/failures.log" 2>/dev/null)" >&2
+fi
+: >"$NOTIFY_LOG"
+ATTENTION_DISPATCHER="$DISPATCHER" run_attention scratch calendar-title 'quiet success' >/dev/null 2>&1
+if [[ -s "$NOTIFY_LOG" ]]; then
+  bad "stays quiet when the action succeeds"
+else
+  ok "stays quiet when the action succeeds"
+fi
+unset AOE_TOOL ATTENTION_DISPATCHER ATTENTION_HOME
 : >"$DISPATCH_LOG"
 : >"$GIT_LOG"
 export ATTENTION_MODE=pr
@@ -463,6 +547,31 @@ if run_attention github "$WORK/missing-repo" 63 attention/upstream-pr upstream-p
   ok "finds a registered checkout by upstream when the suggested path is missing"
 else
   bad "finds a registered checkout by upstream when the suggested path is missing"
+fi
+# A torn-down workspace leaves a worktree registered with no directory behind
+# it while its branch stays claimed. Reporting that as a PR head mismatch sends
+# you after the wrong problem, so name the dead registration and how to clear it.
+git init --quiet --initial-branch=main "$WORK/stale-repo"
+git -C "$WORK/stale-repo" remote add origin https://github.com/example/remote-repo.git
+git -C "$WORK/stale-repo" -c user.name=Test -c user.email=test@example.com -c commit.gpgsign=false \
+  commit --quiet --allow-empty -m 'Base'
+git -C "$WORK/stale-repo" worktree add --quiet -b feature/fork "$WORK/stale-worktree"
+rm -rf "$WORK/stale-worktree"
+echo '[]' >"$SESSIONS"
+: >"$DISPATCH_LOG"
+if run_attention github "$WORK/stale-repo" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo \
+    >"$WORK/stale-worktree.out" 2>&1; then
+  bad "names a worktree whose directory is gone instead of a PR head mismatch"
+elif [[ ! -s "$DISPATCH_LOG" ]] &&
+  grep -Fq 'worktree that is missing:' "$WORK/stale-worktree.out" &&
+  grep -Fq '/stale-worktree' "$WORK/stale-worktree.out" &&
+  grep -Fq 'clear it with:' "$WORK/stale-worktree.out" &&
+  grep -Fq 'worktree unlock' "$WORK/stale-worktree.out" &&
+  ! grep -Fq 'cannot list worktrees' "$WORK/stale-worktree.out"; then
+  ok "names a worktree whose directory is gone instead of a PR head mismatch"
+else
+  bad "names a worktree whose directory is gone instead of a PR head mismatch"
+  cat "$WORK/stale-worktree.out" >&2
 fi
 git -C "$REPO" config --unset "url.$WORK/head.insteadOf"
 git -C "$REPO" worktree add -q "$WORK/existing worktree" feature/fork

@@ -2,11 +2,22 @@
 # attention-session — start a deterministic AoE session from an attention action.
 set -euo pipefail
 
-DISPATCHER=${AOE_SESSION_DISPATCHER:-"$HOME/.local/bin/aoe-scheduled-session"}
 GH_BIN=${GH_BIN:-gh}
 GIT_BIN=${GIT_BIN:-git}
 AOE_BIN=${AOE_BIN:-/opt/homebrew/bin/aoe}
 JQ_BIN=${JQ_BIN:-/opt/homebrew/bin/jq}
+STATE_DIR=${ATTENTION_STATE_DIR:-"${XDG_STATE_HOME:-$HOME/.local/state}/attention-session"}
+TMPDIR=${ATTENTION_TMPDIR:-${TMPDIR:-/tmp}}
+
+# Baseline state directory and the macOS notifier. Overridable so tests can
+# point both at their own scratch space instead of the real /tmp.
+STATE_DIR=${ATTENTION_STATE_DIR:-"${XDG_STATE_HOME:-$HOME/.local/state}/attention-session"}
+NOTIFY_BIN=${ATTENTION_NOTIFY_BIN:-/usr/bin/osascript}
+status=0
+prompt_file=
+dispatch_errors=
+failure_message=
+fail_file=$(mktemp "${TMPDIR:-/tmp}/attention-session-failure.XXXXXX")
 
 usage() {
   printf 'usage: %s scratch <title> <prompt>\n' "$0" >&2
@@ -14,20 +25,72 @@ usage() {
   exit 64
 }
 
+# Attention dispatches these actions in the background, so a nonzero exit
+# otherwise disappears into a per-dispatch log the dashboard has already
+# scrolled past. Leave a durable record and raise a notification, including the
+# dispatcher's own last error when it is the thing that failed. fail() records
+# through a file because several call sites run inside command substitutions.
+report_failure() {
+  local code=$1 message=$failure_message
+  [ "$code" -ne 0 ] || { rm -f "$fail_file"; return 0; }
+  if [ -z "$message" ]; then
+    message=$(cat "$fail_file" 2>/dev/null || true)
+  fi
+  rm -f "$fail_file"
+  [ -n "$message" ] || message="exited with status $code"
+  mkdir -p "$STATE_DIR" 2>/dev/null || true
+  printf '%s\t%s\t%s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$code" "$message" \
+    >>"$STATE_DIR/failures.log" 2>/dev/null || true
+  [ -x "$NOTIFY_BIN" ] || return 0
+  message=${message//\"/\'}
+  message=$(printf '%s' "$message" | cut -c1-200)
+  "$NOTIFY_BIN" -e "display notification \"$message\" with title \"Attention session failed\" subtitle \"$STATE_DIR/failures.log\"" \
+    >/dev/null 2>&1 || true
+}
+
+trap 'report_failure $?' EXIT
+
 fail() {
+  failure_message=$*
   printf 'attention-session: %s\n' "$*" >&2
+  printf '%s' "$*" >"$fail_file" 2>/dev/null || true
   exit 1
 }
 
+# The dispatcher has to match the agent AoE resolved for this item: OMP can take
+# its task at startup, while freebuff's CLI is TUI-only and needs the
+# wait-and-send wrapper. An explicit AOE_SESSION_DISPATCHER always wins.
+resolve_dispatcher() {
+  if [ -n "${AOE_SESSION_DISPATCHER:-}" ]; then
+    printf '%s\n' "$AOE_SESSION_DISPATCHER"
+    return 0
+  fi
+  case ${AOE_TOOL:-omp} in
+    freebuff) printf '%s\n' "$HOME/.local/bin/aoe-freebuf-session" ;;
+    omp) printf '%s\n' "$HOME/.local/bin/aoe-scheduled-session" ;;
+    *) fail "no dispatcher supports AoE tool '${AOE_TOOL}'; set AOE_SESSION_DISPATCHER" ;;
+  esac
+}
+
 dispatch() {
-  local title=$1 prompt=$2
-  [ -x "$DISPATCHER" ] || fail "dispatcher is not executable: $DISPATCHER"
+  local title=$1 prompt=$2 dispatcher reason
+  dispatcher=$(resolve_dispatcher)
+  [ -x "$dispatcher" ] || fail "dispatcher is not executable: $dispatcher"
   shift 2
   umask 077
   prompt_file=$(mktemp "${TMPDIR:-/tmp}/attention-session.XXXXXX")
-  trap 'rm -f "$prompt_file"' EXIT
+  dispatch_errors=$(mktemp "${TMPDIR:-/tmp}/attention-session.XXXXXX")
+  trap 'rm -f "$fail_file" "$prompt_file" "$dispatch_errors"' EXIT
+  trap 'status=$?; [ -z "$prompt_file" ] || rm -f "$prompt_file"; [ -z "$dispatch_errors" ] || rm -f "$dispatch_errors"; report_failure "$status"' EXIT
   printf '%s' "$prompt" >"$prompt_file"
-  env AOE_SESSION_GROUP=Attention AOE_TOOL="${AOE_TOOL:-omp}" "$DISPATCHER" "$title" "$prompt_file" "$@"
+  env AOE_SESSION_GROUP=Attention AOE_TOOL="${AOE_TOOL:-omp}" \
+    "$dispatcher" "$title" "$prompt_file" "$@" 2>"$dispatch_errors" || status=$?
+  reason=$(tail -n 1 "$dispatch_errors" 2>/dev/null || true)
+  [ ! -s "$dispatch_errors" ] || cat "$dispatch_errors" >&2
+  if [ "$status" -ne 0 ]; then
+    failure_message=${reason:-"dispatcher exited with status $status"}
+    exit "$status"
+  fi
 }
 
 # Reuse by live checkout identity, not titles or AoE's creation-time branch.
@@ -104,14 +167,32 @@ resume_existing() {
   exit 0
 }
 
+# A torn-down workspace or manual delete leaves a worktree registered under a
+# branch with no directory behind it. Reporting that as a PR mismatch sends you
+# looking for the wrong problem, so name the dead registration and how to clear
+# it (a locked, AoE-managed worktree needs its lock removed before prune).
 existing_worktree() {
-  "$GIT_BIN" -C "$1" worktree list --porcelain -z |
-    while IFS= read -r -d '' field; do
-      case "$field" in
-        "worktree "*) checkout=${field#worktree } ;;
-        "branch refs/heads/$2") printf '%s\n' "$checkout" ;;
-      esac
-    done
+  local checkout='' stale=''
+  while IFS= read -r -d '' field; do
+    case "$field" in
+      "worktree "*) checkout=${field#worktree } ;;
+      "branch refs/heads/$2")
+        if [ -n "$checkout" ] && [ -d "$checkout" ]; then
+          printf '%s\n' "$checkout"
+          return 0
+        fi
+        stale=${checkout:-$stale}
+        ;;
+    esac
+  done < <("$GIT_BIN" -C "$1" worktree list --porcelain -z)
+  [ -z "$stale" ] || {
+    printf 'attention-session: branch %s is registered to a worktree that is missing: %s\n' \
+      "$2" "$stale" >&2
+    printf 'attention-session: clear it with: git -C %s worktree unlock %s && git -C %s worktree prune\n' \
+      "$1" "'$stale'" "$1" >&2
+    return 2
+  }
+  return 0
 }
 
 matches_origin() {
@@ -218,10 +299,17 @@ case "$1" in
         fail "pull request head is not a valid branch: $head_branch"
       worktree_branch="$head_branch"
       resume_existing github "$title" "$repo_root" "$head_branch" "$head_owner/$head_repo" "$pr_number"
-      checkout=$(existing_worktree "$repo_root" "$head_branch") || fail "cannot list worktrees"
+      if checkout=$(existing_worktree "$repo_root" "$head_branch"); then
+        :
+      else
+        status=$?
+        # Status 2 already reported a worktree whose directory is gone.
+        [ "$status" -eq 2 ] || fail "cannot list worktrees"
+        exit 1
+      fi
       if [ -n "$checkout" ]; then
         matches_pr_checkout "$checkout" "$head_owner/$head_repo" "$pr_number" || \
-          fail "existing worktree does not match PR head repository"
+          fail "worktree $checkout on $head_branch is not the head of $head_owner/$head_repo#${pr_number:-?}; check its origin, or remove the worktree if it is stale"
         # AoE adopts the branch's existing checkout. Do not fetch/reset an
         # in-progress worktree just because its local commits differ from GitHub.
         AOE_WORKTREE_BRANCH="$head_branch" AOE_NEW_BRANCH=false \
