@@ -158,10 +158,11 @@ snooze_duration_minutes = 30
 sidebar_position = "left"
 smart_rename = true
 smart_rename_agent = ""
-# The paired terminal takes 40% of the preview; the split stays visible down to an 80x20 window.
+# The paired terminal takes 40% of the preview; require a desktop-height window (45 rows)
+# so the split stays hidden on short windows, and keep a desktop width of 100 columns.
 split_terminal_height_percent = 40
-split_terminal_min_height = 20
-split_terminal_min_width = 80
+split_terminal_min_height = 45
+split_terminal_min_width = 100
 startup_recovery_wake = false
 strict_hotkeys = false
 tie_workdir_to_name = true
