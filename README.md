@@ -89,6 +89,17 @@ keychain_env MYAPP_API_KEY myapp_api_key
 
 Review it, then run `direnv allow`. Shell startup doesn't load credentials globally. Alternatively, keep 1Password references in an ignored `fnox.local.toml` and use `fnox exec -- <command>` for command-scoped credentials.
 
+For a configured personal GitHub organization, the shell's `omp` function and
+AoE terminal sessions select `~/.config/omp/personal.yml` through a per-process
+overlay. This works in primary checkouts, linked worktrees, and nested
+directories without changing project configuration. Store the OpenRouter key
+in Keychain under service `chezmoi`, account `openrouter_api_key`. Explicit
+`--config` overlays and model overrides can take precedence.
+
+Free model availability and quotas change. OMP settings are not a billing
+boundary: explicit model choices, project settings, environment overrides, and
+other model features can route requests elsewhere.
+
 AoE Serve uses its native token URL for authentication; Tailscale Serve keeps access on the tailnet but does not replace AoE authentication.
 
 ## Naya Create keyboard

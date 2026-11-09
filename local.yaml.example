@@ -18,6 +18,8 @@ rust_cache:
 #                    "Work" places them in the Work group; omit for Open source.
 #   attention_agent : optional AoE agent for this organization's Attention sessions.
 #                    Omit for OMP on non-work orgs or the launcher default on work orgs.
+# Organizations without "Work" use the personal OMP model policy; work
+# organizations keep the global defaults.
 #   automated_review: config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login     : the GitHub user.login the bot posts as; merged into AoE's
 #                     ignored commenters without hiding unresolved threads.

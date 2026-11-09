@@ -31,9 +31,8 @@ if [ -z "${LINEAR_API_KEY:-}" ] && [ -z "${LINEAR_TOKEN:-}" ]; then
   fi
 fi
 
-# Structured (ACP) workers inherit this daemon's environment instead of running
-# the before_session hook, so export the credentials that hook gives terminal
-# OMP sessions. The OMP config roots already arrive from the launchd environment.
+# Supply baseline credentials to the daemon for workers without project-specific
+# overrides. Structured OMP workers also run before_session for their own cwd.
 if [ -x "$HOME/.local/bin/aoe-omp-environment" ]; then
   omp_environment=$(AOE_TOOL=omp "$HOME/.local/bin/aoe-omp-environment" 2>/dev/null) || omp_environment=
   while IFS= read -r assignment; do

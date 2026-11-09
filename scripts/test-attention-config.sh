@@ -48,6 +48,8 @@ check "routes personal-org sessions to omp" \
   test "$(jq -r '.session.agents[] | select(.repo == "your-personal-org/*") | .tool' "$RENDERED")" = omp
 check "routes another org to its configured agent" \
   test "$(jq -r '.session.agents[] | select(.repo == "your-other-org/*") | .tool' "$RENDERED")" = freebuff
+check "leaves work orgs on AoE's default agent" \
+  test "$(jq -r '[.session.agents[].repo] | index("your-work-org/*")' "$RENDERED")" = null
 
 cat >"$DATA" <<'EOF'
 orgs:

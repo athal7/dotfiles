@@ -1,0 +1,7 @@
+{{- $personal := list -}}
+{{- range $org, $settings := (get . "orgs" | default dict) -}}
+{{- if and (kindIs "map" $settings) (ne (dig "attention" "" $settings) "Work") -}}
+{{- $personal = append $personal (lower $org) -}}
+{{- end -}}
+{{- end -}}
+{{ $personal | toJson }}

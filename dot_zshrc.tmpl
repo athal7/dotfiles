@@ -48,7 +48,22 @@ _brew_prefix="$(brew --prefix)"
 
 # Give only OMP its GitHub token, not every shell and child process.
 omp() {
-  local github_token spacelift_mcp_url
+  local github_token spacelift_mcp_url result
+  if [[ ! -x "$HOME/.local/bin/omp-personal-repo" ]]; then
+    print -u2 'Missing personal OMP repository classifier'
+    return 1
+  fi
+  result=0
+  "$HOME/.local/bin/omp-personal-repo" "$PWD" || result=$?
+  case $result in
+    0)
+      local -x PI_CONFIG_FILES="${PI_CONFIG_FILES:+$PI_CONFIG_FILES:}$HOME/.config/omp/personal.yml"
+      local -x OPENROUTER_API_KEY
+      OPENROUTER_API_KEY=$(security find-generic-password -s chezmoi -a openrouter_api_key -w 2>/dev/null) || OPENROUTER_API_KEY=
+      ;;
+    1) ;;
+    *) print -u2 'Cannot classify OMP repository'; return 1 ;;
+  esac
   if command -v spacectl >/dev/null 2>&1 && command -v spacelift-mcp-url >/dev/null 2>&1; then
     spacelift_mcp_url=$(spacelift-mcp-url 2>/dev/null) || spacelift_mcp_url=
   fi

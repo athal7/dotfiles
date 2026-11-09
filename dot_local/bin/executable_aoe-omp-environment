@@ -4,18 +4,45 @@ set -u
 
 [ "${AOE_TOOL:-}" = omp ] || exit 0
 
+personal=false
+if [ -n "${AOE_PROJECT_PATH:-}" ]; then
+  if [ ! -x "$HOME/.local/bin/omp-personal-repo" ]; then
+    printf 'Missing personal OMP repository classifier\n' >&2
+    exit 1
+  fi
+  result=0
+  "$HOME/.local/bin/omp-personal-repo" "$AOE_PROJECT_PATH" || result=$?
+  case $result in
+    0) personal=true ;;
+    1) ;;
+    *) printf 'Cannot set up personal OMP configuration\n' >&2; exit 1 ;;
+  esac
+fi
+if [ "$personal" = true ]; then
+  unset OPENROUTER_API_KEY
+fi
+
 if [ -r "$HOME/.config/direnv/lib/keychain.sh" ]; then
   # shellcheck disable=SC1091
   . "$HOME/.config/direnv/lib/keychain.sh"
-  keychain_env ANTHROPIC_API_KEY anthropic_api_key 2>/dev/null || :
-  keychain_env OTARI_API_KEY otari_api_key 2>/dev/null || :
+  if [ "$personal" = true ]; then
+    keychain_env OPENROUTER_API_KEY openrouter_api_key 2>/dev/null || :
+  else
+    keychain_env ANTHROPIC_API_KEY anthropic_api_key 2>/dev/null || :
+    keychain_env OTARI_API_KEY otari_api_key 2>/dev/null || :
+  fi
 fi
 
 printf 'PI_CONFIG_DIR=.config/omp\nPI_CODING_AGENT_DIR=%s\nXDG_DATA_HOME=%s\n' \
   "$HOME/.config/omp/agent" "$HOME/.local/share"
 
-[ -z "${ANTHROPIC_API_KEY:-}" ] || printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY"
-[ -z "${OTARI_API_KEY:-}" ] || printf 'OTARI_API_KEY=%s\n' "$OTARI_API_KEY"
+if [ "$personal" = true ]; then
+  printf 'PI_CONFIG_FILES=%s%s%s\n' "${PI_CONFIG_FILES:-}" "${PI_CONFIG_FILES:+:}" "$HOME/.config/omp/personal.yml"
+  printf 'OPENROUTER_API_KEY=%s\n' "${OPENROUTER_API_KEY:-}"
+else
+  [ -z "${ANTHROPIC_API_KEY:-}" ] || printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY"
+  [ -z "${OTARI_API_KEY:-}" ] || printf 'OTARI_API_KEY=%s\n' "$OTARI_API_KEY"
+fi
 # AoE starts OMP without a login shell; request gh auth only for this process.
 if command -v gh >/dev/null 2>&1; then
   github_token=$(gh auth token 2>/dev/null) || github_token=

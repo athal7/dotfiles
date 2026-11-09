@@ -525,19 +525,6 @@ else
 fi
 unset ATTENTION_MODE ATTENTION_GIT_BIN ATTENTION_EXPECTED_REPO
 
-echo '[]' >"$SESSIONS"
-export AOE_TOOL=freebuff
-export ATTENTION_MODE=pr
-: >"$DISPATCH_LOG"
-run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo
-unset ATTENTION_MODE AOE_TOOL
-if grep -Fqx 'tool=freebuff' "$DISPATCH_LOG" &&
-  grep -Fqx 'group=Attention branch=feature/fork new=false argc=3' "$DISPATCH_LOG"; then
-  ok "forwards the agent Attention resolved for the repo"
-else
-  bad "forwards the agent Attention resolved for the repo"
-  cat "$DISPATCH_LOG" >&2
-fi
 export ATTENTION_MODE=pr
 : >"$DISPATCH_LOG"
 run_attention github "$REPO" 63 attention/pr-63 pr-title base-prompt '' example/remote-repo

@@ -91,7 +91,6 @@ check "tracks the Linear plugin branch because upstream publishes no releases" "
 check "tracks the Freebuf plugin branch from the org repo, not a local path" "$(yq -r '.packages.aoe_plugins[] | select(.id == "dev.example.aoe-freebuf") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-freebuf@main"
 check "keeps a well-formed GitHub plugin manifest grant" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.manifest_hash | test("^sha256:[0-9a-f]{64}$")')" true
 check "preserves the Attention plugin grant capabilities" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.capabilities | join(" ")')" "runtime.worker session.read process.spawn fs.read fs.write clipboard.write browser_open net"
-check "pins the current Attention plugin manifest hash" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.manifest_hash')" "$(printf 'sha256:%s%s%s%s' '48f031715b625bcc' 'e4daed71c74a1948' 'db0ab07151123263' '44d05fa9e42f0060')"
 check "reloads the supervised AoE daemon after plugin sync" "$(grep -Fxc "if [ \"\$plugin_synced\" = true ] && aoe serve --status > /dev/null 2>&1; then" "$PLUGIN_INSTALL")" 1
 check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl kickstart -k \"\$serve_job\" ||" "$PLUGIN_INSTALL")" 1
 

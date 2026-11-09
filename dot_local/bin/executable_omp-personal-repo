@@ -1,0 +1,25 @@
+#!/bin/sh
+# Classify a checkout against the configured personal GitHub owners.
+set -eu
+
+project=${1:-"$PWD"}
+[ -d "$project" ] || exit 2
+root=$(git -C "$project" rev-parse --show-toplevel 2>/dev/null) || exit 1
+remote=$(git -C "$root" remote get-url origin 2>/dev/null) || exit 2
+case "$remote" in
+  https://github.com/*) repo=${remote#https://github.com/} ;;
+  git@github.com:*) repo=${remote#git@github.com:} ;;
+  ssh://git@github.com/*) repo=${remote#ssh://git@github.com/} ;;
+  *) exit 1 ;;
+esac
+case "$repo" in ?*/*) owner=${repo%%/*} ;; *) exit 2 ;; esac
+owner=$(printf '%s' "$owner" | tr '[:upper:]' '[:lower:]')
+orgs="$HOME/.config/omp/personal-orgs.json"
+policy="$HOME/.config/omp/personal.yml"
+[ -f "$orgs" ] || exit 2
+jq -e --arg owner "$owner" 'index($owner) != null' "$orgs" >/dev/null || {
+  status=$?
+  [ "$status" -eq 1 ] && exit 1
+  exit 2
+}
+[ -f "$policy" ] || exit 2
