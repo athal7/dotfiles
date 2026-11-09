@@ -18,7 +18,7 @@
 - **GitHub tool choice:** use the configured official GitHub MCP for supported operations; OMP's native GitHub tool remains disabled. Use `gh` through Bash for stack operations and uncovered endpoints, never through Eval.
 - **Timeouts:** omitted Eval timeouts default to `0`; set explicit deadlines only when needed. Built-in execution limits are unchanged.
 - **Approval waits:** unanswered approvals stay pending, not failed. After a write times out, establish its outcome before retrying.
-- **Code reviews:** leave findings unlabeled in results and comments; prefix only nits with `nit:`. Never use severity labels (`P1`/`P2`). Anchor each PR finding to a diff line when possible; use a top-level review comment only when it cannot be anchored.
+- **Code reviews:** prefix only nits with `nit:`. Anchor each PR finding to a diff line when possible; use a top-level review comment only when it cannot be anchored.
 - After Firefox work, call `cleanup_session` unless the user asks to retain tabs.
   This action closes only tabs opened by that MCP session; lifecycle cleanup follows the same ownership boundary.
 
