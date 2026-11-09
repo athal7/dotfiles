@@ -38,7 +38,6 @@ aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
 session_group=${AOE_SESSION_GROUP:-Attention}
 worktree_branch=${AOE_WORKTREE_BRANCH:-}
 new_branch=${AOE_NEW_BRANCH:-false}
-launch=${AOE_FREEBUF_LAUNCH:-tool}
 ready_timeout=${AOE_FREEBUF_READY_TIMEOUT:-60}
 poll_interval=${AOE_FREEBUF_POLL_INTERVAL:-1}
 composer=${AOE_FREEBUF_COMPOSER:-Enter a coding task or / for commands}
@@ -70,14 +69,6 @@ elif [[ $new_branch == true ]]; then
   printf 'AOE_NEW_BRANCH requires AOE_WORKTREE_BRANCH\n' >&2
   exit 64
 fi
-case $launch in
-  tool|cmd) ;;
-  *)
-    printf 'AOE_FREEBUF_LAUNCH must be tool or cmd\n' >&2
-    exit 64
-    ;;
-esac
-
 prompt=$(<"$prompt_file")
 if [[ -z $prompt ]]; then
   printf 'prompt file is empty: %s\n' "$prompt_file" >&2
@@ -100,13 +91,10 @@ if [[ -n $worktree_branch ]]; then
     aoe_args+=(--new-branch)
   fi
 fi
-# `tool` is the name AoE and the freebuf plugin classify status by; `cmd` is the
-# fallback when AoE does not list freebuff as an available agent yet.
-if [[ $launch == cmd ]]; then
-  aoe_args+=(--cmd freebuff)
-else
-  aoe_args+=(--tool freebuff)
-fi
+# freebuff is a configured AoE agent, so --tool keeps the plugin's status and
+# attention classification. --cmd was tried and AoE refuses it ("Unknown tool in
+# command: freebuff").
+aoe_args+=(--tool freebuff)
 aoe_args+=(--group "$session_group" --title "$session_title" '--extra-args=--trust-agents')
 
 if ! session_output=$("$aoe_bin" "${aoe_args[@]}"); then

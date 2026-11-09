@@ -63,7 +63,7 @@ class FreebufSessionTest(unittest.TestCase):
         subprocess.run(["/usr/bin/git", "init", "-q", str(self.repo)], check=True)
         self.env = dict(os.environ, TEST_ROOT=str(self.base), AOE_BIN=str(aoe),
                         AOE_SESSION_GROUP="Attention", AOE_FREEBUF_POLL_INTERVAL="0")
-        for key in ("AOE_WORKTREE_BRANCH", "AOE_NEW_BRANCH", "AOE_FREEBUF_LAUNCH",
+        for key in ("AOE_WORKTREE_BRANCH", "AOE_NEW_BRANCH",
                     "AOE_FREEBUF_READY_TIMEOUT", "AOE_FREEBUF_COMPOSER", "PANES",
                     "PANE_AFTER_SEND", "FAIL_START"):
             self.env.pop(key, None)
@@ -151,14 +151,6 @@ class FreebufSessionTest(unittest.TestCase):
         result = self.launch()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.add_args()[self.add_args().index("--group") + 1], "Attention/Free")
-
-    def test_command_fallback_skips_the_tool_registry(self):
-        self.env.update(PANES=json.dumps([COMPOSER]), AOE_FREEBUF_LAUNCH="cmd")
-        result = self.launch()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        args = self.add_args()
-        self.assertEqual(args[args.index("--cmd") + 1], "freebuff")
-        self.assertNotIn("--tool", args)
 
     def test_empty_prompt_never_creates_a_session(self):
         self.prompt.write_text("")
