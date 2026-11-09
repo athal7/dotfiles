@@ -4,7 +4,9 @@
    (never persisted anywhere else); the Attention tool itself has no
    keychain dependency, it just reads linear.apiToken from this file.
    Session and lumen hotkeys were removed from the bundled plugins upstream
-   (hardcoded tool deps) and are restored here as configured actions. */ -}}
+   (hardcoded tool deps) and are restored here as configured actions.
+   Attention does not choose the session agent or its model policy: AoE's
+   per-checkout OMP environment owns that, so sessions and the shell agree. */ -}}
 {{- $remLists := list -}}
 {{- if hasKey . "reminders" -}}
 {{- range $k, $v := .reminders -}}
@@ -29,18 +31,11 @@
 {{- end -}}
 {{- $linearToken := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
 {{- $workGitHubPrefixes := list -}}
-{{- $sessionAgents := list -}}
 {{- if hasKey . "orgs" -}}
 {{- range $org, $settings := .orgs -}}
 {{- if kindIs "map" $settings -}}
-{{- $defaultAgent := "omp" -}}
 {{- if eq (dig "attention" "" $settings) "Work" -}}
 {{- $workGitHubPrefixes = append $workGitHubPrefixes (printf "%s/" $org) -}}
-{{- $defaultAgent = "" -}}
-{{- end -}}
-{{- $agent := dig "attention_agent" $defaultAgent $settings -}}
-{{- if $agent -}}
-{{- $sessionAgents = append $sessionAgents (dict "repo" (printf "%s/*" $org) "tool" $agent) -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -64,7 +59,6 @@
       (dict "name" "Everything else" "fallback" true) -}}
 {{- $config := dict
       "codeDir" .codeDir
-      "session" (dict "agents" $sessionAgents)
       "plugins" (list "reminders" "github" "linear")
       "dashboard" (dict "groups" $groups)
       "reminders" (dict "lists" $remLists "actions" (list

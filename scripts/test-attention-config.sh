@@ -33,9 +33,6 @@ orgs:
     attention: Work
   your-personal-org:
     kb_eligible: false
-    attention_agent: omp
-  your-other-org:
-    attention_agent: freebuff
 EOF
 render_config
 
@@ -44,21 +41,19 @@ if jq -e . "$RENDERED" >/dev/null; then
 else
   bad "renders valid JSON"
 fi
-check "routes personal-org sessions to omp" \
-  test "$(jq -r '.session.agents[] | select(.repo == "your-personal-org/*") | .tool' "$RENDERED")" = omp
-check "routes another org to its configured agent" \
-  test "$(jq -r '.session.agents[] | select(.repo == "your-other-org/*") | .tool' "$RENDERED")" = freebuff
-check "leaves work orgs on AoE's default agent" \
-  test "$(jq -r '[.session.agents[].repo] | index("your-work-org/*")' "$RENDERED")" = null
+check "leaves session agent selection to AoE" \
+  test "$(jq -r 'has("session")' "$RENDERED")" = false
 
 cat >"$DATA" <<'EOF'
 orgs:
   your-work-org:
     attention: Work
+  your-other-org:
+    attention_agent: freebuff
 EOF
 render_config
-check "leaves work orgs on the default agent" \
-  test "$(jq -c '.session.agents' "$RENDERED")" = '[]'
+check "ignores a retired per-org attention agent setting" \
+  test "$(jq -r 'has("session")' "$RENDERED")" = false
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [[ "$fail" -eq 0 ]]
