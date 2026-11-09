@@ -1,0 +1,160 @@
+#!/bin/bash
+# aoe-freebuf-session — start an AoE session on freebuff and hand it the task.
+#
+# Delete this file, scripts/test-aoe-freebuf-session.py, and the wait-and-send
+# loop below when either of these lands; each removes the reason it exists:
+#   1. freebuff gains a prompt-at-launch flag (the open freebuf change), so the
+#      task can ride --extra-args through aoe-scheduled-session like OMP does.
+#   2. AoE ships suggested sessions, which choose the agent and deliver the task
+#      themselves, so no wrapper needs to drive the TUI at all.
+#
+# Until then freebuff's CLI is TUI-only (no positional prompt, no headless mode),
+# so the session is created and started like aoe-scheduled-session, then the
+# task is typed into the fresh composer once the TUI is actually ready. Same
+# arguments and environment as aoe-scheduled-session, so attention-session can
+# use it:
+#
+#   AOE_SESSION_DISPATCHER=$HOME/.local/bin/aoe-freebuf-session \
+#     attention-session github "$PWD" 63 attention/pr-63 title "$prompt" '' org/repo
+#
+# It only ever types into a session this script just created, and refuses to
+# type while freebuff shows a dialog or login screen. A refused or timed-out
+# delivery leaves the session running and reports the prompt file, so nothing
+# is silently lost. --trust-agents keeps the repository trust prompt from
+# swallowing the first message; that also loads the repo's .agents and MCP
+# configuration without asking, so only point this at trusted checkouts.
+
+set -euo pipefail
+
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  printf 'usage: %s <title> <prompt-file> [project-path]\n' "$0" >&2
+  exit 64
+fi
+
+title=$1
+prompt_file=$2
+project_path=${3:-}
+aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
+session_group=${AOE_SESSION_GROUP:-Attention}
+worktree_branch=${AOE_WORKTREE_BRANCH:-}
+new_branch=${AOE_NEW_BRANCH:-false}
+launch=${AOE_FREEBUF_LAUNCH:-tool}
+ready_timeout=${AOE_FREEBUF_READY_TIMEOUT:-60}
+poll_interval=${AOE_FREEBUF_POLL_INTERVAL:-1}
+composer=${AOE_FREEBUF_COMPOSER:-Enter a coding task or / for commands}
+
+if [[ ! -f $prompt_file || ! -r $prompt_file ]]; then
+  printf 'prompt file is not readable: %s\n' "$prompt_file" >&2
+  exit 66
+fi
+if [[ ! -x $aoe_bin ]]; then
+  printf 'AOE_BIN is not executable: %s\n' "$aoe_bin" >&2
+  exit 69
+fi
+case $session_group in
+  ""|*[![:alnum:]_.\ /-]*)
+    printf 'AOE_SESSION_GROUP contains unsupported characters\n' >&2
+    exit 64
+    ;;
+esac
+if [[ $new_branch != true && $new_branch != false ]]; then
+  printf 'AOE_NEW_BRANCH must be true or false\n' >&2
+  exit 64
+fi
+if [[ -n $worktree_branch ]]; then
+  if [[ -z $project_path ]] || ! git -C "$project_path" check-ref-format --branch "$worktree_branch" >/dev/null 2>&1; then
+    printf 'AOE_WORKTREE_BRANCH requires a valid project path and branch name\n' >&2
+    exit 64
+  fi
+elif [[ $new_branch == true ]]; then
+  printf 'AOE_NEW_BRANCH requires AOE_WORKTREE_BRANCH\n' >&2
+  exit 64
+fi
+case $launch in
+  tool|cmd) ;;
+  *)
+    printf 'AOE_FREEBUF_LAUNCH must be tool or cmd\n' >&2
+    exit 64
+    ;;
+esac
+
+prompt=$(<"$prompt_file")
+if [[ -z $prompt ]]; then
+  printf 'prompt file is empty: %s\n' "$prompt_file" >&2
+  exit 64
+fi
+
+# The short suffix keeps repeated dispatches of one title distinguishable and
+# matches the title shape attention-session looks for when it reuses a session.
+session_title="$title-$(/usr/bin/uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]' | cut -c1-8)"
+
+aoe_args=(add)
+if [[ -n $project_path ]]; then
+  aoe_args+=("$project_path")
+else
+  aoe_args+=(--scratch)
+fi
+if [[ -n $worktree_branch ]]; then
+  aoe_args+=(--worktree "$worktree_branch")
+  if [[ $new_branch == true ]]; then
+    aoe_args+=(--new-branch)
+  fi
+fi
+# `tool` is the name AoE and the freebuf plugin classify status by; `cmd` is the
+# fallback when AoE does not list freebuff as an available agent yet.
+if [[ $launch == cmd ]]; then
+  aoe_args+=(--cmd freebuff)
+else
+  aoe_args+=(--tool freebuff)
+fi
+aoe_args+=(--group "$session_group" --title "$session_title" '--extra-args=--trust-agents')
+
+if ! session_output=$("$aoe_bin" "${aoe_args[@]}"); then
+  printf 'aoe add failed; no freebuff session was created\n' >&2
+  exit 75
+fi
+session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
+if [[ ! $session_id =~ ^[[:alnum:]-]+$ ]]; then
+  printf '%s\n' "$session_output" >&2
+  printf 'aoe add did not return a valid session ID\n' >&2
+  exit 1
+fi
+printf '%s\n' "$session_output"
+
+if ! "$aoe_bin" session start "$session_id"; then
+  printf 'Session %s did not start; answer it in AoE, then paste %s\n' \
+    "$session_id" "$prompt_file" >&2
+  exit 75
+fi
+
+# freebuff draws dialogs over the composer, so a blocking screen is never typed
+# into: the dispatch stops and the prompt stays on disk for the user. The
+# markers match what the freebuf plugin uses to classify panes. This whole loop
+# is what obsoleter 1 (a prompt flag) or 2 (suggested sessions) deletes.
+deadline=$((SECONDS + ready_timeout))
+while :; do
+  pane=$("$aoe_bin" session capture "$session_id" --strip-ansi 2>/dev/null || true)
+  case $pane in
+    *"Some questions for you"*|*"Close ✕"*|*"Do you want to proceed"*|*"(y/n)"*)
+      printf 'freebuff shows a dialog in session %s; answer it, then paste %s\n' \
+        "$session_id" "$prompt_file" >&2
+      exit 75
+      ;;
+    *"$composer"*)
+      break
+      ;;
+  esac
+  if (( SECONDS >= deadline )); then
+    printf 'freebuff composer did not appear within %ss; session %s is up, prompt saved at %s\n' \
+      "$ready_timeout" "$session_id" "$prompt_file" >&2
+    exit 75
+  fi
+  sleep "$poll_interval"
+done
+
+if ! "$aoe_bin" send "$session_id" "$prompt"; then
+  printf 'freebuff composer is ready but the task was not delivered; paste %s into session %s\n' \
+    "$prompt_file" "$session_id" >&2
+  exit 75
+fi
+printf 'Dispatched %s to freebuff.\n' "$session_id"
