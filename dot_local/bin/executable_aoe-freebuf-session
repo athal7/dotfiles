@@ -127,23 +127,31 @@ if ! "$aoe_bin" session start "$session_id"; then
   exit 75
 fi
 
-# freebuff draws dialogs over the composer, so a blocking screen is never typed
-# into: the dispatch stops and the prompt stays on disk for the user. The
-# markers match what the freebuf plugin uses to classify panes. This whole loop
-# is what obsoleter 1 (a prompt flag) or 2 (suggested sessions) deletes.
+# Dialogs that mean freebuff is not waiting for a task. The concurrent-session
+# limit is included because it leaves an already typed message as an unsent
+# draft instead of rejecting it. The set matches what the freebuf plugin uses to
+# classify panes. This whole loop is what obsoleter 1 (a prompt flag) or 2
+# (suggested sessions) deletes.
+blocks_delivery() {
+  case $1 in
+    *"Some questions for you"*|*"Close ✕"*|*"Do you want to proceed"*|*"(y/n)"*|*"concurrent-session limit"*)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
 deadline=$((SECONDS + ready_timeout))
 while :; do
   pane=$("$aoe_bin" session capture "$session_id" --strip-ansi 2>/dev/null || true)
-  case $pane in
-    *"Some questions for you"*|*"Close ✕"*|*"Do you want to proceed"*|*"(y/n)"*)
-      printf 'freebuff shows a dialog in session %s; answer it, then paste %s\n' \
-        "$session_id" "$prompt_file" >&2
-      exit 75
-      ;;
-    *"$composer"*)
-      break
-      ;;
-  esac
+  if blocks_delivery "$pane"; then
+    printf 'freebuff shows a dialog in session %s; answer it, then paste %s\n' \
+      "$session_id" "$prompt_file" >&2
+    exit 75
+  fi
+  if [[ $pane == *"$composer"* ]]; then
+    break
+  fi
   if (( SECONDS >= deadline )); then
     printf 'freebuff composer did not appear within %ss; session %s is up, prompt saved at %s\n' \
       "$ready_timeout" "$session_id" "$prompt_file" >&2
@@ -155,6 +163,17 @@ done
 if ! "$aoe_bin" send "$session_id" "$prompt"; then
   printf 'freebuff composer is ready but the task was not delivered; paste %s into session %s\n' \
     "$prompt_file" "$session_id" >&2
+  exit 75
+fi
+
+# A send can succeed and still leave the task as a draft: freebuff raises its
+# concurrent-session limit modal after accepting the text. Never report that as
+# dispatched.
+sleep "$poll_interval"
+delivered=$("$aoe_bin" session capture "$session_id" --strip-ansi 2>/dev/null || true)
+if blocks_delivery "$delivered"; then
+  printf 'freebuff did not accept the task in session %s: it shows a blocking dialog and the prompt may still be a draft there; source text at %s\n' \
+    "$session_id" "$prompt_file" >&2
   exit 75
 fi
 printf 'Dispatched %s to freebuff.\n' "$session_id"

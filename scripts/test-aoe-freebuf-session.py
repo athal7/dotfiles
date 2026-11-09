@@ -31,6 +31,9 @@ elif args[:2] == ["session", "start"]:
         sys.exit(1)
     (root / "started").touch()
 elif args[:2] == ["session", "capture"]:
+    if (root / "sent").exists() and os.environ.get("PANE_AFTER_SEND"):
+        print(os.environ["PANE_AFTER_SEND"])
+        sys.exit(0)
     panes = json.loads(os.environ.get("PANES", "[]"))
     counter = root / "polls"
     seen = int(counter.read_text()) if counter.exists() else 0
@@ -62,7 +65,7 @@ class FreebufSessionTest(unittest.TestCase):
                         AOE_SESSION_GROUP="Attention", AOE_FREEBUF_POLL_INTERVAL="0")
         for key in ("AOE_WORKTREE_BRANCH", "AOE_NEW_BRANCH", "AOE_FREEBUF_LAUNCH",
                     "AOE_FREEBUF_READY_TIMEOUT", "AOE_FREEBUF_COMPOSER", "PANES",
-                    "FAIL_START"):
+                    "PANE_AFTER_SEND", "FAIL_START"):
             self.env.pop(key, None)
 
     def launch(self, *extra):
@@ -112,6 +115,25 @@ class FreebufSessionTest(unittest.TestCase):
         self.assertIn("composer did not appear", result.stderr)
         self.assertIn(str(self.prompt), result.stderr)
         self.assertEqual(self.sent(), [])
+
+    def test_refuses_the_composer_while_the_session_limit_blocks_it(self):
+        self.env["PANES"] = json.dumps([
+            "Your concurrent-session limit across CLI and Desktop is reached.",
+            "Enter: take over  Esc: back to draft"])
+        self.env["AOE_FREEBUF_READY_TIMEOUT"] = "20"
+        result = self.launch()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("dialog", result.stderr)
+        self.assertEqual(self.sent(), [])
+
+    def test_reports_a_dialog_that_appears_after_the_send(self):
+        self.env.update(PANES=json.dumps([COMPOSER]),
+                        PANE_AFTER_SEND="Your concurrent-session limit across CLI and Desktop "
+                                        "is reached.")
+        result = self.launch()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("blocking dialog", result.stderr)
+        self.assertEqual(len(self.sent()), 1)
 
     def test_worktree_dispatch_passes_the_branch(self):
         self.env.update(PANES=json.dumps([COMPOSER]), AOE_WORKTREE_BRANCH="attention/pr-63",
