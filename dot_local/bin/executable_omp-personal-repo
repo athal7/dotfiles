@@ -15,11 +15,9 @@ esac
 case "$repo" in ?*/*) owner=${repo%%/*} ;; *) exit 2 ;; esac
 owner=$(printf '%s' "$owner" | tr '[:upper:]' '[:lower:]')
 orgs="$HOME/.config/omp/personal-orgs.json"
-policy="$HOME/.config/omp/personal.yml"
 [ -f "$orgs" ] || exit 2
 jq -e --arg owner "$owner" 'index($owner) != null' "$orgs" >/dev/null || {
   status=$?
   [ "$status" -eq 1 ] && exit 1
   exit 2
 }
-[ -f "$policy" ] || exit 2

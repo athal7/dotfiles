@@ -5,8 +5,7 @@
    keychain dependency, it just reads linear.apiToken from this file.
    Session and lumen hotkeys were removed from the bundled plugins upstream
    (hardcoded tool deps) and are restored here as configured actions.
-   Attention does not choose the session agent or its model policy: AoE's
-   per-checkout OMP environment owns that, so sessions and the shell agree. */ -}}
+   Session model preferences come from the selected agent's configuration. */ -}}
 {{- $remLists := list -}}
 {{- if hasKey . "reminders" -}}
 {{- range $k, $v := .reminders -}}

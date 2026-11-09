@@ -16,9 +16,8 @@ rust_cache:
 #
 #   attention       : dashboard group name for this organization's GitHub issues and PRs.
 #                    "Work" places them in the Work group; omit for Open source.
-# Attention does not select the session agent; AoE's per-checkout OMP policy
-# decides. Organizations without "Work" use the personal OMP model policy and
-# work organizations keep the global defaults.
+# Attention does not select models. OMP uses its global model preferences in
+# every organization; this grouping only separates personal and work credentials.
 #   automated_review: config for AI/embedded code review (Copilot, Codex, etc.). Omit if not available.
 #     bot_login     : the GitHub user.login the bot posts as; merged into AoE's
 #                     ignored commenters without hiding unresolved threads.

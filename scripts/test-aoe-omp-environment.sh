@@ -6,7 +6,6 @@ trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/home/.config/direnv/lib" "$WORK/home/.config/omp" "$WORK/home/.local/bin" "$WORK/bin"
 ln -s "$(command -v jq)" "$WORK/bin/jq"
 cp "$ROOT/dot_local/bin/executable_omp-personal-repo" "$WORK/home/.local/bin/omp-personal-repo"
-cp "$ROOT/dot_config/omp/personal.yml" "$WORK/home/.config/omp/personal.yml"
 printf '["personal-org"]\n' >"$WORK/home/.config/omp/personal-orgs.json"
 cat >"$WORK/home/.config/direnv/lib/keychain.sh" <<'EOF'
 keychain_env() {
@@ -27,10 +26,10 @@ run_hook() { env -i HOME="$WORK/home" PATH="$WORK/bin:/usr/bin:/bin" AOE_TOOL=om
 personal=$(run_hook "$WORK/tree")
 [[ "$personal" == *'OPENROUTER_API_KEY=personal-test-key'* ]]
 [[ "$personal" != *'ANTHROPIC_API_KEY='* && "$personal" != *'OTARI_API_KEY='* ]]
-[[ "$personal" == *"PI_CONFIG_FILES=$WORK/home/.config/omp/personal.yml"* ]]
+[[ "$personal" != *'PI_CONFIG_FILES='* ]]
 [[ ! -e "$WORK/tree/.omp" ]]
 primary=$(run_hook "$WORK/repo" PI_CONFIG_FILES=/existing.yml)
-[[ "$primary" == *"PI_CONFIG_FILES=/existing.yml:$WORK/home/.config/omp/personal.yml"* ]]
+[[ "$primary" != *'PI_CONFIG_FILES='* ]]
 [[ ! -e "$WORK/repo/.omp" ]]
 missing=$(run_hook "$WORK/tree" MISSING_PERSONAL_KEY=1 OPENROUTER_API_KEY=inherited-key)
 [[ "$missing" == *'OPENROUTER_API_KEY='* && "$missing" != *'OPENROUTER_API_KEY=inherited-key'* ]]
@@ -42,7 +41,7 @@ git -C "$WORK/repo" remote set-url origin https://github.com/personal-org/projec
 mkdir -p "$WORK/tree/.omp" "$WORK/tree/nested"
 printf 'existing\n' >"$WORK/tree/.omp/config.yml"
 nested=$(run_hook "$WORK/tree/nested")
-[[ "$nested" == *"PI_CONFIG_FILES=$WORK/home/.config/omp/personal.yml"* ]]
+[[ "$nested" != *'PI_CONFIG_FILES='* ]]
 [[ "$(cat "$WORK/tree/.omp/config.yml")" == existing ]]
 cat >"$WORK/bin/security" <<'EOF'
 #!/bin/sh
@@ -57,7 +56,7 @@ chmod +x "$WORK/bin/security" "$WORK/bin/omp"
 shell=$(env -i HOME="$WORK/home" PATH="$WORK/bin:/usr/bin:/bin" \
   XDG_STATE_HOME="$WORK/state" XDG_CACHE_HOME="$WORK/cache" PI_CONFIG_FILES=/existing.yml \
   /bin/zsh -df -c 'source "$1"; builtin cd "$2"; omp hello' -- "$ROOT/dot_zshrc.tmpl" "$WORK/tree/nested" 2>/dev/null)
-[[ "$shell" == *"overlay=/existing.yml:$WORK/home/.config/omp/personal.yml"* ]]
+[[ "$shell" == *'overlay=/existing.yml'* ]]
 [[ "$shell" == *'key=personal-test-key'* && "$shell" == *'arg=hello'* ]]
 git -C "$WORK/repo" remote remove origin
 if run_hook "$WORK/tree" >/dev/null 2>&1; then exit 1; fi

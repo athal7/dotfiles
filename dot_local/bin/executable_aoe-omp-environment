@@ -37,7 +37,6 @@ printf 'PI_CONFIG_DIR=.config/omp\nPI_CODING_AGENT_DIR=%s\nXDG_DATA_HOME=%s\n' \
   "$HOME/.config/omp/agent" "$HOME/.local/share"
 
 if [ "$personal" = true ]; then
-  printf 'PI_CONFIG_FILES=%s%s%s\n' "${PI_CONFIG_FILES:-}" "${PI_CONFIG_FILES:+:}" "$HOME/.config/omp/personal.yml"
   printf 'OPENROUTER_API_KEY=%s\n' "${OPENROUTER_API_KEY:-}"
 else
   [ -z "${ANTHROPIC_API_KEY:-}" ] || printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY"
