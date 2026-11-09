@@ -33,6 +33,9 @@ orgs:
     attention: Work
   your-personal-org:
     kb_eligible: false
+    attention_agent: omp
+  your-other-org:
+    attention_agent: freebuff
 EOF
 render_config
 
@@ -43,6 +46,8 @@ else
 fi
 check "routes personal-org sessions to omp" \
   test "$(jq -r '.session.agents[] | select(.repo == "your-personal-org/*") | .tool' "$RENDERED")" = omp
+check "routes another org to its configured agent" \
+  test "$(jq -r '.session.agents[] | select(.repo == "your-other-org/*") | .tool' "$RENDERED")" = freebuff
 
 cat >"$DATA" <<'EOF'
 orgs:

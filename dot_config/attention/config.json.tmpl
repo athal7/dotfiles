@@ -33,10 +33,14 @@
 {{- if hasKey . "orgs" -}}
 {{- range $org, $settings := .orgs -}}
 {{- if kindIs "map" $settings -}}
+{{- $defaultAgent := "omp" -}}
 {{- if eq (dig "attention" "" $settings) "Work" -}}
 {{- $workGitHubPrefixes = append $workGitHubPrefixes (printf "%s/" $org) -}}
-{{- else -}}
-{{- $sessionAgents = append $sessionAgents (dict "repo" (printf "%s/*" $org) "tool" "omp") -}}
+{{- $defaultAgent = "" -}}
+{{- end -}}
+{{- $agent := dig "attention_agent" $defaultAgent $settings -}}
+{{- if $agent -}}
+{{- $sessionAgents = append $sessionAgents (dict "repo" (printf "%s/*" $org) "tool" $agent) -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
