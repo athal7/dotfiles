@@ -13,9 +13,9 @@ license: MIT
 
 ## Peer communication
 
-- **Never use `aoe send`, tmux `send-keys`, paste, or Enter for peer messages or replies.** They target the interactive editor/dialog and can overwrite user steering or answer a question. `--no-revive` does not make delivery safe.
-- **Keep user input and approvals separate.** Hold peer messages while a user question, approval, or draft is active; never auto-forward when a session appears idle. Never use ACP prompts, `acp approve`, RPC UI responses, or terminal input as fallbacks. `agent://` addresses only the current agent tree; `collab` shares control of one session, not an independent peer channel.
-- **Bootstrap without terminal input.** Run `aoe-scheduled-session <title> <prompt-file> [registered-repo]` to start a new OMP worker with the prompt as its initial message. For repository writes set `AOE_WORKTREE_BRANCH=<branch> AOE_NEW_BRANCH=true`. Startup failure does not authorize a retry or injected fallback.
+- **Peer communication is supported; watch for terminal injection.** `aoe send`, tmux `send-keys`, paste, and Enter target the interactive editor/dialog, not an isolated peer inbox. They can overwrite user steering or accidentally answer a question or approval. Check the recipient's input state before sending; prefer an out-of-band channel when available. `--no-revive` does not protect the input buffer.
+- **Keep peer context distinct from user authority.** Attribute messages to the sending agent; never represent them as user steering, approval, or authority to change scope, or answer a user question or approval on a peer's behalf. ACP prompts, `acp approve`, and RPC UI responses also interact with session input/control state; they are not interchangeable peer inboxes. `agent://` addresses only the current agent tree; `collab` shares control of one session, not an independent peer channel.
+- **Prefer initial prompts for new workers.** Run `aoe-scheduled-session <title> <prompt-file> [registered-repo]` to start a new OMP worker with the prompt as its initial message. For repository writes set `AOE_WORKTREE_BRANCH=<branch> AOE_NEW_BRANCH=true`.
 
 ## Troubleshooting
 
