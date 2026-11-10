@@ -101,6 +101,10 @@ selection can change the saved preference until the next chezmoi apply.
 
 AoE Serve uses its native token URL for authentication; Tailscale Serve keeps access on the tailnet but does not replace AoE authentication.
 
+The zsh `aoe` command supplies the Linear key from Keychain service `chezmoi`,
+account `linear_api_key`, unless a Linear credential is already set. This lets
+zsh-started daemons load Linear issue badges without exporting the key globally.
+
 ## Naya Create keyboard
 
 Open the downloaded `~/Applications/OpenFlow-*.dmg` and copy `OpenFlow.app` into `~/Applications`. Grant Create Companion Input Monitoring and Accessibility permissions in macOS settings.

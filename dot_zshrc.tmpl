@@ -46,6 +46,20 @@ _brew_prefix="$(brew --prefix)"
 # Private shell config (not tracked in dotfiles)
 [[ -f ~/.config/zsh/private.zsh ]] && source ~/.config/zsh/private.zsh
 
+# Make Linear available to an AoE daemon started from this shell, without
+# exporting its credential to unrelated commands.
+aoe() {
+  local linear_key
+  if [[ -z "${LINEAR_API_KEY:-}" && -z "${LINEAR_TOKEN:-}" ]]; then
+    linear_key=$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null) || linear_key=
+    if [[ -n "$linear_key" ]]; then
+      LINEAR_API_KEY="$linear_key" command aoe "$@"
+      return $?
+    fi
+  fi
+  command aoe "$@"
+}
+
 # Give only OMP its GitHub token, not every shell and child process.
 omp() {
   local github_token spacelift_mcp_url result
