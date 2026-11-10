@@ -34,8 +34,8 @@ After review feedback, add commits instead of rewriting history.
 ## Push or deploy
 
 - Show unpushed commits in chat first: branch name and one subject per line.
-- Do not rerun the full suite during push unless a push-time check fails and needs a fix.
-- Never flip draft or ready state during a push.
+- Do not rerun the full suite during push unless a push-time check fails and needs a fix, or I ask for it.
+- Do not flip draft or ready state as part of a push; keep it a separate action. When I ask for both at once, readiness still gets its own step.
 - Approval prompts follow person-visibility: creating and pushing a draft, and updating its branch, run unattended, while marking ready, commenting, requesting review, and enabling auto-merge, enqueuing, or merging prompt.
 
 For repositories that use pull requests:
@@ -45,7 +45,7 @@ Review gates below are defaults: an explicit user override for the specified PR/
 - Use `gh stack submit` for a dependent stack; follow `gh-stack` for PR state, branch, and remote-operation details.
 - Create PRs as drafts (`draft: true` with the official GitHub MCP; `gh stack submit --auto` for a stack). Never use `--open` to bypass readiness checks.
 - By default, keep each PR draft until implementation and required checks are complete, findings are resolved, and every configured review bot that can run on drafts has submitted GitHub `APPROVED` or produced a repository-documented, head-specific clean-result signal. A generic green CI check alone is not review approval.
-- Then mark the PR ready (`draft: false`) in a separate action before requesting or waiting for human review. Never wait for human approval while the PR is draft.
+- Then mark the PR ready (`draft: false`) in a separate action before requesting or waiting for human review. Do not wait for human approval while the PR is draft unless I say to keep it draft; that is a choice I can make, not a gate to skip.
 - Required human approvals gate merging, not readiness or enabling auto-merge; GitHub enforces them. Do not require every requested human reviewer to approve. Every configured review bot must have a current-head approval or documented clean-result signal; pending bot reviews, change requests, stale or dismissed bot approvals, and unresolved findings block merge.
 - Keep each PR description to 1 or 2 sentences.
 - Use `Resolves`, `Fixes`, or `Closes` for auto-close.
