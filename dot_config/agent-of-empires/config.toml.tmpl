@@ -161,11 +161,12 @@ snooze_duration_minutes = 30
 sidebar_position = "left"
 smart_rename = true
 smart_rename_agent = ""
-# The paired terminal takes 40% of the preview; require a desktop-height window (45 rows)
-# so the split stays hidden on short windows, and keep a desktop width of 100 columns.
-split_terminal_height_percent = 40
-split_terminal_min_height = 45
-split_terminal_min_width = 100
+# The paired terminal split is unwanted. It renders only when the whole window is at
+# least this tall and wide, so both thresholds at the documented maximum keep it hidden
+# at any window size while Terminal view and the toggle keep working; lower them to
+# bring it back. split_terminal_height_percent is moot while it cannot render.
+split_terminal_min_height = 1000
+split_terminal_min_width = 1000
 startup_recovery_wake = false
 strict_hotkeys = false
 tie_workdir_to_name = true
