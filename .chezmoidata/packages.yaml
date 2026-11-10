@@ -74,24 +74,31 @@ packages:
     # v2.4.0 ships the one-character row-badge marks (dense_row_badge_glyphs).
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
-    # No published releases upstream, so update cannot resolve a bare slug (it
-    # falls back to the default branch only on first install). Track the branch
-    # explicitly so `aoe plugin update` keeps working.
-    - source: "gh:agent-of-empires/plugin-linear@main"
+    # The three sources below are pinned because upstream renamed their manifest
+    # ids into the `agent-of-empires.*` namespace on 2026-11-10. aoe only lets a
+    # featured-verified plugin claim that namespace, and the featured index in
+    # aoe 1.22.3 pins nothing beyond github, cron and kanban, so installing the
+    # renamed manifests is refused outright. Each ref below is the last revision
+    # that still declares a community id this host accepts; move back to a branch
+    # or release once an aoe release features these plugins.
+    #
+    # Linear has no published releases upstream, so a bare slug cannot resolve an
+    # update; 16dbb7f is the commit before the rename.
+    - source: "gh:agent-of-empires/plugin-linear@16dbb7f"
       id: "community.linear"
-    # Same no-release situation as Linear: track the branch so updates resolve.
-    # The upstream manifest ships api_version 19 with the freebuff agent
-    # integration, which the host only reads from aoe-plugin.toml.
-    # `dev.example.aoe-freebuf` is upstream's own id, not a local placeholder:
-    # aoe reserves `agent-of-empires.*` for featured plugins, so a community
-    # plugin cannot claim the org namespace.
-    - source: "gh:agent-of-empires/plugin-freebuf@main"
+    # 8c3e053 is the commit before the rename. Its manifest ships api_version 19
+    # with the freebuff agent integration, which the host reads from
+    # aoe-plugin.toml.
+    - source: "gh:agent-of-empires/plugin-freebuf@8c3e053"
       id: "dev.example.aoe-freebuf"
     # Paired OMP integration: its manifest gates which OMP releases may reply
     # through AoE, so a stale copy silently disables the approval dialog.
-    # Track the branch (no releases upstream) and pair it with the extension
+    # be12ece is the last revision this host can load: everything newer declares
+    # api_version 20 with `agent_integrations` fields (resume_arg, detection) and
+    # `resume_arg` alone already fails manifest parsing on aoe 1.22.3, including
+    # the v0.4.0 tag, which was re-cut after the fact. Pair it with the extension
     # pinned in github_files below.
-    - source: "gh:agent-of-empires/plugin-omp@main"
+    - source: "gh:agent-of-empires/plugin-omp@be12ece"
       id: "omp.agent-of-empires"
 
   casks:
