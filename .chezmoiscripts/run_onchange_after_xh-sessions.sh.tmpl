@@ -21,8 +21,8 @@ fetch_secret() {
 {{   $host := "" -}}
 {{   if hasKey $cfg "host" -}}
 {{     $host = $cfg.host -}}
-{{   else if eq $name "es_api_key" -}}
-{{     $host = $.esHost -}}
+{{   else if hasKey $cfg "host_data" -}}
+{{     $host = get $ $cfg.host_data -}}
 {{   end -}}
 host="{{ $host }}"
 {{   if hasKey $cfg "auth_type" -}}

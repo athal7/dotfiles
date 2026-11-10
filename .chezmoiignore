@@ -4,10 +4,14 @@
 # Keep gh authentication tokens local (don't sync across machines)
 .config/gh/hosts.yml
 
-# Repo documentation and project config - not for home directory
+# Repo documentation and tooling - not for home directory
 AGENTS.md
 README.md
 index.html
+scripts/**
+local.yaml.example
+renovate.json
+favicon.svg
 
 # Source-only skill documentation; authored skill files are managed natively.
 .agents/skills/AGENTS.md

@@ -1,6 +1,8 @@
 #!/bin/sh
 # Load the repository-managed OpenFlow profile after apply only if OpenFlow is running.
 # This updates OpenFlow's local profile only; it never writes to keyboard firmware.
+# Scripts run with their working directory set to the destination (home), so the
+# profile path is taken from the source dir rather than a relative path.
 
 set -eu
 
@@ -10,5 +12,5 @@ if [ ! -d "$HOME/Applications/OpenFlow.app" ] && [ ! -d "/Applications/OpenFlow.
 fi
 
 "$HOME/.local/bin/openflow-profile-sync" sync \
-  --profile-file dot_config/openflow/profiles/naya-default-macos.json \
+  --profile-file "{{ .chezmoi.sourceDir }}/dot_config/openflow/profiles/naya-default-macos.json" \
   --skip-if-not-running

@@ -1,3 +1,10 @@
+# Repo tooling that earlier revisions deployed into the home directory. The
+# matching .chezmoiignore entries keep it out of the target state.
+scripts
+renovate.json
+favicon.svg
+local.yaml.example
+
 .agents/prompts/pr-review-requests.md
 .config/agent-of-empires/plugins/agent-of-empires.cron
 .config/omp/agent/models.yml
