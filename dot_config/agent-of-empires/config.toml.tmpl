@@ -164,7 +164,10 @@ smart_rename_agent = ""
 # The paired terminal split is unwanted. It renders only when the whole window is at
 # least this tall and wide, so both thresholds at the documented maximum keep it hidden
 # at any window size while Terminal view and the toggle keep working; lower them to
-# bring it back. split_terminal_height_percent is moot while it cannot render.
+# bring it back. The height percent only sizes a split that cannot render, but aoe
+# materializes it on every config rewrite, so it is spelled out to keep the rendered
+# file identical to the applied one.
+split_terminal_height_percent = 50
 split_terminal_min_height = 1000
 split_terminal_min_width = 1000
 startup_recovery_wake = false
