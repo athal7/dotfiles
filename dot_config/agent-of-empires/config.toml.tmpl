@@ -100,7 +100,10 @@ show_spans = false
 {{ if stat $configPath -}}
 {{ $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
 {{ end -}}
-{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
+# Keep PR state (and its row glyph) on snoozed rows. Opt-in upstream in #143, merged
+# 2026-11-06 but not in a release yet, so the installed plugin ignores the key until
+# the next update; leave it on so the first release that honours it needs no edit.
+{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
 {{ dict "plugins" $plugins | toToml }}
 
 
