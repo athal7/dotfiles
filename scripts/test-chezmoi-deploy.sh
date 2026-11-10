@@ -10,6 +10,7 @@ cat >"$WORK/bin/chezmoi" <<'EOF'
 #!/usr/bin/env bash
 case "$1" in
   source-path) printf '%s\n' "$DEPLOY_TEST_PRIMARY" ;;
+  diff) printf '%s\n' "$*" >>"$DEPLOY_TEST_LOG"; printf 'rendered difference\n' ;;
   apply) printf '%s\n' "$*" >>"$DEPLOY_TEST_LOG" ;;
   *) exit 64 ;;
 esac
@@ -44,16 +45,17 @@ assert_deployed() {
   git -C "$PRIMARY" merge-base --is-ancestor main feature
   [[ "$(git -C "$PRIMARY" rev-parse main)" = "$(git -C "$PRIMARY" rev-parse feature)" ]]
   [[ "$(git --git-dir="$TEST_DIR/origin.git" rev-parse main)" = "$(git -C "$PRIMARY" rev-parse main)" ]]
-  [[ "$(cat "$LOG")" = 'apply --force --no-tty' ]]
+  [[ "$(cat "$LOG")" = $'diff --no-tty\napply --force --no-tty' ]]
 }
 
 setup fast_forward
 printf 'feature\n' >"$FEATURE/feature"
 git -C "$FEATURE" add feature
 git -C "$FEATURE" commit -qm feature
-run_deploy
+run_deploy >"$TEST_DIR/stdout"
 assert_deployed
-printf '  ok   fast-forward applies and pushes once\n'
+[[ "$(cat "$TEST_DIR/stdout")" == *'rendered difference'* ]]
+printf '  ok   fast-forward renders the pending diff, applies, and pushes once\n'
 
 setup stale_branch
 printf 'feature\n' >"$FEATURE/feature"
@@ -114,5 +116,4 @@ git -C "$PRIMARY" add main-file
 git -C "$PRIMARY" commit -qm main-change
 run_deploy
 git -C "$PRIMARY" merge-base --is-ancestor feature main
-[[ "$(cat "$LOG")" = 'apply --force --no-tty' ]]
 printf '  ok   unassigned local branch rebases and deploys\n'

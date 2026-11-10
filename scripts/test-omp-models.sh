@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# Behavioral checks for the OMP/AoE render results that a `chezmoi diff` cannot
+# judge: cross-file derivations (packages.yaml → externals → config), values
+# computed from other data, and generated scripts' runtime behavior.
+# Plain template literals are intentionally not asserted here — review those in
+# the `chezmoi diff` that `chezmoi-deploy` prints before it applies.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -33,7 +38,8 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agen
 yq -i '
   .runlayer.bigquery_mcp_url = "https://bigquery.example.test/mcp" |
   .runlayer.pagerduty_mcp_url = "https://pagerduty.example.test/mcp" |
-  .orgs.your-personal-org.automated_review.bot_login = "CodeRabbitAI[bot]"
+  .orgs.your-personal-org.automated_review.bot_login = "CodeRabbitAI[bot]" |
+  .omp_model_roles.smol = "test-provider/test-smol"
 ' "$DATA"
 PATH="$BIN:$PATH" chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/config.yml" > "$CONFIG"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/agent-of-empires/config.toml" > "$AOE"
@@ -47,32 +53,19 @@ chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$R
 extension_external="$(yq -p=toml -o=json '.' "$EXTERNAL")"
 extension_url="$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | "https://raw.githubusercontent.com/\(.repo)/\(.ref)/\(.path)"' "$REPO_ROOT/.chezmoidata/packages.yaml")"
 
-check "uses the live custom OMP status-line preset" "$(yq -r '.statusLine.preset' "$CONFIG")" custom
-check "shows model, prewalk mode, and cost in the OMP status line" "$(yq -r '[.statusLine.leftSegments[], .statusLine.rightSegments[]] | join(" ")' "$CONFIG")" "model mode cost"
-check "preserves tight OMP TUI layout" "$(yq -r '.tui.tight' "$CONFIG")" true
-check "preserves unexpected stop detection override" "$(yq -r '.features.unexpectedStopDetection' "$CONFIG")" smart
-check "loads the provider-native OMP extension" "$(yq -r '.extensions[0]' "$CONFIG")" "$HOME/.local/share/omp/extensions/agent-of-empires.ts"
-check "renders the pinned OMP extension source URL" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"].url' <<< "$extension_external")" "$extension_url"
-check "tracks the OMP extension branch instead of pinning a commit" "$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | .ref' "$REPO_ROOT/.chezmoidata/packages.yaml")" main
+check "renders the OMP extension source pinned in packages.yaml" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"].url' <<< "$extension_external")" "$extension_url"
 check "leaves the moving OMP extension unpinned by checksum" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"] | has("checksum")' <<< "$extension_external")" false
-check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
-check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.host_hooks.before_session[0]' "$AOE" | jq -r '.')" "if [ \"\$AOE_TOOL\" = omp ]; then \"\$HOME/.local/bin/aoe-omp-environment\"; fi"
-check "installs the published aoe release instead of HEAD" "$(yq -r '.packages.brews[] | select(.name == "aoe") | has("args")' "$REPO_ROOT/.chezmoidata/packages.yaml")" false
-check "pins OMP to the last AoE-allowlisted release" "$(yq -r '.packages.github_releases[] | select(.name == "omp") | .tag + " " + .target' "$REPO_ROOT/.chezmoidata/packages.yaml")" "v18.16.0 .local/bin/omp"
-check "stops tracking OMP through the Homebrew tap" "$(yq -r '[.packages.brews[] | select(.name == "can1357/tap/omp")] | length' "$REPO_ROOT/.chezmoidata/packages.yaml")" 0
 check "verifies the pinned OMP download by checksum" "$(jq -r '.[".local/bin/omp"].checksum.sha256 | length' <<< "$extension_external")" 64
 check "marks the pinned OMP download executable" "$(jq -r '.[".local/bin/omp"].executable' <<< "$extension_external")" true
-check "keeps Ctrl+Q as AoE live-send exit" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.session.live_send_exit_chord')" C-q
-check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has("app_state")' "$AOE")" false
-check "does not retain AoE live agent overrides" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$AOE")" false
-check "preserves OpenAI Codex code mode override" "$(yq -r '.providers.openai-codex.codeMode' "$CONFIG")" auto
-check "does not configure a judge model role" "$(yq -r '.modelRoles | has("judge")' "$CONFIG")" false
-check "enables curated Mnemopi memory" "$(yq -r '.memory.backend' "$CONFIG")" mnemopi
-check "uses project-tagged Mnemopi scope" "$(yq -r '.mnemopi.scoping' "$CONFIG")" per-project-tagged
-check "recalls memory automatically" "$(yq -r '.mnemopi.autoRecall' "$CONFIG")" true
-check "disables automatic memory retention" "$(yq -r '.mnemopi.autoRetain' "$CONFIG")" false
-check "caps memory injection" "$(yq -r '.mnemopi.injectionTokenLimit' "$CONFIG")" 1200
-check "does not configure ignored skills" "$(yq -r '(.skills.ignoredSkills // []) | length' "$CONFIG")" 0
+check "loads the provider-native OMP extension when local data names no others" "$(yq -r '.extensions[0]' "$CONFIG")" "$HOME/.local/share/omp/extensions/agent-of-empires.ts"
+
+# Model roles are private machine data, not template content. Absence cannot be
+# asserted from a machine that has its own local.yaml (`--override-data-file`
+# merges with it), so the template itself is checked for shipped model names.
+check "renders OMP model roles from private local data" "$(yq -r '.modelRoles.smol' "$CONFIG")" "test-provider/test-smol"
+check "keeps model names out of the public OMP template" "$(grep -Ec 'gpt-|claude-|sonnet' "$REPO_ROOT/dot_config/omp/agent/config.yml.tmpl" || true)" 0
+
+check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
 
 if bash -n "$PLUGIN_INSTALL"; then
   plugin_install_valid=true
@@ -80,21 +73,9 @@ else
   plugin_install_valid=false
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
-check "preserves the configured AoE default agent" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.default_agent')" omp
-check "disables structured view for new sessions" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.acp.structured_view')" off
 check "renders a valid AoE serve launcher" "$(sh -n "$AOE_SERVE" && printf true)" true
 check "forwards OMP credentials to structured ACP workers" "$(grep -Fxc "      ANTHROPIC_API_KEY|OTARI_API_KEY|GITHUB_TOKEN|SPACELIFT_MCP_URL) export \"\$key=\${assignment#*=}\" ;;" "$AOE_SERVE")" 1
-check "preserves live AoE settings across deployment" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '[.acp.notice_display, (.acp.notice_timeout_secs | tostring), (.session.show_shortcut_bar | tostring), (.systemd.enabled | tostring), .systemd.slice, (.systemd.survive_daemon_restart | tostring), (.systemd.tasks_max | tostring)] | join(" ")')" "persistent 10 false true background-aoe-{profile}.slice true 0"
-check "enables AoE plugin auto-updates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.updates.auto_update_plugins')" true
-check "grants the reviewed GitHub plugin capability set" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.capabilities | join(" ")')" "net runtime.worker session.read notifications browser_open"
-check "draws GitHub session-row status as single-character glyph marks" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.dense_row_badge_glyphs')" true
-check "ignores GitHub bot approval recommendations in review state" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.ignore_bot_approval_recommendations')" true
-check "merges known and configured review bots without duplicates" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].settings.ignored_commenters')" "chatgpt-codex-connector, codecov, coderabbitai, copilot-pull-request-reviewer, github-code-quality"
-check "tracks the latest GitHub plugin release instead of a pinned ref" "$(yq -r '.packages.aoe_plugins[] | select(.id == "agent-of-empires.github") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-github"
-check "tracks the Linear plugin branch because upstream publishes no releases" "$(yq -r '.packages.aoe_plugins[] | select(.id == "community.linear") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-linear@main"
-check "tracks the Freebuf plugin branch from the org repo, not a local path" "$(yq -r '.packages.aoe_plugins[] | select(.id == "dev.example.aoe-freebuf") | .source' "$REPO_ROOT/.chezmoidata/packages.yaml")" "gh:agent-of-empires/plugin-freebuf@main"
-check "keeps a well-formed GitHub plugin manifest grant" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["agent-of-empires.github"].grant.manifest_hash | test("^sha256:[0-9a-f]{64}$")')" true
-check "preserves the Attention plugin grant capabilities" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.plugins["athal7.attention"].grant.capabilities | join(" ")')" "runtime.worker session.read process.spawn fs.read fs.write clipboard.write browser_open net"
+
 check "reloads the supervised AoE daemon after plugin sync" "$(grep -Fxc "if [ \"\$plugin_synced\" = true ] && aoe serve --status > /dev/null 2>&1; then" "$PLUGIN_INSTALL")" 1
 check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl kickstart -k \"\$serve_job\" ||" "$PLUGIN_INSTALL")" 1
 

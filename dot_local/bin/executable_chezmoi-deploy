@@ -65,6 +65,21 @@ main() {
   git -C "$PRIMARY" merge --ff-only --quiet "$branch" \
     || { echo "chezmoi-deploy: failed to fast-forward main with '$branch'" >&2; exit 1; }
 
+  # Render review: the pending diff is the change report for the deploy. It is
+  # printed before applying so the change can be judged on its rendered output
+  # instead of on a script of expected template values.
+  echo "chezmoi-deploy: rendering the pending change to ~…"
+  local rendered_diff
+  if ! rendered_diff="$(chezmoi diff --no-tty)"; then
+    echo "chezmoi-deploy: chezmoi diff failed; aborting before apply" >&2
+    exit 1
+  fi
+  if [ -n "$rendered_diff" ]; then
+    printf '%s\n' "$rendered_diff"
+  else
+    echo "chezmoi-deploy: (rendered output already matches ~)"
+  fi
+
   echo "chezmoi-deploy: applying to ~…"
   chezmoi apply --force --no-tty \
     || { echo "chezmoi-deploy: chezmoi apply failed; primary main has the merge but ~ may be partially applied" >&2; exit 1; }

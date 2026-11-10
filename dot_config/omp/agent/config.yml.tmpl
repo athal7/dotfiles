@@ -140,16 +140,10 @@ mnemopi:
   recallLimit: 8
   injectionTokenLimit: 1200
 modelRoleStorage: global
+# Model roles are machine- and account-specific, so `.chezmoidata/local.yaml`
+# owns them (`omp_model_roles`) and this public template ships no model names.
 modelRoles:
-  advisor: openai-codex/gpt-6-luna
-  commit: "@smol"
-  default: openai-codex/gpt-6.1-sol
-  plan: openai-codex/gpt-6.1-sol
-  slow: anthropic/claude-sonnet-5-5
-  smol: openai-codex/gpt-6.1-terra
-  task: openai-codex/gpt-6.1-sol
-  tiny: openai-codex/gpt-6-luna
-  vision: openai-codex/gpt-6.1-sol
+{{ if hasKey . "omp_model_roles" }}{{ .omp_model_roles | toYaml | trimSuffix "\n" | indent 2 }}{{ else }}  {}{{ end }}
 personality: default
 plan:
   defaultOnStartup: false

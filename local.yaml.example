@@ -108,5 +108,19 @@ reminders:
     name: "Work"
     attention_check: true
 
+# OMP model roles rendered into ~/.config/omp/agent/config.yml. These are
+# machine- and account-specific: the public template ships no model names, and
+# roles you omit here stay unset so OMP falls back to its own defaults.
+omp_model_roles:
+  advisor: your-provider/your-large-model
+  commit: "@smol"
+  default: your-provider/your-default-model
+  plan: your-provider/your-default-model
+  slow: your-provider/your-slow-model
+  smol: your-provider/your-small-model
+  task: your-provider/your-default-model
+  tiny: your-provider/your-tiny-model
+  vision: your-provider/your-vision-model
+
 # Optional OMP extension modules.
 omp_approval_extension_paths: []
