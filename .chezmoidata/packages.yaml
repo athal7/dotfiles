@@ -8,12 +8,10 @@ packages:
     - github/gh
     - jnsahaj/lumen
     - steipete/tap
-    - can1357/tap
     - kunobi-ninja/kunobi
     - saffsanity/sill
 
   brews:
-    - name: can1357/tap/omp
     - name: aoe
     - name: autojump
     - name: bat
@@ -134,6 +132,21 @@ packages:
       path: ical
       executable: true
       refresh_period: 24h
+
+    # Pinned rather than tracked: the AoE OMP plugin allowlists provider
+    # versions up to 18.16.0, and above that the plugin drops its approval
+    # reply bridge. The Homebrew tap formula always floats to the newest
+    # release, so OMP installs here as a verified release instead. Move the tag
+    # forward once the plugin's allowlist covers a newer version.
+    - name: omp
+      repo: can1357/oh-my-pi
+      target: .local/bin/omp
+      tag: v18.16.0
+      asset: omp-darwin-arm64
+      checksum: d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e
+      type: file
+      executable: true
+
   # GitHub source files are installed through .chezmoiexternal.toml.tmpl.
   github_files:
     - name: aoe-omp-extension

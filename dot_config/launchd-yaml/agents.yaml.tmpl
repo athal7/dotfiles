@@ -42,7 +42,10 @@ launchagents:
   omp-stats:
     Label: com.$USER.omp-stats
     ProgramArguments:
-      - /opt/homebrew/bin/omp
+      # OMP is a pinned release under ~/.local/bin, not a Homebrew formula; a
+      # KeepAlive agent pointed at the Cellar path would crash-loop after an
+      # uninstall.
+      - $HOME/.local/bin/omp
       - stats
     RunAtLoad: true
     KeepAlive: true

@@ -58,6 +58,10 @@ check "leaves the moving OMP extension unpinned by checksum" "$(jq -r '.[".local
 check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
 check "uses the configured AoE OMP environment hook" "$(yq -p=toml -o=json '.host_hooks.before_session[0]' "$AOE" | jq -r '.')" "if [ \"\$AOE_TOOL\" = omp ]; then \"\$HOME/.local/bin/aoe-omp-environment\"; fi"
 check "installs the published aoe release instead of HEAD" "$(yq -r '.packages.brews[] | select(.name == "aoe") | has("args")' "$REPO_ROOT/.chezmoidata/packages.yaml")" false
+check "pins OMP to the last AoE-allowlisted release" "$(yq -r '.packages.github_releases[] | select(.name == "omp") | .tag + " " + .target' "$REPO_ROOT/.chezmoidata/packages.yaml")" "v18.16.0 .local/bin/omp"
+check "stops tracking OMP through the Homebrew tap" "$(yq -r '[.packages.brews[] | select(.name == "can1357/tap/omp")] | length' "$REPO_ROOT/.chezmoidata/packages.yaml")" 0
+check "verifies the pinned OMP download by checksum" "$(jq -r '.[".local/bin/omp"].checksum.sha256 | length' <<< "$extension_external")" 64
+check "marks the pinned OMP download executable" "$(jq -r '.[".local/bin/omp"].executable' <<< "$extension_external")" true
 check "keeps Ctrl+Q as AoE live-send exit" "$(yq -p=toml -o=json '.' "$AOE" | jq -r '.session.live_send_exit_chord')" C-q
 check "does not put AoE runtime state in config.toml" "$(yq -p=toml -o=json 'has("app_state")' "$AOE")" false
 check "does not retain AoE live agent overrides" "$(yq -p=toml -o=json '.session | has("agent_command_override")' "$AOE")" false

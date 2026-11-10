@@ -9,11 +9,13 @@
 brew trust --tap {{ . | quote }}
 {{ end }}
 
-# OMP follows the tap's current release. Retire the formulae and tap left
-# behind by the retired version pin so they cannot shadow the linked formula.
+# OMP is a pinned release (packages.yaml github_releases), so no Homebrew copy
+# may linger: `brew upgrade` would float it past the AoE plugin's provider
+# allowlist, and the tap formula would shadow the pinned binary on PATH.
+# Retire the tap formula and the older version pins that used to provide it.
 for installed in $(brew list --formula --full-name); do
   case "$installed" in
-    athal7/versions/omp@*)
+    omp|can1357/tap/omp|athal7/versions/omp@*)
       brew uninstall --formula "$installed" || exit 1
       ;;
   esac
