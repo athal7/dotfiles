@@ -10,6 +10,8 @@ packages:
     - steipete/tap
     - kunobi-ninja/kunobi
     - saffsanity/sill
+    - chenrui333/tap
+    - roeyazroel/linear-tui
 
   brews:
     - name: aoe
@@ -26,6 +28,7 @@ packages:
     - name: fzf
     - name: git
     - name: gh
+    - name: chenrui333/tap/gh-dash
     - name: athal7/tap/attention
     - name: athal7/tap/cal-automation
     - name: athal7/tap/git-worktree-sync
@@ -38,6 +41,7 @@ packages:
     - name: kunobi-ninja/kunobi/kache
     - name: kubernetes-cli
     - name: jnsahaj/lumen/lumen
+    - name: roeyazroel/linear-tui/linear-tui
     - name: macos-trash
     - name: mas
     - name: mise

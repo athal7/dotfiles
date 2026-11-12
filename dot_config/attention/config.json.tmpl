@@ -5,7 +5,9 @@
    keychain dependency, it just reads linear.apiToken from this file.
    Session and lumen hotkeys were removed from the bundled plugins upstream
    (hardcoded tool deps) and are restored here as configured actions.
-   Session model preferences come from the selected agent's configuration. */ -}}
+   Session model preferences come from the selected agent's configuration.
+   Keep provider opening in the browser: gh-dash 4.26.2 and linear-tui 0.12.0
+   have no item/repository CLI targeting flags; both remain standalone TUIs. */ -}}
 {{- $remLists := list -}}
 {{- if hasKey . "reminders" -}}
 {{- range $k, $v := .reminders -}}
@@ -59,7 +61,7 @@
 {{- $config := dict
       "codeDir" .codeDir
       "plugins" (list "reminders" "github" "linear")
-      "dashboard" (dict "groups" $groups)
+      "dashboard" (dict "autoExpand" true "groups" $groups)
       "reminders" (dict "lists" $remLists "actions" (list
         (dict "key" "s" "label" "session" "background" true
               "command" (list "attention-session" "scratch" "{title}" "{input}")
