@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Preserve Freebuff's other settings while choosing an unlimited model.
+# Prefer the catalog's DeepSeek Flash Slow row; keep a standard Flash fallback.
 import json
 import sys
 
 contents = sys.stdin.read()
 settings = json.loads(contents) if contents.strip() else {}
-settings["freebuffModel"] = "upstage/solar-mini4"
-settings.pop("freebuffModelKey", None)
+settings["freebuffModel"] = "deepseek/deepseek-v4-flash"
+settings["freebuffModelKey"] = "m-61c26317cc"
 print(json.dumps(settings, indent=2))
