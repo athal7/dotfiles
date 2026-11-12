@@ -94,6 +94,9 @@
                 "command" (list "attention-session" "scratch" "{identifier_lower}" "{input}")
                 "input" (dict "prompt" "Goal (interview first)" "default" "/guided-goal Work on Linear issue {identifier}"))))
       "session" (dict "agents" $sessionAgents)
-      "automation" (dict "maxSessions" (dict "freebuff" 6))
+      "automation" (dict
+        "maxWip" 3
+        "maxWipByProvider" (dict "github" 2 "linear" 1)
+        "maxSessions" (dict "freebuff" 6))
 -}}
 {{ $config | toPrettyJson }}
