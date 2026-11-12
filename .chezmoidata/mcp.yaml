@@ -154,7 +154,11 @@
         "transport": "remote",
         "url": "https://api.githubcopilot.com/mcp/",
         "headers": {
-          "Authorization": { "value": "Bearer ${GITHUB_TOKEN}" },
+          # OMP executes a leading "!" value as a shell command, so the server
+          # resolves its own credential from gh's keyring instead of relying on
+          # GITHUB_TOKEN being forwarded into every agent process. The explicit
+          # unset keeps an inherited token from winning over the keyring.
+          "Authorization": { "value": "!printf 'Bearer %s' \"$(env -u GITHUB_TOKEN -u GH_TOKEN gh auth token)\"" },
           "X-MCP-Toolsets": { "value": "context,issues,pull_requests,repos,users,actions" },
         },
         "tools": [

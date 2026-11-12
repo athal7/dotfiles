@@ -5,8 +5,9 @@ same registry as OMP's mcp.json, so both agents share one source of truth.
 
 This loader has no env-var interpolation outside a stdio server's env block, so
 a remote server is written only when its URL and headers resolve to literal
-values at apply time. Servers whose auth depends on a shell-only variable
-(github's GITHUB_TOKEN) are omitted rather than written unauthenticated. */}}
+values at apply time. Servers whose auth resolves through an OMP shell command
+(`!` prefix, as the github server does from gh's keyring) or a shell-only
+variable are omitted rather than written unauthenticated. */}}
 {{- $servers := dict -}}
 {{- range $server := .mcp_servers -}}
 {{-   $entry := dict -}}
@@ -40,7 +41,7 @@ values at apply time. Servers whose auth depends on a shell-only variable
 {{-             $value = printf $headerSpec.format $value -}}
 {{-           end -}}
 {{-         end -}}
-{{-         if and (ne $value "") (not (contains "${" $value)) -}}
+{{-         if and (ne $value "") (not (contains "${" $value)) (not (hasPrefix "!" $value)) -}}
 {{-           $_ := set $headers $headerName $value -}}
 {{-         end -}}
 {{-       end -}}

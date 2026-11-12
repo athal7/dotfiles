@@ -60,9 +60,10 @@ aoe() {
   command aoe "$@"
 }
 
-# Give only OMP its GitHub token, not every shell and child process.
+# Give only OMP its Spacelift MCP URL, not every shell and child process. GitHub
+# credentials stay out: the github MCP resolves its own token from gh's keyring.
 omp() {
-  local github_token spacelift_mcp_url result
+  local spacelift_mcp_url result
   if [[ ! -x "$HOME/.local/bin/omp-personal-repo" ]]; then
     print -u2 'Missing personal OMP repository classifier'
     return 1
@@ -80,11 +81,7 @@ omp() {
   if command -v spacectl >/dev/null 2>&1 && command -v spacelift-mcp-url >/dev/null 2>&1; then
     spacelift_mcp_url=$(spacelift-mcp-url 2>/dev/null) || spacelift_mcp_url=
   fi
-  if command -v gh >/dev/null 2>&1 && github_token=$(gh auth token 2>/dev/null) && [[ -n "$github_token" ]]; then
-    GITHUB_TOKEN="$github_token" SPACELIFT_MCP_URL="$spacelift_mcp_url" command omp "$@"
-  else
-    SPACELIFT_MCP_URL="$spacelift_mcp_url" command omp "$@"
-  fi
+  SPACELIFT_MCP_URL="$spacelift_mcp_url" command omp "$@"
 }
 
 

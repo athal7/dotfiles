@@ -74,7 +74,7 @@ else
 fi
 check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "renders a valid AoE serve launcher" "$(sh -n "$AOE_SERVE" && printf true)" true
-check "forwards OMP credentials to structured ACP workers" "$(grep -Fxc "      ANTHROPIC_API_KEY|OTARI_API_KEY|GITHUB_TOKEN|SPACELIFT_MCP_URL) export \"\$key=\${assignment#*=}\" ;;" "$AOE_SERVE")" 1
+check "forwards OMP credentials to structured ACP workers" "$(grep -Fxc "      ANTHROPIC_API_KEY|OTARI_API_KEY|SPACELIFT_MCP_URL) export \"\$key=\${assignment#*=}\" ;;" "$AOE_SERVE")" 1
 
 check "reloads the supervised AoE daemon after plugin sync" "$(grep -Fxc "if [ \"\$plugin_synced\" = true ] && aoe serve --status > /dev/null 2>&1; then" "$PLUGIN_INSTALL")" 1
 check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl kickstart -k \"\$serve_job\" ||" "$PLUGIN_INSTALL")" 1
@@ -134,9 +134,9 @@ done
 check "enables the official GitHub MCP by default" "$(jq '.mcpServers.github.enabled == true' "$MCP")" true
 check "uses the official GitHub MCP endpoint" "$(jq -r '.mcpServers.github.url' "$MCP")" "https://api.githubcopilot.com/mcp/"
 check "selects the official GitHub MCP toolsets" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")" "context,issues,pull_requests,repos,users,actions"
-expected_github_authorization="Bearer \${GITHUB_TOKEN}"
-check "defers GitHub token expansion to OMP startup" "$(jq -r '.mcpServers.github.headers.Authorization' "$MCP")" "$expected_github_authorization"
-check "preserves GitHub token expansion in KB enrichment" "$(jq -r '.mcpServers.github.headers.Authorization' "$KB_ENRICH_MCP")" "$expected_github_authorization"
+expected_github_authorization="!printf 'Bearer %s' \"\$(env -u GITHUB_TOKEN -u GH_TOKEN gh auth token)\""
+check "resolves the GitHub token from gh in OMP" "$(jq -r '.mcpServers.github.headers.Authorization' "$MCP")" "$expected_github_authorization"
+check "resolves the GitHub token from gh in KB enrichment" "$(jq -r '.mcpServers.github.headers.Authorization' "$KB_ENRICH_MCP")" "$expected_github_authorization"
 check "includes GitHub MCP in scheduled KB enrichment" "$(jq -r '(.mcpServers | has("github"))' "$KB_ENRICH_MCP")" true
 check "removes the two Runlayer GitHub connectors" "$(jq -r '[.mcpServers | has("github-orgs"), has("github-other-orgs")] | any' "$MCP")" false
 rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[]' | sort | paste -sd ' ' -)"
