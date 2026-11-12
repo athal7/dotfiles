@@ -6,6 +6,9 @@
    Session and lumen hotkeys were removed from the bundled plugins upstream
    (hardcoded tool deps) and are restored here as configured actions.
    Session model preferences come from the selected agent's configuration.
+   session.agents names the AoE agent each organization's items start, using the
+   same attention: Work split as the dashboard groups (work -> omp, personal ->
+   freebuff), so a dispatched session and automation.maxSessions agree.
    Keep provider opening in the browser: gh-dash 4.26.2 and linear-tui 0.12.0
    have no item/repository CLI targeting flags; both remain standalone TUIs. */ -}}
 {{- $remLists := list -}}
@@ -38,6 +41,18 @@
 {{- if eq (dig "attention" "" $settings) "Work" -}}
 {{- $workGitHubPrefixes = append $workGitHubPrefixes (printf "%s/" $org) -}}
 {{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $sessionAgents := list -}}
+{{- if hasKey . "orgs" -}}
+{{- range $org, $settings := .orgs -}}
+{{- if kindIs "map" $settings -}}
+{{- $tool := "freebuff" -}}
+{{- if eq (dig "attention" "" $settings) "Work" -}}
+{{- $tool = "omp" -}}
+{{- end -}}
+{{- $sessionAgents = append $sessionAgents (dict "repo" (printf "%s/*" $org) "tool" $tool) -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -78,5 +93,7 @@
           (dict "key" "s" "label" "session" "background" true
                 "command" (list "attention-session" "scratch" "{identifier_lower}" "{input}")
                 "input" (dict "prompt" "Goal (interview first)" "default" "/guided-goal Work on Linear issue {identifier}"))))
+      "session" (dict "agents" $sessionAgents)
+      "automation" (dict "maxSessions" (dict "freebuff" 6))
 -}}
 {{ $config | toPrettyJson }}
