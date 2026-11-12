@@ -7,7 +7,7 @@
   },
   "layers": [
     {
-      "srcId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+      "srcId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
       "name": "QWERTY",
       "orderId": 0,
       "iconId": "move_down",
@@ -788,7 +788,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+              "actionCode": "TO_LAYER_37d488d8-6ed9-4487-804f-50979653389b",
               "context": null
             }
           ]
@@ -846,15 +846,15 @@
           "colorHex": "#05fff3",
           "bindings": [
             {
-              "behavior": "hold",
-              "actionType": "modifier",
-              "actionCode": "LGUI",
-              "context": null
-            },
-            {
               "behavior": "press",
               "actionType": "key",
               "actionCode": "RETURN",
+              "context": null
+            },
+            {
+              "behavior": "hold",
+              "actionType": "modifier",
+              "actionCode": "LGUI",
               "context": null
             }
           ]
@@ -932,7 +932,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_bf165dc3-dd85-449d-a26d-109482e445bd",
+              "actionCode": "TO_LAYER_b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
               "context": null
             }
           ]
@@ -1009,53 +1009,53 @@
         },
         {
           "positionId": 88,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 89,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 90,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 91,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 92,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 93,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 94,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 95,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 96,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         }
       ]
     },
     {
-      "srcId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+      "srcId": "37d488d8-6ed9-4487-804f-50979653389b",
       "name": "Keypad + Arrow Keys",
       "orderId": 1,
       "iconId": "masks",
@@ -1069,7 +1069,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LALT + LGUI + ESC",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1081,7 +1081,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LCTRL + UP",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1247,7 +1247,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LCTRL + LSHIFT + TAB",
-              "context": "Windows Alias"
+              "context": null
             }
           ]
         },
@@ -1259,7 +1259,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LCTRL + TAB",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1415,7 +1415,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LCTRL + LEFT",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1427,7 +1427,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LCTRL + RIGHT",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1603,7 +1603,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LGUI + Z",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1615,7 +1615,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LGUI + X",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1627,7 +1627,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LGUI + C",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1639,7 +1639,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LGUI + V",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1651,7 +1651,7 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LGUI + SPACE",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
@@ -1749,7 +1749,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+              "actionCode": "TO_LAYER_ce5b00d6-f526-4798-bc1d-37efabb96926",
               "context": null
             }
           ]
@@ -1825,7 +1825,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_bf165dc3-dd85-449d-a26d-109482e445bd",
+              "actionCode": "TO_LAYER_b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
               "context": null
             }
           ]
@@ -1902,53 +1902,53 @@
         },
         {
           "positionId": 88,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 89,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 90,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 91,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 92,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 93,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 94,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 95,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 96,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         }
       ]
     },
     {
-      "srcId": "bf165dc3-dd85-449d-a26d-109482e445bd",
+      "srcId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
       "name": "System",
       "orderId": 2,
       "iconId": "move_down",
@@ -1962,21 +1962,14 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LCTRL + LSHIFT + C_POWER",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
         {
           "positionId": 1,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 2,
@@ -2041,26 +2034,12 @@
         {
           "positionId": 7,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 8,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 9,
@@ -2113,26 +2092,12 @@
         {
           "positionId": 13,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 14,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 15,
@@ -2149,26 +2114,12 @@
         {
           "positionId": 16,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 17,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 18,
@@ -2269,38 +2220,17 @@
         {
           "positionId": 26,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 27,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 28,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 29,
@@ -2310,33 +2240,19 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LGUI + COMMA",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
         {
           "positionId": 30,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 31,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 32,
@@ -2401,26 +2317,12 @@
         {
           "positionId": 37,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 38,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 39,
@@ -2461,62 +2363,27 @@
         {
           "positionId": 42,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 43,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 44,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 45,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 46,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 47,
@@ -2545,74 +2412,32 @@
         {
           "positionId": 49,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 50,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 51,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 52,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 53,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 54,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 55,
@@ -2665,38 +2490,17 @@
         {
           "positionId": 59,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 60,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 61,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 62,
@@ -2718,117 +2522,54 @@
               "behavior": "press",
               "actionType": "shortcut_alias",
               "actionCode": "LSHIFT + LGUI + NUMBER_3",
-              "context": "MacOS Alias"
+              "context": null
             }
           ]
         },
         {
           "positionId": 64,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 65,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 66,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 67,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 68,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 69,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 70,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 71,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 72,
           "colorHex": "#05fff3",
-          "bindings": [
-            {
-              "behavior": "press",
-              "actionType": "none",
-              "actionCode": "DISABLE",
-              "context": null
-            }
-          ]
+          "bindings": []
         },
         {
           "positionId": 73,
@@ -2837,7 +2578,7 @@
             {
               "behavior": "press",
               "actionType": "layer_rude_toggle",
-              "actionCode": "TO_LAYER_f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+              "actionCode": "TO_LAYER_ce5b00d6-f526-4798-bc1d-37efabb96926",
               "context": null
             }
           ]
@@ -2914,47 +2655,47 @@
         },
         {
           "positionId": 88,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 89,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 90,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 91,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 92,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 93,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 94,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 95,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 96,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         }
       ]
@@ -2964,93 +2705,266 @@
   "modules": {
     "configBindings": [
       {
-        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
-        "srcConfigId": "5287c100-3f60-4a5d-9b40-564ac96332d8",
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
+        "srcConfigId": "45ac3f00-2839-4075-bd0a-58e7aaf41772",
         "bindingLocation": "touch:keyboard_left",
         "state": null
       },
       {
-        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
+        "srcConfigId": "45ac3f00-2839-4075-bd0a-58e7aaf41772",
+        "bindingLocation": "touch:keyboard_right",
+        "state": null
+      },
+      {
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
         "srcConfigId": null,
         "bindingLocation": "track:keyboard_left",
         "state": "disabled"
       },
       {
-        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
         "srcConfigId": null,
         "bindingLocation": "track:keyboard_right",
         "state": "disabled"
       },
       {
-        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
-        "srcConfigId": "093f8f3d-1799-4a35-8c9d-cb53b8d5d861",
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
+        "srcConfigId": "edb31df7-3257-4a83-9cba-987f50ce63fb",
         "bindingLocation": "tune:keyboard_left",
         "state": null
       },
       {
-        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
-        "srcConfigId": "093f8f3d-1799-4a35-8c9d-cb53b8d5d861",
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
+        "srcConfigId": "edb31df7-3257-4a83-9cba-987f50ce63fb",
         "bindingLocation": "tune:keyboard_right",
         "state": null
       },
       {
-        "srcLayerId": "f66391d4-76ae-4320-ba8b-f9acf76b28f9",
-        "srcConfigId": "5287c100-3f60-4a5d-9b40-564ac96332d8",
-        "bindingLocation": "touch:keyboard_right",
-        "state": null
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
+        "srcConfigId": null,
+        "bindingLocation": "float:keyboard_left",
+        "state": "disabled"
       },
       {
-        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+        "srcLayerId": "ce5b00d6-f526-4798-bc1d-37efabb96926",
+        "srcConfigId": null,
+        "bindingLocation": "float:keyboard_right",
+        "state": "disabled"
+      },
+      {
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
         "srcConfigId": null,
         "bindingLocation": "touch:keyboard_left",
         "state": "transparent"
       },
       {
-        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
         "srcConfigId": null,
         "bindingLocation": "touch:keyboard_right",
         "state": "transparent"
       },
       {
-        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
-        "srcConfigId": "649212f8-c88c-4749-bbf1-7bfcb12cad24",
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
+        "srcConfigId": null,
+        "bindingLocation": "track:keyboard_left",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
+        "srcConfigId": null,
+        "bindingLocation": "track:keyboard_right",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
+        "srcConfigId": "c60cf81e-5969-4bf5-a6c0-c7d110258e0b",
         "bindingLocation": "tune:keyboard_left",
         "state": null
       },
       {
-        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
-        "srcConfigId": "649212f8-c88c-4749-bbf1-7bfcb12cad24",
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
+        "srcConfigId": "c60cf81e-5969-4bf5-a6c0-c7d110258e0b",
         "bindingLocation": "tune:keyboard_right",
         "state": null
       },
       {
-        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
+        "srcConfigId": null,
+        "bindingLocation": "float:keyboard_left",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "37d488d8-6ed9-4487-804f-50979653389b",
+        "srcConfigId": null,
+        "bindingLocation": "float:keyboard_right",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
         "srcConfigId": null,
         "bindingLocation": "touch:keyboard_left",
         "state": "transparent"
       },
       {
-        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
         "srcConfigId": null,
         "bindingLocation": "touch:keyboard_right",
         "state": "transparent"
       },
       {
-        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
-        "srcConfigId": "2cdb4ab8-dcc8-46b7-a5bf-89e89463f4fa",
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
+        "srcConfigId": null,
+        "bindingLocation": "track:keyboard_left",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
+        "srcConfigId": null,
+        "bindingLocation": "track:keyboard_right",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
+        "srcConfigId": "d9881e86-3e2a-47c7-9f63-4e72ffa5007d",
         "bindingLocation": "tune:keyboard_left",
         "state": null
       },
       {
-        "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
-        "srcConfigId": "2cdb4ab8-dcc8-46b7-a5bf-89e89463f4fa",
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
+        "srcConfigId": "d9881e86-3e2a-47c7-9f63-4e72ffa5007d",
         "bindingLocation": "tune:keyboard_right",
         "state": null
+      },
+      {
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
+        "srcConfigId": null,
+        "bindingLocation": "float:keyboard_left",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "b9254ff0-6e2b-4b6f-95be-0fe3040e56ab",
+        "srcConfigId": null,
+        "bindingLocation": "float:keyboard_right",
+        "state": "transparent"
       }
     ],
     "configs": [
       {
-        "srcId": "2cdb4ab8-dcc8-46b7-a5bf-89e89463f4fa",
+        "srcId": "45ac3f00-2839-4075-bd0a-58e7aaf41772",
+        "name": "Naya Touch MacOS",
+        "type": "TOUCH",
+        "size": 0,
+        "orderId": 2,
+        "iconId": "move_down",
+        "description": "---",
+        "bindings": [
+          {
+            "action_id": null,
+            "action_code": null,
+            "action_type": null,
+            "behavior": "vertical:touch:4_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "M2",
+            "action_type": "mouse",
+            "behavior": "tap:touch:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - SCROLL_LEFT - SCROLL_RIGHT",
+            "action_type": "value",
+            "behavior": "horizontal:touch:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - SCROLL_UP - SCROLL_DOWN",
+            "action_type": "value",
+            "behavior": "vertical:touch:2_fingers",
+            "invert": 1,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - MOUSE_DOWN - MOUSE_UP",
+            "action_type": "value",
+            "behavior": "vertical:touch:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "mouse - MOUSE_LEFT - MOUSE_RIGHT",
+            "action_type": "value",
+            "behavior": "horizontal:touch:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "M1",
+            "action_type": "mouse",
+            "behavior": "tap:touch:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "pinch&spread:touch:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          }
+        ],
+        "settings": [
+          {
+            "value": "10",
+            "type": "numboxSlider",
+            "correlation_id": "scroll_speed"
+          },
+          {
+            "value": "10",
+            "type": "numboxSlider",
+            "correlation_id": "pointer_accel"
+          },
+          {
+            "value": "10",
+            "type": "numboxSlider",
+            "correlation_id": "pointer_speed"
+          },
+          {
+            "value": "false",
+            "type": "toggle",
+            "correlation_id": "pointer_accel_on"
+          }
+        ]
+      },
+      {
+        "srcId": "d9881e86-3e2a-47c7-9f63-4e72ffa5007d",
         "name": "media",
         "type": "TUNE",
         "size": 0,
@@ -3152,7 +3066,109 @@
         "settings": []
       },
       {
-        "srcId": "093f8f3d-1799-4a35-8c9d-cb53b8d5d861",
+        "srcId": "c60cf81e-5969-4bf5-a6c0-c7d110258e0b",
+        "name": "Page Up/Down",
+        "type": "TUNE",
+        "size": 0,
+        "orderId": 2,
+        "iconId": "move_down",
+        "description": "---",
+        "bindings": [
+          {
+            "action_id": null,
+            "action_code": "PG_UP - PG_DN",
+            "action_type": "value",
+            "behavior": "rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "tap:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_left:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_right:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_up:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_down:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "pinch&spread:tune:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "counter_clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          }
+        ],
+        "settings": []
+      },
+      {
+        "srcId": "edb31df7-3257-4a83-9cba-987f50ce63fb",
         "name": "Naya Tune",
         "type": "TUNE",
         "size": 0,
@@ -3271,221 +3287,6 @@
             "value": "50",
             "type": "numboxSlider",
             "correlation_id": "tick_strength"
-          }
-        ]
-      },
-      {
-        "srcId": "649212f8-c88c-4749-bbf1-7bfcb12cad24",
-        "name": "Page Up/Down",
-        "type": "TUNE",
-        "size": 0,
-        "orderId": 2,
-        "iconId": "move_down",
-        "description": "---",
-        "bindings": [
-          {
-            "action_id": null,
-            "action_code": "PG_UP - PG_DN",
-            "action_type": "value",
-            "behavior": "rotate:tune:dial",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "tap:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "swipe_left:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "swipe_right:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "swipe_up:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "swipe_down:tune:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "pinch&spread:tune:2_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "clockwise_rotate:tune:dial",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "counter_clockwise_rotate:tune:dial",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          }
-        ],
-        "settings": []
-      },
-      {
-        "srcId": "5287c100-3f60-4a5d-9b40-564ac96332d8",
-        "name": "Naya Touch MacOS",
-        "type": "TOUCH",
-        "size": 0,
-        "orderId": 2,
-        "iconId": "move_down",
-        "description": "---",
-        "bindings": [
-          {
-            "action_id": null,
-            "action_code": null,
-            "action_type": null,
-            "behavior": "vertical:touch:4_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "M2",
-            "action_type": "mouse",
-            "behavior": "tap:touch:2_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "mouse - SCROLL_LEFT - SCROLL_RIGHT",
-            "action_type": "value",
-            "behavior": "horizontal:touch:2_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "mouse - SCROLL_UP - SCROLL_DOWN",
-            "action_type": "value",
-            "behavior": "vertical:touch:2_fingers",
-            "invert": 1,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "mouse - MOUSE_DOWN - MOUSE_UP",
-            "action_type": "value",
-            "behavior": "vertical:touch:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "mouse - MOUSE_LEFT - MOUSE_RIGHT",
-            "action_type": "value",
-            "behavior": "horizontal:touch:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "M1",
-            "action_type": "mouse",
-            "behavior": "tap:touch:1_finger",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "",
-            "action_type": "none",
-            "behavior": "pinch&spread:touch:2_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          }
-        ],
-        "settings": [
-          {
-            "value": "10",
-            "type": "numboxSlider",
-            "correlation_id": "scroll_speed"
-          },
-          {
-            "value": "10",
-            "type": "numboxSlider",
-            "correlation_id": "pointer_accel"
-          },
-          {
-            "value": "10",
-            "type": "numboxSlider",
-            "correlation_id": "pointer_speed"
-          },
-          {
-            "value": "false",
-            "type": "toggle",
-            "correlation_id": "pointer_accel_on"
           }
         ]
       }
