@@ -14,6 +14,7 @@ TMPDIR=${ATTENTION_TMPDIR:-${TMPDIR:-/tmp}}
 STATE_DIR=${ATTENTION_STATE_DIR:-"${XDG_STATE_HOME:-$HOME/.local/state}/attention-session"}
 NOTIFY_BIN=${ATTENTION_NOTIFY_BIN:-/usr/bin/osascript}
 status=0
+session_tool=
 prompt_file=
 dispatch_errors=
 failure_message=
@@ -57,6 +58,29 @@ fail() {
   exit 1
 }
 
+# AoE can only choose an agent per session (`aoe add --tool`) or from its
+# global/per-profile default; a repository may not set `session.default_tool`,
+# so an item launched by Attention has to name the agent itself. The checkout
+# decides, through the same classifier OMP credentials use, and an explicit
+# AOE_TOOL still wins so the caller always has the last word.
+resolve_tool() {
+  local repo=$1 status=0
+  if [ -n "${AOE_TOOL:-}" ]; then
+    printf '%s\n' "$AOE_TOOL"
+    return 0
+  fi
+  if [ -z "$repo" ]; then
+    printf 'omp\n'
+    return 0
+  fi
+  "$HOME/.local/bin/omp-personal-repo" "$repo" || status=$?
+  case $status in
+    0) printf 'freebuff\n' ;;
+    1) printf 'omp\n' ;;
+    *) fail "cannot classify $repo as personal or work to choose its agent" ;;
+  esac
+}
+
 # The dispatcher has to match the agent AoE resolved for this item: OMP can take
 # its task at startup, while freebuff's CLI is TUI-only and needs the
 # wait-and-send wrapper. An explicit AOE_SESSION_DISPATCHER always wins.
@@ -65,10 +89,10 @@ resolve_dispatcher() {
     printf '%s\n' "$AOE_SESSION_DISPATCHER"
     return 0
   fi
-  case ${AOE_TOOL:-omp} in
+  case $session_tool in
     freebuff) printf '%s\n' "$HOME/.local/bin/aoe-freebuf-session" ;;
     omp) printf '%s\n' "$HOME/.local/bin/aoe-scheduled-session" ;;
-    *) fail "no dispatcher supports AoE tool '${AOE_TOOL}'; set AOE_SESSION_DISPATCHER" ;;
+    *) fail "no dispatcher supports AoE tool '${session_tool}'; set AOE_SESSION_DISPATCHER" ;;
   esac
 }
 
@@ -83,7 +107,7 @@ dispatch() {
   trap 'rm -f "$fail_file" "$prompt_file" "$dispatch_errors"' EXIT
   trap 'status=$?; [ -z "$prompt_file" ] || rm -f "$prompt_file"; [ -z "$dispatch_errors" ] || rm -f "$dispatch_errors"; report_failure "$status"' EXIT
   printf '%s' "$prompt" >"$prompt_file"
-  env AOE_SESSION_GROUP=Attention AOE_TOOL="${AOE_TOOL:-omp}" \
+  env AOE_SESSION_GROUP=Attention AOE_TOOL="$session_tool" \
     "$dispatcher" "$title" "$prompt_file" "$@" 2>"$dispatch_errors" || status=$?
   reason=$(tail -n 1 "$dispatch_errors" 2>/dev/null || true)
   [ ! -s "$dispatch_errors" ] || cat "$dispatch_errors" >&2
@@ -103,7 +127,7 @@ existing_session() {
   # jq variables are expanded by jq, not by the shell.
   # shellcheck disable=SC2016
   candidates=$(printf '%s' "$sessions" | "$JQ_BIN" -sr \
-    --arg kind "$kind" --arg title "$title" --arg tool "${AOE_TOOL:-omp}" '
+    --arg kind "$kind" --arg title "$title" --arg tool "$session_tool" '
     if length != 1 or (.[0] | type) != "array" then error("invalid AoE list")
     else .[0] end |
     .[] | select(.state == "live" or .state == "archived") |
@@ -258,6 +282,8 @@ case "$1" in
     if [ -z "$2" ] || [ -z "$3" ]; then
       fail "title and prompt must not be empty"
     fi
+    # A scratch session has no checkout to classify.
+    session_tool=$(resolve_tool '')
     resume_existing scratch "$2" '' ''
     dispatch "$2" "$3"
     ;;
@@ -283,6 +309,7 @@ case "$1" in
       fail "repository path is not a Git repository: $repo_path"
     matches_github_remote "$repo_root" "$github_repo" || \
       fail "repository remotes do not match $github_repo"
+    session_tool=$(resolve_tool "$repo_root")
 
     "$GIT_BIN" check-ref-format --branch "$requested_branch" >/dev/null || \
       fail "worktree branch is not valid: $requested_branch"

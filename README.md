@@ -11,7 +11,7 @@ A personal macOS development environment managed with [chezmoi](https://chezmoi.
 - [LaunchAgents](dot_config/launchd-yaml/agents.yaml.tmpl) for maintenance, updates, and local services.
 - [Colima containers](dot_colima/default/colima.yaml), [Homebridge](dot_config/homebridge/), and Naya Create keyboard settings.
 
-`pr-track [number]` aligns a clean worktree with a PR head branch; AoE attempts this automatically at worktree startup. When an Attention action reuses a session, enter the new prompt in that session: it is not sent automatically. Attention session actions run in the background, so their failures are raised as a notification and recorded in `~/.local/state/attention-session/failures.log`; an item whose AoE agent resolves to freebuff is dispatched through the wrapper that types the task into its composer.
+`pr-track [number]` aligns a clean worktree with a PR head branch; AoE attempts this automatically at worktree startup. When an Attention action reuses a session, enter the new prompt in that session: it is not sent automatically. Attention session actions run in the background, so their failures are raised as a notification and recorded in `~/.local/state/attention-session/failures.log`; an item whose checkout belongs to a personal (non-work) organization runs on freebuff and is dispatched through the wrapper that types the task into its composer.
 
 ## Shared Firefox automation
 
