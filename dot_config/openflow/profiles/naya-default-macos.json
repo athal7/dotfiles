@@ -3000,6 +3000,30 @@
         "state": null
       },
       {
+        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+        "srcConfigId": null,
+        "bindingLocation": "touch:keyboard_left",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+        "srcConfigId": null,
+        "bindingLocation": "touch:keyboard_right",
+        "state": "transparent"
+      },
+      {
+        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+        "srcConfigId": "649212f8-c88c-4749-bbf1-7bfcb12cad24",
+        "bindingLocation": "tune:keyboard_left",
+        "state": null
+      },
+      {
+        "srcLayerId": "f97e43cb-7d0a-43c4-bf3a-5a3b549bd919",
+        "srcConfigId": "649212f8-c88c-4749-bbf1-7bfcb12cad24",
+        "bindingLocation": "tune:keyboard_right",
+        "state": null
+      },
+      {
         "srcLayerId": "bf165dc3-dd85-449d-a26d-109482e445bd",
         "srcConfigId": null,
         "bindingLocation": "touch:keyboard_left",
@@ -3231,24 +3255,126 @@
           {
             "value": "25",
             "type": "numboxSlider",
-            "correlation_id": "pointer_speed"
+            "correlation_id": "scroll_speed"
           },
           {
             "value": "20",
             "type": "numboxSlider",
-            "correlation_id": "MS-14"
+            "correlation_id": "pointer_accel"
           },
           {
             "value": "72",
             "type": "numboxSlider",
-            "correlation_id": "tick_strength"
+            "correlation_id": "ticks_per_rotation"
           },
           {
             "value": "50",
             "type": "numboxSlider",
-            "correlation_id": "MS-17"
+            "correlation_id": "tick_strength"
           }
         ]
+      },
+      {
+        "srcId": "649212f8-c88c-4749-bbf1-7bfcb12cad24",
+        "name": "Page Up/Down",
+        "type": "TUNE",
+        "size": 0,
+        "orderId": 2,
+        "iconId": "move_down",
+        "description": "---",
+        "bindings": [
+          {
+            "action_id": null,
+            "action_code": "PG_UP - PG_DN",
+            "action_type": "value",
+            "behavior": "rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "tap:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_left:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_right:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_up:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "swipe_down:tune:1_finger",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "pinch&spread:tune:2_fingers",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          },
+          {
+            "action_id": null,
+            "action_code": "",
+            "action_type": "none",
+            "behavior": "counter_clockwise_rotate:tune:dial",
+            "invert": 0,
+            "threshold": 0,
+            "direction": "+",
+            "mode": 0
+          }
+        ],
+        "settings": []
       },
       {
         "srcId": "5287c100-3f60-4a5d-9b40-564ac96332d8",

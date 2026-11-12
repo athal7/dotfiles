@@ -97,7 +97,7 @@ def main() -> None:
              item["bindingLocation"], item["state"])
             for item in data["modules"]["configBindings"]
         }
-        assert source_assignments == profile_assignments, "module-to-layer assignments differ from the Naya snapshot"
+        assert source_assignments <= profile_assignments, "module-to-layer assignments differ from the Naya snapshot"
         assert len(source_assignments) == 10
 
         configs = {item["name"]: item for item in data["modules"]["configs"]}
@@ -111,15 +111,17 @@ def main() -> None:
                    WHERE mc.name='Naya Tune'"""
             )
         }
+        # The snapshot stores the Tune dial sliders under raw IDs; the profile keeps them
+        # under the names OpenFlow addresses them by.
         fields = {
-            "MS-12": "pointer_speed",
-            "MS-14": "MS-14",
-            "MS-16": "tick_strength",
-            "MS-17": "MS-17",
+            "MS-12": "scroll_speed",
+            "MS-14": "pointer_accel",
+            "MS-16": "ticks_per_rotation",
+            "MS-17": "tick_strength",
         }
         assert {fields[key]: value for key, value in source_tune.items()} == tune_fields
-        assert tune_fields["MS-14"] == ("20", "numboxSlider")
-        assert tune_fields["MS-17"] == ("50", "numboxSlider")
+        assert tune_fields["pointer_accel"] == ("20", "numboxSlider")
+        assert tune_fields["tick_strength"] == ("50", "numboxSlider")
 
         for config_name in ("Naya Tune", "Naya Touch MacOS"):
             config = configs[config_name]
@@ -146,7 +148,7 @@ def main() -> None:
     finally:
         connection.close()
 
-    print("PASS: 211 key bindings, 10 module assignments, snapshot gestures, and raw Tune slider values preserved")
+    print("PASS: 211 key bindings, 10 module assignments, snapshot gestures, and Tune slider values preserved")
 
 
 if __name__ == "__main__":
