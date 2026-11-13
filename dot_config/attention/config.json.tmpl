@@ -21,9 +21,18 @@
    product's own concurrency ceiling. Setting automation.maxWip to 0 is the
    kill switch: rules stay configured and nothing starts. cooldownMinutes
    keeps a still-open item to one automated session per day instead of one
-   per refresh. Items whose session agent cannot be resolved are deliberately
-   not automated -- linear has no entry in session.agents, so no agent budget
-   would cover its dispatches, and nothing dispatches for it here.
+   per refresh. maxSessions needs session.agents to know which agent a
+   dispatch starts, so an item whose repository matches no entry is dispatched
+   by AoE's own default agent and the per-agent cap cannot see it coming:
+   every organization you want automated belongs in .orgs (see the
+   local.yaml example), and the rules here only match github for that reason.
+   There is no per-item exemption here yet: selectors match inclusively and a
+   WIP mark does not suppress a dispatch, so a draft pull request still gets
+   picked up once its cooldown passes. attention 3.28 (unreleased) adds automation.skip
+   (item keys like "github:owner/repo#123", dropped before rules match); wire
+   it from gitignored local data once the installed version understands the
+   key, because 3.27 rejects an unknown automation field and disables every
+   rule instead of ignoring just that one.
    Keep provider opening in the browser: gh-dash 4.26.2 and linear-tui 0.12.0
    have no item/repository CLI targeting flags; both remain standalone TUIs. */ -}}
 {{- $remLists := list -}}

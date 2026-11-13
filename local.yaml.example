@@ -32,6 +32,13 @@ orgs:
   your-personal-org:
     kb_eligible: false
 
+# Attention items no automation rule may act on, by repository-qualified
+# identity ("github:owner/repo#123"). Each listed item is dropped before
+# rules match, so it neither starts a session nor raises a nudge -- use it
+# for a draft pull request, or anything already being handled elsewhere.
+# automation.maxWip: 0 remains the switch for all of automation.
+attention_automation_skip: []
+
 # Production service to local repo mapping for scheduled maintenance.
 # Keys are Elastic APM service.name values; values are repo directory names under ~/code.
 prod_services:
