@@ -3198,16 +3198,6 @@
           },
           {
             "action_id": null,
-            "action_code": "LCTRL + RIGHT",
-            "action_type": "shortcut_alias",
-            "behavior": "swipe_left:tune:1_finger",
-            "invert": 1,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
             "action_code": "PG_DN",
             "action_type": "key",
             "behavior": "swipe_down:tune:2_fingers",
@@ -3221,16 +3211,6 @@
             "action_code": "PG_UP",
             "action_type": "key",
             "behavior": "swipe_up:tune:2_fingers",
-            "invert": 0,
-            "threshold": 0,
-            "direction": "+",
-            "mode": 0
-          },
-          {
-            "action_id": null,
-            "action_code": "LCTRL + LEFT",
-            "action_type": "shortcut_alias",
-            "behavior": "swipe_right:tune:1_finger",
             "invert": 0,
             "threshold": 0,
             "direction": "+",
