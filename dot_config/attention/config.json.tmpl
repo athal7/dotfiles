@@ -9,15 +9,21 @@
    session.agents names the AoE agent each organization's items start, using the
    same attention: Work split as the dashboard groups (work -> omp, personal ->
    freebuff), so a dispatched session and automation.maxSessions agree.
-   automation caps: maxSessions.freebuff is the freebuff product's own limit
-   of six concurrent sessions, and maxSessions counts every live session of
-   that agent -- manual ones included -- so automation only ever uses the
-   slots left over. Its provider caps are churn guards, not categories:
-   github carries review requests, fixes to your own PRs, and open-source
-   issues alike, while linear is your planned work. A review budget that is
-   bigger than a work budget belongs on rules, whose own "maxWip" is counted
-   per rule; review requests are the items whose status is
-   "REVIEW REQUESTED" (dashboard groups can match the same field).
+   automation rules split reviewing from own work by what the item *is*, not
+   by provider: github's "REVIEW REQUESTED" status is a review of someone
+   else's PR and "NEEDS ATTENTION" is your own PR needing fixes, so reviews
+   get the larger pool (3) and own work the smaller one (2). A rule's maxWip
+   is counted per rule, which the section-level caps cannot express.
+   Every automation start is bounded four ways: the rule's own maxWip, the
+   global maxWip (8), maxWipByProvider, and maxSessions per AoE agent.
+   maxSessions counts every live session of that agent, manual ones included,
+   so automation only ever uses the slots you leave free; freebuff's 6 is the
+   product's own concurrency ceiling. Setting automation.maxWip to 0 is the
+   kill switch: rules stay configured and nothing starts. cooldownMinutes
+   keeps a still-open item to one automated session per day instead of one
+   per refresh. Items whose session agent cannot be resolved are deliberately
+   not automated -- linear has no entry in session.agents, so no agent budget
+   would cover its dispatches, and nothing dispatches for it here.
    Keep provider opening in the browser: gh-dash 4.26.2 and linear-tui 0.12.0
    have no item/repository CLI targeting flags; both remain standalone TUIs. */ -}}
 {{- $remLists := list -}}
@@ -106,6 +112,23 @@
       "automation" (dict
         "maxWip" 8
         "maxWipByProvider" (dict "github" 6 "linear" 2)
-        "maxSessions" (dict "freebuff" 6))
+        "maxSessions" (dict "freebuff" 6 "omp" 8)
+        "rules" (list
+          (dict
+            "name" "review-requests"
+            "type" "session"
+            "match" (dict
+              "plugins" (list "github")
+              "statuses" (list "REVIEW REQUESTED"))
+            "maxWip" 3
+            "cooldownMinutes" 1440)
+          (dict
+            "name" "own-pr-fixes"
+            "type" "session"
+            "match" (dict
+              "plugins" (list "github")
+              "statuses" (list "NEEDS ATTENTION"))
+            "maxWip" 2
+            "cooldownMinutes" 1440)))
 -}}
 {{ $config | toPrettyJson }}
