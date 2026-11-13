@@ -9,12 +9,15 @@
    session.agents names the AoE agent each organization's items start, using the
    same attention: Work split as the dashboard groups (work -> omp, personal ->
    freebuff), so a dispatched session and automation.maxSessions agree.
-   automation.maxWipByProvider makes the review pool bigger than the task pool:
-   review requests arrive as github items while own task work comes from
-   linear, so github gets the room and linear stays small. A rule's own
-   "maxWip" is the place to separate one review rule from another once rules
-   exist; until then these are the only pools. maxSessions is per AoE agent
-   and counts every live session of that agent, manual ones included.
+   automation caps: maxSessions.freebuff is the freebuff product's own limit
+   of six concurrent sessions, and maxSessions counts every live session of
+   that agent -- manual ones included -- so automation only ever uses the
+   slots left over. Its provider caps are churn guards, not categories:
+   github carries review requests, fixes to your own PRs, and open-source
+   issues alike, while linear is your planned work. A review budget that is
+   bigger than a work budget belongs on rules, whose own "maxWip" is counted
+   per rule; review requests are the items whose status is
+   "REVIEW REQUESTED" (dashboard groups can match the same field).
    Keep provider opening in the browser: gh-dash 4.26.2 and linear-tui 0.12.0
    have no item/repository CLI targeting flags; both remain standalone TUIs. */ -}}
 {{- $remLists := list -}}
@@ -103,6 +106,6 @@
       "automation" (dict
         "maxWip" 8
         "maxWipByProvider" (dict "github" 6 "linear" 2)
-        "maxSessions" (dict "freebuff" 10))
+        "maxSessions" (dict "freebuff" 6))
 -}}
 {{ $config | toPrettyJson }}
