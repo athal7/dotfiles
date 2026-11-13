@@ -151,7 +151,7 @@ plan:
 # Prewalk targets are model names, so `.chezmoidata/local.yaml` owns the whole
 # block (`omp_prewalk`); this public template ships none.
 prewalk:
-{{ if hasKey . "omp_prewalk" }}{{ .omp_prewalk | toYaml | trimSuffix "\n" | indent 2 }}{{ else }}  {}{{ end }}
+{{ if hasKey . "omp_prewalk" }}{{ .omp_prewalk | toYaml | trimSuffix "\n" | indent 2 }}{{ else }}  enabled: true{{ end }}
 providers:
   openai-codex:
     codeMode: auto
