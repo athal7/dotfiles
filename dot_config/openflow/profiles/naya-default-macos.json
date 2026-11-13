@@ -3208,8 +3208,8 @@
           },
           {
             "action_id": null,
-            "action_code": "LCTRL + DOWN",
-            "action_type": "shortcut_alias",
+            "action_code": "PG_DN",
+            "action_type": "key",
             "behavior": "swipe_down:tune:1_finger",
             "invert": 0,
             "threshold": 0,
@@ -3218,8 +3218,8 @@
           },
           {
             "action_id": null,
-            "action_code": "LCTRL + UP",
-            "action_type": "shortcut_alias",
+            "action_code": "PG_UP",
+            "action_type": "key",
             "behavior": "swipe_up:tune:1_finger",
             "invert": 0,
             "threshold": 0,
