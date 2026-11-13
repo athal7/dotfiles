@@ -129,13 +129,5 @@ omp_model_roles:
   tiny: your-provider/your-tiny-model
   vision: your-provider/your-vision-model
 
-# OMP prewalk rendered into the config's `prewalk` block. `from` is the planning
-# model (`@default` when unset) and `into` the model that takes over at the first
-# edit (`@smol` when unset). Both take a selector or a role.
-omp_prewalk:
-  enabled: true
-  from: "@slow"
-  into: your-provider/your-prewalk-model
-
 # Optional OMP extension modules.
 omp_approval_extension_paths: []

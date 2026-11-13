@@ -33,7 +33,7 @@ launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/<plist-file>
 
 - **Adding a new `[data]` key to `.chezmoi.toml.tmpl` requires `chezmoi init` before `chezmoi apply`** — `apply` alone does not regenerate `~/.config/chezmoi/chezmoi.toml`
 - **`chezmoi init` is destructive to the live config** — it re-renders the template from scratch. The "config file template has changed" warning from `chezmoi apply` is cosmetic when scripts are already deployed; do not run `chezmoi init` to silence it.
-- **Machine-specific config lives in `.chezmoidata/local.yaml`** in the source directory — calendar config, reminders, per-org config, and OMP `omp_model_roles` plus `omp_prewalk` targets (model names are account-specific, so `config.yml.tmpl` ships none; roles absent from the map stay unset). Gitignored. The `local.yaml.example` template must NOT live under `.chezmoidata/` itself — files there get merged into `chezmoi data` and would leak placeholder values into runtime.
+- **Machine-specific config lives in `.chezmoidata/local.yaml`** in the source directory — calendar config, reminders, per-org config, and OMP `omp_model_roles` (model names are account-specific, so `config.yml.tmpl` ships none; roles absent from the map stay unset). Gitignored. The `local.yaml.example` template must NOT live under `.chezmoidata/` itself — files there get merged into `chezmoi data` and would leak placeholder values into runtime.
 
 ## Gotchas
 
