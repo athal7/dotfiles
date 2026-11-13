@@ -150,7 +150,9 @@ prevent_sleep_idle_grace_minutes = 15
 new_session_mode = "live_send"
 prevent_sleep_when_active = true
 preview_link_prefixes = []
-restart_wake_message = "wake up: pick up what you were doing"
+# An empty message leaves a restarted session waiting for me instead of typing a
+# nudge prompt into it. Resume the conversation myself when I get back to it.
+restart_wake_message = ""
 row_tag = "none"
 scratch_smart_rename = "inherit"
 session_id_poller_max_threads = 50

@@ -1,5 +1,12 @@
 #!/bin/bash
-# Start an AoE session with its task as the initial OMP message.
+# Start an AoE session that is pointed at its task and nothing else.
+#
+# The task never rides --extra-args. AoE stores that field on the session row
+# and replays it on every launch, so a task there is re-sent as a fresh turn
+# each restart, and its leading `--` makes AoE treat the launch as a wrapper
+# that cannot carry a resume selector, leaving agent_session_id unset so a
+# restart never resumes the conversation. Instead the task is copied to a
+# durable file, and one short pointer message tells the worker where it is.
 
 set -euo pipefail
 
@@ -86,12 +93,9 @@ if [[ -z "$prompt" ]]; then
   printf 'prompt file is empty: %s\n' "$prompt_file" >&2
   exit 64
 fi
-prompt=${prompt//\'/\'\\\'\'}
-extra_args="-- '$prompt'"
 if [[ -n "$omp_model" ]]; then
-  extra_args="--model $omp_model $extra_args"
+  aoe_args+=(--extra-args "--model $omp_model")
 fi
-aoe_args+=(--extra-args "$extra_args")
 session_output=$("$aoe_bin" "${aoe_args[@]}")
 session_id=$(/usr/bin/sed -n 's/^[[:space:]]*ID:[[:space:]]*//p' <<<"$session_output")
 if [[ ! "$session_id" =~ ^[[:alnum:]-]+$ ]]; then
@@ -116,7 +120,26 @@ if [[ -n "$project_mcp_config" ]]; then
   chmod 600 "$session_path/.omp/mcp.json"
 fi
 
+# The task outlives this process, and it is never pasted: a multi-KB paste
+# collapses into a composer attachment that a single Enter does not submit.
+# One short pointer is delivered instead, and a restart finds the same file.
+task_dir=${XDG_STATE_HOME:-$HOME/.local/state}/aoe-scheduled-session/$session_id
+task_file=$task_dir/task.md
+mkdir -p "$task_dir"
+printf '%s\n' "$prompt" >"$task_file"
+
 if ! "$aoe_bin" session start "$session_id"; then
-  printf 'Worker start failed for %s; reconcile before retrying.\n' "$session_id" >&2
+  printf 'Worker start failed for %s; reconcile before retrying. Task: %s\n' \
+    "$session_id" "$task_file" >&2
+  exit 75
+fi
+pointer="Read your complete task from $task_file and carry it out end to end. That file is the whole task; do not ask for it to be restated."
+# `session start` blocks until the agent is up, so this is the first thing
+# typed. It is deliberately single-shot: omp declares no ready marker, so a
+# failed send may already have typed part of the pointer, and a retry could
+# deliver it twice. A failure leaves the worker running with its task on disk.
+if ! "$aoe_bin" send --no-revive "$session_id" "$pointer"; then
+  printf 'Worker %s started but was not pointed at its task; deliver it by hand: %s\n' \
+    "$session_id" "$task_file" >&2
   exit 75
 fi

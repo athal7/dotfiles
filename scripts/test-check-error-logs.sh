@@ -9,6 +9,7 @@ HOME_DIR="$WORK/home"
 BIN="$WORK/bin"
 LOG_DIR="$HOME_DIR/Library/Logs"
 AOE_LOG="$WORK/aoe.log"
+AOE_SENDS="$WORK/aoe-sends.log"
 mkdir -p "$BIN" "$LOG_DIR" "$HOME_DIR/code/dotfiles"
 
 cat >"$BIN/aoe" <<'EOF'
@@ -21,6 +22,10 @@ case "$1" in
     ;;
   session)
     [[ "${AOE_TEST_MODE:-success}" != fail-start ]]
+    ;;
+  send)
+    printf '%s\n' "$3" >>"$AOE_TEST_SENDS"
+    [[ "${AOE_TEST_MODE:-success}" != fail-send ]]
     ;;
   *)
     exit 64
@@ -45,23 +50,29 @@ printf '%s:%s\n' "$LOG_DIR/homebridge.error.log" 0 >>"$LOG_DIR/.check-error-logs
 
 run_checker() {
   HOME="$HOME_DIR" \
+    XDG_STATE_HOME="$HOME_DIR/.local/state" \
     PATH="$BIN:/usr/bin:/bin" \
     AOE_TEST_LOG="$AOE_LOG" \
+    AOE_TEST_SENDS="$AOE_SENDS" \
     AOE_BIN="$BIN/aoe" \
     AOE_TEST_MODE="${AOE_TEST_MODE:-success}" \
     "$CHECKER" "$PROMPT"
 }
 
 : >"$AOE_LOG"
+: >"$AOE_SENDS"
 output=$(run_checker)
 printf '%s\n' "$output" | grep -F 'Dispatched LaunchAgent triage prompt'
-python3 - "$AOE_LOG" <<'PY'
+[[ "$(wc -l <"$AOE_SENDS")" -eq 1 ]]
+python3 - "$HOME_DIR" <<'PY'
 import pathlib, sys
-body = pathlib.Path(sys.argv[1]).read_text()
+task = pathlib.Path(sys.argv[1]) / ".local/state/aoe-scheduled-session/test-session/task.md"
+body = task.read_text()
 assert "Triage the supplied LaunchAgent error-log lines" in body
 assert "Services with new errors: aoe-old" in body
 assert "[aoe-old] Error: session changed while launch hooks were running" in body
 assert "[homebridge]" not in body
+task.with_name("task.phase1.md").write_text(body)
 PY
 grep -Fqx "$LOG_DIR/aoe-old.error.log:$log_size" "$LOG_DIR/.check-error-logs-state"
 grep -Fqx "$LOG_DIR/homebridge.error.log:$homebridge_log_size" "$LOG_DIR/.check-error-logs-state"
@@ -76,15 +87,26 @@ export AOE_TEST_MODE
 : >"$AOE_LOG"
 output=$(run_checker)
 printf '%s\n' "$output" | grep -F 'WARNING: dispatch failed'
+python3 - "$HOME_DIR" <<'PY'
+import pathlib, sys
+# A failed start must never reach the delivery step.
+state = pathlib.Path(sys.argv[1]) / ".local/state/aoe-scheduled-session"
+assert not list(state.rglob("sends.log")), "send attempted after a failed start"
+PY
 state_after_failure=$(grep -F "$LOG_DIR/aoe-old.error.log:" "$LOG_DIR/.check-error-logs-state")
 expected_state="$LOG_DIR/aoe-old.error.log:$log_size"
 [[ "$state_after_failure" == "$expected_state" ]]
-python3 - "$AOE_LOG" <<'PY'
+python3 - "$HOME_DIR" <<'PY'
 import pathlib, sys
-body = pathlib.Path(sys.argv[1]).read_text()
+task = pathlib.Path(sys.argv[1]) / ".local/state/aoe-scheduled-session/test-session/task.md"
+body = task.read_text()
 assert "Services with new errors: aoe-old,homebridge" in body
 assert "[homebridge] [10/13/2026, 9:15:54 AM] [homebridge-google-nest-sdm] Plugin initialization failed" in body
+phase1 = (task.parent / "task.phase1.md").read_text()
+assert body != phase1, "phase 2 read a stale task file"
 PY
+# The failed start wrote no task delivery: still exactly the phase-1 send.
+[[ "$(wc -l <"$AOE_SENDS")" -eq 1 ]]
 grep -Fqx "$LOG_DIR/homebridge.error.log:$homebridge_log_size" "$LOG_DIR/.check-error-logs-state"
 grep -F 'ID: test-session' "$LOG_DIR/.check-error-logs-pending" >/dev/null
 : >"$AOE_LOG"

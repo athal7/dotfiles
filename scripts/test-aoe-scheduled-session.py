@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WRAPPER = ROOT / "dot_local/bin/executable_aoe-scheduled-session"
 
 FAKE_AOE = r'''#!/usr/bin/env python3
-import json, os, pathlib, shlex, sys
+import json, os, pathlib, sys
 root = pathlib.Path(os.environ["TEST_ROOT"])
 args = sys.argv[1:]
 if args[0] == "add":
@@ -22,17 +22,18 @@ if args[0] == "add":
     print(f"ID: {session_id}\nPath: {scratch}")
 elif args[:2] == ["session", "start"]:
     (root / "started").touch()
-    if os.environ.get("FAIL_START"):
-        sys.exit(1)
-    creation = json.loads((root / "args.json").read_text())
-    if "--extra-args" in creation:
-        argv = shlex.split(creation[creation.index("--extra-args") + 1])
-        (root / "received.txt").write_text(argv[-1])
     overlay = root / "scratch/.omp/mcp.json"
     if overlay.exists():
         (root / "overlay-at-start").write_text(str(overlay.stat().st_mode & 0o777))
+    if os.environ.get("FAIL_START"):
+        sys.exit(1)
+elif args[0] == "send":
+    with (root / "sends.log").open("a") as log:
+        log.write(args[-1].replace("\n", "\\n") + "\n")
+    if os.environ.get("FAIL_SEND"):
+        sys.exit(1)
 else:
-    # Any terminal send would corrupt the user's pending draft/approval.
+    # Any other terminal input would corrupt the user's pending draft/approval.
     (root / "user-input").write_text("CORRUPTED")
     sys.exit(1)
 '''
@@ -51,10 +52,14 @@ class ScheduledSessionTest(unittest.TestCase):
         self.prompt = self.base / "prompt.md"
         self.body = "task with unicode ✓\n$(touch SHOULD_NOT_EXIST)\n'quoted' and \"double quoted\"\n"
         self.prompt.write_text(self.body)
-        self.env = dict(os.environ, TEST_ROOT=str(self.base), AOE_BIN=str(aoe))
+        self.env = dict(os.environ, TEST_ROOT=str(self.base), AOE_BIN=str(aoe),
+                        XDG_STATE_HOME=str(self.base / "state"))
         for key in ("AOE_TOOL", "AOE_OMP_MODEL", "AOE_OMP_PROJECT_MCP_CONFIG",
                     "AOE_WORKTREE_BRANCH", "AOE_NEW_BRANCH"):
             self.env.pop(key, None)
+
+    def task_file(self):
+        return self.base / "state/aoe-scheduled-session/test-session/task.md"
 
     def launch(self):
         return subprocess.run([str(WRAPPER), "scheduled", str(self.prompt)],
@@ -64,10 +69,30 @@ class ScheduledSessionTest(unittest.TestCase):
     def test_task_is_available_at_start_without_touching_user_input(self):
         result = self.launch()
         self.assertEqual(result.returncode, 0, result.stderr)
-        received = (self.base / "received.txt").read_text()
-        self.assertEqual(received, self.body.rstrip("\n"))
+        self.assertEqual(self.task_file().read_text(), self.body)
+        sends = (self.base / "sends.log").read_text().splitlines()
+        self.assertEqual(len(sends), 1, sends)
+        self.assertIn(str(self.task_file()), sends[0])
         self.assertEqual(self.input.read_text(), "pending approval; unsent user draft")
         self.assertFalse((self.base / "SHOULD_NOT_EXIST").exists())
+
+    def test_extra_args_carry_only_the_model(self):
+        self.env["AOE_OMP_MODEL"] = "otari/deepseek/deepseek-v4.1-flash-1017"
+        result = self.launch()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        creation = json.loads((self.base / "args.json").read_text())
+        extra = creation[creation.index("--extra-args") + 1]
+        self.assertEqual(extra, "--model otari/deepseek/deepseek-v4.1-flash-1017")
+        self.assertEqual(len((self.base / "sends.log").read_text().splitlines()), 1)
+
+    def test_failed_send_reports_task_file_without_retrying_start(self):
+        self.env["FAIL_SEND"] = "1"
+        result = self.launch()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(str(self.task_file()), result.stderr)
+        # One attempt only: a retry could deliver a partially typed pointer twice.
+        self.assertEqual(len((self.base / "sends.log").read_text().splitlines()), 1)
+        self.assertEqual(self.input.read_text(), "pending approval; unsent user draft")
 
     def test_failed_start_reports_session_without_retry(self):
         self.env["FAIL_START"] = "1"
@@ -103,7 +128,7 @@ class ScheduledSessionTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.base / "started").exists())
 
-    def test_linear_task_uses_initial_prompt(self):
+    def test_linear_task_reaches_the_worker(self):
         repo = self.base / "repo"
         subprocess.run(["/usr/bin/git", "init", "-q", str(repo)], check=True)
         self.env.update(LINEAR_ISSUE_IDENTIFIER="TASK-1", LINEAR_ISSUE_BRANCH_NAME="task-1",
@@ -112,8 +137,8 @@ class ScheduledSessionTest(unittest.TestCase):
         result = subprocess.run([str(ROOT / "dot_local/bin/executable_linear-aoe")],
                                 env=self.env, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
-        received = (self.base / "received.txt").read_text()
-        self.assertEqual(received, self.body.rstrip("\n"))
+        self.assertEqual(self.task_file().read_text(), self.body)
+        self.assertIn(str(self.task_file()), (self.base / "sends.log").read_text())
         self.assertEqual(self.input.read_text(), "pending approval; unsent user draft")
 
     def test_linear_invalid_branch_never_creates_or_starts_a_worker(self):
