@@ -3178,7 +3178,7 @@
         "bindings": [
           {
             "action_id": null,
-            "action_code": "mouse - SCROLL_UP - SCROLL_DOWN",
+            "action_code": "PG_UP - PG_DN",
             "action_type": "value",
             "behavior": "rotate:tune:dial",
             "invert": 0,
