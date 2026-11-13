@@ -81,7 +81,7 @@ packages:
     # The three sources below are pinned because upstream renamed their manifest
     # ids into the `agent-of-empires.*` namespace on 2026-11-10. aoe only lets a
     # featured-verified plugin claim that namespace, and the featured index in
-    # aoe 1.22.3 pins nothing beyond github, cron and kanban, so installing the
+    # aoe 1.23.0 pins nothing beyond github, cron and kanban, so installing the
     # renamed manifests is refused outright. Each ref below is the last revision
     # that still declares a community id this host accepts; move back to a branch
     # or release once an aoe release features these plugins.
@@ -97,10 +97,11 @@ packages:
       id: "dev.example.aoe-freebuf"
     # Paired OMP integration: its manifest gates which OMP releases may reply
     # through AoE, so a stale copy silently disables the approval dialog.
-    # be12ece is the last revision this host can load: everything newer declares
-    # api_version 20 with `agent_integrations` fields (resume_arg, detection) and
-    # `resume_arg` alone already fails manifest parsing on aoe 1.22.3, including
-    # the v0.4.0 tag, which was re-cut after the fact. Pair it with the extension
+    # be12ece is the last revision this host can load. aoe 1.23.0 parses the
+    # newer manifests, but every release above this one (v0.4.0 through v0.4.2)
+    # also declares `agent_integrations.launch` and `.detection`, and the host
+    # refuses those below api_version 21 while it supports up to 20. Move the pin
+    # once an aoe release accepts api_version 21. Pair it with the extension
     # pinned in github_files below.
     - source: "gh:agent-of-empires/plugin-omp@be12ece"
       id: "omp.agent-of-empires"

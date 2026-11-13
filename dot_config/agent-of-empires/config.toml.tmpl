@@ -101,8 +101,10 @@ show_spans = false
 {{ $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
 {{ end -}}
 # Keep PR state (and its row glyph) on snoozed rows. Opt-in upstream in #143, merged
-# 2026-11-06 but not in a release yet, so the installed plugin ignores the key until
-# the next update; leave it on so the first release that honours it needs no edit.
+# 2026-11-06 but in no release yet (plugin-github main still declares 2.4.0), so the
+# installed manifest has no such setting; leave it on so the first release that
+# honours it needs no edit. That release must also be featured in an aoe build
+# before it can claim the reserved namespace and install here.
 {{ $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
 {{ dict "plugins" $plugins | toToml }}
 
