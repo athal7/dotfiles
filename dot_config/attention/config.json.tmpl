@@ -9,6 +9,12 @@
    session.agents names the AoE agent each organization's items start, using the
    same attention: Work split as the dashboard groups (work -> omp, personal ->
    freebuff), so a dispatched session and automation.maxSessions agree.
+   automation.maxWipByProvider makes the review pool bigger than the task pool:
+   review requests arrive as github items while own task work comes from
+   linear, so github gets the room and linear stays small. A rule's own
+   "maxWip" is the place to separate one review rule from another once rules
+   exist; until then these are the only pools. maxSessions is per AoE agent
+   and counts every live session of that agent, manual ones included.
    Keep provider opening in the browser: gh-dash 4.26.2 and linear-tui 0.12.0
    have no item/repository CLI targeting flags; both remain standalone TUIs. */ -}}
 {{- $remLists := list -}}
@@ -95,8 +101,8 @@
                 "input" (dict "prompt" "Goal (interview first)" "default" "/guided-goal Work on Linear issue {identifier}"))))
       "session" (dict "agents" $sessionAgents)
       "automation" (dict
-        "maxWip" 3
-        "maxWipByProvider" (dict "github" 2 "linear" 1)
-        "maxSessions" (dict "freebuff" 6))
+        "maxWip" 8
+        "maxWipByProvider" (dict "github" 6 "linear" 2)
+        "maxSessions" (dict "freebuff" 10))
 -}}
 {{ $config | toPrettyJson }}
