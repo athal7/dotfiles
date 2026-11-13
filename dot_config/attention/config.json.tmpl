@@ -118,26 +118,5 @@
                 "command" (list "attention-session" "scratch" "{identifier_lower}" "{input}")
                 "input" (dict "prompt" "Goal (interview first)" "default" "/guided-goal Work on Linear issue {identifier}"))))
       "session" (dict "agents" $sessionAgents)
-      "automation" (dict
-        "maxWip" 8
-        "maxWipByProvider" (dict "github" 6 "linear" 2)
-        "maxSessions" (dict "freebuff" 6 "omp" 8)
-        "rules" (list
-          (dict
-            "name" "review-requests"
-            "type" "session"
-            "match" (dict
-              "plugins" (list "github")
-              "statuses" (list "REVIEW REQUESTED"))
-            "maxWip" 3
-            "cooldownMinutes" 1440)
-          (dict
-            "name" "own-pr-fixes"
-            "type" "session"
-            "match" (dict
-              "plugins" (list "github")
-              "statuses" (list "NEEDS ATTENTION"))
-            "maxWip" 2
-            "cooldownMinutes" 1440)))
 -}}
 {{ $config | toPrettyJson }}
