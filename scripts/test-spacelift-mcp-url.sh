@@ -11,11 +11,18 @@ cat >"$tmpdir/bin/spacectl" <<'STUB'
 case "$1 $2" in
   "profile current") printf '%s\n' "${TEST_PROFILE:-active}" ;;
   "profile list")
-    printf '%s\n' \
-      'Current | Alias   | Endpoint                              | Type' \
-      '--------|---------|---------------------------------------|----------' \
-      '        | standby | https://standby.app.spacelift.io      | API Token' \
-      '*       | active  | https://active.app.us.spacelift.io   | API Token'
+    if [[ ${TEST_LAYOUT:-padded} == compact ]]; then
+      printf '%s\n' \
+        'Current│Alias│Endpoint│Type' \
+        '───────┼─────┼────────┼────' \
+        '*│active│https://active.app.spacelift.io│API Token'
+    else
+      printf '%s\n' \
+        'Current │ Alias   │ Endpoint                           │ Type     ' \
+        '────────────────────────────────────────────────────────────────────' \
+        '        │ standby │ https://standby.app.spacelift.io   │ API Token' \
+        '*       │ active  │ https://active.app.us.spacelift.io │ API Token'
+    fi
     ;;
 esac
 STUB
@@ -24,9 +31,12 @@ chmod +x "$tmpdir/bin/spacectl"
 actual=$(PATH="$tmpdir/bin:/usr/bin:/bin" "$REPO_ROOT/dot_local/bin/executable_spacelift-mcp-url")
 [[ $actual == https://active.app.us.spacelift.io/mcp ]]
 
+actual=$(TEST_LAYOUT=compact PATH="$tmpdir/bin:/usr/bin:/bin" "$REPO_ROOT/dot_local/bin/executable_spacelift-mcp-url")
+[[ $actual == https://active.app.spacelift.io/mcp ]]
+
 if TEST_PROFILE=missing PATH="$tmpdir/bin:/usr/bin:/bin" "$REPO_ROOT/dot_local/bin/executable_spacelift-mcp-url" >/dev/null 2>&1; then
   printf 'spacelift-mcp-url unexpectedly accepted a missing current profile\n' >&2
   exit 1
 fi
 
-printf 'Spacelift endpoint lookup selects the current profile and fails closed when missing.\n'
+printf 'Spacelift endpoint lookup parses padded and padding-free tables, and fails closed when missing.\n'
