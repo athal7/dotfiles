@@ -8,31 +8,8 @@
    Session model preferences come from the selected agent's configuration.
    session.agents names the AoE agent each organization's items start, using the
    same attention: Work split as the dashboard groups (work -> omp, personal ->
-   freebuff), so a dispatched session and automation.maxSessions agree.
-   automation rules split reviewing from own work by what the item *is*, not
-   by provider: github's "REVIEW REQUESTED" status is a review of someone
-   else's PR and "NEEDS ATTENTION" is your own PR needing fixes, so reviews
-   get the larger pool (3) and own work the smaller one (2). A rule's maxWip
-   is counted per rule, which the section-level caps cannot express.
-   Every automation start is bounded four ways: the rule's own maxWip, the
-   global maxWip (8), maxWipByProvider, and maxSessions per AoE agent.
-   maxSessions counts every live session of that agent, manual ones included,
-   so automation only ever uses the slots you leave free; freebuff's 6 is the
-   product's own concurrency ceiling. Setting automation.maxWip to 0 is the
-   kill switch: rules stay configured and nothing starts. cooldownMinutes
-   keeps a still-open item to one automated session per day instead of one
-   per refresh. maxSessions needs session.agents to know which agent a
-   dispatch starts, so an item whose repository matches no entry is dispatched
-   by AoE's own default agent and the per-agent cap cannot see it coming:
-   every organization you want automated belongs in .orgs (see the
-   local.yaml example), and the rules here only match github for that reason.
-   There is no per-item exemption here yet: selectors match inclusively and a
-   WIP mark does not suppress a dispatch, so a draft pull request still gets
-   picked up once its cooldown passes. attention 3.28 (unreleased) adds automation.skip
-   (item keys like "github:owner/repo#123", dropped before rules match); wire
-   it from gitignored local data once the installed version understands the
-   key, because 3.27 rejects an unknown automation field and disables every
-   rule instead of ignoring just that one.
+   freebuff).
+   No automation block: sessions start only when you press a key.
    Keep provider opening in the browser: gh-dash 4.26.2 and linear-tui 0.12.0
    have no item/repository CLI targeting flags; both remain standalone TUIs. */ -}}
 {{- $remLists := list -}}
