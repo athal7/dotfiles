@@ -51,12 +51,22 @@ fi
 {{ range .packages.aoe_plugins -}}
 PLUGIN_DIR="$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"
 if [ -d "$PLUGIN_DIR" ]; then
-  echo "updating aoe plugin {{ .id }}..."
+{{- if contains "@" .source }}
+  # A pinned source is ours to track: the ref is the reviewed revision, and
+  # `update` is the only way to move an installed copy onto a changed pin.
+  echo "updating pinned aoe plugin {{ .id }}..."
   if aoe plugin update {{ .id }} --yes < /dev/null; then
     plugin_synced=true
   else
     echo "WARN: aoe plugin update {{ .id }} failed" >&2
   fi
+{{- else }}
+  # A featured plugin belongs to aoe: it installs at the release the embedded
+  # index verifies, and updates.auto_update_plugins lets the daemon's own sweep
+  # apply the clean ones. Forcing an update here would push an unverified tree
+  # that the reserved-namespace gate refuses.
+  :
+{{- end }}
 else
   echo "installing aoe plugin {{ .id }} from {{ .source }}..."
   if aoe plugin install {{ .source }} --yes < /dev/null; then

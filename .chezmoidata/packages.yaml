@@ -69,8 +69,13 @@ packages:
   omp_plugins:
     - "@mozilla-ai/pi-otari"
 
-  # AoE plugins: these sources are trusted for unattended install and updates,
-  # including future capabilities, build steps, UI and agent integrations.
+  # AoE plugins. A source with an explicit @ref is pinned by us: the sync script
+  # installs it and moves an installed copy onto a changed pin. A bare
+  # gh:owner/repo source is a featured plugin owned by aoe -- it installs at the
+  # release the embedded featured index verifies, and the daemon's
+  # updates.auto_update_plugins sweep applies its clean updates. The script never
+  # forces an update on one: the reserved-namespace gate refuses an unverified
+  # tree, so forcing only produces a failure.
   # Grants remain AoE-owned local receipts; unknown local plugins are excluded.
   aoe_plugins:
     # Reserved-namespace plugin: aoe refuses an @ref install here (unverified
@@ -78,10 +83,9 @@ packages:
     # v2.4.0 ships the one-character row-badge marks (dense_row_badge_glyphs).
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
-    # Featured as of the aoe 1.24.0 index, so the renamed manifest installs and
-    # tracks releases. It replaced the pinned community.linear install; that id
-    # is retired in the plugin sync script and its settings carry over in
-    # config.toml.tmpl.
+    # Featured as of the aoe 1.24.0 index, so the renamed manifest installs. It
+    # replaced the pinned community.linear install; that id is retired in the
+    # plugin sync script and its settings carry over in config.toml.tmpl.
     - source: "gh:agent-of-empires/plugin-linear"
       id: "agent-of-empires.linear"
     # Owns the weekly maintenance schedule that was a launchd job. Installing or
