@@ -127,11 +127,11 @@ show_spans = false
 {{ if stat $configPath -}}
 {{ $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
 {{ end -}}
-# Keep PR state (and its row glyph) on snoozed rows. Opt-in upstream in #143, merged
-# 2026-11-06 but in no release yet (plugin-github main still declares 2.4.0), so the
-# installed manifest has no such setting; leave it on so the first release that
-# honours it needs no edit. That release must also be featured in an aoe build
-# before it can claim the reserved namespace and install here.
+# Keep PR state (and its row glyph) on snoozed rows. Opt-in upstream in #143 and
+# only honoured since plugin-github v2.5.0 (released 2026-11-14), which aoe 1.24.0's
+# embedded featured index does not pin yet, so 2.4.0 is what installs and it drops
+# snoozed sessions. Leave it on: the first aoe release that pins 2.5.0 then needs
+# no edit here to restore the glyphs on parked rows.
 {{ $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
 {{ $_ := set (index $plugins "agent-of-empires.cron") "settings" (mergeOverwrite $cronExisting $cronSettings) -}}
 {{ dict "plugins" $plugins | toToml }}
@@ -187,6 +187,10 @@ session_id_poller_max_threads = 50
 show_activity_age = true
 show_session_colors = false
 show_diagnostics_pane = false
+# The [structured] badge spends eleven columns of every structured row. The row
+# still opens the Structured view without it, and the GitHub/Linear row glyphs
+# only render when the badge is not eating their width.
+show_structured_badge = false
 show_shortcut_bar = false
 show_tips = false
 snooze_duration_minutes = 30
