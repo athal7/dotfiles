@@ -36,10 +36,14 @@ plugin_synced=false
 {{ range .packages.aoe_plugins_retired -}}
 if [ -d "$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}" ]; then
   echo "removing retired aoe plugin {{ .id }} (replaced by {{ .replaced_by }})..."
-  if aoe plugin uninstall {{ .id }} < /dev/null; then
+  # uninstall only knows external plugins; a plugin that was dropped into the
+  # directory by hand is listed as local and has to be removed directly.
+  if aoe plugin uninstall {{ .id }} < /dev/null 2>/dev/null; then
+    plugin_synced=true
+  elif rm -rf "$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"; then
     plugin_synced=true
   else
-    echo "WARN: aoe plugin uninstall {{ .id }} failed" >&2
+    echo "WARN: could not remove retired aoe plugin {{ .id }}" >&2
   fi
 fi
 {{ end -}}
