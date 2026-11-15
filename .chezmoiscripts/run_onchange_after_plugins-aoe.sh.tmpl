@@ -3,6 +3,7 @@
 # Rerun triggers (chezmoi reruns run_onchange_* scripts whenever their
 # rendered content changes):
 # aoe_plugins: {{ .packages.aoe_plugins | toJson | sha256sum }}
+# aoe_plugins_retired: {{ .packages.aoe_plugins_retired | toJson | sha256sum }}
 {{- range .packages.aoe_plugins }}
 # plugin-present: {{ .id }}={{ if (joinPath $.chezmoi.homeDir ".config/agent-of-empires/plugins" .id | stat) }}1{{ else }}0{{ end }}
 {{- end }}
@@ -30,6 +31,19 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 plugin_synced=false
 
+# Ids upstream renamed. Remove the old copy so it does not load beside its
+# replacement; config.toml.tmpl drops the matching settings entry.
+{{ range .packages.aoe_plugins_retired -}}
+if [ -d "$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}" ]; then
+  echo "removing retired aoe plugin {{ .id }} (replaced by {{ .replaced_by }})..."
+  if aoe plugin uninstall {{ .id }} < /dev/null; then
+    plugin_synced=true
+  else
+    echo "WARN: aoe plugin uninstall {{ .id }} failed" >&2
+  fi
+fi
+{{ end -}}
+
 {{ range .packages.aoe_plugins -}}
 PLUGIN_DIR="$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"
 if [ -d "$PLUGIN_DIR" ]; then
@@ -48,6 +62,18 @@ else
   fi
 fi
 {{ end -}}
+
+{{ template "aoe-plugin-tree-fix" . }}
+# Installing or updating can leave a plugin present but skipped at load, which
+# stops its contributions without failing the sync. Say so instead of leaving
+# only the install step's "validation:" line as evidence. An unusable listing is
+# not evidence of a skip, so stay quiet when it produces nothing.
+plugin_list=$(aoe plugin list 2>/dev/null) || plugin_list=
+if [ -n "$plugin_list" ]; then
+{{ range .packages.aoe_plugins }}  if ! grep -qE '^{{ .id }}[[:space:]]' <<< "$plugin_list"; then
+    echo "WARN: aoe plugin {{ .id }} is installed but did not load" >&2
+  fi
+{{ end }}fi
 
 # A running daemon may have loaded its pane registry before these plugins
 # were installed. Reload once, only when its LaunchAgent is already running.

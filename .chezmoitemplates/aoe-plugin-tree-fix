@@ -1,0 +1,19 @@
+# aoe decides whether a plugin may claim a reserved namespace by hashing its
+# whole tree against the hash pinned in its featured index. A Rust plugin's
+# worker build goes to .aoe-build/cargo-target, but a cargo run without that
+# target dir still creates a root-level target/ holding CACHEDIR.TAG and
+# debug/.cargo-lock. tree_hash skips .aoe-build and .git but not target/, so the
+# tree hashes differently from the pin, validation drops from featured to
+# community, and the host skips the plugin at load ("uses a reserved namespace
+# and was skipped") — silently, about a day after its last install or update.
+# Remove the stray directory; the build output in .aoe-build is untouched.
+for plugin_tree in "$XDG_CONFIG_HOME"/agent-of-empires/plugins/*/; do
+  plugin_tree="${plugin_tree%/}"
+  [ -d "$plugin_tree/.aoe-build" ] || continue
+  [ -d "$plugin_tree/target" ] || continue
+  if rm -rf "$plugin_tree/target"; then
+    echo "removed stray $plugin_tree/target (it breaks the aoe plugin tree hash)"
+  else
+    echo "WARN: could not remove $plugin_tree/target" >&2
+  fi
+done

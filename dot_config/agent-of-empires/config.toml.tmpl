@@ -68,18 +68,45 @@ show_spans = false
 {{ if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
 {{ end -}}
 {{ $linearSettings := dict "include_snoozed" true -}}
+# The weekly maintenance run is a scheduled session owned here, not a launchd job
+# shelling out to a dispatcher script. Cron keeps its jobs in plugin settings, so
+# this list overwrites jobs added in the dashboard: author changes here instead.
+# The prompt is a pointer, not the task text, so the document stays in the repo
+# and the session starts already pointed at it instead of having it typed in.
+# No model_id: the host refuses a model the agent does not advertise, and OMP's
+# @smol class is not one of them, so the session runs the agent default.
+{{ $maintenanceJob := dict
+  "id" "daily-maintenance"
+  "name" "daily-maintenance"
+  "schedule" "0 20 * * 1-5"
+  "agent_id" "omp"
+  "project_paths" (list)
+  "prompt" "Read ~/.agents/prompts/daily-maintenance.md and carry it out end to end. That file is the whole task; do not ask for it to be restated."
+  "group" "Scheduled"
+  "enabled" true -}}
+{{ $cronSettings := dict "jobs" (list $maintenanceJob) -}}
+{{ $cronExisting := dict -}}
+{{ $retiredPlugins := dict -}}
+{{ range .packages.aoe_plugins_retired -}}
+{{ $_ := set $retiredPlugins .id .replaced_by -}}
+{{ end -}}
 {{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
 {{ if stat $configPath -}}
 {{ $existing := include $configPath | fromToml -}}
 {{ range $id, $plugin := $existing.plugins -}}
-{{ if hasKey $plugins $id -}}
+{{ if hasKey $retiredPlugins $id -}}
+{{/* Upstream renamed this plugin into the namespace its replacement claims;
+     drop the entry instead of preserving it as a local plugin, or both load. */}}
+{{ else if hasKey $plugins $id -}}
 {{ if hasKey $plugin "grant" -}}
 {{ $_ := set (index $plugins $id) "grant" $plugin.grant -}}
 {{ end -}}
 {{ if hasKey $plugin "settings" -}}
-{{ if eq $id "community.linear" -}}
+{{ if eq $id "agent-of-empires.linear" -}}
 {{ $linearSettings = mergeOverwrite (deepCopy $plugin.settings) $linearSettings -}}
 {{ else if eq $id "agent-of-empires.github" -}}
+{{ else if eq $id "agent-of-empires.cron" -}}
+{{ $cronExisting = deepCopy $plugin.settings -}}
 {{ else -}}
 {{ $_ := set (index $plugins $id) "settings" $plugin.settings -}}
 {{ end -}}
@@ -95,7 +122,7 @@ show_spans = false
 {{ end -}}
 {{ end -}}
 {{ end -}}
-{{ $_ := set (index $plugins "community.linear") "settings" $linearSettings -}}
+{{ $_ := set (index $plugins "agent-of-empires.linear") "settings" $linearSettings -}}
 {{ $githubSettings := dict -}}
 {{ if stat $configPath -}}
 {{ $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
@@ -106,6 +133,7 @@ show_spans = false
 # honours it needs no edit. That release must also be featured in an aoe build
 # before it can claim the reserved namespace and install here.
 {{ $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
+{{ $_ := set (index $plugins "agent-of-empires.cron") "settings" (mergeOverwrite $cronExisting $cronSettings) -}}
 {{ dict "plugins" $plugins | toToml }}
 
 

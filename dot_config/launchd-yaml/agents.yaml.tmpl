@@ -57,34 +57,11 @@ launchagents:
 
 
 
-  aoe-daily-maintenance:
-    Label: com.$USER.aoe-daily-maintenance
-    ProgramArguments:
-      - $HOME/.local/bin/aoe-scheduled-session
-      - daily-maintenance
-      - $HOME/.agents/prompts/daily-maintenance.md
-    StartCalendarInterval:
-      - Weekday: 1
-        Hour: 20
-        Minute: 0
-      - Weekday: 2
-        Hour: 20
-        Minute: 0
-      - Weekday: 3
-        Hour: 20
-        Minute: 0
-      - Weekday: 4
-        Hour: 20
-        Minute: 0
-      - Weekday: 5
-        Hour: 20
-        Minute: 0
-    StandardOutPath: $HOME/Library/Logs/aoe-daily-maintenance.log
-    StandardErrorPath: $HOME/Library/Logs/aoe-daily-maintenance.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-      AOE_OMP_PROJECT_MCP_CONFIG: $HOME/.config/omp/agent/kb-enrich-mcp.json
-      AOE_OMP_MODEL: "@smol"
+  # The weekly maintenance run is a scheduled session in the AoE cron plugin
+  # (agent-of-empires.cron), not a launchd job: the session starts with its
+  # prompt as the first turn, so no dispatcher script or pane typing is involved
+  # and it gets the global MCP set the create_session dispatch needs. Edit the
+  # job in dot_config/agent-of-empires/config.toml.tmpl.
 {{ template "omp-launchd-env" . }}
 
   agent-plugin-upgrade:

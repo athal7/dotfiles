@@ -19,7 +19,6 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1 (want '$3' got '$2
 DATA="$WORK/local.yaml"
 MCP="$WORK/mcp.json"
 EMPTY_MCP="$WORK/empty-mcp.json"
-KB_ENRICH_MCP="$WORK/kb-enrich-mcp.json"
 CONFIG="$WORK/config.yml"
 EXTERNAL="$WORK/external.toml"
 AOE="$WORK/aoe.toml"
@@ -46,7 +45,6 @@ chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/agent-of
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.zshenv" > "$ZSHENV"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.local/bin/aoe-serve" > "$AOE_SERVE"
 chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/mcp.json" > "$MCP"
-chezmoi cat -S "$REPO_ROOT" --override-data-file "$DATA" "$HOME/.config/omp/agent/kb-enrich-mcp.json" > "$KB_ENRICH_MCP"
 PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiexternal.toml.tmpl" > "$EXTERNAL"
@@ -117,7 +115,6 @@ PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
   AOE_RUNNING=true AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
 check "restarts AoE once after successful plugin sync" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 1
 check "auto-approves changed GitHub plugin capabilities" "$(grep -Fxc '  if aoe plugin update agent-of-empires.github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
-check "auto-approves changed Linear plugin capabilities" "$(grep -Fxc '  if aoe plugin update community.linear --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
 check "enables GitMCP by default" "$(jq '.mcpServers.gitmcp.enabled == true' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled == true and .mcpServers.runlayer.enabled == true and .mcpServers.slack.enabled == true' "$MCP")" true
@@ -136,8 +133,6 @@ check "uses the official GitHub MCP endpoint" "$(jq -r '.mcpServers.github.url' 
 check "selects the official GitHub MCP toolsets" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")" "context,issues,pull_requests,repos,users,actions"
 expected_github_authorization="!printf 'Bearer %s' \"\$(env -u GITHUB_TOKEN -u GH_TOKEN gh auth token)\""
 check "resolves the GitHub token from gh in OMP" "$(jq -r '.mcpServers.github.headers.Authorization' "$MCP")" "$expected_github_authorization"
-check "resolves the GitHub token from gh in KB enrichment" "$(jq -r '.mcpServers.github.headers.Authorization' "$KB_ENRICH_MCP")" "$expected_github_authorization"
-check "includes GitHub MCP in scheduled KB enrichment" "$(jq -r '(.mcpServers | has("github"))' "$KB_ENRICH_MCP")" true
 check "removes the two Runlayer GitHub connectors" "$(jq -r '[.mcpServers | has("github-orgs"), has("github-other-orgs")] | any' "$MCP")" false
 rendered_runlayer_environment="$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[]' | sort | paste -sd ' ' -)"
 check "exports configured Runlayer URLs and the OMP agent directory to AoE sessions" "$rendered_runlayer_environment" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent RUNLAYER_BIGQUERY_MCP_URL=https://bigquery.example.test/mcp RUNLAYER_PAGERDUTY_MCP_URL=https://pagerduty.example.test/mcp"
@@ -145,22 +140,12 @@ if bash -n "$ZSHENV"; then zshenv_valid=true; else zshenv_valid=false; fi
 check "renders a valid shell environment" "$zshenv_valid" true
 rendered_runlayer_shell_variables="$(grep '^export RUNLAYER_.*_MCP_URL=' "$ZSHENV" | cut -d= -f1 | sort | paste -sd ' ' -)"
 check "exports only configured Runlayer MCP URLs to shell sessions" "$rendered_runlayer_shell_variables" "export RUNLAYER_BIGQUERY_MCP_URL export RUNLAYER_PAGERDUTY_MCP_URL"
-configured_kb_mcp_servers="$(yq -r '.mcp_servers[] | select(.kb_enrich != false) | .name' "$REPO_ROOT/.chezmoidata/mcp.yaml" | sort | paste -sd ' ' -)"
-check "includes every configured KB-enrichment MCP server" "$(jq -r '.mcpServers | keys | sort | join(" ")' "$KB_ENRICH_MCP")" "$configured_kb_mcp_servers"
-check "preserves GitHub toolset header in KB enrichment" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$KB_ENRICH_MCP")" "$(jq -r '.mcpServers.github.headers["X-MCP-Toolsets"]' "$MCP")"
-check "renders the Calendar MCP URL" "$(jq -r '.mcpServers["gcalendar"].url' "$KB_ENRICH_MCP")" "\${RUNLAYER_GCALENDAR_MCP_URL}"
-check "enables every KB enrichment MCP server" "$(jq '[.mcpServers[].enabled] | all(. == true)' "$KB_ENRICH_MCP")" true
 LAUNCH_AGENTS="$WORK/agents.yaml"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/dot_config/launchd-yaml/agents.yaml.tmpl" > "$LAUNCH_AGENTS"
 check "removes replaced llama LaunchAgent" "$(yq -o=json ".launchagents" "$LAUNCH_AGENTS" | jq "has(\"llama-server\")")" false
 check "does not run the OpenJev memory-intensive local judge" "$(yq -o=json ".launchagents" "$LAUNCH_AGENTS" | jq "has(\"openjev\")")" false
-check "gives daily maintenance the KB scratch MCP overlay" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables.AOE_OMP_PROJECT_MCP_CONFIG' "$LAUNCH_AGENTS")" "\$HOME/.config/omp/agent/kb-enrich-mcp.json"
 check "configures Homebridge storage under XDG" "$(yq -o=json '.launchagents.homebridge.ProgramArguments' "$LAUNCH_AGENTS" | jq -r '. as $args | [range(0; length) | select($args[.] == "-U") | $args[. + 1]] | if length == 1 then .[0] else null end')" "\$HOME/.config/homebridge"
 check "configures Homebridge UI storage under XDG" "$(yq -r '.launchagents.homebridge.EnvironmentVariables.UIX_STORAGE_PATH' "$LAUNCH_AGENTS")" "\$HOME/.config/homebridge"
-check "does not set a global daily maintenance cutoff" "$(yq -r '.launchagents."aoe-daily-maintenance".EnvironmentVariables | has("AOE_OMP_MAX_TIME")' "$LAUNCH_AGENTS")" false
-check "passes the daily prompt file" "$(yq -r '.launchagents."aoe-daily-maintenance".ProgramArguments[2]' "$LAUNCH_AGENTS")" "\$HOME/.agents/prompts/daily-maintenance.md"
-
-check "runs daily maintenance at the original enrichment time" "$(yq -o=json '.launchagents."aoe-daily-maintenance".StartCalendarInterval' "$LAUNCH_AGENTS" | jq '[.[].Minute] | unique | if . == [0] then 0 else . end')" 0
 check "removes superseded scheduled sessions" "$(yq -o=json '.launchagents' "$LAUNCH_AGENTS" | jq 'has("aoe-kb-enrich") or has("aoe-fix-prod-errors") or has("aoe-audit")')" false
 
 mkdir -p "$AGENT_DIR"

@@ -30,6 +30,25 @@
           ],
       },
       {
+        "name": "aoe",
+        # Session control for the AoE daemon on this host. Excluded from AoE's own
+        # forwarded MCP set: that config passes a header through literally, and
+        # this one is a shell command OMP resolves per connection.
+        "aoe_acp": false,
+        "transport": "remote",
+        "url": "http://127.0.0.1:4097/mcp",
+        "headers": {
+          # The daemon mints a new token on every restart, so read it when the
+          # connection opens instead of baking it into the rendered config.
+          "Authorization": { "value": "!printf 'Bearer %s' \"$(cat ~/.config/agent-of-empires/serve.token)\"" },
+        },
+        # Local session work: creating a worker or sending it a prompt reaches no
+        # other person, and `send` itself refuses when the recipient is waiting on
+        # a dialog or approval, so these stay unattended.
+        "tools": ["create_session", "list_sessions", "read_output", "send", "whoami"],
+        "approval_allow": ["create_session", "list_sessions", "read_output", "send", "whoami"],
+      },
+      {
         "name": "codebase-memory",
         "transport": "local",
         "command": ["codebase-memory-mcp"],
@@ -48,7 +67,6 @@
       {
         "name": "spacelift",
         "aoe_acp": false,
-        "kb_enrich": false,
         "transport": "remote",
         "url": { "from": "env", "name": "SPACELIFT_MCP_URL" },
         "tools": ["discover", "query", "provider", "mutate", "intent"],

@@ -1,5 +1,6 @@
 .agents/prompts/pr-review-requests.md
 .config/agent-of-empires/plugins/agent-of-empires.cron
+.config/omp/agent/kb-enrich-mcp.json
 .config/omp/agent/models.yml
 .config/omp/personal.yml
 .local/bin/review-drafts

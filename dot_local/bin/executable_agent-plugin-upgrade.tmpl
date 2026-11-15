@@ -73,4 +73,7 @@ else
   status=1
 fi
 {{ end }}
+
+{{ template "aoe-plugin-tree-fix" . }}
+
 exit "$status"

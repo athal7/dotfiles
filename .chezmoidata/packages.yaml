@@ -78,33 +78,46 @@ packages:
     # v2.4.0 ships the one-character row-badge marks (dense_row_badge_glyphs).
     - source: "gh:agent-of-empires/plugin-github"
       id: "agent-of-empires.github"
-    # The three sources below are pinned because upstream renamed their manifest
-    # ids into the `agent-of-empires.*` namespace on 2026-11-10. aoe only lets a
-    # featured-verified plugin claim that namespace, and the featured index in
-    # aoe 1.23.0 pins nothing beyond github, cron and kanban, so installing the
-    # renamed manifests is refused outright. Each ref below is the last revision
-    # that still declares a community id this host accepts; move back to a branch
-    # or release once an aoe release features these plugins.
-    #
-    # Linear has no published releases upstream, so a bare slug cannot resolve an
-    # update; 16dbb7f is the commit before the rename.
-    - source: "gh:agent-of-empires/plugin-linear@16dbb7f"
-      id: "community.linear"
-    # 8c3e053 is the commit before the rename. Its manifest ships api_version 19
-    # with the freebuff agent integration, which the host reads from
-    # aoe-plugin.toml.
+    # Featured as of the aoe 1.24.0 index, so the renamed manifest installs and
+    # tracks releases. It replaced the pinned community.linear install; that id
+    # is retired in the plugin sync script and its settings carry over in
+    # config.toml.tmpl.
+    - source: "gh:agent-of-empires/plugin-linear"
+      id: "agent-of-empires.linear"
+    # Owns the weekly maintenance schedule that was a launchd job. Installing or
+    # updating it leaves a stray root-level target/ that perturbs the tree hash
+    # aoe checks before letting a plugin claim this namespace, so the plugin is
+    # skipped at load until the shared aoe-plugin-tree-fix snippet removes it.
+    # config.toml.tmpl holds the job. A worker seeds its schedule on startup and
+    # skips occurrences that elapsed while it was down, so a daemon restart at
+    # the fire time loses that day rather than the whole schedule.
+    - source: "gh:agent-of-empires/plugin-cron"
+      id: "agent-of-empires.cron"
+    # 8c3e053 is the commit before upstream renamed this manifest into the
+    # `agent-of-empires.*` namespace on 2026-11-10. aoe only lets a
+    # featured-verified plugin claim that namespace, and plugin-freebuf is not in
+    # the featured index, so the renamed release (v0.1.1) is refused outright.
+    # Keep the last community-id revision until it is featured.
     - source: "gh:agent-of-empires/plugin-freebuf@8c3e053"
       id: "dev.example.aoe-freebuf"
     # Paired OMP integration: its manifest gates which OMP releases may reply
     # through AoE, so a stale copy silently disables the approval dialog.
-    # be12ece is the last revision this host can load. aoe 1.23.0 parses the
-    # newer manifests, but every release above this one (v0.4.0 through v0.4.2)
-    # also declares `agent_integrations.launch` and `.detection`, and the host
-    # refuses those below api_version 21 while it supports up to 20. Move the pin
-    # once an aoe release accepts api_version 21. Pair it with the extension
-    # pinned in github_files below.
+    # be12ece is the last revision this host can load. Newer manifests cannot
+    # install: v0.4.x keeps the community id but declares
+    # `agent_integrations.launch.capture` and `.detection`, which aoe 1.24.0
+    # refuses below api_version 21, and v0.5.0 raises api_version to 21 by
+    # renaming to the reserved `agent-of-empires.omp`, which aoe refuses for an
+    # unfeatured plugin. Move the pin once plugin-omp is featured or ships an
+    # api_version 21 community-id release.
     - source: "gh:agent-of-empires/plugin-omp@be12ece"
       id: "omp.agent-of-empires"
+
+  # AoE plugin ids upstream renamed. The sync script uninstalls each one so it
+  # stops loading beside its replacement, and config.toml.tmpl drops its
+  # settings entry instead of preserving it as a local plugin.
+  aoe_plugins_retired:
+    - id: "community.linear"
+      replaced_by: "agent-of-empires.linear"
 
   casks:
     - name: firefox
