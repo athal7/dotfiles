@@ -69,13 +69,13 @@ packages:
   omp_plugins:
     - "@mozilla-ai/pi-otari"
 
-  # AoE plugins. A source with an explicit @ref is pinned by us: the sync script
-  # installs it and moves an installed copy onto a changed pin. A bare
-  # gh:owner/repo source is a featured plugin owned by aoe -- it installs at the
-  # release the embedded featured index verifies, and the daemon's
-  # updates.auto_update_plugins sweep applies its clean updates. The script never
-  # forces an update on one: the reserved-namespace gate refuses an unverified
-  # tree, so forcing only produces a failure.
+  # AoE plugins, installed only when missing. Updating them is aoe's job: the
+  # daemon's updates.auto_update_plugins sweep applies the updates that need no
+  # new consent and leaves the rest for `aoe plugin update`. A source with an
+  # explicit @ref therefore pins the first install, not an installed copy --
+  # changing a pin needs `aoe plugin uninstall <id>` and a re-apply, or aoe keeps
+  # the copy it already has. A bare gh:owner/repo source installs at the release
+  # the embedded featured index verifies.
   # Grants remain AoE-owned local receipts; unknown local plugins are excluded.
   aoe_plugins:
     # Reserved-namespace plugin: aoe refuses an @ref install here (unverified

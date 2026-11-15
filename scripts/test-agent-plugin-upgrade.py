@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise managed plugin updates without touching the user's installations."""
+"""Exercise the upgrade script without touching the user's installations."""
 import json
 import os
 from pathlib import Path
@@ -20,11 +20,8 @@ class PluginUpgradeTest(unittest.TestCase):
         self.log = self.home / "calls"
         for name in ("brew", "mise", "omp", "aoe"):
             path = self.bin / name
-            path.write_text(f'#!/bin/sh\nprintf "%s\\n" "{name} $*" >> "$LOG"\n'
-                            '[ "$*" != "plugin outdated" ] || echo "${AOE_OUTDATED:-needs update  example.plugin old -> new}"\n')
+            path.write_text(f'#!/bin/sh\nprintf "%s\\n" "{name} $*" >> "$LOG"\n')
             path.chmod(0o755)
-        self.config = self.home / ".config/agent-of-empires/config.toml"
-        self.config.parent.mkdir(parents=True)
         self.overlay = self.home / "data.json"
         self.overlay.write_text(json.dumps({"packages": {
             "omp_plugins": ["@example/plugin"],
@@ -39,32 +36,22 @@ class PluginUpgradeTest(unittest.TestCase):
         self.script = self.home / "upgrade.sh"
         self.script.write_text(script.stdout)
 
-    def run_upgrade(self, source):
-        self.config.write_text(f'[plugins."example.plugin"]\nsource = "{source}"\n')
-        return subprocess.run(["bash", str(self.script)], env=self.env, cwd=self.home,
-                              capture_output=True, text=True)
-
-    def test_updates_only_declared_and_trusted_sources(self):
-        result = self.run_upgrade("gh:example/plugin@main")
+    def test_upgrades_package_managers_and_omp_while_leaving_aoe_plugins_to_aoe(self):
+        result = subprocess.run(["bash", str(self.script)], env=self.env, cwd=self.home,
+                                capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.log.read_text().splitlines(), [
             "brew update", "brew upgrade --no-ask", "mise upgrade --yes -x node",
-            "omp plugin upgrade @example/plugin", "aoe plugin outdated",
-            "aoe plugin update example.plugin --yes"])
+            "omp plugin upgrade @example/plugin"])
 
-    def test_current_plugin_is_not_rebuilt(self):
-        self.env["AOE_OUTDATED"] = "up to date    example.plugin abcdef12"
-        result = self.run_upgrade("gh:example/plugin@main")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertNotIn("aoe plugin update ", self.log.read_text())
-
-    def test_rejects_untrusted_source_and_reports_failure(self):
-        result = self.run_upgrade("gh:other/plugin@main")
+    def test_reports_a_failed_homebrew_update(self):
+        brew = self.bin / "brew"
+        brew.write_text('#!/bin/sh\nexit 1\n')
+        brew.chmod(0o755)
+        result = subprocess.run(["bash", str(self.script)], env=self.env, cwd=self.home,
+                                capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("source differs", result.stderr)
-        self.assertEqual(self.log.read_text().splitlines(), [
-            "brew update", "brew upgrade --no-ask", "mise upgrade --yes -x node",
-            "omp plugin upgrade @example/plugin", "aoe plugin outdated"])
+        self.assertIn("Homebrew update failed", result.stderr)
 
 
 if __name__ == "__main__":
