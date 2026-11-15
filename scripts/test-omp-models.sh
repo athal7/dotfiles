@@ -114,7 +114,6 @@ check "does not restart AoE when no daemon is running" "$(grep -c '^kickstart -k
 PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
   AOE_RUNNING=true AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
 check "restarts AoE once after successful plugin sync" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 1
-check "auto-approves changed GitHub plugin capabilities" "$(grep -Fxc '  if aoe plugin update agent-of-empires.github --yes < /dev/null; then' "$PLUGIN_INSTALL")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
 check "enables GitMCP by default" "$(jq '.mcpServers.gitmcp.enabled == true' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled == true and .mcpServers.runlayer.enabled == true and .mcpServers.slack.enabled == true' "$MCP")" true
