@@ -68,7 +68,7 @@ for o in req.results ?? [] { guard let c = o.topCandidates(1).first else { conti
 One self-contained `index.html` plus `img/`, no CDN: the site is static and IAP-gated, and a self-contained file also deep-links and opens from disk. reveal.js from a CDN is the fallback when presenting from a networked browser and you want `<aside class="notes">` speaker notes.
 
 - Title slide with the cycle or window and a one-line headline. Order slides by impact, not chronology; skip pure refactors and chores.
-- One slide per issue or parent, headline stating the outcome. Frame each as problem → shipped → proof, in plain language rather than a commit list. Several figures per slide are allowed — a before/after or `paused` / `running` pair beats one image.
+- One slide per issue or parent, headline stating the outcome, framed as problem → shipped → proof in plain language rather than a commit list. Several figures per slide are allowed — a before/after or `paused` / `running` pair beats one image.
 - Keyboard nav (Arrow, Space, PageUp/Down, Home/End), click-to-advance, an `n / total` counter, and `history.replaceState` for deep links. Link each issue id to its tracker URL.
 - Images: `object-fit: contain; object-position: center top` so full-desktop captures stay legible. Flex children holding images need `min-height: 0` or they overflow. Size type with `%`/`clamp()` so it projects.
 - Keep the talk track out of the slide body — `notes.md` beside the deck, or reveal's `<aside class="notes">`.
@@ -76,9 +76,7 @@ One self-contained `index.html` plus `img/`, no CDN: the site is static and IAP-
 
 ## Verify locally
 
-Serve the directory and assert structure over HTTP, not by eye: count `class="slide"`, extract the issue ids, and `curl -o /dev/null -w '%{http_code} %{size_download}'` every image.
-
-Drive the real page with the Firefox devtools MCP: `get_page_text` for the current slide's copy and the `n / total` counter, `press_key` on a snapshot uid to confirm Arrow and End advance. A fresh `navigate_page` to a `#hash` does not re-run the deck JS; reload or press keys.
+Serve the directory and assert structure over HTTP, not by eye: count `class="slide"`, extract the issue ids, and `curl -o /dev/null -w '%{http_code} %{size_download}'` every image. Drive the real page with the Firefox devtools MCP: `get_page_text` for the slide's copy and the `n / total` counter, `press_key` on a snapshot uid to confirm Arrow and End advance. A fresh `navigate_page` to a `#hash` does not re-run the deck JS; reload or press keys.
 
 ## Publish to Quick
 
