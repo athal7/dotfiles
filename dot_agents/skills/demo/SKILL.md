@@ -70,11 +70,11 @@ for o in req.results ?? [] { guard let c = o.topCandidates(1).first else { conti
   print(String(format: "%.4f %.4f %.4f %.4f\t%@", b.origin.x, b.origin.y, b.height, b.width, c.string)) }
 ```
 
-`swiftc -O /tmp/ocr.swift -o /tmp/ocr`, then `/tmp/ocr img.png | cut -f2-`. The box columns locate a region for cropping.
+`swiftc -O /tmp/ocr.swift -o /tmp/ocr`, then `/tmp/ocr img.png | cut -f2-`; the box columns locate a region for cropping.
 
 - Confirm every string a caption asserts — page heading, status text, button labels — appears in the OCR output.
-- A report once captioned images `Generation failed` and `Dismissed`; OCR showed neither string. Drop such images or caption what they show. Never inherit a report's claim.
-- A report verifying a standalone URL does not prove the nav link that is the feature. Caption only what was verified and put request-test evidence in the prose.
+- A report once captioned images `Generation failed` and `Dismissed`; OCR showed neither. Drop such images or caption what they show; never inherit a report's claim.
+- A report verifying a standalone URL does not prove the nav link that is the feature. Caption only what was verified; put request-test evidence in the prose.
 - No usable capture: say so on the slide and link the PR. Never a placeholder or fabricated image.
 
 ## Deck
