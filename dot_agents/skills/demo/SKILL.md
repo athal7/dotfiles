@@ -16,7 +16,6 @@ Both entry points mean the requester's own work only. State the resolved scope b
 Re-query before delivery: users move issues to Done mid-session (one run went 9 → 20). Read `get_issue` for description and attachments; attachments carry the PR links.
 
 One slide per **parent** when the children only make sense together — an OAuth parent covering three children — and name the grouping on the slide. The parent body is the source of the umbrella claim. A child with no visual evidence becomes a bullet under the parent slide, not its own slide.
-
 Scope each claim to what the issue establishes. Read the body's status notes, including a trailing not-done paragraph: an issue with every acceptance box unchecked is not delivered however finished the work looks, and a number belongs to the issue that measured it, never to a pair of siblings.
 
 ## Evidence
@@ -59,7 +58,7 @@ for o in req.results ?? [] { guard let c = o.topCandidates(1).first else { conti
 `swiftc -O /tmp/ocr.swift -o /tmp/ocr`, then `/tmp/ocr img.png | cut -f2-`. The box columns locate a region for cropping.
 
 - Confirm every string a caption asserts — page heading, status text, button labels — appears in the OCR output.
-- A report once captioned two images `Generation failed` and `Dismissed`; OCR showed a normally-scored page with neither string. Drop such images or caption what they actually show. Never inherit a report's claim.
+- A report once captioned images `Generation failed` and `Dismissed`; OCR showed neither string. Drop such images or caption what they show. Never inherit a report's claim.
 - A report verifying a standalone URL does not prove the nav link that is the feature. Caption only what was verified and put request-test evidence in the prose.
 - No usable capture: say so on the slide and link the PR. Never a placeholder or fabricated image.
 
@@ -72,17 +71,17 @@ One self-contained `index.html` plus `img/`, no CDN: the site is static and IAP-
 - Keyboard nav (Arrow, Space, PageUp/Down, Home/End), click-to-advance, an `n / total` counter, and `history.replaceState` for deep links. Link each issue id to its tracker URL.
 - Images: `object-fit: contain; object-position: center top` so full-desktop captures stay legible. Flex children holding images need `min-height: 0` or they overflow. Size type with `%`/`clamp()` so it projects.
 - Keep the talk track out of the slide body — `notes.md` beside the deck, or reveal's `<aside class="notes">`.
-- Reveal only: never style `<section>` for layout (it writes an inline `display` on the visible section and wins), never size with `vh`/`vw` (reveal scales by `transform`, so they measure the real window and overflow), and lay content out in an inner `<div>` — a two-column grid with the screenshot right keeps 4:3 captures visible.
+- Reveal only: never style `<section>` for layout (it writes an inline `display` and wins), never size with `vh`/`vw` (reveal scales by `transform`), and lay content out in an inner `<div>`; a two-column grid with the screenshot right keeps 4:3 captures visible.
 
 ## Verify locally
 
-Serve the directory and assert structure over HTTP, not by eye: count `class="slide"`, extract the issue ids, and `curl -o /dev/null -w '%{http_code} %{size_download}'` every image. Drive the real page with the Firefox devtools MCP: `get_page_text` for the slide's copy and the `n / total` counter, `press_key` on a snapshot uid to confirm Arrow and End advance. A fresh `navigate_page` to a `#hash` does not re-run the deck JS; reload or press keys.
+Serve the directory and assert structure over HTTP: count `class="slide"`, extract issue ids, and `curl -o /dev/null -w '%{http_code} %{size_download}'` every image. Drive the real page with the Firefox devtools MCP: `get_page_text` for slide copy and the `n / total` counter, `press_key` on a snapshot uid to confirm Arrow and End advance. A fresh `navigate_page` to a `#hash` does not re-run the deck JS; reload or press keys.
 
 ## Publish to Quick
 
 Read `skill://quick` first; it owns naming, install, and overwrite rules. Prefix the name per its convention and read the sites bucket from `quick env`.
 
-- **Prune orphans before mirroring.** A plain `quick deploy` never deletes remote objects. `--mirror` deletes remote objects absent *locally*, so an unreferenced file still sitting in `demo/img/` keeps its orphan alive and the mirror looks like a no-op — two stale PNGs survived exactly that way. Delete unreferenced locals first, deploy `--mirror`, then assert the bucket listing equals the deck's referenced images, removing stragglers with `gcloud storage rm`. Orphans on this IAP-gated but staff-open host are published content: two dropped screenshots were readable at guessable URLs until deleted.
+- **Prune orphans before mirroring.** A plain `quick deploy` never deletes remote objects. `--mirror` deletes remote objects absent *locally*, so an unreferenced file still in `demo/img/` keeps its orphan alive and the mirror looks like a no-op. Delete unreferenced locals first, deploy `--mirror`, then assert the bucket listing equals the deck's referenced images, removing stragglers with `gcloud storage rm`. Orphans on IAP-gated but staff-open hosting are still published content, readable at guessable URLs.
 - **gcloud on Python 3.14:** `quick deploy` shells out to `gcloud storage rsync`, which dies with `module 'ssl' has no attribute 'PROTOCOL_TLSv1'`. Never patch the SDK and never `quick update` to fix it. Pin an interpreter in gcloud's supported range that still has the attribute: `CLOUDSDK_PYTHON=/opt/homebrew/bin/python3.13 quick deploy . <name>`. System Python 3.9 is rejected as unsupported.
 - **`invalid_rapt`:** reauth needs an *interactive* sign-in. No cached access token, ADC, or legacy refresh token fixes it; refreshes fail with `invalid_grant`. Stop and hand the user two routes: drag the directory into the Quick web UI (same IAP browser session, no CLI), or run `gcloud auth login` then the pinned deploy. Never start a login prompt in a background job — the PKCE state will not survive the turn.
 - Gate the deploy on `CLOUDSDK_PYTHON=/opt/homebrew/bin/python3.13 gcloud auth print-access-token` succeeding. `quick url <name>` only formats a URL — it prints one and exits 0 even for a nonexistent name, so never treat it as an availability check. Test existence with `gcloud storage ls gs://<bucket>/<name>/`: it exits 0 when objects exist and 1 with `matched no objects` when the name is free.
@@ -90,4 +89,4 @@ Read `skill://quick` first; it owns naming, install, and overwrite rules. Prefix
 
 ## Hand-off
 
-Keep the source in the session's `demo/` directory and give its absolute path. Stop the preview server once published, and call `cleanup_session` when done with the browser. Report an issue → slide table, and name every issue without a screenshot with the reason.
+Keep the source in the session's `demo/` directory and give its absolute path. Stop the preview server once published and call `cleanup_session`. Report an issue → slide table, naming every issue without a screenshot with the reason.
