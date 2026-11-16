@@ -29,6 +29,7 @@ External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](
 | **merge-request** | Maintain a pull request after review feedback or conflicts. |
 | **qa-report-publish** | Publish local QA evidence in a pull request review. |
 | **qa-verification** | Verify a running app in a browser and write local evidence. |
+| **demo** | Build a cycle demo deck from tracker issues and QA screenshots, then publish it to Quick. |
 
 ## Other primitives
 
