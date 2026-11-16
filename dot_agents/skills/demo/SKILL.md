@@ -11,7 +11,7 @@ Build a static deck of the requester's shipped work. Never claim an image shows 
 Both entry points mean the requester's own work only. State the resolved scope before gathering.
 
 - **Cycle — default.** Resolve with `list_cycles(teamId, type: "current")`; never infer the cycle id from issue rows. Then `list_issues(team, cycle, assignee: "me", state: "completed")`. Dropping `assignee=me` returns teammates' work; broaden only when asked to.
-- **Window — "since the last demo".** Read the marker `~/.local/share/kb/last-demo.md`; `2w`, `10d`, or an explicit date overrides it, and 7 days is the fallback. Gather `~/.local/share/kb/journal/YYYY-MM-DD.md` for activity and diff stats, `~/.local/share/kb/projects/<slug>.md` for status, `~/.local/share/kb/decisions/cross-cutting.md` for the why, and `qa-*` directories by mtime. Write the marker only after the deck ships.
+- **Window — "since the last demo".** Read the marker `vault://kb/last-demo.md` if present — it may not exist yet, so create it on first run; `2w`, `10d`, or an explicit date overrides it, and 7 days is the fallback. Gather `vault://kb/journal/YYYY-MM-DD.md` for activity and diff stats, `vault://kb/projects/<slug>.md` for status, `vault://kb/decisions/cross-cutting.md` for the why, and `qa-*` directories by mtime. Write the marker only after the deck ships. Read these through `vault://`, never the backing files under `~/.local/share/kb/`.
 
 Re-query before delivery: users move issues to Done mid-session (one run went 9 → 20). Read `get_issue` for description and attachments; attachments carry the PR links.
 
@@ -21,7 +21,7 @@ Scope each claim to what the issue establishes. Read the body's status notes, in
 
 ## Evidence
 
-Screenshots are not in PRs or tracker comments: `qa-report-publish` forbids publishing report files or screenshots, so PR bodies carry only bot assets. Look locally, in order:
+Screenshots are not in PRs or tracker comments: `qa-report-publish` forbids publishing report files or screenshots, so PR bodies carry only bot assets. Look locally, in order (the same tree is readable at `vault://qa/`; use the filesystem path when copying images into the deck):
 
 1. `~/.local/share/qa/<slug>/qa-YYYYMMDD-HHMMSS/` — `report.md` (often `report.html` too) plus `NNN-name.png`. Slugs are branch-like and many match no issue (`install-page`, `retry`); map each by reading its report for the issue id, PR link, or feature. Skip directories holding a report but no images.
 2. `~/.firefox-devtools-mcp/output/page-screenshot-*.png` — when a report cites these absolute paths because the browser refused the session directory. Filename timestamps do not sort against the report's narrative; identify each file by its content.
