@@ -15,6 +15,8 @@ Both entry points mean the requester's own work only. State the resolved scope b
 
 Re-query before delivery: users move issues to Done mid-session (one run went 9 → 20). Read `get_issue` for description and attachments; attachments carry the PR links.
 
+Include only issues the requester actually worked on, and treat their word as authoritative over Linear `assignee`, `createdBy`, and git author. When they say an issue is not theirs, drop it — even with their name on the record — or ask; never defend the record against them.
+
 One slide per **parent** when the children only make sense together — an OAuth parent covering three children — and name the grouping on the slide. The parent body is the source of the umbrella claim. A child with no visual evidence becomes a bullet under the parent slide, not its own slide.
 Scope each claim to what the issue establishes. Read the body's status notes, including a trailing not-done paragraph: an issue with every acceptance box unchecked is not delivered however finished the work looks, and a number belongs to the issue that measured it, never to a pair of siblings.
 
@@ -31,12 +33,25 @@ Use only PASS reports — check the `## 🧪 QA — PASS ✅` / `FAIL ❌` headi
 
 - **Never defeat the production login gate.** reCAPTCHA Enterprise is enforced server-side on prod sign-in and rejects scripted submits. Do not iterate on stealth or solve the challenge.
 - **Never put a password in a tool argument** (`fill_by_uid`, `type_text`) or a temp file for a script to read: the first lands in the transcript, the second leaves plaintext on disk. `op read > /tmp/pw` is a leak, not a workaround.
-- Test unauthenticated surfaces first: an unauthenticated chart or report page that renders without sign-in, a sibling host that 303s to the OAuth gate, and public pages enumerated from the site's sitemap. The sitemap index sits at `<site>/sitemaps/sitemap.xml.gz`; root `/sitemap.xml` and `/sitemap.xml.gz` are 404, and a non-public report id 404s or 401s.
 - Anything behind sign-in: name the exact URL and hand it to the user for a screenshot. Never substitute a placeholder.
 - Driving the requester's Firefox devtools MCP beats headless: a headless render came out dark-themed and unreadable, while the real profile kept its theme and retina scale.
 - `screenshot_by_uid` and `screenshot_page` take `saveTo`, but only an absolute path under `~/.firefox-devtools-mcp/output/` works; relative and `./` paths get mangled into `/hots` or fail ENOENT/EROFS. Save there, then copy into `demo/img/`.
 - Capture the smallest element that tells the story — `screenshot_by_uid` on the figure or its section, not a full page where the subject is clipped or scaled to a third. A retina element can land at 5090x2650; run `sips -Z 1600` before shipping.
 - Verify the rendered slide, not just the asset: navigate to it and OCR the screenshot. One caption survived three reviews describing motion a still cannot show; it now states the numbers in the pixels.
+
+## Motion
+
+When the feature *is* the motion — a chart drawing, a state transition, a transition animation — a still is not emblematic of it. A short clip is easier than it looks; Playwright video beats assembling GIFs and keeps full colour.
+
+1. Record: `chromium.launch({ executablePath: <installed Chrome> })`, then a context with `recordVideo: { dir: <abs>, size: { width, height } }`. Grab `const video = page.video()`, and call `await video.path()` **before** `ctx.close()` — the file only exists after close.
+2. Convert and trim: `-c:v libx264 -pix_fmt yuv420p -crf 24 -movflags +faststart`, then `-ss <start> -t <duration>` for the window, adding `crop=w:h:x:y` to frame the feature only.
+3. Find the window empirically instead of guessing. Extract at 10fps (`-vf fps=10`), then `magick compare -metric AE prev.png cur.png null:` between consecutive frames (the metric prints on stderr) and take the run where the diff is high. Scroll motion swamps everything, so scroll instantly — `window.scrollTo` — to isolate the draw from the travel.
+4. `<video autoplay loop muted playsinline poster="img/<still>.png">` with a real still as poster, so the slide stays readable if autoplay is blocked. Keep clips a couple of seconds and a few hundred KB.
+5. Verify like a still: extract frames from the *final* clip, not the raw recording, and OCR both ends of the window. A clip whose first and last frame OCR the feature's own labels, and whose middle frames differ, is proven.
+
+**Gotcha:** CSS gated on `.is-in-view` usually toggles `animation-play-state`, so scrolling away and back *resumes* a finished animation instead of replaying it — a verified case returns with the animation still at its end time. Capture the first entry after a fresh load, or you will record a static chart forever.
+
+Do not mine a marketing or marketing-adjacent page for proof of an engineering fix. It is not evidence that the fix shipped, and it reads as padding.
 
 ## Verify images
 
