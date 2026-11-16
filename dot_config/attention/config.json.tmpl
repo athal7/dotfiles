@@ -1,8 +1,9 @@
 {{- /* Renders Attention config from shared calendar/reminder data. Only
    reminder lists flagged attention_check: true are included.
-   The Linear API token is baked in from the macOS keychain at apply time
-   (never persisted anywhere else); the Attention tool itself has no
-   keychain dependency, it just reads linear.apiToken from this file.
+   The Linear token is deliberately absent: the tool reads LINEAR_API_TOKEN
+   (or LINEAR_TOKEN) from its environment, and the attention() wrapper in
+   ~/.zshrc supplies it from the macOS keychain for that one command, so no
+   config file on disk ever holds the credential.
    Session and lumen hotkeys were removed from the bundled plugins upstream
    (hardcoded tool deps) and are restored here as configured actions.
    Session model preferences come from the selected agent's configuration.
@@ -34,7 +35,6 @@
 {{- $openSourceReminderLists = append $openSourceReminderLists (dig "name" "" $aoeReminder) -}}
 {{- end -}}
 {{- end -}}
-{{- $linearToken := output "/bin/sh" "-c" "security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null || true" | trim -}}
 {{- $workGitHubPrefixes := list -}}
 {{- if hasKey . "orgs" -}}
 {{- range $org, $settings := .orgs -}}
@@ -89,7 +89,6 @@
         (dict "key" "l" "label" "lumen"
               "command" (list "lumen" "diff" "{url}"))))
       "linear" (dict
-        "apiToken" $linearToken
         "actions" (list
           (dict "key" "s" "label" "session" "background" true
                 "command" (list "attention-session" "scratch" "{identifier_lower}" "{input}")

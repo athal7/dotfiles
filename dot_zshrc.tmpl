@@ -60,6 +60,20 @@ aoe() {
   command aoe "$@"
 }
 
+# Attention reads its Linear token from LINEAR_API_TOKEN, and this wrapper is the
+# only thing that supplies it, so no config file on disk holds the credential.
+attention() {
+  local linear_token
+  if [[ -z "${LINEAR_API_TOKEN:-}" ]]; then
+    linear_token=$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null) || linear_token=
+    if [[ -n "$linear_token" ]]; then
+      LINEAR_API_TOKEN="$linear_token" command attention "$@"
+      return $?
+    fi
+  fi
+  command attention "$@"
+}
+
 # Give only OMP its Spacelift MCP URL, not every shell and child process. GitHub
 # credentials stay out: the github MCP resolves its own token from gh's keyring.
 omp() {
