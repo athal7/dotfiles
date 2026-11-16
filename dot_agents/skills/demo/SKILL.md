@@ -11,20 +11,33 @@ Build a static deck of the requester's shipped work. Never claim an image shows 
 Both entry points mean the requester's own work only. State the resolved scope before gathering.
 
 - **Cycle — default.** Resolve with `list_cycles(teamId, type: "current")`; never infer the cycle id from issue rows. Then `list_issues(team, cycle, assignee: "me", state: "completed")`. Dropping `assignee=me` returns teammates' work; broaden only when asked to.
-- **Window — "since the last demo".** Read the marker `~/.local/share/kb/last-demo.md` for the last demo date; `2w`, `10d`, or an explicit date overrides it, and 7 days is the fallback. Gather `~/.local/share/kb/journal/YYYY-MM-DD.md` for per-project activity and diff stats, `~/.local/share/kb/projects/<slug>.md` for status, `~/.local/share/kb/decisions/cross-cutting.md` for the why, and `qa-*` directories by mtime.
+- **Window — "since the last demo".** Read the marker `~/.local/share/kb/last-demo.md`; `2w`, `10d`, or an explicit date overrides it, and 7 days is the fallback. Gather `~/.local/share/kb/journal/YYYY-MM-DD.md` for activity and diff stats, `~/.local/share/kb/projects/<slug>.md` for status, `~/.local/share/kb/decisions/cross-cutting.md` for the why, and `qa-*` directories by mtime. Write the marker only after the deck ships.
 
-Re-query before delivery: users move issues to Done mid-session (one run went 9 → 20). Write the marker only after the deck ships.
+Re-query before delivery: users move issues to Done mid-session (one run went 9 → 20). Read `get_issue` for description and attachments; attachments carry the PR links.
 
-Read `get_issue` for description and attachments; attachments carry the PR links. One slide per **parent** when the children only make sense together — an OAuth parent covering three children — and name the grouping on the slide. Do not shatter a parent into a child-per-slide.
+One slide per **parent** when the children only make sense together — an OAuth parent covering three children — and name the grouping on the slide. The parent body is the source of the umbrella claim. A child with no visual evidence becomes a bullet under the parent slide, not its own slide.
+
+Scope each claim to what the issue establishes. Read the body's status notes, including a trailing not-done paragraph: an issue with every acceptance box unchecked is not delivered however finished the work looks, and a number belongs to the issue that measured it, never to a pair of siblings.
 
 ## Evidence
 
 Screenshots are not in PRs or tracker comments: `qa-report-publish` forbids publishing report files or screenshots, so PR bodies carry only bot assets. Look locally, in order:
 
-1. `~/.local/share/qa/<slug>/qa-YYYYMMDD-HHMMSS/` — `report.md` (often `report.html` too) plus `NNN-name.png`. Slugs are branch-like and many are unrelated to any one issue (`install-page`, `retry`); map each by reading its report for the issue id, PR link, or feature described. Skip directories that hold a report but no images.
+1. `~/.local/share/qa/<slug>/qa-YYYYMMDD-HHMMSS/` — `report.md` (often `report.html` too) plus `NNN-name.png`. Slugs are branch-like and many match no issue (`install-page`, `retry`); map each by reading its report for the issue id, PR link, or feature. Skip directories holding a report but no images.
 2. `~/.firefox-devtools-mcp/output/page-screenshot-*.png` — when a report cites these absolute paths because the browser refused the session directory. Filename timestamps do not sort against the report's narrative; identify each file by its content.
 
 Use only PASS reports — check the `## 🧪 QA — PASS ✅` / `FAIL ❌` heading. A FAIL report's images are evidence of a bug, not of shipped work.
+
+## Capture
+
+- **Never defeat the production login gate.** reCAPTCHA Enterprise is enforced server-side on prod sign-in and rejects scripted submits. Do not iterate on stealth or solve the challenge.
+- **Never put a password in a tool argument** (`fill_by_uid`, `type_text`) or a temp file for a script to read: the first lands in the transcript, the second leaves plaintext on disk. `op read > /tmp/pw` is a leak, not a workaround.
+- Test unauthenticated surfaces first: an unauthenticated chart or report page that renders without sign-in, a sibling host that 303s to the OAuth gate, and public pages enumerated from the site's sitemap. The sitemap index sits at `<site>/sitemaps/sitemap.xml.gz`; root `/sitemap.xml` and `/sitemap.xml.gz` are 404, and a non-public report id 404s or 401s.
+- Anything behind sign-in: name the exact URL and hand it to the user for a screenshot. Never substitute a placeholder.
+- Driving the requester's Firefox devtools MCP beats headless: a headless render came out dark-themed and unreadable, while the real profile kept its theme and retina scale.
+- `screenshot_by_uid` and `screenshot_page` take `saveTo`, but only an absolute path under `~/.firefox-devtools-mcp/output/` works; relative and `./` paths get mangled into `/hots` or fail ENOENT/EROFS. Save there, then copy into `demo/img/`.
+- Capture the smallest element that tells the story — `screenshot_by_uid` on the figure or its section, not a full page where the subject is clipped or scaled to a third. A retina element can land at 5090x2650; run `sips -Z 1600` before shipping.
+- Verify the rendered slide, not just the asset: navigate to it and OCR the screenshot. One caption survived three reviews describing motion a still cannot show; it now states the numbers in the pixels.
 
 ## Verify images
 
@@ -69,12 +82,13 @@ Drive the real page with the Firefox devtools MCP: `get_page_text` for the curre
 
 ## Publish to Quick
 
-Read `skill://quick` first; it owns naming, install, and overwrite rules. Prefix the name per its convention, and confirm the name is free with `quick list` — an empty list with exit 0 usually means dead auth, not an empty namespace.
+Read `skill://quick` first; it owns naming, install, and overwrite rules. Prefix the name per its convention and read the sites bucket from `quick env`.
 
+- **Prune orphans before mirroring.** A plain `quick deploy` never deletes remote objects. `--mirror` deletes remote objects absent *locally*, so an unreferenced file still sitting in `demo/img/` keeps its orphan alive and the mirror looks like a no-op — two stale PNGs survived exactly that way. Delete unreferenced locals first, deploy `--mirror`, then assert the bucket listing equals the deck's referenced images, removing stragglers with `gcloud storage rm`. Orphans on this IAP-gated but staff-open host are published content: two dropped screenshots were readable at guessable URLs until deleted.
 - **gcloud on Python 3.14:** `quick deploy` shells out to `gcloud storage rsync`, which dies with `module 'ssl' has no attribute 'PROTOCOL_TLSv1'`. Never patch the SDK and never `quick update` to fix it. Pin an interpreter in gcloud's supported range that still has the attribute: `CLOUDSDK_PYTHON=/opt/homebrew/bin/python3.13 quick deploy . <name>`. System Python 3.9 is rejected as unsupported.
 - **`invalid_rapt`:** reauth needs an *interactive* sign-in. No cached access token, ADC, or legacy refresh token fixes it; refreshes fail with `invalid_grant`. Stop and hand the user two routes: drag the directory into the Quick web UI (same IAP browser session, no CLI), or run `gcloud auth login` then the pinned deploy. Never start a login prompt in a background job — the PKCE state will not survive the turn.
-- Gate the deploy on `CLOUDSDK_PYTHON=/opt/homebrew/bin/python3.13 gcloud auth print-access-token` succeeding, then `quick url <name>`.
-- **IAP blocks rendering it yourself:** an unauthenticated `curl` gets `302` to Google sign-in, a gcloud access token gets `401` (IAP wants an OIDC identity token, and `print-identity-token --audiences` needs a service account). Verify bytes instead: read the bucket from `quick env`'s `sites bucket` line, then `gcloud storage ls -l gs://<bucket>/<name>/**` for sizes and `gcloud storage cat gs://<bucket>/<name>/<file> | shasum -a 256` against the local file (`shasum` is portable; `md5` exists at `/sbin/md5` but is not on a default non-login `PATH`). Report the visual render as unconfirmed and ask the user for the one look.
+- Gate the deploy on `CLOUDSDK_PYTHON=/opt/homebrew/bin/python3.13 gcloud auth print-access-token` succeeding. Check a candidate name with `quick url <name>`, which resolves one site without listing anything.
+- **IAP blocks rendering it yourself:** an unauthenticated `curl` gets `302` to Google sign-in, a gcloud access token gets `401` (IAP wants an OIDC identity token, and `print-identity-token --audiences` needs a service account). Verify bytes instead: `gcloud storage ls -l gs://<bucket>/<name>/**` for sizes, and `gcloud storage cat gs://<bucket>/<name>/<file> | shasum -a 256` against the local file. Report the visual render as unconfirmed and ask the user for the one look.
 
 ## Hand-off
 
