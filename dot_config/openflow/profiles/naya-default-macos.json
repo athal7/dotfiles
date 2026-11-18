@@ -15,7 +15,7 @@
       "keys": [
         {
           "positionId": 0,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -27,7 +27,7 @@
         },
         {
           "positionId": 1,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -39,7 +39,7 @@
         },
         {
           "positionId": 2,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -51,7 +51,7 @@
         },
         {
           "positionId": 3,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -63,7 +63,7 @@
         },
         {
           "positionId": 4,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -75,7 +75,7 @@
         },
         {
           "positionId": 5,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -87,7 +87,7 @@
         },
         {
           "positionId": 6,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -99,7 +99,7 @@
         },
         {
           "positionId": 7,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -111,7 +111,7 @@
         },
         {
           "positionId": 8,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -123,7 +123,7 @@
         },
         {
           "positionId": 9,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -135,7 +135,7 @@
         },
         {
           "positionId": 10,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -147,7 +147,7 @@
         },
         {
           "positionId": 11,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -159,7 +159,7 @@
         },
         {
           "positionId": 12,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -171,7 +171,7 @@
         },
         {
           "positionId": 13,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -183,7 +183,7 @@
         },
         {
           "positionId": 14,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -195,7 +195,7 @@
         },
         {
           "positionId": 15,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -207,7 +207,7 @@
         },
         {
           "positionId": 16,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -219,7 +219,7 @@
         },
         {
           "positionId": 17,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -231,7 +231,7 @@
         },
         {
           "positionId": 18,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -243,7 +243,7 @@
         },
         {
           "positionId": 19,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -255,7 +255,7 @@
         },
         {
           "positionId": 20,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -267,7 +267,7 @@
         },
         {
           "positionId": 21,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -279,7 +279,7 @@
         },
         {
           "positionId": 22,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -291,7 +291,7 @@
         },
         {
           "positionId": 23,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -303,7 +303,7 @@
         },
         {
           "positionId": 24,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -315,7 +315,7 @@
         },
         {
           "positionId": 25,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -327,7 +327,7 @@
         },
         {
           "positionId": 26,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -339,7 +339,7 @@
         },
         {
           "positionId": 27,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -351,7 +351,7 @@
         },
         {
           "positionId": 28,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -363,7 +363,7 @@
         },
         {
           "positionId": 29,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -375,7 +375,7 @@
         },
         {
           "positionId": 30,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -387,7 +387,7 @@
         },
         {
           "positionId": 31,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -399,7 +399,7 @@
         },
         {
           "positionId": 32,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -411,7 +411,7 @@
         },
         {
           "positionId": 33,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -423,7 +423,7 @@
         },
         {
           "positionId": 34,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -435,7 +435,7 @@
         },
         {
           "positionId": 35,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -447,7 +447,7 @@
         },
         {
           "positionId": 36,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -459,7 +459,7 @@
         },
         {
           "positionId": 37,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -477,7 +477,7 @@
         },
         {
           "positionId": 38,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -495,7 +495,7 @@
         },
         {
           "positionId": 39,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -507,7 +507,7 @@
         },
         {
           "positionId": 40,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -519,7 +519,7 @@
         },
         {
           "positionId": 41,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -531,7 +531,7 @@
         },
         {
           "positionId": 42,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -543,7 +543,7 @@
         },
         {
           "positionId": 43,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -555,7 +555,7 @@
         },
         {
           "positionId": 44,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -567,7 +567,7 @@
         },
         {
           "positionId": 45,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -579,7 +579,7 @@
         },
         {
           "positionId": 46,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -591,7 +591,7 @@
         },
         {
           "positionId": 47,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -603,7 +603,7 @@
         },
         {
           "positionId": 48,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -615,7 +615,7 @@
         },
         {
           "positionId": 49,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -627,7 +627,7 @@
         },
         {
           "positionId": 50,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -639,7 +639,7 @@
         },
         {
           "positionId": 51,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -651,7 +651,7 @@
         },
         {
           "positionId": 52,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -663,7 +663,7 @@
         },
         {
           "positionId": 53,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -681,7 +681,7 @@
         },
         {
           "positionId": 54,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -699,7 +699,7 @@
         },
         {
           "positionId": 55,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -711,7 +711,7 @@
         },
         {
           "positionId": 56,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -723,7 +723,7 @@
         },
         {
           "positionId": 57,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -735,7 +735,7 @@
         },
         {
           "positionId": 58,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -747,7 +747,7 @@
         },
         {
           "positionId": 59,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -759,7 +759,7 @@
         },
         {
           "positionId": 60,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -771,7 +771,7 @@
         },
         {
           "positionId": 61,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -783,7 +783,7 @@
         },
         {
           "positionId": 62,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -795,7 +795,7 @@
         },
         {
           "positionId": 63,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -807,7 +807,7 @@
         },
         {
           "positionId": 64,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -819,7 +819,7 @@
         },
         {
           "positionId": 65,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -831,7 +831,7 @@
         },
         {
           "positionId": 66,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -843,7 +843,7 @@
         },
         {
           "positionId": 67,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -861,7 +861,7 @@
         },
         {
           "positionId": 68,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -879,7 +879,7 @@
         },
         {
           "positionId": 69,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -891,7 +891,7 @@
         },
         {
           "positionId": 70,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -903,7 +903,7 @@
         },
         {
           "positionId": 71,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -915,7 +915,7 @@
         },
         {
           "positionId": 72,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -927,7 +927,7 @@
         },
         {
           "positionId": 73,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": [
             {
               "behavior": "press",
@@ -939,72 +939,72 @@
         },
         {
           "positionId": 74,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 75,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 76,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 77,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 78,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 79,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 80,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 81,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 82,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 83,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 84,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 85,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 86,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
           "positionId": 87,
-          "colorHex": "#05fff3",
+          "colorHex": "#xxxxxx",
           "bindings": []
         },
         {
