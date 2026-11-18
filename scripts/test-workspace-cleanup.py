@@ -264,22 +264,76 @@ class WorktreeCleanupTest(unittest.TestCase):
 
 
 
+class KacheCacheCleanupTest(unittest.TestCase):
+    def invoke(self, dry_run, free=None, which="/opt/homebrew/bin/kache", result=None):
+        if free is None:
+            free = cleanup.TARGET_PRESSURE_MIN_FREE_BYTES - 1
+        if result is None:
+            result = subprocess.CompletedProcess([], 0, "Would remove cache entries\n", "")
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with patch.object(cleanup.shutil, "disk_usage", return_value=SimpleNamespace(free=free, total=1000 * 1024**3)), \
+             patch.object(cleanup.shutil, "which", return_value=which), \
+             patch.object(cleanup, "run", return_value=result) as run_mock, \
+             contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            cleanup.kache_cache(dry_run)
+        return stdout.getvalue(), stderr.getvalue(), run_mock
+
+    def test_healthy_disk_preserves_cache(self):
+        _, error, run_mock = self.invoke(False, free=cleanup.TARGET_PRESSURE_MIN_FREE_BYTES)
+        self.assertEqual("", error)
+        run_mock.assert_not_called()
+
+    def test_pressure_previews_then_applies_native_cleanup(self):
+        stdout, error, run_mock = self.invoke(True)
+        self.assertIn("Would remove cache entries", stdout)
+        self.assertEqual("", error)
+        run_mock.assert_called_once_with("kache", "clean", "--cache", "--dry-run", check=False)
+
+        _, error, run_mock = self.invoke(False)
+        self.assertEqual("", error)
+        run_mock.assert_called_once_with("kache", "clean", "--cache", "--yes", check=False)
+
+    def test_missing_kache_and_failed_cleanup_are_nonfatal(self):
+        _, error, run_mock = self.invoke(False, which=None)
+        self.assertIn("kache is not installed", error)
+        run_mock.assert_not_called()
+
+        failure = subprocess.CompletedProcess([], 2, "", "daemon unavailable")
+        _, error, run_mock = self.invoke(False, result=failure)
+        self.assertIn("daemon unavailable", error)
+        run_mock.assert_called_once()
+
+    def test_unknown_free_space_preserves_cache(self):
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with patch.object(cleanup.shutil, "disk_usage", side_effect=OSError("unavailable")), \
+             patch.object(cleanup, "run") as run_mock, \
+             contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            cleanup.kache_cache(False)
+        self.assertIn("cannot check free space", stderr.getvalue())
+        run_mock.assert_not_called()
+
+
 class CleanupCommandTest(unittest.TestCase):
     def test_database_cleanup_requires_explicit_opt_in(self):
         with tempfile.TemporaryDirectory() as home, \
              patch.object(Path, "home", return_value=Path(home)), \
              patch.object(cleanup, "CODE", Path(home)), \
              patch.object(cleanup, "worktrees") as worktrees, \
+             patch.object(cleanup, "kache_cache") as kache_cache, \
              patch.object(cleanup, "chrome_clones") as clones, \
              patch.object(cleanup, "databases") as databases, \
              patch("sys.argv", ["workspace-cleanup", "--apply"]), \
              contextlib.redirect_stdout(io.StringIO()):
             cleanup.main()
             worktrees.assert_called_once_with(False)
+            kache_cache.assert_called_once_with(False)
             clones.assert_called_once_with(False)
             databases.assert_not_called()
             with patch("sys.argv", ["workspace-cleanup", "--database-only", "--apply"]):
                 cleanup.main()
+            kache_cache.assert_called_once_with(False)
             databases.assert_called_once_with(False)
 
 
