@@ -142,7 +142,7 @@
             "create_issue_label",
             "prepare_attachment_upload",
           ],
-        "approval_allow": ["get_status_updates"],
+        "approval_allow": ["get_status_updates", "save_comment"],
       },
       {
         "name": "zoom",
