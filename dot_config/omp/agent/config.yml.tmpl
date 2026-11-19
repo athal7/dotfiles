@@ -25,15 +25,6 @@ bash:
       approval: allow
     - match: "gh stack submit*--auto*"
       approval: allow
-    # Review maintenance is unattended only through these narrow gh forms.
-    # Consolidated GitHub MCP tools also submit reviews or edit PR metadata,
-    # so they remain gated. Never match a tool more broadly than the operation.
-    - match: "gh api graphql*resolveReviewThread*"
-      approval: allow
-    - match: "gh api graphql*dismissPullRequestReview*"
-      approval: allow
-    - match: "gh api graphql*requestReviews*"
-      approval: allow
     # gh accepts the dismissal method as --method PUT, --method=PUT, or -X PUT.
     # All three must be listed; the generic gh api prompts catch the rest.
     - match: "gh api --method* PUT *repos/*/pulls/*/reviews/*/dismissals*"
