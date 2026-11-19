@@ -366,6 +366,7 @@
             "replace_text",
             "resolve_comment",
           ],
+        "approval_allow": ["replace_text"],
       },
       {
         "name": "gsheets",
