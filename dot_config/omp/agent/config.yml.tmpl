@@ -34,7 +34,13 @@ bash:
       approval: allow
     - match: "gh api graphql*requestReviews*"
       approval: allow
-    - match: "gh api --method PUT *repos/*/pulls/*/reviews/*/dismissals*"
+    # gh accepts the dismissal method as --method PUT, --method=PUT, or -X PUT.
+    # All three must be listed; the generic gh api prompts catch the rest.
+    - match: "gh api --method* PUT *repos/*/pulls/*/reviews/*/dismissals*"
+      approval: allow
+    - match: "gh api --method=PUT *repos/*/pulls/*/reviews/*/dismissals*"
+      approval: allow
+    - match: "gh api -X PUT *repos/*/pulls/*/reviews/*/dismissals*"
       approval: allow
     # Person-visible GitHub writes notify reviewers, assignees, or watchers.
     - match: "gh pr create*"
