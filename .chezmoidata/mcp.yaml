@@ -290,7 +290,7 @@
             "transitionJiraIssue",
             "updateConfluencePage",
           ],
-        "approval_allow": ["getTransitionsForJiraIssue"],
+        "approval_allow": ["getTransitionsForJiraIssue", "updateConfluencePage"],
       },
       {
         "name": "gmail",
