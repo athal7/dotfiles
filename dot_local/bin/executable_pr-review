@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# pr-review: review-thread resolution and review dismissal for one pull request.
+# Both operations change PR-internal state only: no notification, no reviewer
+# change, no comment. `resolve` and `unresolve` use the GraphQL mutation;
+# `dismiss` uses the REST dismissals endpoint, which the GitHub MCP lacks.
+set -u
+
+usage() {
+  printf '%s\n' \
+    'usage: pr-review resolve   <thread-id>' \
+    '       pr-review unresolve <thread-id>' \
+    '       pr-review dismiss   <pr-number> <review-id> <message>' >&2
+  exit 2
+}
+
+die() {
+  printf 'pr-review: %s\n' "$1" >&2
+  exit 1
+}
+
+# Reject empty values, option-looking values, and anything outside the
+# base64url alphabet GitHub uses for GraphQL node IDs.
+check_thread_id() {
+  case $1 in
+    ''|-*|*[!A-Za-z0-9_=-]*) die "invalid thread id: $1" ;;
+  esac
+}
+
+check_number() {
+  case $1 in
+    ''|*[!0-9]*) die "invalid $2: $1" ;;
+  esac
+}
+
+[ $# -ge 2 ] || usage
+command -v gh >/dev/null 2>&1 || die 'gh is required'
+
+case $1 in
+  resolve|unresolve)
+    [ $# -eq 2 ] || usage
+    check_thread_id "$2"
+    thread=$2
+    if [ "$1" = resolve ]; then
+      operation=resolveReviewThread
+      expected=true
+    else
+      operation=unresolveReviewThread
+      expected=false
+    fi
+    query="mutation(\$id:ID!){$operation(input:{threadId:\$id}){thread{id isResolved}}}"
+    result=$(gh api graphql -f "query=$query" -f "id=$thread" \
+      --jq ".data.$operation.thread.isResolved") || die "$operation failed"
+    [ "$result" = "$expected" ] \
+      || die "$operation returned isResolved=$result, expected $expected"
+    printf '%s %s\n' "$1" "$thread"
+    ;;
+  dismiss)
+    [ $# -eq 4 ] || usage
+    check_number "$2" 'pull request number'
+    check_number "$3" 'review id'
+    message=$4
+    [ -n "${message//[[:space:]]/}" ] || die 'dismissal message is empty'
+    command -v jq >/dev/null 2>&1 || die 'jq is required'
+    body=$(jq -cn --arg message "$message" \
+      '{message: $message, event: "DISMISS"}') || die 'unable to encode message'
+    state=$(printf '%s' "$body" | gh api --method PUT \
+      "repos/{owner}/{repo}/pulls/$2/reviews/$3/dismissals" --input - --jq '.state') \
+      || die 'dismissal failed'
+    [ "$state" = DISMISSED ] || die "review state is $state, expected DISMISSED"
+    printf 'dismissed %s\n' "$3"
+    ;;
+  *)
+    usage
+    ;;
+esac

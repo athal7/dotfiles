@@ -25,13 +25,14 @@ bash:
       approval: allow
     - match: "gh stack submit*--auto*"
       approval: allow
-    # gh accepts the dismissal method as --method PUT, --method=PUT, or -X PUT.
-    # All three must be listed; the generic gh api prompts catch the rest.
-    - match: "gh api --method* PUT *repos/*/pulls/*/reviews/*/dismissals*"
-      approval: allow
-    - match: "gh api --method=PUT *repos/*/pulls/*/reviews/*/dismissals*"
-      approval: allow
-    - match: "gh api -X PUT *repos/*/pulls/*/reviews/*/dismissals*"
+    # Review-thread resolution and review dismissal are PR-internal
+    # maintenance: they reach no one and destroy no shared state. The
+    # consolidated MCP tool that resolves threads also publishes reviews, so
+    # it is gated; this script is the unattended path for just those
+    # operations. An allow rule cannot approve a compound line, so a raw
+    # `gh api ... review thread` mutation would be prompted as soon as it is
+    # joined to a prefix or a pipe; the script has no such prompt rule.
+    - match: "pr-review *"
       approval: allow
     # Person-visible GitHub writes notify reviewers, assignees, or watchers.
     - match: "gh pr create*"

@@ -196,13 +196,19 @@
         ],
         "approval_allow": [
           "create_pull_request", "create_branch", "create_or_update_file", "delete_file",
-          "fork_repository", "push_files", "create_repository", "resolve_review_thread",
-          "unresolve_review_thread", "delete_pending_pull_request_review",
-          # The PR review-maintenance operations are reached through these
-          # consolidated tools: resolve_thread lives in pull_request_review_write
-          # and reviewers in update_pull_request. Allow both rather than route
-          # each operation through gh.
-          "pull_request_review_write", "update_pull_request", "update_pull_request_branch"
+          "fork_repository", "push_files", "create_repository",
+          # Draft-scoped review work: adding inline comments to an existing
+          # pending review and deleting that draft cannot publish anything.
+          "add_comment_to_pending_review", "delete_pending_pull_request_review",
+          # Maintenance on an already-open PR: reviewer requests, thread
+          # resolution, and branch updates.
+          "resolve_review_thread", "unresolve_review_thread",
+          "request_pull_request_reviewers", "update_pull_request",
+          "update_pull_request_branch"
+          # pull_request_review_write is deliberately absent: it also publishes
+          # (create with an event, submit_pending), which reaches reviewers.
+          # update_pull_request is allowed as a whole, so marking ready or
+          # closing a PR is unattended along with the reviewer re-request.
         ],
         "approval_prompt_globs": [
           "mcp__github_*_write", "mcp__github_*_trigger", "mcp__github_add_*",
@@ -370,7 +376,18 @@
             "replace_text",
             "resolve_comment",
           ],
-        "approval_allow": ["replace_text"],
+        # Formatting edits the document body for the author alone: no
+        # notification, no collaborator-visible comment. Comment tools stay
+        # gated because they reach other people.
+        "approval_allow":
+          [
+            "format_paragraphs",
+            "format_text",
+            "insert_break",
+            "insert_text",
+            "link_text",
+            "replace_text",
+          ],
       },
       {
         "name": "gsheets",
