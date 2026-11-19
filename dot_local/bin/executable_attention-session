@@ -4,7 +4,7 @@ set -euo pipefail
 
 GH_BIN=${GH_BIN:-gh}
 GIT_BIN=${GIT_BIN:-git}
-AOE_BIN=${AOE_BIN:-/opt/homebrew/bin/aoe}
+AOE_BIN=${AOE_BIN:-$HOME/.local/bin/aoe}
 JQ_BIN=${JQ_BIN:-/opt/homebrew/bin/jq}
 STATE_DIR=${ATTENTION_STATE_DIR:-"${XDG_STATE_HOME:-$HOME/.local/state}/attention-session"}
 TMPDIR=${ATTENTION_TMPDIR:-${TMPDIR:-/tmp}}

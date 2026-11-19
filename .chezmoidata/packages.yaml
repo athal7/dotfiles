@@ -1,5 +1,6 @@
 # Package registry — single source of truth for managed dependencies.
-# Homebrew, mise, GitHub releases, and pinned source files.
+# Homebrew, upstream install scripts, mise, GitHub releases, and pinned source
+# files.
 # Install scripts and chezmoi externals are generated from this file.
 
 packages:
@@ -14,7 +15,6 @@ packages:
     - roeyazroel/linear-tui
 
   brews:
-    - name: aoe
     - name: autojump
     - name: bat
     - name: chezmoi
@@ -64,6 +64,24 @@ packages:
     - name: bash-language-server
     - name: yaml-language-server
     - name: witr
+
+  # Tools installed by their own upstream install script rather than Homebrew,
+  # because the channel they track has no formula. Each entry runs in
+  # run_onchange_after_packages.sh.tmpl, so changing the list re-runs it.
+  install_scripts:
+    # agent-of-empires publishes nightlies only as GitHub prereleases: there is
+    # no nightly Homebrew formula, and `brew install --HEAD` builds main while
+    # reporting the stable version, which keeps its update check on stable. The
+    # script downloads the platform's prebuilt tarball from the release, so
+    # nothing compiles here, and installs the binary to ~/.local/bin. That
+    # binary then updates itself with `aoe update`, which follows the nightly
+    # channel it came from.
+    # A nightly may migrate the app data so an older stable cannot read it until
+    # the next stable release; re-run the script without --channel nightly to
+    # return to stable.
+    - name: aoe
+      url: https://raw.githubusercontent.com/agent-of-empires/agent-of-empires/main/scripts/install.sh
+      args: ["--channel", "nightly"]
 
   # OMP plugins installed by run_onchange_after_plugins-omp.sh.tmpl.
   omp_plugins:

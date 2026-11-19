@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o pipefail
 {{ template "brewenv" . }}
 
 # Homebrew 6.x requires explicit trust before it will load formulae/casks/
@@ -8,30 +9,6 @@
 {{ range .packages.taps -}}
 brew trust --tap {{ . | quote }}
 {{ end }}
-
-# OMP is a pinned release (packages.yaml github_releases), so no Homebrew copy
-# may linger: `brew upgrade` would float it past the AoE plugin's provider
-# allowlist, and the tap formula would shadow the pinned binary on PATH.
-# Retire the tap formula and the older version pins that used to provide it.
-for installed in $(brew list --formula --full-name); do
-  case "$installed" in
-    omp|can1357/tap/omp|athal7/versions/omp@*)
-      brew uninstall --formula "$installed" || exit 1
-      ;;
-  esac
-done
-brew untap athal7/versions >/dev/null 2>&1 || true
-
-# Homebrew Bundle won't switch an installed HEAD formula to stable, so migrate
-# an existing HEAD install to the published release before bundling.
-if installed_aoe="$(brew list --formula --versions aoe 2>/dev/null)"; then
-  case "$installed_aoe" in
-    "aoe HEAD"*)
-      brew uninstall --formula aoe || exit 1
-      brew install aoe || exit 1
-      ;;
-  esac
-fi
 
 brew bundle --file=/dev/stdin <<'EOF' || exit 1
 {{ range .packages.taps -}}
@@ -58,3 +35,10 @@ EOF
 {{ end -}}
 mise install
 mise reshim
+
+# Installers declared in packages.yaml. INSTALL_DIR matches where the shell and
+# LaunchAgents look for these binaries.
+{{ range .packages.install_scripts -}}
+# installer: {{ .name }} from {{ .url }} {{ join " " .args }}
+curl -fsSL {{ .url | quote }} | INSTALL_DIR="$HOME/.local/bin" bash -s --{{ range .args }} {{ . | quote }}{{ end }} || exit 1
+{{ end -}}

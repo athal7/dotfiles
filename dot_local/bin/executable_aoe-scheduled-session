@@ -22,7 +22,7 @@ if [[ ! -f "$prompt_file" || ! -r "$prompt_file" ]]; then
   exit 66
 fi
 project_path=${3:-}
-aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
+aoe_bin=${AOE_BIN:-$HOME/.local/bin/aoe}
 project_mcp_config=${AOE_OMP_PROJECT_MCP_CONFIG:-}
 omp_model=${AOE_OMP_MODEL:-}
 session_group=${AOE_SESSION_GROUP:-Scheduled}

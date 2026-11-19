@@ -35,7 +35,7 @@ fi
 title=$1
 prompt_file=$2
 project_path=${3:-}
-aoe_bin=${AOE_BIN:-/opt/homebrew/bin/aoe}
+aoe_bin=${AOE_BIN:-$HOME/.local/bin/aoe}
 session_group=${AOE_SESSION_GROUP:-Attention}
 worktree_branch=${AOE_WORKTREE_BRANCH:-}
 new_branch=${AOE_NEW_BRANCH:-false}

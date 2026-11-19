@@ -68,7 +68,7 @@ serve_port=4097
 retiring=
 # Probe with --no-autostart: a plain `serve --status` starts a daemon when none
 # is running, which would keep this loop waiting on the server it looks for.
-while status=$(/opt/homebrew/bin/aoe serve --status --no-autostart 2>/dev/null); do
+while status=$("$HOME/.local/bin/aoe" serve --status --no-autostart 2>/dev/null); do
   port=$(printf '%s\n' "$status" \
     | sed -n 's|^URL: *http://[^/:]*:\([0-9][0-9]*\)/.*|\1|p' | head -n 1)
   if [ "$port" = "$serve_port" ]; then
@@ -89,7 +89,7 @@ while status=$(/opt/homebrew/bin/aoe serve --status --no-autostart 2>/dev/null);
   fi
   sleep 5
 done
-exec /opt/homebrew/bin/aoe serve \
+exec "$HOME/.local/bin/aoe" serve \
   --host 127.0.0.1 \
   --port "$serve_port" \
   --allowed-host "$dns_name" \
