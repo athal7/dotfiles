@@ -19,7 +19,10 @@ die() {
 }
 
 # Reject empty values, option-looking values, and anything outside the
-# base64url alphabet GitHub uses for GraphQL node IDs.
+# alphabet GitHub uses for GraphQL node IDs. Those ids are base64url, not
+# standard base64: a sample of 223 real node ids contained no `+`, `/`, or `=`,
+# and every one used `_` or `-`. So `+` and `/` are rejected deliberately:
+# they are separators to the shell, and no valid id can need them.
 check_thread_id() {
   case $1 in
     ''|-*|*[!A-Za-z0-9_=-]*) die "invalid thread id: $1" ;;
