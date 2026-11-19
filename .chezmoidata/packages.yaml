@@ -51,6 +51,10 @@ packages:
     - name: ripgrep
     - name: starship
     - name: talisman
+    # aoe's prerequisite: every AoE session runs in tmux. It used to arrive as
+    # a dependency of the aoe formula, which no longer exists, so declare it or
+    # `brew autoremove` takes it away again.
+    - name: tmux
     - name: watch
     - name: worktrunk
     - name: xh
