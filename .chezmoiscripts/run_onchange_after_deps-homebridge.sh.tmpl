@@ -1,9 +1,11 @@
 #!/bin/bash
-# Install/update homebridge and Nest plugin (re-runs when versions change)
+{{ $nodeBin := joinPath .chezmoi.homeDir ".local/share/mise/installs/node/lts/bin/node" -}}
+# Install/update homebridge and Nest plugin (re-runs when versions or the active Node LTS change)
 # homebridge: {{ .packages.npm.homebridge_version }}
 # homebridge-config-ui-x: {{ .packages.npm.ui_version }}
 # homebridge-google-nest-sdm: {{ .packages.npm.nest_sdm_version }}
 # ffmpeg-for-homebridge: {{ .packages.npm.ffmpeg_for_homebridge_version }}
+# Active Node LTS: {{ if stat $nodeBin }}{{ output $nodeBin "--version" | trim }}{{ else }}not installed{{ end }}
 
 set -euo pipefail
 
