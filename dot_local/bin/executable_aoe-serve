@@ -2,7 +2,7 @@
 # Run AoE behind the node's private Tailscale Serve proxy.
 set -eu
 
-# Use AoE's native token auth even if launchd inherited an old passphrase.
+# Use AoE's native token auth even if the environment inherited an old passphrase.
 unset AOE_SERVE_PASSPHRASE
 
 # The full Linear plugin resolves LINEAR_API_KEY only from this daemon's
@@ -49,50 +49,24 @@ dns_name=$(/opt/homebrew/bin/tailscale status --json | /opt/homebrew/bin/jq -er 
 dns_name=${dns_name%.}
 
 if [ -z "$dns_name" ]; then
-  mkdir -p "$HOME/Library/Logs" 2>/dev/null
-  printf '%s aoe-serve: tailscale DNS name is empty — refusing to start with --allowed-host ""\n' \
-    "$(date '+%Y-%m-%d %H:%M:%S')" >> "$HOME/Library/Logs/aoe-serve.error.log" 2>/dev/null
-  printf 'aoe-serve: tailscale DNS name is empty — check Tailscale connectivity and retry.\n' >&2
+  printf 'aoe-serve: tailscale DNS name is empty — refusing to start with --allowed-host ""\n' >&2
+  printf 'aoe-serve: check Tailscale connectivity and retry.\n' >&2
   exit 1
 fi
 
-# AoE keeps one daemon per app dir, and a served daemon inherits the environment
-# of whatever started it. This script is the only starter that carries
-# LINEAR_API_KEY and the Tailscale proxy flags, so it must own that daemon.
+# AoE allows one daemon per app dir, so a daemon started by a TUI, the CLI, or an
+# agent makes this refuse on its own ("daemon already running (PID N)"). Run
+# `aoe serve --stop` first: the daemon whose environment carries LINEAR_API_KEY
+# and the proxy flags is the one this starts.
 #
-# AoE can restart itself into a detached daemon (e.g. after an update); that one
-# keeps this port, so wait for it rather than fighting over a second server. A
-# daemon on any other port came from a TUI, CLI, or agent that needed one first:
-# it has no Linear credential, so retire it instead of waiting on it forever.
-serve_port=4097
-retiring=
-# Probe with --no-autostart: a plain `serve --status` starts a daemon when none
-# is running, which would keep this loop waiting on the server it looks for.
-while status=$("$HOME/.local/bin/aoe" serve --status --no-autostart 2>/dev/null); do
-  port=$(printf '%s\n' "$status" \
-    | sed -n 's|^URL: *http://[^/:]*:\([0-9][0-9]*\)/.*|\1|p' | head -n 1)
-  if [ "$port" = "$serve_port" ]; then
-    sleep 5
-    continue
-  fi
-  if [ -z "$retiring" ]; then
-    printf 'aoe-serve: retiring the daemon on port %s to take ownership\n' \
-      "${port:-unknown}" >&2
-    retiring=1
-  fi
-  # `aoe serve --stop` refuses a daemon it holds no launch record for, so signal
-  # the PID the status reports; it is the same SIGTERM its own stop sends.
-  daemon_pid=$(printf '%s\n' "$status" \
-    | sed -n 's|^Daemon: *running (PID \([0-9][0-9]*\)).*|\1|p' | head -n 1)
-  if [ -n "$daemon_pid" ]; then
-    kill -TERM "$daemon_pid" 2>/dev/null || true
-  fi
-  sleep 5
-done
-exec "$HOME/.local/bin/aoe" serve \
+# --daemon detaches and records serve.launch, which is what makes `aoe serve
+# --stop` and `aoe update` able to manage this daemon later. A foreground daemon
+# records nothing, so both refuse it with "Missing daemon launch record", and it
+# dies with the terminal that started it.
+exec "$HOME/.local/bin/aoe" serve --daemon \
   --host 127.0.0.1 \
-  --port "$serve_port" \
+  --port 4097 \
   --allowed-host "$dns_name" \
   --behind-proxy \
-  --allowed-origin "https://$dns_name:$serve_port" \
+  --allowed-origin "https://$dns_name:4097" \
   --auth token

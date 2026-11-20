@@ -101,6 +101,15 @@ selection can change the saved preference until the next chezmoi apply.
 
 AoE Serve uses its native token URL for authentication; Tailscale Serve keeps access on the tailnet but does not replace AoE authentication.
 
+Nothing starts AoE Serve: no LaunchAgent runs it. Run `~/.local/bin/aoe-serve`
+for the daemon the `aoe` MCP server in `.chezmoidata/mcp.yaml` expects on port
+4097, with the Tailscale proxy flags and the Linear key a daemon started from a
+TUI or by an agent does not carry. It starts a detached managed daemon, so it
+returns once that daemon answers and `aoe serve --stop` still stops it. AoE
+allows one daemon per app dir, so stop a running one first; it refuses with
+`daemon already running` otherwise. Stopping the daemon takes the `aoe` MCP
+server down with it.
+
 The zsh `aoe` command supplies the Linear key from Keychain service `chezmoi`,
 account `linear_api_key`, unless a Linear credential is already set. This lets
 zsh-started daemons load Linear issue badges without exporting the key globally.

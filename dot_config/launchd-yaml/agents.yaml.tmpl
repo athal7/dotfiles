@@ -13,19 +13,6 @@
 # <true/>/<false/>. ProgramArguments are always strings, so numeric args
 # (timeouts, ports) must be quoted.
 launchagents:
-  aoe-serve:
-    Label: com.$USER.aoe-serve
-    ProgramArguments:
-      - $HOME/.local/bin/aoe-serve
-    RunAtLoad: true
-    KeepAlive: true
-    ProcessType: Interactive
-    StandardOutPath: $HOME/Library/Logs/aoe-serve.log
-    StandardErrorPath: $HOME/Library/Logs/aoe-serve.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
-      SHELL: /bin/zsh
-{{ template "omp-launchd-env" . }}
   firefox-mcp-broker:
     Label: com.$USER.firefox-mcp-broker
     ProgramArguments:

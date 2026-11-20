@@ -29,7 +29,6 @@ if ! command -v python3 >/dev/null 2>&1; then
   echo "python3 not found on PATH — skipping aoe plugin install/update" >&2
   exit 0
 fi
-plugin_synced=false
 
 # Ids upstream renamed. Remove the old copy so it does not load beside its
 # replacement; config.toml.tmpl drops the matching settings entry.
@@ -38,11 +37,8 @@ if [ -d "$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}" ]; then
   echo "removing retired aoe plugin {{ .id }} (replaced by {{ .replaced_by }})..."
   # uninstall only knows external plugins; a plugin that was dropped into the
   # directory by hand is listed as local and has to be removed directly.
-  if aoe plugin uninstall {{ .id }} < /dev/null 2>/dev/null; then
-    plugin_synced=true
-  elif rm -rf "$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"; then
-    plugin_synced=true
-  else
+  if ! aoe plugin uninstall {{ .id }} < /dev/null 2>/dev/null &&
+    ! rm -rf "$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"; then
     echo "WARN: could not remove retired aoe plugin {{ .id }}" >&2
   fi
 fi
@@ -58,11 +54,8 @@ fi
 PLUGIN_DIR="$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}"
 if [ ! -d "$PLUGIN_DIR" ]; then
   echo "installing aoe plugin {{ .id }} from {{ .source }}..."
-  if aoe plugin install {{ .source }} --yes < /dev/null; then
-    plugin_synced=true
-  else
+  aoe plugin install {{ .source }} --yes < /dev/null ||
     echo "WARN: aoe plugin install {{ .source }} failed" >&2
-  fi
 fi
 {{ end -}}
 
@@ -91,13 +84,3 @@ if [ -n "$plugin_list" ]; then
     echo "WARN: aoe plugin {{ .id }} is installed but did not load" >&2
   fi
 {{ end }}fi
-
-# A running daemon may have loaded its pane registry before these plugins
-# were installed. Reload once, only when its LaunchAgent is already running.
-if [ "$plugin_synced" = true ] && aoe serve --status > /dev/null 2>&1; then
-  serve_job="gui/$(id -u)/com.$(id -un).aoe-serve"
-  if launchctl print "$serve_job" > /dev/null 2>&1; then
-    launchctl kickstart -k "$serve_job" ||
-      echo "WARN: could not reload AoE Serve after plugin sync" >&2
-  fi
-fi

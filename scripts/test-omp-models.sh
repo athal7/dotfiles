@@ -71,9 +71,6 @@ check "renders the configured AoE plugin installer" "$plugin_install_valid" true
 check "renders a valid AoE serve launcher" "$(sh -n "$AOE_SERVE" && printf true)" true
 check "forwards OMP credentials to structured ACP workers" "$(grep -Fxc "      ANTHROPIC_API_KEY|OTARI_API_KEY|SPACELIFT_MCP_URL) export \"\$key=\${assignment#*=}\" ;;" "$AOE_SERVE")" 1
 
-check "reloads the supervised AoE daemon after plugin sync" "$(grep -Fxc "if [ \"\$plugin_synced\" = true ] && aoe serve --status > /dev/null 2>&1; then" "$PLUGIN_INSTALL")" 1
-check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl kickstart -k \"\$serve_job\" ||" "$PLUGIN_INSTALL")" 1
-
 MOCK_HOME="$WORK/mock-home"
 mkdir -p "$MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.github" "$MOCK_HOME/.config/agent-of-empires/plugins/athal7.attention"
 mkdir -p "$MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.omp/omp-extension"
@@ -88,7 +85,6 @@ mkdir -p "$MOCK_BIN"
 cat > "$MOCK_BIN/aoe" <<'EOF'
 #!/usr/bin/env bash
 case "$*" in
-  "serve --status") [ "${AOE_RUNNING:-false}" = true ] ;;
   "plugin update "*|"plugin install "*) exit 0 ;;
   *) exit 1 ;;
 esac
@@ -98,29 +94,13 @@ cat > "$MOCK_BIN/omp" <<'EOF'
 printf '%s\n' "$*" >> "$OMP_LOG"
 exit 0
 EOF
-cat > "$MOCK_BIN/launchctl" <<'EOF'
-#!/usr/bin/env bash
-printf '%s\n' "$*" >> "$LAUNCHCTL_LOG"
-case "$1" in
-  print) [ "${AOE_LAUNCHD:-false}" = true ] ;;
-  kickstart) exit 0 ;;
-  *) exit 1 ;;
-esac
-EOF
-chmod +x "$MOCK_BIN/aoe" "$MOCK_BIN/omp" "$MOCK_BIN/launchctl"
-LAUNCHCTL_LOG="$WORK/launchctl.log"
+chmod +x "$MOCK_BIN/aoe" "$MOCK_BIN/omp"
 OMP_LOG="$WORK/omp.log"
-: > "$LAUNCHCTL_LOG"
 : > "$OMP_LOG"
-PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" OMP_LOG="$OMP_LOG" \
-  AOE_RUNNING=false AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
-check "does not restart AoE when no daemon is running" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 0
+PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" OMP_LOG="$OMP_LOG" bash "$PLUGIN_INSTALL"
 check "links the OMP extension the paired AoE plugin ships" "$(grep -Fxc "plugin install $MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.omp/omp-extension" "$OMP_LOG")" 1
 : > "$OMP_LOG"
-: > "$LAUNCHCTL_LOG"
-PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" OMP_LOG="$OMP_LOG" \
-  AOE_RUNNING=true AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
-check "restarts AoE once after successful plugin sync" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 1
+PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" OMP_LOG="$OMP_LOG" bash "$PLUGIN_INSTALL"
 check "relinks the OMP extension on every sync, not just the first" "$(grep -Fxc "plugin install $MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.omp/omp-extension" "$OMP_LOG")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
 check "enables GitMCP by default" "$(jq '.mcpServers.gitmcp.enabled == true' "$MCP")" true
