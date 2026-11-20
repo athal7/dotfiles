@@ -119,24 +119,19 @@ packages:
     # the fire time loses that day rather than the whole schedule.
     - source: "gh:agent-of-empires/plugin-cron"
       id: "agent-of-empires.cron"
-    # 8c3e053 is the commit before upstream renamed this manifest into the
-    # `agent-of-empires.*` namespace on 2026-11-10. aoe only lets a
-    # featured-verified plugin claim that namespace, and plugin-freebuf is not in
-    # the featured index, so the renamed release (v0.1.1) is refused outright.
-    # Keep the last community-id revision until it is featured.
-    - source: "gh:agent-of-empires/plugin-freebuf@8c3e053"
-      id: "dev.example.aoe-freebuf"
+    # Featured since the aoe 1.25 index, so the renamed manifest installs and
+    # aoe updates it itself. config.toml.tmpl no longer pins freebuff as a
+    # custom agent: that pin kept plugin declarations out of the name, which
+    # left the plugin unable to own its own tool.
+    - source: "gh:agent-of-empires/plugin-freebuf"
+      id: "agent-of-empires.aoe-freebuf"
     # Paired OMP integration: its manifest gates which OMP releases may reply
     # through AoE, so a stale copy silently disables the approval dialog.
-    # be12ece is the last revision this host can load. Newer manifests cannot
-    # install: v0.4.x keeps the community id but declares
-    # `agent_integrations.launch.capture` and `.detection`, which aoe 1.24.0
-    # refuses below api_version 21, and v0.5.0 raises api_version to 21 by
-    # renaming to the reserved `agent-of-empires.omp`, which aoe refuses for an
-    # unfeatured plugin. Move the pin once plugin-omp is featured or ships an
-    # api_version 21 community-id release.
-    - source: "gh:agent-of-empires/plugin-omp@be12ece"
-      id: "omp.agent-of-empires"
+    # v0.5.0 declares `detection.mode = "native_only"` and api_version 21, so
+    # the community-id pin is retired; the extension external below carries the
+    # provider side of the same contract.
+    - source: "gh:agent-of-empires/plugin-omp"
+      id: "agent-of-empires.omp"
 
   # AoE plugin ids upstream renamed. The sync script uninstalls each one so it
   # stops loading beside its replacement, and config.toml.tmpl drops its
@@ -144,6 +139,10 @@ packages:
   aoe_plugins_retired:
     - id: "community.linear"
       replaced_by: "agent-of-empires.linear"
+    - id: "dev.example.aoe-freebuf"
+      replaced_by: "agent-of-empires.aoe-freebuf"
+    - id: "omp.agent-of-empires"
+      replaced_by: "agent-of-empires.omp"
 
   casks:
     - name: firefox
@@ -184,11 +183,10 @@ packages:
       executable: true
       refresh_period: 24h
 
-    # Pinned rather than tracked: the AoE OMP plugin allowlists provider
-    # versions up to 18.16.0, and above that the plugin drops its approval
-    # reply bridge. The Homebrew tap formula always floats to the newest
-    # release, so OMP installs here as a verified release instead. Move the tag
-    # forward once the plugin's allowlist covers a newer version.
+    # Pinned rather than tracked: the Homebrew tap formula floats to the newest
+    # release, so OMP installs here as a verified release instead. The AoE OMP
+    # plugin currently allows 18.10.4 up to, but excluding, 19.0.0, so this tag
+    # can move within 18.x once a new release is verified.
     - name: omp
       repo: can1357/oh-my-pi
       target: .local/bin/omp
