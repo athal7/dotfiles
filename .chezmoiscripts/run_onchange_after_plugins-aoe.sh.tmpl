@@ -67,6 +67,20 @@ fi
 {{ end -}}
 
 {{ template "aoe-plugin-tree-fix" . }}
+# Some plugins carry the provider-native half of their integration alongside the
+# AoE manifest. Link it into the provider's own plugin manager so one installer
+# owns both halves: OMP loads it from there, and the link survives `aoe plugin
+# update` because that replaces the plugin directory the link resolves into.
+{{ range .packages.aoe_plugins }}{{ if index . "omp_extension" -}}
+if command -v omp >/dev/null 2>&1; then
+  omp_extension_dir="$XDG_CONFIG_HOME/agent-of-empires/plugins/{{ .id }}/{{ .omp_extension }}"
+  if [ -d "$omp_extension_dir" ]; then
+    omp plugin install "$omp_extension_dir" < /dev/null 2>/dev/null ||
+      echo "WARN: could not link the OMP extension from aoe plugin {{ .id }}" >&2
+  fi
+fi
+{{ end }}{{ end -}}
+
 # Installing or updating can leave a plugin present but skipped at load, which
 # stops its contributions without failing the sync. Say so instead of leaving
 # only the install step's "validation:" line as evidence. An unusable listing is

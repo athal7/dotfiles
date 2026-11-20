@@ -49,19 +49,16 @@ PLUGIN_INSTALL="$WORK/plugins-aoe.sh"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiscripts/run_onchange_after_plugins-aoe.sh.tmpl" > "$PLUGIN_INSTALL"
 chezmoi execute-template -S "$REPO_ROOT" --override-data-file "$DATA" --file "$REPO_ROOT/.chezmoiexternal.toml.tmpl" > "$EXTERNAL"
 extension_external="$(yq -p=toml -o=json '.' "$EXTERNAL")"
-extension_url="$(yq -r '.packages.github_files[] | select(.name == "aoe-omp-extension") | "https://raw.githubusercontent.com/\(.repo)/\(.ref)/\(.path)"' "$REPO_ROOT/.chezmoidata/packages.yaml")"
-
-check "renders the OMP extension source pinned in packages.yaml" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"].url' <<< "$extension_external")" "$extension_url"
-check "leaves the moving OMP extension unpinned by checksum" "$(jq -r '.[".local/share/omp/extensions/agent-of-empires.ts"] | has("checksum")' <<< "$extension_external")" false
-check "verifies the pinned OMP download by checksum" "$(jq -r '.[".local/bin/omp"].checksum.sha256 | length' <<< "$extension_external")" 64
-check "marks the pinned OMP download executable" "$(jq -r '.[".local/bin/omp"].executable' <<< "$extension_external")" true
-check "loads the provider-native OMP extension when local data names no others" "$(yq -r '.extensions[0]' "$CONFIG")" "$HOME/.local/share/omp/extensions/agent-of-empires.ts"
 
 # Model roles are private machine data, not template content. Absence cannot be
 # asserted from a machine that has its own local.yaml (`--override-data-file`
 # merges with it), so the template itself is checked for shipped model names.
 check "renders OMP model roles from private local data" "$(yq -r '.modelRoles.smol' "$CONFIG")" "test-provider/test-smol"
 check "keeps model names out of the public OMP template" "$(grep -Ec 'gpt-|claude-|sonnet' "$REPO_ROOT/dot_config/omp/agent/config.yml.tmpl" || true)" 0
+check "verifies the pinned OMP download by checksum" "$(jq -r '.[".local/bin/omp"].checksum.sha256 | length' <<< "$extension_external")" 64
+check "marks the pinned OMP download executable" "$(jq -r '.[".local/bin/omp"].executable' <<< "$extension_external")" true
+check "stops downloading the OMP extension beside the plugin that ships it" "$(jq -r 'has(".local/share/omp/extensions/agent-of-empires.ts")' <<< "$extension_external")" false
+check "loads no OMP extension from config when local data names none" "$(yq -c '.extensions' "$CONFIG")" "[]"
 
 check "renders the AoE-managed OMP hook directory" "$(yq -p=toml -o=json '.environment' "$AOE" | jq -r '.[] | select(startswith("PI_CODING_AGENT_DIR="))')" "PI_CODING_AGENT_DIR=$HOME/.config/omp/agent"
 

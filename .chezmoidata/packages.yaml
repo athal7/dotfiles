@@ -128,10 +128,12 @@ packages:
     # Paired OMP integration: its manifest gates which OMP releases may reply
     # through AoE, so a stale copy silently disables the approval dialog.
     # v0.5.0 declares `detection.mode = "native_only"` and api_version 21, so
-    # the community-id pin is retired; the extension external below carries the
-    # provider side of the same contract.
+    # the community-id pin is retired. The extension ships inside this plugin's
+    # omp-extension/ directory and is linked into OMP by the sync script, so one
+    # installer owns both halves and they cannot drift.
     - source: "gh:agent-of-empires/plugin-omp"
       id: "agent-of-empires.omp"
+      omp_extension: "omp-extension"
 
   # AoE plugin ids upstream renamed. The sync script uninstalls each one so it
   # stops loading beside its replacement, and config.toml.tmpl drops its
@@ -197,15 +199,10 @@ packages:
       executable: true
 
   # GitHub source files are installed through .chezmoiexternal.toml.tmpl.
-  github_files:
-    - name: aoe-omp-extension
-      repo: agent-of-empires/plugin-omp
-      # No releases or tags upstream, so track the branch the paired AoE plugin
-      # installs from. No checksum: it would fail the apply on every upstream
-      # commit, so integrity now rests on the repo rather than a pinned digest.
-      ref: main
-      path: omp-extension/index.ts
-      target: .local/share/omp/extensions/agent-of-empires.ts
+  # The OMP extension is not one of them: it ships inside the AoE plugin
+  # (agent-of-empires.omp) and is loaded from there by `omp plugin install`, so
+  # one installer owns both halves and they cannot drift.
+  github_files: []
 
 
 
