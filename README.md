@@ -105,10 +105,18 @@ Nothing starts AoE Serve: no LaunchAgent runs it. Run `~/.local/bin/aoe-serve`
 for the daemon the `aoe` MCP server in `.chezmoidata/mcp.yaml` expects on port
 4097, with the Tailscale proxy flags and the Linear key a daemon started from a
 TUI or by an agent does not carry. It starts a detached managed daemon, so it
-returns once that daemon answers and `aoe serve --stop` still stops it. AoE
-allows one daemon per app dir, so stop a running one first; it refuses with
-`daemon already running` otherwise. Stopping the daemon takes the `aoe` MCP
-server down with it.
+returns once that daemon answers and `aoe serve --stop` still stops it.
+
+Anything else that needs a daemon starts one itself: the AoE TUI, a CLI command,
+or an agent autostarts one on the default port 8080 with none of those flags,
+and it stays up until stopped or rebooted. AoE allows one daemon per app dir, so
+`aoe-serve` refuses while that one lives (`daemon already running`); stop it
+first with `aoe serve --stop`, which works because AoE records how it was
+started. Stopping the daemon takes the `aoe` MCP server and the cron plugin's
+scheduled sessions down with it, and after a reboot nothing brings a daemon back:
+the `daily-maintenance` cron job skips an occurrence the worker was not running
+for rather than catching up, so a weekday run is lost unless the TUI, a CLI
+command, an agent, or `aoe-serve` starts a daemon that day.
 
 The zsh `aoe` command supplies the Linear key from Keychain service `chezmoi`,
 account `linear_api_key`, unless a Linear credential is already set. This lets
