@@ -118,9 +118,10 @@ check "does not restart AoE when no daemon is running" "$(grep -c '^kickstart -k
 check "links the OMP extension the paired AoE plugin ships" "$(grep -Fxc "plugin install $MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.omp/omp-extension" "$OMP_LOG")" 1
 : > "$OMP_LOG"
 : > "$LAUNCHCTL_LOG"
-PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
+PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" OMP_LOG="$OMP_LOG" \
   AOE_RUNNING=true AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
 check "restarts AoE once after successful plugin sync" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 1
+check "relinks the OMP extension on every sync, not just the first" "$(grep -Fxc "plugin install $MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.omp/omp-extension" "$OMP_LOG")" 1
 check "omits the retired CQ MCP server" "$(jq '.mcpServers | has("cq")' "$MCP")" false
 check "enables GitMCP by default" "$(jq '.mcpServers.gitmcp.enabled == true' "$MCP")" true
 check "keeps selected OMP MCP servers enabled" "$(jq '.mcpServers["codebase-memory"].enabled == true and .mcpServers.runlayer.enabled == true and .mcpServers.slack.enabled == true' "$MCP")" true
