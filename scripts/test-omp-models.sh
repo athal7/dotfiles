@@ -76,6 +76,7 @@ check "restarts AoE Serve through its LaunchAgent" "$(grep -Fxc "    launchctl k
 
 MOCK_HOME="$WORK/mock-home"
 mkdir -p "$MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.github" "$MOCK_HOME/.config/agent-of-empires/plugins/athal7.attention"
+mkdir -p "$MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.omp/omp-extension"
 cat > "$MOCK_HOME/.config/agent-of-empires/config.toml" <<'EOF'
 [plugins."agent-of-empires.github".settings]
 ignored_commenters = "ReviewBot[bot], CODERABBITAI"
@@ -92,6 +93,11 @@ case "$*" in
   *) exit 1 ;;
 esac
 EOF
+cat > "$MOCK_BIN/omp" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$OMP_LOG"
+exit 0
+EOF
 cat > "$MOCK_BIN/launchctl" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$LAUNCHCTL_LOG"
@@ -101,12 +107,16 @@ case "$1" in
   *) exit 1 ;;
 esac
 EOF
-chmod +x "$MOCK_BIN/aoe" "$MOCK_BIN/launchctl"
+chmod +x "$MOCK_BIN/aoe" "$MOCK_BIN/omp" "$MOCK_BIN/launchctl"
 LAUNCHCTL_LOG="$WORK/launchctl.log"
+OMP_LOG="$WORK/omp.log"
 : > "$LAUNCHCTL_LOG"
-PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
+: > "$OMP_LOG"
+PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" OMP_LOG="$OMP_LOG" \
   AOE_RUNNING=false AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
 check "does not restart AoE when no daemon is running" "$(grep -c '^kickstart -k ' "$LAUNCHCTL_LOG" || true)" 0
+check "links the OMP extension the paired AoE plugin ships" "$(grep -Fxc "plugin install $MOCK_HOME/.config/agent-of-empires/plugins/agent-of-empires.omp/omp-extension" "$OMP_LOG")" 1
+: > "$OMP_LOG"
 : > "$LAUNCHCTL_LOG"
 PATH="$MOCK_BIN:$PATH" HOME="$MOCK_HOME" LAUNCHCTL_LOG="$LAUNCHCTL_LOG" \
   AOE_RUNNING=true AOE_LAUNCHD=true bash "$PLUGIN_INSTALL"
