@@ -12,12 +12,14 @@ A skill fires at a **specific, named moment**. Guidance that applies to every se
 
 Keep: exact CLI invocations and flags, file paths, auth setup, silent failure modes, wrong-output traps, numeric caps, org conventions, hard-won gotchas. Cut: anything `<binary> --help` says, generic engineering advice, restated model knowledge, and rationale for a rule the reader already accepted.
 
+**Write a rule as a hard line.** A gray area is where an agent quietly does something else, so say ALWAYS or NEVER in one sentence rather than describing a preference — a hard line at least fails visibly. Give the reason only where the agent would otherwise read the line as optional; a reason it already accepts is the rationale above, cut it.
+
 ## Shape
 
-- **The description is the trigger** — the only thing seen before deciding to load. State the situation, not the topic.
-- **Under ~80 lines.**
+- **The description is the trigger** — the only thing seen before deciding to load, so state the situation the caller is in, not the topic. `reminders: macOS Reminders via remindctl CLI` is a topic nobody opens; name the moment (`use when a reminder looks missing`) and what opening it buys. An undersold description costs the whole skill, so it carries more weight than any rule inside it.
+- **Under ~80 lines.** When a topic outgrows that, move the detail to `references/<topic>.md` and leave a one-line index entry in SKILL.md that says when to open it.
 - **Imperative steps, not phase graphs.** Use a decision tree when a skill has multiple paths.
-- **Keep required action in the triggering skill.** Referenced sub-files are not loaded automatically; put longer programs in `$PATH` as scripts.
+- **Keep required action in the triggering skill.** A `references/` file is not loaded automatically — SKILL.md must link it, and the link is how the agent decides to pay for the next layer. Runnable programs still belong in `$PATH` as scripts, not in a reference file. For the same reason, restate a rule in each skill that needs it rather than factoring it into a shared file or pointing at another skill that is not guaranteed to be loaded — duplicated text is cheap, a gate that is absent from the skill actually in play is not.
 
 ## Public repo
 

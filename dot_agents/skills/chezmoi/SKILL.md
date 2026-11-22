@@ -1,6 +1,6 @@
 ---
 name: chezmoi
-description: Manage dotfiles via chezmoi — apply safely, destroy files, manage LaunchAgents and externals, config and template gotchas
+description: Use when applying, verifying, or debugging this repo's chezmoi state — render-only checks from a worktree, the deploy workflow, destroying managed files, LaunchAgents, externals, and template gotchas.
 license: MIT
 ---
 

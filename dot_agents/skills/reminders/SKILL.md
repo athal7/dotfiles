@@ -1,6 +1,6 @@
 ---
 name: reminders
-description: macOS Reminders via remindctl CLI
+description: Use when reading, adding, or completing macOS Reminders with remindctl — the filters and query combinations that silently return nothing, so an existing or just-created reminder looks missing.
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: xh
-description: HTTPie-compatible HTTP client for REST API calls
+description: Use when calling an HTTP API from the shell — xh syntax for headers, JSON and GraphQL bodies, and the pre-provisioned sessions that already carry credentials, so never add an Authorization header by hand.
 license: MIT
 ---
 
