@@ -119,8 +119,11 @@ command, an agent, or `aoe-serve` starts a daemon that day.
 The zsh `aoe` command supplies the Linear key from Keychain service `chezmoi`,
 account `linear_api_key`, unless a Linear credential is already set. This lets
 zsh-started daemons load Linear issue badges without exporting the key globally.
-Direct and AoE MCP sessions resolve the same Keychain item when connecting to
-Linear, so the rendered MCP configs contain no Linear credential.
+`chezmoi apply` copies the same Keychain item into
+`~/.config/agent-of-empires/linear.token` (mode `600`), which the rendered MCP
+configs read when connecting to Linear, so they contain no Linear credential.
+The copy exists because AoE spawns structured-view workers detached, where the
+Keychain is unavailable (`security` exits 36) but a file read is not.
 
 ## Naya Create keyboard
 

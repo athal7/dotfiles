@@ -79,7 +79,11 @@
         "headers": {
           # AoE forwards the literal command through ACP, and OMP resolves it
           # when opening the connection instead of storing the key in config.
-          "Authorization": { "value": "!printf 'Bearer %s' \"$(/usr/bin/security find-generic-password -s chezmoi -a linear_api_key -w)\"" },
+          # Read a token file, not the Keychain: a daemon-spawned ACP worker has
+          # no interactive login session, so `security` there exits 36
+          # (errSecInteractionNotAllowed) and the header collapses to `Bearer `.
+          # The file is written by an apply-time script that does hold one.
+          "Authorization": { "value": "!printf 'Bearer %s' \"$(cat ~/.config/agent-of-empires/linear.token)\"" },
         },
         "tools":
           [

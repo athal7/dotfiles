@@ -1,0 +1,29 @@
+#!/bin/sh
+# Write the Linear MCP token file from Keychain.
+#
+# The Linear MCP header in .chezmoidata/mcp.yaml reads
+# ~/.config/agent-of-empires/linear.token at connection time. It cannot read the
+# Keychain itself: AoE's daemon spawns ACP workers detached, where `security`
+# exits 36 (errSecInteractionNotAllowed) because there is no interactive login
+# session, so the header would expand to `Bearer ` and Linear answers 401.
+# `chezmoi apply` runs in the user's session, where the Keychain does resolve.
+#
+# A missing Keychain item is reported and left alone rather than failing the
+# apply: the rest of the configuration does not depend on Linear.
+#
+# config hash: {{ include ".chezmoidata/mcp.yaml" | sha256sum }}
+
+set -eu
+
+target="$HOME/.config/agent-of-empires/linear.token"
+
+if ! token=$(/usr/bin/security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null) || [ -z "$token" ]; then
+  printf 'linear token: no Keychain item (service chezmoi, account linear_api_key); leaving %s unchanged\n' "$target" >&2
+  exit 0
+fi
+
+mkdir -p "$(dirname "$target")"
+umask 077
+printf '%s' "$token" > "$target"
+chmod 600 "$target"
+printf 'linear token: wrote %s\n' "$target"
