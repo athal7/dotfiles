@@ -211,6 +211,8 @@ packages:
   skills:
     - repo: BRO3886/ical
       skill: ical-cli
+    - repo: GoogleChrome/modern-web-guidance
+      skill: modern-web-guidance
 
   # npm-managed global packages — unpinned, so each install takes the current
   # published release.

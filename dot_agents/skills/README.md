@@ -17,7 +17,7 @@ How to drive a specific tool or API.
 | **reminders** | macOS Reminders via `remindctl` |
 | **xh** | HTTPie-compatible HTTP client |
 
-External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical).
+External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](https://github.com/BRO3886/ical), [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance).
 
 ## Workflow Skills
 
