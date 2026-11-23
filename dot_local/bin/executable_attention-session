@@ -80,7 +80,9 @@ resolve_tool() {
   fi
   # shellcheck disable=SC2016 # jq expands $repo, not the shell.
   tool=$("$JQ_BIN" -r --arg repo "$owner/*" \
-    '[.session.agents[]? | select(.repo == $repo) | .tool][0] // "omp"' "$config") || \
+    '[.session.agents[]?
+      | select((.repo | ascii_downcase) == ($repo | ascii_downcase))
+      | .tool][0] // "omp"' "$config") || \
     fail "cannot resolve the Attention session agent for $github_repo"
   printf '%s\n' "$tool"
 }
