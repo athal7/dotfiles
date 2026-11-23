@@ -89,10 +89,13 @@
           #
           # A directly launched `omp` has no such hook, so it uses OMP's
           # documented `!` command indirection instead, resolved in its own
-          # process where the Keychain is available.
+          # process where the Keychain is available. A Keychain miss must print
+          # nothing rather than an empty "Bearer ", because `printf` exits 0
+          # regardless: OMP keeps any non-empty header, but omits the server
+          # when the command yields no output.
           "Authorization": {
             "value": "Bearer ${LINEAR_API_KEY}",
-            "omp": "!printf 'Bearer %s' \"$(security find-generic-password -s chezmoi -a linear_api_key -w)\"",
+            "omp": "!k=$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null) || exit 0; [ -n \"$k\" ] || exit 0; printf 'Bearer %s' \"$k\"",
           },
         },
         "tools":
