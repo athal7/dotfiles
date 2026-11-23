@@ -186,9 +186,10 @@ packages:
       refresh_period: 24h
 
     # Pinned rather than tracked: the Homebrew tap formula floats to the newest
-    # release, so OMP installs here as a verified release instead. The AoE OMP
-    # plugin currently allows 18.10.4 up to, but excluding, 19.0.0, so this tag
-    # can move within 18.x once a new release is verified.
+    # release, so OMP installs here as a verified release instead. AoE's
+    # featured OMP plugin release (v0.5.0) allows 18.10.4 up to, but excluding,
+    # 19.0.0. Upstream plugin main widened its bound to <20.0.0, but no such
+    # release is featured yet, so this tag stays within 18.x until one is.
     - name: omp
       repo: can1357/oh-my-pi
       target: .local/bin/omp

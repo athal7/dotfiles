@@ -1,7 +1,9 @@
 .agents/prompts/pr-review-requests.md
 .config/omp/agent/kb-enrich-mcp.json
 .config/omp/agent/models.yml
+.config/omp/personal-orgs.json
 .config/omp/personal.yml
+.local/bin/omp-personal-repo
 .local/bin/review-drafts
 {{ $legacyEnvrc := joinPath .chezmoi.homeDir ".envrc" -}}
 {{ if lstat $legacyEnvrc -}}

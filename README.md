@@ -91,9 +91,7 @@ Review it, then run `direnv allow`. Shell startup doesn't load credentials globa
 
 OMP uses the same global model preferences for direct, AoE, and Attention
 sessions. Explicit model choices, project settings, and environment overrides
-can take precedence. For configured personal GitHub organizations, the shell
-and AoE supply the OpenRouter key from Keychain service `chezmoi`, account
-`openrouter_api_key`, without loading work credentials.
+can take precedence.
 
 Freebuff CLI defaults to Solar Mini 4 in direct, AoE, and Attention sessions.
 Its unlimited pricing is promotional and account-dependent; an explicit

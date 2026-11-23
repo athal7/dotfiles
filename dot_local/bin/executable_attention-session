@@ -60,25 +60,29 @@ fail() {
 
 # AoE can only choose an agent per session (`aoe add --tool`) or from its
 # global/per-profile default; a repository may not set `session.default_tool`,
-# so an item launched by Attention has to name the agent itself. The checkout
-# decides, through the same classifier OMP credentials use, and an explicit
-# AOE_TOOL still wins so the caller always has the last word.
+# so an item launched by Attention has to name the agent itself. Attention's
+# session.agents mapping decides, and an explicit AOE_TOOL still wins.
 resolve_tool() {
-  local repo=$1 status=0
+  local github_repo=$1 owner config tool
   if [ -n "${AOE_TOOL:-}" ]; then
     printf '%s\n' "$AOE_TOOL"
     return 0
   fi
-  if [ -z "$repo" ]; then
+  if [ -z "$github_repo" ]; then
     printf 'omp\n'
     return 0
   fi
-  "$HOME/.local/bin/omp-personal-repo" "$repo" || status=$?
-  case $status in
-    0) printf 'freebuff\n' ;;
-    1) printf 'omp\n' ;;
-    *) fail "cannot classify $repo as personal or work to choose its agent" ;;
-  esac
+  owner=${github_repo%%/*}
+  config="$HOME/.config/attention/config.json"
+  if [ ! -r "$config" ]; then
+    printf 'omp\n'
+    return 0
+  fi
+  # shellcheck disable=SC2016 # jq expands $repo, not the shell.
+  tool=$("$JQ_BIN" -r --arg repo "$owner/*" \
+    '[.session.agents[]? | select(.repo == $repo) | .tool][0] // "omp"' "$config") || \
+    fail "cannot resolve the Attention session agent for $github_repo"
+  printf '%s\n' "$tool"
 }
 
 # The dispatcher has to match the agent AoE resolved for this item: OMP can take
@@ -282,7 +286,7 @@ case "$1" in
     if [ -z "$2" ] || [ -z "$3" ]; then
       fail "title and prompt must not be empty"
     fi
-    # A scratch session has no checkout to classify.
+    # A scratch session has no repository to map to an agent.
     session_tool=$(resolve_tool '')
     resume_existing scratch "$2" '' ''
     dispatch "$2" "$3"
@@ -309,7 +313,7 @@ case "$1" in
       fail "repository path is not a Git repository: $repo_path"
     matches_github_remote "$repo_root" "$github_repo" || \
       fail "repository remotes do not match $github_repo"
-    session_tool=$(resolve_tool "$repo_root")
+    session_tool=$(resolve_tool "$github_repo")
 
     "$GIT_BIN" check-ref-format --branch "$requested_branch" >/dev/null || \
       fail "worktree branch is not valid: $requested_branch"
