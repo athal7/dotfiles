@@ -24,7 +24,12 @@
 {{-       $headers := dict -}}
 {{-       range $headerName, $headerSpec := $server.headers -}}
 {{-         $value := "" -}}
-{{-         if hasKey $headerSpec "value" -}}
+{{-         if hasKey $headerSpec "omp" -}}
+{{/* Emit the literal `!command` form; OMP runs it at connect time. Never
+     `output` here: that runs at chezmoi render time and would bake the
+     secret into the rendered file. */}}
+{{-           $value = $headerSpec.omp | toString -}}
+{{-         else if hasKey $headerSpec "value" -}}
 {{-           $value = $headerSpec.value | toString -}}
 {{-         else -}}
 {{-           $value = output "sh" "-c" $headerSpec.cmd | trim -}}

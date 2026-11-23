@@ -119,13 +119,24 @@ command, an agent, or `aoe-serve` starts a daemon that day.
 The zsh `aoe` command supplies the Linear key from Keychain service `chezmoi`,
 account `linear_api_key`, unless a Linear credential is already set. This lets
 zsh-started daemons load Linear issue badges without exporting the key globally.
-`chezmoi apply` copies the same Keychain item into
-`~/.config/agent-of-empires/linear.token` (mode `600`), which the rendered MCP
-configs read when connecting to Linear, so they contain no Linear credential.
-The copy exists because AoE spawns structured-view workers detached, where the
-login Keychain can read as locked (`security` exits 36) even though the same
-worker can read the item once the Keychain is unlocked. Reading the file makes
-the connection independent of the lock state at connect time.
+
+The rendered MCP configs hold no Linear credential: the Linear server's
+`Authorization` header resolves the key when the connection opens. Each consumer
+uses its own documented mechanism. Inside AoE the header is
+`Bearer ${LINEAR_API_KEY}`, expanded from the session environment, and
+`aoe-linear-env` is a `before_session` host hook that prints
+`LINEAR_API_KEY=<value>` for every agent; it is ungated because the Linear server
+is available to all agents, not only `omp`. A directly launched `omp` runs before
+any AoE hook, so its header uses OMP's `!command` indirection and reads the same
+Keychain item in its own process.
+
+The two paths differ in *where* the read happens, and that difference matters.
+AoE spawns structured-view workers detached, where the login Keychain can read as
+locked (`security` exits 36) even though the same worker reads the item once the
+Keychain is unlocked. Resolving in a `before_session` hook moves the read to
+session launch inside the daemon, so it no longer depends on the lock state at
+connect time. A directly launched `omp` never enters that worker, so it resolves
+in its own process, where the Keychain is available.
 
 ## Naya Create keyboard
 

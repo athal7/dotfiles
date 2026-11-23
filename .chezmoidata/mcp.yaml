@@ -77,16 +77,23 @@
         "transport": "remote",
         "url": "https://mcp.linear.app/mcp",
         "headers": {
-          # AoE forwards the literal command through ACP, and OMP resolves it
-          # when opening the connection instead of storing the key in config.
-          # Read a token file, not the Keychain: a daemon-spawned ACP worker can
-          # see the login Keychain as locked, so `security` there exits 36
-          # (errSecInteractionNotAllowed) and the header collapses to `Bearer `.
-          # That is a lock state, not a missing session: the same worker reads
-          # the item once the Keychain is unlocked. A connect-time read is
-          # therefore only as reliable as the lock state at that instant, while
-          # a file read always works. The apply-time script writes the file.
-          "Authorization": { "value": "!printf 'Bearer %s' \"$(cat ~/.config/agent-of-empires/linear.token)\"" },
+          # Neither form is a credential: both resolve the key when the
+          # connection opens, so no config file holds it and no apply-time copy
+          # can go stale against Keychain.
+          #
+          # AoE expands ${LINEAR_API_KEY} in header values from the session
+          # environment, which `aoe-linear-env` (a before_session host hook)
+          # supplies. Reading Keychain there, at session launch in the daemon,
+          # avoids the detached-worker read that made an earlier design depend on
+          # the Keychain's lock state at connect time.
+          #
+          # A directly launched `omp` has no such hook, so it uses OMP's
+          # documented `!` command indirection instead, resolved in its own
+          # process where the Keychain is available.
+          "Authorization": {
+            "value": "Bearer ${LINEAR_API_KEY}",
+            "omp": "!printf 'Bearer %s' \"$(security find-generic-password -s chezmoi -a linear_api_key -w)\"",
+          },
         },
         "tools":
           [

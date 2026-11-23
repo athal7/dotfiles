@@ -1,0 +1,26 @@
+#!/bin/sh
+# Mint LINEAR_API_KEY for an AoE session's environment.
+#
+# AoE expands ${NAME} in an MCP server's header values from the session
+# environment, which is the profile's environment plus the KEY=VALUE lines a
+# before_session host hook prints. It does not inherit the daemon environment
+# wholesale, so a header of `Bearer ${LINEAR_API_KEY}` stays unresolved -- and
+# AoE drops an unresolved Authorization header -- unless a hook supplies it.
+#
+# Ungated on purpose: the Linear MCP server is available to every agent, so the
+# key must be minted for claude and codex sessions too, not just omp.
+#
+# Prefer an already-set value (aoe-serve exports it at daemon start) and fall
+# back to Keychain for a daemon that started without it. Printing nothing leaves
+# the header unresolved rather than sending an empty credential.
+
+set -u
+
+if [ -z "${LINEAR_API_KEY:-}" ] && [ -r "$HOME/.config/direnv/lib/keychain.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.config/direnv/lib/keychain.sh"
+  keychain_env LINEAR_API_KEY linear_api_key 2>/dev/null || :
+fi
+
+[ -n "${LINEAR_API_KEY:-}" ] || exit 0
+printf 'LINEAR_API_KEY=%s\n' "$LINEAR_API_KEY"
