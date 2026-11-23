@@ -23,6 +23,7 @@ External skills come from `.chezmoidata/packages.yaml` `skills:` — [ical-cli](
 
 | Skill | Covers |
 |---|---|
+| **code-review** | Review a pull request, post findings, and choose the review verdict. |
 | **communication** | Draft human-facing prose for an integration. |
 | **shipit** | Commit and ship small changes as stacked pull requests, or deploy this dotfiles repository. |
 | **homebrew-release** | Verify a release, update its Homebrew tap, and verify the local install. |
