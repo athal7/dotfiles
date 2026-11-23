@@ -119,6 +119,8 @@ command, an agent, or `aoe-serve` starts a daemon that day.
 The zsh `aoe` command supplies the Linear key from Keychain service `chezmoi`,
 account `linear_api_key`, unless a Linear credential is already set. This lets
 zsh-started daemons load Linear issue badges without exporting the key globally.
+Direct and AoE MCP sessions resolve the same Keychain item when connecting to
+Linear, so the rendered MCP configs contain no Linear credential.
 
 ## Naya Create keyboard
 

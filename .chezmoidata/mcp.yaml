@@ -74,9 +74,13 @@
       },
       {
         "name": "linear",
-        "aoe_acp": false,
         "transport": "remote",
         "url": "https://mcp.linear.app/mcp",
+        "headers": {
+          # AoE forwards the literal command through ACP, and OMP resolves it
+          # when opening the connection instead of storing the key in config.
+          "Authorization": { "value": "!printf 'Bearer %s' \"$(/usr/bin/security find-generic-password -s chezmoi -a linear_api_key -w)\"" },
+        },
         "tools":
           [
             "extract_images",
