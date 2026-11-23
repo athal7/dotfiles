@@ -123,7 +123,9 @@ zsh-started daemons load Linear issue badges without exporting the key globally.
 `~/.config/agent-of-empires/linear.token` (mode `600`), which the rendered MCP
 configs read when connecting to Linear, so they contain no Linear credential.
 The copy exists because AoE spawns structured-view workers detached, where the
-Keychain is unavailable (`security` exits 36) but a file read is not.
+login Keychain can read as locked (`security` exits 36) even though the same
+worker can read the item once the Keychain is unlocked. Reading the file makes
+the connection independent of the lock state at connect time.
 
 ## Naya Create keyboard
 

@@ -79,10 +79,13 @@
         "headers": {
           # AoE forwards the literal command through ACP, and OMP resolves it
           # when opening the connection instead of storing the key in config.
-          # Read a token file, not the Keychain: a daemon-spawned ACP worker has
-          # no interactive login session, so `security` there exits 36
+          # Read a token file, not the Keychain: a daemon-spawned ACP worker can
+          # see the login Keychain as locked, so `security` there exits 36
           # (errSecInteractionNotAllowed) and the header collapses to `Bearer `.
-          # The file is written by an apply-time script that does hold one.
+          # That is a lock state, not a missing session: the same worker reads
+          # the item once the Keychain is unlocked. A connect-time read is
+          # therefore only as reliable as the lock state at that instant, while
+          # a file read always works. The apply-time script writes the file.
           "Authorization": { "value": "!printf 'Bearer %s' \"$(cat ~/.config/agent-of-empires/linear.token)\"" },
         },
         "tools":

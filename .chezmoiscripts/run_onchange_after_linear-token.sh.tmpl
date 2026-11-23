@@ -3,10 +3,12 @@
 #
 # The Linear MCP header in .chezmoidata/mcp.yaml reads
 # ~/.config/agent-of-empires/linear.token at connection time. It cannot read the
-# Keychain itself: AoE's daemon spawns ACP workers detached, where `security`
-# exits 36 (errSecInteractionNotAllowed) because there is no interactive login
-# session, so the header would expand to `Bearer ` and Linear answers 401.
-# `chezmoi apply` runs in the user's session, where the Keychain does resolve.
+# Keychain itself: a detached ACP worker can see the login Keychain locked, where
+# `security` exits 36 (errSecInteractionNotAllowed), so the header would expand to
+# `Bearer ` and Linear answers 401. That is a lock state rather than an absent
+# session, so the connect-time read would work only while the Keychain happens to
+# be unlocked. `chezmoi apply` runs in an unlocked session; writing the value out
+# from there makes the read unconditional.
 #
 # A missing Keychain item is reported and left alone rather than failing the
 # apply: the rest of the configuration does not depend on Linear.
