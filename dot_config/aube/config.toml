@@ -1,0 +1,8 @@
+# Firefox MCP renamed its npm package to @mozilla/firefox-mcp in 0.11.0 and
+# still publishes the same build under the old name. aube's minimumPackageAge
+# gate rejects any _new_ package name for 30 days regardless of the version, so
+# allowlist this one rather than keeping mise on the superseded name.
+# Verified 2026-11-25: both names ship the identical 0.11.0 tarball and the
+# broker pins its own lockfile integrity. Remove this entry after 2026-12-18,
+# when the name clears the default gate on its own.
+allowed-unpopular-packages = ["@mozilla/firefox-mcp"]
