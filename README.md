@@ -89,6 +89,8 @@ keychain_env MYAPP_API_KEY myapp_api_key
 
 Review it, then run `direnv allow`. Shell startup doesn't load credentials globally. Alternatively, keep 1Password references in an ignored `fnox.local.toml` and use `fnox exec -- <command>` for command-scoped credentials.
 
+One exception to Keychain-only: AoE's Linear plugin reads `LINEAR_API_KEY` from the daemon's environment, and a daemon started from an SSH session cannot read the Keychain item — `security -w` fails with `errSecInteractionNotAllowed` (exit 36) and prints nothing. `linear-api-key` therefore also accepts `~/.config/linear/api_key`, a 0600 one-line file, which is how `gh` answers `gh auth token` over SSH too.
+
 OMP uses the same global model preferences for direct, AoE, and Attention
 sessions. Explicit model choices, project settings, and environment overrides
 can take precedence.

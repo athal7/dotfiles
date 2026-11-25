@@ -10,16 +10,15 @@
 # Ungated on purpose: the Linear MCP server is available to every agent, so the
 # key must be minted for claude and codex sessions too, not just omp.
 #
-# Prefer an already-set value (aoe-serve exports it at daemon start) and fall
-# back to Keychain for a daemon that started without it. Printing nothing leaves
-# the header unresolved rather than sending an empty credential.
+# linear-api-key prefers a value already in the environment (aoe-serve exports
+# one at daemon start) and otherwise reads ~/.config/linear/api_key or Keychain.
+# Printing nothing leaves the header unresolved rather than sending an empty
+# credential.
 
 set -u
 
-if [ -z "${LINEAR_API_KEY:-}" ] && [ -r "$HOME/.config/direnv/lib/keychain.sh" ]; then
-  # shellcheck disable=SC1091
-  . "$HOME/.config/direnv/lib/keychain.sh"
-  keychain_env LINEAR_API_KEY linear_api_key 2>/dev/null || :
+if [ -z "${LINEAR_API_KEY:-}" ]; then
+  LINEAR_API_KEY=$(linear-api-key 2>/dev/null) || LINEAR_API_KEY=
 fi
 
 [ -n "${LINEAR_API_KEY:-}" ] || exit 0

@@ -47,29 +47,25 @@ _brew_prefix="$(brew --prefix)"
 [[ -f ~/.config/zsh/private.zsh ]] && source ~/.config/zsh/private.zsh
 
 # Make Linear available to an AoE daemon started from this shell, without
-# exporting its credential to unrelated commands.
+# exporting its credential to unrelated commands. linear-api-key resolves the
+# key from the environment, ~/.config/linear/api_key, or Keychain, so this also
+# works from an SSH session where the Keychain item cannot be read.
 aoe() {
   local linear_key
-  if [[ -z "${LINEAR_API_KEY:-}" && -z "${LINEAR_TOKEN:-}" ]]; then
-    linear_key=$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null) || linear_key=
-    if [[ -n "$linear_key" ]]; then
-      LINEAR_API_KEY="$linear_key" command aoe "$@"
-      return $?
-    fi
+  if [[ -z "${LINEAR_API_KEY:-}" && -z "${LINEAR_TOKEN:-}" ]] && linear_key=$(linear-api-key 2>/dev/null); then
+    LINEAR_API_KEY="$linear_key" command aoe "$@"
+    return $?
   fi
   command aoe "$@"
 }
 
 # Attention reads its Linear token from LINEAR_API_TOKEN, and this wrapper is the
-# only thing that supplies it, so no config file on disk holds the credential.
+# only thing that supplies it, so no config file managed here holds the credential.
 attention() {
   local linear_token
-  if [[ -z "${LINEAR_API_TOKEN:-}" ]]; then
-    linear_token=$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null) || linear_token=
-    if [[ -n "$linear_token" ]]; then
-      LINEAR_API_TOKEN="$linear_token" command attention "$@"
-      return $?
-    fi
+  if [[ -z "${LINEAR_API_TOKEN:-}" ]] && linear_token=$(linear-api-key 2>/dev/null); then
+    LINEAR_API_TOKEN="$linear_token" command attention "$@"
+    return $?
   fi
   command attention "$@"
 }

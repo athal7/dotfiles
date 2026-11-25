@@ -15,7 +15,8 @@ cat >"$WORK/bin/aoe" <<'EOF'
 printf '%s|%s\n' "${LINEAR_API_KEY-unset}" "${LINEAR_TOKEN-unset}" > "$PROBE"
 exit 7
 EOF
-chmod +x "$WORK/bin/security" "$WORK/bin/aoe"
+cp "$ROOT/dot_local/bin/executable_linear-api-key" "$WORK/bin/linear-api-key"
+chmod +x "$WORK/bin/security" "$WORK/bin/aoe" "$WORK/bin/linear-api-key"
 run_shell() {
   # shellcheck disable=SC2016 # The invoked zsh expands these expressions.
   env -i HOME="$WORK/home" PATH="$WORK/bin:/usr/bin:/bin" \
@@ -44,4 +45,19 @@ rm "$WORK/lookups"
 [[ "$(cat "$WORK/probe")" == 'unset|unset' ]]
 [[ "$(run_shell KEYCHAIN_KEY=)" == 'unset|unset|7' ]]
 [[ "$(cat "$WORK/probe")" == 'unset|unset' ]]
-printf 'AoE credential precedence, command scope, and missing-key behavior pass.\n'
+# A 0600 key file supplies the key when Keychain cannot be read, as over SSH,
+# and an exported key still wins over it.
+mkdir -p "$WORK/home/.config/linear"
+printf 'file-test-key\n' >"$WORK/home/.config/linear/api_key"
+chmod 600 "$WORK/home/.config/linear/api_key"
+rm -f "$WORK/lookups"
+[[ "$(run_shell MISSING_KEY=1)" == 'unset|unset|7' ]]
+[[ "$(cat "$WORK/probe")" == 'file-test-key|unset' ]]
+[[ ! -e "$WORK/lookups" ]]
+[[ "$(run_shell LINEAR_API_KEY=explicit-key)" == 'explicit-key|unset|7' ]]
+[[ "$(cat "$WORK/probe")" == 'explicit-key|unset' ]]
+# An empty key file falls back to Keychain rather than sending a blank credential.
+printf '\n' >"$WORK/home/.config/linear/api_key"
+[[ "$(run_shell)" == 'unset|unset|7' ]]
+[[ "$(cat "$WORK/probe")" == 'keychain-test-key|unset' ]]
+printf 'AoE credential precedence, command scope, key-file fallback, and missing-key behavior pass.\n'

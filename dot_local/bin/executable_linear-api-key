@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Print the Linear personal API key for a caller to place in its environment.
+#
+# AoE's Linear plugin reads LINEAR_API_KEY from the daemon's environment and
+# nothing else, and OMP's linear MCP server resolves `Bearer ${LINEAR_API_KEY}`
+# from the session environment that the aoe-linear-env host hook supplies. Both
+# therefore need the key to reach a process started from any shell, including an
+# SSH session.
+#
+# Keychain alone cannot do that. An item whose access control requires
+# interaction fails from a headless session with errSecInteractionNotAllowed
+# (exit 36) and prints nothing, which is indistinguishable from "no key". The
+# GitHub plugin avoids this the same way: `gh auth token` reads a 0600 file, so
+# it answers over SSH. This is that fallback for Linear.
+#
+# Resolution order:
+#   1. LINEAR_API_KEY / LINEAR_TOKEN already exported by the caller.
+#   2. ~/.config/linear/api_key -- one line, mode 0600, the same trust model as
+#      gh's hosts.yml. This is the source that works over SSH.
+#   3. Keychain, service chezmoi, account linear_api_key. Needs a GUI session.
+#
+# Prints nothing and exits 1 when no source has a value, so callers leave the
+# variable unset rather than sending an empty credential.
+
+set -u
+
+key_file=$HOME/.config/linear/api_key
+
+# Strip leading and trailing whitespace, including the trailing newline both a
+# file and `security -w` add.
+trim() {
+  local value=$1
+  value=${value#"${value%%[![:space:]]*}"}
+  value=${value%"${value##*[![:space:]]}"}
+  printf '%s' "$value"
+}
+
+for variable in LINEAR_API_KEY LINEAR_TOKEN; do
+  value=$(trim "${!variable:-}")
+  if [[ -n $value ]]; then
+    printf '%s\n' "$value"
+    exit 0
+  fi
+done
+
+if [[ -f $key_file ]]; then
+  value=$(trim "$(<"$key_file")")
+  if [[ -n $value ]]; then
+    printf '%s\n' "$value"
+    exit 0
+  fi
+fi
+
+value=$(trim "$(security find-generic-password -s chezmoi -a linear_api_key -w 2>/dev/null)") || value=
+if [[ -n $value ]]; then
+  printf '%s\n' "$value"
+  exit 0
+fi
+
+exit 1
