@@ -4,7 +4,7 @@ import { chmod, lstat, mkdir, realpath, rm, stat, writeFile } from 'node:fs/prom
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FirefoxDevTools } from '@mozilla/firefox-devtools-mcp';
+import { FirefoxDevTools } from '@mozilla/firefox-mcp';
 import { spawn } from 'node:child_process';
 const newline = String.fromCharCode(10);
 
@@ -23,7 +23,7 @@ const ownerPidPath = `${lockPath}.pid`;
 let ownerLock;
 let ownerLockExited;
 let releasingOwnerLock = false;
-const mcpOutputDir = join(homedir(), '.firefox-devtools-mcp', 'output');
+const mcpOutputDir = join(homedir(), '.firefox-mcp', 'output');
 function within(rootPath, candidatePath) {
   const rel = relative(rootPath, candidatePath);
   return rel === '' || (!rel.startsWith(`..${sep}`) && rel !== '..' && !isAbsolute(rel));
@@ -99,7 +99,7 @@ const string = description => s('string', description);
 const number = description => s('number', description);
 const bool = description => s('boolean', description);
 const wait = s('string', "When to return: 'none' (navigation started), 'interactive' (DOMContentLoaded), 'complete' (load event fired, including subresources). Omit for the default: 'interactive' for http/https/data/blob/file, 'none' for other schemes. Use 'complete' when the page must be fully loaded, e.g. before stopping a performance recording.", { enum: ['none', 'interactive', 'complete'] });
-const saveTo = s(['boolean', 'string'], 'Save the full untruncated output to a file instead of returning it inline. Pass a file path, existing directory, or true for a generated file under ~/.firefox-devtools-mcp/output/. Relative paths resolve against the current working directory.');
+const saveTo = s(['boolean', 'string'], 'Save the full untruncated output to a file instead of returning it inline. Pass a file path, existing directory, or true for a generated file under ~/.firefox-mcp/output/. Relative paths resolve against the current working directory.');
 const uid = description => string(description);
 const schemas = {
   list_pages: {},
