@@ -170,7 +170,7 @@ try {
 
   // Exercise the actual after-packages installer against this isolated target HOME.
   run('bash', [join(repo, '.chezmoiscripts', 'run_onchange_after_z-firefox-mcp.sh.tmpl')], launchdEnv);
-  assert.ok(await stat(join(brokerDir, 'node_modules', '@mozilla', 'firefox-mcp', 'dist', 'index.js')));
+  assert.ok(await stat(join(brokerDir, 'node_modules', '@mozilla', 'firefox-devtools-mcp', 'dist', 'index.js')));
 
   // The stdio adapter must report a missing daemon and exit even while stdin remains open.
   const absentClient = child('firefox-mcp-broker', [], clientEnv);

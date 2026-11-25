@@ -264,7 +264,7 @@ packages:
     - name: npm:codebase-memory-mcp
       version: latest
       allow_builds: [codebase-memory-mcp]
-    - name: npm:@mozilla/firefox-mcp
+    - name: npm:@mozilla/firefox-devtools-mcp
       version: latest
     - name: pipx:pytest
       version: latest
