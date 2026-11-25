@@ -25,7 +25,7 @@ Scope each claim to what the issue establishes. Read the body's status notes, in
 Screenshots are not in PRs or tracker comments: `qa-report-publish` forbids publishing report files or screenshots, so PR bodies carry only bot assets. Look locally, in order (the same tree is readable at `vault://qa/`; use the filesystem path when copying images into the deck):
 
 1. `~/.local/share/qa/<slug>/qa-YYYYMMDD-HHMMSS/` — `report.md` (often `report.html` too) plus `NNN-name.png`. Slugs are branch-like and many match no issue (`install-page`, `retry`); map each by reading its report for the issue id, PR link, or feature. Skip directories holding a report but no images.
-2. `~/.firefox-devtools-mcp/output/page-screenshot-*.png` — when a report cites these absolute paths because the browser refused the session directory. Filename timestamps do not sort against the report's narrative; identify each file by its content.
+2. `~/.firefox-mcp/output/page-screenshot-*.png` — when a report cites these absolute paths because the browser refused the session directory. Filename timestamps do not sort against the report's narrative; identify each file by its content.
 
 Use only PASS reports — check the `## 🧪 QA — PASS ✅` / `FAIL ❌` heading. A FAIL report's images are evidence of a bug, not of shipped work.
 
@@ -35,7 +35,7 @@ Use only PASS reports — check the `## 🧪 QA — PASS ✅` / `FAIL ❌` headi
 - **Never put a password in a tool argument** (`fill_by_uid`, `type_text`) or a temp file for a script to read: the first lands in the transcript, the second leaves plaintext on disk. `op read > /tmp/pw` is a leak, not a workaround.
 - Anything behind sign-in: name the exact URL and hand it to the user for a screenshot. Never substitute a placeholder.
 - Driving the requester's Firefox devtools MCP beats headless: a headless render came out dark-themed and unreadable, while the real profile kept its theme and retina scale.
-- `screenshot_by_uid` and `screenshot_page` take `saveTo`, but only an absolute path under `~/.firefox-devtools-mcp/output/` works; relative and `./` paths get mangled into `/hots` or fail ENOENT/EROFS. Save there, then copy into `demo/img/`.
+- `screenshot_by_uid` and `screenshot_page` take `saveTo`, but only an absolute path under `~/.firefox-mcp/output/` works; relative and `./` paths get mangled into `/hots` or fail ENOENT/EROFS. Save there, then copy into `demo/img/`.
 - Capture the smallest element that tells the story — `screenshot_by_uid` on the figure or its section, not a full page where the subject is clipped or scaled to a third. A retina element can land at 5090x2650; run `sips -Z 1600` before shipping.
 - Verify the rendered slide, not just the asset: navigate to it and OCR the screenshot. One caption survived three reviews describing motion a still cannot show; it now states the numbers in the pixels.
 
