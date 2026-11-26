@@ -1,3 +1,11 @@
+{{- /*
+Render byte-identical to the file aoe writes back. Every UI save re-serializes
+this config from aoe's schema: keys sorted, arrays of two or more broken across
+lines, comments dropped, and schema defaults materialized even when this
+template would omit them. Rendering anything else leaves the diff permanent and
+lets the next UI save revert keys an apply had removed. The comments below are
+template comments, so they document the choices without landing in the output.
+*/ -}}
 {{- $runlayerEnvironment := list -}}
 {{- if hasKey . "runlayer" -}}
 {{-   range $key := keys .runlayer | sortAlpha -}}
@@ -9,8 +17,68 @@
 {{-   end -}}
 {{- end -}}
 {{- $environment := append $runlayerEnvironment (printf "PI_CODING_AGENT_DIR=%s/.config/omp/agent" .chezmoi.homeDir) -}}
-environment = {{ $environment | toToml }}
-default_profile = ""
+{{- /*
+aoe's serializer writes a string quoted, a bool bare, and an array with one
+element inline and two or more one per line at four spaces. Every newline below
+is emitted deliberately, so template whitespace never reaches the output.
+*/ -}}
+{{- define "tomlValue" -}}
+{{- if kindIs "string" . -}}
+{{- quote . -}}
+{{- else if kindIs "bool" . -}}
+{{- if . }}true{{ else }}false{{ end -}}
+{{- else if kindIs "slice" . -}}
+{{-   if le (len .) 1 -}}
+{{-     printf "[" -}}
+{{-     range $i, $e := . -}}
+{{-       if $i }}{{ printf ", " }}{{ end -}}
+{{-       template "tomlValue" $e -}}
+{{-     end -}}
+{{-     printf "]" -}}
+{{-   else -}}
+{{-     printf "[\n" -}}
+{{-     range . -}}
+{{-       printf "    " -}}
+{{-       template "tomlValue" . -}}
+{{-       printf ",\n" -}}
+{{-     end -}}
+{{-     printf "]" -}}
+{{-   end -}}
+{{- else -}}
+{{-   . -}}
+{{- end -}}
+{{- end -}}
+{{- /*
+Emit a table body in aoe's order: scalars first, then nested tables and arrays
+of tables, each sorted. A nested table gets a header only when it holds at least
+one scalar, because aoe omits the header of a table that holds only sub-tables.
+*/ -}}
+{{- define "tomlTable" -}}
+{{- $path := .path -}}
+{{- range $k, $v := .table -}}
+{{-   if not (kindIs "map" $v) -}}
+{{-     if not (and (kindIs "slice" $v) (gt (len $v) 0) (kindIs "map" (index $v 0))) -}}
+{{-       printf "\n%s = " $k -}}
+{{-       template "tomlValue" $v -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+{{- range $k, $v := .table -}}
+{{-   if kindIs "map" $v -}}
+{{-     if not (hasPrefix "[" (toToml $v)) -}}
+{{-       printf "\n\n[%s.%s]" $path $k -}}
+{{-     end -}}
+{{-     template "tomlTable" (dict "path" (printf "%s.%s" $path $k) "table" $v) -}}
+{{-   else if and (kindIs "slice" $v) (gt (len $v) 0) (kindIs "map" (index $v 0)) -}}
+{{-     range $v -}}
+{{-       printf "\n\n[[%s.%s]]" $path $k -}}
+{{-       template "tomlTable" (dict "path" (printf "%s.%s" $path $k) "table" .) -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+{{- end -}}
+default_profile = "main"
+environment = {{ template "tomlValue" $environment }}
 
 [acp]
 allow_agent_install = false
@@ -24,11 +92,13 @@ node_path = ""
 notice_display = "persistent"
 notice_timeout_secs = 10
 rate_limit_auto_resume = false
+rate_limit_failover = false
+rate_limit_failover_accounts = []
 replay_events = 0
 restrict_agents = false
 show_tool_durations = true
 silent_orphan_grace_secs = 120
-# Use the terminal TUI for new sessions and disable the structured-view option.
+{{- /* Use the terminal TUI for new sessions and disable the structured-view option. */}}
 structured_view = "off"
 wrap_tool_output = false
 
@@ -42,7 +112,11 @@ split_view = false
 [hooks]
 
 [host_hooks]
-before_session = ['if [ "$AOE_TOOL" = omp ]; then "$HOME/.local/bin/aoe-omp-environment"; fi', '"$HOME/.local/bin/aoe-pr-track"', '"$HOME/.local/bin/aoe-linear-env"']
+before_session = [
+    'if [ "$AOE_TOOL" = omp ]; then "$HOME/.local/bin/aoe-omp-environment"; fi',
+    '"$HOME/.local/bin/aoe-pr-track"',
+    '"$HOME/.local/bin/aoe-linear-env"',
+]
 before_start = ['"$HOME/.local/bin/aoe-pr-track"']
 
 [logging]
@@ -55,27 +129,35 @@ rotation = "size"
 show_spans = false
 
 [logging.targets]
-
-# Manage portable plugin declarations; preserve local plugins and approval receipts.
-{{ $plugins := dict "aoe.web" (dict "enabled" true) -}}
-{{ range .packages.aoe_plugins -}}
-{{ $_ := set $plugins .id (dict "enabled" true "source" .source) -}}
-{{ end -}}
-# Ignore bot-authored review-state signals, not unresolved-thread counts.
-{{ $ignoredCommenters := list "coderabbitai" "codecov" "chatgpt-codex-connector" "github-code-quality" -}}
-{{ range $org := (get . "orgs" | default dict) -}}
-{{ $bot := dig "automated_review" "bot_login" "" $org | trim | lower | trimSuffix "[bot]" -}}
-{{ if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
-{{ end -}}
-{{ $linearSettings := dict "include_snoozed" true -}}
-# The weekly maintenance run is a scheduled session owned here, not a launchd job
-# shelling out to a dispatcher script. Cron keeps its jobs in plugin settings, so
-# this list overwrites jobs added in the dashboard: author changes here instead.
-# The prompt is a pointer, not the task text, so the document stays in the repo
-# and the session starts already pointed at it instead of having it typed in.
-# No model_id: the host refuses a model the agent does not advertise, and OMP's
-# @smol class is not one of them, so the session runs the agent default.
-{{ $maintenanceJob := dict
+{{- /*
+Manage portable plugin declarations; preserve local plugins and approval
+receipts. The maintenance run is a scheduled session owned here, not a launchd
+job shelling out to a dispatcher script. Cron keeps its jobs in plugin settings,
+so this list overwrites jobs added in the dashboard: author changes here
+instead. The prompt is a pointer, not the task text, so the document stays in
+the repo and the session starts already pointed at it instead of having it typed
+in. No model_id: the host refuses a model the agent does not advertise, and
+OMP's @smol class is not one of them, so the session runs the agent default.
+*/ -}}
+{{- $plugins := dict "aoe.web" (dict "enabled" true) -}}
+{{- range .packages.aoe_plugins -}}
+{{-   $_ := set $plugins .id (dict "enabled" true "source" .source) -}}
+{{- end -}}
+{{- /*
+Ignore bot-authored review-state signals, not unresolved-thread counts. Keep PR
+state (and its row glyph) on snoozed rows. That part is opt-in upstream in #143
+and only honoured since plugin-github v2.5.0 (released 2026-11-14), which aoe
+1.24.0's embedded featured index does not pin yet, so 2.4.0 is what installs and
+it drops snoozed sessions. Leave it on: the first aoe release that pins 2.5.0
+then needs no edit here to restore the glyphs on parked rows.
+*/ -}}
+{{- $ignoredCommenters := list "coderabbitai" "codecov" "chatgpt-codex-connector" "github-code-quality" -}}
+{{- range $org := (get . "orgs" | default dict) -}}
+{{-   $bot := dig "automated_review" "bot_login" "" $org | trim | lower | trimSuffix "[bot]" -}}
+{{-   if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
+{{- end -}}
+{{- $linearSettings := dict "include_snoozed" true -}}
+{{- $maintenanceJob := dict
   "id" "daily-maintenance"
   "name" "daily-maintenance"
   "schedule" "0 20 * * 1-5"
@@ -84,58 +166,56 @@ show_spans = false
   "prompt" "Read ~/.agents/prompts/daily-maintenance.md and carry it out end to end. That file is the whole task; do not ask for it to be restated."
   "group" "Scheduled"
   "enabled" true -}}
-{{ $cronSettings := dict "jobs" (list $maintenanceJob) -}}
-{{ $cronExisting := dict -}}
-{{ $retiredPlugins := dict -}}
-{{ range .packages.aoe_plugins_retired -}}
-{{ $_ := set $retiredPlugins .id .replaced_by -}}
-{{ end -}}
-{{ $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
-{{ if stat $configPath -}}
-{{ $existing := include $configPath | fromToml -}}
-{{ range $id, $plugin := $existing.plugins -}}
-{{ if hasKey $retiredPlugins $id -}}
-{{/* Upstream renamed this plugin into the namespace its replacement claims;
-     drop the entry instead of preserving it as a local plugin, or both load. */}}
-{{ else if hasKey $plugins $id -}}
-{{ if hasKey $plugin "grant" -}}
-{{ $_ := set (index $plugins $id) "grant" $plugin.grant -}}
-{{ end -}}
-{{ if hasKey $plugin "settings" -}}
-{{ if eq $id "agent-of-empires.linear" -}}
-{{ $linearSettings = mergeOverwrite (deepCopy $plugin.settings) $linearSettings -}}
-{{ else if eq $id "agent-of-empires.github" -}}
-{{ else if eq $id "agent-of-empires.cron" -}}
-{{ $cronExisting = deepCopy $plugin.settings -}}
-{{ else -}}
-{{ $_ := set (index $plugins $id) "settings" $plugin.settings -}}
-{{ end -}}
-{{ end -}}
-{{ if eq $id "agent-of-empires.github" -}}
-{{ range $login := regexSplit "[,[:space:]]+" (dig "settings" "ignored_commenters" "" $plugin) -1 -}}
-{{ $bot := $login | trim | lower | trimSuffix "[bot]" -}}
-{{ if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
-{{ end -}}
-{{ end -}}
-{{ else -}}
-{{ $_ := set $plugins $id $plugin -}}
-{{ end -}}
-{{ end -}}
-{{ end -}}
-{{ $_ := set (index $plugins "agent-of-empires.linear") "settings" $linearSettings -}}
-{{ $githubSettings := dict -}}
-{{ if stat $configPath -}}
-{{ $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
-{{ end -}}
-# Keep PR state (and its row glyph) on snoozed rows. Opt-in upstream in #143 and
-# only honoured since plugin-github v2.5.0 (released 2026-11-14), which aoe 1.24.0's
-# embedded featured index does not pin yet, so 2.4.0 is what installs and it drops
-# snoozed sessions. Leave it on: the first aoe release that pins 2.5.0 then needs
-# no edit here to restore the glyphs on parked rows.
-{{ $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
-{{ $_ := set (index $plugins "agent-of-empires.cron") "settings" (mergeOverwrite $cronExisting $cronSettings) -}}
-{{ dict "plugins" $plugins | toToml }}
-
+{{- $cronSettings := dict "jobs" (list $maintenanceJob) -}}
+{{- $cronExisting := dict -}}
+{{- $retiredPlugins := dict -}}
+{{- range .packages.aoe_plugins_retired -}}
+{{-   $_ := set $retiredPlugins .id .replaced_by -}}
+{{- end -}}
+{{- $configPath := joinPath .chezmoi.homeDir ".config/agent-of-empires/config.toml" -}}
+{{- if stat $configPath -}}
+{{-   $existing := include $configPath | fromToml -}}
+{{-   range $id, $plugin := $existing.plugins -}}
+{{-     if hasKey $retiredPlugins $id -}}
+{{- /* Upstream renamed this plugin into the namespace its replacement
+            claims; drop the entry instead of preserving it as a local plugin,
+            or both load. */ -}}
+{{-     else if hasKey $plugins $id -}}
+{{-       if hasKey $plugin "grant" -}}
+{{-         $_ := set (index $plugins $id) "grant" $plugin.grant -}}
+{{-       end -}}
+{{-       if hasKey $plugin "settings" -}}
+{{-         if eq $id "agent-of-empires.linear" -}}
+{{-           $linearSettings = mergeOverwrite (deepCopy $plugin.settings) $linearSettings -}}
+{{-         else if eq $id "agent-of-empires.github" -}}
+{{-         else if eq $id "agent-of-empires.cron" -}}
+{{-           $cronExisting = deepCopy $plugin.settings -}}
+{{-         else -}}
+{{-           $_ := set (index $plugins $id) "settings" $plugin.settings -}}
+{{-         end -}}
+{{-       end -}}
+{{-       if eq $id "agent-of-empires.github" -}}
+{{-         range $login := regexSplit "[,[:space:]]+" (dig "settings" "ignored_commenters" "" $plugin) -1 -}}
+{{-           $bot := $login | trim | lower | trimSuffix "[bot]" -}}
+{{-           if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
+{{-         end -}}
+{{-       end -}}
+{{-     else -}}
+{{-       $_ := set $plugins $id $plugin -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+{{- $_ := set (index $plugins "agent-of-empires.linear") "settings" $linearSettings -}}
+{{- $githubSettings := dict -}}
+{{- if stat $configPath -}}
+{{-   $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
+{{- end -}}
+{{- $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
+{{- $_ := set (index $plugins "agent-of-empires.cron") "settings" (mergeOverwrite $cronExisting $cronSettings) -}}
+{{- range $id, $plugin := $plugins -}}
+{{-   printf "\n\n[plugins.%s]" (quote $id) -}}
+{{-   template "tomlTable" (dict "path" (printf "plugins.%s" (quote $id)) "table" $plugin) -}}
+{{- end }}
 
 [sandbox]
 allow_image_pull = true
@@ -144,13 +224,23 @@ container_runtime = "apple_container"
 default_image = "ghcr.io/agent-of-empires/aoe-sandbox:latest"
 default_terminal_mode = "host"
 enabled_by_default = false
-environment = ["TERM", "COLORTERM", "FORCE_COLOR", "NO_COLOR"]
+environment = [
+    "TERM",
+    "COLORTERM",
+    "FORCE_COLOR",
+    "NO_COLOR",
+]
 extra_volumes = []
 mount_ssh = false
 privileged = false
 selinux_relabel = false
+shared_credential = "host_seed"
 volume_ignores = []
 volume_ignores_strategy = "anonymous"
+
+[serve]
+funnel_port = "443"
+port = 8080
 
 [session]
 agent_status_hooks = true
@@ -164,6 +254,7 @@ default_attach_mode = "tmux"
 default_tool = "omp"
 delete_to_trash = false
 favorites_first = true
+hide_snoozed_with_stopped = true
 host_tab_title = true
 inherit_host_environment = false
 live_send_exit_chord = "C-q"
@@ -172,46 +263,48 @@ live_send_on_view_switch = true
 merge_hooks_into_selected_agent = true
 mouse_capture = true
 name_agent_session = false
-# Keep one column of panes in a narrow terminal instead of stacking them; the
-# schema default is "stacked" at 80 columns, so leaving either out reverts a
-# dashboard choice.
-narrow_layout = "one_pane"
+{{- /* Keep one column of panes in a narrow terminal instead of stacking them;
+       the schema default is "stacked" at 80 columns, so leaving either out
+       reverts a dashboard choice. */}}
 narrow_breakpoint = 120
+narrow_layout = "one_pane"
+new_session_mode = "live_send"
 opencode_preassign_session_id = false
+plugin_staging_sandbox = false
 pre_trust_agent_folders = false
 prevent_sleep_idle_grace_minutes = 15
-new_session_mode = "live_send"
 prevent_sleep_when_active = true
 preview_link_prefixes = []
-# An empty message leaves a restarted session waiting for me instead of typing a
-# nudge prompt into it. Resume the conversation myself when I get back to it.
+{{- /* An empty message leaves a restarted session waiting for me instead of
+       typing a nudge prompt into it. Resume the conversation myself when I get
+       back to it. */}}
 restart_wake_message = ""
 row_tag = "none"
 scratch_smart_rename = "inherit"
 session_id_poller_max_threads = 50
 show_activity_age = true
-show_session_colors = false
-show_diagnostics_pane = false
-# The [structured] badge spends eleven columns of every structured row. The row
-# still opens the Structured view without it, and the GitHub/Linear row glyphs
-# only render when the badge is not eating their width.
-show_structured_badge = false
+show_diagnostics_pane = true
 show_shortcut_bar = false
+{{- /* The [structured] badge spends eleven columns of every structured row. The
+       row still opens the Structured view without it, and the GitHub/Linear row
+       glyphs only render when the badge is not eating their width. */}}
+show_structured_badge = false
 show_tips = false
-snooze_duration_minutes = 30
 sidebar_position = "left"
 smart_rename = true
 smart_rename_agent = ""
-# The paired terminal split is unwanted. It renders only when the whole window is at
-# least this tall and wide, so both thresholds at the documented maximum keep it hidden
-# at any window size while Terminal view and the toggle keep working; lower them to
-# bring it back. The height percent only sizes a split that cannot render, but aoe
-# materializes it on every config rewrite, so it is spelled out to keep the rendered
-# file identical to the applied one.
+snooze_duration_minutes = 30
+{{- /* The paired terminal split is unwanted. It renders only when the whole
+       window is at least this tall and wide, so both thresholds at the
+       documented maximum keep it hidden at any window size while Terminal view
+       and the toggle keep working; lower them to bring it back. The height
+       percent only sizes a split that cannot render, but aoe materializes it on
+       every config rewrite, so it is spelled out to keep the rendered file
+       identical to the applied one. */}}
 split_terminal_height_percent = 50
 split_terminal_min_height = 1000
 split_terminal_min_width = 1000
-startup_recovery_wake = false
+startup_recovery_wake = true
 strict_hotkeys = false
 tie_workdir_to_name = true
 trash_retention_minutes = 43200
@@ -261,7 +354,11 @@ vt_live = true
 [updates]
 auto_update_plugins = true
 update_check_mode = "notify"
+
 [web]
+auto_open_diff_pane = false
+auto_open_plugin_panes = false
+auto_open_terminal_pane = false
 mcp_enabled = true
 notifications_enabled = true
 notify_on_error = true
@@ -276,4 +373,5 @@ delete_branch_on_cleanup = true
 enabled = true
 init_submodules = true
 path_template = "{{ .chezmoi.homeDir }}/code/.worktrees/{repo-name}/{branch}"
+workspace_by_default = false
 workspace_path_template = "{{ .chezmoi.homeDir }}/code/.worktrees/workspaces/{branch}-workspace-{session-id}"

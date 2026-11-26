@@ -15,13 +15,17 @@ SCRIPT = ROOT / '.chezmoiscripts/run_after_plugins-aoe-grants.sh.tmpl'
 
 class ManagedGrantsTest(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
+        # /tmp, not the macOS default under /var/folders: the daemon's unix
+        # socket must fit the platform's ~104-character sun_path limit.
+        self.tmp = tempfile.TemporaryDirectory(dir='/tmp')
         self.addCleanup(self.tmp.cleanup)
         self.home = Path(self.tmp.name).resolve()
-        self.env = dict(os.environ, HOME=str(self.home), XDG_CONFIG_HOME=str(self.home / '.config'),
-                        AOE_NO_AUTOSTART='1')
+        self.env = dict(os.environ, HOME=str(self.home), XDG_CONFIG_HOME=str(self.home / '.config'))
         self.env.pop('AOE_DAEMON_URL', None)
         self.env.pop('AGENT_OF_EMPIRES_PROFILE', None)
+        # Leave the throwaway daemon this HOME autostarts.
+        self.addCleanup(subprocess.run, ['aoe', 'serve', '--stop'], env=self.env,
+                        cwd=self.home, capture_output=True)
         self.source = self.home / 'source'
         self.source.mkdir()
         self.manifest('net')
@@ -97,22 +101,25 @@ capabilities = ["net"]
 granted_at = "2026-01-01T00:00:00Z"
 [plugins."agent-of-empires.github".settings]
 custom = "retained"
-[plugins."community.linear".grant]
+[plugins."agent-of-empires.linear".grant]
 manifest_hash = "sha256:second"
 capabilities = ["fs.read"]
 granted_at = "2026-01-02T00:00:00Z"
-[plugins."community.linear".settings]
-custom = "retained"
+[plugins."community.linear".grant]
+manifest_hash = "sha256:third"
+capabilities = ["fs.read"]
+granted_at = "2026-01-03T00:00:00Z"
 [plugins."local.example".settings]
 custom = "untouched"
 ''')
         before = tomllib.loads(self.config.read_text())['plugins']
         rendered = self.run_cmd('chezmoi', 'cat', '-S', str(ROOT), str(self.config)).stdout
         plugins = tomllib.loads(rendered)['plugins']
-        for plugin in ('agent-of-empires.github', 'community.linear'):
+        for plugin in ('agent-of-empires.github', 'agent-of-empires.linear'):
             self.assertEqual(plugins[plugin]['grant'], before[plugin]['grant'])
-            self.assertEqual(plugins[plugin]['settings']['custom'], 'retained')
         self.assertEqual(plugins['local.example'], before['local.example'])
+        # Retired inventory ids are dropped, not kept as local plugins.
+        self.assertNotIn('community.linear', plugins)
 
 
 if __name__ == '__main__':
