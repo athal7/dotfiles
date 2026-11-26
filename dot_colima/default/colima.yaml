@@ -3,7 +3,7 @@
 arch: aarch64
 autoActivate: false
 binfmt: true
-cpu: 2
+cpu: 4
 cpuType: ""
 disk: 64
 diskImage: ""
@@ -22,7 +22,7 @@ kubernetes:
     - --disable=traefik
   port: 0
   version: v1.35.0+k3s1
-memory: 4
+memory: 10
 modelRunner: docker
 mountInotify: false
 mountType: virtiofs
