@@ -42,6 +42,8 @@ _brew_prefix="$(brew --prefix)"
   [[ -f "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc" ]] && source "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc"
   # kubectl completions
   command -v kubectl >/dev/null 2>&1 && source <(kubectl completion zsh)
+  # aoe completions ($HOME/.local/bin is already on PATH from .zshenv)
+  command -v aoe >/dev/null 2>&1 && eval "$(aoe completion zsh)"
 
 # Private shell config (not tracked in dotfiles)
 [[ -f ~/.config/zsh/private.zsh ]] && source ~/.config/zsh/private.zsh
