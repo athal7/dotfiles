@@ -152,9 +152,21 @@ it drops snoozed sessions. Leave it on: the first aoe release that pins 2.5.0
 then needs no edit here to restore the glyphs on parked rows.
 */ -}}
 {{- $ignoredCommenters := list "coderabbitai" "codecov" "chatgpt-codex-connector" "github-code-quality" -}}
+{{- $suggestionOrgs := list -}}
 {{- range $org := (get . "orgs" | default dict) -}}
 {{-   $bot := dig "automated_review" "bot_login" "" $org | trim | lower | trimSuffix "[bot]" -}}
 {{-   if ne $bot "" }}{{ $ignoredCommenters = append $ignoredCommenters $bot }}{{ end -}}
+{{- end -}}
+{{- /*
+Suggested sessions follow the org universe the attention dashboard is built
+from: attention groups every item into Work, Open source and Dependencies by
+ownership, resolving the org list and the per-org agent from this same `orgs`
+data, so an org that is not here is not work you track. Scoping the provider to
+it keeps suggestions inside that universe instead of every repository the token
+can see.
+*/ -}}
+{{- range $org, $_ := (get . "orgs" | default dict) -}}
+{{-   $suggestionOrgs = append $suggestionOrgs $org -}}
 {{- end -}}
 {{- $linearSettings := dict "include_snoozed" true -}}
 {{- $maintenanceJob := dict
@@ -210,7 +222,7 @@ then needs no edit here to restore the glyphs on parked rows.
 {{- if stat $configPath -}}
 {{-   $githubSettings = deepCopy (dig "plugins" "agent-of-empires.github" "settings" (dict) (include $configPath | fromToml)) -}}
 {{- end -}}
-{{- $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", "))) -}}
+{{- $_ := set (index $plugins "agent-of-empires.github") "settings" (mergeOverwrite $githubSettings (dict "ci_required_checks_only" true "dense_row_badge_glyphs" true "ignore_bot_approval_recommendations" true "include_snoozed_sessions" true "ignored_commenters" ($ignoredCommenters | uniq | sortAlpha | join ", ") "suggestion_organizations" ($suggestionOrgs | uniq | sortAlpha | join ", "))) -}}
 {{- $_ := set (index $plugins "agent-of-empires.cron") "settings" (mergeOverwrite $cronExisting $cronSettings) -}}
 {{- range $id, $plugin := $plugins -}}
 {{-   printf "\n\n[plugins.%s]" (quote $id) -}}
