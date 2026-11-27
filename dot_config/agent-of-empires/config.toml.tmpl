@@ -163,7 +163,10 @@ from: attention groups every item into Work, Open source and Dependencies by
 ownership, resolving the org list and the per-org agent from this same `orgs`
 data, so an org that is not here is not work you track. Scoping the provider to
 it keeps suggestions inside that universe instead of every repository the token
-can see.
+can see. The provider's New issues source is switched off in the Suggested
+settings for the same reason: attention's only issue source is unassigned issues
+in repos you own, while this one searches whole organizations and fills the list
+with other people's trackers.
 */ -}}
 {{- range $org, $_ := (get . "orgs" | default dict) -}}
 {{-   $suggestionOrgs = append $suggestionOrgs $org -}}
