@@ -261,20 +261,3 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/workspace-cleanup.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
-
-  factory-analysis:
-    Label: com.$USER.factory-analysis
-    ProgramArguments:
-      - $HOME/.local/bin/factory-analysis
-      - --lookback
-      - "24"
-      - --context-warning-tokens
-      - "100000"
-    StartCalendarInterval:
-      Hour: 19
-      Minute: 30
-    StandardOutPath: $HOME/Library/Logs/factory-analysis.log
-    StandardErrorPath: $HOME/Library/Logs/factory-analysis.error.log
-    EnvironmentVariables:
-      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
-{{ template "omp-launchd-env" . }}
