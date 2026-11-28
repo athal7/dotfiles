@@ -233,18 +233,68 @@ class FactoryAnalysisTest(unittest.TestCase):
         self.assertEqual(report["coverage"]["status"], "partial")
         self.assertIn("skills root not found", json.dumps(report["coverage"]["warnings"]))
 
-    def test_skill_inventory_limit_is_not_silent(self):
-        self.transcript()
-        for number in range(199):
+    def test_skill_inventory_limit_is_inclusive_and_omissions_are_visible(self):
+        (self.root / "clean.jsonl").write_text(
+            json.dumps(event("2026-11-27T01:00:00Z", "session", id="clean")) + "\n" +
+            json.dumps(assistant("2026-11-27T01:01:00Z", 1000, 0, "stop")) + "\n",
+            encoding="utf-8",
+        )
+        for number in range(198):
             skill = self.skills / f"extra-{number:03}"
             skill.mkdir()
             (skill / "SKILL.md").write_text("---\nname: extra\n---\n")
         result = self.run_analyzer()
         self.assertEqual(result.returncode, 0, result.stderr)
         report = self.report()
+        self.assertEqual(report["coverage"]["status"], "complete")
+        self.assertEqual(report["skills"]["inventory_count"], 200)
+        self.assertEqual(report["skills"]["inventory_details_omitted"], 0)
+        skill = self.skills / "extra-198"
+        skill.mkdir()
+        (skill / "SKILL.md").write_text("---\nname: extra\n---\n")
+        result = self.run_analyzer()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.report()
         self.assertEqual(report["coverage"]["status"], "partial")
-        self.assertIn("skill inventory limit reached",
-                      json.dumps(report["coverage"]["warnings"]))
+        self.assertEqual(report["skills"]["inventory_count"], 201)
+        self.assertEqual(report["skills"]["inventory_details_omitted"], 1)
+        self.assertIn("skill inventory details limited", json.dumps(report["coverage"]["warnings"]))
+
+    def test_symlinked_skill_is_counted_without_reading_or_duplicating(self):
+        self.transcript()
+        external = self.base / "external-skill"
+        external.mkdir()
+        (external / "SKILL.md").write_text("---\nname: external-skill\n---\n")
+        (self.skills / "external-skill").symlink_to(external, target_is_directory=True)
+        result = self.run_analyzer()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.report()
+        self.assertEqual(report["skills"]["external_inventory_count"], 1)
+        self.assertNotIn("external-skill", {item["name"] for item in report["skills"]["items"]})
+
+    def test_only_exact_cron_prompt_marks_maintenance(self):
+        path = self.root / "summaries.jsonl"
+        marker = ("Read ~/.agents/prompts/daily-maintenance.md and carry it out end to end. "
+                  "That file is the whole task; do not ask for it to be restated.")
+        events = [
+            event("2026-11-27T01:00:00Z", "message", message={
+                "role": "user", "content": f"### Session update\n\n**user**:\n{marker}",
+            }),
+            event("2026-11-27T01:01:00Z", "message", message={
+                "role": "user", "synthetic": True, "attribution": "agent", "content": marker,
+            }),
+            event("2026-11-27T01:02:00Z", "message", message={
+                "role": "assistant", "stopReason": "stop",
+                "content": [{"type": "text", "text": marker}],
+            }),
+        ]
+        path.write_text("".join(json.dumps(item) + "\n" for item in events))
+        result = self.run_analyzer()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.report()
+        self.assertEqual(report["maintenance"]["daily_sessions"], 0)
+        self.assertEqual(report["sessions"]["active"], 1)
+        self.assertEqual(report["sessions"]["user_turns"], 1)
 
     def test_timestampless_message_is_partial_not_silently_ignored(self):
         path = self.root / "timestampless.jsonl"

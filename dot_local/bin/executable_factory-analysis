@@ -324,11 +324,12 @@ def transcript_candidates(root: Path, since: datetime):
     return discovered, excluded, candidates
 
 
-def skill_inventory(root: Path) -> tuple[dict[str, dict], int]:
+def skill_inventory(root: Path) -> tuple[dict[str, dict], int, int, int]:
     inventory = {}
     external = 0
+    authored = 0
     if not root.is_dir():
-        return inventory, external
+        return inventory, external, authored, 0
     with os.scandir(root) as entries:
         for entry in entries:
             if entry.is_symlink():
@@ -336,10 +337,11 @@ def skill_inventory(root: Path) -> tuple[dict[str, dict], int]:
                 continue
             if not entry.is_dir(follow_symlinks=False):
                 continue
-            if len(inventory) >= SKILL_LIMIT:
-                break
             path = Path(entry.path) / "SKILL.md"
             if not path.is_file() or path.is_symlink():
+                continue
+            authored += 1
+            if len(inventory) >= SKILL_LIMIT:
                 continue
             raw = path.read_bytes()
             inventory[entry.name] = {
@@ -347,7 +349,7 @@ def skill_inventory(root: Path) -> tuple[dict[str, dict], int]:
                 "lines": len(raw.splitlines()),
                 "bytes": len(raw),
             }
-    return inventory, external
+    return inventory, external, authored, authored - len(inventory)
 
 
 def peak(sessions, attribute):
@@ -361,7 +363,8 @@ def abnormal_stops(session: SessionMetrics) -> int:
 
 
 def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics],
-                 inventory: dict, external_skills: int, coverage: Coverage, limits: dict) -> dict:
+                 inventory: dict, authored_skills: int, external_skills: int,
+                 omitted_skills: int, coverage: Coverage, limits: dict) -> dict:
     active = [session for session in sessions if session.activity_events]
     loads = Counter()
     load_errors = Counter()
@@ -425,7 +428,8 @@ def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics
             "utilization_reason": "OMP transcripts do not record the model context-window size",
         },
         "skills": {
-            "inventory_count": len(inventory),
+            "inventory_count": authored_skills,
+            "inventory_details_omitted": omitted_skills,
             "external_inventory_count": external_skills,
             "observed_loads": sum(loads.values()),
             "load_errors": sum(load_errors.values()),
@@ -563,12 +567,19 @@ def run(args) -> int:
             coverage.bytes_read += used
             coverage.processed_files += 1
             sessions.append(metrics)
-        inventory, external_skills = skill_inventory(args.skills_root)
+        inventory, external_skills, authored_skills, omitted_skills = skill_inventory(args.skills_root)
         if not args.skills_root.is_dir():
             coverage.warn(args.skills_root, None, "skills root not found")
-        elif len(inventory) == SKILL_LIMIT:
-            coverage.warn(args.skills_root, None, "skill inventory limit reached")
-        report = build_report(since, until, sessions, inventory, external_skills, coverage, limits)
+        elif omitted_skills:
+            coverage.warn(
+                args.skills_root, None,
+                f"skill inventory details limited: {authored_skills} authored skills, "
+                f"{omitted_skills} omitted",
+            )
+        report = build_report(
+            since, until, sessions, inventory, authored_skills,
+            external_skills, omitted_skills, coverage, limits,
+        )
         atomic_write(args.output / "latest.json", json.dumps(report, indent=2, sort_keys=True) + "\n")
         atomic_write(args.output / "latest.md", markdown_report(report))
         print(f"factory-analysis: {report['coverage']['status']}; "
