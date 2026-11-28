@@ -63,7 +63,7 @@ class FactoryAnalysisTest(unittest.TestCase):
             }),
             assistant("2026-11-26T23:02:00Z", 999999, 0, "stop"),
             event("2026-11-27T01:00:00Z", "message", message={
-                "role": "user", "content": [{"type": "text", "text": "inspect"}],
+                "role": "user", "content": [{"type": "text", "text": "inspect SECRET_PROMPT"}],
             }),
             assistant("2026-11-27T01:01:00Z", 90000, 0, "toolUse", [
                 {"type": "toolCall", "id": "skill-call", "name": "read",
@@ -309,6 +309,60 @@ class FactoryAnalysisTest(unittest.TestCase):
         self.assertEqual(report["coverage"]["status"], "partial")
         self.assertEqual(report["coverage"]["malformed_records"], 1)
         self.assertEqual(report["sessions"]["active"], 0)
+
+    def test_default_window_is_derived_from_explicit_until(self):
+        (self.root / "historical.jsonl").write_text(
+            json.dumps(event("2019-12-31T12:00:00Z", "session", id="historical")) + "\n" +
+            json.dumps(assistant("2019-12-31T13:00:00Z", 1000, 0, "stop")) + "\n",
+            encoding="utf-8",
+        )
+        command = [
+            sys.executable, str(ANALYZER), "--root", str(self.root),
+            "--skills-root", str(self.skills), "--output", str(self.output),
+            "--until", "2020-01-01T00:00:00Z",
+        ]
+        result = subprocess.run(command, text=True, capture_output=True, cwd=self.base)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.report()
+        self.assertEqual(report["window"]["until"], "2020-01-01T00:00:00Z")
+        self.assertEqual(report["window"]["since"], "2019-12-31T00:00:00Z")
+        self.assertEqual(report["sessions"]["active"], 1)
+
+    def test_compaction_before_window_is_not_attributed_to_next_turn(self):
+        (self.root / "boundary.jsonl").write_text(
+            json.dumps(assistant("2026-11-27T01:00:00Z", 100, 0, "stop")) + "\n" +
+            json.dumps(event("2026-11-27T01:00:00.300000Z", "compaction")) + "\n" +
+            json.dumps(assistant("2026-11-27T01:00:00.500000Z", 100, 1, "stop")) + "\n",
+            encoding="utf-8",
+        )
+        result = self.run_analyzer("--since", "2026-11-27T01:00:00.400000Z")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.report()
+        self.assertEqual(report["sessions"]["active"], 1)
+        self.assertEqual(report["context_pressure"]["compactions"], 0)
+
+    def test_compaction_falls_back_to_epoch_without_records(self):
+        (self.root / "fallback.jsonl").write_text(
+            json.dumps(assistant("2026-11-27T01:00:00Z", 100, 0, "stop")) + "\n" +
+            json.dumps(assistant("2026-11-27T01:00:01Z", 100, 2, "stop")) + "\n",
+            encoding="utf-8",
+        )
+        result = self.run_analyzer()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.report()
+        self.assertEqual(report["context_pressure"]["compactions"], 2)
+
+    def test_compaction_does_not_fall_back_when_records_exist_before_window(self):
+        (self.root / "records.jsonl").write_text(
+            json.dumps(assistant("2026-11-27T01:00:00Z", 100, 0, "stop")) + "\n" +
+            json.dumps(event("2026-11-27T01:00:00.300000Z", "compaction")) + "\n" +
+            json.dumps(assistant("2026-11-27T01:00:00.500000Z", 100, 3, "stop")) + "\n",
+            encoding="utf-8",
+        )
+        result = self.run_analyzer("--since", "2026-11-27T01:00:00.400000Z")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.report()
+        self.assertEqual(report["context_pressure"]["compactions"], 0)
 
     def test_invalid_window_and_missing_root_fail_without_reports(self):
         invalid = self.run_analyzer("--until", "2026-11-26T23:00:00Z")

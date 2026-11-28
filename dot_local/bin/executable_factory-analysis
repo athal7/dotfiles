@@ -90,7 +90,9 @@ class SessionMetrics:
     peak_non_message_tokens: int | float | None = None
     peak_tool_schema_tokens: int | float | None = None
     compactions: int = 0
+    epoch_compactions: int = 0
     explicit_compactions: int = 0
+    explicit_compactions_seen: int = 0
     last_activity: datetime | None = None
 
 
@@ -172,6 +174,7 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
     flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
     bytes_read = 0
     previous_epoch = None
+    previous_assistant_active = False
     skill_calls = {}
     all_tool_calls = set()
     with os.fdopen(os.open(path, flags), "rb") as source:
@@ -211,8 +214,10 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
             if event_type == "session":
                 if isinstance(event.get("id"), str):
                     metrics.identity = event["id"]
-            if event_type == "compaction" and in_window(occurred, since, until):
-                metrics.explicit_compactions += 1
+            if event_type == "compaction":
+                metrics.explicit_compactions_seen += 1
+                if in_window(occurred, since, until):
+                    metrics.explicit_compactions += 1
             active = in_window(occurred, since, until)
             if active:
                 metrics.activity_events += 1
@@ -231,10 +236,12 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
                 if isinstance(snapshot, dict):
                     epoch = snapshot.get("compactionEpoch")
                     if isinstance(epoch, int) and not isinstance(epoch, bool):
-                        if active and previous_epoch is not None and epoch > previous_epoch:
-                            metrics.compactions += epoch - previous_epoch
+                        if (active and previous_assistant_active and previous_epoch is not None
+                                and epoch > previous_epoch):
+                            metrics.epoch_compactions += epoch - previous_epoch
                         previous_epoch = epoch
             if not active:
+                previous_assistant_active = False
                 # Keep tool-call linkage across the window boundary, but do not
                 # count old calls until their result occurs in the window.
                 if role == "assistant" and isinstance(message.get("content"), list):
@@ -294,6 +301,7 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
                     metrics.skill_loads[skill_name] += 1
                     if isinstance(call_id, str):
                         skill_calls[call_id] = skill_name
+            previous_assistant_active = True
         after = os.fstat(source.fileno())
     if truncated:
         coverage.warn(path, None, "byte limit reached")
@@ -333,7 +341,12 @@ def skill_inventory(root: Path) -> tuple[dict[str, dict], int, int, int]:
     with os.scandir(root) as entries:
         for entry in entries:
             if entry.is_symlink():
-                external += 1
+                try:
+                    target = Path(entry.path).resolve(strict=True)
+                except OSError:
+                    continue
+                if target.is_dir() and (target / "SKILL.md").is_file():
+                    external += 1
                 continue
             if not entry.is_dir(follow_symlinks=False):
                 continue
@@ -384,8 +397,11 @@ def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics
         item["load_errors"] = load_errors[name]
     maintenance = [session for session in active if session.maintenance]
     for session in active:
-        if session.explicit_compactions > session.compactions:
-            session.compactions = session.explicit_compactions
+        session.compactions = (
+            session.explicit_compactions
+            if session.explicit_compactions_seen
+            else session.epoch_compactions
+        )
     compactions = sum(session.compactions for session in active)
     findings = []
     if not coverage.complete:
@@ -521,8 +537,8 @@ def atomic_write(path: Path, content: str):
 
 
 def run(args) -> int:
-    since = args.since or (datetime.now(timezone.utc) - args.lookback)
     until = args.until or datetime.now(timezone.utc)
+    since = args.since or (until - args.lookback)
     if until < since:
         raise ValueError("--until must not precede --since")
     root = args.root.resolve(strict=True)
