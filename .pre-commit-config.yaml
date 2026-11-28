@@ -48,6 +48,12 @@ repos:
         entry: scripts/validate-skills.sh
         language: script
         files: dot_agents/skills/.*/SKILL\.md$
+      - id: factory-analysis-tests
+        name: test factory analysis
+        entry: python3 scripts/test-factory-analysis.py
+        language: system
+        pass_filenames: false
+        files: ^(dot_local/bin/executable_factory-analysis|scripts/test-factory-analysis\.py)$
 
   # Talisman (secrets scanning) - already configured, keep it
   - repo: https://github.com/thoughtworks/talisman

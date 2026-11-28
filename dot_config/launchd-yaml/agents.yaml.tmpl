@@ -44,7 +44,7 @@ launchagents:
 
 
 
-  # The weekly maintenance run is a scheduled session in the AoE cron plugin
+  # The weekday maintenance run is a scheduled session in the AoE cron plugin
   # (agent-of-empires.cron), not a launchd job: the session starts with its
   # prompt as the first turn, so no dispatcher script or pane typing is involved
   # and it gets the global MCP set the create_session dispatch needs. Edit the
@@ -261,3 +261,20 @@ launchagents:
     StandardErrorPath: $HOME/Library/Logs/workspace-cleanup.error.log
     EnvironmentVariables:
       PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin
+
+  factory-analysis:
+    Label: com.$USER.factory-analysis
+    ProgramArguments:
+      - $HOME/.local/bin/factory-analysis
+      - --lookback
+      - "24"
+      - --context-warning-tokens
+      - "100000"
+    StartCalendarInterval:
+      Hour: 19
+      Minute: 30
+    StandardOutPath: $HOME/Library/Logs/factory-analysis.log
+    StandardErrorPath: $HOME/Library/Logs/factory-analysis.error.log
+    EnvironmentVariables:
+      PATH: $HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+{{ template "omp-launchd-env" . }}

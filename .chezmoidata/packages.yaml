@@ -110,7 +110,7 @@ packages:
     # plugin sync script and its settings carry over in config.toml.tmpl.
     - source: "gh:agent-of-empires/plugin-linear"
       id: "agent-of-empires.linear"
-    # Owns the weekly maintenance schedule that was a launchd job. Installing or
+    # Owns the weekday maintenance schedule that was a launchd job. Installing or
     # updating it leaves a stray root-level target/ that perturbs the tree hash
     # aoe checks before letting a plugin claim this namespace, so the plugin is
     # skipped at load until the shared aoe-plugin-tree-fix snippet removes it.

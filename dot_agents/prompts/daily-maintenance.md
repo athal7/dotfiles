@@ -1,9 +1,9 @@
-Orchestrate both daily workflows as the director. Spawn two independent workers immediately: one for production-error triage and one for knowledge-base enrichment. Give each worker its complete section and shared safety/reporting rules; workers start without this conversation. Do not perform either workflow in the director. Keep each worker on its own workstream and continue while the other is blocked. A worker turn settling is not proof of completion: inspect its full result, follow up in the same worker when evidence is missing, and reconcile outcomes before reporting. Use bounded waits so an unresponsive worker cannot hold the other hostage. Never retry an uncertain dispatch.
+Orchestrate all three daily workflows as the director. Spawn three independent workers immediately: one for production-error triage, one for knowledge-base enrichment, and one for factory reflection. Give each worker its complete section and shared safety/reporting rules; workers start without this conversation. Do not perform any workflow in the director. Keep each worker on its own workstream and continue while another is blocked. A worker turn settling is not proof of completion: inspect its full result, follow up in the same worker when evidence is missing, and reconcile outcomes before reporting. Use bounded waits so an unresponsive worker cannot hold the others hostage. Never retry an uncertain dispatch.
 
-Treat production triage and KB enrichment as independent work: a pending approval, rate limit, inaccessible source, or failed dispatch in one does not prevent eligible read-only work in the other. Batch independent reads when possible; never wait on one collector before starting another independent collector. Do not retry a timed-out write until its outcome is known, and do not treat an unanswered approval as denial or permission. Resume approved work after approval; continue other eligible work while waiting. Do not substitute another source or weaken access rules to work around a denial.
+Treat production triage, KB enrichment, and factory reflection as independent work: a pending approval, rate limit, inaccessible source, or failed dispatch in one does not prevent eligible read-only work in the others. Batch independent reads when possible; never wait on one collector before starting another independent collector. Do not retry a timed-out write until its outcome is known, and do not treat an unanswered approval as denial or permission. Resume approved work after approval; continue other eligible work while waiting. Do not substitute another source or weaken access rules to work around a denial.
 Before any external query, read the relevant source skill and inspect the live tool schema. Validate the actual response shape before parsing or aggregating it; malformed JSON, null where an array is required, parameter validation errors, and missing required fields are source failures, never empty evidence. Preserve successful sibling results when another call fails; use independent calls or settled-result handling, not fail-fast aggregation.
 
-At the end, read the director's actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded. Report production dispatch outcomes and each collector's terminal status and coverage state separately. If a worker has not finished, any collector is partial or failed or has non-exhaustive coverage, reconciliation is unfinished, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification. Report optional skips explicitly without presenting them as successful reads. Do not mark an unfinished worker's work complete merely because another worker finished.
+At the end, read the director's actual todo state and report its exact completed/total count and remaining item names. A completed orchestration task means its attempted work was recorded, not that every collector succeeded. Report production dispatch outcomes, each collector's terminal status and coverage state, and the factory-reflection record separately. If a worker has not finished, any collector is partial or failed or has non-exhaustive coverage, factory reflection is partial or failed, reconciliation is unfinished, or a dispatch remains pending, label the overall maintenance result partial and name the outstanding work; never call the overall run complete or successful without qualification. Report optional skips explicitly without presenting them as successful reads. Do not mark an unfinished worker's work complete merely because another worker finished.
 
 Production-error triage and fix dispatch:
 
@@ -68,6 +68,34 @@ Evaluate coverage independently: bounded history, an unrequested historical rang
 - Journal stats come from git, not from ephemeral session stores.
 - Never invent a source URL or workspace slug.
 - A project is a durable service or named workstream. A feature or issue belongs under its parent.
+
+## Factory reflection workflow
+
+This is a peer workflow, not a KB collector. The weekday `factory-analysis` LaunchAgent runs at 19:30, before this scheduled session, and writes `~/.local/share/omp/factory-analysis/latest.json` plus `latest.md`. Work read-only: inspect that local report and the skill definitions, recommend changes, and do not edit skills, prompts, configuration, or repositories. Do not rerun `factory-analysis` merely to refresh it, do not run `omp stats` (its database is being written by a KeepAlive process), and do not run Tessl reviews or evals: review uploads the skill bundle, eval needs authentication, project, and workspace access, and neither belongs in this unattended run.
+
+Require a report whose `schema_version` is 1 and whose `window.until` is after the previous weekday's maintenance session. A missing, stale, malformed, or partially written report is a factory prerequisite failure; report it and continue the other workflows. `coverage.status: partial` is valid evidence with non-exhaustive coverage, not a reason to discard the report. Context-window utilization is deliberately `unknown`; never derive a percentage from prompt-token counts. Observed loads and errors are observations, not proof that a skill caused an outcome. Unavailable or timed-out `agentskills` validation makes coverage non-exhaustive.
+
+Summarize deterministic findings, peak prompt tokens, compactions, observed skill loads and load errors, validation failures, tool-error counts, and daily-maintenance session health. Rank recommendations by evidence; do not claim causality, rewrite a skill to chase a score, or propose external uploads. Include the report paths and return this record to the director:
+
+```yaml
+collector: factory
+terminal_status: succeeded | succeeded with no eligible evidence | partial | failed
+execution:
+  report_status: <schema/window validation and stale-or-malformed errors>
+  unresolved_errors: [<failure and affected scope>]
+coverage:
+  state: exhaustive | non-exhaustive
+  reasons: [<coverage.status, limits, validator state, and skipped work>]
+counts:
+  discovered: <report.coverage.candidate_files or null>
+  read: <report.coverage.processed_files or null>
+  eligible_evidence: <report.sessions.active, or null if no valid report>
+  known_omitted: <sum of report.coverage.skipped_files, or null>
+  out_of_allowlist: 0
+```
+
+Use `partial` when the report is valid but coverage or validation is partial, `failed` when no valid current report exists, and `succeeded` only when the report is current, coverage is complete, and validation ran. `succeeded with no eligible evidence` applies only when those execution conditions hold and the window contains no active sessions. Never describe a missing report as a successful analysis.
+
 ## Collector reporting
 
 For every configured collector, emit exactly one report record:
