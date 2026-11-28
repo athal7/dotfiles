@@ -49,7 +49,6 @@ launchagents:
   # prompt as the first turn, so no dispatcher script or pane typing is involved
   # and it gets the global MCP set the create_session dispatch needs. Edit the
   # job in dot_config/agent-of-empires/config.toml.tmpl.
-{{ template "omp-launchd-env" . }}
 
   agent-plugin-upgrade:
     Label: com.$USER.agent-plugin-upgrade

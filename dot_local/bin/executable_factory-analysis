@@ -12,19 +12,18 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import stat
-import subprocess
 import sys
 import tempfile
-import time
 
 
 SCHEMA_VERSION = 1
 WARNING_LIMIT = 50
 SKILL_LIMIT = 200
-VALIDATION_SECONDS = 30
-MAINTENANCE_MARKER = "daily-maintenance.md"
+MAINTENANCE_MARKER = (
+    "Read ~/.agents/prompts/daily-maintenance.md and carry it out end to end. "
+    "That file is the whole task; do not ask for it to be restated."
+)
 
 
 def parse_time(value: str) -> datetime:
@@ -77,11 +76,11 @@ def message_text(content) -> str:
 @dataclass
 class SessionMetrics:
     identity: str
-    cwd: str = ""
     maintenance: bool = False
     activity_events: int = 0
     user_turns: int = 0
     assistant_turns: int = 0
+    synthetic_tool_results: int = 0
     tool_calls: Counter = field(default_factory=Counter)
     tool_errors: Counter = field(default_factory=Counter)
     stop_reasons: Counter = field(default_factory=Counter)
@@ -91,7 +90,8 @@ class SessionMetrics:
     peak_non_message_tokens: int | float | None = None
     peak_tool_schema_tokens: int | float | None = None
     compactions: int = 0
-    last_activity: str | None = None
+    explicit_compactions: int = 0
+    last_activity: datetime | None = None
 
 
 class Coverage:
@@ -101,6 +101,7 @@ class Coverage:
         self.selected_files = 0
         self.processed_files = 0
         self.bytes_read = 0
+        self.excluded_by_mtime = 0
         self.skipped_files = Counter()
         self.warning_count = 0
         self.malformed_records = 0
@@ -125,6 +126,7 @@ class Coverage:
             "candidate_files": self.candidate_files,
             "selected_files": self.selected_files,
             "processed_files": self.processed_files,
+            "excluded_by_mtime_files": self.excluded_by_mtime,
             "bytes_read": self.bytes_read,
             "skipped_files": dict(self.skipped_files),
             "warning_count": self.warning_count,
@@ -146,7 +148,7 @@ def update_peak(current, value):
 
 
 def skill_from_call(part: dict) -> str | None:
-    if part.get("type") != "toolCall" or part.get("name") != "read":
+    if part.get("type") not in ("toolCall", "function_call") or part.get("name") != "read":
         return None
     arguments = part.get("arguments")
     if isinstance(arguments, str):
@@ -171,6 +173,7 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
     bytes_read = 0
     previous_epoch = None
     skill_calls = {}
+    all_tool_calls = set()
     with os.fdopen(os.open(path, flags), "rb") as source:
         before = os.fstat(source.fileno())
         if not stat.S_ISREG(before.st_mode):
@@ -208,21 +211,20 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
             if event_type == "session":
                 if isinstance(event.get("id"), str):
                     metrics.identity = event["id"]
-                if isinstance(event.get("cwd"), str):
-                    metrics.cwd = event["cwd"]
-            if event_type == "title_change" and isinstance(event.get("title"), str):
-                if MAINTENANCE_MARKER in event["title"]:
-                    metrics.maintenance = True
+            if event_type == "compaction" and in_window(occurred, since, until):
+                metrics.explicit_compactions += 1
             active = in_window(occurred, since, until)
             if active:
                 metrics.activity_events += 1
-                if metrics.last_activity is None or iso_time(occurred) > metrics.last_activity:
-                    metrics.last_activity = iso_time(occurred)
+                if metrics.last_activity is None or occurred > metrics.last_activity:
+                    metrics.last_activity = occurred
             if event_type != "message" or not isinstance(event.get("message"), dict):
                 continue
             message = event["message"]
             role = message.get("role")
-            if role == "user" and MAINTENANCE_MARKER in message_text(message.get("content")):
+            if (role == "user" and message.get("synthetic") is not True
+                    and message.get("attribution") != "agent"
+                    and message_text(message.get("content")).strip() == MAINTENANCE_MARKER):
                 metrics.maintenance = True
             if role == "assistant":
                 snapshot = message.get("contextSnapshot")
@@ -237,22 +239,30 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
                 # count old calls until their result occurs in the window.
                 if role == "assistant" and isinstance(message.get("content"), list):
                     for part in message["content"]:
-                        if isinstance(part, dict) and isinstance(part.get("id"), str):
+                        if not isinstance(part, dict):
+                            continue
+                        call_id = part.get("id") or part.get("call_id")
+                        if isinstance(call_id, str):
+                            all_tool_calls.add(call_id)
                             name = skill_from_call(part)
                             if name:
-                                skill_calls[part["id"]] = name
+                                skill_calls[call_id] = name
                 continue
             if role == "user":
-                metrics.user_turns += 1
+                if message.get("synthetic") is not True and message.get("attribution") != "agent":
+                    metrics.user_turns += 1
                 continue
             if role == "toolResult":
-                if message.get("isError") is True:
-                    tool_name = message.get("toolName")
-                    if isinstance(tool_name, str):
-                        metrics.tool_errors[tool_name] += 1
-                    call_id = message.get("toolCallId")
-                    if call_id in skill_calls:
-                        metrics.skill_load_errors[skill_calls[call_id]] += 1
+                details = message.get("details")
+                synthetic = isinstance(details, dict) and details.get("__synthetic") is True
+                if synthetic:
+                    metrics.synthetic_tool_results += 1
+                call_id = message.get("toolCallId")
+                if message.get("isError") is True and not synthetic and call_id in skill_calls:
+                    metrics.tool_errors[message.get("toolName", "unknown")] += 1
+                    metrics.skill_load_errors[skill_calls[call_id]] += 1
+                elif message.get("isError") is True and not synthetic and call_id in all_tool_calls:
+                    metrics.tool_errors[message.get("toolName", "unknown")] += 1
                 continue
             if role != "assistant":
                 continue
@@ -276,21 +286,25 @@ def analyze_transcript(path: Path, since: datetime, until: datetime, byte_limit:
                 name = part.get("name")
                 if isinstance(name, str):
                     metrics.tool_calls[name] += 1
+                call_id = part.get("id") or part.get("call_id")
+                if isinstance(call_id, str):
+                    all_tool_calls.add(call_id)
                 skill_name = skill_from_call(part)
                 if skill_name:
                     metrics.skill_loads[skill_name] += 1
-                    if isinstance(part.get("id"), str):
-                        skill_calls[part["id"]] = skill_name
+                    if isinstance(call_id, str):
+                        skill_calls[call_id] = skill_name
         after = os.fstat(source.fileno())
     if truncated:
-        coverage.warn(path, None, "byte limit reached", malformed=True)
-    if before.st_ino != after.st_ino or after.st_size < before.st_size:
-        coverage.warn(path, None, "file replaced or truncated while being read")
+        coverage.warn(path, None, "byte limit reached")
+    if after.st_size < before.st_size:
+        coverage.warn(path, None, "file truncated while being read")
     return bytes_read
 
 
 def transcript_candidates(root: Path, since: datetime):
     discovered = 0
+    excluded = 0
     candidates = []
     pending = [root]
     while pending:
@@ -304,20 +318,26 @@ def transcript_candidates(root: Path, since: datetime):
                     info = entry.stat(follow_symlinks=False)
                     if info.st_mtime >= since.timestamp():
                         candidates.append((info.st_mtime_ns, entry.path, info.st_size))
+                    else:
+                        excluded += 1
     candidates.sort(key=lambda item: (-item[0], item[1]))
-    return discovered, candidates
+    return discovered, excluded, candidates
 
 
-def skill_inventory(root: Path) -> dict[str, dict]:
+def skill_inventory(root: Path) -> tuple[dict[str, dict], int]:
     inventory = {}
+    external = 0
     if not root.is_dir():
-        return inventory
+        return inventory, external
     with os.scandir(root) as entries:
         for entry in entries:
-            if len(inventory) >= SKILL_LIMIT:
-                break
+            if entry.is_symlink():
+                external += 1
+                continue
             if not entry.is_dir(follow_symlinks=False):
                 continue
+            if len(inventory) >= SKILL_LIMIT:
+                break
             path = Path(entry.path) / "SKILL.md"
             if not path.is_file() or path.is_symlink():
                 continue
@@ -326,66 +346,8 @@ def skill_inventory(root: Path) -> dict[str, dict]:
                 "name": entry.name,
                 "lines": len(raw.splitlines()),
                 "bytes": len(raw),
-                "validation": "not-run",
             }
-    return inventory
-
-
-def run_validator(executable: str | None, skills_root: Path, inventory: dict,
-                  disabled: bool) -> dict:
-    if disabled:
-        return {"tool": "agentskills", "status": "skipped", "reason": "disabled"}
-    if not skills_root.is_dir():
-        return {
-            "tool": "agentskills",
-            "status": "skipped",
-            "reason": f"skills root not found: {skills_root}",
-        }
-    resolved = shutil.which(executable) if executable else None
-    if resolved is None:
-        return {
-            "tool": "agentskills",
-            "status": "skipped",
-            "reason": f"executable not found: {executable or 'agentskills'}",
-        }
-    deadline = time.monotonic() + VALIDATION_SECONDS
-    failures = 0
-    incomplete = 0
-    for name, item in inventory.items():
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            item["validation"] = "not-run"
-            incomplete += 1
-            continue
-        try:
-            result = subprocess.run(
-                [resolved, "validate", str(skills_root / name)],
-                capture_output=True, text=True, timeout=max(0.1, min(10, remaining)),
-                check=False,
-            )
-        except (OSError, subprocess.TimeoutExpired):
-            item["validation"] = "error"
-            incomplete += 1
-            continue
-        if result.returncode == 0:
-            item["validation"] = "passed"
-        elif result.returncode == 1:
-            item["validation"] = "failed"
-            failures += 1
-        else:
-            item["validation"] = "error"
-            incomplete += 1
-    status = "partial" if incomplete else "failed" if failures else "passed"
-    if not inventory:
-        status = "passed"
-    return {
-        "tool": "agentskills",
-        "executable": resolved,
-        "status": status,
-        "failed": failures,
-        "incomplete": incomplete,
-        "validated": len(inventory) - incomplete,
-    }
+    return inventory, external
 
 
 def peak(sessions, attribute):
@@ -395,11 +357,11 @@ def peak(sessions, attribute):
 
 
 def abnormal_stops(session: SessionMetrics) -> int:
-    return sum(session.stop_reasons[reason] for reason in ("aborted", "error", "length", "maxTokens"))
+    return sum(session.stop_reasons[reason] for reason in ("error", "length", "maxTokens"))
 
 
 def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics],
-                 inventory: dict, validation: dict, coverage: Coverage, limits: dict) -> dict:
+                 inventory: dict, external_skills: int, coverage: Coverage, limits: dict) -> dict:
     active = [session for session in sessions if session.activity_events]
     loads = Counter()
     load_errors = Counter()
@@ -413,17 +375,15 @@ def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics
         errors.update(session.tool_errors)
         stops.update(session.stop_reasons)
     for name in set(inventory) | set(loads) | set(load_errors):
-        item = inventory.setdefault(name, {
-            "name": name, "lines": None, "bytes": None, "validation": "not-in-inventory",
-        })
+        item = inventory.setdefault(name, {"name": name, "lines": None, "bytes": None})
         item["observed_loads"] = loads[name]
         item["sessions"] = sum(1 for session in active if session.skill_loads[name])
         item["load_errors"] = load_errors[name]
     maintenance = [session for session in active if session.maintenance]
+    for session in active:
+        if session.explicit_compactions > session.compactions:
+            session.compactions = session.explicit_compactions
     compactions = sum(session.compactions for session in active)
-    threshold = limits["context_warning_tokens"]
-    high_context = [session for session in active
-                    if session.peak_prompt_tokens is not None and session.peak_prompt_tokens >= threshold]
     findings = []
     if not coverage.complete:
         findings.append({"code": "partial-coverage", "severity": "warning",
@@ -431,17 +391,10 @@ def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics
     if compactions:
         findings.append({"code": "context-compactions", "severity": "warning", "count": compactions,
                          "session_ids": [session.identity for session in active if session.compactions][:20]})
-    if high_context:
-        findings.append({"code": "prompt-token-threshold-exceeded", "severity": "warning",
-                         "threshold": threshold, "count": len(high_context),
-                         "session_ids": [session.identity for session in high_context][:20]})
     if errors:
         findings.append({"code": "tool-errors", "severity": "warning", "count": sum(errors.values())})
     if load_errors:
         findings.append({"code": "skill-load-errors", "severity": "warning", "count": sum(load_errors.values())})
-    if validation["status"] in ("failed", "partial"):
-        findings.append({"code": "skill-validation-incomplete-or-failed", "severity": "warning",
-                         "status": validation["status"]})
     if any(abnormal_stops(session) for session in maintenance):
         findings.append({"code": "maintenance-abnormal-stops", "severity": "warning",
                          "count": sum(abnormal_stops(session) for session in maintenance)})
@@ -456,6 +409,7 @@ def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics
             "assistant_turns": sum(session.assistant_turns for session in active),
             "tool_calls": sum(calls.values()),
             "tool_errors": sum(errors.values()),
+            "synthetic_tool_results": sum(session.synthetic_tool_results for session in active),
             "tool_calls_by_name": dict(calls.most_common()),
             "tool_errors_by_name": dict(errors.most_common()),
             "stop_reasons": dict(stops.most_common()),
@@ -466,24 +420,24 @@ def build_report(since: datetime, until: datetime, sessions: list[SessionMetrics
             "peak_prompt_tokens": peak(active, "peak_prompt_tokens"),
             "peak_non_message_tokens": peak(active, "peak_non_message_tokens"),
             "peak_tool_schema_tokens": peak(active, "peak_tool_schema_tokens"),
-            "sessions_at_or_above_warning_tokens": len(high_context),
             "context_window_utilization": None,
             "utilization_status": "unknown",
             "utilization_reason": "OMP transcripts do not record the model context-window size",
         },
         "skills": {
             "inventory_count": len(inventory),
+            "external_inventory_count": external_skills,
             "observed_loads": sum(loads.values()),
             "load_errors": sum(load_errors.values()),
-            "validation": validation,
             "items": sorted(inventory.values(), key=lambda item: item["name"]),
         },
         "maintenance": {
             "daily_sessions": len(maintenance),
             "tool_errors": sum(sum(session.tool_errors.values()) for session in maintenance),
             "abnormal_stops": sum(abnormal_stops(session) for session in maintenance),
-            "last_activity": max((session.last_activity for session in maintenance
-                                  if session.last_activity), default=None),
+            "last_activity": iso_time(max((session.last_activity for session in maintenance
+                                           if session.last_activity), default=since))
+            if any(session.last_activity for session in maintenance) else None,
             "schedule_inference": "observed sessions only; expected cron occurrences are not inferred",
         },
         "findings": findings,
@@ -514,20 +468,22 @@ def markdown_report(report: dict) -> str:
         f"{report['coverage']['processed_files']} files, {report['coverage']['bytes_read']} bytes.", "",
         "## Context pressure", "",
         f"Active sessions: {sessions['active']}; assistant turns: {sessions['assistant_turns']}.",
-        f"Peak prompt tokens: {context['peak_prompt_tokens']}; compactions: {context['compactions']}; "
-        f"sessions at/above threshold: {context['sessions_at_or_above_warning_tokens']}.",
+        f"Peak prompt tokens: {context['peak_prompt_tokens']}; compactions: {context['compactions']}.",
         f"Peak non-message/tool-schema tokens: {context['peak_non_message_tokens']}/"
         f"{context['peak_tool_schema_tokens']}.",
         f"Context-window utilization: **{context['utilization_status']}** — {context['utilization_reason']}.", "",
         "## Skills", "",
-        f"Inventory: {skills['inventory_count']}; observed loads: {skills['observed_loads']}; "
-        f"load errors: {skills['load_errors']}; validation: **{skills['validation']['status']}**.", "",
-        "| Skill | Lines | Loads | Sessions | Load errors | Validation |",
-        "|---|---:|---:|---:|---:|---|",
+        f"Inventory: {skills['inventory_count']} local, "
+        f"{skills['external_inventory_count']} external; observed loads: {skills['observed_loads']}; "
+        f"load errors: {skills['load_errors']}.", "",
+        "| Skill | Lines | Loads | Sessions | Load errors |",
+        "|---|---:|---:|---:|---:|",
     ]
     for item in skills["items"][:20]:
         lines.append(f"| {item['name']} | {item['lines']} | {item['observed_loads']} | "
-                     f"{item['sessions']} | {item['load_errors']} | {item['validation']} |")
+                     f"{item['sessions']} | {item['load_errors']} |")
+    if len(skills["items"]) > 20:
+        lines.append(f"\nShowing 20 of {len(skills['items'])} skills; see `latest.json` for all.")
     lines.extend([
         "", "## Tool friction", "",
         f"Tool calls: {sessions['tool_calls']}; errors: {sessions['tool_errors']}.",
@@ -580,11 +536,11 @@ def run(args) -> int:
             "max_files": args.max_files,
             "max_bytes": args.max_bytes,
             "max_file_bytes": args.max_file_bytes,
-            "context_warning_tokens": args.context_warning_tokens,
         }
         coverage = Coverage()
-        discovered, candidates = transcript_candidates(root, since)
+        discovered, excluded, candidates = transcript_candidates(root, since)
         coverage.discovered_files = discovered
+        coverage.excluded_by_mtime = excluded
         coverage.candidate_files = len(candidates)
         selected = candidates[:args.max_files]
         coverage.selected_files = len(selected)
@@ -607,13 +563,12 @@ def run(args) -> int:
             coverage.bytes_read += used
             coverage.processed_files += 1
             sessions.append(metrics)
-        inventory = skill_inventory(args.skills_root)
+        inventory, external_skills = skill_inventory(args.skills_root)
         if not args.skills_root.is_dir():
             coverage.warn(args.skills_root, None, "skills root not found")
-        elif len(inventory) >= SKILL_LIMIT:
+        elif len(inventory) == SKILL_LIMIT:
             coverage.warn(args.skills_root, None, "skill inventory limit reached")
-        validation = run_validator(args.agentskills, args.skills_root, inventory, args.skip_validation)
-        report = build_report(since, until, sessions, inventory, validation, coverage, limits)
+        report = build_report(since, until, sessions, inventory, external_skills, coverage, limits)
         atomic_write(args.output / "latest.json", json.dumps(report, indent=2, sort_keys=True) + "\n")
         atomic_write(args.output / "latest.md", markdown_report(report))
         print(f"factory-analysis: {report['coverage']['status']}; "
@@ -640,13 +595,10 @@ def main() -> int:
     parser.add_argument("--max-files", type=int, default=200)
     parser.add_argument("--max-bytes", type=int, default=256 * 1024 * 1024)
     parser.add_argument("--max-file-bytes", type=int, default=64 * 1024 * 1024)
-    parser.add_argument("--context-warning-tokens", type=int, default=100_000)
-    parser.add_argument("--agentskills", default=os.environ.get("FACTORY_ANALYSIS_AGENTSKILLS", "agentskills"))
-    parser.add_argument("--skip-validation", action="store_true")
     args = parser.parse_args()
     if args.lookback.total_seconds() <= 0:
         parser.error("--lookback must be positive")
-    if min(args.max_files, args.max_bytes, args.max_file_bytes, args.context_warning_tokens) <= 0:
+    if min(args.max_files, args.max_bytes, args.max_file_bytes) <= 0:
         parser.error("limits must be positive")
     try:
         return run(args)

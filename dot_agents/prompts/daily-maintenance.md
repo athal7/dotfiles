@@ -69,13 +69,15 @@ Evaluate coverage independently: bounded history, an unrequested historical rang
 - Never invent a source URL or workspace slug.
 - A project is a durable service or named workstream. A feature or issue belongs under its parent.
 
+End of knowledge-base enrichment section.
+
 ## Factory reflection workflow
 
-This is a peer workflow, not a KB collector. Run `~/.local/bin/factory-analysis --help`, then run it with its default 24-hour window and default output. It writes only `~/.local/share/omp/factory-analysis/latest.json` and `latest.md`; no other state. Leave `--agentskills` at its default so local skill validation runs. Do not run `omp stats` (its database is being written by a KeepAlive process), and do not run Tessl reviews or evals: review uploads the skill bundle, eval needs authentication, project, and workspace access, and neither belongs in this unattended run. Inspect the resulting report and skill definitions, recommend changes, and do not edit skills, prompts, configuration, or repositories.
+This is a peer workflow, not a KB collector. Run `~/.local/bin/factory-analysis --help`, then run it with its default 24-hour window and default output. It writes only `~/.local/share/omp/factory-analysis/latest.json` and `latest.md`, plus the output directory and its `.lock`; no other state. Do not run `omp stats` (its database is being written by a KeepAlive process), and do not run Tessl reviews or evals: review uploads the skill bundle, eval needs authentication, project, and workspace access, and neither belongs in this unattended run. Do not run `agentskills validate` here either: authored-skill validity is enforced by pre-commit, and installed or vendored skills are not ours to fix. Inspect the report and skill definitions, recommend changes, and do not edit skills, prompts, configuration, or repositories.
 
-A nonzero command status, missing, stale, malformed, or partially written report, or lock contention (exit 75) is a factory prerequisite failure; do not retry an uncertain execution or synthesize metrics, and continue the other workflows. Require `schema_version` 1 and a report window ending no earlier than this maintenance session's start. `coverage.status: partial` is valid evidence with non-exhaustive coverage, not a reason to discard the report. Context-window utilization is deliberately `unknown`; never derive a percentage from prompt-token counts. Observed loads and errors are observations, not proof that a skill caused an outcome. Unavailable or timed-out `agentskills` validation makes coverage non-exhaustive.
+A nonzero command status, missing, stale, malformed, or partially written report, or lock contention (exit 75) is a factory prerequisite failure; do not retry an uncertain execution or synthesize metrics, and continue the other workflows. Require `schema_version` 1 and a report window ending no earlier than this maintenance session's start. `coverage.status: partial` is valid evidence with non-exhaustive coverage, not a reason to discard the report. Context-window utilization is deliberately `unknown`; never derive a percentage from prompt-token counts. Observed loads and errors are observations, not proof that a skill caused an outcome.
 
-Summarize deterministic findings, peak prompt tokens, compactions, observed skill loads and load errors, validation failures, tool-error counts, and daily-maintenance session health. Rank recommendations by evidence; do not claim causality, rewrite a skill to chase a score, or propose external uploads. Include the report paths and return this record to the director:
+Summarize deterministic findings, peak prompt tokens, compactions, observed skill loads and load errors, tool-error counts, and daily-maintenance session health. Skill load counts cover direct `read` calls only and are a lower bound. Symlinked external skills are counted separately and are outside authored-skill validation. Rank recommendations by evidence; do not claim causality, rewrite a skill to chase a score, or propose external uploads. Include the report paths and return this record to the director:
 
 ```yaml
 collector: factory
@@ -85,7 +87,7 @@ execution:
   unresolved_errors: [<failure and affected scope>]
 coverage:
   state: exhaustive | non-exhaustive
-  reasons: [<coverage.status, limits, validator state, and skipped work>]
+  reasons: [<coverage.status, limits, and skipped work>]
 counts:
   discovered: <report.coverage.candidate_files or null>
   read: <report.coverage.processed_files or null>
@@ -94,7 +96,9 @@ counts:
   out_of_allowlist: 0
 ```
 
-Use `partial` when the report is valid but coverage or validation is partial, `failed` when the command fails or no valid current report exists, and `succeeded` only when the command exits 0, the report is current, coverage is complete, and validation ran. `succeeded with no eligible evidence` applies only when those execution conditions hold and the window contains no active sessions. Never describe a missing report as a successful analysis.
+Use `partial` when the report is valid but coverage is partial, `failed` when the command fails or no valid current report exists, and `succeeded` only when the command exits 0, the report is current, and coverage is complete. `succeeded with no eligible evidence` applies only when those execution conditions hold and the window contains no active sessions. Never describe a missing report as a successful analysis.
+
+End of factory reflection section.
 
 ## Collector reporting
 

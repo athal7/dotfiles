@@ -40,7 +40,7 @@ repos:
         files: \.tmpl$
         exclude: ^\.chezmoi\.toml\.tmpl$
 
-  # Agent Skills validation
+  # Local deterministic validation
   - repo: local
     hooks:
       - id: validate-skills
