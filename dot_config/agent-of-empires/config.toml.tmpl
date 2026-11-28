@@ -290,10 +290,6 @@ pre_trust_agent_folders = false
 prevent_sleep_idle_grace_minutes = 15
 prevent_sleep_when_active = true
 preview_link_prefixes = []
-{{- /* An empty message leaves a restarted session waiting for me instead of
-       typing a nudge prompt into it. Resume the conversation myself when I get
-       back to it. */}}
-restart_wake_message = ""
 row_tag = "none"
 scratch_smart_rename = "inherit"
 session_id_poller_max_threads = 50
@@ -319,7 +315,6 @@ snooze_duration_minutes = 30
 split_terminal_height_percent = 50
 split_terminal_min_height = 1000
 split_terminal_min_width = 1000
-startup_recovery_wake = true
 strict_hotkeys = false
 tie_workdir_to_name = true
 trash_retention_minutes = 43200
