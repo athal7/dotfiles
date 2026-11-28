@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Report idle worktrees and Cargo output; reclaim stale Chrome signing clones and pressure-triggered Kache cache."""
+"""Report idle worktrees and Cargo output; reclaim pressure-triggered Kache targets and cache, and stale Chrome signing clones."""
 
 import argparse
 import fcntl
@@ -136,27 +136,35 @@ def worktrees(dry_run):
         prune_stale(repo, stale, dry_run)
 
 
-def kache_cache(dry_run):
+def kache_clean(dry_run, *mode):
     try:
         pressure = shutil.disk_usage(CODE).free < TARGET_PRESSURE_MIN_FREE_BYTES
     except OSError as error:
-        print(f"Skipping Kache cache: cannot check free space: {error}", file=sys.stderr)
+        print(f"Skipping Kache {mode[0].removeprefix('--')}: cannot check free space: {error}", file=sys.stderr)
         return
     if not pressure:
         return
     if shutil.which("kache") is None:
-        print("Skipping Kache cache: kache is not installed", file=sys.stderr)
+        print(f"Skipping Kache {mode[0].removeprefix('--')}: kache is not installed", file=sys.stderr)
         return
-    args = ["kache", "clean", "--cache", "--dry-run" if dry_run else "--yes"]
+    args = ["kache", "clean", *mode, "--dry-run" if dry_run else "--yes"]
     try:
         result = run(*args, check=False)
     except OSError as error:
-        print(f"Cannot clear Kache cache: {error}", file=sys.stderr)
+        print(f"Cannot run Kache {mode[0].removeprefix('--')} cleanup: {error}", file=sys.stderr)
         return
     if result.stdout.strip():
         print(result.stdout.strip())
     if result.returncode:
-        print(f"Cannot clear Kache cache: {result.stderr.strip()}", file=sys.stderr)
+        print(f"Cannot run Kache {mode[0].removeprefix('--')} cleanup: {result.stderr.strip()}", file=sys.stderr)
+
+
+def kache_targets(dry_run):
+    kache_clean(dry_run, "--stale", f"{TARGET_PRESSURE_STALE_DAYS}d")
+
+
+def kache_cache(dry_run):
+    kache_clean(dry_run, "--cache")
 
 
 def databases(dry_run):
@@ -236,7 +244,7 @@ def chrome_clones(dry_run):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="remove eligible resources (default: dry-run)")
-    parser.add_argument("--database-only", action="store_true", help="explicitly opt into database cleanup; skip worktrees, Kache cache, and Chrome clones")
+    parser.add_argument("--database-only", action="store_true", help="explicitly opt into database cleanup; skip worktrees, Kache targets and cache, and Chrome clones")
     args = parser.parse_args()
     state = Path.home() / ".local/state"
     state.mkdir(parents=True, exist_ok=True)
@@ -250,6 +258,7 @@ def main():
             before = shutil.disk_usage(CODE).free
             print(f"Free space before: {before / 1024**3:.1f} GiB; pressure trigger: 100 GiB; recovery goal: 150 GiB")
             worktrees(not args.apply)
+            kache_targets(not args.apply)
             kache_cache(not args.apply)
             chrome_clones(not args.apply)
             after = shutil.disk_usage(CODE).free

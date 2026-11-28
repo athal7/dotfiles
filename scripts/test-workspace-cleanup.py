@@ -264,6 +264,89 @@ class WorktreeCleanupTest(unittest.TestCase):
 
 
 
+@unittest.skipUnless(shutil.which("cargo") and shutil.which("kache"), "Cargo and Kache required")
+class KacheTargetCleanupTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name).resolve()
+        self.repo = self.base / "repo"
+        (self.repo / "src").mkdir(parents=True)
+        (self.repo / "Cargo.toml").write_text('[package]\nname="cleanup-fixture"\nversion="0.1.0"\nedition="2021"\n')
+        (self.repo / "src/main.rs").write_text('fn main() { println!("cleanup fixture"); }\n')
+        (self.repo / ".gitignore").write_text("/target/\n")
+        subprocess.run(["git", "init", "-q", str(self.repo)], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "add", "."],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+             "commit", "-qm", "fixture"],
+            check=True, capture_output=True,
+        )
+        self.cleanup_cwd = self.base / "cleanup"
+        self.cleanup_cwd.mkdir()
+        self.home = self.base / "home"
+        config = self.home / ".config/kache/config.toml"
+        config.parent.mkdir(parents=True)
+        config.write_text("[cache]\ntarget_liveness = true\nauto_clean_orphaned_targets = false\nauto_clean_idle_targets_days = 0\n")
+        self.cache = self.home / "Library/Caches/kache-test"
+        self.env = {
+            key: os.environ[key]
+            for key in ("PATH", "RUSTUP_HOME", "SSL_CERT_FILE", "SSL_CERT_DIR")
+            if key in os.environ
+        }
+        self.env.update(
+            HOME=str(self.home),
+            TMPDIR=str(self.base),
+            KACHE_CONFIG=str(config),
+            KACHE_CACHE_DIR=str(self.cache),
+            KACHE_SOCKET_PATH=str(self.cache / "daemon.sock"),
+            KACHE_HOST_CONFIG="",
+            KACHE_LOCAL_ONLY="1",
+            KACHE_TARGET_LIVENESS="1",
+            KACHE_AUTO_CLEAN_ORPHANED_TARGETS="0",
+            KACHE_AUTO_CLEAN_IDLE_TARGETS_DAYS="0",
+            KACHE_AUTO_RECOVER_TARGETS="0",
+            KACHE_AUTO_CLEAN_UNUSED_UNITS_DAYS="0",
+        )
+        self.addCleanup(self.stop_daemon)
+        plain = subprocess.run(
+            ["cargo", "build", "--offline"],
+            cwd=self.repo, env=self.env, capture_output=True, text=True, timeout=180,
+        )
+        self.assertEqual(0, plain.returncode, plain.stdout + plain.stderr)
+        built = subprocess.run(
+            ["kache", "cargo", "--", "build", "--offline"],
+            cwd=self.repo, env=self.env, capture_output=True, text=True, timeout=180,
+        )
+        self.assertEqual(0, built.returncode, built.stdout + built.stderr)
+        self.artifact = self.repo / "target/debug/cleanup-fixture"
+        self.assertTrue(self.artifact.is_file())
+
+    def stop_daemon(self):
+        subprocess.run(
+            ["kache", "daemon", "stop"], cwd=self.cleanup_cwd, env=self.env,
+            capture_output=True, timeout=30,
+        )
+
+    def test_pressure_preview_preserves_then_apply_reclaims_real_target(self):
+        usage = SimpleNamespace(free=cleanup.TARGET_PRESSURE_MIN_FREE_BYTES - 1, total=1000 * 1024**3)
+        previous = Path.cwd()
+        os.chdir(self.cleanup_cwd)
+        self.addCleanup(os.chdir, previous)
+        with patch.dict(os.environ, self.env), \
+             patch.object(cleanup, "CODE", self.base), \
+             patch.object(cleanup, "TARGET_PRESSURE_STALE_DAYS", 0), \
+             patch.object(cleanup.shutil, "disk_usage", return_value=usage), \
+             contextlib.redirect_stdout(io.StringIO()):
+            cleanup.kache_targets(True)
+            self.assertTrue(self.artifact.is_file())
+            cleanup.kache_targets(False)
+            self.assertFalse(self.artifact.exists())
+
+
 class KacheCacheCleanupTest(unittest.TestCase):
     def invoke(self, dry_run, free=None, which="/opt/homebrew/bin/kache", result=None):
         if free is None:
@@ -321,6 +404,7 @@ class CleanupCommandTest(unittest.TestCase):
              patch.object(Path, "home", return_value=Path(home)), \
              patch.object(cleanup, "CODE", Path(home)), \
              patch.object(cleanup, "worktrees") as worktrees, \
+             patch.object(cleanup, "kache_targets") as kache_targets, \
              patch.object(cleanup, "kache_cache") as kache_cache, \
              patch.object(cleanup, "chrome_clones") as clones, \
              patch.object(cleanup, "databases") as databases, \
@@ -328,11 +412,13 @@ class CleanupCommandTest(unittest.TestCase):
              contextlib.redirect_stdout(io.StringIO()):
             cleanup.main()
             worktrees.assert_called_once_with(False)
+            kache_targets.assert_called_once_with(False)
             kache_cache.assert_called_once_with(False)
             clones.assert_called_once_with(False)
             databases.assert_not_called()
             with patch("sys.argv", ["workspace-cleanup", "--database-only", "--apply"]):
                 cleanup.main()
+            kache_targets.assert_called_once_with(False)
             kache_cache.assert_called_once_with(False)
             databases.assert_called_once_with(False)
 
